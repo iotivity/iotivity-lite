@@ -30,6 +30,7 @@
 #include "oc_api.h"
 #include "oc_ri.h"
 #include "port/oc_clock.h"
+#include "port/oc_log_internal.h"
 #ifdef OC_SECURITY
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY  */

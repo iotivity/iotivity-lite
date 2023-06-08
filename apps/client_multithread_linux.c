@@ -18,6 +18,7 @@
 
 #include "oc_api.h"
 #include "port/oc_clock.h"
+#include "oc_log.h"
 #include <inttypes.h>
 #include <pthread.h>
 #include <signal.h>
@@ -114,7 +115,7 @@ pong_received_handler(oc_client_response_t *data)
     }
   } else {
     printf("PONG received:\n");
-    PRINTipaddr(*data->endpoint);
+    OC_PRINTipaddr(*data->endpoint);
     printf("\n");
     ping_count = 0;
   }
@@ -281,7 +282,7 @@ find_first_endpoint(oc_endpoint_t *endpoint)
   memcpy(&target_ep, ep, sizeof(oc_endpoint_t));
   resource_found = true;
   while (ep != NULL) {
-    PRINTipaddr(*ep);
+    OC_PRINTipaddr(*ep);
     printf("\n");
 
     ep = ep->next;
@@ -293,7 +294,7 @@ find_same_endpoint(oc_endpoint_t *endpoint)
 {
   oc_endpoint_t *ep = endpoint;
   while (ep != NULL) {
-    PRINTipaddr(*ep);
+    OC_PRINTipaddr(*ep);
     printf("\n");
 
     if (oc_endpoint_compare(&set_ep, ep) == 0) {

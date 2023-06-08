@@ -19,6 +19,7 @@
 #include "oc_api.h"
 #include "oc_pki.h"
 #include "port/oc_clock.h"
+#include "oc_log.h"
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>
@@ -91,9 +92,9 @@ check_new_version(size_t device, const char *url, const char *version)
     oc_swupdate_notify_done(device, OC_SWUPDATE_RESULT_INVALID_URL);
     return -1;
   }
-  PRINT("Package url %s\n", url);
+  OC_PRINTF("Package url %s\n", url);
   if (version) {
-    PRINT("Package version: %s\n", version);
+    OC_PRINTF("Package version: %s\n", version);
   }
   oc_swupdate_notify_new_version_available(device, "2.0",
                                            OC_SWUPDATE_RESULT_SUCCESS);
@@ -135,7 +136,7 @@ get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
            void *user_data)
 {
   (void)user_data;
-  PRINT("GET_switch:\n");
+  OC_PRINTF("GET_switch:\n");
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
@@ -158,7 +159,7 @@ post_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)user_data;
-  PRINT("POST_switch:\n");
+  OC_PRINTF("POST_switch:\n");
   bool state = false, bad_request = false;
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
@@ -225,7 +226,7 @@ static void
 random_pin_cb(const unsigned char *pin, size_t pin_len, void *data)
 {
   (void)data;
-  PRINT("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
+  OC_PRINTF("\n\nRandom PIN: %.*s\n\n", (int)pin_len, pin);
 }
 #endif /* OC_SECURITY */
 
@@ -235,32 +236,32 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
 {
   FILE *fp = fopen(file_path, "r");
   if (fp == NULL) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     return -1;
   }
   if (fseek(fp, 0, SEEK_END) != 0) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
   long pem_len = ftell(fp);
   if (pem_len < 0) {
-    PRINT("ERROR: could not obtain length of file\n");
+    OC_PRINTF("ERROR: could not obtain length of file\n");
     fclose(fp);
     return -1;
   }
   if (pem_len >= (long)*buffer_len) {
-    PRINT("ERROR: buffer provided too small\n");
+    OC_PRINTF("ERROR: buffer provided too small\n");
     fclose(fp);
     return -1;
   }
   if (fseek(fp, 0, SEEK_SET) != 0) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
   if (fread(buffer, 1, pem_len, fp) < (size_t)pem_len) {
-    PRINT("ERROR: unable to read PEM\n");
+    OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;
   }
@@ -280,14 +281,14 @@ factory_presets_cb(size_t device, void *data)
   char cert[8192];
   size_t cert_len = 8192;
   if (read_pem("pki_certs/ee.pem", cert, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    OC_PRINTF("ERROR: unable to read certificates\n");
     return;
   }
 
   char key[4096];
   size_t key_len = 4096;
   if (read_pem("pki_certs/key.pem", key, &key_len) < 0) {
-    PRINT("ERROR: unable to read private key");
+    OC_PRINTF("ERROR: unable to read private key");
     return;
   }
 
@@ -295,13 +296,13 @@ factory_presets_cb(size_t device, void *data)
                                       (const unsigned char *)key, key_len);
 
   if (ee_credid < 0) {
-    PRINT("ERROR installing manufacturer EE cert\n");
+    OC_PRINTF("ERROR installing manufacturer EE cert\n");
     return;
   }
 
   cert_len = 8192;
   if (read_pem("pki_certs/subca1.pem", cert, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    OC_PRINTF("ERROR: unable to read certificates\n");
     return;
   }
 
@@ -309,20 +310,20 @@ factory_presets_cb(size_t device, void *data)
     0, ee_credid, (const unsigned char *)cert, cert_len);
 
   if (subca_credid < 0) {
-    PRINT("ERROR installing intermediate CA cert\n");
+    OC_PRINTF("ERROR installing intermediate CA cert\n");
     return;
   }
 
   cert_len = 8192;
   if (read_pem("pki_certs/rootca1.pem", cert, &cert_len) < 0) {
-    PRINT("ERROR: unable to read certificates\n");
+    OC_PRINTF("ERROR: unable to read certificates\n");
     return;
   }
 
   int rootca_credid =
     oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)cert, cert_len);
   if (rootca_credid < 0) {
-    PRINT("ERROR installing root cert\n");
+    OC_PRINTF("ERROR installing root cert\n");
     return;
   }
 

@@ -18,6 +18,7 @@
 
 #include "oc_api.h"
 #include "port/oc_clock.h"
+#include "oc_log.h"
 #include <signal.h>
 #include <windows.h>
 
@@ -47,7 +48,7 @@ static oc_event_callback_retval_t
 stop_observe(void *data)
 {
   (void)data;
-  PRINT("Stopping OBSERVE\n");
+  OC_PRINTF("Stopping OBSERVE\n");
   oc_stop_observe(a_light, light_server);
   return OC_EVENT_DONE;
 }
@@ -55,21 +56,21 @@ stop_observe(void *data)
 static void
 observe_light(oc_client_response_t *data)
 {
-  PRINT("OBSERVE_light:\n");
+  OC_PRINTF("OBSERVE_light:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
-    PRINT("key %s, value ", oc_string(rep->name));
+    OC_PRINTF("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_BOOL:
-      PRINT("%d\n", rep->value.boolean);
+      OC_PRINTF("%d\n", rep->value.boolean);
       state = rep->value.boolean;
       break;
     case OC_REP_INT:
-      PRINT("%d\n", (int)rep->value.integer);
+      OC_PRINTF("%d\n", (int)rep->value.integer);
       power = (int)rep->value.integer;
       break;
     case OC_REP_STRING:
-      PRINT("%s\n", oc_string(rep->value.string));
+      OC_PRINTF("%s\n", oc_string(rep->value.string));
       oc_free_string(&name);
       oc_new_string(&name, oc_string(rep->value.string),
                     oc_string_len(rep->value.string));
@@ -84,29 +85,29 @@ observe_light(oc_client_response_t *data)
 static void
 post2_light(oc_client_response_t *data)
 {
-  PRINT("POST2_light:\n");
+  OC_PRINTF("POST2_light:\n");
   if (data->code == OC_STATUS_CHANGED)
-    PRINT("POST response: CHANGED\n");
+    OC_PRINTF("POST response: CHANGED\n");
   else if (data->code == OC_STATUS_CREATED)
-    PRINT("POST response: CREATED\n");
+    OC_PRINTF("POST response: CREATED\n");
   else
-    PRINT("POST response code %d\n", data->code);
+    OC_PRINTF("POST response code %d\n", data->code);
 
   oc_do_observe(a_light, light_server, NULL, &observe_light, LOW_QOS, NULL);
   oc_set_delayed_callback(NULL, &stop_observe, 30);
-  PRINT("Sent OBSERVE request\n");
+  OC_PRINTF("Sent OBSERVE request\n");
 }
 
 static void
 post_light(oc_client_response_t *data)
 {
-  PRINT("POST_light:\n");
+  OC_PRINTF("POST_light:\n");
   if (data->code == OC_STATUS_CHANGED)
-    PRINT("POST response: CHANGED\n");
+    OC_PRINTF("POST response: CHANGED\n");
   else if (data->code == OC_STATUS_CREATED)
-    PRINT("POST response: CREATED\n");
+    OC_PRINTF("POST response: CREATED\n");
   else
-    PRINT("POST response code %d\n", data->code);
+    OC_PRINTF("POST response code %d\n", data->code);
 
   if (oc_init_post(a_light, light_server, NULL, &post2_light, LOW_QOS, NULL)) {
     oc_rep_start_root_object();
@@ -114,22 +115,22 @@ post_light(oc_client_response_t *data)
     oc_rep_set_int(root, power, 55);
     oc_rep_end_root_object();
     if (oc_do_post())
-      PRINT("Sent POST request\n");
+      OC_PRINTF("Sent POST request\n");
     else
-      PRINT("Could not send POST request\n");
+      OC_PRINTF("Could not send POST request\n");
   } else
-    PRINT("Could not init POST request\n");
+    OC_PRINTF("Could not init POST request\n");
 }
 
 static void
 put_light(oc_client_response_t *data)
 {
-  PRINT("PUT_light:\n");
+  OC_PRINTF("PUT_light:\n");
 
   if (data->code == OC_STATUS_CHANGED)
-    PRINT("PUT response: CHANGED\n");
+    OC_PRINTF("PUT response: CHANGED\n");
   else
-    PRINT("PUT response code %d\n", data->code);
+    OC_PRINTF("PUT response code %d\n", data->code);
 
   if (oc_init_post(a_light, light_server, NULL, &post_light, LOW_QOS, NULL)) {
     oc_rep_start_root_object();
@@ -137,31 +138,31 @@ put_light(oc_client_response_t *data)
     oc_rep_set_int(root, power, 105);
     oc_rep_end_root_object();
     if (oc_do_post())
-      PRINT("Sent POST request\n");
+      OC_PRINTF("Sent POST request\n");
     else
-      PRINT("Could not send POST request\n");
+      OC_PRINTF("Could not send POST request\n");
   } else
-    PRINT("Could not init POST request\n");
+    OC_PRINTF("Could not init POST request\n");
 }
 
 static void
 get_light(oc_client_response_t *data)
 {
-  PRINT("GET_light:\n");
+  OC_PRINTF("GET_light:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
-    PRINT("key %s, value ", oc_string(rep->name));
+    OC_PRINTF("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_BOOL:
-      PRINT("%d\n", rep->value.boolean);
+      OC_PRINTF("%d\n", rep->value.boolean);
       state = rep->value.boolean;
       break;
     case OC_REP_INT:
-      PRINT("%d\n", (int)rep->value.integer);
+      OC_PRINTF("%d\n", (int)rep->value.integer);
       power = (int)rep->value.integer;
       break;
     case OC_REP_STRING:
-      PRINT("%s\n", oc_string(rep->value.string));
+      OC_PRINTF("%s\n", oc_string(rep->value.string));
       oc_free_string(&name);
       oc_new_string(&name, oc_string(rep->value.string),
                     oc_string_len(rep->value.string));
@@ -179,11 +180,11 @@ get_light(oc_client_response_t *data)
     oc_rep_end_root_object();
 
     if (oc_do_put())
-      PRINT("Sent PUT request\n");
+      OC_PRINTF("Sent PUT request\n");
     else
-      PRINT("Could not send PUT request\n");
+      OC_PRINTF("Could not send PUT request\n");
   } else
-    PRINT("Could not init PUT request\n");
+    OC_PRINTF("Could not init PUT request\n");
 }
 
 static oc_discovery_flags_t
@@ -198,21 +199,21 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   int i;
   size_t uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
-  PRINT("\n\nDISCOVERYCB %s %s %d\n\n", anchor, uri,
-        (int)oc_string_array_get_allocated_size(types));
+  OC_PRINTF("\n\nDISCOVERYCB %s %s %d\n\n", anchor, uri,
+            (int)oc_string_array_get_allocated_size(types));
   for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
-    PRINT("\n\nDISCOVERED RES %s\n\n\n", t);
+    OC_PRINTF("\n\nDISCOVERED RES %s\n\n\n", t);
     if (strlen(t) == 10 && strncmp(t, "core.light", 10) == 0) {
       oc_endpoint_list_copy(&light_server, endpoint);
       strncpy(a_light, uri, uri_len);
       a_light[uri_len] = '\0';
 
-      PRINT("Resource %s hosted at endpoints:\n", a_light);
+      OC_PRINTF("Resource %s hosted at endpoints:\n", a_light);
       oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
-        PRINTipaddr(*ep);
-        PRINT("\n");
+        OC_PRINTipaddr(*ep);
+        OC_PRINTF("\n");
         ep = ep->next;
       }
 

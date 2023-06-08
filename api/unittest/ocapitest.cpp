@@ -23,6 +23,7 @@
 #include "oc_obt.h"
 #include "oc_uuid.h"
 #include "port/oc_clock.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_atomic.h"
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
@@ -673,7 +674,7 @@ public:
       std::vector<char> json{};
       json.reserve(256);
       oc_rep_to_json(data->payload, &json[0], json.capacity(), true);
-      PRINT("%s\n", json.data());
+      OC_PRINTF("%s\n", json.data());
     }
 #endif /* OC_DEBUG */
 
@@ -892,7 +893,7 @@ TEST_F(TestObt, DiscoverUnownedResources)
   EXPECT_EQ(0, oc_obt_discover_unowned_devices(onDeviceDiscovered, &devices));
   ApiHelper::poolEvents(5);
   for (const auto &device : devices) {
-    PRINT("Discovered unowned device: %s\n", device.c_str());
+    OC_PRINTF("Discovered unowned device: %s\n", device.c_str());
   }
   std::set<std::string> deviceUUIDs(devices.begin(), devices.end());
   if (ApiHelper::s_LightResource.enabled) {

@@ -59,13 +59,8 @@
 #endif
 #endif /* !__FILENAME__ */
 
-#define SPRINTF(...) sprintf(__VA_ARGS__)
-#define SNPRINTF(...) snprintf(__VA_ARGS__)
-
 #ifdef __ANDROID__
 #include "android/oc_log_android.h"
-#define TAG "OC-JNI"
-#define PRINT(...) __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
 
 #if defined(OC_DEBUG) || defined(OC_PUSHDEBUG)
 #define OC_LOG(level, ...)                                                     \
@@ -82,10 +77,6 @@
 #endif /* !defined(OC_DEBUG) && !defined(OC_PUSHDEBUG) */
 #endif
 
-#ifndef PRINT
-#define PRINT(...) printf(__VA_ARGS__)
-#endif /* !PRINT */
-
 // port's layer can override this macro to provide its own logger
 #ifndef OC_LOG
 #define OC_LOG(log_level, ...)                                                 \
@@ -101,10 +92,11 @@
     }                                                                          \
     char _oc_log_fn_buf[64] = { 0 };                                           \
     oc_clock_time_rfc3339(_oc_log_fn_buf, sizeof(_oc_log_fn_buf));             \
-    PRINT("[OC %s] %s: %s:%d <%s>: ", _oc_log_fn_buf,                          \
-          oc_log_level_to_label(log_level), __FILENAME__, __LINE__, __func__); \
-    PRINT(__VA_ARGS__);                                                        \
-    PRINT("\n");                                                               \
+    OC_PRINTF("[OC %s] %s: %s:%d <%s>: ", _oc_log_fn_buf,                      \
+              oc_log_level_to_label(log_level), __FILENAME__, __LINE__,        \
+              __func__);                                                       \
+    OC_PRINTF(__VA_ARGS__);                                                    \
+    OC_PRINTF("\n");                                                           \
     fflush(stdout);                                                            \
   } while (0)
 #endif /* !OC_LOG */
@@ -167,105 +159,6 @@
 #endif
 #endif /* !OC_ERR */
 
-#define PRINT_ENDPOINT_ADDR(endpoint, addr_memb)                               \
-  do {                                                                         \
-    const char *scheme = "coap";                                               \
-    if ((endpoint).flags & SECURED)                                            \
-      scheme = "coaps";                                                        \
-    if ((endpoint).flags & TCP)                                                \
-      scheme = "coap+tcp";                                                     \
-    if ((endpoint).flags & TCP && (endpoint).flags & SECURED)                  \
-      scheme = "coaps+tcp";                                                    \
-    if ((endpoint).flags & IPV4) {                                             \
-      PRINT("%s://%d.%d.%d.%d:%d", scheme,                                     \
-            ((endpoint).addr_memb.ipv4.address)[0],                            \
-            ((endpoint).addr_memb.ipv4.address)[1],                            \
-            ((endpoint).addr_memb.ipv4.address)[2],                            \
-            ((endpoint).addr_memb.ipv4.address)[3],                            \
-            (endpoint).addr_memb.ipv4.port);                                   \
-    } else {                                                                   \
-      PRINT("%s://[", scheme);                                                 \
-      PRINT("%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x"            \
-            ":%02x%02x:%02x%02x",                                              \
-            ((endpoint).addr_memb.ipv6.address)[0],                            \
-            ((endpoint).addr_memb.ipv6.address)[1],                            \
-            ((endpoint).addr_memb.ipv6.address)[2],                            \
-            ((endpoint).addr_memb.ipv6.address)[3],                            \
-            ((endpoint).addr_memb.ipv6.address)[4],                            \
-            ((endpoint).addr_memb.ipv6.address)[5],                            \
-            ((endpoint).addr_memb.ipv6.address)[6],                            \
-            ((endpoint).addr_memb.ipv6.address)[7],                            \
-            ((endpoint).addr_memb.ipv6.address)[8],                            \
-            ((endpoint).addr_memb.ipv6.address)[9],                            \
-            ((endpoint).addr_memb.ipv6.address)[10],                           \
-            ((endpoint).addr_memb.ipv6.address)[11],                           \
-            ((endpoint).addr_memb.ipv6.address)[12],                           \
-            ((endpoint).addr_memb.ipv6.address)[13],                           \
-            ((endpoint).addr_memb.ipv6.address)[14],                           \
-            ((endpoint).addr_memb.ipv6.address)[15]);                          \
-      if ((endpoint).addr_memb.ipv6.scope > 0) {                               \
-        PRINT("%%%d", (int)(endpoint).addr_memb.ipv6.scope);                   \
-      }                                                                        \
-      PRINT("]:%d", (int)(endpoint).addr_memb.ipv6.port);                      \
-    }                                                                          \
-  } while (0)
-
-#define PRINTipaddr(endpoint) PRINT_ENDPOINT_ADDR(endpoint, addr)
-#define PRINTipaddr_local(endpoint) PRINT_ENDPOINT_ADDR(endpoint, addr_local)
-
-#define IPADDR_BUFF_SIZE 64 // max size : scheme://[ipv6%scope]:port = 63 bytes
-
-#define SNPRINT_ENDPOINT_ADDR(str, size, endpoint, addr_memb)                  \
-  do {                                                                         \
-    const char *scheme = "coap";                                               \
-    if ((endpoint).flags & SECURED)                                            \
-      scheme = "coaps";                                                        \
-    if ((endpoint).flags & TCP)                                                \
-      scheme = "coap+tcp";                                                     \
-    if ((endpoint).flags & TCP && (endpoint).flags & SECURED)                  \
-      scheme = "coaps+tcp";                                                    \
-    memset(str, 0, size);                                                      \
-    if ((endpoint).flags & IPV4) {                                             \
-      SNPRINTF(str, size, "%s://%d.%d.%d.%d:%d", scheme,                       \
-               ((endpoint).addr_memb.ipv4.address)[0],                         \
-               ((endpoint).addr_memb.ipv4.address)[1],                         \
-               ((endpoint).addr_memb.ipv4.address)[2],                         \
-               ((endpoint).addr_memb.ipv4.address)[3],                         \
-               (endpoint).addr_memb.ipv4.port);                                \
-    } else {                                                                   \
-      char scope[5] = { 0 };                                                   \
-      if ((endpoint).addr_memb.ipv6.scope > 0) {                               \
-        SNPRINTF(scope, sizeof(scope), "%%%d",                                 \
-                 (int)(endpoint).addr_memb.ipv6.scope);                        \
-      }                                                                        \
-      SNPRINTF(                                                                \
-        str, size,                                                             \
-        "%s://"                                                                \
-        "[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:"     \
-        "%02x%02x%s]:%d",                                                      \
-        scheme, ((endpoint).addr_memb.ipv6.address)[0],                        \
-        ((endpoint).addr_memb.ipv6.address)[1],                                \
-        ((endpoint).addr_memb.ipv6.address)[2],                                \
-        ((endpoint).addr_memb.ipv6.address)[3],                                \
-        ((endpoint).addr_memb.ipv6.address)[4],                                \
-        ((endpoint).addr_memb.ipv6.address)[5],                                \
-        ((endpoint).addr_memb.ipv6.address)[6],                                \
-        ((endpoint).addr_memb.ipv6.address)[7],                                \
-        ((endpoint).addr_memb.ipv6.address)[8],                                \
-        ((endpoint).addr_memb.ipv6.address)[9],                                \
-        ((endpoint).addr_memb.ipv6.address)[10],                               \
-        ((endpoint).addr_memb.ipv6.address)[11],                               \
-        ((endpoint).addr_memb.ipv6.address)[12],                               \
-        ((endpoint).addr_memb.ipv6.address)[13],                               \
-        ((endpoint).addr_memb.ipv6.address)[14],                               \
-        ((endpoint).addr_memb.ipv6.address)[15], scope,                        \
-        (endpoint).addr_memb.ipv6.port);                                       \
-    }                                                                          \
-  } while (0)
-
-#define SNPRINTFipaddr(str, size, endpoint)                                    \
-  SNPRINT_ENDPOINT_ADDR(str, size, endpoint, addr)
-
 #define SNPRINTFbytes(buff, size, data, len)                                   \
   do {                                                                         \
     char *beg = (buff);                                                        \
@@ -273,8 +166,9 @@
     /* without _oc_log_ret = 9 has sometimes */                                \
     uint8_t *_oc_log_data = (uint8_t *)(data);                                 \
     for (size_t i = 0; (beg <= (end - 3)) && (i < (size_t)(len)); i++) {       \
-      int _oc_log_ret = (i == 0) ? SPRINTF(beg, "%02x", _oc_log_data[i])       \
-                                 : SPRINTF(beg, ":%02x", _oc_log_data[i]);     \
+      int _oc_log_ret =                                                        \
+        (i == 0) ? OC_SNPRINTF(beg, end - beg, "%02x", _oc_log_data[i])        \
+                 : OC_SNPRINTF(beg, end - beg, ":%02x", _oc_log_data[i]);      \
       if (_oc_log_ret < 0) {                                                   \
         break;                                                                 \
       }                                                                        \
@@ -291,8 +185,9 @@
     }                                                                          \
     char _oc_log_endpoint_buf[256];                                            \
     memset(_oc_log_endpoint_buf, 0, sizeof(_oc_log_endpoint_buf));             \
-    SNPRINT_ENDPOINT_ADDR(_oc_log_endpoint_buf, sizeof(_oc_log_endpoint_buf),  \
-                          endpoint, addr_memb);                                \
+    OC_SNPRINT_ENDPOINT_ADDR(_oc_log_endpoint_buf,                             \
+                             sizeof(_oc_log_endpoint_buf), endpoint,           \
+                             addr_memb);                                       \
     if (logger->fn != NULL) {                                                  \
       logger->fn(OC_LOG_LEVEL_DEBUG, OC_LOG_COMPONENT_DEFAULT, __FILENAME__,   \
                  __LINE__, __func__, "%s", _oc_log_endpoint_buf);              \
@@ -300,9 +195,9 @@
     }                                                                          \
     char _oc_log_fn_buf[64] = { 0 };                                           \
     oc_clock_time_rfc3339(_oc_log_fn_buf, sizeof(_oc_log_fn_buf));             \
-    PRINT("[OC %s] %s: %s:%d <%s>: endpoint %s\n", _oc_log_fn_buf,             \
-          oc_log_level_to_label(OC_LOG_LEVEL_DEBUG), __FILENAME__, __LINE__,   \
-          __func__, _oc_log_endpoint_buf);                                     \
+    OC_PRINTF("[OC %s] %s: %s:%d <%s>: endpoint %s\n", _oc_log_fn_buf,         \
+              oc_log_level_to_label(OC_LOG_LEVEL_DEBUG), __FILENAME__,         \
+              __LINE__, __func__, _oc_log_endpoint_buf);                       \
     fflush(stdout);                                                            \
   } while (0)
 #ifndef OC_LOGipaddr
@@ -350,8 +245,8 @@
     }                                                                          \
     char _oc_log_fn_buf[64] = { 0 };                                           \
     oc_clock_time_rfc3339(_oc_log_fn_buf, sizeof(_oc_log_fn_buf));             \
-    PRINT("[OC %s] V: %s:%d <%s>: bytes %s\n", _oc_log_fn_buf, __FILENAME__,   \
-          __LINE__, __func__, _oc_log_bytes_buf_ptr);                          \
+    OC_PRINTF("[OC %s] V: %s:%d <%s>: bytes %s\n", _oc_log_fn_buf,             \
+              __FILENAME__, __LINE__, __func__, _oc_log_bytes_buf_ptr);        \
     oc_free_string(&_oc_log_bytes_buf);                                        \
     fflush(stdout);                                                            \
   } while (0)

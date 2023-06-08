@@ -29,7 +29,6 @@
 #include "oc_export.h"
 #include "oc_network_events.h"
 #include "oc_session_events.h"
-#include "port/oc_log_internal.h"
 #include "util/oc_atomic.h"
 #include "util/oc_features.h"
 #include "util/oc_process.h"

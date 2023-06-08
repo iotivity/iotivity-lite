@@ -57,6 +57,7 @@
 
 #include "oc_api.h"
 #include "port/oc_clock.h"
+#include "oc_log.h"
 #include <signal.h>
 #include <stdlib.h>
 
@@ -176,18 +177,18 @@ app_init(void)
 
     if (fread_ret == 1) {
       oc_set_introspection_data(0, buffer, buffer_size);
-      PRINT(
+      OC_PRINTF(
         "\tIntrospection data set 'server_introspection.cbor': %d [bytes]\n",
         (int)buffer_size);
     } else {
-      PRINT("%s", introspection_error);
+      OC_PRINTF("%s", introspection_error);
     }
     free(buffer);
   } else {
-    PRINT("%s", introspection_error);
+    OC_PRINTF("%s", introspection_error);
   }
 #else
-  PRINT("\t introspection via header file\n");
+  OC_PRINTF("\t introspection via header file\n");
 #endif
   return ret;
 }
@@ -204,19 +205,19 @@ check_on_readonly_common_resource_properties(oc_string_t name, bool error_state)
 {
   if (strcmp(oc_string(name), "n") == 0) {
     error_state = true;
-    PRINT("   property \"n\" is ReadOnly \n");
+    OC_PRINTF("   property \"n\" is ReadOnly \n");
   } else if (strcmp(oc_string(name), "if") == 0) {
     error_state = true;
-    PRINT("   property \"if\" is ReadOnly \n");
+    OC_PRINTF("   property \"if\" is ReadOnly \n");
   } else if (strcmp(oc_string(name), "rt") == 0) {
     error_state = true;
-    PRINT("   property \"rt\" is ReadOnly \n");
+    OC_PRINTF("   property \"rt\" is ReadOnly \n");
   } else if (strcmp(oc_string(name), "id") == 0) {
     error_state = true;
-    PRINT("   property \"id\" is ReadOnly \n");
+    OC_PRINTF("   property \"id\" is ReadOnly \n");
   } else if (strcmp(oc_string(name), "id") == 0) {
     error_state = true;
-    PRINT("   property \"id\" is ReadOnly \n");
+    OC_PRINTF("   property \"id\" is ReadOnly \n");
   }
   return error_state;
 }
@@ -249,25 +250,26 @@ get_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
   bool error_state = false;
   int oc_status_code = OC_STATUS_OK;
 
-  PRINT("-- Begin get_binaryswitch_both: interface %d\n", interfaces);
-  PRINT("-- Global storage status: %d\n", g_binaryswitch_both_storage_status);
+  OC_PRINTF("-- Begin get_binaryswitch_both: interface %d\n", interfaces);
+  OC_PRINTF("-- Global storage status: %d\n",
+            g_binaryswitch_both_storage_status);
   oc_rep_start_root_object();
   switch (interfaces) {
   case OC_IF_BASELINE:
-    PRINT("   Adding Baseline info\n");
+    OC_PRINTF("   Adding Baseline info\n");
     oc_process_baseline_interface(request->resource);
 
     /* property (boolean) 'value' */
     oc_rep_set_boolean(root, value, g_binaryswitch_both_value);
-    PRINT("   %s : %s\n", g_binaryswitch_both_RESOURCE_PROPERTY_NAME_value,
-          btoa(g_binaryswitch_both_value));
+    OC_PRINTF("   %s : %s\n", g_binaryswitch_both_RESOURCE_PROPERTY_NAME_value,
+              btoa(g_binaryswitch_both_value));
     break;
   case OC_IF_A:
 
     /* property (boolean) 'value' */
     oc_rep_set_boolean(root, value, g_binaryswitch_both_value);
-    PRINT("   %s : %s\n", g_binaryswitch_both_RESOURCE_PROPERTY_NAME_value,
-          btoa(g_binaryswitch_both_value));
+    OC_PRINTF("   %s : %s\n", g_binaryswitch_both_RESOURCE_PROPERTY_NAME_value,
+              btoa(g_binaryswitch_both_value));
     break;
   case OC_IF_STARTUP:
     if (g_binaryswitch_both_storage_status != 1) {
@@ -282,9 +284,9 @@ get_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
       temp_size = oc_storage_read("g_binaryswitch_both_value",
                                   (uint8_t *)&temp_value, sizeof(temp_value));
       oc_rep_set_boolean(root, value, temp_value);
-      PRINT("   (startup) %s : %s (%ld)\n",
-            g_binaryswitch_both_RESOURCE_PROPERTY_NAME_value, btoa(temp_value),
-            temp_size);
+      OC_PRINTF("   (startup) %s : %s (%ld)\n",
+                g_binaryswitch_both_RESOURCE_PROPERTY_NAME_value,
+                btoa(temp_value), temp_size);
     }
     break;
   case OC_IF_STARTUP_REVERT:
@@ -303,7 +305,7 @@ get_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
      long temp_size;
      temp_size = oc_storage_read("g_binaryswitch_both_value",
   (uint8_t*)&temp_value, sizeof(temp_value)); oc_rep_set_boolean(root, value,
-  temp_value); PRINT("   (startup) %s : %s (%ld)\n",
+  temp_value); OC_PRINTF("   (startup) %s : %s (%ld)\n",
   g_binaryswitch_both_RESOURCE_PROPERTY_NAME_value,  btoa(temp_value),
   temp_size);
     }
@@ -318,7 +320,7 @@ get_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
   } else {
     oc_send_response(request, OC_STATUS_BAD_OPTION);
   }
-  PRINT("-- End get_binaryswitch_both\n");
+  OC_PRINTF("-- End get_binaryswitch_both\n");
 }
 
 /**
@@ -349,24 +351,26 @@ get_binaryswitch_revert(oc_request_t *request, oc_interface_mask_t interfaces,
   bool error_state = false;
   int oc_status_code = OC_STATUS_OK;
 
-  PRINT("-- Begin get_binaryswitch_revert: interface %d\n", interfaces);
+  OC_PRINTF("-- Begin get_binaryswitch_revert: interface %d\n", interfaces);
   oc_rep_start_root_object();
   switch (interfaces) {
   case OC_IF_BASELINE:
-    PRINT("   Adding Baseline info\n");
+    OC_PRINTF("   Adding Baseline info\n");
     oc_process_baseline_interface(request->resource);
 
     /* property (boolean) 'value' */
     oc_rep_set_boolean(root, value, g_binaryswitch_revert_value);
-    PRINT("   %s : %s\n", g_binaryswitch_revert_RESOURCE_PROPERTY_NAME_value,
-          btoa(g_binaryswitch_revert_value));
+    OC_PRINTF("   %s : %s\n",
+              g_binaryswitch_revert_RESOURCE_PROPERTY_NAME_value,
+              btoa(g_binaryswitch_revert_value));
     break;
   case OC_IF_A:
 
     /* property (boolean) 'value' */
     oc_rep_set_boolean(root, value, g_binaryswitch_revert_value);
-    PRINT("   %s : %s\n", g_binaryswitch_revert_RESOURCE_PROPERTY_NAME_value,
-          btoa(g_binaryswitch_revert_value));
+    OC_PRINTF("   %s : %s\n",
+              g_binaryswitch_revert_RESOURCE_PROPERTY_NAME_value,
+              btoa(g_binaryswitch_revert_value));
     break;
   case OC_IF_STARTUP_REVERT:
     if (g_binaryswitch_revert_storage_status != 2) {
@@ -381,7 +385,7 @@ get_binaryswitch_revert(oc_request_t *request, oc_interface_mask_t interfaces,
      temp_size = oc_storage_read("g_binaryswitch_revert_value",
     (uint8_t*)&temp_value, sizeof(temp_value));
      // oc_rep_set_boolean(root, value, temp_value);
-     PRINT("   (startup) %s : %s (%ld)\n",
+     OC_PRINTF("   (startup) %s : %s (%ld)\n",
     g_binaryswitch_revert_RESOURCE_PROPERTY_NAME_value,  btoa(temp_value),
     temp_size);
     }
@@ -396,7 +400,7 @@ get_binaryswitch_revert(oc_request_t *request, oc_interface_mask_t interfaces,
   } else {
     oc_send_response(request, OC_STATUS_BAD_OPTION);
   }
-  PRINT("-- End get_binaryswitch_revert\n");
+  OC_PRINTF("-- End get_binaryswitch_revert\n");
 }
 
 /**
@@ -426,24 +430,26 @@ get_binaryswitch_startup(oc_request_t *request, oc_interface_mask_t interfaces,
      pass CTT1.2.2 */
   bool error_state = false;
 
-  PRINT("-- Begin get_binaryswitch_startup: interface %d\n", interfaces);
+  OC_PRINTF("-- Begin get_binaryswitch_startup: interface %d\n", interfaces);
   oc_rep_start_root_object();
   switch (interfaces) {
   case OC_IF_BASELINE:
-    PRINT("   Adding Baseline info\n");
+    OC_PRINTF("   Adding Baseline info\n");
     oc_process_baseline_interface(request->resource);
 
     /* property (boolean) 'value' */
     oc_rep_set_boolean(root, value, g_binaryswitch_startup_value);
-    PRINT("   %s : %s\n", g_binaryswitch_startup_RESOURCE_PROPERTY_NAME_value,
-          btoa(g_binaryswitch_startup_value));
+    OC_PRINTF("   %s : %s\n",
+              g_binaryswitch_startup_RESOURCE_PROPERTY_NAME_value,
+              btoa(g_binaryswitch_startup_value));
     break;
   case OC_IF_A:
 
     /* property (boolean) 'value' */
     oc_rep_set_boolean(root, value, g_binaryswitch_startup_value);
-    PRINT("   %s : %s\n", g_binaryswitch_startup_RESOURCE_PROPERTY_NAME_value,
-          btoa(g_binaryswitch_startup_value));
+    OC_PRINTF("   %s : %s\n",
+              g_binaryswitch_startup_RESOURCE_PROPERTY_NAME_value,
+              btoa(g_binaryswitch_startup_value));
     break;
   case OC_IF_STARTUP:
     if (g_binaryswitch_startup_storage_status != 1) {
@@ -457,9 +463,9 @@ get_binaryswitch_startup(oc_request_t *request, oc_interface_mask_t interfaces,
       temp_size = oc_storage_read("g_binaryswitch_startup_value",
                                   (uint8_t *)&temp_value, sizeof(temp_value));
       oc_rep_set_boolean(root, value, temp_value);
-      PRINT("   (startup) %s : %s (%ld)\n",
-            g_binaryswitch_startup_RESOURCE_PROPERTY_NAME_value,
-            btoa(temp_value), temp_size);
+      OC_PRINTF("   (startup) %s : %s (%ld)\n",
+                g_binaryswitch_startup_RESOURCE_PROPERTY_NAME_value,
+                btoa(temp_value), temp_size);
     }
     break;
   default:
@@ -471,7 +477,7 @@ get_binaryswitch_startup(oc_request_t *request, oc_interface_mask_t interfaces,
   } else {
     oc_send_response(request, OC_STATUS_BAD_OPTION);
   }
-  PRINT("-- End get_binaryswitch_startup\n");
+  OC_PRINTF("-- End get_binaryswitch_startup\n");
 }
 
 /**
@@ -495,8 +501,9 @@ post_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)interfaces;
   (void)user_data;
   bool error_state = false;
-  PRINT("-- Begin post_binaryswitch_both:\n");
-  PRINT("-- Global storage status: %d\n", g_binaryswitch_both_storage_status);
+  OC_PRINTF("-- Begin post_binaryswitch_both:\n");
+  OC_PRINTF("-- Global storage status: %d\n",
+            g_binaryswitch_both_storage_status);
   oc_rep_t *rep = request->request_payload;
 
   /* loop over the request document for each required input field to check if
@@ -512,12 +519,12 @@ post_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
   }
   if (var_in_request == false) {
     error_state = true;
-    PRINT(" required property: 'value' not in request\n");
+    OC_PRINTF(" required property: 'value' not in request\n");
   }
   /* loop over the request document to check if all inputs are ok */
   rep = request->request_payload;
   while (rep != NULL) {
-    PRINT("key: (check) %s \n", oc_string(rep->name));
+    OC_PRINTF("key: (check) %s \n", oc_string(rep->name));
 
     error_state =
       check_on_readonly_common_resource_properties(rep->name, error_state);
@@ -526,7 +533,7 @@ post_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
       /* property "value" of type boolean exist in payload */
       if (rep->type != OC_REP_BOOL) {
         error_state = true;
-        PRINT("   property 'value' is not of type bool %d \n", rep->type);
+        OC_PRINTF("   property 'value' is not of type bool %d \n", rep->type);
       }
     }
     rep = rep->next;
@@ -543,7 +550,7 @@ post_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
       /* loop over all the properties in the input document */
       oc_rep_t *rep = request->request_payload;
       while (rep != NULL) {
-        PRINT("key: (assign startup) %s \n", oc_string(rep->name));
+        OC_PRINTF("key: (assign startup) %s \n", oc_string(rep->name));
         /* no error: assign the variables */
 
         if (strcmp(oc_string(rep->name),
@@ -553,13 +560,13 @@ post_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
           temp_size = oc_storage_write("g_binaryswitch_both_value",
                                        (uint8_t *)&rep->value.boolean,
                                        sizeof(g_binaryswitch_both_value));
-          PRINT("  storage (startup)  property 'value' : %s (%ld)\n",
-                btoa(rep->value.boolean), temp_size);
+          OC_PRINTF("  storage (startup)  property 'value' : %s (%ld)\n",
+                    btoa(rep->value.boolean), temp_size);
         }
         rep = rep->next;
       }
       /* set the response */
-      PRINT("Set response (startup) \n");
+      OC_PRINTF("Set response (startup) \n");
       oc_rep_start_root_object();
 
       /* property (boolean) 'value' */
@@ -569,9 +576,9 @@ post_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
         temp_size = oc_storage_read("g_binaryswitch_both_value",
                                     (uint8_t *)&temp_value, sizeof(temp_value));
         oc_rep_set_boolean(root, value, temp_value);
-        PRINT("   (startup) %s : %s (%ld)\n",
-              g_binaryswitch_both_RESOURCE_PROPERTY_NAME_value,
-              btoa(temp_value), temp_size);
+        OC_PRINTF("   (startup) %s : %s (%ld)\n",
+                  g_binaryswitch_both_RESOURCE_PROPERTY_NAME_value,
+                  btoa(temp_value), temp_size);
       }
       oc_rep_end_root_object();
       oc_send_response(request, OC_STATUS_CHANGED);
@@ -584,7 +591,7 @@ post_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
       /* loop over all the properties in the input document */
       oc_rep_t *rep = request->request_payload;
       while (rep != NULL) {
-        PRINT("key: (assign startup.revert) %s \n", oc_string(rep->name));
+        OC_PRINTF("key: (assign startup.revert) %s \n", oc_string(rep->name));
         /* no error: assign the variables */
 
         if (strcmp(oc_string(rep->name),
@@ -594,13 +601,13 @@ post_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
           temp_size = oc_storage_write("g_binaryswitch_both_value",
                                        (uint8_t *)&rep->value.boolean,
                                        sizeof(g_binaryswitch_both_value));
-          PRINT("  storage (startup.revert)  property 'value' : %s (%ld)\n",
-                btoa(rep->value.boolean), temp_size);
+          OC_PRINTF("  storage (startup.revert)  property 'value' : %s (%ld)\n",
+                    btoa(rep->value.boolean), temp_size);
         }
         rep = rep->next;
       }
       /* set the response */
-      PRINT("Set response (startup) \n");
+      OC_PRINTF("Set response (startup) \n");
       oc_rep_start_root_object();
 
       /* property (boolean) 'value' */
@@ -610,9 +617,9 @@ post_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
         temp_size = oc_storage_read("g_binaryswitch_both_value",
                                     (uint8_t *)&temp_value, sizeof(temp_value));
         oc_rep_set_boolean(root, value, temp_value);
-        PRINT("   (startup.revert) %s : %s (%ld)\n",
-              g_binaryswitch_both_RESOURCE_PROPERTY_NAME_value,
-              btoa(temp_value), temp_size);
+        OC_PRINTF("   (startup.revert) %s : %s (%ld)\n",
+                  g_binaryswitch_both_RESOURCE_PROPERTY_NAME_value,
+                  btoa(temp_value), temp_size);
       }
       oc_rep_end_root_object();
       oc_send_response(request, OC_STATUS_CHANGED);
@@ -622,7 +629,8 @@ post_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
         /* write the properties to the storage */
         oc_rep_t *rep = request->request_payload;
         while (rep != NULL) {
-          PRINT("key: (assign startup default) %s \n", oc_string(rep->name));
+          OC_PRINTF("key: (assign startup default) %s \n",
+                    oc_string(rep->name));
           /* no error: assign the variables */
 
           if (strcmp(oc_string(rep->name),
@@ -632,8 +640,9 @@ post_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
             temp_size = oc_storage_write("g_binaryswitch_both_value",
                                          (uint8_t *)&rep->value.boolean,
                                          sizeof(g_binaryswitch_both_value));
-            PRINT("  storage (startup default)  property 'value' : %s (%ld)\n",
-                  btoa(rep->value.boolean), temp_size);
+            OC_PRINTF(
+              "  storage (startup default)  property 'value' : %s (%ld)\n",
+              btoa(rep->value.boolean), temp_size);
           }
           rep = rep->next;
         }
@@ -641,23 +650,23 @@ post_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
       /* loop over all the properties in the input document */
       oc_rep_t *rep = request->request_payload;
       while (rep != NULL) {
-        PRINT("key: (assign) %s \n", oc_string(rep->name));
+        OC_PRINTF("key: (assign) %s \n", oc_string(rep->name));
         /* no error: assign the variables */
 
         if (strcmp(oc_string(rep->name),
                    g_binaryswitch_both_RESOURCE_PROPERTY_NAME_value) == 0) {
           /* assign "value" */
-          PRINT("  property 'value' : %s\n", btoa(rep->value.boolean));
+          OC_PRINTF("  property 'value' : %s\n", btoa(rep->value.boolean));
           g_binaryswitch_both_value = rep->value.boolean;
         }
         rep = rep->next;
       }
       /* set the response */
-      PRINT("Set response for default interface \n");
+      OC_PRINTF("Set response for default interface \n");
       oc_rep_start_root_object();
       /*oc_process_baseline_interface(request->resource); */
-      PRINT("   %s : %s", g_binaryswitch_both_RESOURCE_PROPERTY_NAME_value,
-            btoa(g_binaryswitch_both_value));
+      OC_PRINTF("   %s : %s", g_binaryswitch_both_RESOURCE_PROPERTY_NAME_value,
+                btoa(g_binaryswitch_both_value));
       oc_rep_set_boolean(root, value, g_binaryswitch_both_value);
       // oc_storage_write("g_binaryswitch_both_value",
       // (uint8_t*)&g_binaryswitch_both_value,
@@ -672,12 +681,12 @@ post_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
     }
     }
   } else {
-    PRINT("  Returning Error \n");
+    OC_PRINTF("  Returning Error \n");
     /* TODO: add error response, if any */
     // oc_send_response(request, OC_STATUS_NOT_MODIFIED);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
-  PRINT("-- End post_binaryswitch_both\n");
+  OC_PRINTF("-- End post_binaryswitch_both\n");
 }
 
 /**
@@ -701,7 +710,7 @@ post_binaryswitch_revert(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)interfaces;
   (void)user_data;
   bool error_state = false;
-  PRINT("-- Begin post_binaryswitch_revert:\n");
+  OC_PRINTF("-- Begin post_binaryswitch_revert:\n");
   oc_rep_t *rep = request->request_payload;
 
   /* loop over the request document for each required input field to check if
@@ -717,12 +726,12 @@ post_binaryswitch_revert(oc_request_t *request, oc_interface_mask_t interfaces,
   }
   if (var_in_request == false) {
     error_state = true;
-    PRINT(" required property: 'value' not in request\n");
+    OC_PRINTF(" required property: 'value' not in request\n");
   }
   /* loop over the request document to check if all inputs are ok */
   rep = request->request_payload;
   while (rep != NULL) {
-    PRINT("key: (check) %s \n", oc_string(rep->name));
+    OC_PRINTF("key: (check) %s \n", oc_string(rep->name));
 
     error_state =
       check_on_readonly_common_resource_properties(rep->name, error_state);
@@ -731,7 +740,7 @@ post_binaryswitch_revert(oc_request_t *request, oc_interface_mask_t interfaces,
       /* property "value" of type boolean exist in payload */
       if (rep->type != OC_REP_BOOL) {
         error_state = true;
-        PRINT("   property 'value' is not of type bool %d \n", rep->type);
+        OC_PRINTF("   property 'value' is not of type bool %d \n", rep->type);
       }
     }
     rep = rep->next;
@@ -748,7 +757,7 @@ post_binaryswitch_revert(oc_request_t *request, oc_interface_mask_t interfaces,
       /* loop over all the properties in the input document */
       oc_rep_t *rep = request->request_payload;
       while (rep != NULL) {
-        PRINT("key: (assign startup) %s \n", oc_string(rep->name));
+        OC_PRINTF("key: (assign startup) %s \n", oc_string(rep->name));
         /* no error: assign the variables */
 
         if (strcmp(oc_string(rep->name),
@@ -758,13 +767,13 @@ post_binaryswitch_revert(oc_request_t *request, oc_interface_mask_t interfaces,
           temp_size = oc_storage_write("g_binaryswitch_revert_value",
                                        (uint8_t *)&rep->value.boolean,
                                        sizeof(g_binaryswitch_revert_value));
-          PRINT("  storage (startup.revert)  property 'value' : %s (%ld)\n",
-                btoa(rep->value.boolean), temp_size);
+          OC_PRINTF("  storage (startup.revert)  property 'value' : %s (%ld)\n",
+                    btoa(rep->value.boolean), temp_size);
         }
         rep = rep->next;
       }
       /* set the response */
-      PRINT("Set response (startup) \n");
+      OC_PRINTF("Set response (startup) \n");
       oc_rep_start_root_object();
 
       /* property (boolean) 'value' */
@@ -774,9 +783,9 @@ post_binaryswitch_revert(oc_request_t *request, oc_interface_mask_t interfaces,
         temp_size = oc_storage_read("g_binaryswitch_revert_value",
                                     (uint8_t *)&temp_value, sizeof(temp_value));
         oc_rep_set_boolean(root, value, temp_value);
-        PRINT("   (startup) %s : %s (%ld)\n",
-              g_binaryswitch_revert_RESOURCE_PROPERTY_NAME_value,
-              btoa(temp_value), temp_size);
+        OC_PRINTF("   (startup) %s : %s (%ld)\n",
+                  g_binaryswitch_revert_RESOURCE_PROPERTY_NAME_value,
+                  btoa(temp_value), temp_size);
       }
       oc_rep_end_root_object();
       oc_send_response(request, OC_STATUS_CHANGED);
@@ -786,7 +795,7 @@ post_binaryswitch_revert(oc_request_t *request, oc_interface_mask_t interfaces,
         /* write the properties to the storage */
         oc_rep_t *rep = request->request_payload;
         while (rep != NULL) {
-          PRINT("key: (assign startup) %s \n", oc_string(rep->name));
+          OC_PRINTF("key: (assign startup) %s \n", oc_string(rep->name));
           /* no error: assign the variables */
 
           if (strcmp(oc_string(rep->name),
@@ -796,8 +805,9 @@ post_binaryswitch_revert(oc_request_t *request, oc_interface_mask_t interfaces,
             temp_size = oc_storage_write("g_binaryswitch_revert_value",
                                          (uint8_t *)&rep->value.boolean,
                                          sizeof(g_binaryswitch_revert_value));
-            PRINT("  storage (startup.revert)  property 'value' : %s (%ld)\n",
-                  btoa(rep->value.boolean), temp_size);
+            OC_PRINTF(
+              "  storage (startup.revert)  property 'value' : %s (%ld)\n",
+              btoa(rep->value.boolean), temp_size);
           }
           rep = rep->next;
         }
@@ -805,23 +815,24 @@ post_binaryswitch_revert(oc_request_t *request, oc_interface_mask_t interfaces,
       /* loop over all the properties in the input document */
       oc_rep_t *rep = request->request_payload;
       while (rep != NULL) {
-        PRINT("key: (assign) %s \n", oc_string(rep->name));
+        OC_PRINTF("key: (assign) %s \n", oc_string(rep->name));
         /* no error: assign the variables */
 
         if (strcmp(oc_string(rep->name),
                    g_binaryswitch_revert_RESOURCE_PROPERTY_NAME_value) == 0) {
           /* assign "value" */
-          PRINT("  property 'value' : %s\n", btoa(rep->value.boolean));
+          OC_PRINTF("  property 'value' : %s\n", btoa(rep->value.boolean));
           g_binaryswitch_revert_value = rep->value.boolean;
         }
         rep = rep->next;
       }
       /* set the response */
-      PRINT("Set response \n");
+      OC_PRINTF("Set response \n");
       oc_rep_start_root_object();
       /*oc_process_baseline_interface(request->resource); */
-      PRINT("   %s : %s", g_binaryswitch_revert_RESOURCE_PROPERTY_NAME_value,
-            btoa(g_binaryswitch_revert_value));
+      OC_PRINTF("   %s : %s",
+                g_binaryswitch_revert_RESOURCE_PROPERTY_NAME_value,
+                btoa(g_binaryswitch_revert_value));
       oc_rep_set_boolean(root, value, g_binaryswitch_revert_value);
       oc_storage_write("g_binaryswitch_revert_value",
                        (uint8_t *)&g_binaryswitch_revert_value,
@@ -835,12 +846,12 @@ post_binaryswitch_revert(oc_request_t *request, oc_interface_mask_t interfaces,
     }
     }
   } else {
-    PRINT("  Returning Error \n");
+    OC_PRINTF("  Returning Error \n");
     /* TODO: add error response, if any */
     // oc_send_response(request, OC_STATUS_NOT_MODIFIED);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
-  PRINT("-- End post_binaryswitch_revert\n");
+  OC_PRINTF("-- End post_binaryswitch_revert\n");
 }
 
 /**
@@ -864,7 +875,7 @@ post_binaryswitch_startup(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)interfaces;
   (void)user_data;
   bool error_state = false;
-  PRINT("-- Begin post_binaryswitch_startup:\n");
+  OC_PRINTF("-- Begin post_binaryswitch_startup:\n");
   oc_rep_t *rep = request->request_payload;
 
   /* loop over the request document for each required input field to check if
@@ -880,12 +891,12 @@ post_binaryswitch_startup(oc_request_t *request, oc_interface_mask_t interfaces,
   }
   if (var_in_request == false) {
     error_state = true;
-    PRINT(" required property: 'value' not in request\n");
+    OC_PRINTF(" required property: 'value' not in request\n");
   }
   /* loop over the request document to check if all inputs are ok */
   rep = request->request_payload;
   while (rep != NULL) {
-    PRINT("key: (check) %s \n", oc_string(rep->name));
+    OC_PRINTF("key: (check) %s \n", oc_string(rep->name));
 
     error_state =
       check_on_readonly_common_resource_properties(rep->name, error_state);
@@ -894,7 +905,7 @@ post_binaryswitch_startup(oc_request_t *request, oc_interface_mask_t interfaces,
       /* property "value" of type boolean exist in payload */
       if (rep->type != OC_REP_BOOL) {
         error_state = true;
-        PRINT("   property 'value' is not of type bool %d \n", rep->type);
+        OC_PRINTF("   property 'value' is not of type bool %d \n", rep->type);
       }
     }
     rep = rep->next;
@@ -911,7 +922,7 @@ post_binaryswitch_startup(oc_request_t *request, oc_interface_mask_t interfaces,
       /* loop over all the properties in the input document */
       oc_rep_t *rep = request->request_payload;
       while (rep != NULL) {
-        PRINT("key: (assign startup) %s \n", oc_string(rep->name));
+        OC_PRINTF("key: (assign startup) %s \n", oc_string(rep->name));
         /* no error: assign the variables */
 
         if (strcmp(oc_string(rep->name),
@@ -921,13 +932,13 @@ post_binaryswitch_startup(oc_request_t *request, oc_interface_mask_t interfaces,
           temp_size = oc_storage_write("g_binaryswitch_startup_value",
                                        (uint8_t *)&rep->value.boolean,
                                        sizeof(g_binaryswitch_startup_value));
-          PRINT("  storage (startup.revert)  property 'value' : %s (%ld)\n",
-                btoa(rep->value.boolean), temp_size);
+          OC_PRINTF("  storage (startup.revert)  property 'value' : %s (%ld)\n",
+                    btoa(rep->value.boolean), temp_size);
         }
         rep = rep->next;
       }
       /* set the response */
-      PRINT("Set response (startup) \n");
+      OC_PRINTF("Set response (startup) \n");
       oc_rep_start_root_object();
 
       /* property (boolean) 'value' */
@@ -937,9 +948,9 @@ post_binaryswitch_startup(oc_request_t *request, oc_interface_mask_t interfaces,
         temp_size = oc_storage_read("g_binaryswitch_startup_value",
                                     (uint8_t *)&temp_value, sizeof(temp_value));
         oc_rep_set_boolean(root, value, temp_value);
-        PRINT("   (startup) %s : %s (%ld)\n",
-              g_binaryswitch_startup_RESOURCE_PROPERTY_NAME_value,
-              btoa(temp_value), temp_size);
+        OC_PRINTF("   (startup) %s : %s (%ld)\n",
+                  g_binaryswitch_startup_RESOURCE_PROPERTY_NAME_value,
+                  btoa(temp_value), temp_size);
       }
       oc_rep_end_root_object();
       oc_send_response(request, OC_STATUS_CHANGED);
@@ -948,23 +959,24 @@ post_binaryswitch_startup(oc_request_t *request, oc_interface_mask_t interfaces,
       /* loop over all the properties in the input document */
       oc_rep_t *rep = request->request_payload;
       while (rep != NULL) {
-        PRINT("key: (assign) %s \n", oc_string(rep->name));
+        OC_PRINTF("key: (assign) %s \n", oc_string(rep->name));
         /* no error: assign the variables */
 
         if (strcmp(oc_string(rep->name),
                    g_binaryswitch_startup_RESOURCE_PROPERTY_NAME_value) == 0) {
           /* assign "value" */
-          PRINT("  property 'value' : %s\n", btoa(rep->value.boolean));
+          OC_PRINTF("  property 'value' : %s\n", btoa(rep->value.boolean));
           g_binaryswitch_startup_value = rep->value.boolean;
         }
         rep = rep->next;
       }
       /* set the response */
-      PRINT("Set response \n");
+      OC_PRINTF("Set response \n");
       oc_rep_start_root_object();
       /*oc_process_baseline_interface(request->resource); */
-      PRINT("   %s : %s", g_binaryswitch_startup_RESOURCE_PROPERTY_NAME_value,
-            btoa(g_binaryswitch_startup_value));
+      OC_PRINTF("   %s : %s",
+                g_binaryswitch_startup_RESOURCE_PROPERTY_NAME_value,
+                btoa(g_binaryswitch_startup_value));
       oc_rep_set_boolean(root, value, g_binaryswitch_startup_value);
 
       oc_rep_end_root_object();
@@ -975,12 +987,12 @@ post_binaryswitch_startup(oc_request_t *request, oc_interface_mask_t interfaces,
     }
     }
   } else {
-    PRINT("  Returning Error \n");
+    OC_PRINTF("  Returning Error \n");
     /* TODO: add error response, if any */
     // oc_send_response(request, OC_STATUS_NOT_MODIFIED);
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
   }
-  PRINT("-- End post_binaryswitch_startup\n");
+  OC_PRINTF("-- End post_binaryswitch_startup\n");
 }
 
 /**
@@ -1000,14 +1012,15 @@ void
 register_resources(void)
 {
 
-  PRINT("Register Resource with local path \"/binaryswitch_both\"\n");
+  OC_PRINTF("Register Resource with local path \"/binaryswitch_both\"\n");
   res_binaryswitch_both =
     oc_new_resource(NULL, g_binaryswitch_both_RESOURCE_ENDPOINT,
                     g_binaryswitch_both_nr_resource_types, 0);
-  PRINT("     number of Resource Types: %d\n",
-        g_binaryswitch_both_nr_resource_types);
+  OC_PRINTF("     number of Resource Types: %d\n",
+            g_binaryswitch_both_nr_resource_types);
   for (int a = 0; a < g_binaryswitch_both_nr_resource_types; a++) {
-    PRINT("     Resource Type: \"%s\"\n", g_binaryswitch_both_RESOURCE_TYPE[a]);
+    OC_PRINTF("     Resource Type: \"%s\"\n",
+              g_binaryswitch_both_RESOURCE_TYPE[a]);
     oc_resource_bind_resource_type(res_binaryswitch_both,
                                    g_binaryswitch_both_RESOURCE_TYPE[a]);
   }
@@ -1021,7 +1034,7 @@ register_resources(void)
   oc_resource_bind_resource_interface(
     res_binaryswitch_both, OC_IF_STARTUP_REVERT); /* oic.if.startup.revert */
   oc_resource_set_default_interface(res_binaryswitch_both, OC_IF_A);
-  PRINT("     Default OCF Interface: 'oic.if.a'\n");
+  OC_PRINTF("     Default OCF Interface: 'oic.if.a'\n");
   oc_resource_set_discoverable(res_binaryswitch_both, true);
   /* periodic observable
      to be used when one wants to send an event per time slice
@@ -1041,15 +1054,15 @@ register_resources(void)
 
   oc_add_resource(res_binaryswitch_both);
 
-  PRINT("Register Resource with local path \"/binaryswitch_revert\"\n");
+  OC_PRINTF("Register Resource with local path \"/binaryswitch_revert\"\n");
   oc_resource_t *res_binaryswitch_revert =
     oc_new_resource(NULL, g_binaryswitch_revert_RESOURCE_ENDPOINT,
                     g_binaryswitch_revert_nr_resource_types, 0);
-  PRINT("     number of Resource Types: %d\n",
-        g_binaryswitch_revert_nr_resource_types);
+  OC_PRINTF("     number of Resource Types: %d\n",
+            g_binaryswitch_revert_nr_resource_types);
   for (int a = 0; a < g_binaryswitch_revert_nr_resource_types; a++) {
-    PRINT("     Resource Type: \"%s\"\n",
-          g_binaryswitch_revert_RESOURCE_TYPE[a]);
+    OC_PRINTF("     Resource Type: \"%s\"\n",
+              g_binaryswitch_revert_RESOURCE_TYPE[a]);
     oc_resource_bind_resource_type(res_binaryswitch_revert,
                                    g_binaryswitch_revert_RESOURCE_TYPE[a]);
   }
@@ -1061,7 +1074,7 @@ register_resources(void)
   oc_resource_bind_resource_interface(
     res_binaryswitch_revert, OC_IF_STARTUP_REVERT); /* oic.if.startup.revert */
   oc_resource_set_default_interface(res_binaryswitch_revert, OC_IF_A);
-  PRINT("     Default OCF Interface: 'oic.if.a'\n");
+  OC_PRINTF("     Default OCF Interface: 'oic.if.a'\n");
   oc_resource_set_discoverable(res_binaryswitch_revert, true);
   /* periodic observable
      to be used when one wants to send an event per time slice
@@ -1080,15 +1093,15 @@ register_resources(void)
 
   oc_add_resource(res_binaryswitch_revert);
 
-  PRINT("Register Resource with local path \"/binaryswitch_startup\"\n");
+  OC_PRINTF("Register Resource with local path \"/binaryswitch_startup\"\n");
   oc_resource_t *res_binaryswitch_startup =
     oc_new_resource(NULL, g_binaryswitch_startup_RESOURCE_ENDPOINT,
                     g_binaryswitch_startup_nr_resource_types, 0);
-  PRINT("     number of Resource Types: %d\n",
-        g_binaryswitch_startup_nr_resource_types);
+  OC_PRINTF("     number of Resource Types: %d\n",
+            g_binaryswitch_startup_nr_resource_types);
   for (int a = 0; a < g_binaryswitch_startup_nr_resource_types; a++) {
-    PRINT("     Resource Type: \"%s\"\n",
-          g_binaryswitch_startup_RESOURCE_TYPE[a]);
+    OC_PRINTF("     Resource Type: \"%s\"\n",
+              g_binaryswitch_startup_RESOURCE_TYPE[a]);
     oc_resource_bind_resource_type(res_binaryswitch_startup,
                                    g_binaryswitch_startup_RESOURCE_TYPE[a]);
   }
@@ -1100,7 +1113,7 @@ register_resources(void)
   oc_resource_bind_resource_interface(res_binaryswitch_startup,
                                       OC_IF_STARTUP); /* oic.if.startup */
   oc_resource_set_default_interface(res_binaryswitch_startup, OC_IF_A);
-  PRINT("     Default OCF Interface: 'oic.if.a'\n");
+  OC_PRINTF("     Default OCF Interface: 'oic.if.a'\n");
   oc_resource_set_discoverable(res_binaryswitch_startup, true);
   /* periodic observable
      to be used when one wants to send an event per time slice
@@ -1131,25 +1144,25 @@ factory_presets_cb(size_t device, void *data)
 #include "pki_certs.h"
   int credid =
     oc_pki_add_mfg_cert(0, (const unsigned char *)my_cert, strlen(my_cert),
-(const unsigned char *)my_key, strlen(my_key)); if (credid < 0) { PRINT("ERROR
-installing PKI certificate\n"); } else { PRINT("Successfully installed PKI
-certificate\n");
+(const unsigned char *)my_key, strlen(my_key)); if (credid < 0) {
+OC_PRINTF("ERROR installing PKI certificate\n"); } else {
+OC_PRINTF("Successfully installed PKI certificate\n");
   }
 
   if (oc_pki_add_mfg_intermediate_cert(0, credid, (const unsigned char *)int_ca,
-strlen(int_ca)) < 0) { PRINT("ERROR installing intermediate CA certificate\n");
-  } else {
-    PRINT("Successfully installed intermediate CA certificate\n");
+strlen(int_ca)) < 0) { OC_PRINTF("ERROR installing intermediate CA
+certificate\n"); } else { OC_PRINTF("Successfully installed intermediate CA
+certificate\n");
   }
 
   if (oc_pki_add_mfg_trust_anchor(0, (const unsigned char *)root_ca,
-strlen(root_ca)) < 0) { PRINT("ERROR installing root certificate\n"); } else {
-    PRINT("Successfully installed root certificate\n");
+strlen(root_ca)) < 0) { OC_PRINTF("ERROR installing root certificate\n"); } else
+{ OC_PRINTF("Successfully installed root certificate\n");
   }
 
   oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, credid);
 #else
-    PRINT("No PKI certificates installed\n");
+    OC_PRINTF("No PKI certificates installed\n");
 #endif
 }
 **/
@@ -1173,7 +1186,8 @@ initialize_variables(void)
                              (uint8_t *)&g_binaryswitch_both_value,
                              sizeof(g_binaryswitch_both_value));
   if (ret_size != sizeof(g_binaryswitch_both_value))
-    PRINT(" could not read store g_binaryswitch_both_value : %d\n", ret_size);
+    OC_PRINTF(" could not read store g_binaryswitch_both_value : %d\n",
+              ret_size);
   /* initialize global variables for resource "/binaryswitch_revert" */
   oc_storage_read("g_binaryswitch_revert_storage_status",
                   (uint8_t *)&g_binaryswitch_revert_storage_status,
@@ -1184,7 +1198,8 @@ initialize_variables(void)
                              (uint8_t *)&g_binaryswitch_revert_value,
                              sizeof(g_binaryswitch_revert_value));
   if (ret_size != sizeof(g_binaryswitch_revert_value))
-    PRINT(" could not read store g_binaryswitch_revert_value : %d\n", ret_size);
+    OC_PRINTF(" could not read store g_binaryswitch_revert_value : %d\n",
+              ret_size);
   /* initialize global variables for resource "/binaryswitch_startup" */
   oc_storage_read("g_binaryswitch_startup_storage_status",
                   (uint8_t *)&g_binaryswitch_startup_storage_status,
@@ -1195,8 +1210,8 @@ initialize_variables(void)
                              (uint8_t *)&g_binaryswitch_startup_value,
                              sizeof(g_binaryswitch_startup_value));
   if (ret_size != sizeof(g_binaryswitch_startup_value))
-    PRINT(" could not read store g_binaryswitch_startup_value : %d\n",
-          ret_size);
+    OC_PRINTF(" could not read store g_binaryswitch_startup_value : %d\n",
+              ret_size);
 
   /* set the flag for NO oic/con resource. */
   oc_set_con_res_announced(false);
@@ -1260,9 +1275,9 @@ main(void)
   /* install Ctrl-C */
   signal(SIGINT, handle_signal);
 
-  PRINT("Used input file : "
-        "\"../device_output/out_codegeneration_merged.swagger.json\"\n");
-  PRINT("OCF Server name : \"server_lite_4209\"\n");
+  OC_PRINTF("Used input file : "
+            "\"../device_output/out_codegeneration_merged.swagger.json\"\n");
+  OC_PRINTF("OCF Server name : \"server_lite_4209\"\n");
 
 /*
  The storage folder depends on the build system
@@ -1271,7 +1286,7 @@ main(void)
  folder is created in the makefile, with $target as name with _cred as post fix.
 */
 #ifdef OC_STORAGE
-  PRINT("\tstorage at './simpleserver_creds' \n");
+  OC_PRINTF("\tstorage at './simpleserver_creds' \n");
   oc_storage_config("./simpleserver_creds/");
 #endif
 
@@ -1294,12 +1309,12 @@ main(void)
   init = oc_main_init(&handler);
 
   if (init < 0) {
-    PRINT("oc_main_init failed %d, exiting.\n", init);
+    OC_PRINTF("oc_main_init failed %d, exiting.\n", init);
     return init;
   }
 
-  PRINT("OCF server \"server_lite_4209\" running, waiting on incoming "
-        "connections.\n");
+  OC_PRINTF("OCF server \"server_lite_4209\" running, waiting on incoming "
+            "connections.\n");
 
   oc_clock_time_t next_event;
 #ifdef WIN32

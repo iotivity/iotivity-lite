@@ -17,6 +17,7 @@
  ******************************************************************/
 
 #include "oc_api.h"
+#include "oc_log.h"
 #include <inttypes.h>
 
 static int
@@ -37,7 +38,7 @@ static oc_event_callback_retval_t
 stop_observe(void *data)
 {
   (void)data;
-  PRINT("Stopping OBSERVE\n");
+  OC_PRINTF("Stopping OBSERVE\n");
   oc_stop_observe(temp_1, temp_sensor);
   return OC_EVENT_DONE;
 }
@@ -47,10 +48,10 @@ get_temp(oc_client_response_t *data)
 {
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
-    PRINT("key %s, value ", oc_string(rep->name));
+    OC_PRINTF("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_INT:
-      PRINT("%" PRId64 "\n", rep->value.integer);
+      OC_PRINTF("%" PRId64 "\n", rep->value.integer);
       temperature = (int)rep->value.integer;
       break;
     default:
@@ -80,11 +81,11 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       strncpy(temp_1, uri, uri_len);
       temp_1[uri_len] = '\0';
 
-      PRINT("Resource %s hosted at endpoints:\n", temp_1);
+      OC_PRINTF("Resource %s hosted at endpoints:\n", temp_1);
       oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
-        PRINTipaddr(*ep);
-        PRINT("\n");
+        OC_PRINTipaddr(*ep);
+        OC_PRINTF("\n");
         ep = ep->next;
       }
 

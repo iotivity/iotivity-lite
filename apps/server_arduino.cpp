@@ -5,6 +5,7 @@
 #include "oc_connectivity.h"
 #include "oc_network_event_handler_internal.h"
 #include "oc_storage.h"
+#include "oc_log.h"
 #include "serial.h"
 #include "util/oc_process.h"
 

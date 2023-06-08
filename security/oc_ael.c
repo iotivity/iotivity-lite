@@ -30,6 +30,7 @@
 #include "oc_core_res.h"
 #include "oc_pstat.h"
 #include "oc_store.h"
+#include "port/oc_log_internal.h"
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
 #include <stdlib.h>

@@ -27,6 +27,7 @@
 #include "oc_sp.h"
 #include "oc_store.h"
 #include "port/oc_connectivity.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "port/oc_storage.h"
 #include "port/oc_storage_internal.h"

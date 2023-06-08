@@ -216,8 +216,8 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       OC_DBG("Resource %s hosted at endpoints:", a_light);
       oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
-        PRINTipaddr(*ep);
-        PRINT("\n");
+        OC_PRINTipaddr(*ep);
+        OC_PRINTF("\n");
         ep = ep->next;
       }
       oc_do_get(a_light, light_server, NULL, &get_light, LOW_QOS, NULL);

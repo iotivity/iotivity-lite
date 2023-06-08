@@ -115,24 +115,27 @@ oc_mem_trace_print_paces(void)
   mem_logger_s *mem_log_item_link =
     (mem_logger_s *)oc_list_head((&mInfo)->mem_log_list);
 
-  PRINT("==================================================================");
-  PRINT("=================\n");
-  PRINT("  %2s   %-22s   %11s    %9s   %5s    %5s    %5s \n", "No.", "Func",
-        "Address", "Size", "Req", "Cur", "Peak");
-  PRINT("------------------------------------------------------------------");
-  PRINT("-----------------\n");
+  OC_PRINTF(
+    "==================================================================");
+  OC_PRINTF("=================\n");
+  OC_PRINTF("  %2s   %-22s   %11s    %9s   %5s    %5s    %5s \n", "No.", "Func",
+            "Address", "Size", "Req", "Cur", "Peak");
+  OC_PRINTF(
+    "------------------------------------------------------------------");
+  OC_PRINTF("-----------------\n");
 
   while (mem_log_item_link) {
-    PRINT(" %3d   %-26.25s  %10p   %5d   %5s    %5d    %5d\n", ++cnt,
-          mem_log_item_link->func, mem_log_item_link->address,
-          mem_log_item_link->size,
-          (mem_log_item_link->type == MEM_TRACE_FREE) ? "Free" : "Alloc",
-          mem_log_item_link->current, mem_log_item_link->peak);
+    OC_PRINTF(" %3d   %-26.25s  %10p   %5d   %5s    %5d    %5d\n", ++cnt,
+              mem_log_item_link->func, mem_log_item_link->address,
+              mem_log_item_link->size,
+              (mem_log_item_link->type == MEM_TRACE_FREE) ? "Free" : "Alloc",
+              mem_log_item_link->current, mem_log_item_link->peak);
 
     mem_log_item_link = oc_list_item_next(mem_log_item_link);
   }
-  PRINT("===================================================================");
-  PRINT("================\n");
+  OC_PRINTF(
+    "===================================================================");
+  OC_PRINTF("================\n");
 }
 
 void
@@ -141,10 +144,10 @@ oc_mem_trace_shutdown(void)
   oc_mem_trace_print_paces();
 
   if (mInfo.current) {
-    PRINT("########################################################\n");
-    PRINT("####### Unreleased memory size: [%8d bytes] #######\n",
-          mInfo.current);
-    PRINT("########################################################\n");
+    OC_PRINTF("########################################################\n");
+    OC_PRINTF("####### Unreleased memory size: [%8d bytes] #######\n",
+              mInfo.current);
+    OC_PRINTF("########################################################\n");
   }
 
   oc_mem_trace_free();

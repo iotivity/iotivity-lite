@@ -34,7 +34,6 @@
 #include "oc_rep.h"
 #include "oc_ri.h"
 #include "oc_endpoint.h"
-#include "port/oc_log_internal.h"
 #include "util/oc_memb.h"
 #include "util/oc_process.h"
 

@@ -21,6 +21,7 @@
 #include "oc_core_res.h"
 #include "port/common/oc_ip.h"
 #include "port/oc_connectivity.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "util/oc_macros.h"
 #include "util/oc_memb.h"

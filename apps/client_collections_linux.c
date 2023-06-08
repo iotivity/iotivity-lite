@@ -18,6 +18,7 @@
 
 #include "oc_api.h"
 #include "port/oc_clock.h"
+#include "oc_log.h"
 
 #include <pthread.h>
 #include <signal.h>
@@ -56,7 +57,7 @@ dishand(const char *anchor, const char *uri, oc_string_array_t types,
   (void)bm;
   (void)endpoint;
 
-  PRINT("\n\nURI %s\n\n", uri);
+  OC_PRINTF("\n\nURI %s\n\n", uri);
 
   (void)types;
   (void)interfaces;
@@ -68,38 +69,38 @@ static void
 post_lights_oic_if_create(oc_client_response_t *data)
 {
   (void)data;
-  PRINT("\n\nPOST_lights:oic_if_create\n\n");
+  OC_PRINTF("\n\nPOST_lights:oic_if_create\n\n");
 
   oc_rep_t *rep = data->payload;
 
   while (rep) {
-    PRINT("\n\nKey: %s\t\t", oc_string(rep->name));
+    OC_PRINTF("\n\nKey: %s\t\t", oc_string(rep->name));
 
     switch (rep->type) {
     case OC_REP_STRING:
-      PRINT("%s\n\n", oc_string(rep->value.string));
+      OC_PRINTF("%s\n\n", oc_string(rep->value.string));
       break;
     case OC_REP_STRING_ARRAY: {
       size_t i;
       for (i = 0; i < oc_string_array_get_allocated_size(rep->value.array);
            i++) {
 
-        PRINT(" %s ", oc_string_array_get_item(rep->value.array, i));
+        OC_PRINTF(" %s ", oc_string_array_get_item(rep->value.array, i));
       }
-      PRINT("\n");
+      OC_PRINTF("\n");
     } break;
     case OC_REP_INT:
-      PRINT(" %" PRId64 "\n", rep->value.integer);
+      OC_PRINTF(" %" PRId64 "\n", rep->value.integer);
       break;
     case OC_REP_OBJECT: {
       oc_rep_t *policy = rep->value.object;
       ;
 
       while (policy) {
-        PRINT("\t\t%s\t\t", oc_string(policy->name));
+        OC_PRINTF("\t\t%s\t\t", oc_string(policy->name));
         switch (policy->type) {
         case OC_REP_INT:
-          PRINT(" %" PRId64 " ", policy->value.integer);
+          OC_PRINTF(" %" PRId64 " ", policy->value.integer);
           break;
         default:
           break;
@@ -121,11 +122,11 @@ static oc_event_callback_retval_t
 stop_observe(void *data)
 {
   (void)data;
-  PRINT("Stopping OBSERVE\n");
+  OC_PRINTF("Stopping OBSERVE\n");
   oc_stop_observe(lights, lights_server);
 
 #ifdef OC_COLLECTIONS_IF_CREATE
-  PRINT("\nSending POST %s?if=oic.if.create \n", lights);
+  OC_PRINTF("\nSending POST %s?if=oic.if.create \n", lights);
 
   if (oc_init_post(lights, lights_server, "if=oic.if.create",
                    &post_lights_oic_if_create, LOW_QOS, NULL)) {
@@ -154,11 +155,11 @@ stop_observe(void *data)
     oc_rep_end_root_object();
 
     if (oc_do_post())
-      PRINT("Sent POST request\n\n");
+      OC_PRINTF("Sent POST request\n\n");
     else
-      PRINT("Could not send POST\n\n");
+      OC_PRINTF("Could not send POST\n\n");
   } else
-    PRINT("Could not init POST\n\n");
+    OC_PRINTF("Could not init POST\n\n");
 #endif /* OC_COLLECTIONS_IF_CREATE */
   return OC_EVENT_DONE;
 }
@@ -166,41 +167,41 @@ stop_observe(void *data)
 static void
 post_lights_oic_if_b(oc_client_response_t *data)
 {
-  PRINT("\nPOST_lights_oic_if_b:\n");
+  OC_PRINTF("\nPOST_lights_oic_if_b:\n");
   if (data->code == OC_STATUS_CHANGED)
-    PRINT("POST response OK\n");
+    OC_PRINTF("POST response OK\n");
   else
-    PRINT("POST response code %d\n", data->code);
+    OC_PRINTF("POST response code %d\n", data->code);
 
   oc_rep_t *ll = data->payload;
 
   while (ll != NULL) {
-    PRINT("\tLink:\n");
+    OC_PRINTF("\tLink:\n");
     oc_rep_t *link = ll->value.object;
     while (link != NULL) {
       switch (link->type) {
       case OC_REP_STRING:
-        PRINT("\t\tkey: %s value: %s\n", oc_string(link->name),
-              oc_string(link->value.string));
+        OC_PRINTF("\t\tkey: %s value: %s\n", oc_string(link->name),
+                  oc_string(link->value.string));
         break;
       case OC_REP_OBJECT: {
-        PRINT("\t\tkey: %s value: { ", oc_string(link->name));
+        OC_PRINTF("\t\tkey: %s value: { ", oc_string(link->name));
         oc_rep_t *rep = link->value.object;
         while (rep != NULL) {
           switch (rep->type) {
           case OC_REP_BOOL:
-            PRINT(" %s : %d ", oc_string(rep->name), rep->value.boolean);
+            OC_PRINTF(" %s : %d ", oc_string(rep->name), rep->value.boolean);
             break;
           case OC_REP_INT:
-            PRINT(" %s : %" PRId64 " ", oc_string(rep->name),
-                  rep->value.integer);
+            OC_PRINTF(" %s : %" PRId64 " ", oc_string(rep->name),
+                      rep->value.integer);
             break;
           default:
             break;
           }
           rep = rep->next;
         }
-        PRINT(" }\n\n");
+        OC_PRINTF(" }\n\n");
       } break;
       default:
         break;
@@ -210,7 +211,7 @@ post_lights_oic_if_b(oc_client_response_t *data)
     ll = ll->next;
   }
 
-  PRINT("\nSending OBSERVE %s?if=oic.if.b\n\n", lights);
+  OC_PRINTF("\nSending OBSERVE %s?if=oic.if.b\n\n", lights);
 
   oc_do_observe(lights, lights_server, "if=oic.if.b", &get_lights_oic_if_b,
                 LOW_QOS, NULL);
@@ -220,36 +221,36 @@ post_lights_oic_if_b(oc_client_response_t *data)
 static void
 get_lights_oic_if_b(oc_client_response_t *data)
 {
-  PRINT("\nGET_lights_oic_if_b:\n");
+  OC_PRINTF("\nGET_lights_oic_if_b:\n");
   oc_rep_t *ll = data->payload;
 
   while (ll != NULL) {
-    PRINT("\tLink:\n");
+    OC_PRINTF("\tLink:\n");
     oc_rep_t *link = ll->value.object;
     while (link != NULL) {
       switch (link->type) {
       case OC_REP_STRING:
-        PRINT("\t\tkey: %s value: %s\n", oc_string(link->name),
-              oc_string(link->value.string));
+        OC_PRINTF("\t\tkey: %s value: %s\n", oc_string(link->name),
+                  oc_string(link->value.string));
         break;
       case OC_REP_OBJECT: {
-        PRINT("\t\tkey: %s value: { ", oc_string(link->name));
+        OC_PRINTF("\t\tkey: %s value: { ", oc_string(link->name));
         oc_rep_t *rep = link->value.object;
         while (rep != NULL) {
           switch (rep->type) {
           case OC_REP_BOOL:
-            PRINT(" %s : %d ", oc_string(rep->name), rep->value.boolean);
+            OC_PRINTF(" %s : %d ", oc_string(rep->name), rep->value.boolean);
             break;
           case OC_REP_INT:
-            PRINT(" %s : %" PRId64 " ", oc_string(rep->name),
-                  rep->value.integer);
+            OC_PRINTF(" %s : %" PRId64 " ", oc_string(rep->name),
+                      rep->value.integer);
             break;
           default:
             break;
           }
           rep = rep->next;
         }
-        PRINT(" }\n\n");
+        OC_PRINTF(" }\n\n");
       } break;
       default:
         break;
@@ -262,9 +263,9 @@ get_lights_oic_if_b(oc_client_response_t *data)
   if (!do_once)
     return;
 
-  PRINT("\nSending POST %s?if=oic.if.b [{href: /light/1, rep: "
-        "{state: true}}, {href: /count/1, rep: {count: 100}}]\n",
-        lights);
+  OC_PRINTF("\nSending POST %s?if=oic.if.b [{href: /light/1, rep: "
+            "{state: true}}, {href: /count/1, rep: {count: 100}}]\n",
+            lights);
 
   if (oc_init_post(lights, lights_server, "if=oic.if.b", &post_lights_oic_if_b,
                    LOW_QOS, NULL)) {
@@ -284,11 +285,11 @@ get_lights_oic_if_b(oc_client_response_t *data)
     oc_rep_end_links_array();
 
     if (oc_do_post())
-      PRINT("Sent POST request\n\n");
+      OC_PRINTF("Sent POST request\n\n");
     else
-      PRINT("Could not send POST\n\n");
+      OC_PRINTF("Could not send POST\n\n");
   } else
-    PRINT("Could not init POST\n\n");
+    OC_PRINTF("Could not init POST\n\n");
 
   do_once = false;
 }
@@ -296,49 +297,49 @@ get_lights_oic_if_b(oc_client_response_t *data)
 static void
 get_lights_oic_if_ll(oc_client_response_t *data)
 {
-  PRINT("\nGET_lights_oic_if_ll:\n");
+  OC_PRINTF("\nGET_lights_oic_if_ll:\n");
   oc_rep_t *ll = data->payload;
 
   while (ll != NULL) {
-    PRINT("\tLink:\n");
+    OC_PRINTF("\tLink:\n");
     oc_rep_t *link = ll->value.object;
     while (link != NULL) {
-      PRINT("\t\tkey: %s value: ", oc_string(link->name));
+      OC_PRINTF("\t\tkey: %s value: ", oc_string(link->name));
       switch (link->type) {
       case OC_REP_STRING:
-        PRINT("%s\n", oc_string(link->value.string));
+        OC_PRINTF("%s\n", oc_string(link->value.string));
         break;
       case OC_REP_STRING_ARRAY: {
-        PRINT("[ ");
+        OC_PRINTF("[ ");
         int i;
         for (i = 0;
              i < (int)oc_string_array_get_allocated_size(link->value.array);
              i++) {
-          PRINT(" %s ", oc_string_array_get_item(link->value.array, i));
+          OC_PRINTF(" %s ", oc_string_array_get_item(link->value.array, i));
         }
-        PRINT(" ]\n");
+        OC_PRINTF(" ]\n");
       } break;
       case OC_REP_OBJECT: {
-        PRINT("{ ");
+        OC_PRINTF("{ ");
         oc_rep_t *rep = link->value.object;
         while (rep != NULL) {
-          PRINT(" %s : ", oc_string(rep->name));
+          OC_PRINTF(" %s : ", oc_string(rep->name));
           switch (rep->type) {
           case OC_REP_BOOL:
-            PRINT("%d ", rep->value.boolean);
+            OC_PRINTF("%d ", rep->value.boolean);
             break;
           case OC_REP_INT:
-            PRINT("%" PRId64 " ", rep->value.integer);
+            OC_PRINTF("%" PRId64 " ", rep->value.integer);
             break;
           case OC_REP_STRING:
-            PRINT("%s ", oc_string(rep->value.string));
+            OC_PRINTF("%s ", oc_string(rep->value.string));
             break;
           default:
             break;
           }
           rep = rep->next;
         }
-        PRINT(" }\n\n");
+        OC_PRINTF(" }\n\n");
       } break;
       default:
         break;
@@ -348,7 +349,7 @@ get_lights_oic_if_ll(oc_client_response_t *data)
     ll = ll->next;
   }
 
-  PRINT("\nSending GET %s?if=oic.if.b\n\n", lights);
+  OC_PRINTF("\nSending GET %s?if=oic.if.b\n\n", lights);
 
   oc_do_get(lights, lights_server, "if=oic.if.b", &get_lights_oic_if_b, LOW_QOS,
             NULL);
@@ -375,15 +376,15 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       strncpy(lights, uri, uri_len);
       lights[uri_len] = '\0';
 
-      PRINT("Resource %s hosted at endpoints:\n", lights);
+      OC_PRINTF("Resource %s hosted at endpoints:\n", lights);
       oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
-        PRINTipaddr(*ep);
-        PRINT("\n");
+        OC_PRINTipaddr(*ep);
+        OC_PRINTF("\n");
         ep = ep->next;
       }
 
-      PRINT("\nSending GET %s?if=oic.if.ll\n\n", lights);
+      OC_PRINTF("\nSending GET %s?if=oic.if.ll\n\n", lights);
 
       oc_do_get(lights, lights_server, "if=oic.if.ll", &get_lights_oic_if_ll,
                 LOW_QOS, NULL);

@@ -21,6 +21,7 @@
 #include "oc_certs.h"
 #include "oc_config.h"
 #include "oc_pki.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_random.h"
 #include "security/oc_keypair_internal.h"
 #include "security/oc_security_internal.h"

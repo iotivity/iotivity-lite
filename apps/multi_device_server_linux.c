@@ -18,6 +18,7 @@
 
 #include "oc_api.h"
 #include "port/oc_clock.h"
+#include "oc_log.h"
 
 #include <pthread.h>
 #include <signal.h>
@@ -52,7 +53,7 @@ get_fridge(oc_request_t *request, oc_interface_mask_t iface_mask,
            void *user_data)
 {
   (void)user_data;
-  PRINT("GET_fridge:\n");
+  OC_PRINTF("GET_fridge:\n");
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
@@ -77,16 +78,16 @@ post_fridge(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)user_data;
   (void)iface_mask;
-  PRINT("POST_fridge:\n");
+  OC_PRINTF("POST_fridge:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    PRINT("key: %s ", oc_string(rep->name));
+    OC_PRINTF("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_INT:
       if (oc_string_len(rep->name) == 6 &&
           memcmp(oc_string(rep->name), "filter", 6) == 0) {
         fridge_state.filter = (int)rep->value.integer;
-        PRINT("value: %d\n", fridge_state.filter);
+        OC_PRINTF("value: %d\n", fridge_state.filter);
       } else {
         oc_send_response(request, OC_STATUS_BAD_REQUEST);
         return;
@@ -106,7 +107,7 @@ post_fridge(oc_request_t *request, oc_interface_mask_t iface_mask,
         oc_send_response(request, OC_STATUS_BAD_REQUEST);
         return;
       }
-      PRINT("value: %d\n", rep->value.boolean);
+      OC_PRINTF("value: %d\n", rep->value.boolean);
       break;
     default:
       oc_send_response(request, OC_STATUS_BAD_REQUEST);
@@ -123,7 +124,7 @@ get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 {
   (void)user_data;
   (void)request;
-  PRINT("GET_temp:\n");
+  OC_PRINTF("GET_temp:\n");
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
@@ -146,7 +147,7 @@ post_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)user_data;
   (void)iface_mask;
-  PRINT("POST_temp:\n");
+  OC_PRINTF("POST_temp:\n");
   if (iface_mask == OC_IF_S) {
     oc_send_response(request, OC_STATUS_BAD_REQUEST);
     return;
@@ -154,13 +155,13 @@ post_temp(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_CHANGED);
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    PRINT("key: %s ", oc_string(rep->name));
+    OC_PRINTF("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_DOUBLE:
       if (oc_string_len(rep->name) == 11 &&
           memcmp(oc_string(rep->name), "temperature", 11) == 0) {
         thermostat = rep->value.double_p;
-        PRINT("value: %lf\n", thermostat);
+        OC_PRINTF("value: %lf\n", thermostat);
       } else {
         oc_send_response(request, OC_STATUS_BAD_REQUEST);
         return;

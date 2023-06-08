@@ -19,6 +19,7 @@
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
 #include "oc_certs.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_random.h"
 #include "security/oc_certs_internal.h"
 

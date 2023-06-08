@@ -18,6 +18,7 @@
 
 #include "oc_api.h"
 #include "port/oc_clock.h"
+#include "oc_log.h"
 #include "port/oc_random.h"
 #include <inttypes.h>
 #include <pthread.h>
@@ -47,13 +48,13 @@ handle_array_response(void *data)
   (void)data;
   if (array_response.active) {
     oc_set_separate_response_buffer(&array_response);
-    PRINT("GET_array:\n");
+    OC_PRINTF("GET_array:\n");
     int i;
     for (i = 0; i < 100; i++) {
       large_array[i] = oc_random_value();
-      PRINT("(%d %d) ", i, large_array[i]);
+      OC_PRINTF("(%d %d) ", i, large_array[i]);
     }
-    PRINT("\n");
+    OC_PRINTF("\n");
     oc_rep_start_root_object();
     oc_rep_set_int_array(root, array, large_array, 100);
     oc_rep_end_root_object();
@@ -78,18 +79,18 @@ post_array(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)user_data;
-  PRINT("POST_array:\n");
+  OC_PRINTF("POST_array:\n");
   int i;
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    PRINT("key: %s ", oc_string(rep->name));
+    OC_PRINTF("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_INT_ARRAY: {
       int64_t *arr = oc_int_array(rep->value.array);
       for (i = 0; i < (int)oc_int_array_size(rep->value.array); i++) {
-        PRINT("(%d %" PRId64 ") ", i, arr[i]);
+        OC_PRINTF("(%d %" PRId64 ") ", i, arr[i]);
       }
-      PRINT("\n");
+      OC_PRINTF("\n");
     } break;
     default:
       break;

@@ -19,6 +19,7 @@
 #include "oc_api.h"
 #include "oc_pki.h"
 #include "port/oc_clock.h"
+#include "oc_log.h"
 #include "security/oc_certs_internal.h"
 #include <pthread.h>
 #include <signal.h>
@@ -51,7 +52,7 @@ get_light(oc_request_t *request, oc_interface_mask_t iface_mask,
   (void)user_data;
   ++power;
 
-  PRINT("GET_light:\n");
+  OC_PRINTF("GET_light:\n");
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
@@ -75,18 +76,18 @@ post_light(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)user_data;
-  PRINT("POST_light:\n");
+  OC_PRINTF("POST_light:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    PRINT("key: %s ", oc_string(rep->name));
+    OC_PRINTF("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_BOOL:
       state = rep->value.boolean;
-      PRINT("value: %d\n", state);
+      OC_PRINTF("value: %d\n", state);
       break;
     case OC_REP_INT:
       power = (int)rep->value.integer;
-      PRINT("value: %d\n", power);
+      OC_PRINTF("value: %d\n", power);
       break;
     case OC_REP_STRING:
       oc_free_string(&name);

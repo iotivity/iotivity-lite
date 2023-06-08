@@ -211,7 +211,7 @@ public:
     std::vector<char> json{};
     json.reserve(json_size + 1);
     oc_rep_to_json(rep, &json[0], json.capacity(), true);
-    PRINT("%s", json.data());
+    OC_PRINTF("%s", json.data());
 #endif /* OC_DEBUG */
   }
 

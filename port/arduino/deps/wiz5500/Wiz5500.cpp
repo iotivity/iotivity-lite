@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include "Wiz5500.h"
 #include <w5500.h>
-#include "oc_log.h"
+#include "port/oc_log_internal.h"
 
 struct wiz5500 {
     void *w5500_ref;

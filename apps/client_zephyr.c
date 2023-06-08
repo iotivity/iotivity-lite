@@ -17,6 +17,7 @@
  ******************************************************************/
 
 #include "oc_api.h"
+#include "oc_log.h"
 
 #include <string.h>
 #include <zephyr.h>
@@ -48,7 +49,7 @@ static oc_event_callback_retval_t
 stop_observe(void *data)
 {
   (void)data;
-  PRINT("Stopping OBSERVE\n");
+  OC_PRINTF("Stopping OBSERVE\n");
   oc_stop_observe(light_1, light_server);
   return OC_EVENT_DONE;
 }
@@ -56,23 +57,23 @@ stop_observe(void *data)
 static void
 post_light(oc_client_response_t *data)
 {
-  PRINT("POST_light:\n");
+  OC_PRINTF("POST_light:\n");
   if (data->code == OC_STATUS_OK)
-    PRINT("POST response OK\n");
+    OC_PRINTF("POST response OK\n");
   else
-    PRINT("POST response code %d\n", data->code);
+    OC_PRINTF("POST response code %d\n", data->code);
 }
 
 static void
 observe_light(oc_client_response_t *data)
 {
-  PRINT("OBSERVE_light:\n");
+  OC_PRINTF("OBSERVE_light:\n");
   oc_rep_t *rep = data->payload;
   while (rep != NULL) {
-    PRINT("key %s, value ", oc_string(rep->name));
+    OC_PRINTF("key %s, value ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_BOOL:
-      PRINT("%d\n", rep->value.boolean);
+      OC_PRINTF("%d\n", rep->value.boolean);
       light_state = rep->value.boolean;
       break;
     default:
@@ -86,11 +87,11 @@ observe_light(oc_client_response_t *data)
     oc_rep_set_boolean(root, state, !light_state);
     oc_rep_end_root_object();
     if (oc_do_post())
-      PRINT("Sent POST request\n");
+      OC_PRINTF("Sent POST request\n");
     else
-      PRINT("Could not send POST\n");
+      OC_PRINTF("Could not send POST\n");
   } else
-    PRINT("Could not init POST\n");
+    OC_PRINTF("Could not init POST\n");
 }
 
 static oc_discovery_flags_t

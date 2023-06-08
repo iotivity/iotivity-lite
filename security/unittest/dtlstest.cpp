@@ -21,6 +21,7 @@
 #include "api/oc_core_res_internal.h"
 #include "api/oc_endpoint_internal.h"
 #include "port/oc_clock.h"
+#include "port/oc_log_internal.h"
 #include "security/oc_pstat.h"
 #include "security/oc_tls_internal.h"
 #include "tests/gtest/Device.h"

@@ -21,7 +21,7 @@
 #ifndef OC_PORT_ASSERT_H
 #define OC_PORT_ASSERT_H
 
-#include "port/oc_log_internal.h"
+#include "oc_log.h"
 #include "util/oc_compiler.h"
 
 #ifdef __cplusplus
@@ -50,7 +50,7 @@ OC_NO_RETURN
 static inline void
 oc_abort(const char *msg)
 {
-  PRINT("\n%s\nAbort.\n", msg);
+  OC_PRINTF("\n%s\nAbort.\n", msg);
   abort_impl();
 }
 

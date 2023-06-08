@@ -18,6 +18,7 @@
 
 #include "oc_api.h"
 #include "port/oc_clock.h"
+#include "oc_log.h"
 
 #include <pthread.h>
 #include <signal.h>
@@ -43,7 +44,7 @@ retrieve_light_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
                       void *user_data)
 {
   (void)user_data;
-  PRINT("RETRIEVE light switch:\n");
+  OC_PRINTF("RETRIEVE light switch:\n");
   oc_rep_start_root_object();
   switch (iface_mask) {
   case OC_IF_BASELINE:
@@ -57,7 +58,7 @@ retrieve_light_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
   oc_rep_end_root_object();
   oc_send_response(request, OC_STATUS_OK);
-  PRINT("Light state %d\n", light_state);
+  OC_PRINTF("Light state %d\n", light_state);
 }
 
 static void
@@ -66,23 +67,23 @@ update_light_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)user_data;
   (void)iface_mask;
-  PRINT("UPDATE light switch:\n");
+  OC_PRINTF("UPDATE light switch:\n");
   if (request->origin) {
     if (request->origin->flags & MULTICAST) {
-      PRINT("\t\t--multicast\n\t\t--");
+      OC_PRINTF("\t\t--multicast\n\t\t--");
     }
-    PRINTipaddr(*(request->origin));
-    PRINT("\n");
+    OC_PRINTipaddr(*(request->origin));
+    OC_PRINTF("\n");
   }
   oc_status_t code = OC_STATUS_CHANGED;
   bool state = false;
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
-    PRINT("key: %s ", oc_string(rep->name));
+    OC_PRINTF("key: %s ", oc_string(rep->name));
     switch (rep->type) {
     case OC_REP_BOOL:
       state = rep->value.boolean;
-      PRINT("value: %d\n", state);
+      OC_PRINTF("value: %d\n", state);
       break;
     default:
       code = OC_STATUS_BAD_REQUEST;

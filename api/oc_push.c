@@ -37,6 +37,7 @@
 #include "oc_rep_internal.h"
 #include "oc_ri.h"
 #include "oc_signal_event_loop.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_compiler.h"
 #include "util/oc_list.h"
 #include "util/oc_macros.h"
@@ -58,9 +59,9 @@
 
 #ifdef __ANDROID__
 #include "android/oc_log_android.h"
-#define TAG "OC-JNI"
+#define OC_TAG "OC-JNI"
 #define OC_PUSH_PRINT(...)                                                     \
-  __android_log_print(ANDROID_LOG_INFO, TAG, __VA_ARGS__)
+  __android_log_print(ANDROID_LOG_INFO, OC_TAG, __VA_ARGS__)
 #else /* !__ANDROID__ */
 #define OC_PUSH_PRINT(...) printf(__VA_ARGS__)
 #endif /* __ANDROID__ */

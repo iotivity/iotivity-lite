@@ -27,6 +27,7 @@
 #include "oc_store.h"
 #include "oc_tls_internal.h"
 #include "port/oc_connectivity.h"
+#include "port/oc_log_internal.h"
 
 #include <mbedtls/ecp.h>
 #include <mbedtls/pk.h>

@@ -16,29 +16,29 @@
  {
  #endif
 -
--#define PRINT(...) printf(__VA_ARGS__)
+-#define OC_PRINTF(...) printf(__VA_ARGS__)
 +#ifdef ARDUINO
 +#include "Arduino.h"
 +#include "serial.h"
 +#if defined(__AVR__)
-+#define PRINT(format, ...)  AVR_LOG(format, ##__VA_ARGS__)
++#define OC_PRINTF(format, ...)  AVR_LOG(format, ##__VA_ARGS__)
 +#else
-+#define PRINT(format, ...)  ARM_LOG(format, ##__VA_ARGS__)  
++#define OC_PRINTF(format, ...)  ARM_LOG(format, ##__VA_ARGS__)  
 +#endif
 +#else
-+#define PRINT(...) printf(__VA_ARGS__) 
++#define OC_PRINTF(...) printf(__VA_ARGS__) 
 +#endif
  
- #define PRINTipaddr(endpoint)                                                  \
+ #define OC_PRINTipaddr(endpoint)                                                  \
    do {                                                                         \
      if ((endpoint).flags & IPV4) {                                             \
--      PRINT("[%d.%d.%d.%d]:%d", ((endpoint).addr.ipv4.address)[0],             \
-+      PRINT("[%d.%d.%d.%d]:%u", ((endpoint).addr.ipv4.address)[0],             \
+-      OC_PRINTF("[%d.%d.%d.%d]:%d", ((endpoint).addr.ipv4.address)[0],             \
++      OC_PRINTF("[%d.%d.%d.%d]:%u", ((endpoint).addr.ipv4.address)[0],             \
              ((endpoint).addr.ipv4.address)[1],                                 \
              ((endpoint).addr.ipv4.address)[2],                                 \
              ((endpoint).addr.ipv4.address)[3], (endpoint).addr.ipv4.port);     \
 @@ -39,7 +46,7 @@
-       PRINT(                                                                   \
+       OC_PRINTF(                                                                   \
          "[%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%02x%02x:%"    \
          "02x%"                                                                 \
 -        "02x]:%d",                                                             \
@@ -55,34 +55,34 @@
 +#ifdef ARDUINO
 +#define OC_LOG(level, format, ...)                                            \
 +  do {                                                                        \
-+      PRINT(level ": " __FILE__ "<%s:%d> ", __func__, __LINE__);           \
-+      PRINT(format, ##__VA_ARGS__);                                           \
-+      PRINT("\n");                                                          \
++      OC_PRINTF(level ": " __FILE__ "<%s:%d> ", __func__, __LINE__);           \
++      OC_PRINTF(format, ##__VA_ARGS__);                                           \
++      OC_PRINTF("\n");                                                          \
 +  } while (0)
 +#define OC_DBG(format, ...)   OC_LOG("DBG", format, ##__VA_ARGS__)
 +#define OC_WRN(format, ...)   OC_LOG("WRN", format,##__VA_ARGS__)
 +#define OC_ERR(format, ...)   OC_LOG("ERR", format, ##__VA_ARGS__)
 +#define OC_LOGipaddr(endpoint)                                                \
 +  do {                                                                        \
-+      PRINT("DBG: " __FILE__   "<%s:%d>: " , __func__, __LINE__);             \
-+      PRINTipaddr(endpoint);                                                  \
-+      PRINT("\r\n");                                                          \
++      OC_PRINTF("DBG: " __FILE__   "<%s:%d>: " , __func__, __LINE__);             \
++      OC_PRINTipaddr(endpoint);                                                  \
++      OC_PRINTF("\r\n");                                                          \
 +  } while (0)
 +#define OC_LOGbytes(bytes, length)                                            \
 +  do {                                                                        \
-+			 PRINT("DBG: " __FILE__  "<%s:%d>: " , __func__, __LINE__);                   \
++			 OC_PRINTF("DBG: " __FILE__  "<%s:%d>: " , __func__, __LINE__);                   \
 +			 uint16_t i;                                                             \
 +      for (i = 0; i < length; i++)                                            \
-+        PRINT(" %02X", bytes[i]);                                             \
-+      PRINT("\r\n");                                                          \
++        OC_PRINTF(" %02X", bytes[i]);                                             \
++      OC_PRINTF("\r\n");                                                          \
 +  } while (0)
 +#else /* ! ARDUINO */
  #define OC_LOG(level, ...)                                                     \
    do {                                                                         \
-     PRINT("%s: %s <%s:%d>: ", level, __FILE__, __func__, __LINE__);            \
+     OC_PRINTF("%s: %s <%s:%d>: ", level, __FILE__, __func__, __LINE__);            \
 @@ -78,13 +110,6 @@
-       PRINT(" %02X", bytes[i]);                                                \
-     PRINT("\n");                                                               \
+       OC_PRINTF(" %02X", bytes[i]);                                                \
+     OC_PRINTF("\n");                                                               \
    } while (0)
 -#else
 -#define OC_LOG(...)

@@ -25,6 +25,7 @@
 #include "oc_helpers.h"
 #include "oc_store.h"
 #include "oc_uuid.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_random.h"
 #include "port/oc_storage.h"
 #include "port/oc_storage_internal.h"

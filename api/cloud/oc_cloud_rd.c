@@ -24,6 +24,9 @@
 #ifdef OC_SECURITY
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY */
+
+#include "port/oc_log_internal.h"
+
 #define ONE_HOUR 3600
 #define OC_RSRVD_LINKS "links"
 #define OC_RSRVD_HREF "href"

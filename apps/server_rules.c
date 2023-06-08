@@ -22,6 +22,7 @@
 #include "oc_core_res.h"
 #include "oc_ri.h"
 #include "port/oc_clock.h"
+#include "oc_log.h"
 
 #if defined(OC_IDD_API)
 #include "oc_introspection.h"
@@ -199,13 +200,13 @@ app_init(void)
 
     if (fread_ret == 1) {
       oc_set_introspection_data(0, buffer, buffer_size);
-      PRINT("\tIntrospection data set for device.\n");
+      OC_PRINTF("\tIntrospection data set for device.\n");
     } else {
-      PRINT("%s", introspection_error);
+      OC_PRINTF("%s", introspection_error);
     }
     free(buffer);
   } else {
-    PRINT("%s", introspection_error);
+    OC_PRINTF("%s", introspection_error);
   }
 #endif
   return ret;
@@ -252,17 +253,17 @@ get_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
      returns to this function here. alternative is to have a callback from the
      hardware that sets the global variables. */
 
-  PRINT("get_binaryswitch: interface %d\n", interfaces);
+  OC_PRINTF("get_binaryswitch: interface %d\n", interfaces);
   oc_rep_start_root_object();
   switch (interfaces) {
   case OC_IF_BASELINE:
-    PRINT("   Adding Baseline info\n");
+    OC_PRINTF("   Adding Baseline info\n");
     oc_process_baseline_interface(request->resource);
     /* fall through */
   case OC_IF_A:
     /* property "value" */
     oc_rep_set_boolean(root, value, g_binaryswitch_value);
-    PRINT("   value : %d\n", g_binaryswitch_value); /* not handled value */
+    OC_PRINTF("   value : %d\n", g_binaryswitch_value); /* not handled value */
     break;
   default:
     break;
@@ -287,16 +288,16 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)interfaces;
   (void)user_data;
   bool error_state = false;
-  PRINT("post_binaryswitch:\n");
+  OC_PRINTF("post_binaryswitch:\n");
   oc_rep_t *rep = request->request_payload;
   /* loop over the request document to check if all inputs are ok */
   while (rep != NULL) {
-    PRINT("key: (check) %s \n", oc_string(rep->name));
+    OC_PRINTF("key: (check) %s \n", oc_string(rep->name));
     if (memcmp(oc_string(rep->name), "value", 5) == 0) {
       /* property "value" of type boolean exist in payload */
       if (rep->type != OC_REP_BOOL) {
         error_state = true;
-        PRINT("   property 'value' is not of type bool %d \n", rep->type);
+        OC_PRINTF("   property 'value' is not of type bool %d \n", rep->type);
       }
     }
 
@@ -308,7 +309,7 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
     /* loop over all the properties in the input document */
     oc_rep_t *rep = request->request_payload;
     while (rep != NULL) {
-      PRINT("key: (assign) %s \n", oc_string(rep->name));
+      OC_PRINTF("key: (assign) %s \n", oc_string(rep->name));
       /* no error: assign the variables */
       if (memcmp(oc_string(rep->name), "value", 5) == 0) {
         /* assign "value" */
@@ -317,7 +318,7 @@ post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
       rep = rep->next;
     }
     /* set the response */
-    PRINT("Set response \n");
+    OC_PRINTF("Set response \n");
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, value, g_binaryswitch_value);
     oc_rep_end_root_object();
@@ -346,11 +347,11 @@ get_audio(oc_request_t *request, oc_interface_mask_t interfaces,
 {
   (void)user_data; /* not used */
 
-  PRINT("get_audio: interface %d\n", interfaces);
+  OC_PRINTF("get_audio: interface %d\n", interfaces);
   oc_rep_start_root_object();
   switch (interfaces) {
   case OC_IF_BASELINE:
-    PRINT("   Adding Baseline info\n");
+    OC_PRINTF("   Adding Baseline info\n");
     oc_process_baseline_interface(request->resource);
     /* fall through */
   case OC_IF_A:
@@ -379,18 +380,18 @@ post_audio(oc_request_t *request, oc_interface_mask_t interfaces,
 {
   (void)interfaces;
   (void)user_data;
-  PRINT("post_audio:\n");
+  OC_PRINTF("post_audio:\n");
   oc_rep_t *rep = request->request_payload;
 
   while (rep != NULL) {
     switch (rep->type) {
     case OC_REP_BOOL:
       g_audio_mute = rep->value.boolean;
-      PRINT("value: %d\n", g_audio_mute);
+      OC_PRINTF("value: %d\n", g_audio_mute);
       break;
     case OC_REP_INT:
       g_audio_volume = (int)rep->value.integer;
-      PRINT("value: %d\n", g_audio_volume);
+      OC_PRINTF("value: %d\n", g_audio_volume);
       break;
     default:
       oc_send_response(request, OC_STATUS_BAD_REQUEST);
@@ -420,7 +421,7 @@ get_scenemember(oc_request_t *request, oc_interface_mask_t interfaces,
 {
   (void)user_data; /* not used */
 
-  PRINT("get_scenemember: interface %d\n", interfaces);
+  OC_PRINTF("get_scenemember: interface %d\n", interfaces);
   oc_rep_start_root_object();
   switch (interfaces) {
   case OC_IF_BASELINE:
@@ -470,11 +471,11 @@ get_ruleexpression(oc_request_t *request, oc_interface_mask_t interfaces,
 {
   (void)user_data; /* not used */
 
-  PRINT("get_ruleexpression: interface %d\n", interfaces);
+  OC_PRINTF("get_ruleexpression: interface %d\n", interfaces);
   oc_rep_start_root_object();
   switch (interfaces) {
   case OC_IF_BASELINE:
-    PRINT("   Adding Baseline info\n");
+    OC_PRINTF("   Adding Baseline info\n");
     oc_process_baseline_interface(request->resource);
     /* fall through */
   case OC_IF_RW:
@@ -506,7 +507,7 @@ post_ruleexpression(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)interfaces;
   (void)user_data;
 
-  PRINT("post_ruleexpression:\n");
+  OC_PRINTF("post_ruleexpression:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep != NULL) {
     printf("  %s :", oc_string(rep->name));
@@ -566,7 +567,7 @@ get_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
 {
   (void)user_data; /* not used */
 
-  PRINT("get_ruleaction: interface %d\n", interfaces);
+  OC_PRINTF("get_ruleaction: interface %d\n", interfaces);
   oc_rep_start_root_object();
   switch (interfaces) {
   case OC_IF_BASELINE:
@@ -603,7 +604,7 @@ post_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
 {
   (void)interfaces;
   (void)user_data;
-  PRINT("post_ruleaction:\n");
+  OC_PRINTF("post_ruleaction:\n");
   oc_rep_t *rep = request->request_payload;
   while (rep) {
     if (rep->type == OC_REP_STRING && oc_string_len(rep->name) == 10 &&
@@ -704,7 +705,7 @@ static void
 register_resources(void)
 {
 
-  PRINT("Register Resource with local path \"/binaryswitch\"\n");
+  OC_PRINTF("Register Resource with local path \"/binaryswitch\"\n");
   res_binaryswitch = oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
   oc_resource_bind_resource_type(res_binaryswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(res_binaryswitch, OC_IF_A);
@@ -717,7 +718,7 @@ register_resources(void)
                                   NULL);
   oc_add_resource(res_binaryswitch);
 
-  PRINT("Register Resource with local path \"/audio\"\n");
+  OC_PRINTF("Register Resource with local path \"/audio\"\n");
   res_audio = oc_new_resource("Audio", "/audio", 1, 0);
   oc_resource_bind_resource_type(res_audio, "oic.r.audio");
   oc_resource_bind_resource_interface(res_audio, OC_IF_A);
@@ -729,7 +730,7 @@ register_resources(void)
   oc_add_resource(res_audio);
 
 #ifdef OC_COLLECTIONS
-  PRINT("Register Resource with local path \"/scenemember1\"\n");
+  OC_PRINTF("Register Resource with local path \"/scenemember1\"\n");
   oc_resource_t *res_scenemember1 =
     oc_new_resource("Scene Member 1", "/scenemember1", 1, 0);
   oc_resource_bind_resource_type(res_scenemember1, "oic.wk.scenemember");
@@ -739,7 +740,7 @@ register_resources(void)
                                   NULL);
   oc_add_resource(res_scenemember1);
 
-  PRINT("Register Collection with local path \"/scenecollection1\"\n");
+  OC_PRINTF("Register Collection with local path \"/scenecollection1\"\n");
   res_scenecol1 =
     oc_new_collection("Scene Collection 1", "/scenecollection1", 1, 0);
   // Remove batch from the set of supported interafaces
@@ -756,7 +757,7 @@ register_resources(void)
                                  set_scenecol_properties, NULL);
   oc_add_collection(res_scenecol1);
 
-  PRINT("Register Collection with local path \"/scenelist\"\n");
+  OC_PRINTF("Register Collection with local path \"/scenelist\"\n");
   oc_resource_t *res_scenelist =
     oc_new_collection("Scene List", "/scenelist", 1, 0);
   oc_resource_bind_resource_type(res_scenelist, "oic.wk.scenelist");
@@ -771,7 +772,7 @@ register_resources(void)
 
   oc_add_collection(res_scenelist);
 
-  PRINT("Register Resource with local path \"/ruleexpression\"\n");
+  OC_PRINTF("Register Resource with local path \"/ruleexpression\"\n");
   res_ruleexpression =
     oc_new_resource("Rule Expression", "/ruleexpression", 1, 0);
   oc_resource_bind_resource_type(res_ruleexpression, "oic.r.rule.expression");
@@ -785,7 +786,7 @@ register_resources(void)
                                   post_ruleexpression, NULL);
   oc_add_resource(res_ruleexpression);
 
-  PRINT("Register Resource with local path \"/ruleaction\"\n");
+  OC_PRINTF("Register Resource with local path \"/ruleaction\"\n");
   oc_resource_t *res_ruleaction =
     oc_new_resource("Rule Action", "/ruleaction", 1, 0);
   oc_resource_bind_resource_type(res_ruleaction, "oic.r.rule.action");
@@ -798,7 +799,7 @@ register_resources(void)
                                   NULL);
   oc_add_resource(res_ruleaction);
 
-  PRINT("Register Collection with local path \"/ruleinputcollection\"\n");
+  OC_PRINTF("Register Collection with local path \"/ruleinputcollection\"\n");
   oc_resource_t *res_ruleinputcol =
     oc_new_collection("Rule Input Collection", "/ruleinputcollection", 1, 0);
   // Remove batch from the set of supported interafaces
@@ -820,7 +821,7 @@ register_resources(void)
   oc_collection_add_supported_rt(res_ruleinputcol, "oic.r.switch.binary");
   oc_add_collection(res_ruleinputcol);
 
-  PRINT("Register Collection with local path \"/ruleactioncollection\"\n");
+  OC_PRINTF("Register Collection with local path \"/ruleactioncollection\"\n");
   oc_resource_t *res_ruleactioncol =
     oc_new_collection("Rule Action Collection", "/ruleactioncollection", 1, 0);
   // Remove batch from the set of supported interafaces
@@ -837,7 +838,7 @@ register_resources(void)
 
   oc_add_collection(res_ruleactioncol);
 
-  PRINT("Register Collection with local path \"/rule\"\n");
+  OC_PRINTF("Register Collection with local path \"/rule\"\n");
   oc_resource_t *res_rule = oc_new_collection("Rule", "/rule", 1, 0);
   // Remove batch from the set of supported interafaces
   res_rule->interfaces = OC_IF_BASELINE | OC_IF_LL;
@@ -896,7 +897,7 @@ display_device_uuid(void)
   char buffer[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
 
-  PRINT("Started device with ID: %s\n", buffer);
+  OC_PRINTF("Started device with ID: %s\n", buffer);
 }
 
 /**
@@ -935,10 +936,10 @@ main(void)
   };
   oc_clock_time_t next_event;
 
-  PRINT("OCF Server name : \"Rules Test Server\"\n");
+  OC_PRINTF("OCF Server name : \"Rules Test Server\"\n");
 
 #ifdef OC_SECURITY
-  PRINT("Intialize Secure Resources\n");
+  OC_PRINTF("Intialize Secure Resources\n");
   oc_storage_config("./server_rules_creds");
 #endif /* OC_SECURITY */
   oc_set_max_app_data_size(13312);
@@ -957,8 +958,8 @@ main(void)
   oc_resource_set_observable(con_resource, false);
 
   display_device_uuid();
-  PRINT("OCF server \"Rules Test Server\" running, waiting on incomming "
-        "connections.\n");
+  OC_PRINTF("OCF server \"Rules Test Server\" running, waiting on incomming "
+            "connections.\n");
 
   /* linux specific loop */
   while (quit != 1) {

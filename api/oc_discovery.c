@@ -26,6 +26,7 @@
 #include "oc_enums.h"
 #include "oc_resource_internal.h"
 #include "oc_server_api_internal.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_features.h"
 
 #ifdef OC_CLIENT

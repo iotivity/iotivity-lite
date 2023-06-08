@@ -32,6 +32,8 @@
 #include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
 
+#include "port/oc_log_internal.h"
+
 /** Account URI.*/
 #ifdef OC_SPEC_VER_OIC
 #define OC_RSRVD_ACCOUNT_URI "/oic/account"

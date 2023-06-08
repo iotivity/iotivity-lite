@@ -27,6 +27,7 @@
 #include "api/c-timestamp/timestamp.h"
 #include "oc_obt.h"
 #include "oc_store.h"
+#include "port/oc_log_internal.h"
 #include "security/oc_certs_internal.h"
 #include "security/oc_entropy_internal.h"
 #include "security/oc_keypair_internal.h"
