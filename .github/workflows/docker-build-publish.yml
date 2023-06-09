@@ -18,6 +18,7 @@ on:
   pull_request:
     branches:
       - master
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 env:
@@ -35,7 +36,7 @@ jobs:
             file: docker/apps/Dockerfile.cloud-server
           - name: cloud-server-debug
             build_type: Debug
-            build_args: ""
+            build_args: "-DOC_DEBUG_ENABLED=ON"
             file: docker/apps/Dockerfile.cloud-server-debug
           - name: cloud-server-discovery-resource-observable
             build_type: Release
@@ -43,11 +44,12 @@ jobs:
             file: docker/apps/Dockerfile.cloud-server
           - name: cloud-server-discovery-resource-observable-debug
             build_type: Debug
-            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
+            build_args: "-DOC_DEBUG_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
             file: docker/apps/Dockerfile.cloud-server-debug
-    uses: ./.github/workflows/docker-build-publish-with-cfg.yml
+    uses: ./.github/workflows/docker-build-publish-tag.yml
     with:
       name: ${{ matrix.name }}
       build_type: ${{ matrix.build_type }}
-      build_args: ${{ matrix.build_args }}
+      build_args: -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON ${{ matrix.build_args }}
       file: ${{ matrix.file }}
+      release: 2.2.5.4
