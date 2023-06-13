@@ -52,11 +52,6 @@
 
 #include "conf.h"
 #include "constants.h"
-#include <stddef.h> /* for size_t */
-#include <stdint.h>
-#ifdef OC_OSCORE
-#include "oscore_constants.h"
-#endif /* OC_OSCORE */
 #include "oc_buffer.h"
 #include "oc_config.h"
 #include "oc_ri.h"
@@ -64,20 +59,15 @@
 #include "port/oc_log_internal.h"
 #include "port/oc_random.h"
 
+#ifdef OC_OSCORE
+#include "oscore_constants.h"
+#endif /* OC_OSCORE */
+
+#include <stddef.h> /* size_t */
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#ifndef MAX
-#define MAX(n, m) (((n) < (m)) ? (m) : (n))
-#endif
-
-#ifndef MIN
-#define MIN(n, m) (((n) < (m)) ? (n) : (m))
-#endif
-
-#ifndef ABS
-#define ABS(n) (((n) < 0) ? -(n) : (n))
 #endif
 
 /* bitmap for set options */
@@ -90,7 +80,17 @@ enum { OPTION_MAP_SIZE = sizeof(uint8_t) * 8 };
    (1 << ((opt) % OPTION_MAP_SIZE)))
 
 /* enum value for coap transport type  */
-typedef enum { COAP_TRANSPORT_UDP, COAP_TRANSPORT_TCP } coap_transport_type_t;
+typedef enum {
+  COAP_TRANSPORT_UDP,
+  COAP_TRANSPORT_TCP,
+} coap_transport_type_t;
+
+enum {
+  OC_COAP_OBSERVE_NOT_SET = -1,
+  OC_COAP_OBSERVE_REGISTER = 0,
+  OC_COAP_OBSERVE_UNREGISTER = 1,
+  // observe values [2, 2^24-1] are used for the sequence number
+};
 
 /* parsed message struct */
 typedef struct
@@ -265,8 +265,8 @@ int coap_get_header_location_query(
   const char **query); /* in-place string might not be 0-terminated. */
 size_t coap_set_header_location_query(void *packet, const char *query);
 
-int coap_get_header_observe(const void *packet, int32_t *observe);
-int coap_set_header_observe(void *packet, int32_t observe);
+int coap_get_header_observe(const coap_packet_t *packet, int32_t *observe);
+void coap_set_header_observe(coap_packet_t *packet, int32_t observe);
 
 int coap_get_header_block2(const void *packet, uint32_t *num, uint8_t *more,
                            uint16_t *size, uint32_t *offset);

@@ -27,6 +27,7 @@
 #include "port/oc_connectivity.h"
 #include "port/oc_log_internal.h"
 #include "util/oc_list.h"
+#include "util/oc_macros_internal.h"
 #include "util/oc_memb.h"
 #include <inttypes.h>
 
@@ -190,7 +191,7 @@ oc_blockwise_alloc_response_buffer(const char *href, size_t href_len,
   if (buffer) {
     oc_random_buffer(buffer->etag, sizeof(buffer->etag));
 #ifdef OC_CLIENT
-    buffer->observe_seq = -1;
+    buffer->observe_seq = OC_COAP_OBSERVE_NOT_SET;
 #endif /* OC_CLIENT */
     oc_ri_add_timed_event_callback_seconds(
       buffer, oc_blockwise_response_timeout, OC_EXCHANGE_LIFETIME);

@@ -158,7 +158,21 @@ remove_discovery_batch_observers(cmp_batch_observer_t *cmp, void *ctx)
 #endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
 
 /*-------------------*/
-int32_t observe_counter = 3;
+
+#define COAP_OBSERVE_MAX_VALUE ((1 << 24) - 1) // 2^24 - 1
+#define COAP_OBSERVE_START_VALUE (3)
+
+int32_t g_observe_counter = COAP_OBSERVE_START_VALUE;
+
+static int32_t
+observe_increment_observe_counter(int32_t *counter)
+{
+  int32_t prev = *counter;
+  prev == COAP_OBSERVE_START_VALUE ? *counter = COAP_OBSERVE_START_VALUE
+                                   : ++(*counter);
+  return prev;
+}
+
 /*---------------------------------------------------------------------------*/
 OC_LIST(observers_list);
 OC_MEMB(observers_memb, coap_observer_t, COAP_MAX_OBSERVERS);
@@ -208,7 +222,7 @@ add_observer(oc_resource_t *resource, uint16_t block2_size,
     memcpy(o->token, token, token_len);
     o->last_mid = 0;
     o->iface_mask = iface_mask;
-    o->obs_counter = observe_counter;
+    o->obs_counter = g_observe_counter;
     o->resource = resource;
 #ifdef OC_BLOCK_WISE
     o->block2_size = block2_size;
@@ -558,10 +572,11 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
       coap_set_status_code(notification, response->response_buffer->code);
       if (notification->code < BAD_REQUEST_4_00 &&
           obs->resource->num_observers) {
-        coap_set_header_observe(notification, (obs->obs_counter)++);
-        observe_counter++;
+        coap_set_header_observe(
+          notification, observe_increment_observe_counter(&obs->obs_counter));
+        observe_increment_observe_counter(&g_observe_counter);
       } else {
-        coap_set_header_observe(notification, 1);
+        coap_set_header_observe(notification, OC_COAP_OBSERVE_UNREGISTER);
       }
       if (response->response_buffer->content_format > 0) {
         coap_set_header_content_format(

@@ -47,24 +47,28 @@
  * This file is part of the Contiki operating system.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <inttypes.h>
-
 #include "coap.h"
 #include "coap_internal.h"
+#include "oc_ri.h"
 #include "transactions.h"
+#include "util/oc_macros_internal.h"
+
 #ifdef OC_OSCORE
 #include "oscore.h"
 #endif /* OC_OSCORE */
+
 #ifdef OC_TCP
 #include "coap_signal.h"
 #endif /* OC_TCP */
-#include "oc_ri.h"
+
 #ifdef OC_SECURITY
 #include "security/oc_audit.h"
 #include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
+
+#include <stdio.h>
+#include <string.h>
+#include <inttypes.h>
 
 /* option format serialization */
 #define COAP_SERIALIZE_INT_OPTION(number, field, text)                         \
@@ -1812,25 +1816,22 @@ coap_set_header_location_query(void *packet, const char *query)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_observe(const void *packet, int32_t *observe)
+coap_get_header_observe(const coap_packet_t *packet, int32_t *observe)
 {
-  const coap_packet_t *const coap_pkt = (const coap_packet_t *)packet;
-
-  if (!IS_OPTION(coap_pkt, COAP_OPTION_OBSERVE)) {
+  if (!IS_OPTION(packet, COAP_OPTION_OBSERVE)) {
     return 0;
   }
-  *observe = coap_pkt->observe;
+  *observe = packet->observe;
   return 1;
 }
-int
-coap_set_header_observe(void *packet, int32_t observe)
-{
-  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
-  coap_pkt->observe = observe;
-  SET_OPTION(coap_pkt, COAP_OPTION_OBSERVE);
-  return 1;
+void
+coap_set_header_observe(coap_packet_t *packet, int32_t observe)
+{
+  packet->observe = observe;
+  SET_OPTION(packet, COAP_OPTION_OBSERVE);
 }
+
 /*---------------------------------------------------------------------------*/
 int
 coap_get_header_block2(const void *packet, uint32_t *num, uint8_t *more,

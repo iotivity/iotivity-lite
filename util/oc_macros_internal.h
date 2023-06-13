@@ -27,6 +27,18 @@
 
 #define OC_ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
+#ifndef MAX
+#define MAX(n, m) (((n) < (m)) ? (m) : (n))
+#endif /* MAX */
+
+#ifndef MIN
+#define MIN(n, m) (((n) < (m)) ? (n) : (m))
+#endif /* MIN */
+
+#ifndef ABS
+#define ABS(n) (((n) < 0) ? -(n) : (n))
+#endif /* ABS */
+
 #if defined(__GNUC__) && !defined(__clang__)
 #define OC_DO_PRAGMA(x) _Pragma(#x)
 #define GCC_IGNORE_WARNING_START OC_DO_PRAGMA(GCC diagnostic push)

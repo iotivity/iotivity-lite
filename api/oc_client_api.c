@@ -113,14 +113,15 @@ dispatch_coap_request(void)
   if (g_dispatch.transaction->message->length > 0) {
     coap_send_transaction(g_dispatch.transaction);
 
-    if (g_dispatch.client_cb->observe_seq == -1) {
-      if (g_dispatch.client_cb->qos == LOW_QOS)
+    if (g_dispatch.client_cb->observe_seq == OC_COAP_OBSERVE_NOT_SET) {
+      if (g_dispatch.client_cb->qos == LOW_QOS) {
         oc_set_delayed_callback(g_dispatch.client_cb,
                                 &oc_client_cb_remove_async, OC_NON_LIFETIME);
-      else
+      } else {
         oc_set_delayed_callback(g_dispatch.client_cb,
                                 &oc_client_cb_remove_async,
                                 OC_EXCHANGE_LIFETIME);
+      }
     }
 
     success = true;
@@ -213,8 +214,9 @@ prepare_coap_request(oc_client_cb_t *cb)
   coap_set_header_uri_path(g_request, oc_string(cb->uri),
                            oc_string_len(cb->uri));
 
-  if (cb->observe_seq != -1)
+  if (cb->observe_seq != OC_COAP_OBSERVE_NOT_SET) {
     coap_set_header_observe(g_request, cb->observe_seq);
+  }
 
   if (oc_string_len(cb->query) > 0) {
     coap_set_header_uri_query(g_request, oc_string(cb->query));
@@ -548,7 +550,7 @@ oc_do_observe(const char *uri, const oc_endpoint_t *endpoint, const char *query,
   if (!cb)
     return false;
 
-  cb->observe_seq = 0;
+  cb->observe_seq = OC_COAP_OBSERVE_REGISTER;
 
   bool status = false;
 
@@ -569,7 +571,7 @@ oc_stop_observe(const char *uri, const oc_endpoint_t *endpoint)
     return false;
 
   cb->mid = coap_get_mid();
-  cb->observe_seq = 1;
+  cb->observe_seq = OC_COAP_OBSERVE_UNREGISTER;
 
   bool status = false;
 

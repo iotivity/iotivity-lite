@@ -537,14 +537,14 @@ on_keepalive_response_default(oc_cloud_context_t *ctx, bool response_received,
                               uint64_t *next_ping)
 {
   if (response_received) {
-    *next_ping = 20UL * 1000UL;
+    *next_ping = 20UL * MILLISECONDS_PER_SECOND;
     ctx->retry_count = 0;
   } else {
-    *next_ping = 4UL * 1000UL;
+    *next_ping = 4UL * MILLISECONDS_PER_SECOND;
     uint64_t keepalive_ping_timeout_ms =
-      ((uint64_t)(ctx->keepalive.ping_timeout)) * 1000;
+      ((uint64_t)(ctx->keepalive.ping_timeout)) * MILLISECONDS_PER_SECOND;
     // we don't want to ping more often than once per second
-    if (keepalive_ping_timeout_ms >= (*next_ping + 1000)) {
+    if (keepalive_ping_timeout_ms >= (*next_ping + MILLISECONDS_PER_SECOND)) {
       *next_ping = (keepalive_ping_timeout_ms - *next_ping);
     }
     ++ctx->retry_count;

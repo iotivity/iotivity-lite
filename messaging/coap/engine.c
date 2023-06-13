@@ -57,6 +57,7 @@
 #include "messaging/coap/coap_internal.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_audit.h"
@@ -859,7 +860,7 @@ send_message:
       else {
         oc_blockwise_response_state_t *b =
           (oc_blockwise_response_state_t *)response_buffer;
-        if (b && b->observe_seq != -1) {
+        if (b && b->observe_seq != OC_COAP_OBSERVE_NOT_SET) {
           response->token_len = sizeof(response->token);
           oc_random_buffer(response->token, response->token_len);
           if (request_buffer) {

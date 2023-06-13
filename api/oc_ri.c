@@ -1059,7 +1059,7 @@ ri_handle_observation(const coap_packet_t *request, coap_packet_t *response,
   if (observe == 0) {
     if (ri_add_observation(request, response, resource, resource_is_collection,
                            block2_size, endpoint, iface_query)) {
-      coap_set_header_observe(response, 0);
+      coap_set_header_observe(response, OC_COAP_OBSERVE_REGISTER);
     } else {
       coap_remove_observer_by_token(endpoint, request->token,
                                     request->token_len);

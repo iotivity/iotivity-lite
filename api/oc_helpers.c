@@ -22,6 +22,7 @@
 #include "port/oc_assert.h"
 #include "port/oc_log_internal.h"
 #include "port/oc_random.h"
+#include "util/oc_macros_internal.h"
 #include <assert.h>
 #include <inttypes.h>
 #include <stdbool.h>
