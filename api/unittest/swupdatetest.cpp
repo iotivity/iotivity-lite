@@ -43,8 +43,11 @@
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY */
 
+#include <algorithm>
 #include <functional>
 #include <gtest/gtest.h>
+#include <string>
+#include <vector>
 
 static constexpr size_t kDeviceID{ 0 };
 
@@ -351,6 +354,21 @@ TEST_F(TestSWUpdate, Decode_FailReadonlyLastUpdate)
   EXPECT_FALSE(oc_swupdate_decode(rep.get(), /*flags*/ 0, &swu_parsed));
 }
 
+TEST_F(TestSWUpdate, Decode_FailInvalidLastUpdate)
+{
+  oc::RepPool pool{};
+
+  oc_rep_start_root_object();
+  oc_rep_set_text_string(root, lastupdate, "not a valid timestamp");
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  auto rep = pool.ParsePayload();
+  oc_swupdate_t swu_parsed{};
+  EXPECT_FALSE(oc_swupdate_decode(
+    rep.get(), OC_SWUPDATE_DECODE_FLAG_FROM_STORAGE, &swu_parsed));
+}
+
 TEST_F(TestSWUpdate, Decode_FailInvalidAction)
 {
   oc::RepPool pool{};
@@ -538,6 +556,176 @@ public:
     TestSWUpdateImplementation::Clear();
   }
 };
+
+struct ValidateUpdateError
+{
+  std::string property;
+  oc_swupdate_validate_update_error_t error;
+};
+
+template<bool Continue = true>
+static bool
+storeError(const oc_rep_t *rep, oc_swupdate_validate_update_error_t error,
+           void *data)
+{
+  OC_DBG("SWU validation error(%d)", static_cast<int>(error));
+  auto *errors = static_cast<std::vector<ValidateUpdateError> *>(data);
+  errors->push_back({ rep != nullptr ? oc_string(rep->name) : "", error });
+  return Continue;
+}
+
+static bool
+hasStoredError(const std::vector<ValidateUpdateError> &errors,
+               const std::string &property,
+               oc_swupdate_validate_update_error_t error)
+{
+  for (const auto &e : errors) {
+    if ((property.empty() || e.property == property) && e.error == error) {
+      return true;
+    }
+  }
+  return false;
+}
+
+TEST_F(TestSWUpdateWithServer, ValidateUpdate_FailInvalidImplementation)
+{
+  oc::RepPool pool{};
+
+  oc_rep_start_root_object();
+  std::string packageURL{ "https://test.package.com" };
+  oc_rep_set_text_string(root, purl, packageURL.c_str());
+  oc_rep_set_text_string(root, updatetime, "now");
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  oc_swupdate_set_impl(nullptr);
+  std::vector<ValidateUpdateError> errors{};
+  EXPECT_FALSE(oc_swupdate_validate_update(kDeviceID, pool.ParsePayload().get(),
+                                           storeError, &errors));
+  ASSERT_EQ(1, errors.size());
+  EXPECT_EQ(OC_SWUPDATE_VALIDATE_UPDATE_ERROR_INVALID_IMPLEMENTATION,
+            errors[0].error);
+  errors.clear();
+
+  oc_swupdate_cb_t instance{
+    /*validate_purl=*/nullptr,
+    /*check_new_version=*/TestSWUpdateImplementation::CheckNewVersion,
+    /*download_update=*/TestSWUpdateImplementation::DownloadUpgrade,
+    /*perform_upgrade=*/TestSWUpdateImplementation::PerformUpgrade,
+  };
+  oc_swupdate_set_impl(&instance);
+  EXPECT_FALSE(oc_swupdate_validate_update(kDeviceID, pool.ParsePayload().get(),
+                                           storeError, &errors));
+  ASSERT_EQ(1, errors.size());
+  EXPECT_EQ(OC_SWUPDATE_VALIDATE_UPDATE_ERROR_INVALID_IMPLEMENTATION,
+            errors[0].error);
+}
+
+TEST_F(TestSWUpdateWithServer, ValidateUpdate_FailMissingRequired)
+{
+  oc::RepPool pool{};
+
+  oc_rep_start_root_object();
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  std::vector<ValidateUpdateError> errors{};
+  // continue after error
+  EXPECT_FALSE(oc_swupdate_validate_update(kDeviceID, pool.ParsePayload().get(),
+                                           storeError<true>, &errors));
+  ASSERT_EQ(2, errors.size());
+  EXPECT_TRUE(hasStoredError(
+    errors, "", OC_SWUPDATE_VALIDATE_UPDATE_ERROR_UPDATETIME_NOT_SET));
+  EXPECT_TRUE(
+    hasStoredError(errors, "", OC_SWUPDATE_VALIDATE_UPDATE_ERROR_PURL_NOT_SET));
+
+  errors.clear();
+  // stop on first error
+  EXPECT_FALSE(oc_swupdate_validate_update(kDeviceID, pool.ParsePayload().get(),
+                                           storeError<false>, &errors));
+  EXPECT_EQ(1, errors.size());
+}
+
+TEST_F(TestSWUpdateWithServer, ValidateUpdate_FailReadonly)
+{
+  oc::RepPool pool{};
+
+  oc_rep_start_root_object();
+  std::string packageURL{ "https://test.package.com" };
+  oc_rep_set_text_string(root, purl, packageURL.c_str());
+  oc_rep_set_text_string(root, updatetime, "none");
+  oc_rep_set_int(root, swupdateresult, OC_SWUPDATE_RESULT_SUCCESS);
+  oc_rep_set_text_string(root, nv, "4.2");
+  oc_rep_set_text_string(root, signed, "plgd.dev");
+  oc_rep_set_text_string(root, swupdatestate,
+                         oc_swupdate_state_to_str(OC_SWUPDATE_STATE_UPGRADING));
+  ASSERT_TRUE(oc_swupdate_encode_clocktime_to_string(
+    oc_clock_time(), [](const char *timestamp) {
+      oc_rep_set_text_string(root, lastupdate, timestamp);
+      return g_err == 0;
+    }));
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  std::vector<ValidateUpdateError> errors{};
+  EXPECT_FALSE(oc_swupdate_validate_update(kDeviceID, pool.ParsePayload().get(),
+                                           storeError, &errors));
+  ASSERT_EQ(5, errors.size());
+  EXPECT_TRUE(
+    hasStoredError(errors, "swupdateresult",
+                   OC_SWUPDATE_VALIDATE_UPDATE_ERROR_READONLY_PROPERTY));
+  EXPECT_TRUE(hasStoredError(
+    errors, "nv", OC_SWUPDATE_VALIDATE_UPDATE_ERROR_READONLY_PROPERTY));
+  EXPECT_TRUE(hasStoredError(
+    errors, "signed", OC_SWUPDATE_VALIDATE_UPDATE_ERROR_READONLY_PROPERTY));
+  EXPECT_TRUE(
+    hasStoredError(errors, "swupdatestate",
+                   OC_SWUPDATE_VALIDATE_UPDATE_ERROR_READONLY_PROPERTY));
+  EXPECT_TRUE(hasStoredError(
+    errors, "lastupdate", OC_SWUPDATE_VALIDATE_UPDATE_ERROR_READONLY_PROPERTY));
+}
+
+TEST_F(TestSWUpdateWithServer, ValidateUpdate_InvalidProperty)
+{
+  oc::RepPool pool{};
+
+  oc_rep_start_root_object();
+  std::string packageURL{ "https://test.package.com" };
+  oc_rep_set_text_string(root, purl, packageURL.c_str());
+  oc_rep_set_text_string(root, updatetime, "now");
+
+  oc_rep_set_text_string(root, invalid, "does not exist");
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  std::vector<ValidateUpdateError> errors{};
+  EXPECT_FALSE(oc_swupdate_validate_update(kDeviceID, pool.ParsePayload().get(),
+                                           storeError, &errors));
+  ASSERT_EQ(1, errors.size());
+  EXPECT_TRUE(hasStoredError(
+    errors, "invalid", OC_SWUPDATE_VALIDATE_UPDATE_ERROR_INVALID_PROPERTY));
+}
+
+TEST_F(TestSWUpdateWithServer, ValidateUpdate_InvalidPropertyValue)
+{
+  oc::RepPool pool{};
+
+  oc_rep_start_root_object();
+  std::string packageURL{ "https://test.package.com" };
+  oc_rep_set_text_string(root, purl, packageURL.c_str());
+
+  oc_rep_set_text_string(root, updatetime, "not a valid timestamp");
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  std::vector<ValidateUpdateError> errors{};
+  EXPECT_FALSE(oc_swupdate_validate_update(kDeviceID, pool.ParsePayload().get(),
+                                           storeError, &errors));
+  ASSERT_EQ(1, errors.size());
+  EXPECT_TRUE(
+    hasStoredError(errors, "updatetime",
+                   OC_SWUPDATE_VALIDATE_UPDATE_ERROR_INVALID_PROPERTY_VALUE));
+}
 
 #if !defined(OC_SECURITY) || defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM)
 

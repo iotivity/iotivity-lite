@@ -21,6 +21,7 @@
 
 #include "oc_config.h"
 #include "oc_helpers.h"
+#include "oc_swupdate.h"
 #include "util/oc_compiler.h"
 #include <stdbool.h>
 #include <stddef.h>
@@ -175,10 +176,16 @@ typedef bool (*oc_swupdate_on_encode_timestamp_to_string_t)(const char *)
 bool oc_swupdate_encode_clocktime_to_string(
   oc_clock_time_t time, oc_swupdate_on_encode_timestamp_to_string_t encode);
 
+typedef struct
+{
+  oc_swupdate_on_validate_update_error_fn_t fn;
+  void *data;
+} oc_swupdate_on_error_t;
+
 typedef enum {
   OC_SWUPDATE_DECODE_FLAG_IGNORE_ERRORS = 1 << 0,
   OC_SWUPDATE_DECODE_FLAG_FROM_STORAGE = 1 << 1,
-  OC_SWUPDATE_DECODE_FLAG_COAP_UPDATE = 1 << 2,
+  OC_SWUPDATE_DECODE_FLAG_VALIDATE_DECODED_DATA = 1 << 2,
 } oc_swupdate_decode_flag_t;
 
 /**
