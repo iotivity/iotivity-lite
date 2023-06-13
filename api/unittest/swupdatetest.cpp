@@ -1034,9 +1034,13 @@ TEST_F(TestSWUpdateWithServer, DeleteRequest_FailMethodNotSupported)
 
 #endif /* !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 
+/** Test all SWU steps
+ *   - SWU notification with success (OC_SWUPDATE_RESULT_SUCCESS) should trigger
+ * the corresponding action
+ */
 TEST_F(TestSWUpdateWithServer, Upgrade)
 {
-  std::string version{ "1.0" };
+  std::string version{ "4.2" };
 
   EXPECT_EQ(0, TestSWUpdateImplementation::checkNewVersionCounter_);
   oc_swupdate_perform_action(OC_SWUPDATE_ISAC, kDeviceID);
@@ -1073,6 +1077,22 @@ TEST_F(TestSWUpdateWithServer, Upgrade)
 #ifdef OC_SECURITY
   EXPECT_EQ(0, oc_sec_pstat_current_mode(kDeviceID));
 #endif /* OC_SECURITY */
+}
+
+/** Notification with unsuccesful result should not trigger the next step */
+TEST_F(TestSWUpdateWithServer, UpgradeNoNextStep)
+{
+  std::string version{ "4.2" };
+
+  EXPECT_EQ(0, TestSWUpdateImplementation::downloadUpgradeCounter_);
+  oc_swupdate_notify_new_version_available(kDeviceID, version.c_str(),
+                                           OC_SWUPDATE_RESULT_SVV_FAIL);
+  EXPECT_EQ(0, TestSWUpdateImplementation::downloadUpgradeCounter_);
+
+  EXPECT_EQ(0, TestSWUpdateImplementation::performUpgradeCounter_);
+  oc_swupdate_notify_downloaded(kDeviceID, version.c_str(),
+                                OC_SWUPDATE_RESULT_CONN_FAIL);
+  EXPECT_EQ(0, TestSWUpdateImplementation::performUpgradeCounter_);
 }
 
 #endif /* OC_SOFTWARE_UPDATE */

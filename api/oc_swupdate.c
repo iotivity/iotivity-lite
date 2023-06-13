@@ -111,7 +111,7 @@ static struct
   oc_swupdate_cb_t cbs;
   bool cbs_set;
 } g_swupdate_impl = {
-  .cbs = { NULL },
+  .cbs = { NULL, NULL, NULL, NULL },
   .cbs_set = false,
 };
 
@@ -538,13 +538,8 @@ swupdate_decode_string_property(const oc_rep_t *rep, int flags,
                          OC_CHAR_ARRAY_LEN(OC_SWU_PROP_SIGNED))) {
 
     if (!from_storage) {
-      return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_READONLY_PROPERTY; // cannot be
-                                                                  // edited
-                                                                  // currently,
-                                                                  // only
-                                                                  // "vendor"
-                                                                  // value is
-                                                                  // supported
+      // cannot be edited currently, only "vendor" value is supported
+      return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_READONLY_PROPERTY;
     }
     swudecode->signage = &rep->value.string;
     return 0;
@@ -737,7 +732,7 @@ swupdate_decode(const oc_rep_t *rep, int flags, bool has_purl,
 bool
 oc_swupdate_decode(const oc_rep_t *rep, int flags, oc_swupdate_t *dst)
 {
-  oc_swupdate_on_error_t on_error = { NULL };
+  oc_swupdate_on_error_t on_error = { NULL, NULL };
   oc_swupdate_decode_t swudecode = { 0 };
   if (!swupdate_decode(rep, flags, oc_string(dst->purl) != NULL, on_error,
                        &swudecode)) {
@@ -851,7 +846,6 @@ oc_swupdate_encode_with_resource(const oc_swupdate_t *swu,
     oc_process_baseline_interface(swu_res);
   }
 
-  bool to_storage = (flags & OC_SWUPDATE_ENCODE_FLAG_TO_STORAGE) != 0;
   if (!swupdate_encode_package_url(&swu->purl)) {
     OC_ERR("swupdate: failed to encode purl property");
     return -1;
@@ -883,6 +877,7 @@ oc_swupdate_encode_with_resource(const oc_swupdate_t *swu,
     return -1;
   }
 
+  bool to_storage = (flags & OC_SWUPDATE_ENCODE_FLAG_TO_STORAGE) != 0;
   if ((!to_storage || swu->updatetime > 0) &&
       !oc_swupdate_encode_clocktime_to_string(swu->updatetime,
                                               swupdate_on_encode_updatetime)) {
