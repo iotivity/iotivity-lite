@@ -576,15 +576,13 @@ storeError(const oc_rep_t *rep, oc_swupdate_validate_update_error_t error,
 
 static bool
 hasStoredError(const std::vector<ValidateUpdateError> &errors,
-               const std::string &property,
+               std::string_view property,
                oc_swupdate_validate_update_error_t error)
 {
-  for (const auto &e : errors) {
-    if ((property.empty() || e.property == property) && e.error == error) {
-      return true;
-    }
-  }
-  return false;
+  return std::any_of(
+    std::begin(errors), std::end(errors), [property, error](const auto &e) {
+      return (property.empty() || e.property == property) && e.error == error;
+    });
 }
 
 TEST_F(TestSWUpdateWithServer, ValidateUpdate_FailInvalidImplementation)

@@ -15,9 +15,15 @@
  * language governing permissions and limitations under the License.
  *
  ****************************************************************************/
+
 /**
-  @file
-*/
+ * @defgroup swupdate Software Update
+ *
+ * Notify the application of a new software update and perform the update.
+ *
+ * @{
+ */
+
 #ifndef OC_SWUPDATE_H
 #define OC_SWUPDATE_H
 
@@ -125,30 +131,31 @@ typedef struct
  *
  * @param swupdate_impl the structure with the software update callbacks
  *
- * @note the callbacks are copied to internal storage, so the validity of the
+ * @note the callbacks are copied to runtime variable, so the validity of the
  * structure is only required during the call to this function
  */
 OC_API
 void oc_swupdate_set_impl(const oc_swupdate_cb_t *swupdate_impl);
 
+/// @brief Validation error codes
 typedef enum {
   OC_SWUPDATE_VALIDATE_UPDATE_ERROR_INVALID_IMPLEMENTATION =
-    -1, // software update callbacks not assigned correctly
+    -1, ///< software update callbacks not assigned correctly
 
-  OC_SWUPDATE_VALIDATE_UPDATE_ERROR_INVALID_PROPERTY = -8, // invalid property
+  OC_SWUPDATE_VALIDATE_UPDATE_ERROR_INVALID_PROPERTY = -8, ///< invalid property
   OC_SWUPDATE_VALIDATE_UPDATE_ERROR_READONLY_PROPERTY =
-    -9, // trying to update a read-only property
+    -9, ///< trying to update a read-only property
   OC_SWUPDATE_VALIDATE_UPDATE_ERROR_INVALID_PROPERTY_VALUE =
-    -10, // invalid property value
+    -10, ///< invalid property value
 
   OC_SWUPDATE_VALIDATE_UPDATE_ERROR_UPDATETIME_NOT_SET =
-    -16, // updatetime property is not set
+    -16, ///< updatetime property is not set
   OC_SWUPDATE_VALIDATE_UPDATE_ERROR_UPDATETIME_INVALID =
-    -17, // updatetime property has invalid value
-  OC_SWUPDATE_VALIDATE_UPDATE_ERROR_PURL_NOT_SET = -18, // purl property not set
+    -17, ///< updatetime property has invalid value
+  OC_SWUPDATE_VALIDATE_UPDATE_ERROR_PURL_NOT_SET =
+    -18, ///< purl property not set
   OC_SWUPDATE_VALIDATE_UPDATE_ERROR_PURL_INVALID =
-    -19, // purl property has invalid value
-
+    -19, ///< purl property has invalid value
 } oc_swupdate_validate_update_error_t;
 
 /**
@@ -189,3 +196,5 @@ bool oc_swupdate_validate_update(
 #endif
 
 #endif /* OC_SWUPDATE_H */
+
+/** @} */
