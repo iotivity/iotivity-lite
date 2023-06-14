@@ -51,6 +51,7 @@
  * list with list_remove(). The head and tail of a list can be
  * extracted using list_head() and list_tail(), respectively.
  *
+ * @{
  */
 
 #ifndef OC_LIST_H
@@ -151,3 +152,5 @@ void *oc_list_item_next(void *item);
 #endif
 
 #endif /* OC_LIST_H */
+
+/** @} */

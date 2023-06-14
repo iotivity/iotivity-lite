@@ -50,8 +50,12 @@ Storage::Config()
 int
 Storage::Clear()
 {
-  for (const auto &entry : std::filesystem::directory_iterator(path_)) {
-    std::filesystem::remove_all(entry.path());
+  try {
+    for (const auto &entry : std::filesystem::directory_iterator(path_)) {
+      std::filesystem::remove_all(entry.path());
+    }
+  } catch (...) {
+    // ignore errors
   }
   return oc_storage_reset();
 }

@@ -106,7 +106,14 @@ static oc_swupdate_t *g_sw;
 static oc_swupdate_t g_sw[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-static const oc_swupdate_cb_t *g_swupdate_impl;
+static struct
+{
+  oc_swupdate_cb_t cbs;
+  bool cbs_set;
+} g_swupdate_impl = {
+  .cbs = { NULL, NULL, NULL, NULL },
+  .cbs_set = false,
+};
 
 static oc_event_callback_retval_t swupdate_update_async(void *data);
 
@@ -193,9 +200,7 @@ static oc_status_t
 swupdate_encode_for_device_with_interface(oc_interface_mask_t iface,
                                           size_t device)
 {
-  switch (iface) {
-  case OC_IF_RW:
-  case OC_IF_BASELINE:
+  if (iface == OC_IF_RW || iface == OC_IF_BASELINE) {
     if (!oc_swupdate_encode_for_device(
           device, iface == OC_IF_BASELINE
                     ? OC_SWUPDATE_ENCODE_FLAG_INCLUDE_BASELINE
@@ -204,8 +209,6 @@ swupdate_encode_for_device_with_interface(oc_interface_mask_t iface,
       return OC_STATUS_INTERNAL_SERVER_ERROR;
     }
     return OC_STATUS_OK;
-  default:
-    break;
   }
   return OC_STATUS_BAD_REQUEST;
 }
@@ -287,9 +290,9 @@ swupdate_resource_post(oc_request_t *request, oc_interface_mask_t iface,
 {
   (void)data;
   size_t device = request->resource->device;
-  if (!oc_swupdate_decode_for_device(request->request_payload,
-                                     OC_SWUPDATE_DECODE_FLAG_COAP_UPDATE,
-                                     device)) {
+  if (!oc_swupdate_decode_for_device(
+        request->request_payload, OC_SWUPDATE_DECODE_FLAG_VALIDATE_DECODED_DATA,
+        device)) {
     oc_send_response_with_callback(request, OC_STATUS_NOT_ACCEPTABLE, true);
     return;
   }
@@ -452,23 +455,23 @@ swupdate_decode_copy(const oc_swupdate_decode_t *src, oc_swupdate_t *dst)
   }
 }
 
-static bool
+static int
 swupdate_decode_int_property(const oc_rep_t *rep, int flags,
                              oc_swupdate_decode_t *swudecode)
 {
   assert(rep->type == OC_REP_INT);
   if (oc_rep_is_property(rep, OC_SWU_PROP_UPDATERESULT,
                          OC_CHAR_ARRAY_LEN(OC_SWU_PROP_UPDATERESULT))) {
-    if ((flags & OC_SWUPDATE_DECODE_FLAG_FROM_STORAGE) != 0) {
-      assert(rep->value.integer <= INT_MAX);
-      swudecode->swupdateresult = (int)rep->value.integer;
-      swudecode->swupdateresult_set = true;
-      return true;
+    if ((flags & OC_SWUPDATE_DECODE_FLAG_FROM_STORAGE) == 0) {
+      /* Read-only property */
+      return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_READONLY_PROPERTY;
     }
-    /* Read-only property */
-    return false;
+    assert(rep->value.integer <= INT_MAX);
+    swudecode->swupdateresult = (int)rep->value.integer;
+    swudecode->swupdateresult_set = true;
+    return 0;
   }
-  return false;
+  return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_INVALID_PROPERTY;
 }
 
 static bool
@@ -481,41 +484,40 @@ swupdate_decode_timestamp(const oc_string_t *value, oc_clock_time_t *time)
                                         oc_string_len(*value), time);
 }
 
-static bool
+static int
 swupdate_decode_update_time(const oc_rep_t *rep, int flags,
                             oc_swupdate_decode_t *swudecode)
 {
   assert(rep->type == OC_REP_STRING);
 
   bool from_storage = (flags & OC_SWUPDATE_DECODE_FLAG_FROM_STORAGE) != 0;
-
   if (!from_storage) {
     // allow special values for UPDATE
     if (oc_string_is_cstr_equal(
           &rep->value.string, OC_SWU_PROP_UPDATETIME_NONE,
           OC_CHAR_ARRAY_LEN(OC_SWU_PROP_UPDATETIME_NONE))) {
       swudecode->updatetime_set = UPDATE_TIME_NONE;
-      return true;
+      return 0;
     }
     if (oc_string_is_cstr_equal(
           &rep->value.string, OC_SWU_PROP_UPDATETIME_NOW,
           OC_CHAR_ARRAY_LEN(OC_SWU_PROP_UPDATETIME_NOW))) {
       swudecode->updatetime_set = UPDATE_TIME_NOW;
-      return true;
+      return 0;
     }
   }
   oc_clock_time_t updatetime;
   if (!swupdate_decode_timestamp(&rep->value.string, &updatetime)) {
     OC_ERR("swupdate: invalid updatetime property(%s)",
            oc_string(rep->value.string));
-    return false;
+    return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_INVALID_PROPERTY_VALUE;
   }
   swudecode->updatetime = updatetime;
   swudecode->updatetime_set = UPDATE_TIME_SET;
-  return true;
+  return 0;
 }
 
-static bool
+static int
 swupdate_decode_string_property(const oc_rep_t *rep, int flags,
                                 oc_swupdate_decode_t *swudecode)
 {
@@ -526,21 +528,21 @@ swupdate_decode_string_property(const oc_rep_t *rep, int flags,
                          OC_CHAR_ARRAY_LEN(OC_SWU_PROP_NEWVERSION))) {
     if (!from_storage) {
       /* Read-only property */
-      return false;
+      return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_READONLY_PROPERTY;
     }
     swudecode->nv = &rep->value.string;
-    return true;
+    return 0;
   }
 
   if (oc_rep_is_property(rep, OC_SWU_PROP_SIGNED,
                          OC_CHAR_ARRAY_LEN(OC_SWU_PROP_SIGNED))) {
 
     if (!from_storage) {
-      return false; // cannot be edited currently, only "vendor" value is
-                    // supported
+      // cannot be edited currently, only "vendor" value is supported
+      return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_READONLY_PROPERTY;
     }
     swudecode->signage = &rep->value.string;
-    return true;
+    return 0;
   }
 
   if (oc_rep_is_property(rep, OC_SWU_PROP_UPDATEACTION,
@@ -548,44 +550,44 @@ swupdate_decode_string_property(const oc_rep_t *rep, int flags,
     int action = oc_swupdate_action_from_str(oc_string(rep->value.string),
                                              oc_string_len(rep->value.string));
     if (action < 0) {
-      return false;
+      return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_INVALID_PROPERTY_VALUE;
     }
     swudecode->swupdateaction = (oc_swupdate_action_t)action;
     swudecode->swupdateaction_set = true;
-    return true;
+    return 0;
   }
 
   if (oc_rep_is_property(rep, OC_SWU_PROP_UPDATESTATE,
                          OC_CHAR_ARRAY_LEN(OC_SWU_PROP_UPDATESTATE))) {
     if (!from_storage) {
       /* Read-only property */
-      return false;
+      return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_READONLY_PROPERTY;
     }
     int state = oc_swupdate_state_from_str(oc_string(rep->value.string),
                                            oc_string_len(rep->value.string));
     if (state < 0) {
-      return false;
+      return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_INVALID_PROPERTY_VALUE;
     }
     swudecode->swupdatestate = (oc_swupdate_state_t)state;
     swudecode->swupdatestate_set = true;
-    return true;
+    return 0;
   }
 
   if (oc_rep_is_property(rep, OC_SWU_PROP_LASTUPDATE,
                          OC_CHAR_ARRAY_LEN(OC_SWU_PROP_LASTUPDATE))) {
     if (!from_storage) {
       /* Read-only property */
-      return false;
+      return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_READONLY_PROPERTY;
     }
     oc_clock_time_t lastupdate;
     if (!swupdate_decode_timestamp(&rep->value.string, &lastupdate)) {
       OC_ERR("swupdate: invalid lastupdate property(%s)",
              oc_string(rep->value.string));
-      return false;
+      return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_INVALID_PROPERTY_VALUE;
     }
     swudecode->lastupdate = lastupdate;
     swudecode->lastupdate_set = true;
-    return true;
+    return 0;
   }
 
   if (oc_rep_is_property(rep, OC_SWU_PROP_UPDATETIME,
@@ -596,85 +598,146 @@ swupdate_decode_string_property(const oc_rep_t *rep, int flags,
   if (oc_rep_is_property(rep, OC_SWU_PROP_PACKAGEURL,
                          OC_CHAR_ARRAY_LEN(OC_SWU_PROP_PACKAGEURL))) {
     swudecode->purl = &rep->value.string;
-    return true;
+    return 0;
   }
-  return false;
+  return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_INVALID_PROPERTY;
 }
 
-static bool
-swupdate_validate_decode(const oc_swupdate_decode_t *swudecode,
-                         bool skip_purl_validation)
+static int
+swupdate_decode_property(const oc_rep_t *rep, int flags,
+                         oc_swupdate_decode_t *swudecode)
+{
+  if (rep->type == OC_REP_INT) {
+    return swupdate_decode_int_property(rep, flags, swudecode);
+  }
+  if (rep->type == OC_REP_STRING) {
+    return swupdate_decode_string_property(rep, flags, swudecode);
+  }
+  return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_INVALID_PROPERTY;
+}
+
+static int
+swupdate_validate_updatetime(const oc_swupdate_decode_t *swudecode)
 {
   if (swudecode->updatetime_set == UPDATE_TIME_NOT_SET) {
     OC_ERR("swupdate: updatetime not set");
-    return false;
+    return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_UPDATETIME_NOT_SET;
   }
   if (swudecode->updatetime_set == UPDATE_TIME_SET &&
       swudecode->updatetime < oc_clock_time()) {
     OC_ERR("swupdate: updatetime(%ld) is in the past",
            (long)swudecode->updatetime);
-    return false;
+    return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_UPDATETIME_INVALID;
+  }
+  return 0;
+}
+
+static int
+swupdate_validate_package_url(const oc_swupdate_decode_t *swudecode)
+{
+  const char *purl =
+    swudecode->purl == NULL ? NULL : oc_string(*swudecode->purl);
+  if (purl == NULL) {
+    OC_ERR("swupdate: package URL not set");
+    return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_PURL_NOT_SET;
   }
 
-  if (!skip_purl_validation) {
-    const char *purl =
-      swudecode->purl == NULL ? NULL : oc_string(*swudecode->purl);
-    if (purl == NULL) {
-      OC_ERR("swupdate: package URL not set");
-      return false;
-    }
-
-    if (g_swupdate_impl == NULL || (g_swupdate_impl->validate_purl == NULL)) {
-      OC_ERR("swupdate: cannot validate package URL");
-      return false;
-    }
-    if (g_swupdate_impl->validate_purl(purl) < 0) {
-      OC_ERR("swupdate: package URL not valid");
-      return false;
-    }
+  if (!g_swupdate_impl.cbs_set || (g_swupdate_impl.cbs.validate_purl == NULL)) {
+    OC_ERR("swupdate: cannot validate package URL");
+    return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_INVALID_IMPLEMENTATION;
   }
-  return true;
+  if (g_swupdate_impl.cbs.validate_purl(purl) < 0) {
+    OC_ERR("swupdate: package URL not valid");
+    return OC_SWUPDATE_VALIDATE_UPDATE_ERROR_PURL_INVALID;
+  }
+  return 0;
+}
+
+static bool
+swupdate_validate_decoded_data(const oc_swupdate_decode_t *swudecode,
+                               bool skip_purl_validation,
+                               oc_swupdate_on_error_t on_error)
+{
+  bool is_valid = true;
+  int err = swupdate_validate_updatetime(swudecode);
+  if (err != 0) {
+    if (on_error.fn == NULL ||
+        !on_error.fn(NULL, (oc_swupdate_validate_update_error_t)err,
+                     on_error.data)) {
+      return false;
+    }
+    is_valid = false;
+  }
+
+  if (skip_purl_validation) {
+    return is_valid;
+  }
+
+  err = swupdate_validate_package_url(swudecode);
+  if (err == 0) {
+    return is_valid;
+  }
+  if (on_error.fn != NULL) {
+    on_error.fn(NULL, (oc_swupdate_validate_update_error_t)err, on_error.data);
+  }
+  return false;
+}
+
+static bool
+swupdate_decode(const oc_rep_t *rep, int flags, bool has_purl,
+                oc_swupdate_on_error_t on_error,
+                oc_swupdate_decode_t *swudecode)
+
+{
+  bool is_valid = true;
+  for (; rep != NULL; rep = rep->next) {
+    int err = swupdate_decode_property(rep, flags, swudecode);
+    if (err == 0) {
+      continue;
+    }
+    if ((flags & OC_SWUPDATE_DECODE_FLAG_IGNORE_ERRORS) != 0) {
+      OC_DBG("swupdate: cannot decode property (name=%s, type=%d)",
+             oc_string(rep->name), (int)rep->type);
+      continue;
+    }
+    OC_ERR("swupdate: cannot decode property (name=%s, type=%d)",
+           oc_string(rep->name), (int)rep->type);
+    if (on_error.fn == NULL ||
+        !on_error.fn(rep, (oc_swupdate_validate_update_error_t)err,
+                     on_error.data)) {
+      return false;
+    }
+    is_valid = false;
+  }
+
+  if (!is_valid ||
+      (flags & OC_SWUPDATE_DECODE_FLAG_VALIDATE_DECODED_DATA) == 0) {
+    return is_valid;
+  }
+
+  // special case for non-idle actions -> if purl is empty we keep the
+  // previous purl and skip purl validation
+  bool skip_purl_validation = false;
+  if (swudecode->swupdateaction_set &&
+      swudecode->swupdateaction != OC_SWUPDATE_IDLE &&
+      swudecode->purl != NULL && oc_string(*swudecode->purl)[0] == '\0' &&
+      has_purl) {
+    skip_purl_validation = true;
+  }
+  return swupdate_validate_decoded_data(swudecode, skip_purl_validation,
+                                        on_error) &&
+         is_valid;
 }
 
 bool
 oc_swupdate_decode(const oc_rep_t *rep, int flags, oc_swupdate_t *dst)
 {
+  oc_swupdate_on_error_t on_error = { NULL, NULL };
   oc_swupdate_decode_t swudecode = { 0 };
-  for (; rep != NULL; rep = rep->next) {
-    if (rep->type == OC_REP_STRING &&
-        swupdate_decode_string_property(rep, flags, &swudecode)) {
-      continue;
-    }
-    if (rep->type == OC_REP_INT &&
-        swupdate_decode_int_property(rep, flags, &swudecode)) {
-      continue;
-    }
-
-    if ((flags & OC_SWUPDATE_DECODE_FLAG_IGNORE_ERRORS) == 0) {
-      OC_ERR("swupdate: cannot decode property (name=%s, type=%d)",
-             oc_string(rep->name), (int)rep->type);
-      return false;
-    }
-    OC_DBG("swupdate: cannot decode property (name=%s, type=%d)",
-           oc_string(rep->name), (int)rep->type);
+  if (!swupdate_decode(rep, flags, oc_string(dst->purl) != NULL, on_error,
+                       &swudecode)) {
+    return false;
   }
-
-  if ((flags & OC_SWUPDATE_DECODE_FLAG_COAP_UPDATE) != 0) {
-    // special case for non-idle actions -> if purl is empty we keep the
-    // previous purl and skip purl validation
-    bool skip_purl_validation = false;
-    if (swudecode.swupdateaction_set &&
-        swudecode.swupdateaction != OC_SWUPDATE_IDLE &&
-        swudecode.purl != NULL && oc_string(*swudecode.purl)[0] == '\0' &&
-        oc_string(dst->purl) != NULL) {
-      skip_purl_validation = true;
-    }
-
-    if (!swupdate_validate_decode(&swudecode, skip_purl_validation)) {
-      return false;
-    }
-  }
-
   swupdate_decode_copy(&swudecode, dst);
   return true;
 }
@@ -683,6 +746,21 @@ bool
 oc_swupdate_decode_for_device(const oc_rep_t *rep, int flags, size_t device)
 {
   return oc_swupdate_decode(rep, flags, &g_sw[device]);
+}
+
+bool
+oc_swupdate_validate_update(size_t device, const oc_rep_t *rep,
+                            oc_swupdate_on_validate_update_error_fn_t on_error,
+                            void *on_error_data)
+{
+  oc_swupdate_on_error_t on_error_impl = {
+    .fn = on_error,
+    .data = on_error_data,
+  };
+  oc_swupdate_decode_t swudecode = { 0 };
+  return swupdate_decode(rep, OC_SWUPDATE_DECODE_FLAG_VALIDATE_DECODED_DATA,
+                         oc_string(g_sw[device].purl) != NULL, on_error_impl,
+                         &swudecode);
 }
 
 static bool
@@ -768,7 +846,6 @@ oc_swupdate_encode_with_resource(const oc_swupdate_t *swu,
     oc_process_baseline_interface(swu_res);
   }
 
-  bool to_storage = (flags & OC_SWUPDATE_ENCODE_FLAG_TO_STORAGE) != 0;
   if (!swupdate_encode_package_url(&swu->purl)) {
     OC_ERR("swupdate: failed to encode purl property");
     return -1;
@@ -800,6 +877,7 @@ oc_swupdate_encode_with_resource(const oc_swupdate_t *swu,
     return -1;
   }
 
+  bool to_storage = (flags & OC_SWUPDATE_ENCODE_FLAG_TO_STORAGE) != 0;
   if ((!to_storage || swu->updatetime > 0) &&
       !oc_swupdate_encode_clocktime_to_string(swu->updatetime,
                                               swupdate_on_encode_updatetime)) {
@@ -874,7 +952,13 @@ oc_swupdate_dump(size_t device)
 void
 oc_swupdate_set_impl(const oc_swupdate_cb_t *swupdate_impl)
 {
-  g_swupdate_impl = swupdate_impl;
+  if (swupdate_impl == NULL) {
+    memset(&g_swupdate_impl.cbs, 0, sizeof(g_swupdate_impl.cbs));
+    g_swupdate_impl.cbs_set = false;
+    return;
+  }
+  memcpy(&g_swupdate_impl.cbs, swupdate_impl, sizeof(*swupdate_impl));
+  g_swupdate_impl.cbs_set = true;
 }
 
 void
@@ -980,24 +1064,27 @@ oc_swupdate_perform_action(oc_swupdate_action_t action, size_t device)
   oc_swupdate_t *s = &g_sw[device];
   s->swupdateaction = action;
   if (action == OC_SWUPDATE_ISAC) {
-    if (g_swupdate_impl && g_swupdate_impl->check_new_version &&
-        g_swupdate_impl->check_new_version(device, oc_string(s->purl),
-                                           oc_string(s->nv)) < 0) {
+    if (g_swupdate_impl.cbs_set &&
+        g_swupdate_impl.cbs.check_new_version != NULL &&
+        g_swupdate_impl.cbs.check_new_version(device, oc_string(s->purl),
+                                              oc_string(s->nv)) < 0) {
       OC_ERR("swupdate: could not check for availability of new version of "
              "software");
     }
     return;
   }
   if (action == OC_SWUPDATE_ISVV) {
-    if (g_swupdate_impl && g_swupdate_impl->download_update &&
-        g_swupdate_impl->download_update(device, oc_string(s->purl)) < 0) {
+    if (g_swupdate_impl.cbs_set &&
+        g_swupdate_impl.cbs.download_update != NULL &&
+        g_swupdate_impl.cbs.download_update(device, oc_string(s->purl)) < 0) {
       OC_ERR("swupdate: could not download new software update");
     }
     return;
   }
   if (action == OC_SWUPDATE_UPGRADE) {
-    if (g_swupdate_impl && g_swupdate_impl->perform_upgrade &&
-        g_swupdate_impl->perform_upgrade(device, oc_string(s->purl)) < 0) {
+    if (g_swupdate_impl.cbs_set &&
+        g_swupdate_impl.cbs.perform_upgrade != NULL &&
+        g_swupdate_impl.cbs.perform_upgrade(device, oc_string(s->purl)) < 0) {
       OC_ERR("swupdate: could not initiate a software update");
     }
     return;
