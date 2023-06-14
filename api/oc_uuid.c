@@ -19,6 +19,7 @@
 #include "oc_uuid.h"
 #include "port/oc_random.h"
 #include "util/oc_macros_internal.h"
+#include "util/oc_secure_string_internal.h"
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -35,17 +36,19 @@ oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
   if (str == NULL) {
     return;
   }
+  size_t str_len = oc_strnlen(str, OC_UUID_LEN);
   memset(uuid, 0, sizeof(*uuid));
-  if (str[0] == '*' && strlen(str) == 1) {
+  if (str[0] == '*' && str_len == 1) {
     uuid->id[0] = '*';
     return;
   }
-  int i, j = 0, k = 1;
+  size_t k = 1;
   uint8_t c = 0;
-  for (i = 0; i < 36 && i < (int)strlen(str); i++) {
-    if (str[i] == '-')
+  for (size_t i = 0, j = 0; i < (OC_UUID_LEN - 1) && i < str_len; ++i) {
+    if (str[i] == '-') {
       continue;
-    else if (isalpha((int)str[i])) {
+    }
+    if (isalpha((int)str[i])) {
       switch (str[i]) {
       case 65:
       case 97:

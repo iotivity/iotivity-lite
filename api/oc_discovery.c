@@ -1186,7 +1186,7 @@ oc_discovery_process_payload(const uint8_t *payload, size_t len,
       link = link->next;
     }
 
-    if (eps_list &&
+    if (eps_list && anchor != NULL && uri != NULL && types != NULL &&
         (all ? all_handler(oc_string(*anchor), oc_string(*uri), *types,
                            iface_mask, eps_list, bm,
                            (links->next ? true : false), user_data)

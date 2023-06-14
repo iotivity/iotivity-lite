@@ -2122,7 +2122,7 @@ oc_tls_init_context(void)
   if (mbedtls_ctr_drbg_seed(&g_oc_ctr_drbg_ctx, mbedtls_entropy_func,
                             &g_entropy_ctx,
                             (const unsigned char *)PERSONALIZATION_DATA,
-                            strlen(PERSONALIZATION_DATA)) != 0) {
+                            sizeof(PERSONALIZATION_DATA)) != 0) {
     OC_ERR("error initializing RNG");
     goto dtls_init_err;
   }

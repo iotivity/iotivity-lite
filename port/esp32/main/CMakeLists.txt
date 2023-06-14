@@ -66,6 +66,7 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_memb.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_mmem.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_process.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_secure_string.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_timer.c
 
 	main.c

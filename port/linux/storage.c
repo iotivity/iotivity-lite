@@ -23,6 +23,7 @@
 #include "port/oc_log_internal.h"
 #include "port/oc_storage.h"
 #include "port/oc_storage_internal.h"
+#include "util/oc_secure_string_internal.h"
 #include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -30,7 +31,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define STORE_PATH_SIZE 64
+#define STORE_PATH_SIZE (64)
 
 static char g_store_path[STORE_PATH_SIZE] = { 0 };
 static size_t g_store_path_len = 0;
@@ -39,7 +40,7 @@ static bool g_path_set = false;
 int
 oc_storage_config(const char *store)
 {
-  size_t store_len = strlen(store);
+  size_t store_len = oc_strnlen_s(store, STORE_PATH_SIZE);
   if (store_len >= STORE_PATH_SIZE) {
     return -ENOENT;
   }
@@ -67,7 +68,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
   if (!g_path_set) {
     return -ENOENT;
   }
-  size_t store_len = strlen(store);
+  size_t store_len = oc_strnlen_s(store, STORE_PATH_SIZE);
   if (1 + store_len + g_store_path_len >= STORE_PATH_SIZE) {
     return -ENOENT;
   }
@@ -109,7 +110,7 @@ write_and_flush(FILE *fp, const uint8_t *buf, size_t size)
 long
 oc_storage_write(const char *store, const uint8_t *buf, size_t size)
 {
-  size_t store_len = strlen(store);
+  size_t store_len = oc_strnlen_s(store, STORE_PATH_SIZE);
   if (!g_path_set || (store_len + g_store_path_len >= STORE_PATH_SIZE)) {
     return -ENOENT;
   }

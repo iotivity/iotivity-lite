@@ -28,6 +28,7 @@
 #include "oc_python.h"
 #include "port/oc_clock.h"
 #include "util/oc_atomic.h"
+#include "util/oc_secure_string_internal.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_obt_internal.h"
@@ -2191,11 +2192,11 @@ diplomat_discovery(const char *anchor, const char *uri, oc_string_array_t types,
   (void)iface_mask;
   (void)bm;
   (void)user_data;
-  size_t uri_len = strlen(uri);
-  uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
+  size_t uri_len = oc_strnlen(uri, MAX_URI_LENGTH - 1);
   for (size_t i = 0; i < oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
-    if (strlen(t) == 14 && strncmp(t, "oic.r.diplomat", 14) == 0) {
+    if (oc_strnlen(t, STRING_ARRAY_ITEM_MAX_LEN) == 14 &&
+        strncmp(t, "oic.r.diplomat", 14) == 0) {
       oc_endpoint_list_copy(&diplomat_ep, endpoint);
       strncpy(diplomat_uri, uri, uri_len);
       diplomat_uri[uri_len] = '\0';

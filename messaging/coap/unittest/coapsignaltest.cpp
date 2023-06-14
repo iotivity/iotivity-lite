@@ -111,11 +111,10 @@ TEST_F(TestCoapSignal, coap_send_pong_message_N)
 
 TEST_F(TestCoapSignal, coap_send_release_message_P)
 {
-  const char *addr = "coap+tcp://127.0.0.1:5683";
-  size_t addr_len = strlen(addr) + 1;
+  std::string addr = "coap+tcp://127.0.0.1:5683";
   uint32_t hold_off = 10;
-
-  int ret = coap_send_release_message(target_ep, addr, addr_len, hold_off);
+  int ret = coap_send_release_message(target_ep, addr.c_str(),
+                                      addr.length() + 1, hold_off);
   EXPECT_EQ(1, ret);
 }
 
@@ -128,10 +127,10 @@ TEST_F(TestCoapSignal, coap_send_release_message_N)
 TEST_F(TestCoapSignal, coap_send_abort_message_P)
 {
   uint16_t opt = 10;
-  const char *msg = "Abort!";
-  size_t msg_len = strlen(msg) + 1;
+  std::string msg = "Abort!";
 
-  int ret = coap_send_abort_message(target_ep, opt, msg, msg_len);
+  int ret =
+    coap_send_abort_message(target_ep, opt, msg.c_str(), msg.length() + 1);
   EXPECT_EQ(1, ret);
 }
 
@@ -393,16 +392,15 @@ TEST_F(TestCoapSignal, SignalSetCustodyTest_N)
 TEST_F(TestCoapSignal, SignalGetAltAddrTest_P)
 {
   coap_packet_t packet{};
-  const char *addr = "coap+tcp://127.0.0.1:5683";
-  size_t addr_len = strlen(addr) + 1;
+  std::string addr = "coap+tcp://127.0.0.1:5683";
   coap_tcp_init_message(&packet, RELEASE_7_04);
-  coap_signal_set_alt_addr(&packet, addr, addr_len);
+  coap_signal_set_alt_addr(&packet, addr.c_str(), addr.length() + 1);
 
   const char *actual = nullptr;
   size_t actual_len = coap_signal_get_alt_addr(&packet, &actual);
 
-  ASSERT_EQ(addr, actual);
-  ASSERT_EQ(addr_len, actual_len);
+  ASSERT_EQ(addr.length() + 1, actual_len);
+  ASSERT_EQ(addr.c_str(), actual);
 }
 
 /*
@@ -432,16 +430,15 @@ TEST_F(TestCoapSignal, SignalSetAltAddrTest_P)
   coap_packet_t packet{};
   coap_tcp_init_message(&packet, RELEASE_7_04);
 
-  const char *addr = "coap+tcp://127.0.0.1:5683";
-  size_t addr_len = strlen(addr) + 1;
-  size_t length = coap_signal_set_alt_addr(&packet, addr, addr_len);
-
-  ASSERT_EQ(addr_len, length);
+  std::string addr = "coap+tcp://127.0.0.1:5683";
+  size_t length =
+    coap_signal_set_alt_addr(&packet, addr.c_str(), addr.length() + 1);
+  ASSERT_EQ(addr.length() + 1, length);
 
   const char *actual = nullptr;
   length = coap_signal_get_alt_addr(&packet, &actual);
-  ASSERT_EQ(addr_len, length);
-  ASSERT_EQ(addr, actual);
+  ASSERT_EQ(addr.length() + 1, length);
+  ASSERT_STREQ(addr.c_str(), actual);
 }
 
 /*
@@ -676,9 +673,8 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_RELEASE)
   coap_packet_t packet{};
   coap_tcp_init_message(&packet, RELEASE_7_04);
 
-  const char *addr = "coap+tcp://127.0.0.1:5683";
-  size_t addr_len = strlen(addr) + 1;
-  coap_signal_set_alt_addr(&packet, addr, addr_len);
+  std::string addr = "coap+tcp://127.0.0.1:5683";
+  coap_signal_set_alt_addr(&packet, addr.c_str(), addr.length() + 1);
   uint32_t hold_off = 10;
   coap_signal_set_hold_off(&packet, hold_off);
 
@@ -705,9 +701,9 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_ABORT)
   uint16_t bad_csm_opt = 10;
   coap_signal_set_bad_csm(&packet, bad_csm_opt);
 
-  const char *diagnostic = "BAD CSM OPTION";
-  size_t diagnostic_len = strlen(diagnostic) + 1;
-  coap_set_payload(&packet, diagnostic, diagnostic_len);
+  std::string diagnostic = "BAD CSM OPTION";
+  coap_set_payload(&packet, diagnostic.c_str(),
+                   static_cast<uint32_t>(diagnostic.length() + 1));
 
   std::vector<uint8_t> buffer;
   buffer.reserve(OC_PDU_SIZE);
@@ -720,7 +716,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_ABORT)
   ASSERT_EQ(COAP_NO_ERROR, ret);
   ASSERT_EQ(packet.code, parse_packet.code);
   ASSERT_EQ(packet.bad_csm_opt, parse_packet.bad_csm_opt);
-  ASSERT_STREQ(diagnostic, (char *)parse_packet.payload);
+  ASSERT_STREQ(diagnostic.c_str(), (char *)parse_packet.payload);
 }
 
 #endif /* OC_TCP && IPV4 */
