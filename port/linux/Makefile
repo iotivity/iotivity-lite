@@ -175,11 +175,11 @@ endif
 
 
 ifeq ($(WKCORE),1)
-	CFLAGS += -DOC_WKCORE
+	EXTRA_CFLAGS += -DOC_WKCORE
 endif
 
 ifeq ($(CLOUD),1)
-	CFLAGS += -DOC_CLOUD
+	EXTRA_CFLAGS += -DOC_CLOUD
 	TCP=1
 	IPV4=1
 	SAMPLES += cloud_client cloud_server cloud_tests cloud_proxy
@@ -199,7 +199,7 @@ else
 endif
 
 ifeq ($(MEMORY_TRACE), 1)
-	CFLAGS += -DOC_MEMORY_TRACE
+	EXTRA_CFLAGS += -DOC_MEMORY_TRACE
 endif
 
 ifeq ($(PKI),1)
@@ -294,10 +294,6 @@ endif
 
 CFLAGS += $(EXTRA_CFLAGS)
 CXXFLAGS += $(EXTRA_CFLAGS)
-
-ifeq ($(MEMTRACE),1)
-	CFLAGS += -DOC_MEMORY_TRACE
-endif
 
 SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
 

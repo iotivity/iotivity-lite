@@ -20,6 +20,7 @@
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
+#include "messaging/coap/observe.h"
 #include "messaging/coap/separate.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -792,7 +793,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
   coap_separate_t *cur = oc_list_head(handle->requests);
   while (cur != NULL) {
     coap_separate_t *next = cur->next;
-    if (cur->observe < 3) {
+    if (cur->observe < OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE) {
       handle_separate_response_request(cur, &response_buffer);
     } else {
       oc_resource_t *resource = oc_ri_get_app_resource_by_uri(

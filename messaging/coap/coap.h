@@ -85,13 +85,6 @@ typedef enum {
   COAP_TRANSPORT_TCP,
 } coap_transport_type_t;
 
-enum {
-  OC_COAP_OBSERVE_NOT_SET = -1,
-  OC_COAP_OBSERVE_REGISTER = 0,
-  OC_COAP_OBSERVE_UNREGISTER = 1,
-  // observe values [2, 2^24-1] are used for the sequence number
-};
-
 /* parsed message struct */
 typedef struct
 {
@@ -170,6 +163,15 @@ typedef struct
   uint32_t payload_len;
   uint8_t *payload;
 } coap_packet_t;
+
+typedef enum {
+  OC_COAP_OPTION_OBSERVE_NOT_SET = -1,
+  OC_COAP_OPTION_OBSERVE_REGISTER = 0,
+  OC_COAP_OPTION_OBSERVE_UNREGISTER = 1,
+  // observe values [2, 2^24-1] are used for the sequence number
+  OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE = 2,
+  OC_COAP_OPTION_OBSERVE_MAX_VALUE = ((1 << 24) - 1),
+} oc_coap_option_observe_t;
 
 void coap_init_connection(void);
 uint16_t coap_get_mid(void);

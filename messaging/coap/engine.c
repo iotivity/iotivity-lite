@@ -860,7 +860,7 @@ send_message:
       else {
         oc_blockwise_response_state_t *b =
           (oc_blockwise_response_state_t *)response_buffer;
-        if (b && b->observe_seq != OC_COAP_OBSERVE_NOT_SET) {
+        if (b && b->observe_seq != OC_COAP_OPTION_OBSERVE_NOT_SET) {
           response->token_len = sizeof(response->token);
           oc_random_buffer(response->token, response->token_len);
           if (request_buffer) {

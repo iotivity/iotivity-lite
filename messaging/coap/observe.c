@@ -159,17 +159,15 @@ remove_discovery_batch_observers(cmp_batch_observer_t *cmp, void *ctx)
 
 /*-------------------*/
 
-#define COAP_OBSERVE_MAX_VALUE ((1 << 24) - 1) // 2^24 - 1
-#define COAP_OBSERVE_START_VALUE (3)
-
-int32_t g_observe_counter = COAP_OBSERVE_START_VALUE;
+int32_t g_observe_counter = OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE;
 
 static int32_t
 observe_increment_observe_counter(int32_t *counter)
 {
   int32_t prev = *counter;
-  prev == COAP_OBSERVE_START_VALUE ? *counter = COAP_OBSERVE_START_VALUE
-                                   : ++(*counter);
+  prev == OC_COAP_OPTION_OBSERVE_MAX_VALUE
+    ? *counter = OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE
+    : ++(*counter);
   return prev;
 }
 
@@ -576,7 +574,8 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
           notification, observe_increment_observe_counter(&obs->obs_counter));
         observe_increment_observe_counter(&g_observe_counter);
       } else {
-        coap_set_header_observe(notification, OC_COAP_OBSERVE_UNREGISTER);
+        coap_set_header_observe(notification,
+                                OC_COAP_OPTION_OBSERVE_UNREGISTER);
       }
       if (response->response_buffer->content_format > 0) {
         coap_set_header_content_format(
@@ -1332,12 +1331,12 @@ coap_observe_handler(const coap_packet_t *request,
       !IS_OPTION(request, COAP_OPTION_OBSERVE)) {
     return -1;
   }
-  if (request->observe == 0) {
+  if (request->observe == OC_COAP_OPTION_OBSERVE_REGISTER) {
     return add_observer(resource, block2_size, endpoint, request->token,
                         request->token_len, request->uri_path,
                         request->uri_path_len, iface_mask);
   }
-  if (request->observe == 1) {
+  if (request->observe == OC_COAP_OPTION_OBSERVE_UNREGISTER) {
     return coap_remove_observer_by_token(endpoint, request->token,
                                          request->token_len);
   }
