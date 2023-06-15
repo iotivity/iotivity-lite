@@ -329,7 +329,8 @@ main(void)
   int ret = oc_main_init(&handler);
   if (ret < 0) {
     printf("oc_main_init failed!(%d)\n", ret);
-    goto exit;
+    deinit();
+    return ret;
   }
 
   size_t device_num = oc_core_get_num_devices();

@@ -18,6 +18,7 @@
 
 #ifdef OC_SECURITY
 
+#include "api/oc_helpers_internal.h"
 #include "api/oc_ri_internal.h"
 #include "oc_acl_internal.h"
 #include "oc_api.h"
@@ -33,7 +34,7 @@
 #include "oc_tls_internal.h"
 #include "port/oc_assert.h"
 #include "util/oc_features.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 #include "api/plgd/plgd_time_internal.h"
@@ -97,7 +98,7 @@ get_new_aceid(size_t device)
 {
   int aceid;
   do {
-    aceid = oc_random_value() >> 1;
+    aceid = (int)(oc_random_value() >> 1);
   } while (!unique_aceid(aceid, device));
   return aceid;
 }
@@ -131,9 +132,8 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, const oc_sec_ace_t *ace,
     }
 
     if (match && wildcard != 0 && res->wildcard != 0) {
-      if (wildcard != OC_ACE_WC_ALL && (wildcard & res->wildcard) != 0) {
-        positive = true;
-      } else if (wildcard == OC_ACE_WC_ALL && res->wildcard == OC_ACE_WC_ALL) {
+      if ((wildcard != OC_ACE_WC_ALL && (wildcard & res->wildcard) != 0) ||
+          (wildcard == OC_ACE_WC_ALL && res->wildcard == OC_ACE_WC_ALL)) {
         positive = true;
       } else {
         match = false;
@@ -148,6 +148,40 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, const oc_sec_ace_t *ace,
   }
 
   return res;
+}
+
+static bool
+acl_find_subject_has_matching_tag(const oc_sec_ace_t *ace, const char *tag,
+                                  size_t tag_len)
+{
+  if (tag == NULL) {
+    return oc_string(ace->tag) == NULL;
+  }
+  return oc_string(ace->tag) != NULL &&
+         oc_string_is_cstr_equal(&ace->tag, tag, tag_len);
+}
+
+static bool
+acl_find_subject_has_matching_subject(const oc_sec_ace_t *ace,
+                                      oc_ace_subject_type_t type,
+                                      const oc_ace_subject_t *subject)
+{
+  if (ace->subject_type != type) {
+    return false;
+  }
+  switch (type) {
+  case OC_SUBJECT_UUID:
+    return memcmp(subject->uuid.id, ace->subject.uuid.id,
+                  OC_ARRAY_SIZE(subject->uuid.id)) == 0;
+  case OC_SUBJECT_ROLE:
+    return oc_string_is_equal(&subject->role.role, &ace->subject.role.role) &&
+           (oc_string_len(ace->subject.role.authority) == 0 ||
+            oc_string_is_equal(&subject->role.authority,
+                               &ace->subject.role.authority));
+  case OC_SUBJECT_CONN:
+    return subject->conn == ace->subject.conn;
+  }
+  return false;
 }
 
 oc_sec_ace_t *
@@ -170,49 +204,13 @@ oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
     if (permission != 0 && ace->permission != permission) {
       goto next_ace;
     }
-    if (match_tag) {
-      if (tag == NULL) {
-        if (oc_string(ace->tag) != NULL) {
-          goto next_ace;
-        }
-      } else {
-        if (oc_string(ace->tag) == NULL || oc_string_len(ace->tag) != tag_len ||
-            memcmp(oc_string(ace->tag), tag, oc_string_len(ace->tag)) != 0) {
-          goto next_ace;
-        }
-      }
+    if (match_tag && !acl_find_subject_has_matching_tag(ace, tag, tag_len)) {
+      goto next_ace;
     }
-    if (ace->subject_type == type) {
-      switch (type) {
-      case OC_SUBJECT_UUID:
-        if (memcmp(subject->uuid.id, ace->subject.uuid.id, 16) == 0) {
-          return ace;
-        }
-        break;
-      case OC_SUBJECT_ROLE:
-        if (oc_string_len(subject->role.role) ==
-              oc_string_len(ace->subject.role.role) &&
-            memcmp(oc_string(subject->role.role),
-                   oc_string(ace->subject.role.role),
-                   oc_string_len(subject->role.role)) == 0) {
-          if (oc_string_len(ace->subject.role.authority) == 0) {
-            return ace;
-          } else if (oc_string_len(ace->subject.role.authority) ==
-                       oc_string_len(subject->role.authority) &&
-                     memcmp(oc_string(subject->role.authority),
-                            oc_string(ace->subject.role.authority),
-                            oc_string_len(subject->role.authority)) == 0) {
-            return ace;
-          }
-        }
-        break;
-      case OC_SUBJECT_CONN:
-        if (subject->conn == ace->subject.conn) {
-          return ace;
-        }
-        break;
-      }
+    if (acl_find_subject_has_matching_subject(ace, type, subject)) {
+      return ace;
     }
+
   next_ace:
     ace = ace->next;
   }
@@ -225,10 +223,10 @@ oc_ace_get_permission(const oc_sec_ace_t *ace, const oc_resource_t *resource,
 {
   /* If the resource is discoverable and exposes >=1 unsecured endpoints
    * then match with ACEs bearing any of the 3 wildcard resources.
-   * If the resource is discoverable and does not expose any unsecured endpoint,
-   * then match with ACEs bearing either OC_ACE_WC_ALL_SECURED or OC_ACE_WC_ALL.
-   * If the resource is not discoverable, then match only with ACEs bearing
-   *  OC_ACE_WC_ALL.
+   * If the resource is discoverable and does not expose any unsecured
+   * endpoint, then match with ACEs bearing either OC_ACE_WC_ALL_SECURED or
+   * OC_ACE_WC_ALL. If the resource is not discoverable, then match only with
+   * ACEs bearing OC_ACE_WC_ALL.
    */
   oc_ace_wildcard_t wc = 0;
   if (!is_DCR) {
@@ -372,7 +370,8 @@ oc_sec_check_acl_on_get(const oc_resource_t *resource, bool is_otm)
   const char *uri = oc_string(resource->uri);
   size_t uri_len = oc_string_len(resource->uri);
 
-  /* Retrieve requests to "/oic/res", "/oic/d" and "/oic/p" shall be granted. */
+  /* Retrieve requests to "/oic/res", "/oic/d" and "/oic/p" shall be granted.
+   */
   if (is_otm && ((uri_len == 8 && memcmp(uri, "/oic/res", 8) == 0) ||
                  (uri_len == 6 && memcmp(uri, "/oic/d", 6) == 0) ||
                  (uri_len == 6 && memcmp(uri, "/oic/p", 6) == 0))) {
@@ -526,16 +525,14 @@ oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
     /* All Retrieve requests to the “/oic/sec/pstat” Resource shall be
        granted.
     */
-    else if (oc_string_len(resource->uri) == 14 &&
-             memcmp(oc_string(resource->uri), "/oic/sec/pstat", 14) == 0 &&
-             method == OC_GET) {
+    if (oc_string_len(resource->uri) == 14 &&
+        memcmp(oc_string(resource->uri), "/oic/sec/pstat", 14) == 0 &&
+        method == OC_GET) {
       OC_DBG("oc_sec_check_acl: R access granted to pstat prior to DOC");
       return true;
     }
     /* Reject all other requests */
-    else {
-      return false;
-    }
+    return false;
   }
 
   if ((pstat->s == OC_DOS_RFPRO || pstat->s == OC_DOS_RFNOP ||
@@ -571,9 +568,13 @@ oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
   oc_sec_ace_t *match = NULL;
   if (uuid != NULL) {
     do {
-      match = oc_sec_acl_find_subject(
-        match, OC_SUBJECT_UUID, (const oc_ace_subject_t *)uuid, /*aceid*/ -1,
-        /*permission*/ 0, /*tag*/ NULL, /*match_tag*/ false, endpoint->device);
+      oc_ace_subject_t subject;
+      memset(&subject, 0, sizeof(oc_ace_subject_t));
+      memcpy(&subject.uuid, uuid, sizeof(*uuid));
+      match = oc_sec_acl_find_subject(match, OC_SUBJECT_UUID, &subject,
+                                      /*aceid*/ -1,
+                                      /*permission*/ 0, /*tag*/ NULL,
+                                      /*match_tag*/ false, endpoint->device);
 
       if (match) {
         permission |= oc_ace_get_permission(match, resource, is_DCR, is_public);

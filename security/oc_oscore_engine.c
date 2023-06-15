@@ -727,7 +727,7 @@ oc_oscore_send_message(oc_message_t *msg)
      * notifications.
      */
     int32_t observe_option = coap_pkt->observe;
-    if (coap_pkt->observe > 1) {
+    if (coap_pkt->observe >= OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE) {
       coap_pkt->observe = 0;
       OC_DBG(
         "---response is a notification; making inner Observe option empty");

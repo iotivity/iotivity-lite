@@ -22,6 +22,7 @@
 #include "api/oc_ri_internal.h"
 #include "oc_acl.h"
 #include "oc_api.h"
+#include "oc_clock_util.h"
 #include "oc_core_res.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
@@ -326,6 +327,7 @@ TestDevice::AddDynamicResource(const DynamicResourceToAdd &dr, size_t device)
     permission |= OC_PERM_DELETE;
   }
 
+  (void)permission;
 #ifdef OC_SECURITY
   if (dr.isPublic) {
     oc_resource_make_public(res);
@@ -334,8 +336,6 @@ TestDevice::AddDynamicResource(const DynamicResourceToAdd &dr, size_t device)
       res, true, static_cast<oc_ace_permissions_t>(permission));
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
-#else  /* !OC_SECURITY */
-  (void)permission;
 #endif /* OC_SECURITY */
 
   if (!oc_add_resource(res)) {

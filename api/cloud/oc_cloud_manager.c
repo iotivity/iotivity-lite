@@ -43,6 +43,10 @@
 #include <assert.h>
 #include <stdint.h>
 
+#define MILLISECONDS_PER_SECOND (1000)
+#define MILLISECONDS_PER_MINUTE (60 * MILLISECONDS_PER_SECOND)
+#define MILLISECONDS_PER_HOUR (60 * MILLISECONDS_PER_MINUTE)
+
 static void cloud_start_process(oc_cloud_context_t *ctx);
 static oc_event_callback_retval_t cloud_manager_reconnect_async(void *data);
 static oc_event_callback_retval_t cloud_manager_register_async(void *data);
@@ -186,23 +190,26 @@ finish:
   _oc_signal_event_loop();
 }
 
-static uint16_t
-check_expires_in(int64_t expires_in)
+static uint64_t
+refresh_token_expires_in_ms(int64_t expires_in_ms)
 {
-  if (expires_in <= 0) {
+  if (expires_in_ms <= 0) {
     return 0;
   }
-  if (expires_in > 60 * 60) {
-    // if time is more than 1h then set expires to (expires_in - 10min).
-    expires_in = expires_in - 10 * 60;
-  } else if (expires_in > 4 * 60) {
-    // if time is more than 240sec then set expires to (expires_in - 2min).
-    expires_in = expires_in - 2 * 60;
-  } else if (expires_in > 20) {
-    // if time is more than 20sec then set expires to (expires_in - 10sec).
-    expires_in = expires_in - 10;
+
+  if (expires_in_ms > (int64_t)MILLISECONDS_PER_HOUR) {
+    // if time is more than 1h then set expires to (expires_in_ms - 10min).
+    return (uint64_t)(expires_in_ms - (int64_t)(10 * MILLISECONDS_PER_MINUTE));
   }
-  return expires_in > UINT16_MAX ? UINT16_MAX : (uint16_t)expires_in;
+  if (expires_in_ms > (int64_t)(4 * MILLISECONDS_PER_MINUTE)) {
+    // if time is more than 240sec then set expires to (expires_in_ms - 2min).
+    return (uint64_t)(expires_in_ms - (int64_t)(2 * MILLISECONDS_PER_MINUTE));
+  }
+  if (expires_in_ms > (int64_t)(20 * MILLISECONDS_PER_SECOND)) {
+    // if time is more than 20sec then set expires to (expires_in_ms - 10sec).
+    return (uint64_t)(expires_in_ms - (int64_t)(10 * MILLISECONDS_PER_SECOND));
+  }
+  return (uint64_t)expires_in_ms;
 }
 
 static bool
@@ -530,14 +537,14 @@ on_keepalive_response_default(oc_cloud_context_t *ctx, bool response_received,
                               uint64_t *next_ping)
 {
   if (response_received) {
-    *next_ping = 20 * 1000;
+    *next_ping = 20UL * MILLISECONDS_PER_SECOND;
     ctx->retry_count = 0;
   } else {
-    *next_ping = 4 * 1000;
+    *next_ping = 4UL * MILLISECONDS_PER_SECOND;
     uint64_t keepalive_ping_timeout_ms =
-      ((uint64_t)(ctx->keepalive.ping_timeout)) * 1000;
+      ((uint64_t)(ctx->keepalive.ping_timeout)) * MILLISECONDS_PER_SECOND;
     // we don't want to ping more often than once per second
-    if (keepalive_ping_timeout_ms >= (*next_ping + 1000)) {
+    if (keepalive_ping_timeout_ms >= (*next_ping + MILLISECONDS_PER_SECOND)) {
       *next_ping = (keepalive_ping_timeout_ms - *next_ping);
     }
     ++ctx->retry_count;
@@ -559,12 +566,12 @@ on_keepalive_response(oc_cloud_context_t *ctx, bool response_received,
   }
   if (!ok) {
     OC_ERR("[CM] keepalive failed");
-  } else {
-    OC_DBG("[CM] keepalive sends the next ping in %llu milliseconds with %u "
-           "seconds timeout",
-           (long long unsigned)*next_ping, ctx->keepalive.ping_timeout);
+    return false;
   }
-  return ok;
+  OC_DBG("[CM] keepalive sends the next ping in %llu milliseconds with %u "
+         "seconds timeout",
+         (long long unsigned)*next_ping, ctx->keepalive.ping_timeout);
+  return true;
 }
 
 static void
@@ -583,8 +590,10 @@ cloud_manager_login_handler(oc_client_response_t *data)
     on_keepalive_response(ctx, true, &next_ping);
     oc_reset_delayed_callback_ms(ctx, cloud_manager_send_ping_async, next_ping);
     if (ctx->store.expires_in > 0) {
-      oc_reset_delayed_callback(ctx, cloud_manager_refresh_token_async,
-                                check_expires_in(ctx->store.expires_in));
+      oc_reset_delayed_callback_ms(
+        ctx, cloud_manager_refresh_token_async,
+        refresh_token_expires_in_ms(ctx->store.expires_in *
+                                    MILLISECONDS_PER_SECOND));
     }
     goto finish;
   }

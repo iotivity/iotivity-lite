@@ -27,6 +27,7 @@
 #define OC_UUID_H
 
 #include "oc_export.h"
+#include "util/oc_compiler.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -67,10 +68,10 @@ typedef struct
  * oc_str_to_uuid("1628fbcc-13ce-4e37-b883-1fd8d2ad945d", &uuid);
  * ```
  * @param[in] str the UUID string
- * @param[out] uuid the oc_uuid_t to hold the UUID bits.
+ * @param[out] uuid the oc_uuid_t to hold the UUID bits (cannot be NULL).
  */
 OC_API
-void oc_str_to_uuid(const char *str, oc_uuid_t *uuid);
+void oc_str_to_uuid(const char *str, oc_uuid_t *uuid) OC_NONNULL(2);
 
 /**
  * Convert the 128 bit oc_uuid_t to a string representation.
@@ -113,7 +114,7 @@ void oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, size_t buflen);
  * @param[out] uuid the randomly generated UUID
  */
 OC_API
-void oc_gen_uuid(oc_uuid_t *uuid);
+void oc_gen_uuid(oc_uuid_t *uuid) OC_NONNULL();
 
 /**
  * @brief Compare two uuid values.

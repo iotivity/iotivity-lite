@@ -29,7 +29,8 @@
 #include "oc_store.h"
 #include "port/oc_assert.h"
 #include "port/oc_log_internal.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
+#include "util/oc_secure_string_internal.h"
 
 #include <assert.h>
 
@@ -195,7 +196,8 @@ oc_sec_sp_decode(const oc_rep_t *rep, int flags, oc_sec_sp_t *dst)
     for (size_t i = 0;
          i < oc_string_array_get_allocated_size(*supportedprofiles); ++i) {
       const char *p = oc_string_array_get_item(*supportedprofiles, i);
-      oc_sp_types_t profile = oc_sec_sp_type_from_string(p, strlen(p));
+      oc_sp_types_t profile =
+        oc_sec_sp_type_from_string(p, oc_strnlen(p, STRING_ARRAY_ITEM_MAX_LEN));
       if (profile == 0) {
         OC_ERR("oc_sp: invalid supportedprofiles item value([%zu]=%s)", i, p);
         return false;

@@ -20,13 +20,14 @@
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
+#include "messaging/coap/observe.h"
 #include "messaging/coap/separate.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_core_res_internal.h"
 #include "port/oc_log_internal.h"
 #include "util/oc_features.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_SERVER
 #include "api/oc_ri_server_internal.h"
@@ -684,9 +685,9 @@ void
 oc_set_separate_response_buffer(oc_separate_response_t *handle)
 {
 #ifdef OC_BLOCK_WISE
-  oc_rep_new(handle->buffer, OC_MAX_APP_DATA_SIZE);
+  oc_rep_new_v1(handle->buffer, OC_MAX_APP_DATA_SIZE);
 #else  /* OC_BLOCK_WISE */
-  oc_rep_new(handle->buffer, OC_BLOCK_SIZE);
+  oc_rep_new_v1(handle->buffer, OC_BLOCK_SIZE);
 #endif /* !OC_BLOCK_WISE */
 }
 
@@ -768,7 +769,7 @@ handle_separate_response_request(coap_separate_t *request,
 #endif /* OC_BLOCK_WISE */
   if (response_buffer->response_length > 0) {
     coap_set_payload(&response, response_buffer->buffer,
-                     response_buffer->response_length);
+                     (uint32_t)response_buffer->response_length);
   }
   handle_separate_response_transaction(t, &response,
                                        (uint8_t)response_buffer->code);
@@ -792,7 +793,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
   coap_separate_t *cur = oc_list_head(handle->requests);
   while (cur != NULL) {
     coap_separate_t *next = cur->next;
-    if (cur->observe < 3) {
+    if (cur->observe < OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE) {
       handle_separate_response_request(cur, &response_buffer);
     } else {
       oc_resource_t *resource = oc_ri_get_app_resource_by_uri(

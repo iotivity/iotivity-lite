@@ -34,6 +34,7 @@
 #include "port/oc_network_event_handler_internal.h"
 #include "util/oc_atomic.h"
 #include "util/oc_features.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_SESSION_EVENTS
 #include "api/oc_session_events_internal.h"
@@ -351,7 +352,10 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, int port,
         }
         ep.interface_index = addrmsg->ifa_index;
         include = true;
-        struct rtattr *attr = (struct rtattr *)IFA_RTA(addrmsg);
+        CLANG_IGNORE_WARNING_START
+        CLANG_IGNORE_WARNING("-Wcast-align")
+        struct rtattr *attr = IFA_RTA(addrmsg);
+        CLANG_IGNORE_WARNING_END
         int att_len = IFA_PAYLOAD(response);
         while (RTA_OK(attr, att_len)) {
           if (attr->rta_type == IFA_ADDRESS) {
@@ -370,7 +374,10 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, int port,
               include = false;
             }
           }
+          CLANG_IGNORE_WARNING_START
+          CLANG_IGNORE_WARNING("-Wcast-align")
           attr = RTA_NEXT(attr, att_len);
+          CLANG_IGNORE_WARNING_END
         }
       }
       if (include) {
@@ -406,7 +413,10 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, int port,
       }
 
     next_ifaddr:
+      CLANG_IGNORE_WARNING_START
+      CLANG_IGNORE_WARNING("-Wcast-align")
       response = NLMSG_NEXT(response, response_len);
+      CLANG_IGNORE_WARNING_END
     }
   }
   close(nl_sock);
@@ -505,7 +515,8 @@ oc_connectivity_get_endpoints(size_t device)
   bool swapped = false;
   int8_t expected = OC_ATOMIC_LOAD8(dev->flags);
   while ((expected & IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST) != 0) {
-    int8_t desired = expected & ~IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST;
+    int8_t desired =
+      (int8_t)(expected & ~IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST);
     OC_ATOMIC_COMPARE_AND_SWAP8(dev->flags, expected, desired, swapped);
     if (swapped) {
       refresh = true;
@@ -557,7 +568,10 @@ process_interface_change_event(void)
           oc_network_interface_event(NETWORK_INTERFACE_UP);
         }
 #endif /* OC_NETWORK_MONITOR */
-        struct rtattr *attr = (struct rtattr *)IFA_RTA(ifa);
+        CLANG_IGNORE_WARNING_START
+        CLANG_IGNORE_WARNING("-Wcast-align")
+        struct rtattr *attr = IFA_RTA(ifa);
+        CLANG_IGNORE_WARNING_END
         int att_len = IFA_PAYLOAD(response);
         while (RTA_OK(attr, att_len)) {
           if (attr->rta_type == IFA_ADDRESS) {
@@ -587,7 +601,10 @@ process_interface_change_event(void)
                 }
               }
           }
+          CLANG_IGNORE_WARNING_START
+          CLANG_IGNORE_WARNING("-Wcast-align")
           attr = RTA_NEXT(attr, att_len);
+          CLANG_IGNORE_WARNING_END
         }
       }
       if_state_changed = true;
@@ -602,7 +619,10 @@ process_interface_change_event(void)
       }
       if_state_changed = true;
     }
+    CLANG_IGNORE_WARNING_START
+    CLANG_IGNORE_WARNING("-Wcast-align")
     response = NLMSG_NEXT(response, response_len);
+    CLANG_IGNORE_WARNING_END
   }
 
   if (if_state_changed) {
@@ -614,7 +634,8 @@ process_interface_change_event(void)
       bool swapped = false;
       int8_t expected = OC_ATOMIC_LOAD8(dev->flags);
       while ((expected & IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST) == 0) {
-        int8_t desired = expected | IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST;
+        int8_t desired =
+          (int8_t)(expected | IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST);
         OC_ATOMIC_COMPARE_AND_SWAP8(dev->flags, expected, desired, swapped);
         if (swapped) {
           break;
@@ -674,7 +695,10 @@ recv_msg(int sock, uint8_t *recv_buf, long recv_buf_size,
       endpoint->addr.ipv6.port = ntohs(c6->sin6_port);
 
       /* Set receiving network interface index */
+      CLANG_IGNORE_WARNING_START
+      CLANG_IGNORE_WARNING("-Wcast-align")
       struct in6_pktinfo *pktinfo = (struct in6_pktinfo *)CMSG_DATA(cmsg);
+      CLANG_IGNORE_WARNING_END
       endpoint->interface_index = pktinfo->ipi6_ifindex;
 
       /* For a unicast receiving socket, extract the destination address
@@ -696,7 +720,10 @@ recv_msg(int sock, uint8_t *recv_buf, long recv_buf_size,
         OC_ERR("anciliary data contains invalid source address");
         return -1;
       }
+      CLANG_IGNORE_WARNING_START
+      CLANG_IGNORE_WARNING("-Wcast-align")
       struct in_pktinfo *pktinfo = (struct in_pktinfo *)CMSG_DATA(cmsg);
+      CLANG_IGNORE_WARNING_END
       struct sockaddr_in *c4 = (struct sockaddr_in *)&client;
       memcpy(endpoint->addr.ipv4.address, &c4->sin_addr.s_addr,
              sizeof(c4->sin_addr.s_addr));
@@ -980,7 +1007,7 @@ to_timeval(oc_clock_time_t ticks)
 {
   unsigned sec = (unsigned)(ticks / OC_CLOCK_SECOND);
   unsigned usec =
-    (unsigned)((ticks % OC_CLOCK_SECOND) * (1.e06 / OC_CLOCK_SECOND));
+    (unsigned)((double)(ticks % OC_CLOCK_SECOND) * (1.e06 / OC_CLOCK_SECOND));
   if (sec == 0 && usec == 0) {
     usec = 1;
   }
@@ -1048,7 +1075,7 @@ network_event_thread(void *data)
   return NULL;
 }
 
-static int
+static ssize_t
 send_msg(int sock, struct sockaddr_storage *receiver,
          const oc_message_t *message)
 {
@@ -1080,7 +1107,10 @@ send_msg(int sock, struct sockaddr_storage *receiver,
     cmsg->cmsg_type = IPV6_PKTINFO;
     cmsg->cmsg_len = CMSG_LEN(sizeof(struct in6_pktinfo));
 
+    CLANG_IGNORE_WARNING_START
+    CLANG_IGNORE_WARNING("-Wcast-align")
     pktinfo = (struct in6_pktinfo *)CMSG_DATA(cmsg);
+    CLANG_IGNORE_WARNING_END
     memset(pktinfo, 0, sizeof(struct in6_pktinfo));
 
     /* Get the outgoing interface index from message->endpint */
@@ -1104,7 +1134,10 @@ send_msg(int sock, struct sockaddr_storage *receiver,
     cmsg->cmsg_type = IP_PKTINFO;
     cmsg->cmsg_len = CMSG_LEN(sizeof(struct in_pktinfo));
 
+    CLANG_IGNORE_WARNING_START
+    CLANG_IGNORE_WARNING("-Wcast-align")
     pktinfo = (struct in_pktinfo *)CMSG_DATA(cmsg);
+    CLANG_IGNORE_WARNING_END
     memset(pktinfo, 0, sizeof(struct in_pktinfo));
 
     pktinfo->ipi_ifindex = message->endpoint.interface_index;
@@ -1118,24 +1151,23 @@ send_msg(int sock, struct sockaddr_storage *receiver,
   }
 #endif /* OC_IPV4 */
 
-  int bytes_sent = 0, x;
-  while (bytes_sent < (int)message->length) {
+  size_t bytes_sent = 0;
+  while (bytes_sent < message->length) {
     iovec[0].iov_base = (void *)(message->data + bytes_sent);
-    iovec[0].iov_len = message->length - (size_t)bytes_sent;
-    x = sendmsg(sock, &msg, 0);
+    iovec[0].iov_len = message->length - bytes_sent;
+    ssize_t x = sendmsg(sock, &msg, 0);
     if (x < 0) {
       OC_WRN("sendto() returned errno %d", (int)errno);
       break;
     }
     bytes_sent += x;
   }
-  OC_DBG("Sent %d bytes", bytes_sent);
+  OC_DBG("Sent %zu bytes", bytes_sent);
 
   if (bytes_sent == 0) {
     return -1;
   }
-
-  return bytes_sent;
+  return (ssize_t)bytes_sent;
 }
 
 bool
@@ -1221,7 +1253,7 @@ oc_send_buffer_internal(oc_message_t *message, bool create, bool queue)
   }
 #endif /* OC_IPV4 */
 
-  return send_msg(send_sock, &receiver, message);
+  return (int)send_msg(send_sock, &receiver, message);
 }
 
 int
@@ -1248,7 +1280,10 @@ send_ipv6_discovery_request(oc_message_t *message,
 #define IN6_IS_ADDR_MC_REALM_LOCAL(addr)                                       \
   IN6_IS_ADDR_MULTICAST(addr) && ((((const uint8_t *)(addr))[1] & 0x0f) == 0x03)
 
+  CLANG_IGNORE_WARNING_START
+  CLANG_IGNORE_WARNING("-Wcast-align")
   const struct sockaddr_in6 *addr = (struct sockaddr_in6 *)interface->ifa_addr;
+  CLANG_IGNORE_WARNING_END
   if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
     unsigned int mif = if_nametoindex(interface->ifa_name);
     if (setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, &mif,
@@ -1291,7 +1326,10 @@ send_ipv4_discovery_request(oc_message_t *message,
     OC_ERR("server socket for IPv4 is disabled");
     return false;
   }
+  CLANG_IGNORE_WARNING_START
+  CLANG_IGNORE_WARNING("-Wcast-align")
   struct sockaddr_in *addr = (struct sockaddr_in *)interface->ifa_addr;
+  CLANG_IGNORE_WARNING_END
   if (setsockopt(server_sock, IPPROTO_IP, IP_MULTICAST_IF, &addr->sin_addr,
                  sizeof(addr->sin_addr)) == -1) {
     OC_ERR("setting socket option for default IP_MULTICAST_IF: %d", errno);

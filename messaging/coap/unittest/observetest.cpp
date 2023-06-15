@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright 2023 Daniel Adam All Rights Reserved.
+ * Copyright (c) 2023 plgd.dev s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *
- ******************************************************************/
+ ***************************************************************************/
 
-#ifndef OC_MACROS_H
-#define OC_MACROS_H
-
-#define OC_TO_STR(x) #x
-
-// use only for C-string constants to get string length and not size of a
-// pointer, OC_CHAR_ARRAY_LEN(x) should be equal to strlen(x)
-#define OC_CHAR_ARRAY_LEN(x) (sizeof(x) - 1)
-
-#define OC_ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
-
-#endif // OC_MACROS_H
+// TODO: add tests for messaging/coap/observe.c

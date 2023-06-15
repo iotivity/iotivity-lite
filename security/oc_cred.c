@@ -34,7 +34,7 @@
 #include "security/oc_roles_internal.h"
 #include "security/oc_tls_internal.h"
 #include "util/oc_list.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 #include "util/oc_memb.h"
 #include <stdlib.h>
 
@@ -68,15 +68,15 @@ static const int allowed_roles_num = sizeof(allowed_roles) / sizeof(char *);
 #define SYMMETRIC_KEY_128BIT_LEN 16
 #define SYMMETRIC_KEY_256BIT_LEN 32
 
-static int
-check_symmetric_key_length(int key_size)
+static bool
+check_symmetric_key_length(size_t key_size)
 {
   if (key_size != SYMMETRIC_KEY_128BIT_LEN &&
       key_size != SYMMETRIC_KEY_256BIT_LEN) {
-    OC_ERR("oc_cred: invalid PSK length(%d)", key_size);
-    return -1;
+    OC_ERR("oc_cred: invalid PSK length(%zu)", key_size);
+    return false;
   }
-  return 0;
+  return true;
 }
 
 oc_sec_creds_t *
@@ -216,7 +216,7 @@ get_new_credid(bool roles_resource, const oc_tls_peer_t *client, size_t device)
 {
   int credid;
   do {
-    credid = oc_random_value() >> 1;
+    credid = (int)(oc_random_value() >> 1);
   } while (oc_sec_is_existing_cred(credid, roles_resource, client, device));
   return credid;
 }
@@ -536,12 +536,16 @@ oc_sec_get_valid_ecdsa_keypair(size_t device, size_t public_key_len,
                                const uint8_t *publicdata)
 {
   oc_ecdsa_keypair_t *kp = oc_sec_ecdsa_get_keypair(device);
-  if (!kp) {
+  if (kp == NULL) {
     return NULL;
   }
-  if (memcmp(kp->public_key,
-             oc_cast(*public_key, uint8_t) + public_key->size - public_key_len,
-             public_key_len) != 0) {
+  const uint8_t *pk_buffer = oc_cast(*public_key, uint8_t);
+  if (pk_buffer == NULL) {
+    return NULL;
+  }
+  // data is written at the end of the buffer
+  pk_buffer += public_key->size - public_key_len;
+  if (memcmp(kp->public_key, pk_buffer, public_key_len) != 0) {
     return NULL;
   }
   if (!check_uuid_from_cert_raw(publicdata_size + 1, publicdata,
@@ -570,17 +574,20 @@ oc_sec_add_new_cred(size_t device, bool roles_resource,
 #ifdef OC_PKI
   oc_string_t public_key;
   memset(&public_key, 0, sizeof(oc_string_t));
-  int public_key_len = 0;
-  if (credtype == OC_CREDTYPE_CERT &&
-      (public_key_len = oc_certs_parse_public_key_to_oc_string(
-         publicdata, publicdata_size + 1, &public_key)) < 0) {
-    goto add_new_cred_error;
+  size_t public_key_len = 0;
+  if (credtype == OC_CREDTYPE_CERT) {
+    int pk_len = oc_certs_parse_public_key_to_oc_string(
+      publicdata, publicdata_size + 1, &public_key);
+    if (pk_len < 0) {
+      goto add_new_cred_error;
+    }
+    public_key_len = (size_t)pk_len;
   }
 
   if (roles_resource &&
       (credtype != OC_CREDTYPE_CERT ||
-       !oc_sec_verify_role_cred(client, credusage, (size_t)public_key_len,
-                                &public_key, publicdata_size, publicdata))) {
+       !oc_sec_verify_role_cred(client, credusage, public_key_len, &public_key,
+                                publicdata_size, publicdata))) {
     goto add_new_cred_error;
   }
 #endif /* OC_PKI */
@@ -592,8 +599,8 @@ oc_sec_add_new_cred(size_t device, bool roles_resource,
 #ifdef OC_PKI
   oc_ecdsa_keypair_t *kp = NULL;
   if (credusage == OC_CREDUSAGE_IDENTITY_CERT && privatedata_size == 0) {
-    kp = oc_sec_get_valid_ecdsa_keypair(
-      device, (size_t)public_key_len, &public_key, publicdata_size, publicdata);
+    kp = oc_sec_get_valid_ecdsa_keypair(device, public_key_len, &public_key,
+                                        publicdata_size, publicdata);
     if (!kp) {
       goto add_new_cred_error;
     }
@@ -735,7 +742,7 @@ oc_sec_add_new_cred(size_t device, bool roles_resource,
       uint8_t key[64];
       memcpy(key, privatedata, privatedata_size);
       int key_size = oc_base64_decode(key, privatedata_size);
-      if (check_symmetric_key_length(key_size)) {
+      if (key_size < 0 || !check_symmetric_key_length((size_t)key_size)) {
         oc_sec_remove_cred(cred, device);
         goto add_new_cred_error;
       }
@@ -743,7 +750,7 @@ oc_sec_add_new_cred(size_t device, bool roles_resource,
       privatedata_encoding = OC_ENCODING_RAW;
     } else {
       if (credtype == OC_CREDTYPE_PSK &&
-          check_symmetric_key_length(privatedata_size)) {
+          !check_symmetric_key_length(privatedata_size)) {
         oc_sec_remove_cred(cred, device);
         goto add_new_cred_error;
       }

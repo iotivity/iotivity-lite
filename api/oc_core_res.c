@@ -32,7 +32,7 @@
 #include "util/oc_atomic.h"
 #include "util/oc_compiler.h"
 #include "util/oc_features.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_CLOUD
 #include "api/cloud/oc_cloud_resource_internal.h"

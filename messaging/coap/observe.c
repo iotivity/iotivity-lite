@@ -158,7 +158,19 @@ remove_discovery_batch_observers(cmp_batch_observer_t *cmp, void *ctx)
 #endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
 
 /*-------------------*/
-int32_t observe_counter = 3;
+
+int32_t g_observe_counter = OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE;
+
+static int32_t
+observe_increment_observe_counter(int32_t *counter)
+{
+  int32_t prev = *counter;
+  prev == OC_COAP_OPTION_OBSERVE_MAX_VALUE
+    ? *counter = OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE
+    : ++(*counter);
+  return prev;
+}
+
 /*---------------------------------------------------------------------------*/
 OC_LIST(observers_list);
 OC_MEMB(observers_memb, coap_observer_t, COAP_MAX_OBSERVERS);
@@ -208,7 +220,7 @@ add_observer(oc_resource_t *resource, uint16_t block2_size,
     memcpy(o->token, token, token_len);
     o->last_mid = 0;
     o->iface_mask = iface_mask;
-    o->obs_counter = observe_counter;
+    o->obs_counter = g_observe_counter;
     o->resource = resource;
 #ifdef OC_BLOCK_WISE
     o->block2_size = block2_size;
@@ -549,18 +561,21 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
                    "for client liveness");
             notification->type = COAP_TYPE_CON;
           }
-          coap_set_payload(notification, response->response_buffer->buffer,
-                           response->response_buffer->response_length);
+          coap_set_payload(
+            notification, response->response_buffer->buffer,
+            (uint32_t)response->response_buffer->response_length);
         } //! blockwise transfer
       }   // !is_revert
 
       coap_set_status_code(notification, response->response_buffer->code);
       if (notification->code < BAD_REQUEST_4_00 &&
           obs->resource->num_observers) {
-        coap_set_header_observe(notification, (obs->obs_counter)++);
-        observe_counter++;
+        coap_set_header_observe(
+          notification, observe_increment_observe_counter(&obs->obs_counter));
+        observe_increment_observe_counter(&g_observe_counter);
       } else {
-        coap_set_header_observe(notification, 1);
+        coap_set_header_observe(notification,
+                                OC_COAP_OPTION_OBSERVE_UNREGISTER);
       }
       if (response->response_buffer->content_format > 0) {
         coap_set_header_content_format(
@@ -641,10 +656,10 @@ coap_notify_collection(oc_collection_t *collection,
   request.method = OC_GET;
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size,
-                     OC_MAX_OBSERVE_SIZE);
+  oc_rep_new_realloc_v1(&response_buffer.buffer, response_buffer.buffer_size,
+                        OC_MAX_OBSERVE_SIZE);
 #else  /* OC_DYNAMIC_ALLOCATION */
-  oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+  oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
   request.resource = (oc_resource_t *)collection;
@@ -725,10 +740,10 @@ coap_notify_collections(oc_resource_t *resource)
 
     request.resource = (oc_resource_t *)collection;
 #ifdef OC_DYNAMIC_ALLOCATION
-    oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size,
-                       OC_MAX_OBSERVE_SIZE);
+    oc_rep_new_realloc_v1(&response_buffer.buffer, response_buffer.buffer_size,
+                          OC_MAX_OBSERVE_SIZE);
 #else  /* OC_DYNAMIC_ALLOCATION */
-    oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+    oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
     if (!oc_handle_collection_request(OC_GET, &request, OC_IF_B, resource)) {
@@ -786,12 +801,12 @@ fill_response(oc_resource_t *resource, const oc_endpoint_t *endpoint,
     iface_mask = resource->default_interface;
   }
 #ifdef OC_DYNAMIC_ALLOCATION
-  oc_rep_new_realloc(&response->response_buffer->buffer,
-                     response->response_buffer->buffer_size,
-                     OC_MAX_OBSERVE_SIZE);
+  oc_rep_new_realloc_v1(&response->response_buffer->buffer,
+                        response->response_buffer->buffer_size,
+                        OC_MAX_OBSERVE_SIZE);
 #else  /* OC_DYNAMIC_ALLOCATION */
-  oc_rep_new(response->response_buffer->buffer,
-             response->response_buffer->buffer_size);
+  oc_rep_new_v1(response->response_buffer->buffer,
+                response->response_buffer->buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
   if (resource->get_handler.cb) {
     resource->get_handler.cb(&request, iface_mask,
@@ -1080,10 +1095,10 @@ process_batch_observers(void *data)
     }
 #endif /* OC_BLOCK_WISE */
 #ifdef OC_DYNAMIC_ALLOCATION
-    oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size,
-                       OC_MAX_OBSERVE_SIZE);
+    oc_rep_new_realloc_v1(&response_buffer.buffer, response_buffer.buffer_size,
+                          OC_MAX_OBSERVE_SIZE);
 #else  /* OC_DYNAMIC_ALLOCATION */
-    oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+    oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
     oc_rep_start_links_array();
     int size_before = oc_rep_get_encoded_payload_size();
@@ -1316,12 +1331,12 @@ coap_observe_handler(const coap_packet_t *request,
       !IS_OPTION(request, COAP_OPTION_OBSERVE)) {
     return -1;
   }
-  if (request->observe == 0) {
+  if (request->observe == OC_COAP_OPTION_OBSERVE_REGISTER) {
     return add_observer(resource, block2_size, endpoint, request->token,
                         request->token_len, request->uri_path,
                         request->uri_path_len, iface_mask);
   }
-  if (request->observe == 1) {
+  if (request->observe == OC_COAP_OPTION_OBSERVE_UNREGISTER) {
     return coap_remove_observer_by_token(endpoint, request->token,
                                          request->token_len);
   }

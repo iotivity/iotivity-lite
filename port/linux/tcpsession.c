@@ -21,17 +21,18 @@
 #include "api/oc_network_events_internal.h"
 #include "api/oc_session_events_internal.h"
 #include "api/oc_tcp_internal.h"
-#include "messaging/coap/coap.h"
-#include "port/oc_assert.h"
-#include "port/oc_connectivity_internal.h"
-#include "util/oc_features.h"
-#include "util/oc_memb.h"
 #include "ipadapter.h"
 #include "ipcontext.h"
+#include "messaging/coap/coap.h"
 #include "oc_buffer.h"
 #include "oc_endpoint.h"
 #include "oc_session_events.h"
+#include "port/oc_assert.h"
+#include "port/oc_connectivity_internal.h"
 #include "tcpsession.h"
+#include "util/oc_features.h"
+#include "util/oc_macros_internal.h"
+#include "util/oc_memb.h"
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
@@ -122,6 +123,8 @@ is_matching_address(const struct sockaddr *first, const struct sockaddr *second)
   if (first->sa_family != second->sa_family) {
     return false;
   }
+  CLANG_IGNORE_WARNING_START
+  CLANG_IGNORE_WARNING("-Wcast-align")
   if (first->sa_family == AF_INET6) {
     const struct sockaddr_in6 *a = (const struct sockaddr_in6 *)first;
     const struct sockaddr_in6 *b = (const struct sockaddr_in6 *)second;
@@ -134,6 +137,7 @@ is_matching_address(const struct sockaddr *first, const struct sockaddr *second)
     return a->sin_addr.s_addr == b->sin_addr.s_addr;
   }
 #endif /* OC_IPV4 */
+  CLANG_IGNORE_WARNING_END
   return false;
 }
 
@@ -513,15 +517,15 @@ find_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
 
 static int
-try_connect_nonblocking(int sockfd, const struct sockaddr *r, int r_len)
+try_connect_nonblocking(int sockfd, const struct sockaddr *r, socklen_t r_len)
 {
   if (oc_set_fd_flags(sockfd, O_NONBLOCK, 0) < 0) {
     OC_ERR("cannot set non-blocking socket(%d)", sockfd);
     return -1;
   }
 
-  int n;
-  if ((n = connect(sockfd, r, r_len)) < 0 && (errno != EINPROGRESS)) {
+  int n = connect(sockfd, r, r_len);
+  if (n < 0 && errno != EINPROGRESS) {
     OC_DBG("connect to socked(%d) failed with error: %d", sockfd, (int)errno);
     return -1;
   }
@@ -576,9 +580,9 @@ tcp_create_connected_socket(const oc_endpoint_t *endpoint,
   }
 
   socklen_t size = sizeof(*receiver);
-  int ret;
-  if ((ret = try_connect_nonblocking(sock, (const struct sockaddr *)receiver,
-                                     size)) < 0) {
+  int ret =
+    try_connect_nonblocking(sock, (const struct sockaddr *)receiver, size);
+  if (ret < 0) {
     close(sock);
     return cs;
   }

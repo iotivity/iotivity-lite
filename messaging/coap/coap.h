@@ -52,11 +52,6 @@
 
 #include "conf.h"
 #include "constants.h"
-#include <stddef.h> /* for size_t */
-#include <stdint.h>
-#ifdef OC_OSCORE
-#include "oscore_constants.h"
-#endif /* OC_OSCORE */
 #include "oc_buffer.h"
 #include "oc_config.h"
 #include "oc_ri.h"
@@ -64,20 +59,15 @@
 #include "port/oc_log_internal.h"
 #include "port/oc_random.h"
 
+#ifdef OC_OSCORE
+#include "oscore_constants.h"
+#endif /* OC_OSCORE */
+
+#include <stddef.h> /* size_t */
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#ifndef MAX
-#define MAX(n, m) (((n) < (m)) ? (m) : (n))
-#endif
-
-#ifndef MIN
-#define MIN(n, m) (((n) < (m)) ? (n) : (m))
-#endif
-
-#ifndef ABS
-#define ABS(n) (((n) < 0) ? -(n) : (n))
 #endif
 
 /* bitmap for set options */
@@ -90,7 +80,10 @@ enum { OPTION_MAP_SIZE = sizeof(uint8_t) * 8 };
    (1 << ((opt) % OPTION_MAP_SIZE)))
 
 /* enum value for coap transport type  */
-typedef enum { COAP_TRANSPORT_UDP, COAP_TRANSPORT_TCP } coap_transport_type_t;
+typedef enum {
+  COAP_TRANSPORT_UDP,
+  COAP_TRANSPORT_TCP,
+} coap_transport_type_t;
 
 /* parsed message struct */
 typedef struct
@@ -171,6 +164,15 @@ typedef struct
   uint8_t *payload;
 } coap_packet_t;
 
+typedef enum {
+  OC_COAP_OPTION_OBSERVE_NOT_SET = -1,
+  OC_COAP_OPTION_OBSERVE_REGISTER = 0,
+  OC_COAP_OPTION_OBSERVE_UNREGISTER = 1,
+  // observe values [2, 2^24-1] are used for the sequence number
+  OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE = 2,
+  OC_COAP_OPTION_OBSERVE_MAX_VALUE = ((1 << 24) - 1),
+} oc_coap_option_observe_t;
+
 void coap_init_connection(void);
 uint16_t coap_get_mid(void);
 
@@ -230,10 +232,10 @@ int coap_set_header_max_age(void *packet, uint32_t age);
 int coap_get_header_etag(const void *packet, const uint8_t **etag);
 int coap_set_header_etag(void *packet, const uint8_t *etag, size_t etag_len);
 
-int coap_get_header_proxy_uri(
+size_t coap_get_header_proxy_uri(
   const void *packet,
   const char **uri); /* in-place string might not be 0-terminated. */
-int coap_set_header_proxy_uri(void *packet, const char *uri);
+size_t coap_set_header_proxy_uri(void *packet, const char *uri);
 
 int coap_get_header_proxy_scheme(
   void *packet,
@@ -265,8 +267,8 @@ int coap_get_header_location_query(
   const char **query); /* in-place string might not be 0-terminated. */
 size_t coap_set_header_location_query(void *packet, const char *query);
 
-int coap_get_header_observe(const void *packet, uint32_t *observe);
-int coap_set_header_observe(void *packet, uint32_t observe);
+int coap_get_header_observe(const coap_packet_t *packet, int32_t *observe);
+void coap_set_header_observe(coap_packet_t *packet, int32_t observe);
 
 int coap_get_header_block2(const void *packet, uint32_t *num, uint8_t *more,
                            uint16_t *size, uint32_t *offset);
@@ -284,8 +286,8 @@ int coap_set_header_size2(void *packet, uint32_t size);
 int coap_get_header_size1(const void *packet, uint32_t *size);
 int coap_set_header_size1(void *packet, uint32_t size);
 
-int coap_get_payload(const void *packet, const uint8_t **payload);
-int coap_set_payload(void *packet, const void *payload, size_t length);
+uint32_t coap_get_payload(const void *packet, const uint8_t **payload);
+uint32_t coap_set_payload(void *packet, const void *payload, uint32_t length);
 
 size_t coap_set_option_header(unsigned int delta, size_t length,
                               uint8_t *buffer);

@@ -70,12 +70,12 @@ post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 
   if (success) {
 #ifdef OC_DYNAMIC_ALLOCATION
-    oc_rep_new_realloc(&request->response->response_buffer->buffer,
-                       request->response->response_buffer->buffer_size,
-                       OC_MAX_APP_DATA_SIZE);
+    oc_rep_new_realloc_v1(&request->response->response_buffer->buffer,
+                          request->response->response_buffer->buffer_size,
+                          OC_MAX_APP_DATA_SIZE);
 #else  /* OC_DYNAMIC_ALLOCATION */
-    oc_rep_new(request->response->response_buffer->buffer,
-               request->response->response_buffer->buffer_size);
+    oc_rep_new_v1(request->response->response_buffer->buffer,
+                  request->response->response_buffer->buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, fr, false);

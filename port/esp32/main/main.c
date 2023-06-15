@@ -17,6 +17,7 @@
  ******************************************************************/
 
 #include "oc_api.h"
+#include "oc_clock_util.h"
 #include "oc_core_res.h"
 #include "oc_esp.h"
 #include "oc_log.h"
@@ -574,8 +575,7 @@ server_main(void *pvParameter)
     if (next_event == 0) {
       pthread_cond_wait(&cv, &mutex);
     } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
+      ts = oc_clock_time_to_timespec(next_event);
       pthread_cond_timedwait(&cv, &mutex, &ts);
     }
     pthread_mutex_unlock(&mutex);

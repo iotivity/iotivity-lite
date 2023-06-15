@@ -60,7 +60,7 @@
 #include <stdio.h>
 #include <string.h>
 
-OC_MEMB(separate_requests, coap_separate_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
+OC_MEMB(g_separate_requests, coap_separate_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 
 /*---------------------------------------------------------------------------*/
 /*- Separate Response API ---------------------------------------------------*/
@@ -69,7 +69,7 @@ OC_MEMB(separate_requests, coap_separate_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 /**
  * \brief Initiate a separate response with an empty ACK
  * \param request The request to accept
- * \param separate_store A pointer to the data structure that will store the
+ * \param separate_response A pointer to the data structure that will store the
  *   relevant information for the response
  *
  * When the server does not have enough resources left to store the information
@@ -93,6 +93,10 @@ coap_separate_accept(const coap_packet_t *request,
     OC_LIST_STRUCT_INIT(separate_response, requests);
 #ifdef OC_DYNAMIC_ALLOCATION
     separate_response->buffer = (uint8_t *)malloc(OC_MAX_APP_DATA_SIZE);
+    if (!separate_response->buffer) {
+      OC_WRN("insufficient memory to store separate response");
+      return 0;
+    }
 #endif /* OC_DYNAMIC_ALLOCATION */
   }
 
@@ -108,14 +112,12 @@ coap_separate_accept(const coap_packet_t *request,
   }
 
   if (!separate_store) {
-    separate_store = oc_memb_alloc(&separate_requests);
+    separate_store = oc_memb_alloc(&g_separate_requests);
 
     if (!separate_store) {
       OC_WRN("insufficient memory to store new request for separate response");
       return 0;
     }
-
-    oc_list_add(separate_response->requests, separate_store);
 
     /* store correct response type */
     separate_store->type = COAP_TYPE_NON;
@@ -131,11 +133,13 @@ coap_separate_accept(const coap_packet_t *request,
 #ifdef OC_BLOCK_WISE
     separate_store->block2_size = block2_size;
 #endif /* OC_BLOCK_WISE */
+
+    separate_store->observe = observe;
+
+    oc_list_add(separate_response->requests, separate_store);
   }
 
   memcpy(&separate_store->endpoint, endpoint, sizeof(oc_endpoint_t));
-
-  separate_store->observe = observe;
 
   /* send separate ACK for CON */
   if (request->type == COAP_TYPE_CON) {
@@ -193,7 +197,7 @@ coap_separate_clear(oc_separate_response_t *separate_response,
   oc_free_string(&separate_store->uri);
 #endif /* OC_BLOCK_WISE */
   oc_list_remove(separate_response->requests, separate_store);
-  oc_memb_free(&separate_requests, separate_store);
+  oc_memb_free(&g_separate_requests, separate_store);
 }
 
 #endif /* OC_SERVER */

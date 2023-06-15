@@ -21,6 +21,7 @@
 #ifdef OC_STORAGE
 #include "port/oc_storage.h"
 #include "port/oc_storage_internal.h"
+#include "util/oc_secure_string_internal.h"
 
 #include <errno.h>
 #include <stdbool.h>
@@ -28,7 +29,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define STORE_PATH_SIZE 64
+#define STORE_PATH_SIZE (64)
 
 static char g_store_path[STORE_PATH_SIZE] = { 0 };
 static size_t g_store_path_len = 0;
@@ -40,7 +41,7 @@ oc_storage_config(const char *store)
   if (!store || !*store) {
     return -EINVAL;
   }
-  size_t store_len = strlen(store);
+  size_t store_len = oc_strnlen(store, STORE_PATH_SIZE);
   if (store_len >= STORE_PATH_SIZE) {
     return -ENOENT;
   }
@@ -76,7 +77,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
     return -ENOENT;
   }
 
-  size_t store_len = strlen(store);
+  size_t store_len = oc_strnlen_s(store, STORE_PATH_SIZE);
   if (store_len + g_store_path_len >= STORE_PATH_SIZE) {
     return -ENOENT;
   }
@@ -96,15 +97,14 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
 long
 oc_storage_write(const char *store, const uint8_t *buf, size_t size)
 {
-  FILE *fp;
-  size_t store_len = strlen(store);
-
-  if (!g_path_set || (store_len + g_store_path_len >= STORE_PATH_SIZE))
+  size_t store_len = oc_strnlen_s(store, STORE_PATH_SIZE);
+  if (!g_path_set || (store_len + g_store_path_len >= STORE_PATH_SIZE)) {
     return -ENOENT;
+  }
 
   memcpy(g_store_path + g_store_path_len, store, store_len);
   g_store_path[g_store_path_len + store_len] = '\0';
-  fp = fopen(g_store_path, "wb");
+  FILE *fp = fopen(g_store_path, "wb");
   if (!fp)
     return -EINVAL;
 

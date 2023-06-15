@@ -40,7 +40,7 @@
 #include "port/oc_log_internal.h"
 #include "util/oc_compiler.h"
 #include "util/oc_list.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 #include "util/oc_mmem.h"
 #include "util/oc_process.h"
 
@@ -377,15 +377,17 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
                              OC_CHAR_ARRAY_LEN(OC_PUSH_PROP_STATE))) {
         /* state can be modified only if Push Proxy is in "tout" or "err" state
          */
-        if (strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_ERR)) &&
-            strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_TOUT))) {
+        if (strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_ERR)) !=
+              0 &&
+            strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_TOUT)) !=
+              0) {
           OC_PUSH_ERR("state can be modified only if Push Proxy is in \"tout\" "
                       "or \"err\" state");
           return false;
         }
 
         /* "waitingforupdate" is only acceptable value */
-        if (strcmp(oc_string(rep->value.string), pp_statestr(OC_PP_WFU))) {
+        if (strcmp(oc_string(rep->value.string), pp_statestr(OC_PP_WFU)) != 0) {
           OC_PUSH_ERR(
             "only \"waitingforupdate\" is allowed to reset \"state\"");
           return false;
@@ -487,9 +489,9 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
    * - only configurator can change "state" when it is in "err"/"tout" state
    */
   if (pushtarget_is_updated &&
-      strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_ERR)) &&
-      strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_TOUT)) &&
-      strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_WFU))) {
+      strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_ERR)) != 0 &&
+      strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_TOUT)) != 0 &&
+      strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_WFU)) != 0) {
     OC_PUSH_DBG("state of Push Proxy (\"%s\") is changed (%s => %s)",
                 oc_string(ns_instance->resource->uri),
                 oc_string(ns_instance->state), pp_statestr(OC_PP_WFU));
@@ -508,7 +510,7 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
  * @brief callback to be called to fill the contents of `notification
  * selector` from existing data structure (`oc_ns_t`)
  *
- * @param resource
+ * @param resource not used
  * @param iface_mask interface to be used to send response
  * @param data internal structure for storing `notification selector`
  * resource (oc_memb struct for ["oic.r.notificationselector",
@@ -1066,7 +1068,7 @@ _find_pushd_rsc_rep_by_uri(oc_string_t *uri, size_t device_index)
     (oc_pushd_resource_rep_t *)(oc_list_head(g_pushd_rsc_rep_list));
 
   while (pushd_rsc_rep) {
-    if (!strcmp(oc_string(pushd_rsc_rep->resource->uri), oc_string(*uri)) &&
+    if (strcmp(oc_string(pushd_rsc_rep->resource->uri), oc_string(*uri)) == 0 &&
         (pushd_rsc_rep->resource->device == device_index)) {
       break;
     } else {
@@ -1149,17 +1151,18 @@ _check_pushd_rsc_rt(oc_recv_t *recv_obj, oc_rep_t *rep)
   rts_len = oc_string_array_get_allocated_size(recv_obj->rts);
 
   /* if "rts" is not configured (""), any pushed resource can be accepted... */
-  if ((rts_len == 1) && !strcmp(oc_string_array_get_item(recv_obj->rts, 0), ""))
+  if ((rts_len == 1) &&
+      strcmp(oc_string_array_get_item(recv_obj->rts, 0), "") == 0)
     return 1;
 
   while (rep) {
     if ((rep->type == OC_REP_STRING_ARRAY) &&
-        !strcmp(oc_string(rep->name), "rt")) {
+        strcmp(oc_string(rep->name), "rt") == 0) {
       rt_len = oc_string_array_get_allocated_size(rep->value.array);
       for (i = 0; i < rt_len; i++) {
         for (j = 0; j < rts_len; j++) {
-          if (!strcmp(oc_string_array_get_item(rep->value.array, i),
-                      oc_string_array_get_item(recv_obj->rts, j)))
+          if (strcmp(oc_string_array_get_item(rep->value.array, i),
+                     oc_string_array_get_item(recv_obj->rts, j)) == 0)
             break;
         }
         if (j == rts_len) {
@@ -1292,19 +1295,18 @@ _create_pushd_rsc_rep(oc_rep_t *org_rep)
 void
 oc_print_pushd_resource(const oc_rep_t *payload)
 {
-  static int depth = 0;
+  static unsigned depth = 0;
   char prefix_width = 3;
   const char *prefix_str = "   ";
-  char depth_prefix[1024];
+  char depth_prefix[1024] = { 0 };
   const oc_rep_t *rep = payload;
-  const oc_rep_t *obj;
-  int i;
 
   /* check buffer overflow */
-  if ((size_t)(prefix_width * (depth + 1) + 1) > sizeof(depth_prefix)) {
+  if ((prefix_width * (depth + 1) + 1) > sizeof(depth_prefix)) {
     return;
   }
 
+  size_t i;
 #if 0
   depth_prefix[sizeof(depth_prefix) - 1] = '\0';
   depth++;
@@ -1319,7 +1321,6 @@ oc_print_pushd_resource(const oc_rep_t *payload)
   for (i = 0; i < depth; i++) {
     strcpy(depth_prefix + (i * prefix_width), prefix_str);
   }
-
   depth_prefix[i * prefix_width] = '\0';
 
   if (!rep) {
@@ -1341,7 +1342,7 @@ oc_print_pushd_resource(const oc_rep_t *payload)
     case OC_REP_BOOL_ARRAY:
       OC_PUSH_PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name),
                     depth_prefix);
-      for (i = 0; i < (int)oc_bool_array_size(rep->value.array); i++) {
+      for (i = 0; i < oc_bool_array_size(rep->value.array); i++) {
         OC_PUSH_PRINT("%s%s\"%d\"\n", depth_prefix, prefix_str,
                       oc_bool_array(rep->value.array)[i]);
       }
@@ -1356,7 +1357,7 @@ oc_print_pushd_resource(const oc_rep_t *payload)
     case OC_REP_INT_ARRAY:
       OC_PUSH_PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name),
                     depth_prefix);
-      for (i = 0; i < (int)oc_int_array_size(rep->value.array); i++) {
+      for (i = 0; i < oc_int_array_size(rep->value.array); i++) {
         OC_PUSH_PRINT("%s%s\"%" PRId64 "\"\n", depth_prefix, prefix_str,
                       oc_int_array(rep->value.array)[i]);
       }
@@ -1371,7 +1372,7 @@ oc_print_pushd_resource(const oc_rep_t *payload)
     case OC_REP_DOUBLE_ARRAY:
       OC_PUSH_PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name),
                     depth_prefix);
-      for (i = 0; i < (int)oc_double_array_size(rep->value.array); i++) {
+      for (i = 0; i < oc_double_array_size(rep->value.array); i++) {
         OC_PUSH_PRINT("%s%s\"%f\"\n", depth_prefix, prefix_str,
                       oc_double_array(rep->value.array)[i]);
       }
@@ -1386,7 +1387,7 @@ oc_print_pushd_resource(const oc_rep_t *payload)
     case OC_REP_STRING_ARRAY:
       OC_PUSH_PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name),
                     depth_prefix);
-      for (i = 0; i < (int)oc_string_array_get_allocated_size(rep->value.array);
+      for (i = 0; i < oc_string_array_get_allocated_size(rep->value.array);
            i++) {
         OC_PUSH_PRINT("%s%s\"%s\"\n", depth_prefix, prefix_str,
                       oc_string_array_get_item(rep->value.array, i));
@@ -1406,7 +1407,7 @@ oc_print_pushd_resource(const oc_rep_t *payload)
       OC_PUSH_PRINT("%s%s: \n%s[\n", depth_prefix, oc_string(rep->name),
                     depth_prefix);
       depth++;
-      obj = rep->value.object_array;
+      const oc_rep_t *obj = rep->value.object_array;
       while (obj) {
         OC_PUSH_PRINT("%s%s{\n", depth_prefix, prefix_str);
         oc_print_pushd_resource(obj->value.object);
@@ -1533,7 +1534,7 @@ post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
        */
       switch (rep->type) {
       case OC_REP_STRING_ARRAY:
-        if (!strcmp(oc_string(rep->name), "rt")) {
+        if (strcmp(oc_string(rep->name), "rt") == 0) {
           /* update rt */
           oc_free_string_array(&request->resource->types);
           oc_new_string_array(
@@ -1556,7 +1557,7 @@ post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
           oc_free_rep(common_property);
           continue;
 
-        } else if (!strcmp(oc_string(rep->name), "if")) {
+        } else if (strcmp(oc_string(rep->name), "if") == 0) {
           /* update if */
           request->resource->interfaces = 0;
           for (int i = 0;
@@ -1573,7 +1574,7 @@ post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
         }
         break;
       case OC_REP_STRING:
-        if (!strcmp(oc_string(rep->name), "n")) {
+        if (strcmp(oc_string(rep->name), "n") == 0) {
           /* update name */
           oc_set_string(&request->resource->name, oc_string(rep->value.string),
                         oc_string_len(rep->value.string));
@@ -1601,8 +1602,8 @@ post_pushd_rsc(oc_request_t *request, oc_interface_mask_t iface_mask,
       oc_rep_set_pool(&g_rep_instance_memb);
       oc_free_rep(pushd_rsc_rep->rep);
 
-      if (!(pushd_rsc_rep->rep =
-              _create_pushd_rsc_rep(request->request_payload))) {
+      pushd_rsc_rep->rep = _create_pushd_rsc_rep(request->request_payload);
+      if (pushd_rsc_rep->rep == NULL) {
         OC_PUSH_ERR("something wrong!, creating corresponding pushed resource "
                     "representation faild (%s) ! ",
                     oc_string(request->resource->uri));
@@ -1838,7 +1839,7 @@ _purge_recv_obj_list(oc_recvs_t *recvs_instance)
  * @brief update existing receiver object with new contents
  *
  * @param recv_obj existing receiver object
- * @param resource app Resource pointed by `recv_obj->receiveruri`
+ * @param recvs_instance app Resource pointed by `recv_obj->receiveruri`
  * @param rep payload representation of new receiver object
  */
 static void
@@ -1850,14 +1851,14 @@ _update_recv_obj(oc_recv_t *recv_obj, const oc_recvs_t *recvs_instance,
   while (rep) {
     switch (rep->type) {
     case OC_REP_STRING:
-      if (!strcmp(oc_string(rep->name), "receiveruri")) {
+      if (strcmp(oc_string(rep->name), "receiveruri") == 0) {
         OC_PUSH_DBG("target receiveruri: \"%s\", new receiveruri: \"%s\"",
                     oc_string(recv_obj->receiveruri),
                     oc_string(rep->value.string));
         /* if `receiveruri' is different from existing `receiveruri`,
          * update URI of Resource pointed by previous `receiveruri` */
         if (strcmp(oc_string(recv_obj->receiveruri),
-                   oc_string(rep->value.string))) {
+                   oc_string(rep->value.string)) != 0) {
           pushd_rsc_rep = _find_pushd_rsc_rep_by_uri(
             &recv_obj->receiveruri, recvs_instance->resource->device);
 
@@ -1877,7 +1878,7 @@ _update_recv_obj(oc_recv_t *recv_obj, const oc_recvs_t *recvs_instance,
       break;
 
     case OC_REP_STRING_ARRAY:
-      if (!strcmp(oc_string(rep->name), "rts")) {
+      if (strcmp(oc_string(rep->name), "rts") == 0) {
         oc_free_string_array(&recv_obj->rts);
         size_t len = oc_string_array_get_allocated_size(rep->value.array);
         oc_new_string_array(&recv_obj->rts, len);
@@ -1919,7 +1920,7 @@ _create_recv_obj(oc_recvs_t *recvs_instance, oc_rep_t *rep)
   while (rep) {
     switch (rep->type) {
     case OC_REP_STRING:
-      if (!strcmp(oc_string(rep->name), "receiveruri")) {
+      if (strcmp(oc_string(rep->name), "receiveruri") == 0) {
         oc_new_string(&recv_obj->receiveruri, oc_string(rep->value.string),
                       oc_string_len(rep->value.string));
         mandatory_property_check |= 0x1;
@@ -1927,7 +1928,7 @@ _create_recv_obj(oc_recvs_t *recvs_instance, oc_rep_t *rep)
       break;
 
     case OC_REP_STRING_ARRAY:
-      if (!strcmp(oc_string(rep->name), "rts")) {
+      if (strcmp(oc_string(rep->name), "rts") == 0) {
         size_t len = oc_string_array_get_allocated_size(rep->value.array);
         oc_new_string_array(&recv_obj->rts, len);
 
@@ -1990,13 +1991,13 @@ _validate_recv_obj_list(oc_rep_t *obj_list)
     for (; rep != NULL; rep = rep->next) {
       switch (rep->type) {
       case OC_REP_STRING:
-        if (!strcmp(oc_string(rep->name), "receiveruri")) {
+        if (strcmp(oc_string(rep->name), "receiveruri") == 0) {
           mandatory_property_check |= 0x1;
         }
         break;
 
       case OC_REP_STRING_ARRAY:
-        if (!strcmp(oc_string(rep->name), "rts")) {
+        if (strcmp(oc_string(rep->name), "rts") == 0) {
           mandatory_property_check |= 0x2;
         }
         break;
@@ -2030,30 +2031,29 @@ exit:
 static bool
 _replace_recv_obj_array(oc_recvs_t *recvs_instance, oc_rep_t *rep)
 {
-  bool result = false;
 
-  if (rep && (rep->type == OC_REP_OBJECT_ARRAY)) {
-    /* check if received new receiver object array is ok */
-    if (!_validate_recv_obj_list(rep->value.object_array))
-      goto exit;
-
-    /* if received new receiver object array is ok, do the job... */
-    /* remove existing receivers object array */
-    _purge_recv_obj_list(recvs_instance);
-
-    /* replace `receivers` obj array with new one */
-    for (oc_rep_t *rep_obj = rep->value.object_array; rep_obj != NULL;
-         rep_obj = rep_obj->next) {
-      _create_recv_obj(recvs_instance, rep_obj->value.object);
-    }
-
-    result = true;
-  } else {
-    OC_PUSH_ERR("something wrong, unexpected Property type: %d", rep->type);
+  if (rep == NULL || rep->type != OC_REP_OBJECT_ARRAY) {
+    OC_PUSH_ERR("something wrong, unexpected Property type: %d",
+                rep != NULL ? (int)rep->type : -1);
+    return false;
   }
 
-exit:
-  return result;
+  /* check if received new receiver object array is ok */
+  if (!_validate_recv_obj_list(rep->value.object_array)) {
+    return false;
+  }
+
+  /* if received new receiver object array is ok, do the job... */
+  /* remove existing receivers object array */
+  _purge_recv_obj_list(recvs_instance);
+
+  /* replace `receivers` obj array with new one */
+  for (oc_rep_t *rep_obj = rep->value.object_array; rep_obj != NULL;
+       rep_obj = rep_obj->next) {
+    _create_recv_obj(recvs_instance, rep_obj->value.object);
+  }
+
+  return true;
 }
 
 /**
@@ -2400,7 +2400,7 @@ push_update(oc_ns_t *ns_instance)
 
   /* href (optional) */
   if (oc_string(ns_instance->phref) &&
-      strcmp(oc_string(ns_instance->phref), "")) {
+      strcmp(oc_string(ns_instance->phref), "") != 0) {
     oc_rep_set_text_string(root, href, oc_string(ns_instance->phref));
   }
 
@@ -2510,7 +2510,7 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
          * - option
          */
         if (oc_string(ns_instance->phref) &&
-            strcmp(oc_string(ns_instance->phref), "")) {
+            strcmp(oc_string(ns_instance->phref), "") != 0) {
           oc_rep_set_text_string(root, href, oc_string(ns_instance->phref));
         }
 
@@ -2531,9 +2531,8 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 
         oc_rep_end_root_object();
 
-        if (oc_do_post()) {
-          OC_PUSH_DBG("Sent POST request");
-        } else {
+        OC_PUSH_DBG("Sending POST request");
+        if (!oc_do_post()) {
           OC_PUSH_ERR("Could not send POST");
         }
       } else {
@@ -2547,8 +2546,6 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 
 /**
  * @brief check if any of source array is part of target array
- * @param target
- * @param source
  * @return
  * 			false: any of source is not part of target
  * 			true: any of source is part of target
@@ -2567,8 +2564,8 @@ _check_string_array_inclusion(oc_string_array_t *target,
 
   for (size_t i = 0; i < src_len; i++) {
     for (size_t j = 0; j < tgt_len; j++) {
-      if (!strcmp(oc_string_array_get_item(*source, i),
-                  oc_string_array_get_item(*target, j))) {
+      if (strcmp(oc_string_array_get_item(*source, i),
+                 oc_string_array_get_item(*target, j)) == 0) {
         return true;
       }
     }
@@ -2609,11 +2606,11 @@ oc_resource_state_changed(const char *uri, size_t uri_len, size_t device_index)
       continue;
 
     /* if push proxy is not in "wait for update" state, just skip it... */
-    if (strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_WFU)))
+    if (strcmp(oc_string(ns_instance->state), pp_statestr(OC_PP_WFU)) != 0)
       continue;
 
     if (oc_string(ns_instance->phref)) {
-      if (strcmp(oc_string(ns_instance->phref), uri)) {
+      if (strcmp(oc_string(ns_instance->phref), uri) != 0) {
         OC_PUSH_DBG("%s:phref exists, but mismatches (phref:%s - uri:%s)",
                     oc_string(ns_instance->resource->uri),
                     oc_string(ns_instance->phref), uri);
@@ -2670,8 +2667,8 @@ oc_resource_state_changed(const char *uri, size_t uri_len, size_t device_index)
 
     if (oc_string_array_get_allocated_size(ns_instance->pif) > 0) {
       oc_interface_mask_t pif = 0;
-      for (int i = 0;
-           i < (int)oc_string_array_get_allocated_size(ns_instance->pif); i++) {
+      for (size_t i = 0;
+           i < oc_string_array_get_allocated_size(ns_instance->pif); i++) {
         pif |= oc_ri_get_interface_mask(
           oc_string_array_get_item(ns_instance->pif, i),
           oc_byte_string_array_get_item_size(ns_instance->pif, i));

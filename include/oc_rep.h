@@ -23,12 +23,14 @@
 #define OC_REP_H
 
 #include <cbor.h>
+#include "oc_config.h"
 #include "oc_export.h"
 #include "oc_helpers.h"
+#include "util/oc_compiler.h"
 #include "util/oc_memb.h"
 #include "util/oc_features.h"
-#include <oc_config.h>
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -49,7 +51,17 @@ extern int g_err;
  * @param[in] max_size maximum size the encoder buffer
  */
 OC_API
-void oc_rep_new_realloc(uint8_t **payload, int size, int max_size);
+void oc_rep_new_realloc_v1(uint8_t **payload, size_t size, size_t max_size)
+  OC_NONNULL();
+
+/**
+ * Initialize the buffer used to hold the cbor encoded data with reallocation.
+ *
+ * @deprecated replaced by oc_rep_new_realloc_v1 in v2.2.5.6
+ */
+OC_API
+void oc_rep_new_realloc(uint8_t **payload, int size, int max_size) OC_NONNULL()
+  OC_DEPRECATED("replaced by oc_rep_new_realloc_v1 in v2.2.5.6");
 
 /**
  * Initialize the buffer used to hold the cbor encoded data without
@@ -61,7 +73,17 @@ void oc_rep_new_realloc(uint8_t **payload, int size, int max_size);
  * @param[in] size size of the payload buffer
  */
 OC_API
-void oc_rep_new(uint8_t *payload, int size);
+void oc_rep_new_v1(uint8_t *payload, size_t size) OC_NONNULL();
+
+/**
+ * Initialize the buffer used to hold the cbor encoded data without
+ * reallocation.
+ *
+ * @deprecated replaced by oc_rep_new_v1 in v2.2.5.6
+ */
+OC_API
+void oc_rep_new(uint8_t *payload, int size) OC_NONNULL()
+  OC_DEPRECATED("replaced by oc_rep_new_v1 in v2.2.5.6");
 
 /**
  * @brief Get the global cbor encoder
@@ -69,7 +91,7 @@ void oc_rep_new(uint8_t *payload, int size);
  * @return global cbor encoder
  */
 OC_API
-CborEncoder *oc_rep_get_encoder(void);
+CborEncoder *oc_rep_get_encoder(void) OC_RETURNS_NONNULL;
 
 /**
  * Get the size of the encoder buffer.

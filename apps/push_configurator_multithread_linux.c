@@ -268,11 +268,9 @@ cb_discovery(const char *anchor, const char *uri, oc_string_array_t types,
 
   (void)anchor;
   (void)iface_mask;
-  int i;
-  int uri_len = strlen(uri);
+  size_t uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
-
-  for (i = 0; i < (int)oc_string_array_get_allocated_size(types); i++) {
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(types); i++) {
     char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == strlen(resource_rt) &&
         strncmp(t, resource_rt, strlen(t)) == 0) {
@@ -522,7 +520,8 @@ main(void)
   int ret = oc_main_init(&handler);
   if (ret < 0) {
     OC_PRINTF("oc_main_init failed!(%d)\n", ret);
-    goto exit;
+    deinit();
+    return ret;
   }
 
   pthread_t thread;

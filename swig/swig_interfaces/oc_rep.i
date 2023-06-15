@@ -55,6 +55,9 @@ struct CborEncoder
 %ignore g_err;
 
 %ignore oc_rep_new;
+%ignore oc_rep_new_v1;
+%ignore oc_rep_new_realloc;
+%ignore oc_rep_new_realloc_v1;
 // DOCUMENTATION workaround
 %javamethodmodifiers newBuffer "/**
    * Allocate memory needed hold the OCRepresentation object.
@@ -96,12 +99,12 @@ void deleteBuffer() {
   g_new_rep_buffer = NULL;
 }
 
-void newBuffer(int size) {
+void newBuffer(size_t size) {
   if (g_new_rep_buffer) {
     deleteBuffer();
   }
   g_new_rep_buffer = (uint8_t *)malloc(size);
-  oc_rep_new(g_new_rep_buffer, size);
+  oc_rep_new_v1(g_new_rep_buffer, size);
   g_rep_objects.size = sizeof(oc_rep_t);
   g_rep_objects.num = 0;
   g_rep_objects.count = NULL;
@@ -1865,5 +1868,8 @@ char *jni_rep_to_json(oc_rep_t *rep, bool prettyPrint)
 %}
 
 #define OC_API
+#define OC_DEPRECATED(...)
+#define OC_NONNULL(...)
+#define OC_RETURNS_NONNULL
 %include "oc_rep.h"
 /*******************End oc_rep.h****************************/

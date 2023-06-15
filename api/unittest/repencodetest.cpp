@@ -45,11 +45,11 @@ public:
     if (size > 0) {
       buffer_ = static_cast<uint8_t *>(malloc(size));
     }
-    oc_rep_new_realloc(&buffer_, size, max_size);
+    oc_rep_new_realloc_v1(&buffer_, size, max_size);
 #else  /* OC_DYNAMIC_ALLOCATION */
     (void)size;
     buffer_.reserve(max_size);
-    oc_rep_new(buffer_.data(), buffer_.capacity());
+    oc_rep_new_v1(buffer_.data(), buffer_.capacity());
 #endif /* OC_DYNAMIC_ALLOCATION */
   }
 

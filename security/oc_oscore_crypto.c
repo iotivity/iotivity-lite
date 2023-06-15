@@ -36,23 +36,25 @@ HMAC_SHA256(const uint8_t *key, uint8_t key_len, const uint8_t *data,
 
   mbedtls_md_context_t hmac_SHA256;
   mbedtls_md_init(&hmac_SHA256);
-  int ret = 0;
-  if ((ret = mbedtls_md_setup(
-         &hmac_SHA256, mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1)) != 0) {
+  int ret = mbedtls_md_setup(&hmac_SHA256,
+                             mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1);
+  if (ret != 0) {
     OC_ERR("failed to setup message-digest context for HMAC computation: %d",
            ret);
     goto finish;
   }
-
-  if ((ret = mbedtls_md_hmac_starts(&hmac_SHA256, key, key_len)) != 0) {
+  ret = mbedtls_md_hmac_starts(&hmac_SHA256, key, key_len);
+  if (ret != 0) {
     OC_ERR("failed to start the HMAC computation: %d", ret);
     goto finish;
   }
-  if ((ret = mbedtls_md_hmac_update(&hmac_SHA256, data, data_len)) != 0) {
+  ret = mbedtls_md_hmac_update(&hmac_SHA256, data, data_len);
+  if (ret != 0) {
     OC_ERR("failed to compute HMAC: %d", ret);
     goto finish;
   }
-  if ((ret = mbedtls_md_hmac_finish(&hmac_SHA256, hmac)) != 0) {
+  ret = mbedtls_md_hmac_finish(&hmac_SHA256, hmac);
+  if (ret != 0) {
     OC_ERR("failed to finish the HMAC computation: %d", ret);
     goto finish;
   }

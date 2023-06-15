@@ -35,9 +35,10 @@
 bool
 timestamp_valid(const timestamp_t *tsp)
 {
-  const int64_t sec = tsp->sec + tsp->offset * 60;
+  const int64_t sec = tsp->sec + tsp->offset * 60L;
   if (sec < MIN_SEC || sec > MAX_SEC || tsp->nsec < 0 ||
-      tsp->nsec > 999999999 || tsp->offset < -1439 || tsp->offset > 1439)
+      tsp->nsec > 999999999 || tsp->offset < -1439 || tsp->offset > 1439) {
     return false;
+  }
   return true;
 }

@@ -123,7 +123,7 @@ void tcp_session_shutdown(const ip_context_t *dev);
  * sessions. Retry the connection process for sessions that haven't reached the
  * maximal amount of retries. Get the nearest timeout of a non-expired session.
  *
- * @param now current monotonic time
+ * @param now_mt current monotonic time
  * @return 0 no non-expired session was found
  * @return >0 the nearest timeout of a non-expired session
  *

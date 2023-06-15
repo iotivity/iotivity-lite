@@ -161,7 +161,6 @@ POST method.
 * The input values (as a set) are checked if all supplied values are correct.
 * If the input values are correct, they will be assigned to the global  property
 values.
-* Resource Description:
 */
 static void
 post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,

@@ -27,7 +27,7 @@
 #include "tests/gtest/Device.h"
 #include "tests/gtest/tls/DTLS.h"
 #include "tests/gtest/tls/DTLSClient.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 
 #include <atomic>
 #include <gtest/gtest.h>

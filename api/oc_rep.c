@@ -24,9 +24,11 @@
 #include "oc_config.h"
 #include "port/oc_assert.h"
 #include "port/oc_log_internal.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 #include "util/oc_memb.h"
 #include "util/oc_features.h"
+
+#include <assert.h>
 
 static struct oc_memb *g_rep_objects;
 CborEncoder root_map;
@@ -47,18 +49,33 @@ oc_rep_set_pool(struct oc_memb *rep_objects_pool)
 }
 
 void
-oc_rep_new(uint8_t *out_payload, int size)
+oc_rep_new_v1(uint8_t *payload, size_t size)
 {
   g_err = CborNoError;
-  oc_rep_encoder_init(out_payload, size);
+  oc_rep_encoder_init(payload, size);
+}
+
+void
+oc_rep_new(uint8_t *payload, int size)
+{
+  oc_rep_new_v1(payload, (size_t)size);
 }
 
 #ifdef OC_DYNAMIC_ALLOCATION
+
 void
-oc_rep_new_realloc(uint8_t **out_payload, int size, int max_size)
+oc_rep_new_realloc_v1(uint8_t **payload, size_t size, size_t max_size)
 {
   g_err = CborNoError;
-  oc_rep_encoder_realloc_init(out_payload, size, max_size);
+  oc_rep_encoder_realloc_init(payload, size, max_size);
+}
+
+void
+oc_rep_new_realloc(uint8_t **payload, int size, int max_size)
+{
+  assert(size >= 0);
+  assert(max_size >= 0);
+  oc_rep_new_realloc_v1(payload, (size_t)size, (size_t)max_size);
 }
 #endif /* OC_DYNAMIC_ALLOCATION */
 

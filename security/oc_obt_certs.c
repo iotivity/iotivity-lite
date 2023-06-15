@@ -33,6 +33,7 @@
 #include "security/oc_keypair_internal.h"
 #include "security/oc_obt_internal.h"
 #include "security/oc_pki_internal.h"
+#include "util/oc_secure_string_internal.h"
 
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
@@ -197,10 +198,10 @@ oc_obt_generate_self_signed_root_cert(
     return -1;
   }
 
-  int ret = oc_sec_add_new_cred(device, false, NULL, -1, OC_CREDTYPE_CERT,
-                                OC_CREDUSAGE_TRUSTCA, "*", 0, 0, NULL,
-                                OC_ENCODING_PEM, strlen((const char *)cert_pem),
-                                cert_pem, NULL, NULL, NULL, NULL);
+  int ret = oc_sec_add_new_cred(
+    device, false, NULL, -1, OC_CREDTYPE_CERT, OC_CREDUSAGE_TRUSTCA, "*", 0, 0,
+    NULL, OC_ENCODING_PEM, oc_strnlen((const char *)cert_pem, sizeof(cert_pem)),
+    cert_pem, NULL, NULL, NULL, NULL);
 
   if (ret == -1) {
     OC_ERR("could not write root cert into /oic/sec/cred");

@@ -57,6 +57,7 @@
 #include "messaging/coap/coap_internal.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_audit.h"
@@ -307,7 +308,7 @@ coap_receive(oc_message_t *msg)
 #ifdef OC_BLOCK_WISE
         const uint8_t *incoming_block;
         uint32_t incoming_block_len =
-          (uint32_t)coap_get_payload(message, &incoming_block);
+          coap_get_payload(message, &incoming_block);
         if (block1) {
           OC_DBG("processing block1 option");
           request_buffer = oc_blockwise_find_request_buffer(
@@ -746,12 +747,11 @@ coap_receive(oc_message_t *msg)
         client_cb = (oc_client_cb_t *)response_buffer->client_cb;
         oc_blockwise_response_state_t *response_state =
           (oc_blockwise_response_state_t *)response_buffer;
-        coap_get_header_observe(message,
-                                (uint32_t *)&response_state->observe_seq);
+        coap_get_header_observe(message, &response_state->observe_seq);
 
         const uint8_t *incoming_block;
         uint32_t incoming_block_len =
-          (uint32_t)coap_get_payload(message, &incoming_block);
+          coap_get_payload(message, &incoming_block);
         if (incoming_block_len > 0 &&
             oc_blockwise_handle_block(response_buffer, block2_offset,
                                       incoming_block,
@@ -860,7 +860,7 @@ send_message:
       else {
         oc_blockwise_response_state_t *b =
           (oc_blockwise_response_state_t *)response_buffer;
-        if (b && b->observe_seq != -1) {
+        if (b && b->observe_seq != OC_COAP_OPTION_OBSERVE_NOT_SET) {
           response->token_len = sizeof(response->token);
           oc_random_buffer(response->token, response->token_len);
           if (request_buffer) {

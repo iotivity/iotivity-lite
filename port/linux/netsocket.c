@@ -20,7 +20,7 @@
 #include "netsocket.h"
 
 #include "port/oc_log_internal.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -188,8 +188,11 @@ netsocket_configure_mcast(int mcast_sock, int sa_family)
     int if_index = if_nametoindex(interface->ifa_name);
     /* Accordingly handle IPv6/IPv4 addresses */
     if (sa_family == AF_INET6) {
+      CLANG_IGNORE_WARNING_START
+      CLANG_IGNORE_WARNING("-Wcast-align")
       const struct sockaddr_in6 *addr =
         (struct sockaddr_in6 *)interface->ifa_addr;
+      CLANG_IGNORE_WARNING_END
       if (addr == NULL || !IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
         continue;
       }
@@ -200,8 +203,11 @@ netsocket_configure_mcast(int mcast_sock, int sa_family)
     }
 #ifdef OC_IPV4
     if (sa_family == AF_INET) {
+      CLANG_IGNORE_WARNING_START
+      CLANG_IGNORE_WARNING("-Wcast-align")
       const struct sockaddr_in *addr =
         (struct sockaddr_in *)interface->ifa_addr;
+      CLANG_IGNORE_WARNING_END
       if (addr == NULL) {
         continue;
       }

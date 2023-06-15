@@ -47,24 +47,28 @@
  * This file is part of the Contiki operating system.
  */
 
-#include <stdio.h>
-#include <string.h>
-#include <inttypes.h>
-
 #include "coap.h"
 #include "coap_internal.h"
+#include "oc_ri.h"
 #include "transactions.h"
+#include "util/oc_macros_internal.h"
+
 #ifdef OC_OSCORE
 #include "oscore.h"
 #endif /* OC_OSCORE */
+
 #ifdef OC_TCP
 #include "coap_signal.h"
 #endif /* OC_TCP */
-#include "oc_ri.h"
+
 #ifdef OC_SECURITY
 #include "security/oc_audit.h"
 #include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
+
+#include <stdio.h>
+#include <string.h>
+#include <inttypes.h>
 
 /* option format serialization */
 #define COAP_SERIALIZE_INT_OPTION(number, field, text)                         \
@@ -270,7 +274,7 @@ coap_serialize_int_option(unsigned int number, unsigned int current_number,
 static size_t
 coap_serialize_array_option(unsigned int number, unsigned int current_number,
                             uint8_t *buffer, uint8_t *array, size_t length,
-                            char split_char)
+                            unsigned char split_char)
 {
   size_t i = 0;
 
@@ -290,7 +294,7 @@ coap_serialize_array_option(unsigned int number, unsigned int current_number,
         OC_DBG("STEP %zu/%zu (%c)", j, length, array[j]);
       }
 
-      if (array[j] == (uint8_t)split_char || j == length) {
+      if (array[j] == split_char || j == length) {
         part_end = array + j;
         temp_length = part_end - part_start;
 
@@ -845,7 +849,8 @@ coap_oscore_parse_option(coap_packet_t *const coap_pkt, uint8_t *current_option,
       break;
 #endif
     case COAP_OPTION_OBSERVE:
-      coap_pkt->observe = coap_parse_int_option(current_option, option_length);
+      coap_pkt->observe =
+        (int32_t)coap_parse_int_option(current_option, option_length);
       OC_DBG("  Observe [%lu]", (unsigned long)coap_pkt->observe);
       break;
     case COAP_OPTION_BLOCK2:
@@ -1615,7 +1620,7 @@ coap_set_header_etag(void *packet, const uint8_t *etag, size_t etag_len)
   return coap_pkt->etag_len;
 }
 /*---------------------------------------------------------------------------*/
-int
+size_t
 coap_get_header_proxy_uri(const void *packet, const char **uri)
 {
   const coap_packet_t *const coap_pkt = (const coap_packet_t *)packet;
@@ -1626,7 +1631,7 @@ coap_get_header_proxy_uri(const void *packet, const char **uri)
   *uri = coap_pkt->proxy_uri;
   return coap_pkt->proxy_uri_len;
 }
-int
+size_t
 coap_set_header_proxy_uri(void *packet, const char *uri)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
@@ -1811,25 +1816,22 @@ coap_set_header_location_query(void *packet, const char *query)
 }
 /*---------------------------------------------------------------------------*/
 int
-coap_get_header_observe(const void *packet, uint32_t *observe)
+coap_get_header_observe(const coap_packet_t *packet, int32_t *observe)
 {
-  const coap_packet_t *const coap_pkt = (const coap_packet_t *)packet;
-
-  if (!IS_OPTION(coap_pkt, COAP_OPTION_OBSERVE)) {
+  if (!IS_OPTION(packet, COAP_OPTION_OBSERVE)) {
     return 0;
   }
-  *observe = coap_pkt->observe;
+  *observe = packet->observe;
   return 1;
 }
-int
-coap_set_header_observe(void *packet, uint32_t observe)
-{
-  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
-  coap_pkt->observe = observe;
-  SET_OPTION(coap_pkt, COAP_OPTION_OBSERVE);
-  return 1;
+void
+coap_set_header_observe(coap_packet_t *packet, int32_t observe)
+{
+  packet->observe = observe;
+  SET_OPTION(packet, COAP_OPTION_OBSERVE);
 }
+
 /*---------------------------------------------------------------------------*/
 int
 coap_get_header_block2(const void *packet, uint32_t *num, uint8_t *more,
@@ -1965,7 +1967,7 @@ coap_set_header_size1(void *packet, uint32_t size)
   return 1;
 }
 /*---------------------------------------------------------------------------*/
-int
+uint32_t
 coap_get_payload(const void *packet, const uint8_t **payload)
 {
   const coap_packet_t *const coap_pkt = (const coap_packet_t *)packet;
@@ -1973,24 +1975,23 @@ coap_get_payload(const void *packet, const uint8_t **payload)
   if (coap_pkt->payload) {
     *payload = coap_pkt->payload;
     return coap_pkt->payload_len;
-  } else {
-    *payload = NULL;
-    return 0;
   }
+  *payload = NULL;
+  return 0;
 }
-int
-coap_set_payload(void *packet, const void *payload, size_t length)
+uint32_t
+coap_set_payload(void *packet, const void *payload, uint32_t length)
 {
   coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
   coap_pkt->payload = (uint8_t *)payload;
 #ifdef OC_TCP
   if (coap_pkt->transport_type == COAP_TRANSPORT_TCP) {
-    coap_pkt->payload_len = (uint32_t)length;
+    coap_pkt->payload_len = length;
   } else
 #endif /* OC_TCP */
   {
-    coap_pkt->payload_len = (uint32_t)MIN((unsigned)OC_BLOCK_SIZE, length);
+    coap_pkt->payload_len = MIN((uint32_t)OC_BLOCK_SIZE, length);
   }
 
   return coap_pkt->payload_len;

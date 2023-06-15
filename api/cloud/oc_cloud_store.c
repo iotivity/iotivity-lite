@@ -133,10 +133,10 @@ cloud_store_dump_internal(const char *store_name, const oc_cloud_store_t *store)
   uint8_t *buf = malloc(OC_MIN_APP_DATA_SIZE);
   if (!buf)
     return -1;
-  oc_rep_new_realloc(&buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
+  oc_rep_new_realloc_v1(&buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
 #else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t buf[OC_MIN_APP_DATA_SIZE];
-  oc_rep_new(buf, OC_MIN_APP_DATA_SIZE);
+  oc_rep_new_v1(buf, sizeof(buf));
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
   // Dumping cloud and accesspoint information.

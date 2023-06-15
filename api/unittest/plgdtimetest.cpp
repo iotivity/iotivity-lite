@@ -37,7 +37,7 @@
 #include "tests/gtest/Endpoint.h"
 #include "tests/gtest/PKI.h"
 #include "tests/gtest/RepPool.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_security_internal.h"

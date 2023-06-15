@@ -30,7 +30,7 @@
 #include "port/oc_storage_internal.h"
 #include "security/oc_doxm_internal.h"
 #include "security/oc_svr_internal.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"

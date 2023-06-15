@@ -219,7 +219,7 @@ toggle_switch_resource(void *data)
 {
   (void)data;
   while (OC_ATOMIC_LOAD8(quit) != 1) {
-    char c = getchar();
+    int c = getchar();
     if (OC_ATOMIC_LOAD8(quit) != 1) {
       getchar();
       if (c == 48) {
@@ -281,7 +281,6 @@ POST method.
 * The input values (as a set) are checked if all supplied values are correct.
 * If the input values are correct, they will be assigned to the global  property
 values.
-* Resource Description:
 */
 static void
 post_binaryswitch(oc_request_t *request, oc_interface_mask_t interfaces,
@@ -374,7 +373,6 @@ POST method.
 * The input values (as a set) are checked if all supplied values are correct.
 * If the input values are correct, they will be assigned to the global  property
 values.
-* Resource Description:
 */
 static void
 post_audio(oc_request_t *request, oc_interface_mask_t interfaces,
@@ -541,7 +539,6 @@ POST method.
 * The input values (as a set) are checked if all supplied values are correct.
 * If the input values are correct, they will be assigned to the global  property
 values.
-* Resource Description:
 */
 static void
 post_ruleexpression(oc_request_t *request, oc_interface_mask_t interfaces,
@@ -637,7 +634,6 @@ POST method.
 * The input values (as a set) are checked if all supplied values are correct.
 * If the input values are correct, they will be assigned to the global  property
 values.
-* Resource Description:
 */
 static void
 post_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,

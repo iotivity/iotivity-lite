@@ -1027,7 +1027,7 @@ oc_create_discovery_resource(int resource_idx, size_t device)
 
 #ifdef OC_CLIENT
 oc_discovery_flags_t
-oc_discovery_process_payload(const uint8_t *payload, int len,
+oc_discovery_process_payload(const uint8_t *payload, size_t len,
                              oc_client_handler_t client_handler,
                              const oc_endpoint_t *endpoint, void *user_data)
 {
@@ -1186,7 +1186,7 @@ oc_discovery_process_payload(const uint8_t *payload, int len,
       link = link->next;
     }
 
-    if (eps_list &&
+    if (eps_list && anchor != NULL && uri != NULL && types != NULL &&
         (all ? all_handler(oc_string(*anchor), oc_string(*uri), *types,
                            iface_mask, eps_list, bm,
                            (links->next ? true : false), user_data)

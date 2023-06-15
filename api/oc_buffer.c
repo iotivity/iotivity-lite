@@ -24,7 +24,7 @@
 #include "oc_signal_event_loop.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "util/oc_features.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 #include "util/oc_memb.h"
 
 #ifdef OC_SECURITY

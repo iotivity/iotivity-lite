@@ -17,6 +17,7 @@
  ****************************************************************************/
 
 #include "oc_api.h"
+#include "oc_clock_util.h"
 #include "oc_core_res.h"
 #include "oc_log.h"
 #include "oc_obt.h"

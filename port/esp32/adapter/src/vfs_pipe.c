@@ -23,6 +23,8 @@
 #include "port/oc_assert.h"
 #include "port/oc_log_internal.h"
 #include "sdkconfig.h"
+#include "util/oc_macros_internal.h"
+
 #include <stdarg.h>
 #include <stdbool.h>
 #include <string.h>

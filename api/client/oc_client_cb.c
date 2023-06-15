@@ -81,7 +81,7 @@ oc_ri_alloc_client_cb(const char *uri, const oc_endpoint_t *endpoint,
   oc_random_buffer(cb->token, cb->token_len);
   cb->discovery = false;
   cb->timestamp = oc_clock_time();
-  cb->observe_seq = -1;
+  cb->observe_seq = OC_COAP_OPTION_OBSERVE_NOT_SET;
   if (endpoint != NULL) {
     oc_endpoint_copy(&cb->endpoint, endpoint);
   }
@@ -237,7 +237,7 @@ client_cb_notify_with_code(oc_client_cb_t *cb, oc_status_t code)
   memset(&client_response, 0, sizeof(oc_client_response_t));
   client_response.client_cb = cb;
   client_response.endpoint = &cb->endpoint;
-  client_response.observe_option = -1;
+  client_response.observe_option = OC_COAP_OPTION_OBSERVE_NOT_SET;
   client_response.user_data = cb->user_data;
   client_response.code = code;
 
@@ -332,7 +332,7 @@ ri_prepare_client_response(const coap_packet_t *packet,
   memset(&client_response, 0, sizeof(oc_client_response_t));
   client_response.client_cb = cb;
   client_response.endpoint = endpoint;
-  client_response.observe_option = -1;
+  client_response.observe_option = OC_COAP_OPTION_OBSERVE_NOT_SET;
   client_response.content_format = cf;
   client_response.user_data = cb->user_data;
 
@@ -351,7 +351,7 @@ ri_prepare_client_response(const coap_packet_t *packet,
   }
 #else  /* !OC_BLOCK_WISE */
   (void)response_state;
-  coap_get_header_observe(packet, (uint32_t *)&client_response.observe_option);
+  coap_get_header_observe(packet, &client_response.observe_option);
 #endif /* OC_BLOCK_WISE */
 
   return client_response;
@@ -364,10 +364,11 @@ ri_client_cb_set_observe_seq(oc_client_cb_t *cb, int observe_seq,
   cb->observe_seq = observe_seq;
 
   // Drop old observe callback and keep the last one.
-  if (cb->observe_seq == 0) {
+  if (cb->observe_seq == OC_COAP_OPTION_OBSERVE_REGISTER) {
     oc_client_cb_t *dup_cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
     while (dup_cb != NULL) {
-      if (dup_cb != cb && dup_cb->observe_seq != -1 &&
+      if (dup_cb != cb &&
+          dup_cb->observe_seq != OC_COAP_OPTION_OBSERVE_NOT_SET &&
           dup_cb->token_len == cb->token_len &&
           memcmp(dup_cb->token, cb->token, cb->token_len) == 0 &&
           oc_string_is_equal(&dup_cb->uri, &cb->uri) &&
@@ -408,7 +409,8 @@ oc_client_cb_invoke(const coap_packet_t *response, oc_client_cb_t *cb,
 #endif /* OC_BLOCK_WISE */
 
 #if defined(OC_OSCORE) && defined(OC_SECURITY)
-  if (client_response.observe_option > 1) {
+  if (client_response.observe_option >=
+      OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE) {
     uint64_t notification_num = 0;
     oscore_read_piv(endpoint->piv, endpoint->piv_len, &notification_num);
     if (notification_num < cb->notification_num) {
@@ -419,17 +421,17 @@ oc_client_cb_invoke(const coap_packet_t *response, oc_client_cb_t *cb,
 #endif /* OC_OSCORE && OC_SECURITY */
 
   const uint8_t *payload = NULL;
-  int payload_len = 0;
+  size_t payload_len = 0;
 #ifdef OC_BLOCK_WISE
   if (*response_state != NULL) {
     payload = (*response_state)->buffer;
-    payload_len = (int)(*response_state)->payload_size;
+    payload_len = (*response_state)->payload_size;
   }
 #else  /* OC_BLOCK_WISE */
   payload_len = coap_get_payload(response, (const uint8_t **)&payload);
 #endif /* !OC_BLOCK_WISE */
   client_response._payload = payload;
-  client_response._payload_len = (size_t)payload_len;
+  client_response._payload_len = payload_len;
 
   bool separate = false;
   if (payload_len) {
@@ -491,7 +493,8 @@ oc_client_cb_invoke(const coap_packet_t *response, oc_client_cb_t *cb,
 
   cb->ref_count = 0;
 
-  if (client_response.observe_option == -1 && !separate && !cb->discovery) {
+  if (client_response.observe_option == OC_COAP_OPTION_OBSERVE_NOT_SET &&
+      !separate && !cb->discovery) {
     if (cb->multicast) {
       if (cb->stop_multicast_receive) {
         uint16_t mid = cb->mid;

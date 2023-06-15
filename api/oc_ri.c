@@ -36,7 +36,7 @@
 #include "util/oc_etimer_internal.h"
 #include "util/oc_features.h"
 #include "util/oc_list.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 #include "util/oc_memb.h"
 #include "util/oc_process_internal.h"
 
@@ -1047,36 +1047,38 @@ ri_handle_observation(const coap_packet_t *request, coap_packet_t *response,
   /* If a GET request was successfully processed, then check if the resource is
    * OBSERVABLE and check its observe option.
    */
-  uint32_t observe = 2;
+  int32_t observe = OC_COAP_OPTION_OBSERVE_NOT_SET;
   if ((resource->properties & OC_OBSERVABLE) == 0 ||
       !coap_get_header_observe(request, &observe)) {
-    return 2;
+    return OC_COAP_OPTION_OBSERVE_NOT_SET;
   }
 
   /* If the observe option is set to 0, make an attempt to add the requesting
    * client as an observer.
    */
-  if (observe == 0) {
+  if (observe == OC_COAP_OPTION_OBSERVE_REGISTER) {
     if (ri_add_observation(request, response, resource, resource_is_collection,
                            block2_size, endpoint, iface_query)) {
-      coap_set_header_observe(response, 0);
+      coap_set_header_observe(response, OC_COAP_OPTION_OBSERVE_REGISTER);
     } else {
       coap_remove_observer_by_token(endpoint, request->token,
                                     request->token_len);
     }
-    return 0;
+    return OC_COAP_OPTION_OBSERVE_REGISTER;
   }
 
   /* If the observe option is set to 1, make an attempt to remove  the
    * requesting client from the list of observers. In addition, remove the
    * resource from the list periodic GET callbacks if it is periodic observable.
    */
-  if (observe == 1) {
+  if (observe == OC_COAP_OPTION_OBSERVE_UNREGISTER) {
     ri_remove_observation(request, response, resource, resource_is_collection,
                           block2_size, endpoint, iface_query);
-    return 1;
+    return OC_COAP_OPTION_OBSERVE_UNREGISTER;
   }
-  return 2;
+
+  // if the observe option is >= 2 then we a have a notification
+  return observe;
 }
 
 static oc_event_callback_retval_t
@@ -1279,7 +1281,7 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
 
   /* Obtain handle to buffer containing the serialized payload */
   const uint8_t *payload = NULL;
-  int payload_len = 0;
+  size_t payload_len = 0;
 #ifdef OC_BLOCK_WISE
   if (*ctx.request_state) {
     payload = (*ctx.request_state)->buffer;
@@ -1289,7 +1291,7 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
   payload_len = coap_get_payload(request, &payload);
 #endif /* !OC_BLOCK_WISE */
   request_obj._payload = payload;
-  request_obj._payload_len = (size_t)payload_len;
+  request_obj._payload_len = payload_len;
   request_obj.content_format = cf;
   request_obj.accept = accept;
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
@@ -1431,14 +1433,14 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
      */
 #ifdef OC_DYNAMIC_ALLOCATION
     if (response_state_allocated) {
-      oc_rep_new_realloc(&response_buffer.buffer, response_buffer.buffer_size,
-                         OC_MAX_APP_DATA_SIZE);
+      oc_rep_new_realloc_v1(&response_buffer.buffer,
+                            response_buffer.buffer_size, OC_MAX_APP_DATA_SIZE);
       enable_realloc_rep = true;
     } else {
-      oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+      oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
     }
 #else  /* OC_DYNAMIC_ALLOCATION */
-    oc_rep_new(response_buffer.buffer, response_buffer.buffer_size);
+    oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
     oc_status_t ret =
@@ -1526,7 +1528,7 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
   }
 
 #ifdef OC_SERVER
-  int32_t observe = 2;
+  int32_t observe = OC_COAP_OPTION_OBSERVE_NOT_SET;
   if (success && response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
 #ifdef OC_BLOCK_WISE
     uint16_t block2_size = ctx.block2_size;

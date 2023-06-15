@@ -147,7 +147,6 @@
 #include "oc_log.h"
 #include "oc_pki.h"
 #include "port/oc_clock.h"
-#include <signal.h>
 
 #ifdef OC_CLOUD
 #include "oc_cloud.h"
@@ -156,6 +155,8 @@
 #ifdef OC_IDD_API
 #include "oc_introspection.h"
 #endif /* OC_IDD_API */
+
+#include <signal.h>
 
 #ifndef DOXYGEN
 // Force doxygen to document static inline
@@ -1571,7 +1572,7 @@ cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
   }
   if (status & OC_CLOUD_TOKEN_EXPIRY) {
     OC_PRINTF("\t\t-Token Expiry: ");
-    if (ctx) {
+    if (ctx != NULL) {
       OC_PRINTF("%d\n", oc_cloud_get_token_expiry(ctx));
     } else {
       OC_PRINTF("\n");
@@ -1595,11 +1596,16 @@ cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
     OC_PRINTF("\t\t-Refreshed Token\n");
   }
 
-  OC_PRINTF("   AC   = %s\n", oc_string(ctx->store.access_token));
-  OC_PRINTF("   AP   = %s\n", oc_string(ctx->store.auth_provider));
-  OC_PRINTF("   CI   = %s\n", oc_string(ctx->store.ci_server));
-
-  OC_PRINTF("   UUID = %s\n", oc_string(ctx->store.uid));
+  if (ctx != NULL) {
+    const char *at = oc_string(ctx->store.access_token);
+    OC_PRINTF("   AC   = %s\n", at != NULL ? at : "");
+    const char *ap = oc_string(ctx->store.auth_provider);
+    OC_PRINTF("   AP   = %s\n", ap != NULL ? ap : "");
+    const char *ci = oc_string(ctx->store.ci_server);
+    OC_PRINTF("   CI   = %s\n", ci != NULL ? ci : "");
+    const char *uid = oc_string(ctx->store.uid);
+    OC_PRINTF("   UUID = %s\n", uid != NULL ? uid : "");
+  }
 }
 #endif // OC_CLOUD
 

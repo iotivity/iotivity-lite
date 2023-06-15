@@ -85,13 +85,14 @@ dispatch_coap_request(void)
         g_dispatch.client_cb->qos = HIGH_QOS;
       }
     } else {
-      coap_set_payload(g_request, g_request_buffer->buffer, payload_size);
+      coap_set_payload(g_request, g_request_buffer->buffer,
+                       (uint32_t)payload_size);
       g_request_buffer->ref_count = 0;
     }
 #else  /* OC_BLOCK_WISE */
     coap_set_payload(
       g_request, g_dispatch.transaction->message->data + COAP_MAX_HEADER_SIZE,
-      payload_size);
+      (uint32_t)payload_size);
 #endif /* !OC_BLOCK_WISE */
   }
 
@@ -112,14 +113,15 @@ dispatch_coap_request(void)
   if (g_dispatch.transaction->message->length > 0) {
     coap_send_transaction(g_dispatch.transaction);
 
-    if (g_dispatch.client_cb->observe_seq == -1) {
-      if (g_dispatch.client_cb->qos == LOW_QOS)
+    if (g_dispatch.client_cb->observe_seq == OC_COAP_OPTION_OBSERVE_NOT_SET) {
+      if (g_dispatch.client_cb->qos == LOW_QOS) {
         oc_set_delayed_callback(g_dispatch.client_cb,
                                 &oc_client_cb_remove_async, OC_NON_LIFETIME);
-      else
+      } else {
         oc_set_delayed_callback(g_dispatch.client_cb,
                                 &oc_client_cb_remove_async,
                                 OC_EXCHANGE_LIFETIME);
+      }
     }
 
     success = true;
@@ -158,8 +160,8 @@ prepare_coap_request(oc_client_cb_t *cb)
   }
 
   g_dispatch.transaction = transaction;
-  oc_rep_new(g_dispatch.transaction->message->data + COAP_MAX_HEADER_SIZE,
-             OC_BLOCK_SIZE);
+  oc_rep_new_v1(g_dispatch.transaction->message->data + COAP_MAX_HEADER_SIZE,
+                OC_BLOCK_SIZE);
 
 #ifdef OC_BLOCK_WISE
   if (cb->method == OC_PUT || cb->method == OC_POST) {
@@ -173,15 +175,16 @@ prepare_coap_request(oc_client_cb_t *cb)
 #ifdef OC_DYNAMIC_ALLOCATION
 #ifdef OC_APP_DATA_BUFFER_POOL
     if (g_request_buffer->block) {
-      oc_rep_new(g_request_buffer->buffer, g_request_buffer->buffer_size);
+      oc_rep_new_v1(g_request_buffer->buffer, g_request_buffer->buffer_size);
     } else
 #endif
     {
-      oc_rep_new_realloc(&g_request_buffer->buffer,
-                         g_request_buffer->buffer_size, OC_MAX_APP_DATA_SIZE);
+      oc_rep_new_realloc_v1(&g_request_buffer->buffer,
+                            g_request_buffer->buffer_size,
+                            OC_MAX_APP_DATA_SIZE);
     }
 #else  /* OC_DYNAMIC_ALLOCATION */
-    oc_rep_new(g_request_buffer->buffer, OC_MIN_APP_DATA_SIZE);
+    oc_rep_new_v1(g_request_buffer->buffer, OC_MIN_APP_DATA_SIZE);
 #endif /* !OC_DYNAMIC_ALLOCATION */
     g_request_buffer->mid = cb->mid;
     g_request_buffer->client_cb = cb;
@@ -211,8 +214,9 @@ prepare_coap_request(oc_client_cb_t *cb)
   coap_set_header_uri_path(g_request, oc_string(cb->uri),
                            oc_string_len(cb->uri));
 
-  if (cb->observe_seq != -1)
+  if (cb->observe_seq != OC_COAP_OPTION_OBSERVE_NOT_SET) {
     coap_set_header_observe(g_request, cb->observe_seq);
+  }
 
   if (oc_string_len(cb->query) > 0) {
     coap_set_header_uri_query(g_request, oc_string(cb->query));
@@ -252,7 +256,7 @@ oc_do_multicast_update(void)
 
   if (payload_size > 0) {
     coap_set_payload(g_request, g_multicast_update->data + COAP_MAX_HEADER_SIZE,
-                     payload_size);
+                     (uint32_t)payload_size);
   } else {
     goto do_multicast_update_error;
   }
@@ -298,7 +302,7 @@ oc_init_multicast_update(const char *uri, const char *query)
 
   memcpy(&g_multicast_update->endpoint, &mcast, sizeof(oc_endpoint_t));
 
-  oc_rep_new(g_multicast_update->data + COAP_MAX_HEADER_SIZE, OC_BLOCK_SIZE);
+  oc_rep_new_v1(g_multicast_update->data + COAP_MAX_HEADER_SIZE, OC_BLOCK_SIZE);
 
   coap_udp_init_message(g_request, type, OC_POST, coap_get_mid());
 
@@ -546,7 +550,7 @@ oc_do_observe(const char *uri, const oc_endpoint_t *endpoint, const char *query,
   if (!cb)
     return false;
 
-  cb->observe_seq = 0;
+  cb->observe_seq = OC_COAP_OPTION_OBSERVE_REGISTER;
 
   bool status = false;
 
@@ -567,7 +571,7 @@ oc_stop_observe(const char *uri, const oc_endpoint_t *endpoint)
     return false;
 
   cb->mid = coap_get_mid();
-  cb->observe_seq = 1;
+  cb->observe_seq = OC_COAP_OPTION_OBSERVE_UNREGISTER;
 
   bool status = false;
 

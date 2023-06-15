@@ -44,7 +44,7 @@ extern "C" {
  * @return false otherwise
  */
 bool oc_sec_csr_validate(mbedtls_x509_csr *csr, mbedtls_pk_type_t pk_type,
-                         int md_flags);
+                         unsigned md_flags);
 
 /**
  * @brief Extract subject from a CSR.

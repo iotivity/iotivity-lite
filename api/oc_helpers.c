@@ -22,6 +22,7 @@
 #include "port/oc_assert.h"
 #include "port/oc_log_internal.h"
 #include "port/oc_random.h"
+#include "util/oc_macros_internal.h"
 #include <assert.h>
 #include <inttypes.h>
 #include <stdbool.h>
@@ -147,7 +148,7 @@ oc_string_is_cstr_equal(const oc_string_t *str1, const char *str2,
                         size_t str2_len)
 {
   return oc_string_len(*str1) == str2_len &&
-         strncmp(oc_string(*str1), str2, str2_len) == 0;
+         memcmp(oc_string(*str1), str2, str2_len) == 0;
 }
 
 void

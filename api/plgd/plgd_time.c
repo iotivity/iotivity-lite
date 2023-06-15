@@ -34,7 +34,7 @@
 #include "port/oc_clock.h"
 #include "port/oc_log_internal.h"
 #include "util/oc_compiler.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 #include "util/oc_memb.h"
 
 #ifdef OC_SECURITY
@@ -151,7 +151,7 @@ dev_time_set_time(oc_clock_time_t lst, bool dump, bool notify)
 #if OC_DBG_IS_ENABLED
   char lst_ts[64] = { 0 };
   oc_clock_encode_time_rfc3339(lst, lst_ts, sizeof(lst_ts));
-  uint64_t ut_s = (uint64_t)(updateTime / (double)OC_CLOCK_SECOND);
+  uint64_t ut_s = (uint64_t)((double)updateTime / (double)OC_CLOCK_SECOND);
   OC_DBG("plgd-time: %s (update: %" PRIu64 "s)", lst_ts, ut_s);
 #endif /* OC_DBG_IS_ENABLED */
 
@@ -197,7 +197,7 @@ dev_plgd_time(plgd_time_t pt)
     return -1;
   }
 
-  long elapsed = cur - pt.update_time;
+  long elapsed = (long)(cur - pt.update_time);
   assert(elapsed >= 0);
   oc_clock_time_t ptime = (pt.store.last_synced_time + elapsed);
 
@@ -218,7 +218,7 @@ dev_plgd_time(plgd_time_t pt)
   oc_clock_time_t time = oc_clock_time();
   char ts[RFC3339_BUFFER_SIZE] = { 0 };
   oc_clock_encode_time_rfc3339(time, ts, sizeof(ts));
-  long diff = (long)((time - ptime) / (double)OC_CLOCK_SECOND);
+  long diff = (long)((double)(time - ptime) / (double)OC_CLOCK_SECOND);
   OC_DBG("calculated plgd-time: %s, system time: %s, diff: %lds", pt_ts, ts,
          diff);
 #endif /* OC_DBG_IS_ENABLED */

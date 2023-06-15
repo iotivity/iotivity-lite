@@ -35,7 +35,7 @@
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY  */
 #include "util/oc_compiler.h"
-#include "util/oc_macros.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"

@@ -38,6 +38,7 @@ class TestMessage : public testing::Test {
 public:
   static void SetUpTestCase()
   {
+    (void)kTestMessagesPoolSize;
     oc_memb_init(&oc_test_messages);
     oc_set_buffers_avail_cb(onIncomingBufferAvailable);
     oc_memb_set_buffers_avail_cb(&oc_test_messages, onTestBufferAvailable);
