@@ -359,10 +359,13 @@ obt_rdp_7(oc_client_response_t *data)
     goto err_obt_rdp_7;
   }
 
+  oc_sec_encoded_data_t privatedata = { key, OC_ARRAY_SIZE(key),
+                                        OC_ENCODING_RAW };
+  oc_sec_encoded_data_t publicdata = { NULL, 0, 0 };
   int credid =
     oc_sec_add_new_cred(0, false, NULL, -1, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL,
-                        suuid, OC_ENCODING_RAW, OC_ARRAY_SIZE(key), key, 0, 0,
-                        NULL, NULL, NULL, NULL, NULL);
+                        suuid, privatedata, publicdata, oc_string_view2(NULL),
+                        oc_string_view2(NULL), oc_string_view2(NULL), NULL);
 
   if (credid == -1) {
     goto err_obt_rdp_7;
@@ -647,10 +650,13 @@ oc_obt_perform_random_pin_otm(const oc_uuid_t *uuid, const unsigned char *pin,
    * TLS layer.
    */
 
-  int credid =
-    oc_sec_add_new_cred(0, false, NULL, -1, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL,
-                        subjectuuid, OC_ENCODING_RAW, OC_ARRAY_SIZE(key), key,
-                        0, 0, NULL, NULL, NULL, NULL, NULL);
+  oc_sec_encoded_data_t privatedata = { key, OC_ARRAY_SIZE(key),
+                                        OC_ENCODING_RAW };
+  oc_sec_encoded_data_t publicdata = { NULL, 0, 0 };
+  int credid = oc_sec_add_new_cred(
+    0, false, NULL, -1, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, subjectuuid,
+    privatedata, publicdata, oc_string_view2(NULL), oc_string_view2(NULL),
+    oc_string_view2(NULL), NULL);
 
   if (credid == -1) {
     oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);

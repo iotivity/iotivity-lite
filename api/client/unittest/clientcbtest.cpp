@@ -57,7 +57,7 @@ public:
   static oc_discovery_flags_t discoveryHandler(const char *, const char *,
                                                oc_string_array_t,
                                                oc_interface_mask_t,
-                                               oc_endpoint_t *,
+                                               const oc_endpoint_t *,
                                                oc_resource_properties_t, void *)
   {
     TestClientCB::discoveryHandlerInvoked = true;
@@ -66,7 +66,7 @@ public:
 
   static oc_discovery_flags_t discoveryAllHandler(
     const char *, const char *, oc_string_array_t, oc_interface_mask_t,
-    oc_endpoint_t *, oc_resource_properties_t, bool, void *)
+    const oc_endpoint_t *, oc_resource_properties_t, bool, void *)
   {
     TestClientCB::discoveryAllHandlerInvoked = true;
     return OC_STOP_DISCOVERY;

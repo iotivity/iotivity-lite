@@ -82,7 +82,7 @@ oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
       uuid->id[j++] = c;
       c = 0;
     } else {
-      c = c << 4;
+      c = (uint8_t)(c << 4);
     }
     k++;
   }

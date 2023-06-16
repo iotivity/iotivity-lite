@@ -89,9 +89,11 @@ bool coap_separate_accept(const coap_packet_t *request,
                           oc_separate_response_t *separate_response,
                           const oc_endpoint_t *endpoint, int observe,
                           uint16_t block2_size);
+
 void coap_separate_resume(coap_packet_t *response,
-                          coap_separate_t *separate_store, uint8_t code,
+                          const coap_separate_t *separate_store, uint8_t code,
                           uint16_t mid);
+
 void coap_separate_clear(oc_separate_response_t *separate_response,
                          coap_separate_t *separate_store);
 

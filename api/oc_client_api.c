@@ -167,7 +167,7 @@ prepare_coap_request(oc_client_cb_t *cb)
   if (cb->method == OC_PUT || cb->method == OC_POST) {
     g_request_buffer = oc_blockwise_alloc_request_buffer(
       oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, &cb->endpoint,
-      cb->method, OC_BLOCKWISE_CLIENT, OC_MIN_APP_DATA_SIZE);
+      cb->method, OC_BLOCKWISE_CLIENT, (uint32_t)OC_MIN_APP_DATA_SIZE);
     if (!g_request_buffer) {
       OC_ERR("g_request_buffer is NULL");
       return false;

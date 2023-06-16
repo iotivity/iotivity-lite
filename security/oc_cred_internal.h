@@ -16,12 +16,15 @@
  *
  ****************************************************************************/
 
-#ifndef OC_CRED_H
-#define OC_CRED_H
+#ifndef OC_CRED_INTERNAL_H
+#define OC_CRED_INTERNAL_H
 
+#include "api/oc_helpers_internal.h"
 #include "oc_cred.h"
 #include "oc_ri.h"
 #include "oc_uuid.h"
+#include "util/oc_compiler.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -53,14 +56,21 @@ typedef struct
 
 #endif /* OC_PKI */
 
-int oc_sec_add_new_cred(
-  size_t device, bool roles_resource, const struct oc_tls_peer_t *client,
-  int credid, oc_sec_credtype_t credtype, oc_sec_credusage_t credusage,
-  const char *subject, oc_sec_encoding_t privatedata_encoding,
-  size_t privatedata_size, const uint8_t *privatedata,
-  oc_sec_encoding_t publicdata_encoding, size_t publicdata_size,
-  const uint8_t *publicdata, const char *role, const char *authority,
-  const char *tag, oc_sec_add_new_cred_data_t *new_cred_data);
+typedef struct
+{
+  const uint8_t *data;
+  size_t size;
+  oc_sec_encoding_t encoding;
+} oc_sec_encoded_data_t;
+
+int oc_sec_add_new_cred(size_t device, bool roles_resource,
+                        const struct oc_tls_peer_t *client, int credid,
+                        oc_sec_credtype_t credtype,
+                        oc_sec_credusage_t credusage, const char *subject,
+                        oc_sec_encoded_data_t privatedata,
+                        oc_sec_encoded_data_t publicdata, oc_string_view_t role,
+                        oc_string_view_t authority, oc_string_view_t tag,
+                        oc_sec_add_new_cred_data_t *new_cred_data);
 
 void oc_sec_cred_default(size_t device);
 void oc_sec_cred_init(void);
@@ -73,6 +83,9 @@ bool oc_sec_decode_cred(const oc_rep_t *rep, oc_sec_cred_t **owner,
                         oc_sec_on_apply_cred_cb_t on_apply_cred_cb,
                         void *on_apply_cred_data);
 
+/** Convert encoding to oc_string_view_t */
+oc_string_view_t oc_cred_encoding_to_string(oc_sec_encoding_t encoding);
+
 /**
  * @brief Parse cred encoding from string
  *
@@ -80,16 +93,8 @@ bool oc_sec_decode_cred(const oc_rep_t *rep, oc_sec_cred_t **owner,
  * @param str_len length of \p str
  * @return oc_sec_encoding_t parsed encoding
  */
-oc_sec_encoding_t oc_cred_encoding_from_string(const char *str, size_t str_len);
-
-/**
- * @brief Parse cred usage from string
- *
- * @param str string (cannot be NULL)
- * @param str_len length of \p str
- * @return oc_sec_credusage_t parsed usage
- */
-oc_sec_credusage_t oc_cred_usage_from_string(const char *str, size_t str_len);
+oc_sec_encoding_t oc_cred_encoding_from_string(const char *str, size_t str_len)
+  OC_NONNULL();
 
 /**
  * @brief Allocate and initialize a new credential and append it to global
@@ -168,17 +173,32 @@ oc_sec_cred_t *oc_sec_find_cred(oc_sec_cred_t *start,
 oc_sec_cred_t *oc_sec_find_role_cred(oc_sec_cred_t *start, const char *role,
                                      const char *authority, const char *tag);
 
-void put_cred(oc_request_t *request, oc_interface_mask_t iface_mask,
-              void *data);
-void post_cred(oc_request_t *request, oc_interface_mask_t iface_mask,
-               void *data);
-void get_cred(oc_request_t *request, oc_interface_mask_t iface_mask,
-              void *data);
-void delete_cred(oc_request_t *request, oc_interface_mask_t iface_mask,
-                 void *data);
+/**
+ * @brief Create roles (/oic/sec/cred) resource for given device.
+ *
+ * @param device device index
+ */
+void oc_sec_cred_create_resource(size_t device);
+
+#ifdef OC_PKI
+
+/** @brief Convert credusage to oc_string_view_t */
+oc_string_view_t oc_cred_credusage_to_string(oc_sec_credusage_t credusage);
+
+/**
+ * @brief Parse cred usage from string
+ *
+ * @param str string (cannot be NULL)
+ * @param str_len length of \p str
+ * @return oc_sec_credusage_t parsed usage
+ */
+oc_sec_credusage_t oc_cred_usage_from_string(const char *str, size_t str_len)
+  OC_NONNULL();
+
+#endif /* OC_PKI */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* OC_CRED_H */
+#endif /* OC_CRED_INTERNAL_H */

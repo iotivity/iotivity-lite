@@ -848,9 +848,9 @@ oc_ri_audit_log(oc_method_t method, const oc_resource_t *resource,
   snprintf(aux[idx++], LINE_WIDTH, "device is in %s", state_str_val[state]);
   snprintf(aux[idx++], LINE_WIDTH, "No roles asserted");
 #ifdef OC_PKI
-  if (peer) {
+  if (peer != NULL) {
     size_t pos = 0;
-    for (oc_sec_cred_t *rc = oc_sec_get_roles(peer); rc && pos < LINE_WIDTH;
+    for (oc_sec_cred_t *rc = oc_sec_roles_get(peer); rc && pos < LINE_WIDTH;
          rc = rc->next) {
       pos += snprintf(aux[idx - 1] + pos, LINE_WIDTH - pos - 1, "%s ",
                       oc_string(rc->role.role));
@@ -1194,7 +1194,7 @@ ri_invoke_coap_entity_set_response(coap_packet_t *response,
 
   if (response_buffer->code ==
       oc_status_code(OC_STATUS_REQUEST_ENTITY_TOO_LARGE)) {
-    coap_set_header_size1(response, OC_BLOCK_SIZE);
+    coap_set_header_size1(response, (uint32_t)OC_BLOCK_SIZE);
   }
 
   /* response_buffer->code at this point contains a valid CoAP status
@@ -1393,7 +1393,7 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
       OC_DBG("creating new block-wise response state");
       *ctx.response_state = oc_blockwise_alloc_response_buffer(
         uri_path, uri_path_len, endpoint, method, OC_BLOCKWISE_SERVER,
-        OC_MIN_APP_DATA_SIZE);
+        (uint32_t)OC_MIN_APP_DATA_SIZE);
       if (*ctx.response_state == NULL) {
         OC_ERR("failure to alloc response state");
         bad_request = true;

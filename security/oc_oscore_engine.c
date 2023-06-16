@@ -397,13 +397,10 @@ oc_oscore_send_multicast_message(oc_message_t *message)
     }
 
     OC_DBG("### parsed CoAP message ###");
-
-    uint8_t piv[OSCORE_PIV_LEN], piv_len = 0, kid[OSCORE_CTXID_LEN],
-                                 kid_len = 0, nonce[OSCORE_AEAD_NONCE_LEN],
-                                 AAD[OSCORE_AAD_MAX_LEN], AAD_len = 0;
-
     OC_DBG("### protecting multicast request ###");
     /* Use context->SSN as Partial IV */
+    uint8_t piv[OSCORE_PIV_LEN];
+    uint8_t piv_len = 0;
     oscore_store_piv(oscore_ctx->ssn, piv, &piv_len);
     OC_DBG("---using SSN as Partial IV: %" PRIu64, oscore_ctx->ssn);
     OC_LOGbytes(piv, piv_len);
@@ -411,10 +408,13 @@ oc_oscore_send_multicast_message(oc_message_t *message)
     oscore_ctx->ssn++;
 
     /* Use context-sendid as kid */
+    uint8_t kid[OSCORE_CTXID_LEN];
+    uint8_t kid_len = 0;
     memcpy(kid, oscore_ctx->sendid, oscore_ctx->sendid_len);
     kid_len = oscore_ctx->sendid_len;
 
     /* Compute nonce using partial IV and context->sendid */
+    uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
     oc_oscore_AEAD_nonce(oscore_ctx->sendid, oscore_ctx->sendid_len, piv,
                          piv_len, oscore_ctx->commoniv, nonce,
                          OSCORE_AEAD_NONCE_LEN);
@@ -423,6 +423,8 @@ oc_oscore_send_multicast_message(oc_message_t *message)
     OC_LOGbytes(nonce, OSCORE_AEAD_NONCE_LEN);
 
     /* Compose AAD using partial IV and context->sendid */
+    uint8_t AAD[OSCORE_AAD_MAX_LEN];
+    uint8_t AAD_len = 0;
     oc_oscore_compose_AAD(oscore_ctx->sendid, oscore_ctx->sendid_len, piv,
                           piv_len, AAD, &AAD_len);
     OC_DBG("---composed AAD using Partial IV (SSN) and Sender ID");
@@ -598,11 +600,13 @@ oc_oscore_send_message(oc_message_t *msg)
     }
 
     OC_DBG("### parsed CoAP message ###");
-
-    uint8_t piv[OSCORE_PIV_LEN], piv_len = 0, kid[OSCORE_CTXID_LEN],
-                                 kid_len = 0, nonce[OSCORE_AEAD_NONCE_LEN],
-                                 AAD[OSCORE_AAD_MAX_LEN], AAD_len = 0;
-
+    uint8_t piv[OSCORE_PIV_LEN];
+    uint8_t piv_len = 0;
+    uint8_t kid[OSCORE_CTXID_LEN];
+    uint8_t kid_len = 0;
+    uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
+    uint8_t AAD[OSCORE_AAD_MAX_LEN];
+    uint8_t AAD_len = 0;
     /* If CoAP message is request */
     if ((coap_pkt->code >= OC_GET && coap_pkt->code <= OC_DELETE)
 #ifdef OC_TCP

@@ -247,8 +247,6 @@ oc_oscore_context_derive_param(const uint8_t *id, uint8_t id_len,
                                uint8_t salt_len, uint8_t *param,
                                uint8_t param_len)
 {
-  uint8_t info[OSCORE_INFO_MAX_LEN];
-  CborEncoder e, a;
   CborError err = CborNoError;
 
   /* From RFC 8613: Section 3.2.1:
@@ -260,7 +258,10 @@ oc_oscore_context_derive_param(const uint8_t *id, uint8_t id_len,
         L : uint,
       ]
   */
+  CborEncoder e;
+  uint8_t info[OSCORE_INFO_MAX_LEN];
   cbor_encoder_init(&e, info, OSCORE_INFO_MAX_LEN, 0);
+  CborEncoder a;
   /* Array of 5 elements */
   err |= cbor_encoder_create_array(&e, &a, 5);
   /* Sender ID, Recipient ID or empty string for Common IV */

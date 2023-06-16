@@ -1174,8 +1174,7 @@ provision_role_wildcard_ace(void)
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, dev;
-
+  int i = 0;
   OC_PRINTF("\nProvision role * ACE\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -1192,6 +1191,7 @@ provision_role_wildcard_ace(void)
     return;
   }
 
+  int dev;
   OC_PRINTF("\n\nSelect device for provisioning: ");
   SCANF("%d", &dev);
   if (dev < 0 || dev >= i) {

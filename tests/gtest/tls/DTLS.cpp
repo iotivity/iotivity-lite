@@ -36,10 +36,11 @@ AddPresharedKey(size_t device, const PreSharedKey &psk)
   std::copy(std::begin(uuid->id), std::end(uuid->id), std::begin(hint));
   std::array<char, OC_UUID_LEN> uuid_str{};
   oc_uuid_to_str(uuid, uuid_str.data(), uuid_str.size());
-  if (oc_sec_add_new_cred(device, false, nullptr, -1, OC_CREDTYPE_PSK,
-                          OC_CREDUSAGE_NULL, uuid_str.data(), OC_ENCODING_RAW,
-                          psk.size(), psk.data(), OC_ENCODING_UNSUPPORTED, 0,
-                          nullptr, nullptr, nullptr, nullptr, nullptr) == -1) {
+  if (oc_sec_add_new_cred(
+        device, false, nullptr, -1, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL,
+        uuid_str.data(), { psk.data(), psk.size(), OC_ENCODING_RAW },
+        { nullptr, 0, OC_ENCODING_UNSUPPORTED }, { nullptr, 0 }, { nullptr, 0 },
+        { nullptr, 0 }, nullptr) == -1) {
     return {};
   }
   return hint;

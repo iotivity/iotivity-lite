@@ -16,10 +16,11 @@
  *
  ****************************************************************************/
 
-#include "oc_core_res.h"
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
+#include "oc_core_res.h"
 #include "oc_core_res_internal.h"
+#include "oc_csr.h"
 #include "oc_discovery.h"
 #include "oc_endpoint.h"
 #include "oc_introspection_internal.h"
@@ -28,6 +29,7 @@
 #include "oc_ri_internal.h"
 #include "oc_main.h"
 #include "oc_server_api_internal.h"
+#include "oc_swupdate_internal.h"
 #include "port/oc_assert.h"
 #include "util/oc_atomic.h"
 #include "util/oc_compiler.h"
@@ -45,6 +47,7 @@
 #ifdef OC_SECURITY
 #include "security/oc_doxm_internal.h"
 #include "security/oc_pstat.h"
+#include "security/oc_roles_internal.h"
 #include "security/oc_sdi_internal.h"
 #include "security/oc_sp_internal.h"
 #include "security/oc_tls_internal.h"
@@ -205,8 +208,9 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   size_t device = request->resource->device;
   oc_rep_start_root_object();
 
-  char di[OC_UUID_LEN], piid[OC_UUID_LEN];
+  char di[OC_UUID_LEN];
   oc_uuid_to_str(&g_oc_device_info[device].di, di, OC_UUID_LEN);
+  char piid[OC_UUID_LEN];
   if (request->origin && request->origin->version != OIC_VER_1_1_0) {
     oc_uuid_to_str(&g_oc_device_info[device].piid, piid, OC_UUID_LEN);
   }
@@ -873,12 +877,12 @@ oc_core_get_resource_type_by_uri(const char *uri)
     return OCF_SEC_SP;
   }
 #ifdef OC_PKI
-  if (core_is_resource_uri(uri, uri_len, "/oic/sec/csr",
-                           OC_CHAR_ARRAY_LEN("/oic/sec/csr"))) {
+  if (core_is_resource_uri(uri, uri_len, OCF_SEC_CSR_URI,
+                           OC_CHAR_ARRAY_LEN(OCF_SEC_CSR_URI))) {
     return OCF_SEC_CSR;
   }
-  if (core_is_resource_uri(uri, uri_len, "/oic/sec/roles",
-                           OC_CHAR_ARRAY_LEN("/oic/sec/roles"))) {
+  if (core_is_resource_uri(uri, uri_len, OCF_SEC_ROLES_URI,
+                           OC_CHAR_ARRAY_LEN(OCF_SEC_ROLES_URI))) {
     return OCF_SEC_ROLES;
   }
 #endif /* OC_PKI */
@@ -888,8 +892,8 @@ oc_core_get_resource_type_by_uri(const char *uri)
   }
 #endif /* OC_SECURITY */
 #ifdef OC_SOFTWARE_UPDATE
-  if (core_is_resource_uri(uri, uri_len, "/oc/swu",
-                           OC_CHAR_ARRAY_LEN("/oc/swu"))) {
+  if (core_is_resource_uri(uri, uri_len, OCF_SW_UPDATE_URI,
+                           OC_CHAR_ARRAY_LEN(OCF_SW_UPDATE_URI))) {
     return OCF_SW_UPDATE;
   }
 #endif /* OC_SOFTWARE_UPDATE */

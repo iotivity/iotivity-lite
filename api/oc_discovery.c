@@ -1052,12 +1052,12 @@ oc_discovery_process_payload(const uint8_t *payload, size_t len,
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
   oc_rep_set_pool(&rep_objects);
 
-  oc_rep_t *links = 0, *rep, *p;
+  oc_rep_t *p = NULL;
   int s = oc_parse_rep(payload, len, &p);
   if (s != 0) {
     OC_WRN("error parsing discovery response");
   }
-  links = rep = p;
+  oc_rep_t *rep = p;
   /*  While the oic.wk.res schema over the baseline interface provides for an
    *  array of objects, only one object is present and used in practice.
    *
@@ -1070,6 +1070,7 @@ oc_discovery_process_payload(const uint8_t *payload, size_t len,
     rep = rep->value.object;
   }
 
+  oc_rep_t *links = p;
   while (rep != NULL) {
     switch (rep->type) {
     /*  Ignore other oic.wk.res properties over here as they're known

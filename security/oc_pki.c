@@ -71,7 +71,7 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
   }
   OC_DBG("parsed intermediate CA cert");
 
-  mbedtls_x509_crt id_cert_chain, *id_cert;
+  mbedtls_x509_crt id_cert_chain;
   mbedtls_x509_crt_init(&id_cert_chain);
 
   /* Parse the identity cert chain */
@@ -87,7 +87,7 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
   }
   OC_DBG("parsed identity cert chain");
 
-  id_cert = &id_cert_chain;
+  mbedtls_x509_crt *id_cert = &id_cert_chain;
   for (; id_cert != NULL; id_cert = id_cert->next) {
     /* If this intermediate cert is already on the chain, return */
     if (id_cert->raw.len == int_ca.raw.len &&
@@ -144,7 +144,6 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
 {
   OC_DBG("attempting to add an identity certificate chain");
 
-  size_t c_size = cert_size, k_size = key_size;
   mbedtls_pk_context pkey;
   mbedtls_pk_init(&pkey);
 
@@ -152,9 +151,13 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
     OC_ERR("provided cert is not in PEM format");
     return -1;
   }
+
+  size_t c_size = cert_size;
   if (cert[cert_size - 1] != '\0') {
     c_size += 1;
   }
+
+  size_t k_size = key_size;
   if (oc_certs_is_PEM(key, key_size)) {
     if (key[key_size - 1] != '\0') {
       k_size += 1;
@@ -184,7 +187,7 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
 
   size_t private_key_size = ret;
 
-  mbedtls_x509_crt cert1, cert2;
+  mbedtls_x509_crt cert1;
   mbedtls_x509_crt_init(&cert1);
 
   /* Parse identity cert chain */
@@ -212,6 +215,7 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
     if (c->credusage != credusage) {
       continue;
     }
+    mbedtls_x509_crt cert2;
     mbedtls_x509_crt_init(&cert2);
 
     ret =
@@ -236,10 +240,13 @@ pki_add_identity_cert(size_t device, const unsigned char *cert,
 
   mbedtls_x509_crt_free(&cert1);
 
+  oc_sec_encoded_data_t privatedata = { privkbuf + (200 - private_key_size),
+                                        private_key_size, OC_ENCODING_RAW };
+  oc_sec_encoded_data_t publicdata = { cert, c_size - 1, OC_ENCODING_PEM };
   int credid = oc_sec_add_new_cred(
     device, false, NULL, -1, OC_CREDTYPE_CERT, credusage, subjectuuid,
-    OC_ENCODING_RAW, private_key_size, privkbuf + (200 - private_key_size),
-    OC_ENCODING_PEM, c_size - 1, cert, NULL, NULL, NULL, NULL);
+    privatedata, publicdata, oc_string_view2(NULL), oc_string_view2(NULL),
+    oc_string_view2(NULL), NULL);
 
   if (credid != -1) {
     OC_DBG("added new identity cert(credid=%d) chain to /oic/sec/cred", credid);
@@ -280,19 +287,17 @@ pki_add_trust_anchor(size_t device, const unsigned char *cert, size_t cert_size,
                      oc_sec_credusage_t credusage)
 {
   OC_DBG("attempting to add a trust anchor");
-
-  mbedtls_x509_crt cert1, cert2;
-  mbedtls_x509_crt_init(&cert1);
-  size_t c_size = cert_size;
-
   /* Parse root cert */
   if (!oc_certs_is_PEM(cert, cert_size)) {
     OC_ERR("provided cert is not in PEM format");
     return -1;
   }
+  size_t c_size = cert_size;
   if (cert[cert_size - 1] != '\0') {
     c_size += 1;
   }
+  mbedtls_x509_crt cert1;
+  mbedtls_x509_crt_init(&cert1);
   int ret = mbedtls_x509_crt_parse(&cert1, cert, c_size);
   if (ret < 0) {
     OC_ERR("could not parse the provided trust anchor: %d", ret);
@@ -307,6 +312,7 @@ pki_add_trust_anchor(size_t device, const unsigned char *cert, size_t cert_size,
     if (c->credusage != credusage) {
       continue;
     }
+    mbedtls_x509_crt cert2;
     mbedtls_x509_crt_init(&cert2);
     ret =
       mbedtls_x509_crt_parse(&cert2, oc_cast(c->publicdata.data, unsigned char),
@@ -336,9 +342,12 @@ pki_add_trust_anchor(size_t device, const unsigned char *cert, size_t cert_size,
 
   OC_DBG("adding a new trust anchor entry to /oic/sec/cred");
 
-  ret = oc_sec_add_new_cred(device, false, NULL, -1, OC_CREDTYPE_CERT,
-                            credusage, "*", 0, 0, NULL, OC_ENCODING_PEM,
-                            c_size - 1, cert, NULL, NULL, NULL, NULL);
+  oc_sec_encoded_data_t privatedata = { NULL, 0, 0 };
+  oc_sec_encoded_data_t publicdata = { cert, c_size - 1, OC_ENCODING_PEM };
+  ret =
+    oc_sec_add_new_cred(device, false, NULL, -1, OC_CREDTYPE_CERT, credusage,
+                        "*", privatedata, publicdata, oc_string_view2(NULL),
+                        oc_string_view2(NULL), oc_string_view2(NULL), NULL);
   if (ret != -1) {
     OC_DBG("added new trust anchor entry to /oic/sec/cred");
     oc_sec_dump_cred(device);

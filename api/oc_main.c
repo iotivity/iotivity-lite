@@ -48,6 +48,7 @@
 #include "security/oc_tls_internal.h"
 #ifdef OC_PKI
 #include "security/oc_keypair_internal.h"
+#include "security/oc_roles_internal.h"
 #endif /* OC_PKI */
 #include "security/oc_sdi_internal.h"
 #endif /* OC_SECURITY */
@@ -445,6 +446,9 @@ oc_main_shutdown(void)
 
   oc_sec_svr_free();
 #ifdef OC_PKI
+#ifdef OC_CLIENT
+  oc_sec_role_creds_free();
+#endif /* OC_CLIENT */
   oc_sec_ecdsa_free_keypairs();
 #endif /* OC_PKI */
 #endif /* OC_SECURITY */
