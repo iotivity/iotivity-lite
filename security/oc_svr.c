@@ -18,7 +18,6 @@
 
 #ifdef OC_SECURITY
 
-#include "oc_svr_internal.h"
 #include "api/oc_core_res_internal.h"
 #include "oc_acl_internal.h"
 #include "oc_ael.h"
@@ -30,8 +29,10 @@
 #include "oc_doxm_internal.h"
 #include "oc_pstat.h"
 #include "oc_ri.h"
+#include "oc_roles_internal.h"
 #include "oc_sdi_internal.h"
 #include "oc_sp_internal.h"
+#include "oc_svr_internal.h"
 #include "port/oc_log_internal.h"
 
 void
@@ -57,10 +58,7 @@ oc_sec_svr_create(void)
                               OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
                               OC_DISCOVERABLE | OC_SECURE, get_acl, 0, post_acl,
                               delete_acl, 1, "oic.r.acl2");
-    oc_core_populate_resource(OCF_SEC_CRED, i, "/oic/sec/cred",
-                              OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-                              OC_DISCOVERABLE | OC_SECURE, get_cred, 0,
-                              post_cred, delete_cred, 1, "oic.r.cred");
+    oc_sec_cred_create_resource(i);
     oc_core_populate_resource(
       OCF_SEC_AEL, i, "/oic/sec/ael", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
       OC_DISCOVERABLE | OC_SECURE, get_ael, 0, post_ael, 0, 1, "oic.r.ael");
@@ -69,11 +67,7 @@ oc_sec_svr_create(void)
     oc_sec_sdi_create_resource(i);
 #ifdef OC_PKI
     oc_sec_csr_create_resource(i);
-
-    oc_core_populate_resource(OCF_SEC_ROLES, i, "/oic/sec/roles",
-                              OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-                              OC_DISCOVERABLE | OC_SECURE, get_cred, 0,
-                              post_cred, delete_cred, 1, "oic.r.roles");
+    oc_sec_roles_create_resource(i);
 #endif /* OC_PKI */
   }
 }

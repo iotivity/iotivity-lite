@@ -193,9 +193,6 @@ int
 oc_oscore_compose_AAD(const uint8_t *kid, uint8_t kid_len, const uint8_t *piv,
                       uint8_t piv_len, uint8_t *AAD, uint8_t *AAD_len)
 {
-  uint8_t aad_array[OSCORE_AAD_MAX_LEN];
-
-  CborEncoder e, a, alg;
   CborError err = CborNoError;
 
   /* Compose aad_array... From RFC 8613 Section 5.4:
@@ -208,12 +205,16 @@ oc_oscore_compose_AAD(const uint8_t *kid, uint8_t kid_len, const uint8_t *piv,
      options : bstr,
    ]
   */
+  CborEncoder e;
+  uint8_t aad_array[OSCORE_AAD_MAX_LEN];
   cbor_encoder_init(&e, aad_array, OSCORE_AAD_MAX_LEN, 0);
   /* Array of 5 elements */
+  CborEncoder a;
   err |= cbor_encoder_create_array(&e, &a, 5);
   /* oscore_version: 1 */
   err |= cbor_encode_uint(&a, 0x01);
   /* algorithms: contains only alg_aead (10) */
+  CborEncoder alg;
   err |= cbor_encoder_create_array(&a, &alg, 1);
   err |= cbor_encode_int(&alg, 10);
   err |= cbor_encoder_close_container(&a, &alg);

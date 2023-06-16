@@ -29,6 +29,7 @@
 #include "oc_uuid.h"
 #include "security/oc_pstat.h"
 #include "util/oc_list.h"
+#include "util/oc_compiler.h"
 
 #ifdef OC_PKI
 #include <mbedtls/build_info.h>
@@ -272,7 +273,7 @@ typedef struct oc_obt_generate_root_cert_data_t
  */
 int oc_obt_generate_self_signed_root_cert_pem(
   oc_obt_generate_root_cert_data_t cert_data, unsigned char *buffer,
-  size_t buffer_size);
+  size_t buffer_size) OC_NONNULL();
 
 /**
  * @brief Generate a self-signed certificate and add it to credentials of given
@@ -309,24 +310,7 @@ typedef struct oc_obt_generate_identity_cert_data_t
  */
 int oc_obt_generate_identity_cert_pem(
   oc_obt_generate_identity_cert_data_t cert_data, unsigned char *buffer,
-  size_t buffer_size);
-
-/**
- * @brief Encode linked list of role and authority pairs into linked list of
- * mbedtls_x509_general_names*
- *
- * @param[in] roles linked list of role-authority pairs
- * @param[out] general_names output pointer to store linked list of
- * mbedtls_x509_general_names * (cannot be NULL, must be deallocated by
- * oc_obt_free_encoded_roles)
- * @return >=0 on success, number of encoded roles
- * @return -1 on error
- */
-int oc_obt_encode_roles(const oc_role_t *roles,
-                        mbedtls_x509_general_names **general_names);
-
-/// @brief Deallocate a linked list of mbedtls_x509_general_names*
-void oc_obt_free_encoded_roles(mbedtls_x509_general_names *general_names);
+  size_t buffer_size) OC_NONNULL();
 
 typedef struct oc_obt_generate_role_cert_data_t
 {
@@ -351,7 +335,8 @@ typedef struct oc_obt_generate_role_cert_data_t
  * @return -1 on error
  */
 int oc_obt_generate_role_cert_pem(oc_obt_generate_role_cert_data_t cert_data,
-                                  unsigned char *buffer, size_t buffer_size);
+                                  unsigned char *buffer, size_t buffer_size)
+  OC_NONNULL();
 
 #endif /* OC_PKI */
 

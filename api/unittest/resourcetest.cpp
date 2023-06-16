@@ -40,7 +40,6 @@ public:
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
     oc_resource_t *con = oc_core_get_resource_by_index(OCF_CON, /*device*/ 0);
     ASSERT_NE(nullptr, con);
-    // oc_resource_make_public(con);
     oc_resource_set_access_in_RFOTM(con, true, OC_PERM_RETRIEVE);
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
@@ -135,7 +134,7 @@ TEST_F(TestResourceWithDevice, BaselineInterfaceProperties)
   auto get_handler = [](oc_client_response_t *data) {
     ASSERT_EQ(OC_STATUS_OK, data->code);
     oc::TestDevice::Terminate();
-    bool *invoked = static_cast<bool *>(data->user_data);
+    auto *invoked = static_cast<bool *>(data->user_data);
     *invoked = true;
 
     oc_rep_t *rep = data->payload;

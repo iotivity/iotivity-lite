@@ -299,6 +299,12 @@
     <ClCompile Include="..\..\..\security\oc_certs.c">
       <Filter>Security</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_certs_generate.c">
+      <Filter>Security</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_certs_validate.c">
+      <Filter>Security</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\security\oc_keypair.c">
       <Filter>Security</Filter>
     </ClCompile>

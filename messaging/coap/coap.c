@@ -195,7 +195,8 @@ coap_set_option_header(unsigned int delta, size_t length, uint8_t *buffer)
   size_t written = 0;
 
   if (buffer) {
-    buffer[0] = coap_option_nibble(delta) << 4 | coap_option_nibble(length);
+    buffer[0] =
+      (uint8_t)(coap_option_nibble(delta) << 4 | coap_option_nibble(length));
   }
 
   if (delta > 268) {
@@ -1187,7 +1188,8 @@ coap_tcp_parse_message_length(const uint8_t *data, size_t *message_length,
     *message_length = tcp_len;
   } else {
     uint8_t i = 1;
-    *num_extended_length_bytes = 1 << (tcp_len - COAP_TCP_EXTENDED_LENGTH_1);
+    *num_extended_length_bytes =
+      (uint8_t)(1 << (tcp_len - COAP_TCP_EXTENDED_LENGTH_1));
     for (i = 1; i <= *num_extended_length_bytes; i++) {
       *message_length |= ((uint32_t)(0x000000FF & data[i])
                           << (8 * (*num_extended_length_bytes - i)));
@@ -1412,7 +1414,7 @@ coap_send_message(oc_message_t *message)
       message->endpoint.version == OCF_VER_1_0_0) {
     tcp_csm_state_t state = oc_tcp_get_csm_state(&message->endpoint);
     if (state == CSM_NONE) {
-      coap_send_csm_message(&message->endpoint, OC_PDU_SIZE, 0);
+      coap_send_csm_message(&message->endpoint, (uint32_t)OC_PDU_SIZE, 0);
     }
   }
 #endif /* OC_TCP */

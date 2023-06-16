@@ -137,42 +137,6 @@ oc_sec_certs_ecp_group_id_is_allowed(mbedtls_ecp_group_id gid)
          (MBEDTLS_X509_ID_FLAG(gid) & g_allowed_ecp_grpids_mask) != 0;
 }
 
-int
-oc_certs_generate_serial_number(mbedtls_x509write_cert *crt, size_t size)
-{
-  mbedtls_ctr_drbg_context ctr_drbg;
-  mbedtls_ctr_drbg_init(&ctr_drbg);
-
-  mbedtls_entropy_context entropy;
-  mbedtls_entropy_init(&entropy);
-  oc_entropy_add_source(&entropy);
-
-#define PERSONALIZATION_DATA "IoTivity-Lite-Certificate_Serial_Number"
-
-  int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
-                                  (const unsigned char *)PERSONALIZATION_DATA,
-                                  sizeof(PERSONALIZATION_DATA));
-
-#undef PERSONALIZATION_DATA
-
-  if (ret < 0) {
-    OC_ERR("error initializing RNG %d", ret);
-    return -1;
-  }
-
-  mbedtls_ctr_drbg_set_prediction_resistance(&ctr_drbg, MBEDTLS_CTR_DRBG_PR_ON);
-
-  ret = mbedtls_mpi_fill_random(&crt->serial, size, mbedtls_ctr_drbg_random,
-                                &ctr_drbg);
-
-  if (ret < 0) {
-    OC_ERR("error generating random serial number for certificate %d", ret);
-    return -1;
-  }
-
-  return 0;
-}
-
 bool
 oc_certs_is_PEM(const unsigned char *cert, size_t cert_len)
 {
@@ -485,30 +449,6 @@ oc_certs_parse_CN_for_UUID(const unsigned char *cert, size_t cert_size,
   return ok;
 }
 
-bool
-oc_certs_encode_role(const oc_role_t *role, char *buf, size_t buf_len)
-{
-  char *buffer = buf;
-  size_t length = buf_len;
-  int ret = snprintf(buffer, length, "CN=%s", oc_string(role->role));
-  if (ret < 0 || (size_t)ret >= length) {
-    OC_ERR("could not encode role");
-    return false;
-  }
-  if (oc_string_len(role->authority) == 0) {
-    return true;
-  }
-
-  buffer = buf + ret;
-  length -= ret;
-  ret = snprintf(buffer, length, ",OU=%s", oc_string(role->authority));
-  if (ret < 0 || (size_t)ret >= length) {
-    OC_ERR("could not encode authority");
-    return false;
-  }
-  return true;
-}
-
 static bool
 oc_certs_DN_is_CN(const mbedtls_x509_name *dn)
 {
@@ -622,28 +562,6 @@ oc_certs_timestamp_now(void)
   memset(&ts, 0, sizeof(ts));
   ts.sec = (int64_t)(now / OC_CLOCK_SECOND);
   return ts;
-}
-
-bool
-oc_certs_timestamp_format(timestamp_t ts, char *buffer, size_t buffer_size)
-{
-  assert(buffer != NULL);
-
-  struct tm now_tm;
-  memset(&now_tm, 0, sizeof(struct tm));
-  if (timestamp_to_tm_utc(&ts, &now_tm) == NULL) {
-    OC_ERR("cannot convert timestamp to string: invalid timestamp");
-    return false;
-  }
-
-  int ret = snprintf(buffer, buffer_size, "%d%02d%02d%02d%02d%02d",
-                     now_tm.tm_year + 1900, now_tm.tm_mon + 1, now_tm.tm_mday,
-                     now_tm.tm_hour, now_tm.tm_min, now_tm.tm_sec);
-  if (ret < 0 || (size_t)ret >= buffer_size) {
-    OC_ERR("cannot convert timestamp to string: buffer too small");
-    return false;
-  }
-  return true;
 }
 
 uint64_t

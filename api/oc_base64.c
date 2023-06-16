@@ -128,7 +128,8 @@ oc_base64_decode(uint8_t *str, size_t len)
   /* The Base64 input string is decoded in-place. */
   size_t i = 0;
   int j = 0;
-  unsigned char val_c = 0, val_s = 0;
+  unsigned char val_c = 0;
+  unsigned char val_s = 0;
 
   /* Process every input character */
   for (i = 0; i < len; i++) {

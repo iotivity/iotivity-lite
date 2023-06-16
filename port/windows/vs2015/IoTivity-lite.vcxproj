@@ -427,6 +427,8 @@
     <ClCompile Include="..\..\..\security\oc_ael.c" />
     <ClCompile Include="..\..\..\security\oc_audit.c" />
     <ClCompile Include="..\..\..\security\oc_certs.c" />
+    <ClCompile Include="..\..\..\security\oc_certs_generate.c" />
+    <ClCompile Include="..\..\..\security\oc_certs_validate.c" />
     <ClCompile Include="..\..\..\security\oc_cred.c" />
     <ClCompile Include="..\..\..\security\oc_csr.c" />
     <ClCompile Include="..\..\..\security\oc_doxm.c" />

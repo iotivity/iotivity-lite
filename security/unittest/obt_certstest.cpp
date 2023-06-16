@@ -86,6 +86,7 @@ public:
     return std::string(container.begin(), container.end());
   }
 
+  static std::vector<unsigned char> GetPEM(std::vector<unsigned char> &data);
   std::vector<unsigned char> GenerateSelfSignedRootCertificate(
     oc::keypair_t &kp, mbedtls_md_type_t sig_alg = MBEDTLS_MD_SHA256) const;
   std::vector<unsigned char> GenerateIdentityCertificate(
@@ -102,6 +103,20 @@ public:
 static const std::string g_root_subject_name{ "IoTivity-Lite Test" };
 static const std::string g_root_subject{ "C=US, O=OCF, CN=" +
                                          g_root_subject_name };
+
+std::vector<unsigned char>
+TestObtCerts::GetPEM(std::vector<unsigned char> &data)
+{
+  auto it =
+    std::find(data.begin(), data.end(), static_cast<unsigned char>('\0'));
+  size_t data_len =
+    std::distance(data.begin(), it) + 1; // size with NULL terminator
+  EXPECT_NE(data.end(), it);
+
+  EXPECT_TRUE(oc_certs_is_PEM(&data[0], data_len));
+  data.resize(data_len);
+  return data;
+}
 
 std::vector<unsigned char>
 TestObtCerts::GenerateSelfSignedRootCertificate(oc::keypair_t &kp,
@@ -122,15 +137,7 @@ TestObtCerts::GenerateSelfSignedRootCertificate(oc::keypair_t &kp,
     cert_data, cert_buf.data(), cert_buf.size());
   EXPECT_EQ(0, err);
 
-  auto it = std::find(cert_buf.begin(), cert_buf.end(),
-                      static_cast<unsigned char>('\0'));
-  size_t cert_buf_len =
-    std::distance(cert_buf.begin(), it) + 1; // size with NULL terminator
-  EXPECT_NE(cert_buf.end(), it);
-
-  EXPECT_TRUE(oc_certs_is_PEM(&cert_buf[0], cert_buf_len));
-  cert_buf.resize(cert_buf_len);
-  return cert_buf;
+  return GetPEM(cert_buf);
 }
 
 std::vector<unsigned char>
@@ -152,17 +159,7 @@ TestObtCerts::GenerateIdentityCertificate(oc::keypair_t &kp,
   int err = oc_obt_generate_identity_cert_pem(cert_data, cert_buf.data(),
                                               cert_buf.size());
   EXPECT_EQ(0, err);
-
-  auto it = std::find(cert_buf.begin(), cert_buf.end(),
-                      static_cast<unsigned char>('\0'));
-  size_t cert_buf_len =
-    std::distance(cert_buf.begin(), it) + 1; // size with NULL terminator
-  EXPECT_NE(cert_buf.end(), it);
-  std::string pem(cert_buf.begin(), it);
-
-  EXPECT_TRUE(oc_certs_is_PEM(&cert_buf[0], cert_buf_len));
-  cert_buf.resize(cert_buf_len);
-  return cert_buf;
+  return GetPEM(cert_buf);
 }
 
 std::vector<unsigned char>
@@ -185,17 +182,7 @@ TestObtCerts::GenerateRoleCertificate(oc::keypair_t &kp,
   int err =
     oc_obt_generate_role_cert_pem(cert_data, cert_buf.data(), cert_buf.size());
   EXPECT_EQ(0, err);
-
-  auto it = std::find(cert_buf.begin(), cert_buf.end(),
-                      static_cast<unsigned char>('\0'));
-  size_t cert_buf_len =
-    std::distance(cert_buf.begin(), it) + 1; // size with NULL terminator
-  EXPECT_NE(cert_buf.end(), it);
-  std::string pem(cert_buf.begin(), it);
-
-  EXPECT_TRUE(oc_certs_is_PEM(&cert_buf[0], cert_buf_len));
-  cert_buf.resize(cert_buf_len);
-  return cert_buf;
+  return GetPEM(cert_buf);
 }
 
 TEST_F(TestObtCerts, GenerateSelfSignedRootCertificateFail)

@@ -27,7 +27,7 @@
 oc_role_t *
 oc_get_all_roles(void)
 {
-  return oc_sec_get_role_creds();
+  return oc_sec_role_creds_get();
 }
 
 static void
@@ -74,7 +74,7 @@ oc_assert_role(const char *role, const char *authority,
     return false;
   }
   oc_tls_select_cert_ciphersuite();
-  if (!oc_init_post("/oic/sec/roles", endpoint, NULL, handler, HIGH_QOS,
+  if (!oc_init_post(OCF_SEC_ROLES_URI, endpoint, NULL, handler, HIGH_QOS,
                     user_data)) {
     OC_ERR("cannot init POST");
   }
@@ -94,7 +94,7 @@ void
 oc_assert_all_roles(const oc_endpoint_t *endpoint,
                     oc_response_handler_t handler, void *user_data)
 {
-  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+  const oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (oc_tls_uses_psk_cred(peer)) {
     return;
   }
@@ -103,7 +103,7 @@ oc_assert_all_roles(const oc_endpoint_t *endpoint,
   if (roles == NULL) {
     return;
   }
-  if (!oc_init_post("/oic/sec/roles", endpoint, NULL, handler, HIGH_QOS,
+  if (!oc_init_post(OCF_SEC_ROLES_URI, endpoint, NULL, handler, HIGH_QOS,
                     user_data)) {
     OC_ERR("cannot init POST");
   }

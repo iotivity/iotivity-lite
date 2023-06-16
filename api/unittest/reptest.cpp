@@ -235,9 +235,9 @@ TEST_F(TestRepWithPool, OCRepSetGetInt)
   EXPECT_FALSE(oc_rep_get_int(rep.get(), "zero", nullptr));
   EXPECT_FALSE(oc_rep_get_int(rep.get(), "not_a_key", &zero_out));
 
-  CheckJson(rep.get(),
-            "{\"ultimate_answer\":10000000000,\"negative\":-1024,\"zero\":0}",
-            false);
+  std::string json =
+    R"({"ultimate_answer":10000000000,"negative":-1024,"zero":0})";
+  CheckJson(rep.get(), json, false);
   std::string pretty_json = "{\n"
                             "  \"ultimate_answer\" : 10000000000,\n"
                             "  \"negative\" : -1024,\n"
@@ -301,7 +301,7 @@ TEST_F(TestRepWithPool, OCRepSetGetUint)
   EXPECT_FALSE(oc_rep_get_int(rep.get(), "not_a_key", &zero_out));
 
   std::string json =
-    "{\"ultimate_answer\":42,\"larger_than_int\":3000000000,\"zero\":0}";
+    R"({"ultimate_answer":42,"larger_than_int":3000000000,"zero":0})";
   CheckJson(rep.get(), json, false);
   std::string pretty_json = "{\n"
                             "  \"ultimate_answer\" : 42,\n"
@@ -341,7 +341,7 @@ TEST_F(TestRepWithPool, OCRepSetGetBool)
   EXPECT_FALSE(oc_rep_get_bool(rep.get(), "true_flag", nullptr));
   EXPECT_FALSE(oc_rep_get_bool(rep.get(), "not_a_key", &true_flag_out));
 
-  std::string json = "{\"true_flag\":true,\"false_flag\":false}";
+  std::string json = R"({"true_flag":true,"false_flag":false})";
   CheckJson(rep.get(), json, false);
   std::string pretty_json = "{\n"
                             "  \"true_flag\" : true,\n"
@@ -407,9 +407,8 @@ TEST_F(TestRepWithPool, OCRepSetGetTextString)
   EXPECT_FALSE(
     oc_rep_get_string(rep.get(), "not_a_key", &hal9000_out, &str_len));
 
-  std::string json = "{\"empty\":\"\","
-                     "\"hal9000\":\"Dave\","
-                     "\"ru_character_set\":\"Привет, мир\"}";
+  std::string json =
+    R"({"empty":"","hal9000":"Dave","ru_character_set":"Привет, мир"})";
   CheckJson(rep.get(), json, false);
   std::string pretty_json = "{\n"
                             "  \"empty\" : \"\",\n"
@@ -468,8 +467,8 @@ TEST_F(TestRepWithPool, OCRepSetGetByteString)
   EXPECT_FALSE(oc_rep_get_byte_string(rep.get(), "not_a_key",
                                       &test_byte_string_out, &str_len));
 
-  std::string json = "{\"empty_byte_string\":\"\","
-                     "\"test_byte_string\":\"AQIDBAIA\"}";
+  std::string json =
+    R"({"empty_byte_string":"","test_byte_string":"AQIDBAIA"})";
   CheckJson(rep.get(), json, false);
   std::string pretty_json = "{\n"
                             "  \"empty_byte_string\" : \"\",\n"
@@ -484,7 +483,7 @@ TEST_F(TestRepWithPool, OCRepSetGetByteString)
   // Decoding of byte string is an all or nothing action. Since there
   // is not enough room in the too_small output buffer nothing is placed in the
   // buffer and remaining space is left empty.
-  std::string too_small_json = "{\"empty_byte_string\":\"\",";
+  std::string too_small_json = R"({"empty_byte_string":"",)";
   EXPECT_STREQ(too_small_json.c_str(), too_small.data());
 }
 
@@ -932,7 +931,7 @@ TEST_F(TestRepWithPool, OCRepSetGetObject)
   EXPECT_EQ(5, c_out_size);
   EXPECT_STREQ("three", c_out);
 
-  std::string json = "{\"my_object\":{\"a\":1,\"b\":false,\"c\":\"three\"}}";
+  std::string json = R"({"my_object":{"a":1,"b":false,"c":"three"}})";
   CheckJson(rep.get(), json, false);
   std::string pretty_json = "{\n"
                             "  \"my_object\" : {\n"
@@ -1120,9 +1119,9 @@ TEST_F(TestRepWithPool, OCRepSetGetObjectArray)
   EXPECT_STREQ("AI computer", job_out);
 
   std::string json =
-    "{\"space_2001\":[{\"name\":\"Dave Bowman\","
-    "\"job\":\"astronaut\"},{\"name\":\"Frank Poole\",\"job\":\"astronaut\"}"
-    ",{\"name\":\"Hal 9000\",\"job\":\"AI computer\"}]}";
+    R"({"space_2001":[{"name":"Dave Bowman","job":"astronaut"},)"
+    R"({"name":"Frank Poole","job":"astronaut"},)"
+    R"({"name":"Hal 9000","job":"AI computer"}]})";
   CheckJson(rep.get(), json, false);
   std::string pretty_json = "{\n"
                             "  \"space_2001\" : [\n"
@@ -1209,8 +1208,8 @@ TEST_F(TestRepWithPool, OCRepAddGetByteStringArray)
             0);
 
   std::string json =
-    "{\"barray\":[\"AQECAwQFBg==\","
-    "\"AQECAwUIEyE0VYk=\",\"QkJCQkJCQkJCQkJCQkJCQkJCQkI=\",\"AAD/AAA=\"]}";
+    R"({"barray":["AQECAwQFBg==",)"
+    R"("AQECAwUIEyE0VYk=","QkJCQkJCQkJCQkJCQkJCQkJCQkI=","AAD/AAA="]})";
   CheckJson(rep.get(), json, false);
   std::string pretty_json = "{\n"
                             "  \"barray\" : [\n"
@@ -1314,11 +1313,11 @@ TEST_F(TestRepWithPool, OCRepSetGetStringArray)
   EXPECT_STREQ(STR3.c_str(), oc_string_array_get_item(quotes_out, 3));
 
   // clang-format off
-  std::string json = "{\"quotes\":"
-                     "[\"" + STR0 + "\","
-                     "\"" + STR1 + "\","
-                     "\"" + STR2 + "\","
-                     "\"" + STR3 + "\"]}";
+  std::string json = R"({"quotes":)"
+                     R"([")" + STR0 + R"(",)"
+                     R"(")" + STR1 + R"(",)"
+                     R"(")" + STR2 + R"(",)"
+                     R"(")" + STR3 + R"("]})";
   // clang-format on
   CheckJson(rep.get(), json, false);
   // clang-format off
@@ -1501,8 +1500,8 @@ TEST_F(TestRepWithPool, OCRepRootArrayObject)
   EXPECT_TRUE(oc_rep_get_int(rep_out, "count", &count_out));
   EXPECT_EQ(100, count_out);
 
-  std::string json = "[{\"href\":\"/light/1\",\"rep\":{\"state\":true}},"
-                     "{\"href\":\"/count/1\",\"rep\":{\"count\":100}}]";
+  std::string json = R"([{"href":"/light/1","rep":{"state":true}},)"
+                     R"({"href":"/count/1","rep":{"count":100}}])";
   CheckJson(rep.get(), json, false);
   std::string pretty_json = "[\n"
                             "  {\n"

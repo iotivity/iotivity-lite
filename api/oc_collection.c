@@ -832,7 +832,8 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
   assert(request != NULL);
   int ecode = oc_status_code(OC_STATUS_OK);
   int pcode = oc_status_code(OC_STATUS_BAD_REQUEST);
-  CborEncoder encoder, prev_link;
+  CborEncoder encoder;
+  CborEncoder prev_link;
   oc_request_t rest_request = { 0 };
   oc_response_t response = { 0 };
   oc_response_buffer_t response_buffer;

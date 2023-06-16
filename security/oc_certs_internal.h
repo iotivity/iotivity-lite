@@ -38,10 +38,6 @@ extern "C" {
 /// Restore certificate and CSR configuration to default values.
 void oc_sec_certs_default(void);
 
-/// Fill with serial number of the certificates with random byte string of given
-/// size
-int oc_certs_generate_serial_number(mbedtls_x509write_cert *crt, size_t size);
-
 /// @brief Check that string is in PEM format.
 bool oc_certs_is_PEM(const unsigned char *cert, size_t cert_len);
 
@@ -148,21 +144,6 @@ bool oc_certs_parse_CN_for_UUID(const unsigned char *cert, size_t cert_size,
                                 char *buffer, size_t buffer_size);
 
 /**
- * @brief Encode role and authority into a nul-terminated C-String for a Common
- * Name and Organizational Unit fields of a certificate.
- *
- * The Common Name (CN) component contains the role and the Organizational Unit
- * (OU) component contains the authority.
- *
- * @param[in] role role and authority to encode
- * @param[out] buf output buffer to store the encoded data
- * @param[in] buf_len size of the output buffer
- * @return true on success
- * @return false on failure
- */
-bool oc_certs_encode_role(const oc_role_t *role, char *buf, size_t buf_len);
-
-/**
  * @brief Extract the first role and authority pair from Common Name and
  * Organizational Unit fields of a certificate.
  *
@@ -188,19 +169,6 @@ timestamp_t oc_certs_timestamp_now(void);
 
 /// Convert mbedtls_x509_time to UNIX timestamp
 uint64_t oc_certs_time_to_unix_timestamp(mbedtls_x509_time time);
-
-/**
- * @brief Convert timestamp into a UTC timezone string expected by the x509
- * certificate in the notBefore and notAfter fields.
- *
- * @param ts timestamp to convert
- * @param buffer output buffer (cannot be NULL)
- * @param buffer_size size of the output buffer
- * @return true on success
- * @return false on failure
- */
-bool oc_certs_timestamp_format(timestamp_t ts, char *buffer,
-                               size_t buffer_size);
 
 /// Serialize certificate chain to PEM string
 int oc_certs_serialize_chain_to_pem(const mbedtls_x509_crt *cert_chain,

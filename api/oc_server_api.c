@@ -844,7 +844,8 @@ oc_notify_observers_delayed_ticks(oc_resource_t *resource,
     return;
   }
   oc_remove_delayed_callback(resource, &oc_observe_notification_delayed);
-  oc_set_delayed_callback(resource, &oc_observe_notification_delayed, ticks);
+  oc_ri_add_timed_event_callback_ticks(resource,
+                                       &oc_observe_notification_delayed, ticks);
 }
 
 void

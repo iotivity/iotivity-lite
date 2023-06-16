@@ -157,6 +157,7 @@ if(CONFIG_SECURE)
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_ael.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_audit.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_certs.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_certs_generate.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_certs_validate.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_cred.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_csr.c

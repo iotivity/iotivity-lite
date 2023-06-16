@@ -40,6 +40,7 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #include "security/oc_csr_internal.h"
 #include "security/oc_keypair_internal.h"
 #include "security/oc_obt_internal.h"
+#include "security/oc_roles_internal.h"
 #include "security/oc_security_internal.h"
 #include "security/oc_sdi_internal.h"
 #include "security/oc_tls_internal.h"
@@ -303,73 +304,78 @@ oc_obt_dump_state(void)
 static void
 oc_obt_load_state(void)
 {
-  long ret = 0;
-  oc_rep_t *rep, *head;
-
   uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
   if (!buf) {
     return;
   }
 
-  ret = oc_storage_read("obt_state", buf, OC_MAX_APP_DATA_SIZE);
-  if (ret > 0) {
-    struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
-    oc_rep_set_pool(&rep_objects);
-    int err = oc_parse_rep(buf, ret, &rep);
-    head = rep;
-    if (err == 0) {
-      while (rep != NULL) {
-        switch (rep->type) {
+  long ret = oc_storage_read("obt_state", buf, OC_MAX_APP_DATA_SIZE);
+  if (ret <= 0) {
+    free(buf);
+    return;
+  }
+
+  struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
+  oc_rep_set_pool(&rep_objects);
+  oc_rep_t *rep = NULL;
+  int err = oc_parse_rep(buf, ret, &rep);
+  if (err != 0) {
+    oc_free_rep(rep);
+    free(buf);
+    return;
+  }
+
+  oc_rep_t *head = rep;
+  while (rep != NULL) {
+    switch (rep->type) {
 #ifdef OC_PKI
-        case OC_REP_INT:
+    case OC_REP_INT:
 #define CREDID "credid"
-          if (oc_string_len(rep->name) == OC_CHAR_ARRAY_LEN(CREDID) &&
-              memcmp(oc_string(rep->name), CREDID, OC_CHAR_ARRAY_LEN(CREDID)) ==
-                0) {
-            g_root_cert_credid = (int)rep->value.integer;
-          }
-          break;
+      if (oc_string_len(rep->name) == OC_CHAR_ARRAY_LEN(CREDID) &&
+          memcmp(oc_string(rep->name), CREDID, OC_CHAR_ARRAY_LEN(CREDID)) ==
+            0) {
+        g_root_cert_credid = (int)rep->value.integer;
+      }
+      break;
 #endif /* OC_PKI */
 #if defined(OC_PKI) || defined(OC_OSCORE)
-        case OC_REP_BYTE_STRING:
+    case OC_REP_BYTE_STRING:
 #ifdef OC_PKI
 #define PRIVATE_KEY "private_key"
-          if (oc_string_len(rep->name) == OC_CHAR_ARRAY_LEN(PRIVATE_KEY) &&
-              memcmp(oc_string(rep->name), PRIVATE_KEY,
-                     OC_CHAR_ARRAY_LEN(PRIVATE_KEY)) == 0) {
-            g_private_key_size = oc_string_len(rep->value.string);
-            memcpy(g_private_key, oc_string(rep->value.string),
-                   g_private_key_size);
-            break;
-          }
+      if (oc_string_len(rep->name) == OC_CHAR_ARRAY_LEN(PRIVATE_KEY) &&
+          memcmp(oc_string(rep->name), PRIVATE_KEY,
+                 OC_CHAR_ARRAY_LEN(PRIVATE_KEY)) == 0) {
+        g_private_key_size = oc_string_len(rep->value.string);
+        memcpy(g_private_key, oc_string(rep->value.string), g_private_key_size);
+        break;
+      }
 #endif /* OC_PKI */
 #ifdef OC_OSCORE
 #define GROUP_ID "groupid"
-          if (oc_string_len(rep->name) == OC_CHAR_ARRAY_LEN(GROUP_ID) &&
-              memcmp(oc_string(rep->name), GROUP_ID,
-                     OC_CHAR_ARRAY_LEN(GROUP_ID)) == 0) {
-            memcpy(g_groupid, oc_string(rep->value.string), OSCORE_CTXID_LEN);
-            break;
-          }
-#define GROUP_SECRET "group_secret"
-          if (oc_string_len(rep->name) == OC_CHAR_ARRAY_LEN(GROUP_SECRET) &&
-              memcmp(oc_string(rep->name), GROUP_SECRET,
-                     OC_CHAR_ARRAY_LEN(GROUP_SECRET)) == 0) {
-            memcpy(g_group_secret, oc_string(rep->value.string),
-                   OSCORE_MASTER_SECRET_LEN);
-            break;
-          }
-#endif /* OC_OSCORE */
-          break;
-#endif /* OC_PKI || OC_OSCORE */
-        default:
-          break;
-        }
-        rep = rep->next;
+      if (oc_string_len(rep->name) == OC_CHAR_ARRAY_LEN(GROUP_ID) &&
+          memcmp(oc_string(rep->name), GROUP_ID, OC_CHAR_ARRAY_LEN(GROUP_ID)) ==
+            0) {
+        memcpy(g_groupid, oc_string(rep->value.string), OSCORE_CTXID_LEN);
+        break;
       }
+#define GROUP_SECRET "group_secret"
+      if (oc_string_len(rep->name) == OC_CHAR_ARRAY_LEN(GROUP_SECRET) &&
+          memcmp(oc_string(rep->name), GROUP_SECRET,
+                 OC_CHAR_ARRAY_LEN(GROUP_SECRET)) == 0) {
+        memcpy(g_group_secret, oc_string(rep->value.string),
+               OSCORE_MASTER_SECRET_LEN);
+        break;
+      }
+#endif /* OC_OSCORE */
+      break;
+#endif /* OC_PKI || OC_OSCORE */
+    default:
+      break;
     }
-    oc_free_rep(head);
+    rep = rep->next;
   }
+
+  oc_free_rep(head);
   free(buf);
 }
 #endif /* OC_PKI || OC_OSCORE */
@@ -1668,7 +1674,6 @@ free_trustanchor_state(oc_trustanchor_ctx_t *p, int status)
   oc_tls_close_connection(ep);
 
   p->cb.cb(status, p->cb.data);
-  // p->cb.cb(p->cb.data);
 
   if (p->switch_dos) {
     free_switch_dos_state(p->switch_dos);
@@ -1695,9 +1700,9 @@ oc_obt_add_roleid(oc_role_t *roles, const char *role, const char *authority)
 void
 oc_obt_free_roleid(oc_role_t *roles)
 {
-  oc_role_t *r = roles, *next;
+  oc_role_t *r = roles;
   while (r) {
-    next = r->next;
+    oc_role_t *next = r->next;
     oc_free_string(&r->role);
     oc_free_string(&r->authority);
     oc_memb_free(&oc_roles, r);
@@ -1778,8 +1783,8 @@ device_cred(oc_client_response_t *data)
 
     oc_rep_set_array(aclist2, resources);
     oc_rep_object_array_start_item(resources);
-    oc_rep_set_text_string_v1(resources, href, "/oic/sec/roles",
-                              OC_CHAR_ARRAY_LEN("/oic/sec/roles"));
+    oc_rep_set_text_string_v1(resources, href, OCF_SEC_ROLES_URI,
+                              OC_CHAR_ARRAY_LEN(OCF_SEC_ROLES_URI));
     oc_rep_object_array_end_item(resources);
     oc_rep_close_array(aclist2, resources);
 
@@ -2691,9 +2696,9 @@ oc_obt_provision_ace(const oc_uuid_t *uuid, oc_sec_ace_t *ace,
 void
 oc_obt_free_creds(oc_sec_creds_t *creds)
 {
-  oc_sec_cred_t *cred = oc_list_head(creds->creds), *next;
+  oc_sec_cred_t *cred = oc_list_head(creds->creds);
   while (cred != NULL) {
-    next = cred->next;
+    oc_sec_cred_t *next = cred->next;
     oc_free_string(&cred->role.role);
     oc_free_string(&cred->role.authority);
     oc_free_string(&cred->privatedata.data);
@@ -3191,9 +3196,9 @@ error_decode_acl:
 void
 oc_obt_free_acl(oc_sec_acl_t *acl)
 {
-  oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_list_pop(acl->subjects), *next;
+  oc_sec_ace_t *ace = (oc_sec_ace_t *)oc_list_pop(acl->subjects);
   while (ace) {
-    next = ace->next;
+    oc_sec_ace_t *next = ace->next;
     oc_obt_free_ace(ace);
     ace = next;
   }

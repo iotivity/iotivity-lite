@@ -184,10 +184,9 @@ static void
 remove_all_network_interface_cbs(void)
 {
   oc_network_interface_cb_t *cb_item =
-                              oc_list_head(oc_network_interface_cb_list),
-                            *next;
+    oc_list_head(oc_network_interface_cb_list);
   while (cb_item != NULL) {
-    next = cb_item->next;
+    oc_network_interface_cb_t *next = cb_item->next;
     oc_list_remove(oc_network_interface_cb_list, cb_item);
     oc_memb_free(&oc_network_interface_cb_s, cb_item);
     cb_item = next;

@@ -21,6 +21,7 @@
 #include "oc_certs.h"
 #include "port/oc_log_internal.h"
 #include "port/oc_random.h"
+#include "security/oc_certs_generate_internal.h"
 #include "security/oc_certs_internal.h"
 
 #include <algorithm>
@@ -64,6 +65,8 @@ TEST_F(TestCerts, IsPem)
   EXPECT_TRUE(is_pem("-----BEGIN CERTIFICATE-----"));
 }
 
+#ifdef OC_DYNAMIC_ALLOCATION
+
 TEST_F(TestCerts, TimestampFormatFail)
 {
   timestamp_t ts = oc_certs_timestamp_now();
@@ -86,6 +89,8 @@ TEST_F(TestCerts, TimestampFormat)
   EXPECT_TRUE(oc_certs_timestamp_format(ts, buffer.data(), buffer.size()));
   OC_DBG("notAfter: %s", buffer.data());
 }
+
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 TEST_F(TestCerts, SetSignatureMDAlgorithm)
 {

@@ -161,8 +161,9 @@ coap_separate_accept(const coap_packet_t *request,
 }
 
 void
-coap_separate_resume(coap_packet_t *response, coap_separate_t *separate_store,
-                     uint8_t code, uint16_t mid)
+coap_separate_resume(coap_packet_t *response,
+                     const coap_separate_t *separate_store, uint8_t code,
+                     uint16_t mid)
 {
 #ifdef OC_TCP
   if ((separate_store->endpoint.flags & TCP) != 0) {

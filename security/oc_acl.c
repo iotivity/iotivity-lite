@@ -231,10 +231,9 @@ oc_ace_get_permission(const oc_sec_ace_t *ace, const oc_resource_t *resource,
   oc_ace_wildcard_t wc = 0;
   if (!is_DCR) {
     if (resource->properties & OC_DISCOVERABLE) {
+      wc = OC_ACE_WC_ALL_SECURED;
       if (is_public) {
-        wc = OC_ACE_WC_ALL_PUBLIC | OC_ACE_WC_ALL_SECURED;
-      } else {
-        wc = OC_ACE_WC_ALL_SECURED;
+        wc |= OC_ACE_WC_ALL_PUBLIC;
       }
     } else {
       wc = OC_ACE_WC_ALL;
@@ -556,8 +555,8 @@ oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
     }
     if ((pstat->s == OC_DOS_RFPRO || pstat->s == OC_DOS_RFNOP ||
          pstat->s == OC_DOS_SRESET) &&
-        oc_string_len(resource->uri) == 14 &&
-        memcmp(oc_string(resource->uri), "/oic/sec/roles", 14) == 0) {
+        oc_string_is_cstr_equal(&resource->uri, OCF_SEC_ROLES_URI,
+                                OC_CHAR_ARRAY_LEN(OCF_SEC_ROLES_URI))) {
       OC_DBG("oc_acl: peer has implicit access to /oic/sec/roles in RFPRO, "
              "RFNOP, SRESET");
       return true;
@@ -600,7 +599,8 @@ oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
     }
 #ifdef OC_PKI
     else {
-      const oc_sec_cred_t *role_cred = peer ? oc_sec_get_roles(peer) : NULL;
+      const oc_sec_cred_t *role_cred =
+        peer != NULL ? oc_sec_roles_get(peer) : NULL;
       while (role_cred) {
         const oc_sec_cred_t *next = role_cred->next;
         uint32_t flags = 0;
@@ -907,10 +907,9 @@ oc_sec_ace_update_res(oc_ace_subject_type_t type,
 static void
 oc_ace_free_resources(size_t device, oc_sec_ace_t **ace, const char *href)
 {
-  oc_ace_res_t *res = (oc_ace_res_t *)oc_list_head((*ace)->resources),
-               *next = NULL;
+  oc_ace_res_t *res = (oc_ace_res_t *)oc_list_head((*ace)->resources);
   while (res != NULL) {
-    next = res->next;
+    oc_ace_res_t *next = res->next;
     if (href == NULL ||
         (oc_string_len(res->href) == strlen(href) &&
          memcmp(href, oc_string(res->href), strlen(href)) == 0)) {

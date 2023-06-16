@@ -177,9 +177,9 @@ void oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2);
 #define oc_double_array(ocdoublearray) (oc_cast(ocdoublearray, double))
 
 #ifdef OC_DYNAMIC_ALLOCATION
-#define STRING_ARRAY_ITEM_MAX_LEN 128
+#define STRING_ARRAY_ITEM_MAX_LEN (128)
 #else /* OC_DYNAMIC_ALLOCATION */
-#define STRING_ARRAY_ITEM_MAX_LEN 32
+#define STRING_ARRAY_ITEM_MAX_LEN (32)
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 bool _oc_copy_string_to_array(oc_string_array_t *ocstringarray,
