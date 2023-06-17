@@ -243,14 +243,15 @@ if(OC_INTROSPECTION_ENABLED)
 
     if(OC_IDD_API_ENABLED)
         # copy introspection files, used by certification applications.
-        add_custom_target(copy-idd-files
-            COMMAND ${CMAKE_COMMAND} -E copy
+        set(idd_files
             ${PROJECT_SOURCE_DIR}/server_certification_tests_IDD.cbor
             ${PROJECT_SOURCE_DIR}/client_certification_tests_IDD.cbor
             ${PROJECT_SOURCE_DIR}/server_rules_IDD.cbor
             ${PROJECT_SOURCE_DIR}/cloud_proxy_IDD.cbor
             ${PROJECT_SOURCE_DIR}/smart_home_server_linux_IDD.cbor
-            ${PROJECT_BINARY_DIR}
+        )
+        add_custom_target(copy-idd-files
+            COMMAND ${CMAKE_COMMAND} -E copy ${idd_files} ${PROJECT_BINARY_DIR}
         )
         add_dependencies(client-server-static copy-idd-files)
     endif()

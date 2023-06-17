@@ -26,7 +26,6 @@
 #include "security/oc_csr_internal.h"
 #include "security/oc_keypair_internal.h"
 #include "security/oc_obt_internal.h"
-
 #include "tests/gtest/Device.h"
 #include "tests/gtest/KeyPair.h"
 #include "tests/gtest/Resource.h"
@@ -299,7 +298,7 @@ TEST_F(TestCSRWithDevice, Resource)
   ASSERT_NE(nullptr, ep);
 
   ASSERT_TRUE(
-    oc::SetAccessInRFOTM(OCF_SEC_CSR, /*device*/ 0, OC_PERM_RETRIEVE));
+    oc::SetAccessInRFOTM(OCF_SEC_CSR, /*device*/ 0, true, OC_PERM_RETRIEVE));
 
   auto csr_handler = [](oc_client_response_t *data) {
     EXPECT_EQ(OC_STATUS_OK, data->code);

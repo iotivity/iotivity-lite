@@ -28,13 +28,16 @@ namespace oc {
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
 
 bool
-SetAccessInRFOTM(oc_core_resource_t index, size_t device, unsigned permissions)
+SetAccessInRFOTM(oc_core_resource_t index, size_t device, bool make_public,
+                 unsigned permissions)
 {
   oc_resource_t *res = oc_core_get_resource_by_index(index, device);
   if (res == NULL) {
     return false;
   }
-  oc_resource_make_public(res);
+  if (make_public) {
+    oc_resource_make_public(res);
+  }
   oc_resource_set_access_in_RFOTM(
     res, true, static_cast<oc_ace_permissions_t>(permissions));
   return true;

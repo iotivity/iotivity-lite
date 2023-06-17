@@ -19,7 +19,9 @@
 #ifndef OC_INTROSPECTION_INTERNAL_H
 #define OC_INTROSPECTION_INTERNAL_H
 
+#include "util/oc_compiler.h"
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -36,9 +38,22 @@ extern "C" {
 #define OC_INTROSPECTION_DATA_DEFAULT_IF (OC_IF_BASELINE)
 
 /**
- * @brief Creation of the oic.wk.introspection resource.
+ * @brief Get the introspection data for the device
  *
- * @param device index of the device to which the resource is to be created
+ * @param device index of the device to get the introspection data from
+ * @param buffer buffer to store the introspection data
+ * @param buffer_size size of the buffer
+ * @return long size of the introspection data
+ * @return -1 on error
+ */
+long oc_introspection_get_data(size_t device, uint8_t *buffer,
+                               size_t buffer_size) OC_NONNULL();
+
+/**
+ * @brief Create the oic.wk.introspection and
+ * x.org.openconnectivity.oic.introspection.data resources
+ *
+ * @param device index of the device to which the resources will be added
  */
 void oc_create_introspection_resource(size_t device);
 

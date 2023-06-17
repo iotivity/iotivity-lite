@@ -27,7 +27,7 @@ namespace oc {
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
 
-bool SetAccessInRFOTM(oc_core_resource_t index, size_t device,
+bool SetAccessInRFOTM(oc_core_resource_t index, size_t device, bool make_public,
                       unsigned permissions);
 
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */

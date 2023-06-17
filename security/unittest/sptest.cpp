@@ -290,7 +290,7 @@ public:
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
     ASSERT_TRUE(
-      oc::SetAccessInRFOTM(OCF_SEC_SP, /*device*/ 0,
+      oc::SetAccessInRFOTM(OCF_SEC_SP, /*device*/ 0, true,
                            OC_PERM_RETRIEVE | OC_PERM_UPDATE | OC_PERM_DELETE));
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
@@ -424,7 +424,7 @@ TEST_F(TestSecurityProfileWithServer, DeleteRequest_FailMethodNotSupported)
   const oc_endpoint_t *ep =
     oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
   ASSERT_NE(nullptr, ep);
-  oc::testNotSupportedMethod(OC_DELETE, ep, OCF_SEC_SP_URI, nullptr);
+  oc::testNotSupportedMethod(OC_DELETE, ep, OCF_SEC_SP_URI);
 }
 
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM  */

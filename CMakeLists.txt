@@ -849,7 +849,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
     macro(oc_package_add_test)
         set(options)
         set(oneValueArgs TARGET)
-        set(multiValueArgs ENVIRONMENT SOURCES)
+        set(multiValueArgs ENVIRONMENT FILES SOURCES)
         cmake_parse_arguments(OC_PACKAGE_ADD_TEST "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
 
         add_executable(${OC_PACKAGE_ADD_TEST_TARGET} ${OC_PACKAGE_ADD_TEST_SOURCES})
@@ -881,8 +881,24 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
 
         set_property(TEST ${OC_PACKAGE_ADD_TEST_TARGET} PROPERTY FOLDER unittests)
         set_property(TEST ${OC_PACKAGE_ADD_TEST_TARGET} PROPERTY LABELS oc-unittest)
-        if (OC_PACKAGE_ADD_TEST_ENVIRONMENT)
+        if(OC_PACKAGE_ADD_TEST_ENVIRONMENT)
             set_property(TEST ${OC_PACKAGE_ADD_TEST_TARGET} PROPERTY ENVIRONMENT "${OC_PACKAGE_ADD_TEST_ENVIRONMENT}")
+        endif()
+
+        if(OC_PACKAGE_ADD_TEST_FILES)
+            set(OC_PACKAGE_ADD_TEST_FILENAMES)
+            set(OC_PACKAGE_ADD_TEST_OUT_FILES)
+            foreach(OC_PACKAGE_ADD_TEST_FILE "${OC_PACKAGE_ADD_TEST_FILES}")
+                get_filename_component(OC_PACKAGE_ADD_TEST_FILENAME ${OC_PACKAGE_ADD_TEST_FILE} NAME)
+                list(APPEND OC_PACKAGE_ADD_TEST_FILENAMES ${OC_PACKAGE_ADD_TEST_FILENAME})
+                list(APPEND OC_PACKAGE_ADD_TEST_OUT_FILES ${PROJECT_BINARY_DIR}/${OC_PACKAGE_ADD_TEST_FILENAME})
+            endforeach()
+
+            add_custom_target(${OC_PACKAGE_ADD_TEST_TARGET}-files
+                COMMAND ${CMAKE_COMMAND} -E copy ${OC_PACKAGE_ADD_TEST_FILES} ${PROJECT_BINARY_DIR}
+                BYPRODUCTS ${OC_PACKAGE_ADD_TEST_OUT_FILES}
+            )
+            add_dependencies(${OC_PACKAGE_ADD_TEST_TARGET} ${OC_PACKAGE_ADD_TEST_TARGET}-files)
         endif()
 
         list(APPEND OC_UNITTESTS ${OC_PACKAGE_ADD_TEST_TARGET})
@@ -892,7 +908,11 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
 
     # Unit tests
     file(GLOB APITEST_SRC api/unittest/*.cpp api/client/unittest/*.cpp)
-    oc_package_add_test(TARGET apitest SOURCES ${COMMONTEST_SRC} ${APITEST_SRC})
+    set(apitest_files)
+    if (OC_INTROSPECTION_ENABLED AND OC_IDD_API_ENABLED)
+        set(apitest_files ${PROJECT_SOURCE_DIR}/api/unittest/introspectiontest_IDD.cbor)
+    endif()
+    oc_package_add_test(TARGET apitest SOURCES ${COMMONTEST_SRC} ${APITEST_SRC} FILES ${apitest_files})
 
     file(GLOB TIMESTAMPTEST_SRC api/c-timestamp/unittest/*.cpp)
     oc_package_add_test(TARGET timestamptest SOURCES ${TIMESTAMPTEST_SRC})

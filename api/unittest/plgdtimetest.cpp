@@ -249,7 +249,7 @@ public:
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
     ASSERT_TRUE(
-      oc::SetAccessInRFOTM(PLGD_TIME, /*device*/ 0,
+      oc::SetAccessInRFOTM(PLGD_TIME, /*device*/ 0, true,
                            OC_PERM_RETRIEVE | OC_PERM_UPDATE | OC_PERM_DELETE));
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
@@ -560,7 +560,7 @@ TEST_F(TestPlgdTimeWithServer, DeleteRequest_FailMethodNotSupported)
   const oc_endpoint_t *ep =
     oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
   ASSERT_NE(nullptr, ep);
-  oc::testNotSupportedMethod(OC_DELETE, ep, PLGD_TIME_URI, nullptr);
+  oc::testNotSupportedMethod(OC_DELETE, ep, PLGD_TIME_URI);
 }
 
 #endif /* !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */

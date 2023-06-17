@@ -19,6 +19,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_log.h"
+#include "oc_obt.h"
 #include "oc_pki.h"
 #include "oc_swupdate.h"
 #include "port/oc_clock.h"

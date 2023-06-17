@@ -40,8 +40,10 @@ namespace oc {
 
 using encodePayloadFn = void (*)();
 
-void testNotSupportedMethod(oc_method_t method, const oc_endpoint_t *ep,
-                            const std::string &uri, encodePayloadFn payloadFn);
+void testNotSupportedMethod(
+  oc_method_t method, const oc_endpoint_t *ep, const std::string &uri,
+  encodePayloadFn payloadFn = nullptr,
+  oc_status_t error_code = OC_STATUS_METHOD_NOT_ALLOWED);
 
 struct DeviceToAdd
 {

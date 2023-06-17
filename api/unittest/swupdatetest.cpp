@@ -33,6 +33,7 @@
 #include "tests/gtest/Clock.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
+#include "tests/gtest/Resource.h"
 #include "tests/gtest/Storage.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
@@ -527,13 +528,9 @@ public:
     ASSERT_TRUE(oc::TestDevice::StartServer());
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
-    oc_resource_t *sc = oc_core_get_resource_by_index(OCF_SW_UPDATE, kDeviceID);
-    ASSERT_NE(nullptr, sc);
-    oc_resource_make_public(sc);
-    oc_resource_set_access_in_RFOTM(
-      sc, true,
-      static_cast<oc_ace_permissions_t>(OC_PERM_RETRIEVE | OC_PERM_UPDATE |
-                                        OC_PERM_DELETE));
+    ASSERT_TRUE(
+      oc::SetAccessInRFOTM(OCF_SW_UPDATE, kDeviceID, true,
+                           OC_PERM_RETRIEVE | OC_PERM_UPDATE | OC_PERM_DELETE));
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 
     oc_swupdate_clear(oc_swupdate_get(kDeviceID));
@@ -1027,7 +1024,7 @@ TEST_F(TestSWUpdateWithServer, DeleteRequest_FailMethodNotSupported)
 {
   const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
-  oc::testNotSupportedMethod(OC_DELETE, ep, OCF_SW_UPDATE_URI, nullptr);
+  oc::testNotSupportedMethod(OC_DELETE, ep, OCF_SW_UPDATE_URI);
 }
 
 #endif /* !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
