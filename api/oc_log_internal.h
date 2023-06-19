@@ -28,7 +28,6 @@
 #define OC_LOG_INTERNAL_H
 
 #include "oc_log.h"
-#include "oc_clock_util.h"
 #include "util/oc_atomic.h"
 
 #include <stdio.h>
@@ -40,8 +39,8 @@ extern "C" {
 
 typedef struct oc_logger_t
 {
-  oc_print_log_fn_t fn;    ///< logging function
-  OC_ATOMIC_UINT8_T level; ///< mask of enabled log levels
+  oc_print_log_fn_t fn;   ///< logging function
+  OC_ATOMIC_INT8_T level; ///< mask of enabled log levels
 } oc_logger_t;
 
 /** Get global logger */

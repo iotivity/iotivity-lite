@@ -24,6 +24,7 @@
 
 #include "oc_log_internal.h"
 #include "port/oc_log_internal.h"
+#include "util/oc_atomic.h"
 
 #include <assert.h>
 #include <stddef.h>
@@ -43,14 +44,15 @@ oc_log_get_logger(void)
 void
 oc_log_set_level(oc_log_level_t level)
 {
-  assert(level < UINT8_MAX);
-  g_logger.level = (uint8_t)level;
+  assert(level >= INT8_MIN);
+  assert(level <= INT8_MAX);
+  OC_ATOMIC_STORE8(g_logger.level, (int8_t)level);
 }
 
 oc_log_level_t
 oc_log_get_level(void)
 {
-  return g_logger.level;
+  return OC_ATOMIC_LOAD8(g_logger.level);
 }
 
 const char *
