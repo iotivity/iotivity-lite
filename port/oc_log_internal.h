@@ -44,8 +44,9 @@
 #define OC_PORT_LOG_INTERNAL_H
 
 #include "api/oc_log_internal.h"
-#include "oc_log.h"
+#include "oc_clock_util.h"
 #include "oc_helpers.h"
+#include "oc_log.h"
 
 #include <inttypes.h>
 
