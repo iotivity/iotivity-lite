@@ -31,9 +31,9 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-#ifdef OC_INTROSPECTION
+#if defined(OC_INTROSPECTION) && defined(OC_IDD_API)
 #include "oc_introspection.h"
-#endif /* OC_INTROSPECTION */
+#endif /* OC_INTROSPECTION && OC_IDD_API */
 
 static const size_t DEVICE = 0;
 
@@ -91,7 +91,7 @@ app_init(void)
   ret |= oc_add_device("/oic/d", "oic.wk.d", "OCFTestClient", "ocf.2.2.5",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
 
-#if defined(OC_IDD_API)
+#ifdef OC_IDD_API
   FILE *fp;
   uint8_t *buffer;
   size_t buffer_size;

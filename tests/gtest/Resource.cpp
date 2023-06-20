@@ -32,7 +32,7 @@ SetAccessInRFOTM(oc_core_resource_t index, size_t device, bool make_public,
                  unsigned permissions)
 {
   oc_resource_t *res = oc_core_get_resource_by_index(index, device);
-  if (res == NULL) {
+  if (res == nullptr) {
     return false;
   }
   if (make_public) {

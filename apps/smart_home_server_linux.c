@@ -22,9 +22,9 @@
 #include "port/oc_clock.h"
 #include "util/oc_atomic.h"
 
-#ifdef OC_IDD_API
+#if defined(OC_INTROSPECTION) && defined(OC_IDD_API)
 #include "oc_introspection.h"
-#endif /* OC_IDD_API */
+#endif /* OC_INTROSPECTION && OC_IDD_API */
 
 #include <pthread.h>
 #include <signal.h>

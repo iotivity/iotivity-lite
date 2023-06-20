@@ -52,8 +52,8 @@
 #ifndef OC_INTROSPECTION_H
 #define OC_INTROSPECTION_H
 
-#include <wchar.h>
-
+#include "oc_export.h"
+#include "util/oc_compiler.h"
 #include <inttypes.h>
 #include <stddef.h>
 
@@ -67,10 +67,12 @@ extern "C" {
  *
  * @param device index of the device to which the IDD describes
  * @param IDD an array of CBOR encoded bytes containing the introspection device
- * data
+ * data (cannot be NULL)
  * @param IDD_size the size of the IDD array
  */
-void oc_set_introspection_data(size_t device, uint8_t *IDD, size_t IDD_size);
+OC_API
+void oc_set_introspection_data(size_t device, const uint8_t *IDD,
+                               size_t IDD_size) OC_NONNULL();
 
 #ifdef __cplusplus
 }

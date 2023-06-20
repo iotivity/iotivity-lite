@@ -31,6 +31,7 @@
 #include "oc_introspection_internal.h"
 #include "oc_server_api_internal.h"
 #include "port/oc_log_internal.h"
+#include "util/oc_macros_internal.h"
 
 #include <inttypes.h>
 #include <stdio.h>
@@ -39,16 +40,17 @@
 #include "server_introspection.dat.h"
 #else /* OC_IDD_API */
 
-#if !defined(OC_STORAGE)
+#ifndef OC_STORAGE
 #error Preprocessor macro OC_IDD_API is defined but OC_STORAGE is not defined \
 check oc_config.h and make sure OC_STORAGE is defined if OC_IDD_API is defined.
-#endif
+#endif /* !OC_STORAGE */
 
 void
-oc_set_introspection_data(size_t device, uint8_t *IDD, size_t IDD_size)
+oc_set_introspection_data(size_t device, const uint8_t *IDD, size_t IDD_size)
 {
   char idd_tag[OC_STORAGE_SVR_TAG_MAX];
-  if (oc_storage_gen_svr_tag("IDD", device, idd_tag, sizeof(idd_tag)) < 0) {
+  if (oc_storage_gen_svr_tag(OC_INTROSPECTION_WK_STORE_NAME, device, idd_tag,
+                             sizeof(idd_tag)) < 0) {
     OC_ERR("cannot set introspection data: failed to generate tag");
     return;
   }
@@ -67,17 +69,25 @@ oc_introspection_get_data(size_t device, uint8_t *buffer, size_t buffer_size)
 {
 #ifdef OC_IDD_API
   char idd_tag[OC_STORAGE_SVR_TAG_MAX];
-  if (oc_storage_gen_svr_tag("IDD", device, idd_tag, sizeof(idd_tag)) < 0) {
+  if (oc_storage_gen_svr_tag(OC_INTROSPECTION_WK_STORE_NAME, device, idd_tag,
+                             sizeof(idd_tag)) < 0) {
     OC_ERR("cannot get introspection data: failed to generate tag");
     return -1;
   }
-  return oc_storage_read(idd_tag, buffer, buffer_size);
+  long ret = oc_storage_read(idd_tag, buffer, buffer_size);
+  if (ret < 0) {
+    OC_ERR("cannot get introspection data: failed to read data(error=%ld)",
+           ret);
+    return -1;
+  }
+  return ret;
 #else  /* !OC_IDD_API */
   (void)device;
   if (introspection_data_size < buffer_size) {
     memcpy(buffer, introspection_data, introspection_data_size);
     return introspection_data_size;
   }
+  OC_ERR("cannot get introspection data: buffer size too small");
   return -1;
 #endif /* OC_IDD_API */
 }
@@ -93,7 +103,7 @@ oc_core_introspection_data_handler(oc_request_t *request,
   long IDD_size = oc_introspection_get_data(
     request->resource->device, request->response->response_buffer->buffer,
     OC_MAX_APP_DATA_SIZE);
-  if (IDD_size < 0 || IDD_size > OC_MAX_APP_DATA_SIZE) {
+  if (IDD_size < 0) {
     OC_ERR(
       "oc_core_introspection_data_handler: failed to get introspection data");
     oc_send_response_internal(request, OC_STATUS_INTERNAL_SERVER_ERROR,
@@ -104,16 +114,16 @@ oc_core_introspection_data_handler(oc_request_t *request,
                             IDD_size, true);
 }
 
-static bool
-introspection_wk_get_uri(size_t device, int interface_index,
-                         transport_flags conn, oc_string_t *uri)
+bool
+oc_introspection_wk_get_uri(size_t device, int interface_index,
+                            transport_flags flags, oc_string_t *uri)
 {
   /* We are interested in only a single coap:// endpoint on this logical device.
    */
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(device);
   while (eps != NULL) {
     if ((interface_index == -1 || eps->interface_index == interface_index) &&
-        !(eps->flags & SECURED) && (eps->flags == conn)) {
+        (eps->flags == flags)) {
       oc_string_t ep;
       if (oc_endpoint_to_string(eps, &ep) == 0) {
         oc_concat_strings(uri, oc_string(ep), OC_INTROSPECTION_DATA_URI);
@@ -127,6 +137,24 @@ introspection_wk_get_uri(size_t device, int interface_index,
 }
 
 static void
+introspection_wk_encode(const char *uri, size_t uri_len,
+                        const oc_resource_t *resource, bool include_baseline)
+{
+  oc_rep_start_root_object();
+  if (include_baseline) {
+    oc_process_baseline_interface(resource);
+  }
+  oc_rep_set_array(root, urlInfo);
+  oc_rep_object_array_start_item(urlInfo);
+  oc_rep_set_text_string_v1(urlInfo, protocol, "coap",
+                            OC_CHAR_ARRAY_LEN("coap"));
+  oc_rep_set_text_string_v1(urlInfo, url, uri, uri_len);
+  oc_rep_object_array_end_item(urlInfo);
+  oc_rep_close_array(root, urlInfo);
+  oc_rep_end_root_object();
+}
+
+static void
 oc_core_introspection_wk_handler(oc_request_t *request,
                                  oc_interface_mask_t iface_mask, void *data)
 {
@@ -134,34 +162,19 @@ oc_core_introspection_wk_handler(oc_request_t *request,
 
   int interface_index =
     (request->origin) ? request->origin->interface_index : -1;
-  transport_flags conn =
+  transport_flags flags =
     (request->origin && (request->origin->flags & IPV6)) ? IPV6 : IPV4;
   oc_string_t uri;
   memset(&uri, 0, sizeof(oc_string_t));
-  if (!introspection_wk_get_uri(request->resource->device, interface_index,
-                                conn, &uri)) {
+  if (!oc_introspection_wk_get_uri(request->resource->device, interface_index,
+                                   flags, &uri)) {
     OC_ERR("could not obtain introspection resource uri");
     oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
     return;
   }
 
-  oc_rep_start_root_object();
-  switch (iface_mask) {
-  case OC_IF_BASELINE:
-    oc_process_baseline_interface(request->resource);
-    OC_FALLTHROUGH;
-  case OC_IF_R: {
-    oc_rep_set_array(root, urlInfo);
-    oc_rep_object_array_start_item(urlInfo);
-    oc_rep_set_text_string(urlInfo, protocol, "coap");
-    oc_rep_set_text_string(urlInfo, url, oc_string(uri));
-    oc_rep_object_array_end_item(urlInfo);
-    oc_rep_close_array(root, urlInfo);
-  } break;
-  default:
-    break;
-  }
-  oc_rep_end_root_object();
+  introspection_wk_encode(oc_string(uri), oc_string_len(uri), request->resource,
+                          (iface_mask & OC_IF_BASELINE) != 0);
   oc_send_response_with_callback(request, OC_STATUS_OK, true);
 
   OC_DBG("got introspection resource uri %s", oc_string(uri));

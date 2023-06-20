@@ -18,10 +18,14 @@
 
 #include "oc_api.h"
 #include "oc_helpers.h"
-#include "oc_introspection.h"
 #include "port/oc_clock.h"
 #include "port/oc_storage.h"
 #include "util/oc_compiler.h"
+
+#if defined(OC_INTROSPECTION) && defined(OC_IDD_API)
+#include "oc_introspection.h"
+#endif /* OC_INTROSPECTION && OC_IDD_API */
+
 #include <signal.h>
 #include <stdbool.h>
 #include <stddef.h>

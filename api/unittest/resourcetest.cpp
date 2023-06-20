@@ -139,7 +139,7 @@ TEST_F(TestResourceWithDevice, BaselineInterfaceProperties)
     *invoked = true;
 
     oc_rep_t *rep = data->payload;
-    while (rep != NULL) {
+    while (rep != nullptr) {
       EXPECT_TRUE(oc_rep_is_baseline_interface_property(rep));
       rep = rep->next;
     }

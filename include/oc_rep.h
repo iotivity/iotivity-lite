@@ -435,6 +435,18 @@ CborError oc_rep_encoder_close_container(CborEncoder *encoder,
     }                                                                          \
   } while (0)
 
+/** Alternative to oc_rep_set_text_string in case we know the length of the
+value */
+#define oc_rep_set_text_string_v1(object, key, value, value_len)               \
+  do {                                                                         \
+    g_err |= oc_rep_encode_text_string(&object##_map, #key, sizeof(#key) - 1); \
+    if ((value) != NULL) {                                                     \
+      g_err |= oc_rep_encode_text_string(&object##_map, value, value_len);     \
+    } else {                                                                   \
+      g_err |= oc_rep_encode_text_string(&object##_map, "", 0);                \
+    }                                                                          \
+  } while (0)
+
 /**
  * Add an byte array `value` to the cbor `object` under the `key` name
  * Example:

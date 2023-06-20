@@ -133,6 +133,12 @@ HEADERS := $(wildcard ../../include/*.h)
 HEADERS += ../../port/linux/oc_config.h
 ifneq ($(INTROSPECTION),1)
 HEADERS:=$(filter-out %oc_introspection.h %server_introspection.dat.h,${HEADERS})
+else
+ifeq ($(IDD),1)
+HEADERS:=$(filter-out %server_introspection.dat.h,${HEADERS})
+else
+HEADERS:=$(filter-out %oc_introspection.h,${HEADERS})
+endif
 endif
 HEADERS_COAP := $(filter-out %_internal.h,$(wildcard ../../messaging/coap/*.h))
 HEADERS_UTIL := $(filter-out %_internal.h,$(wildcard ../../util/*.h))

@@ -93,6 +93,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
     nvs_close(handle);
     return -EINVAL;
   }
+  // TODO: check for overflow of buffer
 
   nvs_close(handle);
   return size;

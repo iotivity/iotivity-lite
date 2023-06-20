@@ -98,6 +98,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t len)
     return -1;
   }
   while (sdfile_available(_file_holder)) {
+    // TODO: check for overflow of buffer
     if ((len = sdfile_read(_file_holder, buf, len)) == -1) {
       OC_ERR("Error reading from: %s", store_path);
     }

@@ -1087,12 +1087,15 @@ install(DIRECTORY include/
 )
 
 if (OC_INTROSPECTION_ENABLED)
-    install(DIRECTORY include/
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
-        FILES_MATCHING
-        PATTERN "oc_introspection.h"
-        PATTERN "server_introspection.dat.h"
-    )
+    if (OC_IDD_API_ENABLED)
+        install(FILES include/oc_introspection.h
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
+        )
+    else()
+        install(FILES include/server_introspection.dat.h
+            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
+        )
+    endif()
 endif()
 
 if (PLGD_DEV_TIME_ENABLED)
