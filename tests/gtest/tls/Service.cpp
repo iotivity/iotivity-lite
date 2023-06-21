@@ -88,7 +88,7 @@ Service::WriteData(const uint8_t *data, size_t dataSize)
     int ret = mbedtls_ssl_write(mbedtlsCtx_->GetSSLContext(), &data[written],
                                 dataSize - written);
     if (ret < 0) {
-      if (ret == MBEDTLS_ERR_SSL_WANT_READ &&
+      if (ret == MBEDTLS_ERR_SSL_WANT_READ ||
           ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
         continue;
       }
