@@ -37,6 +37,7 @@
 #include "tests/gtest/Endpoint.h"
 #include "tests/gtest/PKI.h"
 #include "tests/gtest/RepPool.h"
+#include "tests/gtest/Resource.h"
 #include "util/oc_macros_internal.h"
 
 #ifdef OC_SECURITY
@@ -247,13 +248,9 @@ public:
     oc::TestDevice::ConfigurePlgdTime(true);
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
-    oc_resource_t *sc = oc_core_get_resource_by_index(PLGD_TIME, /*device*/ 0);
-    ASSERT_NE(nullptr, sc);
-    oc_resource_make_public(sc);
-    oc_resource_set_access_in_RFOTM(
-      sc, true,
-      static_cast<oc_ace_permissions_t>(OC_PERM_RETRIEVE | OC_PERM_UPDATE |
-                                        OC_PERM_DELETE));
+    ASSERT_TRUE(
+      oc::SetAccessInRFOTM(PLGD_TIME, /*device*/ 0, true,
+                           OC_PERM_RETRIEVE | OC_PERM_UPDATE | OC_PERM_DELETE));
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
 
@@ -563,7 +560,7 @@ TEST_F(TestPlgdTimeWithServer, DeleteRequest_FailMethodNotSupported)
   const oc_endpoint_t *ep =
     oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
   ASSERT_NE(nullptr, ep);
-  oc::testNotSupportedMethod(OC_DELETE, ep, PLGD_TIME_URI, nullptr);
+  oc::testNotSupportedMethod(OC_DELETE, ep, PLGD_TIME_URI);
 }
 
 #endif /* !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */

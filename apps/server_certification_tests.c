@@ -38,9 +38,9 @@
 #include "oc_swupdate.h"
 #endif /* OC_SOFTWARE_UPDATE */
 
-#ifdef OC_IDD_API
+#if defined(OC_INTROSPECTION) && defined(OC_IDD_API)
 #include "oc_introspection.h"
-#endif /* OC_IDD_API */
+#endif /* OC_INTROSPECTION && OC_IDD_API */
 
 static const size_t DEVICE = 0;
 

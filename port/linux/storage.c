@@ -81,6 +81,14 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
     return -EINVAL;
   }
 
+  fseek(fp, 0, SEEK_END);
+  size_t fsize = ftell(fp);
+  if (fsize > size) {
+    fclose(fp);
+    return -EINVAL;
+  }
+  fseek(fp, 0, SEEK_SET);
+
   size = fread(buf, 1, size, fp);
   fclose(fp);
   return (long)size;

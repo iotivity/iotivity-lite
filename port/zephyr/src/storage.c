@@ -308,6 +308,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
     size_t off = 0;
 
     while (times) {
+      // TODO: check for overflow of buffer
       r = flash_read(memmap.flash, key->offset + off, buf + off,
                      memmap.max_rw_size);
       if (r < 0)

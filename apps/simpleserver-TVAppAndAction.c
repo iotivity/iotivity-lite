@@ -18,10 +18,14 @@
 
 #include "oc_api.h"
 #include "oc_helpers.h"
-#include "oc_introspection.h"
 #include "port/oc_clock.h"
 #include "port/oc_storage.h"
 #include "util/oc_compiler.h"
+
+#if defined(OC_INTROSPECTION) && defined(OC_IDD_API)
+#include "oc_introspection.h"
+#endif /* OC_INTROSPECTION && OC_IDD_API */
+
 #include <signal.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -76,7 +80,8 @@ app_init(void)
   oc_string_array_add_item(my_supportedactions, "0");
   oc_string_array_add_item(my_supportedactions, "-");
 
-#if defined(OC_IDD_API)
+#ifdef OC_INTROSPECTION
+#ifdef OC_IDD_API
   uint8_t *buffer;
   size_t buffer_size;
   const char introspection_error[] =
@@ -105,9 +110,10 @@ app_init(void)
   } else {
     printf("%s", introspection_error);
   }
-#else
+#else  /* !OC_IDD_API */
   printf("\t introspection via header file\n");
-#endif
+#endif /* OC_IDD_API */
+#endif /* OC_INTROSPECTION */
   return ret;
 }
 

@@ -408,6 +408,18 @@ CborError oc_rep_encoder_close_container(CborEncoder *encoder,
     g_err |= oc_rep_encode_boolean(&object##_map, value);                      \
   } while (0)
 
+/** Alternative to oc_rep_set_text_string in case we know the length of the
+value */
+#define oc_rep_set_text_string_v1(object, key, value, value_len)               \
+  do {                                                                         \
+    g_err |= oc_rep_encode_text_string(&object##_map, #key, sizeof(#key) - 1); \
+    if ((value) != NULL) {                                                     \
+      g_err |= oc_rep_encode_text_string(&object##_map, value, value_len);     \
+    } else {                                                                   \
+      g_err |= oc_rep_encode_text_string(&object##_map, "", 0);                \
+    }                                                                          \
+  } while (0)
+
 /**
  * Add an string `value` to the cbor `object` under the `key` name
  * Example:
@@ -426,14 +438,8 @@ CborError oc_rep_encoder_close_container(CborEncoder *encoder,
  * ~~~
  */
 #define oc_rep_set_text_string(object, key, value)                             \
-  do {                                                                         \
-    g_err |= oc_rep_encode_text_string(&object##_map, #key, strlen(#key));     \
-    if ((value) != NULL) {                                                     \
-      g_err |= oc_rep_encode_text_string(&object##_map, value, strlen(value)); \
-    } else {                                                                   \
-      g_err |= oc_rep_encode_text_string(&object##_map, "", 0);                \
-    }                                                                          \
-  } while (0)
+  oc_rep_set_text_string_v1(object, key, value,                                \
+                            (value) != NULL ? strlen(value) : 0)
 
 /**
  * Add an byte array `value` to the cbor `object` under the `key` name
@@ -1172,8 +1178,8 @@ CborError oc_rep_encoder_close_container(CborEncoder *encoder,
 
 /**
  * Called after any `oc_rep_set_*`, `oc_rep_start_*`, `oc_rep_begin_*`,
- * `oc_rep_end_*`, `oc_rep_add_*`, `oc_rep_open_*`, and `oc_rep_close_*` macros
- * to check if an error occurred while executing the commands.
+ * `oc_rep_end_*`, `oc_rep_add_*`, `oc_rep_open_*`, and `oc_rep_close_*`
+ * macros to check if an error occurred while executing the commands.
  *
  * If the value returned is anything other than `CborNoError` then one of the
  * `oc_rep_*` macros failed.

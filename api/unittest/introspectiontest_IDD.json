@@ -1,0 +1,195 @@
+{
+  "schemes": [
+    "http"
+  ],
+  "swagger": "2.0",
+  "consumes": [
+    "application/json"
+  ],
+  "paths": {
+    "/oic/p": {
+      "get": {
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/Platform"
+            },
+            "description": ""
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/parameters/interface30"
+          }
+        ],
+        "description": ""
+      }
+    }
+  },
+  "definitions": {
+    "Platform": {
+      "properties": {
+        "id": {
+          "type": "string",
+          "readOnly": true,
+          "maxLength": 64,
+          "description": ""
+        },
+        "if": {
+          "minItems": 2,
+          "items": {
+            "enum": [
+              "oic.if.r",
+              "oic.if.baseline"
+            ],
+            "type": "string",
+            "maxLength": 64
+          },
+          "description": "",
+          "uniqueItems": true,
+          "readOnly": true,
+          "type": "array"
+        },
+        "n": {
+          "type": "string",
+          "readOnly": true,
+          "maxLength": 64,
+          "description": ""
+        },
+        "mnmn": {
+          "type": "string",
+          "readOnly": true,
+          "maxLength": 64,
+          "description": ""
+        },
+        "mnnct": {
+          "minItems": 1,
+          "items": {
+            "minimum": 1,
+            "type": "integer",
+            "description": ""
+          },
+          "readOnly": true,
+          "type": "array",
+          "description": ""
+        },
+        "mnml": {
+          "format": "uri",
+          "type": "string",
+          "readOnly": true,
+          "maxLength": 256,
+          "description": ""
+        },
+        "mnsel": {
+          "type": "string",
+          "readOnly": true,
+          "maxLength": 64,
+          "description": ""
+        },
+        "mnpv": {
+          "type": "string",
+          "readOnly": true,
+          "maxLength": 64,
+          "description": ""
+        },
+        "mnfv": {
+          "type": "string",
+          "readOnly": true,
+          "maxLength": 64,
+          "description": ""
+        },
+        "rt": {
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "oic.wk.p"
+            ],
+            "type": "string",
+            "maxLength": 64
+          },
+          "description": "",
+          "uniqueItems": true,
+          "readOnly": true,
+          "default": [
+            "oic.wk.p"
+          ],
+          "type": "array"
+        },
+        "mnos": {
+          "type": "string",
+          "readOnly": true,
+          "maxLength": 64,
+          "description": ""
+        },
+        "mnhw": {
+          "type": "string",
+          "readOnly": true,
+          "maxLength": 64,
+          "description": ""
+        },
+        "vid": {
+          "type": "string",
+          "readOnly": true,
+          "maxLength": 64,
+          "description": ""
+        },
+        "mnmo": {
+          "type": "string",
+          "readOnly": true,
+          "maxLength": 128,
+          "description": ""
+        },
+        "mndt": {
+          "readOnly": true,
+          "type": "string",
+          "pattern": "^([0-9]{4})-(1[0-2]|0[1-9])-(3[0-1]|2[0-9]|1[0-9]|0[1-9])$",
+          "description": ""
+        },
+        "pi": {
+          "readOnly": true,
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+          "description": ""
+        },
+        "st": {
+          "format": "date-time",
+          "readOnly": true,
+          "type": "string",
+          "description": ""
+        },
+        "mnsl": {
+          "format": "uri",
+          "type": "string",
+          "readOnly": true,
+          "maxLength": 256,
+          "description": ""
+        }
+      },
+      "type": "object"
+    }
+  },
+  "info": {
+    "version": "20230616",
+    "title": "introspectiontest",
+    "termsOfService": "https://openconnectivityfoundation.github.io/core/DISCLAIMER.md",
+    "license": {
+      "x-copyright": "copyright 2016-2017, 2019 Open Connectivity Foundation, Inc. All rights reserved.",
+      "url": "https://github.com/openconnectivityfoundation/core/blob/e28a9e0a92e17042ba3e83661e4c0fbce8bdc4ba/LICENSE.md",
+      "name": "OCF Data Model License"
+    }
+  },
+  "parameters": {
+    "interface30": {
+      "enum": [
+        "oic.if.r",
+        "oic.if.baseline"
+      ],
+      "type": "string",
+      "in": "query",
+      "name": "if"
+    }
+  },
+  "produces": [
+    "application/json"
+  ]
+}

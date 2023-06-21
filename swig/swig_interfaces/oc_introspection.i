@@ -50,4 +50,6 @@ void jni_set_introspection_data(size_t device, uint8_t *IDD, size_t IDD_size){
  }
  %}
 
+#define OC_API
+#define OC_NONNULL(...)
 %include "oc_introspection.h"

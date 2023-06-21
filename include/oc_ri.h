@@ -207,8 +207,10 @@ typedef enum {
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
   /* List of resources on a logical device: start */
   OCF_CON,
+#ifdef OC_INTROSPECTION
   OCF_INTROSPECTION_WK,
   OCF_INTROSPECTION_DATA,
+#endif /* OC_INTROSPECTION */
 /* List of Device Configuration Resources (DCRs): start */
 #ifdef OC_WKCORE
   WELLKNOWNCORE,

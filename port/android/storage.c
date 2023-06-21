@@ -72,8 +72,17 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
   strncpy(g_store_path + g_store_path_len + 1, store, store_len);
   g_store_path[1 + g_store_path_len + store_len] = '\0';
   fp = fopen(g_store_path, "rb");
-  if (!fp)
+  if (fp == NULL) {
     return -EINVAL;
+  }
+
+  fseek(fp, 0, SEEK_END);
+  size_t fsize = ftell(fp);
+  if (fsize > size) {
+    fclose(fp);
+    return -EINVAL;
+  }
+  fseek(fp, 0, SEEK_SET);
 
   size = fread(buf, 1, size, fp);
   fclose(fp);

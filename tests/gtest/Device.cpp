@@ -37,27 +37,32 @@ namespace oc {
 
 void
 testNotSupportedMethod(oc_method_t method, const oc_endpoint_t *ep,
-                       const std::string &uri, encodePayloadFn payloadFn)
+                       const std::string &uri, encodePayloadFn payloadFn,
+                       oc_status_t error_code)
 {
-  auto handler = [](oc_client_response_t *data) {
-    EXPECT_EQ(OC_STATUS_METHOD_NOT_ALLOWED, data->code);
-    oc::TestDevice::Terminate();
-    bool *invoked = static_cast<bool *>(data->user_data);
-    *invoked = true;
+  struct handlerData
+  {
+    bool invoked;
+    oc_status_t error_code;
   };
 
-  bool invoked = false;
+  auto handler = [](oc_client_response_t *data) {
+    auto *hd = static_cast<handlerData *>(data->user_data);
+    EXPECT_EQ(hd->error_code, data->code);
+    oc::TestDevice::Terminate();
+    hd->invoked = true;
+  };
+
+  handlerData hd = { false, error_code };
   switch (method) {
   case OC_GET:
   case OC_DELETE:
     break;
   case OC_POST:
-    ASSERT_TRUE(
-      oc_init_post(uri.c_str(), ep, nullptr, handler, HIGH_QOS, &invoked));
+    ASSERT_TRUE(oc_init_post(uri.c_str(), ep, nullptr, handler, HIGH_QOS, &hd));
     break;
   case OC_PUT:
-    ASSERT_TRUE(
-      oc_init_put(uri.c_str(), ep, nullptr, handler, HIGH_QOS, &invoked));
+    ASSERT_TRUE(oc_init_put(uri.c_str(), ep, nullptr, handler, HIGH_QOS, &hd));
     break;
   default:
     GTEST_FAIL();
@@ -67,12 +72,10 @@ testNotSupportedMethod(oc_method_t method, const oc_endpoint_t *ep,
   }
   switch (method) {
   case OC_GET:
-    EXPECT_TRUE(
-      oc_do_get(uri.c_str(), ep, nullptr, handler, HIGH_QOS, &invoked));
+    EXPECT_TRUE(oc_do_get(uri.c_str(), ep, nullptr, handler, HIGH_QOS, &hd));
     break;
   case OC_DELETE:
-    EXPECT_TRUE(
-      oc_do_delete(uri.c_str(), ep, nullptr, handler, HIGH_QOS, &invoked));
+    EXPECT_TRUE(oc_do_delete(uri.c_str(), ep, nullptr, handler, HIGH_QOS, &hd));
     break;
   case OC_POST:
     ASSERT_TRUE(oc_do_post());
@@ -85,7 +88,7 @@ testNotSupportedMethod(oc_method_t method, const oc_endpoint_t *ep,
   }
   oc::TestDevice::PoolEvents(5);
 
-  EXPECT_TRUE(invoked);
+  EXPECT_TRUE(hd.invoked);
 }
 
 Device::Device()

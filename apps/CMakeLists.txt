@@ -31,11 +31,6 @@ endfunction()
 
 # platform-independent applications
 oc_add_app_executable(
-    TARGET introspectionclient
-    SOURCES ${PROJECT_SOURCE_DIR}/introspectionclient.c
-    DEPENDENCIES client-static
-)
-oc_add_app_executable(
     TARGET simpleserver-resourcedefaults
     SOURCES ${PROJECT_SOURCE_DIR}/simpleserver-resourcedefaults.c
     DEPENDENCIES server-static
@@ -238,6 +233,30 @@ elseif(WIN32)
     )
 endif()
 
+if(OC_INTROSPECTION_ENABLED)
+    add_executable(introspectionclient
+        ${PROJECT_SOURCE_DIR}/introspectionclient.c
+    )
+    target_compile_options(introspectionclient PRIVATE ${PRIVATE_COMPILE_OPTIONS})
+    target_link_libraries(introspectionclient client-static)
+    file(MAKE_DIRECTORY ${PROJECT_BINARY_DIR}/introspectionclient_creds)
+
+    if(OC_IDD_API_ENABLED)
+        # copy introspection files, used by certification applications.
+        set(idd_files
+            ${PROJECT_SOURCE_DIR}/server_certification_tests_IDD.cbor
+            ${PROJECT_SOURCE_DIR}/client_certification_tests_IDD.cbor
+            ${PROJECT_SOURCE_DIR}/server_rules_IDD.cbor
+            ${PROJECT_SOURCE_DIR}/cloud_proxy_IDD.cbor
+            ${PROJECT_SOURCE_DIR}/smart_home_server_linux_IDD.cbor
+        )
+        add_custom_target(copy-idd-files
+            COMMAND ${CMAKE_COMMAND} -E copy ${idd_files} ${PROJECT_BINARY_DIR}
+        )
+        add_dependencies(client-server-static copy-idd-files)
+    endif()
+endif()
+
 # copy credentials, used by example applications.
 add_custom_target(copy-pki-certs ALL
     COMMAND ${CMAKE_COMMAND} -E copy_directory
@@ -245,16 +264,3 @@ add_custom_target(copy-pki-certs ALL
     ${PROJECT_BINARY_DIR}/pki_certs
 )
 add_dependencies(client-server-static copy-pki-certs)
-
-if(OC_IDD_API_ENABLED)
-    # copy introspection files, used by certification applications.
-    add_custom_target(copy-idd-files
-        COMMAND ${CMAKE_COMMAND} -E copy
-        ${PROJECT_SOURCE_DIR}/server_certification_tests_IDD.cbor
-        ${PROJECT_SOURCE_DIR}/client_certification_tests_IDD.cbor
-        ${PROJECT_SOURCE_DIR}/server_rules_IDD.cbor
-        ${PROJECT_SOURCE_DIR}/cloud_proxy_IDD.cbor
-        ${PROJECT_SOURCE_DIR}/smart_home_server_linux_IDD.cbor
-        ${PROJECT_BINARY_DIR}
-    )
-endif()

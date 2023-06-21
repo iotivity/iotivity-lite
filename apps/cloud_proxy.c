@@ -152,9 +152,9 @@
 #include "oc_cloud.h"
 #endif /* OC_CLOUD */
 
-#ifdef OC_IDD_API
+#if defined(OC_INTROSPECTION) && defined(OC_IDD_API)
 #include "oc_introspection.h"
-#endif /* OC_IDD_API */
+#endif /* OC_INTROSPECTION && OC_IDD_API */
 
 #include <signal.h>
 
@@ -421,7 +421,8 @@ app_init(void)
                        "ocf.res.1.3.0, ocf.sh.1.3.0", /* dmv value */
                        NULL, NULL);
 
-#if defined(OC_IDD_API)
+#ifdef OC_INTROSPECTION
+#ifdef OC_IDD_API
   FILE *fp;
   uint8_t *buffer;
   size_t buffer_size;
@@ -449,9 +450,10 @@ app_init(void)
   } else {
     OC_PRINTF("%s", introspection_error);
   }
-#else
+#else  /* !OC_IDD_API */
   OC_PRINTF("\t introspection via header file\n");
-#endif
+#endif /* OC_IDD_API */
+#endif /* OC_INTROSPECTION */
   return ret;
 }
 
@@ -993,8 +995,12 @@ is_vertical(char *resource_type)
     return false;
   if (size_rt == 8 && strncmp(resource_type, "oic.r.sp", 8) == 0)
     return false;
-  if (size_rt == 20 && strncmp(resource_type, "oic.wk.introspection", 20) == 0)
+#ifdef OC_INTROSPECTION
+  if (size_rt == 20 &&
+      strncmp(resource_type, "oic.wk.introspection", 20) == 0) {
     return false;
+  }
+#endif /* OC_INTROSPECTION */
   if (size_rt == 19 && strncmp(resource_type, "oic.r.coapcloudconf", 19) == 0)
     return false;
 

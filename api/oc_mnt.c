@@ -93,7 +93,7 @@ post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 void
 oc_create_maintenance_resource(size_t device)
 {
-  OC_DBG("oc_introspection: Initializing maintenance resource");
+  OC_DBG("oc_mnt: Initializing maintenance resource");
 
   oc_core_populate_resource(
     OCF_MNT, device, "oic/mnt", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,

@@ -63,7 +63,11 @@ Option and default setting in the Linux Makefile
 - JAVA 0
   
   not building JAVA (SWIG)
-  
+
+- INTROSPECTION 0
+
+  disable introspection resource (e.g. oic.wk.introspection)
+
 - IDD 1
   
   enable API to read introspection file from disk
