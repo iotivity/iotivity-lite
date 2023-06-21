@@ -224,37 +224,35 @@ swupdate_resource_get(oc_request_t *request, oc_interface_mask_t iface,
   oc_send_response_with_callback(request, code, true);
 }
 
+static size_t
+swupdate_async_get_device_index(const void *data)
+{
+  const oc_swupdate_t *s = (const oc_swupdate_t *)data;
+  for (size_t i = 0; i < oc_core_get_num_devices(); i++) {
+    if (s == &g_sw[i]) {
+      return i;
+    }
+  }
+  return (size_t)-1;
+}
+
 static oc_event_callback_retval_t
 swupdate_update_async(void *data)
 {
-  oc_swupdate_t *s = (oc_swupdate_t *)data;
-  size_t device = (size_t)-1;
-  for (size_t i = 0; i < oc_core_get_num_devices(); i++) {
-    if (s == &g_sw[i]) {
-      device = i;
-      break;
-    }
-  }
+  size_t device = swupdate_async_get_device_index(data);
   if (device == (size_t)-1) {
     OC_ERR("swupdate: cannot schedule update, device data not found");
     return OC_EVENT_DONE;
   }
+  const oc_swupdate_t *s = (const oc_swupdate_t *)data;
   oc_swupdate_perform_action(s->swupdateaction, device);
-  oc_swupdate_dump(device);
   return OC_EVENT_DONE;
 }
 
 static oc_event_callback_retval_t
 swupdate_dump_async(void *data)
 {
-  const oc_swupdate_t *s = (const oc_swupdate_t *)data;
-  size_t device = (size_t)-1;
-  for (size_t i = 0; i < oc_core_get_num_devices(); i++) {
-    if (s == &g_sw[i]) {
-      device = i;
-      break;
-    }
-  }
+  size_t device = swupdate_async_get_device_index(data);
   if (device == (size_t)-1) {
     OC_ERR("swupdate: cannot dump, device data not found");
     return OC_EVENT_DONE;
