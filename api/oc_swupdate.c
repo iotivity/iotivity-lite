@@ -26,6 +26,7 @@
 #include "api/oc_core_res_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_rep_internal.h"
+#include "api/oc_server_api_internal.h"
 #include "api/oc_storage_internal.h"
 #include "oc_api.h"
 #include "oc_ri.h"
@@ -223,23 +224,47 @@ swupdate_resource_get(oc_request_t *request, oc_interface_mask_t iface,
   oc_send_response_with_callback(request, code, true);
 }
 
+static size_t
+swupdate_async_get_device_index(const void *data)
+{
+  const oc_swupdate_t *s = (const oc_swupdate_t *)data;
+  for (size_t i = 0; i < oc_core_get_num_devices(); i++) {
+    if (s == &g_sw[i]) {
+      return i;
+    }
+  }
+  return (size_t)-1;
+}
+
 static oc_event_callback_retval_t
 swupdate_update_async(void *data)
 {
-  oc_swupdate_t *s = (oc_swupdate_t *)data;
-  size_t device = (size_t)-1;
-  for (size_t i = 0; i < oc_core_get_num_devices(); i++) {
-    if (s == &g_sw[i]) {
-      device = i;
-      break;
-    }
-  }
+  size_t device = swupdate_async_get_device_index(data);
   if (device == (size_t)-1) {
     OC_ERR("swupdate: cannot schedule update, device data not found");
     return OC_EVENT_DONE;
   }
+  const oc_swupdate_t *s = (const oc_swupdate_t *)data;
   oc_swupdate_perform_action(s->swupdateaction, device);
   return OC_EVENT_DONE;
+}
+
+static oc_event_callback_retval_t
+swupdate_dump_async(void *data)
+{
+  size_t device = swupdate_async_get_device_index(data);
+  if (device == (size_t)-1) {
+    OC_ERR("swupdate: cannot dump, device data not found");
+    return OC_EVENT_DONE;
+  }
+  oc_swupdate_dump(device);
+  return OC_EVENT_DONE;
+}
+
+static void
+oc_swupdate_dump_async(size_t device)
+{
+  oc_reset_delayed_callback(&g_sw[device], swupdate_dump_async, 0);
 }
 
 void
@@ -978,6 +1003,7 @@ oc_swupdate_notify_new_version_available(size_t device, const char *version,
   if (result != OC_SWUPDATE_RESULT_SUCCESS) {
     s->swupdateaction = OC_SWUPDATE_IDLE;
   }
+  oc_swupdate_dump_async(device);
 #ifdef OC_SERVER
   oc_notify_observers(oc_core_get_resource_by_index(OCF_SW_UPDATE, device));
 #endif /* OC_SERVER */
@@ -1009,6 +1035,7 @@ oc_swupdate_notify_downloaded(size_t device, const char *version,
   if (result != OC_SWUPDATE_RESULT_SUCCESS) {
     s->swupdateaction = OC_SWUPDATE_IDLE;
   }
+  oc_swupdate_dump_async(device);
 #ifdef OC_SERVER
   oc_notify_observers(oc_core_get_resource_by_index(OCF_SW_UPDATE, device));
 #endif /* OC_SERVER */
@@ -1034,6 +1061,7 @@ oc_swupdate_notify_upgrading(size_t device, const char *version,
   oc_free_string(&s->nv);
   oc_new_string(&s->nv, version, strlen(version));
   s->lastupdate = timestamp;
+  oc_swupdate_dump_async(device);
 #ifdef OC_SERVER
   oc_notify_observers(oc_core_get_resource_by_index(OCF_SW_UPDATE, device));
 #endif /* OC_SERVER */
@@ -1052,6 +1080,7 @@ oc_swupdate_notify_done(size_t device, oc_swupdate_result_t result)
   s->swupdateaction = OC_SWUPDATE_IDLE;
   s->swupdatestate = OC_SWUPDATE_STATE_IDLE;
   s->swupdateresult = result;
+  oc_swupdate_dump_async(device);
 #ifdef OC_SERVER
   oc_notify_observers(oc_core_get_resource_by_index(OCF_SW_UPDATE, device));
 #endif /* OC_SERVER */
