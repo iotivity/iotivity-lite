@@ -56,9 +56,9 @@ typedef struct oc_oscore_context_t
 } oc_oscore_context_t;
 
 int oc_oscore_context_derive_param(const uint8_t *id, uint8_t id_len,
-                                   uint8_t *id_ctx, uint8_t id_ctx_len,
-                                   const char *type, uint8_t *secret,
-                                   uint8_t secret_len, uint8_t *salt,
+                                   const uint8_t *id_ctx, uint8_t id_ctx_len,
+                                   const char *type, const uint8_t *secret,
+                                   uint8_t secret_len, const uint8_t *salt,
                                    uint8_t salt_len, uint8_t *param,
                                    uint8_t param_len);
 
@@ -70,7 +70,7 @@ oc_oscore_context_t *oc_oscore_add_context(size_t device, const char *senderid,
                                            void *cred, bool from_storagw);
 
 oc_oscore_context_t *oc_oscore_find_context_by_UUID(size_t device,
-                                                    oc_uuid_t *uuid);
+                                                    const oc_uuid_t *uuid);
 
 oc_oscore_context_t *oc_oscore_find_context_by_kid(oc_oscore_context_t *ctx,
                                                    size_t device,
@@ -78,8 +78,8 @@ oc_oscore_context_t *oc_oscore_find_context_by_kid(oc_oscore_context_t *ctx,
                                                    uint8_t kid_len);
 
 oc_oscore_context_t *oc_oscore_find_context_by_token_mid(
-  size_t device, uint8_t *token, uint8_t token_len, uint16_t mid,
-  uint8_t **request_piv, uint8_t *request_piv_len, bool tcp);
+  size_t device, const uint8_t *token, uint8_t token_len, uint16_t mid,
+  const uint8_t **request_piv, uint8_t *request_piv_len, bool tcp);
 
 oc_oscore_context_t *oc_oscore_find_group_context(void);
 

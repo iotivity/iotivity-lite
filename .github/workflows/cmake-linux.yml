@@ -54,8 +54,8 @@ jobs:
           - args: "-DOC_IPV4_ENABLED=ON -DOC_TCP_ENABLED=ON -DOC_PKI_ENABLED=OFF"
           # cloud on (ipv4+tcp on), collections create on
           - args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON"
-          # cloud on (ipv4+tcp on), collections create on, custom message buffer size
-          - args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_INOUT_BUFFER_SIZE=1024"
+          # cloud on (ipv4+tcp on), collections create on, custom message buffer size, custom message buffer pool size, custom app data buffer size, custom app data buffer pool size
+          - args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_INOUT_BUFFER_SIZE=2048 -DOC_INOUT_BUFFER_POOL=4 -DOC_APP_DATA_BUFFER_SIZE=2048 -DOC_APP_DATA_BUFFER_POOL=4"
           # debug on
           - args: "-DOC_DEBUG_ENABLED=ON"
           # debug on, cloud on (ipv4+tcp on)

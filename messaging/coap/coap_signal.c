@@ -85,7 +85,7 @@ coap_send_csm_message(const oc_endpoint_t *endpoint, uint32_t max_message_size,
 
 int
 coap_send_ping_message(const oc_endpoint_t *endpoint, uint8_t custody_option,
-                       uint8_t *token, uint8_t token_len)
+                       const uint8_t *token, uint8_t token_len)
 {
   if (!endpoint || !token || token_len == 0 || !(endpoint->flags & TCP))
     return 0;

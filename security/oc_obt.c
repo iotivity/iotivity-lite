@@ -465,9 +465,8 @@ get_endpoints(oc_client_response_t *data)
   if (data->code >= OC_STATUS_BAD_REQUEST) {
     return;
   }
-  oc_rep_t *links = data->payload;
-
   oc_uuid_t di;
+  oc_rep_t *links = data->payload;
   oc_rep_t *link = links != NULL ? links->value.object : NULL;
   while (link != NULL) {
     switch (link->type) {
@@ -485,7 +484,7 @@ get_endpoints(oc_client_response_t *data)
   }
 
   const oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-  if (memcmp(my_uuid->id, di.id, 16) == 0) {
+  if (memcmp(my_uuid->id, di.id, sizeof(di.id)) == 0) {
     return;
   }
 
@@ -509,9 +508,11 @@ get_endpoints(oc_client_response_t *data)
   oc_free_server_endpoints(device->endpoint);
   device->endpoint = NULL;
 
-  oc_endpoint_t *eps_cur = NULL;
+  if (links == NULL) {
+    return;
+  }
   link = links->value.object;
-  oc_endpoint_t temp_ep;
+  oc_endpoint_t *eps_cur = NULL;
   while (link != NULL) {
     switch (link->type) {
     case OC_REP_OBJECT_ARRAY: {
@@ -523,6 +524,7 @@ get_endpoints(oc_client_response_t *data)
           case OC_REP_STRING: {
             if (oc_string_len(ep->name) == 2 &&
                 memcmp(oc_string(ep->name), "ep", 2) == 0) {
+              oc_endpoint_t temp_ep;
               if (oc_string_to_endpoint(&ep->value.string, &temp_ep, NULL) ==
                   0) {
                 if (((data->endpoint->flags & IPV4) &&
@@ -3567,15 +3569,15 @@ oc_obt_general_post(const oc_uuid_t *uuid, const char *query, const char *url,
     oc_rep_start_root_object();
     for (int i = 0; i < array_size; i++) {
       if (strstr(payload_types[i], "bool") != NULL) {
-        int payload_int = strtol(payload_values[i], NULL, 10);
-        bool payload_bool = (payload_int ? true : false);
+        long payload_int = strtol(payload_values[i], NULL, 10);
+        bool payload_bool = (payload_int != 0 ? true : false);
 
         oc_rep_encode_text_string(&root_map, payload_properties[i],
                                   strlen(payload_properties[i]));
         oc_rep_encode_boolean(&root_map, payload_bool);
 
       } else if (strstr(payload_types[i], "int") != NULL) {
-        int payload_int = strtol(payload_values[i], NULL, 10);
+        long payload_int = strtol(payload_values[i], NULL, 10);
 
         oc_rep_encode_text_string(&root_map, payload_properties[i],
                                   strlen(payload_properties[i]));

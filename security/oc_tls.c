@@ -292,9 +292,9 @@ oc_mbedtls_debug(void *ctx, int level, const char *file, int line,
 #endif /* OC_DEBUG */
 
 static bool
-is_peer_active(oc_tls_peer_t *peer)
+is_peer_active(const oc_tls_peer_t *peer)
 {
-  oc_tls_peer_t *p = (oc_tls_peer_t *)oc_list_head(g_tls_peers);
+  const oc_tls_peer_t *p = (oc_tls_peer_t *)oc_list_head(g_tls_peers);
   while (p != NULL) {
     if (p == peer) {
       return true;
@@ -714,7 +714,7 @@ oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len, const oc_uuid_t *uuid,
 
 static void
 oc_tls_audit_log(const char *aeid, const char *message, uint8_t category,
-                 uint8_t priority, oc_tls_peer_t *peer)
+                 uint8_t priority, const oc_tls_peer_t *peer)
 {
   char buff[OC_IPADDR_BUFF_SIZE];
   if (peer) {
@@ -822,7 +822,7 @@ ssl_get_timer(void *ctx)
 }
 
 #ifdef OC_PKI
-typedef bool (*check_if_known_cert_cb)(oc_sec_cred_t *cred);
+typedef bool (*check_if_known_cert_cb)(const oc_sec_cred_t *cred);
 typedef void (*add_new_cert_cb)(oc_sec_cred_t *cred, size_t device);
 
 static void
@@ -830,8 +830,7 @@ oc_tls_add_new_certs(oc_sec_credusage_t credusage,
                      check_if_known_cert_cb is_known_cert,
                      add_new_cert_cb add_new_cert)
 {
-  size_t device;
-  for (device = 0; device < oc_core_get_num_devices(); device++) {
+  for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
     oc_sec_creds_t *creds = oc_sec_get_creds(device);
     oc_sec_cred_t *cred = (oc_sec_cred_t *)oc_list_head(creds->creds);
     for (; cred != NULL; cred = cred->next) {
@@ -849,7 +848,7 @@ oc_tls_add_new_certs(oc_sec_credusage_t credusage,
 }
 
 static bool
-is_known_identity_cert(oc_sec_cred_t *cred)
+is_known_identity_cert(const oc_sec_cred_t *cred)
 {
   oc_x509_crt_t *certs = (oc_x509_crt_t *)oc_list_head(g_identity_certs);
 
@@ -1042,7 +1041,7 @@ oc_tls_get_identity_cert_for_cred(const oc_sec_cred_t *cred)
 }
 
 bool
-oc_tls_remove_identity_cert(oc_sec_cred_t *cred)
+oc_tls_remove_identity_cert(const oc_sec_cred_t *cred)
 {
   oc_x509_crt_t *cert = oc_tls_find_identity_cert(cred);
   if (!cert) {
@@ -1115,7 +1114,7 @@ oc_tls_reload_trust_anchors(void)
 }
 
 bool
-oc_tls_remove_trust_anchor(oc_sec_cred_t *cred)
+oc_tls_remove_trust_anchor(const oc_sec_cred_t *cred)
 {
   oc_x509_cacrt_t *cert = oc_tls_find_trust_anchor_for_cred(cred);
   if (cert == NULL) {
@@ -1134,7 +1133,7 @@ oc_tls_remove_trust_anchor(oc_sec_cred_t *cred)
 #ifdef OC_TEST
 
 static oc_sec_cred_t *
-oc_tls_find_cert_cred(size_t device, oc_sec_cred_t *cert_cred)
+oc_tls_find_cert_cred(size_t device, const oc_sec_cred_t *cert_cred)
 {
   if (cert_cred == NULL) {
     return NULL;
@@ -1200,7 +1199,7 @@ oc_tls_validate_identity_certs_consistency(void)
 }
 
 static oc_x509_cacrt_t *
-oc_tls_find_ca_cert(mbedtls_x509_crt *cert)
+oc_tls_find_ca_cert(const mbedtls_x509_crt *cert)
 {
   if (cert == NULL) {
     return NULL;
@@ -1216,7 +1215,7 @@ oc_tls_find_ca_cert(mbedtls_x509_crt *cert)
 }
 
 static mbedtls_x509_crt *
-oc_tls_find_trust_anchor(oc_x509_cacrt_t *cacert)
+oc_tls_find_trust_anchor(const oc_x509_cacrt_t *cacert)
 {
   if (cacert == NULL) {
     return NULL;
@@ -1367,9 +1366,9 @@ oc_tls_load_identity_cert_chain(mbedtls_ssl_config *conf, size_t device,
 }
 
 static bool
-is_known_trust_anchor(oc_sec_cred_t *cred)
+is_known_trust_anchor(const oc_sec_cred_t *cred)
 {
-  oc_x509_cacrt_t *cert = (oc_x509_cacrt_t *)oc_list_head(g_ca_certs);
+  const oc_x509_cacrt_t *cert = (oc_x509_cacrt_t *)oc_list_head(g_ca_certs);
 
   for (; cert != NULL; cert = cert->next) {
     if (cert->cred == cred) {

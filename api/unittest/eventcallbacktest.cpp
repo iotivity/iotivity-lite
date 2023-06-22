@@ -471,8 +471,6 @@ public:
 
   static void SetUpTestCase()
   {
-    oc_log_set_level(OC_LOG_LEVEL_DEBUG);
-
     ASSERT_TRUE(oc::TestDevice::StartServer());
 
 #if defined(OC_SERVER) && defined(OC_COLLECTIONS)

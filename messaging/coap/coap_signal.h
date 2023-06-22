@@ -50,7 +50,7 @@ int coap_send_csm_message(const oc_endpoint_t *endpoint,
                           uint32_t max_message_size,
                           uint8_t blockwise_transfer_option);
 int coap_send_ping_message(const oc_endpoint_t *endpoint,
-                           uint8_t custody_option, uint8_t *token,
+                           uint8_t custody_option, const uint8_t *token,
                            uint8_t token_len);
 int coap_send_pong_message(const oc_endpoint_t *endpoint, void *packet);
 int coap_send_release_message(const oc_endpoint_t *endpoint,

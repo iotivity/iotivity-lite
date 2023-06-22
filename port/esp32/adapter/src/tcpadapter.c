@@ -18,7 +18,7 @@
 
 #define __USE_GNU
 
-#include "tcpadapter.h"
+#include "api/oc_buffer_internal.h"
 #include "api/oc_session_events_internal.h"
 #include "api/oc_tcp_internal.h"
 #include "ipcontext.h"
@@ -27,6 +27,7 @@
 #include "oc_session_events.h"
 #include "port/oc_assert.h"
 #include "port/oc_log_internal.h"
+#include "tcpadapter.h"
 #include "util/oc_memb.h"
 #include <arpa/inet.h>
 #include <assert.h>
@@ -411,11 +412,11 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
         ret_with_code(ADAPTER_STATUS_ERROR);
       }
       total_length = get_total_length_from_header(message, &session->endpoint);
-      if (total_length >
-          (unsigned)(OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE)) {
-        OC_ERR("total receive length(%zu) is bigger than max pdu size(%ld)",
-               total_length, (OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE));
-        OC_ERR("It may occur buffer overflow.");
+      // check to avoid buffer overflow
+      if (total_length > oc_message_buffer_size()) {
+        OC_ERR(
+          "total receive length(%zu) is bigger than message buffer size(%zu)",
+          total_length, oc_message_buffer_size());
         free_tcp_session(session);
         ret_with_code(ADAPTER_STATUS_ERROR);
       }

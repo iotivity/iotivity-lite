@@ -36,9 +36,6 @@ class TestEventTimer : public testing::Test {
 public:
   static void SetUpTestCase()
   {
-    // TODO: remove me
-    oc_log_set_level(OC_LOG_LEVEL_DEBUG);
-
     oc_clock_init();
     oc::SetTestStartTime();
     oc_process_init();
@@ -52,9 +49,6 @@ public:
     oc_process_exit(&oc_test_process);
     oc_process_exit(&oc_etimer_process);
     oc_process_shutdown();
-
-    // TODO: remove me
-    oc_log_set_level(OC_LOG_LEVEL_INFO);
   }
 
   static oc_clock_time_t Poll()

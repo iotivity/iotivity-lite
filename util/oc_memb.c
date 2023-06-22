@@ -145,14 +145,14 @@ _oc_memb_free(
 }
 /*---------------------------------------------------------------------------*/
 int
-oc_memb_inmemb(struct oc_memb *m, void *ptr)
+oc_memb_inmemb(const struct oc_memb *m, const void *ptr)
 {
-  return ((char *)ptr >= (char *)m->mem) &&
-         ((char *)ptr < ((char *)m->mem + (ptrdiff_t)(m->num * m->size)));
+  return ((const char *)ptr >= (char *)m->mem) &&
+         ((const char *)ptr < ((char *)m->mem + (ptrdiff_t)(m->num * m->size)));
 }
 /*---------------------------------------------------------------------------*/
 int
-oc_memb_numfree(struct oc_memb *m)
+oc_memb_numfree(const struct oc_memb *m)
 {
   int num_free = 0;
   for (unsigned short i = 0; i < m->num; ++i) {

@@ -379,30 +379,31 @@ coap_remove_observer_by_mid(const oc_endpoint_t *endpoint, uint16_t mid)
 /*---------------------------------------------------------------------------*/
 
 static void
-send_cancellation_notification(coap_observer_t *obs, uint8_t code)
+send_cancellation_notification(const coap_observer_t *obs, uint8_t code)
 {
-  coap_packet_t notification[1];
+  coap_packet_t notification;
 #ifdef OC_TCP
   if (obs->endpoint.flags & TCP) {
-    coap_tcp_init_message(notification, code);
+    coap_tcp_init_message(&notification, code);
   } else
 #endif
   {
-    coap_udp_init_message(notification, COAP_TYPE_NON, code, 0);
+    coap_udp_init_message(&notification, COAP_TYPE_NON, code, 0);
   }
-  coap_set_token(notification, obs->token, obs->token_len);
+  coap_set_token(&notification, obs->token, obs->token_len);
   coap_transaction_t *transaction = coap_new_transaction(
     coap_get_mid(), obs->token, obs->token_len, &obs->endpoint);
-  if (transaction) {
-    notification->mid = transaction->mid;
-    transaction->message->length = coap_serialize_message(
-      notification, transaction->message->data, oc_message_buffer_size());
-    if (transaction->message->length > 0) {
-      coap_send_transaction(transaction);
-    } else {
-      coap_clear_transaction(transaction);
-    }
-  } // transaction
+  if (transaction == NULL) {
+    return;
+  }
+  notification.mid = transaction->mid;
+  transaction->message->length = coap_serialize_message(
+    &notification, transaction->message->data, oc_message_buffer_size());
+  if (transaction->message->length > 0) {
+    coap_send_transaction(transaction);
+  } else {
+    coap_clear_transaction(transaction);
+  }
 }
 
 int
@@ -537,7 +538,7 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
           response_state->payload_size =
             response->response_buffer->response_length;
           uint32_t payload_size = 0;
-          const void *payload = oc_blockwise_dispatch_block(
+          void *payload = oc_blockwise_dispatch_block(
             response_state, 0, obs->block2_size, &payload_size);
           if (payload) {
             coap_set_payload(notification, payload, payload_size);
@@ -1346,10 +1347,10 @@ coap_observe_handler(const coap_packet_t *request,
 /*---------------------------------------------------------------------------*/
 
 bool
-coap_want_be_notified(oc_resource_t *resource)
+coap_want_be_notified(const oc_resource_t *resource)
 {
 #if defined(OC_DISCOVERY_RESOURCE_OBSERVABLE) && defined(OC_RES_BATCH_SUPPORT)
-  oc_resource_t *discover_resource =
+  const oc_resource_t *discover_resource =
     oc_core_get_resource_by_index(OCF_RES, resource->device);
 #endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE && OC_RES_BATCH_SUPPORT */
   /* iterate over observers */
@@ -1365,7 +1366,8 @@ coap_want_be_notified(oc_resource_t *resource)
     }
 #endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
 #if defined(OC_COLLECTIONS) && defined(OC_COLLECTIONS_IF_CREATE)
-    oc_rt_created_t *rtc = oc_rt_get_factory_create_for_resource(resource);
+    const oc_rt_created_t *rtc =
+      oc_rt_get_factory_create_for_resource(resource);
     if ((rtc != NULL) && (obs->resource == (oc_resource_t *)rtc->collection) &&
         (obs->iface_mask & OC_IF_B)) {
       return true;

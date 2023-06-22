@@ -124,16 +124,6 @@ has_doxm_response_for_device(size_t device)
 
 #endif /* OC_SERVER */
 
-static void
-default_select_oxms_cb(size_t device_index, int *oxms, int *num_oxms,
-                       void *user_data)
-{
-  (void)device_index;
-  (void)oxms;
-  (void)num_oxms;
-  (void)user_data;
-}
-
 static oc_select_oxms_cb_t g_oc_select_oxms_cb;
 static void *g_oc_select_oxms_cb_user_data;
 
@@ -181,8 +171,10 @@ evaluate_supported_oxms(size_t device)
     g_doxm[device].oxms[g_doxm[device].num_oxms++] = OC_OXMTYPE_MFG_CERT;
   }
 #endif /* OC_PKI */
-  g_oc_select_oxms_cb(device, g_doxm[device].oxms, &g_doxm[device].num_oxms,
-                      g_oc_select_oxms_cb_user_data);
+  if (g_oc_select_oxms_cb != NULL) {
+    g_oc_select_oxms_cb(device, g_doxm[device].oxms, &g_doxm[device].num_oxms,
+                        g_oc_select_oxms_cb_user_data);
+  }
 }
 
 void
@@ -712,7 +704,7 @@ void
 oc_set_select_oxms_cb(oc_select_oxms_cb_t callback, void *user_data)
 {
   if (callback == NULL) {
-    g_oc_select_oxms_cb = default_select_oxms_cb;
+    g_oc_select_oxms_cb = NULL;
     g_oc_select_oxms_cb_user_data = NULL;
     return;
   }
@@ -733,7 +725,8 @@ oc_add_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data)
 }
 
 void
-oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data)
+oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb,
+                              const void *user_data)
 {
   oc_doxm_owned_cb_t *doxm_cb_item =
     (oc_doxm_owned_cb_t *)oc_list_head(g_oc_doxm_owned_cb_list);

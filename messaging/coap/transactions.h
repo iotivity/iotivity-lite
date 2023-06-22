@@ -86,14 +86,14 @@ typedef struct coap_transaction
 
 void coap_register_as_transaction_handler(void);
 
-coap_transaction_t *coap_new_transaction(uint16_t mid, uint8_t *token,
+coap_transaction_t *coap_new_transaction(uint16_t mid, const uint8_t *token,
                                          uint8_t token_len,
                                          const oc_endpoint_t *endpoint);
 
 void coap_send_transaction(coap_transaction_t *t);
 void coap_clear_transaction(coap_transaction_t *t);
 coap_transaction_t *coap_get_transaction_by_mid(uint16_t mid);
-coap_transaction_t *coap_get_transaction_by_token(uint8_t *token,
+coap_transaction_t *coap_get_transaction_by_token(const uint8_t *token,
                                                   uint8_t token_len);
 void coap_check_transactions(void);
 void coap_free_all_transactions(void);

@@ -95,7 +95,8 @@ extern "C" {
   2 /* | len:0xF0 tkl:0x0F | .... | code |                                     \
      */
 #define COAP_TCP_MAX_EXTENDED_LENGTH_LEN 4
-#define COAP_PAYLOAD_MARKER_LEN 1 /* 0xFF */
+#define COAP_PAYLOAD_MARKER (0xFF)
+#define COAP_PAYLOAD_MARKER_LEN (1) /* 0xFF */
 
 #define COAP_TCP_HEADER_LEN_MASK 0xF0
 #define COAP_TCP_HEADER_LEN_POSITION 4

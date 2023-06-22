@@ -611,6 +611,8 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeFail)
 #endif /* OC_SECURITY */
 }
 
+#ifndef OC_INOUT_BUFFER_POOL
+
 #if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
 
 struct TCPSessionData
@@ -800,6 +802,8 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeAlreadyConnectedSecure)
 }
 
 #endif /* OC_SECURITY && OC_PKI */
+
+#endif /* !OC_INOUT_BUFFER_POOL */
 
 #endif /* OC_CLIENT */
 

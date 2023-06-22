@@ -251,8 +251,7 @@ oc_get_block_size(void)
 static void
 oc_shutdown_all_devices(void)
 {
-  size_t device;
-  for (device = 0; device < oc_core_get_num_devices(); device++) {
+  for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
     oc_connectivity_shutdown(device);
   }
 

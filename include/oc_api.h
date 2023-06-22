@@ -816,7 +816,7 @@ void oc_add_ownership_status_cb(oc_ownership_status_cb_t cb, void *user_data);
  */
 OC_API
 void oc_remove_ownership_status_cb(oc_ownership_status_cb_t cb,
-                                   void *user_data);
+                                   const void *user_data);
 
 /**
  * Get the ownership status of the logical device this is the value of the
@@ -2645,7 +2645,7 @@ void oc_set_delayed_callback_ms_v1(void *cb_data, oc_trigger_t callback,
  * @return false otherwise
  */
 OC_API
-bool oc_has_delayed_callback(void *cb_data, oc_trigger_t callback,
+bool oc_has_delayed_callback(const void *cb_data, oc_trigger_t callback,
                              bool ignore_cb_data);
 
 /**
@@ -2681,7 +2681,7 @@ void oc_remove_delayed_callback_by_filter(
  * @param[in] callback the delayed callback that is being removed
  */
 OC_API
-void oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback);
+void oc_remove_delayed_callback(const void *cb_data, oc_trigger_t callback);
 
 /** API for setting handlers for interrupts */
 

@@ -127,12 +127,13 @@ add_ip_interface(int target_index)
 static bool
 check_new_ip_interfaces(void)
 {
-  struct ifaddrs *ifs = NULL, *interface = NULL;
+  struct ifaddrs *ifs = NULL;
   if (getifaddrs(&ifs) < 0) {
     OC_ERR("querying interface address");
     return false;
   }
-  for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
+  for (struct ifaddrs *interface = ifs; interface != NULL;
+       interface = interface->ifa_next) {
     /* Ignore interfaces that are down and the loopback interface */
     if (!(interface->ifa_flags & IFF_UP) ||
         (interface->ifa_flags & IFF_LOOPBACK)) {
