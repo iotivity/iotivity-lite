@@ -51,6 +51,7 @@
 
 #ifdef OC_SERVER
 
+#include "api/oc_buffer_internal.h"
 #include "oc_api.h"
 #include "observe.h"
 #include "separate.h"
@@ -394,8 +395,8 @@ send_cancellation_notification(coap_observer_t *obs, uint8_t code)
     coap_get_mid(), obs->token, obs->token_len, &obs->endpoint);
   if (transaction) {
     notification->mid = transaction->mid;
-    transaction->message->length =
-      coap_serialize_message(notification, transaction->message->data);
+    transaction->message->length = coap_serialize_message(
+      notification, transaction->message->data, oc_message_buffer_size());
     if (transaction->message->length > 0) {
       coap_send_transaction(transaction);
     } else {
@@ -587,8 +588,8 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
       if (transaction) {
         obs->last_mid = transaction->mid;
         notification->mid = transaction->mid;
-        transaction->message->length =
-          coap_serialize_message(notification, transaction->message->data);
+        transaction->message->length = coap_serialize_message(
+          notification, transaction->message->data, oc_message_buffer_size());
         if (transaction->message->length > 0) {
           coap_send_transaction(transaction);
         } else {

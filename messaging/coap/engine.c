@@ -122,7 +122,8 @@ coap_send_empty_response(coap_message_type_t type, uint16_t mid,
     if (token && token_len > 0) {
       coap_set_token(msg, token, token_len);
     }
-    size_t len = coap_serialize_message(msg, message->data);
+    size_t len =
+      coap_serialize_message(msg, message->data, oc_message_buffer_size());
     if (len > 0) {
       message->length = len;
       coap_send_message(message);
@@ -882,8 +883,8 @@ send_message:
       memcpy(transaction->token, response->token, response->token_len);
       transaction->token_len = response->token_len;
     }
-    transaction->message->length =
-      coap_serialize_message(response, transaction->message->data);
+    transaction->message->length = coap_serialize_message(
+      response, transaction->message->data, oc_message_buffer_size());
     if (transaction->message->length > 0) {
       coap_send_transaction(transaction);
     } else {

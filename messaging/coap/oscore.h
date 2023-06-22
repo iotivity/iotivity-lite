@@ -50,8 +50,10 @@ coap_status_t oscore_parse_inner_message(uint8_t *data, size_t data_len,
                                          coap_packet_t *packet);
 coap_status_t oscore_parse_outer_message(oc_message_t *msg,
                                          coap_packet_t *packet);
-size_t oscore_serialize_message(coap_packet_t *packet, uint8_t *buffer);
-size_t oscore_serialize_plaintext(coap_packet_t *packet, uint8_t *buffer);
+size_t oscore_serialize_message(coap_packet_t *packet, uint8_t *buffer,
+                                size_t buffer_size);
+size_t oscore_serialize_plaintext(coap_packet_t *packet, uint8_t *buffer,
+                                  size_t buffer_size);
 
 #ifdef __cplusplus
 }

@@ -108,8 +108,8 @@ dispatch_coap_request(void)
   }
 
   bool success = false;
-  g_dispatch.transaction->message->length =
-    coap_serialize_message(g_request, g_dispatch.transaction->message->data);
+  g_dispatch.transaction->message->length = coap_serialize_message(
+    g_request, g_dispatch.transaction->message->data, oc_message_buffer_size());
   if (g_dispatch.transaction->message->length > 0) {
     coap_send_transaction(g_dispatch.transaction);
 
@@ -265,8 +265,8 @@ oc_do_multicast_update(void)
     coap_set_header_content_format(g_request, APPLICATION_VND_OCF_CBOR);
   }
 
-  g_multicast_update->length =
-    coap_serialize_message(g_request, g_multicast_update->data);
+  g_multicast_update->length = coap_serialize_message(
+    g_request, g_multicast_update->data, oc_message_buffer_size());
   if (g_multicast_update->length > 0) {
     oc_send_message(g_multicast_update);
   } else {

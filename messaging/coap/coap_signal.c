@@ -42,7 +42,8 @@ coap_send_signal_message(const oc_endpoint_t *endpoint, coap_packet_t *packet)
 
   memcpy(&message->endpoint, endpoint, sizeof(oc_endpoint_t));
 
-  message->length = coap_serialize_message(packet, message->data);
+  message->length =
+    coap_serialize_message(packet, message->data, oc_message_buffer_size());
   oc_send_message(message);
 
   return 1;
@@ -105,7 +106,8 @@ coap_send_ping_message(const oc_endpoint_t *endpoint, uint8_t custody_option,
   if (!t) {
     return 0;
   }
-  t->message->length = coap_serialize_message(ping_pkt, t->message->data);
+  t->message->length = coap_serialize_message(ping_pkt, t->message->data,
+                                              oc_message_buffer_size());
 
   OC_DBG("send ping signal message.");
   coap_send_transaction(t);

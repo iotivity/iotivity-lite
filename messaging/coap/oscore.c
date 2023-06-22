@@ -53,7 +53,8 @@ oscore_send_error(const coap_packet_t *packet, uint8_t code,
       coap_set_token(&msg, packet->token, packet->token_len);
     }
     coap_set_header_max_age(&msg, 0);
-    size_t len = coap_serialize_message(&msg, message->data);
+    size_t len =
+      coap_serialize_message(&msg, message->data, oc_message_buffer_size());
     if (len > 0) {
       message->length = len;
       coap_send_message(message);
@@ -374,15 +375,19 @@ coap_serialize_oscore_option(unsigned int *current_number,
 }
 
 size_t
-oscore_serialize_plaintext(coap_packet_t *packet, uint8_t *buffer)
+oscore_serialize_plaintext(coap_packet_t *packet, uint8_t *buffer,
+                           size_t buffer_size)
 {
-  return coap_oscore_serialize_message(packet, buffer, true, false, true);
+  return coap_oscore_serialize_message(packet, buffer, buffer_size, true, false,
+                                       true);
 }
 
 size_t
-oscore_serialize_message(coap_packet_t *packet, uint8_t *buffer)
+oscore_serialize_message(coap_packet_t *packet, uint8_t *buffer,
+                         size_t buffer_size)
 {
-  return coap_oscore_serialize_message(packet, buffer, false, true, true);
+  return coap_oscore_serialize_message(packet, buffer, buffer_size, false, true,
+                                       true);
 }
 
 coap_status_t

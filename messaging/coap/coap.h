@@ -58,6 +58,7 @@
 #include "port/oc_connectivity.h"
 #include "port/oc_log_internal.h"
 #include "port/oc_random.h"
+#include "util/oc_compiler.h"
 
 #ifdef OC_OSCORE
 #include "oscore_constants.h"
@@ -176,12 +177,17 @@ typedef enum {
 void coap_init_connection(void);
 uint16_t coap_get_mid(void);
 
-void coap_udp_init_message(void *packet, coap_message_type_t type, uint8_t code,
-                           uint16_t mid);
-size_t coap_serialize_message(void *packet, uint8_t *buffer);
-size_t coap_oscore_serialize_message(void *packet, uint8_t *buffer, bool inner,
-                                     bool outer, bool oscore);
-void coap_send_message(oc_message_t *message);
+void coap_udp_init_message(coap_packet_t *packet, coap_message_type_t type,
+                           uint8_t code, uint16_t mid) OC_NONNULL();
+
+size_t coap_serialize_message(coap_packet_t *packet, uint8_t *buffer,
+                              size_t buffer_size);
+
+size_t coap_oscore_serialize_message(coap_packet_t *packet, uint8_t *buffer,
+                                     size_t buffer_size, bool inner, bool outer,
+                                     bool oscore);
+
+void coap_send_message(oc_message_t *message) OC_NONNULL();
 
 /**
  * @brief Parse CoAP message options
@@ -293,7 +299,7 @@ size_t coap_set_option_header(unsigned int delta, size_t length,
                               uint8_t *buffer);
 
 #ifdef OC_TCP
-void coap_tcp_init_message(void *packet, uint8_t code);
+void coap_tcp_init_message(coap_packet_t *packet, uint8_t code) OC_NONNULL();
 
 size_t coap_tcp_get_packet_size(const uint8_t *data);
 

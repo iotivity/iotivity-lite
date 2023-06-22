@@ -1131,111 +1131,119 @@ coap_tcp_parse_message_length(const uint8_t *data, size_t *message_length,
          *message_length, *num_extended_length_bytes);
 }
 #endif /* OC_TCP */
+
 /*---------------------------------------------------------------------------*/
 /*- Internal API ------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
+
 void
 coap_init_connection(void)
 {
   /* initialize transaction ID */
   current_mid = (uint16_t)oc_random_value();
 }
-/*---------------------------------------------------------------------------*/
+
 uint16_t
 coap_get_mid(void)
 {
   return ++current_mid;
 }
-/*---------------------------------------------------------------------------*/
+
 void
-coap_udp_init_message(void *packet, coap_message_type_t type, uint8_t code,
-                      uint16_t mid)
+coap_udp_init_message(coap_packet_t *packet, coap_message_type_t type,
+                      uint8_t code, uint16_t mid)
 {
-  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
-
-  /* Important thing */
-  memset(coap_pkt, 0, sizeof(coap_packet_t));
-
-  coap_pkt->transport_type = COAP_TRANSPORT_UDP;
-  coap_pkt->type = type;
-  coap_pkt->code = code;
-  coap_pkt->mid = mid;
+  memset(packet, 0, sizeof(coap_packet_t));
+  packet->transport_type = COAP_TRANSPORT_UDP;
+  packet->type = type;
+  packet->code = code;
+  packet->mid = mid;
 }
-/*---------------------------------------------------------------------------*/
+
 #ifdef OC_TCP
 void
-coap_tcp_init_message(void *packet, uint8_t code)
+coap_tcp_init_message(coap_packet_t *packet, uint8_t code)
 {
-  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
-
-  /* Important thing */
-  memset(coap_pkt, 0, sizeof(coap_packet_t));
-
-  coap_pkt->transport_type = COAP_TRANSPORT_TCP;
-  coap_pkt->type = COAP_TYPE_NON;
-  coap_pkt->code = code;
-  coap_pkt->mid = 0;
+  memset(packet, 0, sizeof(coap_packet_t));
+  packet->transport_type = COAP_TRANSPORT_TCP;
+  packet->type = COAP_TYPE_NON;
+  packet->code = code;
+  packet->mid = 0;
 }
 #endif /* OC_TCP */
-/*---------------------------------------------------------------------------*/
-static void
-coap_udp_set_header_fields(void *packet)
-{
-  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
 
-  coap_pkt->buffer[0] = 0x00;
-  coap_pkt->buffer[0] |= COAP_HEADER_VERSION_MASK &
-                         (coap_pkt->version) << COAP_HEADER_VERSION_POSITION;
-  coap_pkt->buffer[0] |= COAP_HEADER_TYPE_MASK & (coap_pkt->type)
-                                                   << COAP_HEADER_TYPE_POSITION;
-  coap_pkt->buffer[0] |=
-    COAP_HEADER_TOKEN_LEN_MASK & (coap_pkt->token_len)
-                                   << COAP_HEADER_TOKEN_LEN_POSITION;
-  coap_pkt->buffer[1] = coap_pkt->code;
-  coap_pkt->buffer[2] = (uint8_t)((coap_pkt->mid) >> 8);
-  coap_pkt->buffer[3] = (uint8_t)(coap_pkt->mid);
-}
-/*---------------------------------------------------------------------------*/
-size_t
-coap_oscore_serialize_message(void *packet, uint8_t *buffer, bool inner,
-                              bool outer, bool oscore)
+static void
+coap_udp_set_header_fields(coap_packet_t *packet)
 {
-  if (!packet || !buffer) {
-    OC_ERR("packet: %p or buffer: %p is NULL", packet, (void *)buffer);
+  packet->buffer[0] = 0x00;
+  packet->buffer[0] |= COAP_HEADER_VERSION_MASK &
+                       (packet->version) << COAP_HEADER_VERSION_POSITION;
+  packet->buffer[0] |= COAP_HEADER_TYPE_MASK & (packet->type)
+                                                 << COAP_HEADER_TYPE_POSITION;
+  packet->buffer[0] |= COAP_HEADER_TOKEN_LEN_MASK &
+                       (packet->token_len) << COAP_HEADER_TOKEN_LEN_POSITION;
+  packet->buffer[1] = packet->code;
+  packet->buffer[2] = (uint8_t)((packet->mid) >> 8);
+  packet->buffer[3] = (uint8_t)(packet->mid);
+}
+
+static bool
+coap_oscore_check_packet_header_size(size_t header_size, size_t buffer_size)
+{
+  if (header_size > (size_t)COAP_MAX_HEADER_SIZE) {
+    OC_ERR("Serialized header length %zu exceeds COAP_MAX_HEADER_SIZE %zu",
+           header_size, (size_t)COAP_MAX_HEADER_SIZE);
+    return false;
+  }
+  if (header_size > buffer_size) {
+    OC_ERR("Serialized header length %zu exceeds buffer size %zu", header_size,
+           buffer_size);
+    return false;
+  }
+  return true;
+}
+
+size_t
+coap_oscore_serialize_message(coap_packet_t *packet, uint8_t *buffer,
+                              size_t buffer_size, bool inner, bool outer,
+                              bool oscore)
+{
+  if (packet == NULL || buffer == NULL) {
+    OC_ERR("packet or buffer is NULL");
     return 0;
   }
 
-  coap_packet_t *const coap_pkt = (coap_packet_t *)packet;
   uint8_t *option;
   unsigned int current_number = 0;
   uint8_t token_location = 0;
-  size_t option_length = 0, option_length_calculation = 0,
-         header_length_calculation = 0;
+  size_t option_length = 0;
+  size_t option_length_calculation = 0;
+  size_t header_length_calculation = 0;
 
   /* Initialize */
-  coap_pkt->buffer = buffer;
-  coap_pkt->version = 1;
+  packet->buffer = buffer;
+  packet->version = 1;
 
   /* coap header option serialize first to know total length about options */
   option_length_calculation =
-    coap_serialize_options(coap_pkt, NULL, inner, outer, oscore);
+    coap_serialize_options(packet, NULL, inner, outer, oscore);
   header_length_calculation += option_length_calculation;
 
   /* accoridng to spec  COAP_PAYLOAD_MARKER_LEN should be included
      if payload  exists */
-  if (coap_pkt->payload_len > 0) {
+  if (packet->payload_len > 0) {
     header_length_calculation += COAP_PAYLOAD_MARKER_LEN;
   }
 
   if (outer) {
-    header_length_calculation += coap_pkt->token_len;
+    header_length_calculation += packet->token_len;
 
 #ifdef OC_TCP
-    if (coap_pkt->transport_type == COAP_TRANSPORT_TCP) {
+    if (packet->transport_type == COAP_TRANSPORT_TCP) {
       uint8_t num_extended_length_bytes = 0, len = 0;
       size_t extended_len = 0;
 
-      coap_tcp_compute_message_length(coap_pkt, option_length_calculation,
+      coap_tcp_compute_message_length(packet, option_length_calculation,
                                       &num_extended_length_bytes, &len,
                                       &extended_len);
 
@@ -1243,14 +1251,13 @@ coap_oscore_serialize_message(void *packet, uint8_t *buffer, bool inner,
       header_length_calculation += token_location;
 
       /* an error occurred: caller must check for !=0 */
-      if (header_length_calculation > COAP_MAX_HEADER_SIZE) {
-        OC_ERR(
-          "Serialized header length %u exceeds COAP_MAX_HEADER_SIZE %u-TCP",
-          (unsigned int)(header_length_calculation), COAP_MAX_HEADER_SIZE);
+      if (!coap_oscore_check_packet_header_size(header_length_calculation,
+                                                buffer_size)) {
+        OC_ERR("cannot serialize TCP packet");
         goto exit;
       }
       /* set header fields */
-      coap_tcp_set_header_fields(coap_pkt, &num_extended_length_bytes, &len,
+      coap_tcp_set_header_fields(packet, &num_extended_length_bytes, &len,
                                  &extended_len);
     } else
 #endif /* OC_TCP */
@@ -1258,45 +1265,43 @@ coap_oscore_serialize_message(void *packet, uint8_t *buffer, bool inner,
       /* set header fields */
       token_location = COAP_HEADER_LEN;
       header_length_calculation += token_location;
-
-      if (header_length_calculation > COAP_MAX_HEADER_SIZE) {
-        OC_ERR(
-          "Serialized header length %u exceeds COAP_MAX_HEADER_SIZE %u-UDP",
-          (unsigned int)(header_length_calculation), COAP_MAX_HEADER_SIZE);
+      if (!coap_oscore_check_packet_header_size(header_length_calculation,
+                                                buffer_size)) {
+        OC_ERR("cannot serialize UDP packet");
         goto exit;
       }
 
-      OC_DBG("-Serializing MID %u to %p", coap_pkt->mid,
-             (void *)coap_pkt->buffer);
-      coap_udp_set_header_fields(coap_pkt);
+      OC_DBG("-Serializing MID %u to %p", packet->mid, (void *)packet->buffer);
+      coap_udp_set_header_fields(packet);
     }
   }
 
   /* empty packet, dont need to do more stuff */
-  if (outer && !coap_pkt->code) {
-    OC_DBG("Done serializing empty message at %p-", (void *)coap_pkt->buffer);
+  if (outer && !packet->code) {
+    OC_DBG("Done serializing empty message at %p-", (void *)packet->buffer);
     return token_location;
-  } else if (outer) {
+  }
+  if (outer) {
     if (oscore) {
-      OC_DBG("Outer CoAP code: %d", coap_pkt->code);
+      OC_DBG("Outer CoAP code: %d", packet->code);
     }
     /* set Token */
-    OC_DBG("Token (len %u)", coap_pkt->token_len);
-    OC_LOGbytes(coap_pkt->token, coap_pkt->token_len);
-    option = coap_pkt->buffer + token_location;
-    for (current_number = 0; current_number < coap_pkt->token_len;
+    OC_DBG("Token (len %u)", packet->token_len);
+    OC_LOGbytes(packet->token, packet->token_len);
+    option = packet->buffer + token_location;
+    for (current_number = 0; current_number < packet->token_len;
          ++current_number) {
-      *option = coap_pkt->token[current_number];
+      *option = packet->token[current_number];
       ++option;
     }
   } else {
-    OC_DBG("Inner CoAP code: %d", coap_pkt->code);
-    coap_pkt->buffer[0] = coap_pkt->code;
-    option = coap_pkt->buffer + 1;
+    OC_DBG("Inner CoAP code: %d", packet->code);
+    packet->buffer[0] = packet->code;
+    option = packet->buffer + 1;
     ++header_length_calculation;
-    if (header_length_calculation > COAP_MAX_HEADER_SIZE) {
-      OC_ERR("Serialized header length %u exceeds COAP_MAX_HEADER_SIZE %u-UDP",
-             (unsigned int)(header_length_calculation), COAP_MAX_HEADER_SIZE);
+    if (!coap_oscore_check_packet_header_size(header_length_calculation,
+                                              buffer_size)) {
+      OC_ERR("cannot serialize inner packet");
       goto exit;
     }
   }
@@ -1305,33 +1310,31 @@ coap_oscore_serialize_message(void *packet, uint8_t *buffer, bool inner,
   option += option_length;
 
   /* Pack payload */
-  if ((option - coap_pkt->buffer) <= COAP_MAX_HEADER_SIZE) {
-    /* Payload marker */
-    if (coap_pkt->payload_len > 0) {
-      *option = 0xFF;
-      ++option;
-      memmove(option, coap_pkt->payload, coap_pkt->payload_len);
-    }
-    OC_DBG("Serialized payload:");
-    OC_LOGbytes(option, coap_pkt->payload_len);
-  } else {
-    /* an error occurred: caller must check for !=0 */
-    OC_WRN("Serialized header length %u exceeds COAP_MAX_HEADER_SIZE %u",
-           (unsigned int)(option - coap_pkt->buffer), COAP_MAX_HEADER_SIZE);
+  size_t header_len = (size_t)(option - packet->buffer);
+  if (!coap_oscore_check_packet_header_size(header_len, buffer_size)) {
+    OC_ERR("cannot serialize packet");
     goto exit;
   }
 
-  OC_DBG("-Done %u B (header len %u, payload len %u)-",
-         (unsigned int)(coap_pkt->payload_len + option - buffer),
-         (unsigned int)(option - buffer), (unsigned int)coap_pkt->payload_len);
+  /* Payload marker */
+  if (packet->payload_len > 0) {
+    *option = 0xFF;
+    ++option;
+    memmove(option, packet->payload, packet->payload_len);
+  }
+  OC_DBG("Serialized payload:");
+  OC_LOGbytes(option, packet->payload_len);
+
+  OC_DBG("-Done %zu B (header len %zu, payload len %u)-",
+         (size_t)(packet->payload_len + option - buffer),
+         (size_t)(option - buffer), (unsigned)packet->payload_len);
 
   OC_DBG("Dump");
-  OC_LOGbytes(coap_pkt->buffer, (coap_pkt->payload_len + option - buffer));
+  OC_LOGbytes(packet->buffer, (packet->payload_len + option - buffer));
 
-  return (option - buffer) + coap_pkt->payload_len; /* packet length */
-
+  return (size_t)((option - buffer) + packet->payload_len);
 exit:
-  coap_pkt->buffer = NULL;
+  packet->buffer = NULL;
   return 0;
 }
 /*---------------------------------------------------------------------------*/
@@ -1354,9 +1357,11 @@ coap_send_message(oc_message_t *message)
 }
 
 size_t
-coap_serialize_message(void *packet, uint8_t *buffer)
+coap_serialize_message(coap_packet_t *packet, uint8_t *buffer,
+                       size_t buffer_size)
 {
-  return coap_oscore_serialize_message(packet, buffer, true, true, false);
+  return coap_oscore_serialize_message(packet, buffer, buffer_size, true, true,
+                                       false);
 }
 /*---------------------------------------------------------------------------*/
 coap_status_t
