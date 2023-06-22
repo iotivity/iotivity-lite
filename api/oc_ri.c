@@ -1388,29 +1388,43 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
   bool response_state_allocated = false;
   bool enable_realloc_rep = false;
 #endif /* OC_DYNAMIC_ALLOCATION */
-  if (cur_resource && !bad_request && *ctx.response_state == NULL) {
-    OC_DBG("creating new block-wise response state");
-    *ctx.response_state = oc_blockwise_alloc_response_buffer(
-      uri_path, uri_path_len, endpoint, method, OC_BLOCKWISE_SERVER,
-      OC_MIN_APP_DATA_SIZE);
+  if (cur_resource && !bad_request) {
     if (*ctx.response_state == NULL) {
-      OC_ERR("failure to alloc response state");
-      bad_request = true;
-    } else {
+      OC_DBG("creating new block-wise response state");
+      *ctx.response_state = oc_blockwise_alloc_response_buffer(
+        uri_path, uri_path_len, endpoint, method, OC_BLOCKWISE_SERVER,
+        OC_MIN_APP_DATA_SIZE);
+      if (*ctx.response_state == NULL) {
+        OC_ERR("failure to alloc response state");
+        bad_request = true;
+      } else {
 #ifdef OC_DYNAMIC_ALLOCATION
 #ifdef OC_APP_DATA_BUFFER_POOL
-      if (!request_buffer->block)
+        if (!(*ctx.response_state)->block)
 #endif /* OC_APP_DATA_BUFFER_POOL */
-      {
-        response_state_allocated = true;
-      }
+        {
+          response_state_allocated = true;
+        }
 #endif /* OC_DYNAMIC_ALLOCATION */
-      if (uri_query_len > 0) {
-        oc_new_string(&(*ctx.response_state)->uri_query, uri_query,
-                      uri_query_len);
+        if (uri_query_len > 0) {
+          oc_new_string(&(*ctx.response_state)->uri_query, uri_query,
+                        uri_query_len);
+        }
+        response_buffer.buffer = (*ctx.response_state)->buffer;
+#ifdef OC_DYNAMIC_ALLOCATION
+        response_buffer.buffer_size = (*ctx.response_state)->buffer_size;
+#else  /* !OC_DYNAMIC_ALLOCATION */
+        response_buffer.buffer_size = sizeof((*ctx.response_state)->buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
       }
+    } else {
+      OC_DBG("using existing block-wise response state");
       response_buffer.buffer = (*ctx.response_state)->buffer;
-      response_buffer.buffer_size = OC_MIN_APP_DATA_SIZE;
+#ifdef OC_DYNAMIC_ALLOCATION
+      response_buffer.buffer_size = (*ctx.response_state)->buffer_size;
+#else  /* !OC_DYNAMIC_ALLOCATION */
+      response_buffer.buffer_size = sizeof((*ctx.response_state)->buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
     }
   }
 #else  /* OC_BLOCK_WISE */

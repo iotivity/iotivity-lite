@@ -47,7 +47,8 @@
 #include <stdexcept>
 #endif /* _WIN32 */
 
-#ifdef OC_DYNAMIC_ALLOCATION
+#if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_POOL) &&        \
+  !defined(OC_APP_DATA_BUFFER_POOL)
 // discovery requests are so large that they only work with dynamic allocation
 
 static constexpr uint16_t kMaxWaitTime{ 10 };
@@ -923,4 +924,5 @@ TEST_F(TestObt, DiscoverUnownedResources)
 }
 
 #endif /* OC_SECURITY */
-#endif /* OC_DYNAMIC_ALLOCATION */
+#endif /* OC_DYNAMIC_ALLOCATION && !OC_INOUT_BUFFER_POOL &&                    \
+          !OC_APP_DATA_BUFFER_POOL */

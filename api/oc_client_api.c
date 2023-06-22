@@ -75,7 +75,7 @@ dispatch_coap_request(void)
 #else  /* OC_TCP */
     if ((long)payload_size > OC_BLOCK_SIZE) {
 #endif /* !OC_TCP */
-      const void *payload = oc_blockwise_dispatch_block(
+      void *payload = oc_blockwise_dispatch_block(
         g_request_buffer, 0, (uint32_t)OC_BLOCK_SIZE, &block_size);
       if (payload) {
         coap_set_payload(g_request, payload, block_size);
@@ -219,7 +219,8 @@ prepare_coap_request(oc_client_cb_t *cb)
   }
 
   if (oc_string_len(cb->query) > 0) {
-    coap_set_header_uri_query(g_request, oc_string(cb->query));
+    coap_set_header_uri_query(g_request, oc_string(cb->query),
+                              oc_string_len(cb->query));
   }
 
   g_dispatch.client_cb = cb;
@@ -314,7 +315,7 @@ oc_init_multicast_update(const char *uri, const char *query)
   coap_set_header_uri_path(g_request, uri, strlen(uri));
 
   if (query) {
-    coap_set_header_uri_query(g_request, query);
+    coap_set_header_uri_query(g_request, query, strlen(query));
   }
 
   return true;

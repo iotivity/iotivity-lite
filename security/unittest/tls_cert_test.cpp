@@ -179,8 +179,7 @@ TEST_F(TestTlsCertificates, RemoveTrustAnchors)
 
 TEST_F(TestTlsCertificates, VerifyCredCerts)
 {
-  auto verify_cert_validity = [](const oc_sec_certs_data_t *data,
-                                 void *) -> bool {
+  auto verify_cert_validity = [](const oc_sec_certs_data_t *data, void *) {
     return (time_t)data->valid_from <= TestTlsCertificates::now_ &&
            (time_t)data->valid_to > TestTlsCertificates::now_;
   };

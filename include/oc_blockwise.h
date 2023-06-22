@@ -131,7 +131,7 @@ oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_token(
  * @return oc_blockwise_state_t*
  */
 oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_client_cb(
-  const oc_endpoint_t *endpoint, void *client_cb);
+  const oc_endpoint_t *endpoint, const void *client_cb);
 
 /**
  * @brief find the response by client callback & endpoint
@@ -141,7 +141,7 @@ oc_blockwise_state_t *oc_blockwise_find_request_buffer_by_client_cb(
  * @return oc_blockwise_state_t*
  */
 oc_blockwise_state_t *oc_blockwise_find_response_buffer_by_client_cb(
-  const oc_endpoint_t *endpoint, void *client_cb);
+  const oc_endpoint_t *endpoint, const void *client_cb);
 
 /**
  * @brief find request buffer based on more information
@@ -228,12 +228,12 @@ void oc_blockwise_free_response_buffer(oc_blockwise_state_t *buffer);
  * @param block_offset the block offset
  * @param requested_block_size blocksize to be send
  * @param payload_size the send payload size
- * @return const void*
+ * @return void*
  */
-const void *oc_blockwise_dispatch_block(oc_blockwise_state_t *buffer,
-                                        uint32_t block_offset,
-                                        uint32_t requested_block_size,
-                                        uint32_t *payload_size);
+void *oc_blockwise_dispatch_block(oc_blockwise_state_t *buffer,
+                                  uint32_t block_offset,
+                                  uint32_t requested_block_size,
+                                  uint32_t *payload_size);
 
 /**
  * @brief handle the incomming block (partial message)
@@ -262,7 +262,7 @@ void oc_blockwise_scrub_buffers(bool all);
  *
  * @param cb client callback
  */
-void oc_blockwise_scrub_buffers_for_client_cb(void *cb);
+void oc_blockwise_scrub_buffers_for_client_cb(const void *cb);
 
 #ifdef __cplusplus
 }

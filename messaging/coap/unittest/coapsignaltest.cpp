@@ -19,6 +19,8 @@
 #include "coap.h"
 #include "coap_signal.h"
 #include "oc_api.h"
+
+#include <array>
 #include <cstdlib>
 #include <gtest/gtest.h>
 #include <string>
@@ -80,8 +82,8 @@ TEST_F(TestCoapSignal, coap_send_csm_message_N)
 
 TEST_F(TestCoapSignal, coap_send_ping_message_P)
 {
-  uint8_t token[4] = { 0x01, 0x02, 0x03, 0x04 };
-  int ret = coap_send_ping_message(target_ep, 1, token, 4);
+  std::array<uint8_t, 4> token = { 0x01, 0x02, 0x03, 0x04 };
+  int ret = coap_send_ping_message(target_ep, 1, token.data(), token.size());
   EXPECT_EQ(1, ret);
 }
 
@@ -93,10 +95,10 @@ TEST_F(TestCoapSignal, coap_send_ping_message_N)
 
 TEST_F(TestCoapSignal, coap_send_pong_message_P)
 {
-  uint8_t token[4] = { 0x01, 0x02, 0x03, 0x04 };
+  std::array<uint8_t, 4> token = { 0x01, 0x02, 0x03, 0x04 };
   coap_packet_t packet = {};
   coap_tcp_init_message(&packet, PING_7_02);
-  coap_set_token(&packet, token, 4);
+  coap_set_token(&packet, token.data(), token.size());
   coap_signal_set_custody(&packet, 1);
 
   int ret = coap_send_pong_message(target_ep, &packet);

@@ -208,7 +208,8 @@ oc_rt_factory_create_resource(oc_collection_t *collection,
 }
 
 void
-oc_rt_factory_free_created_resource(oc_rt_created_t *rtc, oc_rt_factory_t *rf)
+oc_rt_factory_free_created_resource(oc_rt_created_t *rtc,
+                                    const oc_rt_factory_t *rf)
 {
   if (oc_list_remove2(created_res, rtc) == NULL) {
     /* protection against cyclical call of oc_rt_factory_free_created_resource
@@ -231,7 +232,7 @@ oc_fi_factory_free_all_created_resources(void)
 }
 
 oc_rt_created_t *
-oc_rt_get_factory_create_for_resource(oc_resource_t *resource)
+oc_rt_get_factory_create_for_resource(const oc_resource_t *resource)
 {
   oc_rt_created_t *rtc = (oc_rt_created_t *)oc_list_head(created_res);
   while (rtc) {

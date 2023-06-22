@@ -79,15 +79,14 @@ post_lights_oic_if_create(oc_client_response_t *data)
     case OC_REP_STRING:
       OC_PRINTF("%s\n\n", oc_string(rep->value.string));
       break;
-    case OC_REP_STRING_ARRAY: {
-      size_t i;
-      for (i = 0; i < oc_string_array_get_allocated_size(rep->value.array);
-           i++) {
+    case OC_REP_STRING_ARRAY:
+      for (size_t i = 0;
+           i < oc_string_array_get_allocated_size(rep->value.array); i++) {
 
         OC_PRINTF(" %s ", oc_string_array_get_item(rep->value.array, i));
       }
       OC_PRINTF("\n");
-    } break;
+      break;
     case OC_REP_INT:
       OC_PRINTF(" %" PRId64 "\n", rep->value.integer);
       break;

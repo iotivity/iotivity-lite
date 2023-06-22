@@ -606,35 +606,36 @@ get_switch_instance(const char *href, oc_string_array_t *types,
                     size_t device)
 {
   oc_switch_t *cswitch = (oc_switch_t *)oc_memb_alloc(&switch_s);
-  if (cswitch) {
-    cswitch->resource = oc_new_resource(
-      NULL, href, oc_string_array_get_allocated_size(*types), device);
-    if (cswitch->resource) {
-      size_t i;
-      for (i = 0; i < oc_string_array_get_allocated_size(*types); i++) {
-        const char *rt = oc_string_array_get_item(*types, i);
-        oc_resource_bind_resource_type(cswitch->resource, rt);
-      }
-      oc_resource_bind_resource_interface(cswitch->resource, iface_mask);
-      cswitch->resource->properties = bm;
-      oc_resource_set_default_interface(cswitch->resource, OC_IF_A);
-      oc_resource_set_request_handler(cswitch->resource, OC_GET, get_cswitch,
-                                      cswitch);
-      oc_resource_set_request_handler(cswitch->resource, OC_DELETE,
-                                      delete_cswitch, cswitch);
-      oc_resource_set_request_handler(cswitch->resource, OC_POST, post_cswitch,
-                                      cswitch);
-      oc_resource_set_properties_cbs(cswitch->resource, get_switch_properties,
-                                     cswitch, set_switch_properties, cswitch);
-      oc_add_resource(cswitch->resource);
-      oc_set_delayed_callback(cswitch->resource, register_to_cloud, 0);
-      oc_list_add(switches, cswitch);
-      return cswitch->resource;
-    } else {
-      oc_memb_free(&switch_s, cswitch);
-    }
+  if (cswitch == NULL) {
+    printf("ERROR: insufficient memory to add new switch instance");
+    return NULL;
   }
-  return NULL;
+  cswitch->resource = oc_new_resource(
+    NULL, href, oc_string_array_get_allocated_size(*types), device);
+  if (cswitch->resource == NULL) {
+    printf("ERROR: could not create /switch instance");
+    oc_memb_free(&switch_s, cswitch);
+    return NULL;
+  }
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(*types); i++) {
+    const char *rt = oc_string_array_get_item(*types, i);
+    oc_resource_bind_resource_type(cswitch->resource, rt);
+  }
+  oc_resource_bind_resource_interface(cswitch->resource, iface_mask);
+  cswitch->resource->properties = bm;
+  oc_resource_set_default_interface(cswitch->resource, OC_IF_A);
+  oc_resource_set_request_handler(cswitch->resource, OC_GET, get_cswitch,
+                                  cswitch);
+  oc_resource_set_request_handler(cswitch->resource, OC_DELETE, delete_cswitch,
+                                  cswitch);
+  oc_resource_set_request_handler(cswitch->resource, OC_POST, post_cswitch,
+                                  cswitch);
+  oc_resource_set_properties_cbs(cswitch->resource, get_switch_properties,
+                                 cswitch, set_switch_properties, cswitch);
+  oc_add_resource(cswitch->resource);
+  oc_set_delayed_callback(cswitch->resource, register_to_cloud, 0);
+  oc_list_add(switches, cswitch);
+  return cswitch->resource;
 }
 
 static void
@@ -891,7 +892,8 @@ simulate_tpm_mbedtls_pk_parse_key(size_t device, mbedtls_pk_context *pk,
       return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
     }
     uint8_t identity_private_key[4096];
-    int ret = fread(identity_private_key, 1, sizeof(identity_private_key), f);
+    size_t ret =
+      fread(identity_private_key, 1, sizeof(identity_private_key), f);
     fclose(f);
     return mbedtls_pk_parse_key(pk, identity_private_key, ret, NULL, 0, f_rng,
                                 p_rng);

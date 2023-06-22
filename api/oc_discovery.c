@@ -637,12 +637,11 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
 {
   (void)data;
   int matches = 0;
-  size_t device;
 
   switch (iface_mask) {
   case OC_IF_LL: {
     oc_rep_start_links_array();
-    for (device = 0; device < oc_core_get_num_devices(); device++) {
+    for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
       matches += process_oic_1_1_device_object(oc_rep_array(links), request,
                                                device, false);
     }
@@ -650,7 +649,7 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
   } break;
   case OC_IF_BASELINE: {
     oc_rep_start_links_array();
-    for (device = 0; device < oc_core_get_num_devices(); device++) {
+    for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
       matches += process_oic_1_1_device_object(oc_rep_array(links), request,
                                                device, true);
     }

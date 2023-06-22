@@ -136,7 +136,7 @@ oc_process_start(struct oc_process *p, oc_process_data_t data)
 }
 /*---------------------------------------------------------------------------*/
 static void
-exit_process(struct oc_process *p, struct oc_process *fromprocess)
+exit_process(struct oc_process *p, const struct oc_process *fromprocess)
 {
   register struct oc_process *q;
   struct oc_process *old_current = oc_process_current;
@@ -491,7 +491,7 @@ oc_process_poll(struct oc_process *p)
 }
 /*---------------------------------------------------------------------------*/
 int
-oc_process_is_running(struct oc_process *p)
+oc_process_is_running(const struct oc_process *p)
 {
   return OC_ATOMIC_LOAD8(p->state) != OC_PROCESS_STATE_NONE;
 }

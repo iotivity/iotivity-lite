@@ -675,8 +675,7 @@ oc_reset_device_v1(size_t device, bool close_all_tls_connections_immediately)
 void
 oc_reset_v1(bool close_all_tls_connections_immediately)
 {
-  size_t device;
-  for (device = 0; device < oc_core_get_num_devices(); device++) {
+  for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
     oc_reset_device_v1(device, close_all_tls_connections_immediately);
   }
 }

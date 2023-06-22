@@ -95,8 +95,7 @@ oc_sec_cred_init(void)
     oc_abort("Insufficient memory");
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
-  size_t i;
-  for (i = 0; i < oc_core_get_num_devices(); i++) {
+  for (size_t i = 0; i < oc_core_get_num_devices(); i++) {
     OC_LIST_STRUCT_INIT(&devices[i], creds);
   }
 }
@@ -319,8 +318,7 @@ oc_sec_cred_default(size_t device)
 void
 oc_sec_cred_free(void)
 {
-  size_t device;
-  for (device = 0; device < oc_core_get_num_devices(); device++) {
+  for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
     oc_sec_cred_clear(device, NULL, NULL);
   }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -1248,8 +1246,7 @@ is_valid_oscore_id(const char *id, size_t id_len)
   if (id_len != 14) {
     return false;
   }
-  size_t i;
-  for (i = 0; i < id_len; i++) {
+  for (size_t i = 0; i < id_len; i++) {
     if (!isxdigit(id[i])) {
       return false;
     }

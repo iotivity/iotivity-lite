@@ -63,7 +63,7 @@ stop_observe(void *data)
 
   if (oc_init_post(array_1, array_server, NULL, &post_array, LOW_QOS, NULL)) {
     for (int i = 0; i < 100; i++) {
-      large_array[i] = oc_random_value();
+      large_array[i] = (int)oc_random_value();
       OC_PRINTF("(%d %d) ", i, large_array[i]);
     }
     OC_PRINTF("\n");

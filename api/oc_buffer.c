@@ -41,13 +41,13 @@
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 OC_PROCESS(oc_message_buffer_handler, "OC Message Buffer Handler");
-#ifdef OC_INOUT_BUFFER_POOL_SIZE
-OC_MEMB_STATIC(oc_incoming_buffers, oc_message_t, OC_INOUT_BUFFER_POOL_SIZE);
-OC_MEMB_STATIC(oc_outgoing_buffers, oc_message_t, OC_INOUT_BUFFER_POOL_SIZE);
-#else  /* OC_INOUT_BUFFER_POOL_SIZE */
+#ifdef OC_INOUT_BUFFER_POOL
+OC_MEMB_STATIC(oc_incoming_buffers, oc_message_t, OC_INOUT_BUFFER_POOL);
+OC_MEMB_STATIC(oc_outgoing_buffers, oc_message_t, OC_INOUT_BUFFER_POOL);
+#else  /* !OC_INOUT_BUFFER_POOL */
 OC_MEMB(oc_incoming_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 OC_MEMB(oc_outgoing_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
-#endif /* !OC_INOUT_BUFFER_POOL_SIZE */
+#endif /* OC_INOUT_BUFFER_POOL */
 
 static void
 message_deallocate(oc_message_t *message, struct oc_memb *pool)

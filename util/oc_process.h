@@ -531,7 +531,7 @@ int oc_process_run(void);
  * \retval Non-zero if the process is running.
  * \retval Zero if the process is not running.
  */
-int oc_process_is_running(struct oc_process *p);
+int oc_process_is_running(const struct oc_process *p);
 
 /**
  *  Number of events waiting to be processed.

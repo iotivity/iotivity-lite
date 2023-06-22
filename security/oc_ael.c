@@ -122,8 +122,7 @@ oc_sec_ael_init(void)
     oc_abort("Insufficient memory");
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
-  size_t device;
-  for (device = 0; device < oc_core_get_num_devices(); device++) {
+  for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
     OC_LIST_STRUCT_INIT(&ael[device], events);
   }
 }
@@ -131,8 +130,7 @@ oc_sec_ael_init(void)
 void
 oc_sec_ael_free(void)
 {
-  size_t device;
-  for (device = 0; device < oc_core_get_num_devices(); device++) {
+  for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
     oc_sec_ael_reset(device);
   }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -492,8 +490,7 @@ oc_sec_ael_create_event(size_t device, uint8_t category, uint8_t priority,
     oc_new_string(&res->message, message, strlen(message));
   }
   if (aux_info && aux_size > 0) {
-    size_t i;
-    for (i = 0; i < aux_size; i++) {
+    for (size_t i = 0; i < aux_size; i++) {
       oc_sec_ael_aux_info_t *a_info =
         (oc_sec_ael_aux_info_t *)oc_memb_alloc(&aux_s);
       if (a_info) {

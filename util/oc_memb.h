@@ -185,9 +185,9 @@ char _oc_memb_free(
 void oc_memb_set_buffers_avail_cb(struct oc_memb *m,
                                   oc_memb_buffers_avail_callback_t cb);
 
-int oc_memb_inmemb(struct oc_memb *m, void *ptr);
+int oc_memb_inmemb(const struct oc_memb *m, const void *ptr);
 
-int oc_memb_numfree(struct oc_memb *m);
+int oc_memb_numfree(const struct oc_memb *m);
 
 #ifdef __cplusplus
 }

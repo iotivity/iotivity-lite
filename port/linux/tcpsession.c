@@ -18,6 +18,7 @@
 
 #define __USE_GNU
 
+#include "api/oc_buffer_internal.h"
 #include "api/oc_network_events_internal.h"
 #include "api/oc_session_events_internal.h"
 #include "api/oc_tcp_internal.h"
@@ -413,6 +414,8 @@ tcp_session_receive_message_locked(tcp_session_t *session,
     OC_DBG("recv(): %zu bytes.", (size_t)count);
     message->length += (size_t)count;
     want_read -= (size_t)count;
+    OC_DBG("written message buffer from=%p to=%p", (void *)message->data,
+           (void *)(message->data + message->length));
 
     if (total_length == 0) {
       memcpy(&message->endpoint, &session->endpoint, sizeof(oc_endpoint_t));
@@ -428,11 +431,10 @@ tcp_session_receive_message_locked(tcp_session_t *session,
       }
       total_length = get_total_length_from_header(message, &session->endpoint);
       // check to avoid buffer overflow
-      if (total_length >
-          (unsigned)(OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE)) {
-        OC_ERR("total receive length(%zu) is bigger than max pdu size(%ld)",
-               total_length,
-               (long)(OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE));
+      if (total_length > oc_message_buffer_size()) {
+        OC_ERR(
+          "total receive length(%zu) is bigger than message buffer size(%zu)",
+          total_length, oc_message_buffer_size());
         free_session_locked(session, true);
         return ADAPTER_STATUS_ERROR;
       }

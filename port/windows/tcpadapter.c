@@ -17,6 +17,7 @@
  ****************************************************************************/
 
 #define WIN32_LEAN_AND_MEAN
+#include "api/oc_buffer_internal.h"
 #include "api/oc_network_events_internal.h"
 #include "api/oc_session_events_internal.h"
 #include "api/oc_tcp_internal.h"
@@ -547,12 +548,11 @@ recv_message_with_tcp_session(tcp_session_t *session, oc_message_t *message)
         return ADAPTER_STATUS_ERROR;
       }
       total_length = get_total_length_from_header(message, &session->endpoint);
-      if (total_length >
-          (unsigned)(OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE)) {
-        OC_ERR("total receive length(%zu) is bigger than max pdu size(%zu)",
-               total_length,
-               (size_t)(OC_MAX_APP_DATA_SIZE + COAP_MAX_HEADER_SIZE));
-        OC_ERR("It may occur buffer overflow.");
+      // check to avoid buffer overflow
+      if (total_length > oc_message_buffer_size()) {
+        OC_ERR(
+          "total receive length(%zu) is bigger than message buffer size(%zu)",
+          total_length, oc_message_buffer_size());
         free_tcp_session(session);
         return ADAPTER_STATUS_ERROR;
       }

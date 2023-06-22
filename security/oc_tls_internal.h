@@ -273,7 +273,7 @@ void oc_tls_resolve_new_identity_certs(void);
  * @return true identity certificate was found and removed
  * @return false otherwise
  */
-bool oc_tls_remove_identity_cert(oc_sec_cred_t *cred);
+bool oc_tls_remove_identity_cert(const oc_sec_cred_t *cred);
 
 /**
  * @brief Get parsed mbedtls x509 certificate for given credential.
@@ -304,7 +304,7 @@ void oc_tls_resolve_new_trust_anchors(void);
  * global mbedtls trust anchor chain was reloaded
  * @return false otherwise
  */
-bool oc_tls_remove_trust_anchor(oc_sec_cred_t *cred);
+bool oc_tls_remove_trust_anchor(const oc_sec_cred_t *cred);
 
 /**
  * @brief Get parsed mbedtls x509 certificate for given credential.

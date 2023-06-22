@@ -50,12 +50,11 @@ dump_cred(void *data)
 static bool
 check_if_replayed_request(oc_oscore_context_t *oscore_ctx, uint64_t piv)
 {
-  uint8_t i;
   if (piv == 0 && oscore_ctx->rwin[0] == 0 &&
       oscore_ctx->rwin[OSCORE_REPLAY_WINDOW_SIZE - 1] == 0) {
     goto fresh_request;
   }
-  for (i = 0; i < OSCORE_REPLAY_WINDOW_SIZE; i++) {
+  for (uint8_t i = 0; i < OSCORE_REPLAY_WINDOW_SIZE; i++) {
     if (oscore_ctx->rwin[i] == piv) {
       return true;
     }
@@ -133,7 +132,7 @@ oscore_parse_message(oc_message_t *message)
   }
 
   oc_oscore_context_t *oscore_ctx = NULL;
-  uint8_t *request_piv = NULL;
+  const uint8_t *request_piv = NULL;
   uint8_t request_piv_len = 0;
   /* If OSCORE packet contains kid... */
   if (oscore_pkt.kid_len > 0) {
@@ -176,10 +175,11 @@ oscore_parse_message(oc_message_t *message)
 
   /* Copy "subjectuuid" of cred with OSCORE context to oc_endpoint_t */
   oc_sec_cred_t *oscore_cred = (oc_sec_cred_t *)oscore_ctx->cred;
-  memcpy(message->endpoint.di.id, oscore_cred->subjectuuid.id, 16);
+  memcpy(message->endpoint.di.id, oscore_cred->subjectuuid.id,
+         sizeof(oscore_cred->subjectuuid.id));
 
   /* Use recipient key for decryption */
-  uint8_t *key = oscore_ctx->recvkey;
+  const uint8_t *key = oscore_ctx->recvkey;
   uint8_t AAD[OSCORE_AAD_MAX_LEN];
   uint8_t AAD_len = 0;
   uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
@@ -383,7 +383,7 @@ oc_oscore_send_multicast_message(oc_message_t *message)
     OC_DBG("found group OSCORE context");
 
     /* Use sender key for encryption */
-    uint8_t *key = oscore_ctx->sendkey;
+    const uint8_t *key = oscore_ctx->sendkey;
 
     OC_DBG("### parse CoAP message ###");
     /* Parse CoAP message */
@@ -563,7 +563,7 @@ oc_oscore_send_message(oc_message_t *msg)
     }
 
     /* Use sender key for encryption */
-    uint8_t *key = oscore_ctx->sendkey;
+    const uint8_t *key = oscore_ctx->sendkey;
 
     /* Clone incoming oc_message_t (*msg) from CoAP layer */
     message = oc_message_allocate_outgoing();
@@ -791,7 +791,8 @@ oc_oscore_send_message(oc_message_t *msg)
     oc_uuid_to_str(&message->endpoint.di, uuid, OC_UUID_LEN);
     oc_string_t proxy_uri;
     oc_concat_strings(&proxy_uri, "ocf://", uuid);
-    coap_set_header_proxy_uri(coap_pkt, oc_string(proxy_uri));
+    coap_set_header_proxy_uri(coap_pkt, oc_string(proxy_uri),
+                              oc_string_len(proxy_uri));
 
     /* Serialize OSCORE message to oc_message_t */
     OC_DBG("### serializing OSCORE message ###");

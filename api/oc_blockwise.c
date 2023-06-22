@@ -216,7 +216,7 @@ oc_blockwise_free_response_buffer(oc_blockwise_state_t *buffer)
 
 #ifdef OC_CLIENT
 void
-oc_blockwise_scrub_buffers_for_client_cb(void *cb)
+oc_blockwise_scrub_buffers_for_client_cb(const void *cb)
 {
   oc_blockwise_state_t *buffer =
     (oc_blockwise_state_t *)oc_list_head(oc_blockwise_requests);
@@ -321,7 +321,7 @@ oc_blockwise_find_response_buffer_by_mid(uint16_t mid)
 static oc_blockwise_state_t *
 oc_blockwise_find_buffer_by_client_cb(oc_list_t list,
                                       const oc_endpoint_t *endpoint,
-                                      void *client_cb)
+                                      const void *client_cb)
 {
   oc_blockwise_state_t *buffer = (oc_blockwise_state_t *)oc_list_head(list);
   while (buffer) {
@@ -336,7 +336,7 @@ oc_blockwise_find_buffer_by_client_cb(oc_list_t list,
 
 oc_blockwise_state_t *
 oc_blockwise_find_request_buffer_by_client_cb(const oc_endpoint_t *endpoint,
-                                              void *client_cb)
+                                              const void *client_cb)
 {
   return oc_blockwise_find_buffer_by_client_cb(oc_blockwise_requests, endpoint,
                                                client_cb);
@@ -344,7 +344,7 @@ oc_blockwise_find_request_buffer_by_client_cb(const oc_endpoint_t *endpoint,
 
 oc_blockwise_state_t *
 oc_blockwise_find_response_buffer_by_client_cb(const oc_endpoint_t *endpoint,
-                                               void *client_cb)
+                                               const void *client_cb)
 {
   return oc_blockwise_find_buffer_by_client_cb(oc_blockwise_responses, endpoint,
                                                client_cb);
@@ -391,7 +391,7 @@ oc_blockwise_find_response_buffer(const char *href, size_t href_len,
                                   endpoint, method, query, query_len, role);
 }
 
-const void *
+void *
 oc_blockwise_dispatch_block(oc_blockwise_state_t *buffer, uint32_t block_offset,
                             uint32_t requested_block_size,
                             uint32_t *payload_size)
@@ -404,7 +404,7 @@ oc_blockwise_dispatch_block(oc_blockwise_state_t *buffer, uint32_t block_offset,
                           (uint32_t)(buffer->payload_size - block_offset));
     }
     buffer->next_block_offset = block_offset + *payload_size;
-    return (const void *)&buffer->buffer[block_offset];
+    return (void *)&buffer->buffer[block_offset];
   }
   return NULL;
 }

@@ -225,7 +225,7 @@ oc_reset_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
 }
 
 bool
-oc_has_delayed_callback(void *cb_data, oc_trigger_t callback,
+oc_has_delayed_callback(const void *cb_data, oc_trigger_t callback,
                         bool ignore_cb_data)
 {
   return oc_ri_has_timed_event_callback(cb_data, callback, ignore_cb_data);
@@ -242,7 +242,7 @@ oc_remove_delayed_callback_by_filter(oc_trigger_t cb,
 }
 
 void
-oc_remove_delayed_callback(void *cb_data, oc_trigger_t callback)
+oc_remove_delayed_callback(const void *cb_data, oc_trigger_t callback)
 {
   oc_ri_remove_timed_event_callback(cb_data, callback);
 }
@@ -653,8 +653,7 @@ oc_resource_set_secure_mcast(oc_resource_t *resource, bool supported)
 void
 oc_set_con_write_cb(oc_con_write_cb_t callback)
 {
-  size_t i;
-  for (i = 0; i < oc_core_get_num_devices(); i++) {
+  for (size_t i = 0; i < oc_core_get_num_devices(); i++) {
     oc_resource_t *res = oc_core_get_resource_by_index(OCF_CON, i);
     if (res) {
       res->post_handler.user_data = *(void **)(&callback);
@@ -754,7 +753,7 @@ handle_separate_response_request(coap_separate_t *request,
     response_state->payload_size = (uint32_t)response_buffer->response_length;
 
     uint32_t payload_size = 0;
-    const void *payload = oc_blockwise_dispatch_block(
+    void *payload = oc_blockwise_dispatch_block(
       response_state, 0, request->block2_size, &payload_size);
     if (payload != NULL) {
       coap_set_payload(&response, payload, payload_size);

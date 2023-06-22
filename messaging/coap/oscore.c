@@ -69,8 +69,8 @@ oscore_read_piv(const uint8_t *piv, uint8_t piv_len, uint64_t *ssn)
 {
   *ssn = 0;
 
-  uint8_t i, j = sizeof(uint64_t) - piv_len;
-  for (i = 0; i < piv_len; i++, j++) {
+  uint8_t j = sizeof(uint64_t) - piv_len;
+  for (uint8_t i = 0; i < piv_len; i++, j++) {
     memcpy((char *)ssn + j, &piv[i], 1);
   }
 

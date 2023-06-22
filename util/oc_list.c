@@ -217,7 +217,7 @@ oc_list_pop(oc_list_t list)
  */
 /*---------------------------------------------------------------------------*/
 void
-oc_list_remove(oc_list_t list, void *item)
+oc_list_remove(oc_list_t list, const void *item)
 {
   struct list **l;
 

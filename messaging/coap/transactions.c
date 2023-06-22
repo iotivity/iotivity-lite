@@ -84,35 +84,35 @@ coap_register_as_transaction_handler(void)
 }
 
 coap_transaction_t *
-coap_new_transaction(uint16_t mid, uint8_t *token, uint8_t token_len,
+coap_new_transaction(uint16_t mid, const uint8_t *token, uint8_t token_len,
                      const oc_endpoint_t *endpoint)
 {
   coap_transaction_t *t = oc_memb_alloc(&transactions_memb);
-  if (t) {
-    t->message = oc_message_allocate_outgoing();
-    if (t->message) {
-      OC_DBG("Created new transaction %u: %p", mid, (void *)t);
-      t->mid = mid;
-      if (token_len > 0) {
-        memcpy(t->token, token, token_len);
-        t->token_len = token_len;
-      }
-      t->retrans_counter = 0;
-
-      /* save client address */
-      memcpy(&t->message->endpoint, endpoint, sizeof(oc_endpoint_t));
-
-      oc_list_add(
-        transactions_list,
-        t); /* list itself makes sure same element is not added twice */
-    } else {
-      oc_memb_free(&transactions_memb, t);
-      t = NULL;
-    }
-  } else {
-    OC_WRN("insufficient memory to create transaction");
+  if (t == NULL) {
+    OC_ERR("insufficient memory to create transaction");
+    return NULL;
   }
 
+  t->message = oc_message_allocate_outgoing();
+  if (t->message == NULL) {
+
+    oc_memb_free(&transactions_memb, t);
+    return NULL;
+  }
+
+  OC_DBG("Created new transaction %u: %p", mid, (void *)t);
+  t->mid = mid;
+  if (token_len > 0) {
+    memcpy(t->token, token, token_len);
+    t->token_len = token_len;
+  }
+  t->retrans_counter = 0;
+
+  /* save client address */
+  memcpy(&t->message->endpoint, endpoint, sizeof(oc_endpoint_t));
+
+  oc_list_add(transactions_list,
+              t); /* list itself makes sure same element is not added twice */
   return t;
 }
 
@@ -211,10 +211,9 @@ coap_clear_transaction(coap_transaction_t *t)
 coap_transaction_t *
 coap_get_transaction_by_mid(uint16_t mid)
 {
-  coap_transaction_t *t = NULL;
-
-  for (t = (coap_transaction_t *)oc_list_head(transactions_list); t;
-       t = t->next) {
+  for (coap_transaction_t *t =
+         (coap_transaction_t *)oc_list_head(transactions_list);
+       t != NULL; t = t->next) {
     if (t->mid == mid) {
       OC_DBG("Found transaction for MID %u: %p", t->mid, (void *)t);
       return t;
@@ -224,12 +223,11 @@ coap_get_transaction_by_mid(uint16_t mid)
 }
 
 coap_transaction_t *
-coap_get_transaction_by_token(uint8_t *token, uint8_t token_len)
+coap_get_transaction_by_token(const uint8_t *token, uint8_t token_len)
 {
-  coap_transaction_t *t = NULL;
-
-  for (t = (coap_transaction_t *)oc_list_head(transactions_list); t;
-       t = t->next) {
+  for (coap_transaction_t *t =
+         (coap_transaction_t *)oc_list_head(transactions_list);
+       t != NULL; t = t->next) {
     if (t->token_len == token_len && memcmp(t->token, token, token_len) == 0) {
       OC_DBG("Found transaction by token %p", (void *)t);
       return t;
@@ -241,10 +239,9 @@ coap_get_transaction_by_token(uint8_t *token, uint8_t token_len)
 void
 coap_check_transactions(void)
 {
-  coap_transaction_t *t = (coap_transaction_t *)oc_list_head(transactions_list),
-                     *next;
+  coap_transaction_t *t = (coap_transaction_t *)oc_list_head(transactions_list);
   while (t != NULL) {
-    next = t->next;
+    coap_transaction_t *next = t->next;
     if (oc_etimer_expired(&t->retrans_timer)) {
       ++(t->retrans_counter);
       OC_DBG("Retransmitting %u (%u)", t->mid, t->retrans_counter);
@@ -262,10 +259,9 @@ coap_check_transactions(void)
 void
 coap_free_all_transactions(void)
 {
-  coap_transaction_t *t = (coap_transaction_t *)oc_list_head(transactions_list),
-                     *next;
+  coap_transaction_t *t = (coap_transaction_t *)oc_list_head(transactions_list);
   while (t != NULL) {
-    next = t->next;
+    coap_transaction_t *next = t->next;
     coap_clear_transaction(t);
     t = next;
   }

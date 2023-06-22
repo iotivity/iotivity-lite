@@ -135,8 +135,8 @@ HKDF_Expand(const uint8_t *prk, const uint8_t *info, uint8_t info_len,
 
 int
 HKDF_SHA256(const uint8_t *salt, uint8_t salt_len, const uint8_t *ikm,
-            uint8_t ikm_len, uint8_t *info, uint8_t info_len, uint8_t *okm,
-            uint8_t okm_len)
+            uint8_t ikm_len, const uint8_t *info, uint8_t info_len,
+            uint8_t *okm, uint8_t okm_len)
 {
   uint8_t PRK[HMAC_SHA256_HASHLEN];
   if (HKDF_Extract(salt, salt_len, ikm, ikm_len, PRK) != 0) {
@@ -149,8 +149,9 @@ HKDF_SHA256(const uint8_t *salt, uint8_t salt_len, const uint8_t *ikm,
 }
 
 void
-oc_oscore_AEAD_nonce(uint8_t *id, uint8_t id_len, uint8_t *piv, uint8_t piv_len,
-                     uint8_t *civ, uint8_t *nonce, uint8_t nonce_len)
+oc_oscore_AEAD_nonce(const uint8_t *id, uint8_t id_len, const uint8_t *piv,
+                     uint8_t piv_len, const uint8_t *civ, uint8_t *nonce,
+                     uint8_t nonce_len)
 {
   OC_DBG("### computing AEAD nonce ###");
   OC_DBG("Sender ID:");
@@ -189,7 +190,7 @@ oc_oscore_AEAD_nonce(uint8_t *id, uint8_t id_len, uint8_t *piv, uint8_t piv_len,
 }
 
 int
-oc_oscore_compose_AAD(uint8_t *kid, uint8_t kid_len, uint8_t *piv,
+oc_oscore_compose_AAD(const uint8_t *kid, uint8_t kid_len, const uint8_t *piv,
                       uint8_t piv_len, uint8_t *AAD, uint8_t *AAD_len)
 {
   uint8_t aad_array[OSCORE_AAD_MAX_LEN];
@@ -256,8 +257,8 @@ oc_oscore_compose_AAD(uint8_t *kid, uint8_t kid_len, uint8_t *piv,
 
 int
 oc_oscore_encrypt(uint8_t *plaintext, size_t plaintext_len, size_t tag_len,
-                  uint8_t *key, size_t key_len, uint8_t *nonce,
-                  size_t nonce_len, uint8_t *AAD, size_t AAD_len,
+                  const uint8_t *key, size_t key_len, const uint8_t *nonce,
+                  size_t nonce_len, const uint8_t *AAD, size_t AAD_len,
                   uint8_t *output)
 {
   mbedtls_ccm_context ccm;
@@ -277,10 +278,10 @@ oc_oscore_encrypt(uint8_t *plaintext, size_t plaintext_len, size_t tag_len,
 }
 
 int
-oc_oscore_decrypt(uint8_t *ciphertext, size_t ciphertext_len, size_t tag_len,
-                  uint8_t *key, size_t key_len, uint8_t *nonce,
-                  size_t nonce_len, uint8_t *AAD, size_t AAD_len,
-                  uint8_t *output)
+oc_oscore_decrypt(const uint8_t *ciphertext, size_t ciphertext_len,
+                  size_t tag_len, const uint8_t *key, size_t key_len,
+                  const uint8_t *nonce, size_t nonce_len, const uint8_t *AAD,
+                  size_t AAD_len, uint8_t *output)
 {
   mbedtls_ccm_context ccm;
   mbedtls_ccm_init(&ccm);
