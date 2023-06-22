@@ -625,11 +625,14 @@ TEST_F(TestOSCORE, ClientRequest1_P)
   EXPECT_STREQ(testvec, "8368456e63727970743040488501810a40411440");
 
   /* Verify plaintext: 0x01b3747631 (5 bytes) */
-  size_t plaintext_len = oscore_serialize_plaintext(coap_pkt, buffer + 256);
+  uint8_t *payload = buffer + 256;
+  size_t payload_size = sizeof(buffer) - 256;
+  size_t plaintext_len =
+    oscore_serialize_plaintext(coap_pkt, payload, payload_size);
 
   testvec_len = 512;
-  EXPECT_EQ(oc_conv_byte_array_to_hex_string(buffer + 256, plaintext_len,
-                                             testvec, &testvec_len),
+  EXPECT_EQ(oc_conv_byte_array_to_hex_string(payload, plaintext_len, testvec,
+                                             &testvec_len),
             0);
   EXPECT_STREQ(testvec, "01b3747631");
 
@@ -644,18 +647,18 @@ TEST_F(TestOSCORE, ClientRequest1_P)
   EXPECT_STREQ(testvec, "4622d4dd6d944168eefb549868");
 
   /* Verify ciphertext: 0x612f1092f1776f1c1668b3825e (13 bytes) */
-  EXPECT_EQ(oc_oscore_encrypt(buffer + 256, plaintext_len, OSCORE_AEAD_TAG_LEN,
-                              skey, skey_len, nonce, OSCORE_AEAD_NONCE_LEN, AAD,
-                              AAD_len, buffer + 256),
+  EXPECT_EQ(oc_oscore_encrypt(payload, plaintext_len, OSCORE_AEAD_TAG_LEN, skey,
+                              skey_len, nonce, OSCORE_AEAD_NONCE_LEN, AAD,
+                              AAD_len, payload),
             0);
   testvec_len = 512;
   EXPECT_EQ(
     oc_conv_byte_array_to_hex_string(
-      buffer + 256, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec, &testvec_len),
+      payload, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec, &testvec_len),
     0);
   EXPECT_STREQ(testvec, "612f1092f1776f1c1668b3825e");
 
-  coap_pkt->payload = buffer + 256;
+  coap_pkt->payload = payload;
   coap_pkt->payload_len = plaintext_len + OSCORE_AEAD_TAG_LEN;
 
   /* Set the Outer code for the OSCORE packet (POST/FETCH:2.04/2.05) */
@@ -665,7 +668,7 @@ TEST_F(TestOSCORE, ClientRequest1_P)
   coap_set_header_oscore(coap_pkt, piv, piv_len, nullptr, 0, nullptr, 0);
 
   /* Serialize OSCORE message to oc_message_t */
-  buffer_len = oscore_serialize_message(coap_pkt, buffer);
+  buffer_len = oscore_serialize_message(coap_pkt, buffer, sizeof(buffer));
 
   /* Verify protected CoAP request (OSCORE message): 0x44025d1f00003974396c6f6
       3616c686f7374620914ff612f1092f1776f1c1668b3825e (35 bytes)
@@ -741,11 +744,14 @@ TEST_F(TestOSCORE, ClientRequest2_P)
   EXPECT_STREQ(testvec, "8368456e63727970743040498501810a4100411440");
 
   /* Verify plaintext: 0x01b3747631 (5 bytes) */
-  size_t plaintext_len = oscore_serialize_plaintext(coap_pkt, buffer + 256);
+  uint8_t *payload = buffer + 256;
+  size_t payload_size = sizeof(buffer) - 256;
+  size_t plaintext_len =
+    oscore_serialize_plaintext(coap_pkt, payload, payload_size);
 
   testvec_len = 512;
-  EXPECT_EQ(oc_conv_byte_array_to_hex_string(buffer + 256, plaintext_len,
-                                             testvec, &testvec_len),
+  EXPECT_EQ(oc_conv_byte_array_to_hex_string(payload, plaintext_len, testvec,
+                                             &testvec_len),
             0);
   EXPECT_STREQ(testvec, "01b3747631");
 
@@ -759,18 +765,18 @@ TEST_F(TestOSCORE, ClientRequest2_P)
   EXPECT_STREQ(testvec, "bf35ae297d2dace910c52e99ed");
 
   /* Verify ciphertext: 0x4ed339a5a379b0b8bc731fffb0 (13 bytes) */
-  EXPECT_EQ(oc_oscore_encrypt(buffer + 256, plaintext_len, OSCORE_AEAD_TAG_LEN,
-                              skey, skey_len, nonce, OSCORE_AEAD_NONCE_LEN, AAD,
-                              AAD_len, buffer + 256),
+  EXPECT_EQ(oc_oscore_encrypt(payload, plaintext_len, OSCORE_AEAD_TAG_LEN, skey,
+                              skey_len, nonce, OSCORE_AEAD_NONCE_LEN, AAD,
+                              AAD_len, payload),
             0);
   testvec_len = 512;
   EXPECT_EQ(
     oc_conv_byte_array_to_hex_string(
-      buffer + 256, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec, &testvec_len),
+      payload, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec, &testvec_len),
     0);
   EXPECT_STREQ(testvec, "4ed339a5a379b0b8bc731fffb0");
 
-  coap_pkt->payload = buffer + 256;
+  coap_pkt->payload = payload;
   coap_pkt->payload_len = plaintext_len + OSCORE_AEAD_TAG_LEN;
 
   /* Set the Outer code for the OSCORE packet (POST/FETCH:2.04/2.05) */
@@ -780,7 +786,7 @@ TEST_F(TestOSCORE, ClientRequest2_P)
   coap_set_header_oscore(coap_pkt, piv, piv_len, sid, 1, nullptr, 0);
 
   /* Serialize OSCORE message to oc_message_t */
-  buffer_len = oscore_serialize_message(coap_pkt, buffer);
+  buffer_len = oscore_serialize_message(coap_pkt, buffer, sizeof(buffer));
 
   /* Protected CoAP request (OSCORE message): 0x440271c30000b932396c6f6
       3616c686f737463091400ff4ed339a5a379b0b8bc731fffb0 (36 bytes)
@@ -862,11 +868,14 @@ TEST_F(TestOSCORE, ClientRequest3_P)
   EXPECT_STREQ(testvec, "8368456e63727970743040488501810a40411440");
 
   /* Verify plaintext: 0x01b3747631 (5 bytes) */
-  size_t plaintext_len = oscore_serialize_plaintext(coap_pkt, buffer + 256);
+  uint8_t *payload = buffer + 256;
+  size_t payload_size = sizeof(buffer) - 256;
+  size_t plaintext_len =
+    oscore_serialize_plaintext(coap_pkt, payload, payload_size);
 
   testvec_len = 512;
-  EXPECT_EQ(oc_conv_byte_array_to_hex_string(buffer + 256, plaintext_len,
-                                             testvec, &testvec_len),
+  EXPECT_EQ(oc_conv_byte_array_to_hex_string(payload, plaintext_len, testvec,
+                                             &testvec_len),
             0);
   EXPECT_STREQ(testvec, "01b3747631");
 
@@ -881,18 +890,18 @@ TEST_F(TestOSCORE, ClientRequest3_P)
   EXPECT_STREQ(testvec, "2ca58fb85ff1b81c0b7181b84a");
 
   /* Verify ciphertext: 0x72cd7273fd331ac45cffbe55c3 (13 bytes) */
-  EXPECT_EQ(oc_oscore_encrypt(buffer + 256, plaintext_len, OSCORE_AEAD_TAG_LEN,
-                              skey, skey_len, nonce, OSCORE_AEAD_NONCE_LEN, AAD,
-                              AAD_len, buffer + 256),
+  EXPECT_EQ(oc_oscore_encrypt(payload, plaintext_len, OSCORE_AEAD_TAG_LEN, skey,
+                              skey_len, nonce, OSCORE_AEAD_NONCE_LEN, AAD,
+                              AAD_len, payload),
             0);
   testvec_len = 512;
   EXPECT_EQ(
     oc_conv_byte_array_to_hex_string(
-      buffer + 256, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec, &testvec_len),
+      payload, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec, &testvec_len),
     0);
   EXPECT_STREQ(testvec, "72cd7273fd331ac45cffbe55c3");
 
-  coap_pkt->payload = buffer + 256;
+  coap_pkt->payload = payload;
   coap_pkt->payload_len = plaintext_len + OSCORE_AEAD_TAG_LEN;
 
   /* Set the Outer code for the OSCORE packet (POST/FETCH:2.04/2.05) */
@@ -902,7 +911,7 @@ TEST_F(TestOSCORE, ClientRequest3_P)
   coap_set_header_oscore(coap_pkt, piv, piv_len, nullptr, 0, idctx, idctx_len);
 
   /* Serialize OSCORE message to oc_message_t */
-  buffer_len = oscore_serialize_message(coap_pkt, buffer);
+  buffer_len = oscore_serialize_message(coap_pkt, buffer, sizeof(buffer));
 
   /* Protected CoAP request (OSCORE message):
       0x44022f8eef9bbf7a396c6f63616c686f73746b19140837cbf3210017a2d3ff
@@ -976,11 +985,14 @@ TEST_F(TestOSCORE, ServerResponse1_P)
   EXPECT_STREQ(testvec, "8368456e63727970743040488501810a40411440");
 
   /* Verify plaintext: 0x45ff48656c6c6f20576f726c6421 (14 bytes) */
-  size_t plaintext_len = oscore_serialize_plaintext(coap_pkt, buffer + 256);
+  uint8_t *payload = buffer + 256;
+  size_t payload_size = sizeof(buffer) - 256;
+  size_t plaintext_len =
+    oscore_serialize_plaintext(coap_pkt, payload, payload_size);
 
   testvec_len = 512;
-  EXPECT_EQ(oc_conv_byte_array_to_hex_string(buffer + 256, plaintext_len,
-                                             testvec, &testvec_len),
+  EXPECT_EQ(oc_conv_byte_array_to_hex_string(payload, plaintext_len, testvec,
+                                             &testvec_len),
             0);
   EXPECT_STREQ(testvec, "45ff48656c6c6f20576f726c6421");
 
@@ -997,18 +1009,18 @@ TEST_F(TestOSCORE, ServerResponse1_P)
 
   /* Verify ciphertext: 0xdbaad1e9a7e7b2a813d3c31524378303cdafae119106 (22
       bytes) */
-  EXPECT_EQ(oc_oscore_encrypt(buffer + 256, plaintext_len, OSCORE_AEAD_TAG_LEN,
-                              skey, skey_len, nonce, OSCORE_AEAD_NONCE_LEN, AAD,
-                              AAD_len, buffer + 256),
+  EXPECT_EQ(oc_oscore_encrypt(payload, plaintext_len, OSCORE_AEAD_TAG_LEN, skey,
+                              skey_len, nonce, OSCORE_AEAD_NONCE_LEN, AAD,
+                              AAD_len, payload),
             0);
   testvec_len = 512;
   EXPECT_EQ(
     oc_conv_byte_array_to_hex_string(
-      buffer + 256, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec, &testvec_len),
+      payload, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec, &testvec_len),
     0);
   EXPECT_STREQ(testvec, "dbaad1e9a7e7b2a813d3c31524378303cdafae119106");
 
-  coap_pkt->payload = buffer + 256;
+  coap_pkt->payload = payload;
   coap_pkt->payload_len = plaintext_len + OSCORE_AEAD_TAG_LEN;
 
   /* Set the Outer code for the OSCORE packet (POST/FETCH:2.04/2.05) */
@@ -1018,7 +1030,7 @@ TEST_F(TestOSCORE, ServerResponse1_P)
   coap_set_header_oscore(coap_pkt, nullptr, 0, nullptr, 0, nullptr, 0);
 
   /* Serialize OSCORE message to oc_message_t */
-  buffer_len = oscore_serialize_message(coap_pkt, buffer);
+  buffer_len = oscore_serialize_message(coap_pkt, buffer, sizeof(buffer));
 
   /*
     Protected CoAP response (OSCORE message):
@@ -1090,11 +1102,14 @@ TEST_F(TestOSCORE, ServerResponse2_P)
   EXPECT_STREQ(testvec, "8368456e63727970743040488501810a40411440");
 
   /* Verify plaintext: 0x45ff48656c6c6f20576f726c6421 (14 bytes) */
-  size_t plaintext_len = oscore_serialize_plaintext(coap_pkt, buffer + 256);
+  uint8_t *payload = buffer + 256;
+  size_t payload_size = sizeof(buffer) - 256;
+  size_t plaintext_len =
+    oscore_serialize_plaintext(coap_pkt, payload, payload_size);
 
   testvec_len = 512;
-  EXPECT_EQ(oc_conv_byte_array_to_hex_string(buffer + 256, plaintext_len,
-                                             testvec, &testvec_len),
+  EXPECT_EQ(oc_conv_byte_array_to_hex_string(payload, plaintext_len, testvec,
+                                             &testvec_len),
             0);
   EXPECT_STREQ(testvec, "45ff48656c6c6f20576f726c6421");
 
@@ -1115,18 +1130,18 @@ TEST_F(TestOSCORE, ServerResponse2_P)
 
   /* Verify ciphertext: 0x4d4c13669384b67354b2b6175ff4b8658c666a6cf88e (22
       bytes) */
-  EXPECT_EQ(oc_oscore_encrypt(buffer + 256, plaintext_len, OSCORE_AEAD_TAG_LEN,
-                              skey, skey_len, nonce, OSCORE_AEAD_NONCE_LEN, AAD,
-                              AAD_len, buffer + 256),
+  EXPECT_EQ(oc_oscore_encrypt(payload, plaintext_len, OSCORE_AEAD_TAG_LEN, skey,
+                              skey_len, nonce, OSCORE_AEAD_NONCE_LEN, AAD,
+                              AAD_len, payload),
             0);
   testvec_len = 512;
   EXPECT_EQ(
     oc_conv_byte_array_to_hex_string(
-      buffer + 256, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec, &testvec_len),
+      payload, plaintext_len + OSCORE_AEAD_TAG_LEN, testvec, &testvec_len),
     0);
   EXPECT_STREQ(testvec, "4d4c13669384b67354b2b6175ff4b8658c666a6cf88e");
 
-  coap_pkt->payload = buffer + 256;
+  coap_pkt->payload = payload;
   coap_pkt->payload_len = plaintext_len + OSCORE_AEAD_TAG_LEN;
 
   /* Set the Outer code for the OSCORE packet (POST/FETCH:2.04/2.05) */
@@ -1136,7 +1151,7 @@ TEST_F(TestOSCORE, ServerResponse2_P)
   coap_set_header_oscore(coap_pkt, piv, 1, nullptr, 0, nullptr, 0);
 
   /* Serialize OSCORE message to oc_message_t */
-  buffer_len = oscore_serialize_message(coap_pkt, buffer);
+  buffer_len = oscore_serialize_message(coap_pkt, buffer, sizeof(buffer));
 
   /*
     Protected CoAP response (OSCORE message): 0x64445d1f00003974920100

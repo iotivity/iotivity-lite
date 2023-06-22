@@ -762,7 +762,7 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
                      OC_CREDUSAGE_NULL, peer->endpoint.device);
   if (cred != NULL) {
     OC_DBG("oc_tls: Found peer credential");
-    memcpy(peer->uuid.id, identity, 16);
+    memcpy(peer->uuid.id, identity, OC_UUID_ID_SIZE);
     OC_DBG("oc_tls: Setting the key:");
     OC_LOGbytes(oc_string(cred->privatedata.data),
                 oc_string_len(cred->privatedata.data));

@@ -16,7 +16,7 @@
  *
  ****************************************************************************/
 
-#include "oc_server_api_internal.h"
+#include "api/oc_buffer_internal.h"
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
@@ -25,6 +25,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_core_res_internal.h"
+#include "oc_server_api_internal.h"
 #include "port/oc_log_internal.h"
 #include "util/oc_features.h"
 #include "util/oc_macros_internal.h"
@@ -697,7 +698,8 @@ handle_separate_response_transaction(coap_transaction_t *t,
                                      uint8_t response_code)
 {
   coap_set_status_code(response, response_code);
-  t->message->length = coap_serialize_message(response, t->message->data);
+  t->message->length = coap_serialize_message(response, t->message->data,
+                                              oc_message_buffer_size());
   if (t->message->length <= 0) {
     coap_clear_transaction(t);
     return;

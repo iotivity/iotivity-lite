@@ -279,7 +279,8 @@ oscore_parse_message(oc_message_t *message)
 
   OC_DBG("### serializing CoAP message ###");
   /* Serialize fully decrypted CoAP packet to message->data buffer */
-  message->length = coap_serialize_message(&coap_pkt, message->data);
+  message->length =
+    coap_serialize_message(&coap_pkt, message->data, oc_message_buffer_size());
 
   OC_DBG("### serialized decrypted CoAP message to dispatch to the CoAP "
          "layer ###");
@@ -443,15 +444,17 @@ oc_oscore_send_multicast_message(oc_message_t *message)
     /* Serialize OSCORE plaintext at offset COAP_MAX_HEADER_SIZE
        (code, inner options, payload)
     */
-    size_t plaintext_size = oscore_serialize_plaintext(
-      coap_pkt, message->data + COAP_MAX_HEADER_SIZE);
+    uint8_t *buffer = message->data + COAP_MAX_HEADER_SIZE;
+    size_t buffer_size = oc_message_buffer_size() - COAP_MAX_HEADER_SIZE;
+    size_t plaintext_size =
+      oscore_serialize_plaintext(coap_pkt, buffer, buffer_size);
 
     OC_DBG("### serialized OSCORE plaintext: %zd bytes ###", plaintext_size);
 
     /* Set the OSCORE packet payload to point to location of the serialized
        inner message.
     */
-    coap_pkt->payload = message->data + COAP_MAX_HEADER_SIZE;
+    coap_pkt->payload = buffer;
     coap_pkt->payload_len = plaintext_size;
 
     /* Encrypt OSCORE plaintext */
@@ -480,7 +483,8 @@ oc_oscore_send_multicast_message(oc_message_t *message)
 
     /* Serialize OSCORE message to oc_message_t */
     OC_DBG("### serializing OSCORE message ###");
-    message->length = oscore_serialize_message(coap_pkt, message->data);
+    message->length = oscore_serialize_message(coap_pkt, message->data,
+                                               oc_message_buffer_size());
     OC_DBG("### serialized OSCORE message ###");
   } else {
     OC_ERR("*** could not find group OSCORE context ***");
@@ -737,15 +741,17 @@ oc_oscore_send_message(oc_message_t *msg)
     /* Serialize OSCORE plaintext at offset COAP_MAX_HEADER_SIZE
        (code, inner options, payload)
     */
-    size_t plaintext_size = oscore_serialize_plaintext(
-      coap_pkt, message->data + COAP_MAX_HEADER_SIZE);
+    uint8_t *buffer = message->data + COAP_MAX_HEADER_SIZE;
+    size_t buffer_size = oc_message_buffer_size() - COAP_MAX_HEADER_SIZE;
+    size_t plaintext_size =
+      oscore_serialize_plaintext(coap_pkt, buffer, buffer_size);
 
     OC_DBG("### serialized OSCORE plaintext: %zd bytes ###", plaintext_size);
 
     /* Set the OSCORE packet payload to point to location of the serialized
        inner message.
     */
-    coap_pkt->payload = message->data + COAP_MAX_HEADER_SIZE;
+    coap_pkt->payload = buffer;
     coap_pkt->payload_len = plaintext_size;
 
     /* Encrypt OSCORE plaintext */
@@ -789,7 +795,8 @@ oc_oscore_send_message(oc_message_t *msg)
 
     /* Serialize OSCORE message to oc_message_t */
     OC_DBG("### serializing OSCORE message ###");
-    message->length = oscore_serialize_message(coap_pkt, message->data);
+    message->length = oscore_serialize_message(coap_pkt, message->data,
+                                               oc_message_buffer_size());
     OC_DBG("### serialized OSCORE message ###");
     oc_free_string(&proxy_uri);
   }

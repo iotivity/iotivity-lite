@@ -16,6 +16,7 @@
  *
  ******************************************************************/
 
+#include "api/oc_buffer_internal.h"
 #include "api/oc_tcp_internal.h"
 #include "api/oc_session_events_internal.h"
 #include "messaging/coap/coap.h"
@@ -445,7 +446,8 @@ TEST_F(TestConnectivityWithServer, oc_tcp_update_csm_state_P)
   std::array<uint8_t, 8> payload{ "connect" };
   packet.payload = payload.data();
   packet.payload_len = payload.size();
-  msg->length = coap_serialize_message(&packet, msg->data);
+  msg->length =
+    coap_serialize_message(&packet, msg->data, oc_message_buffer_size());
 
   oc_send_buffer(msg);
   oc_message_unref(msg);
@@ -576,7 +578,8 @@ TEST_F(TestConnectivityWithServer, oc_tcp_send_buffer2)
 
   oc_message_t *msg = oc_allocate_message();
   memcpy(&msg->endpoint, ep, sizeof(oc_endpoint_t));
-  msg->length = coap_serialize_message(&packet, msg->data);
+  msg->length =
+    coap_serialize_message(&packet, msg->data, oc_message_buffer_size());
 
   EXPECT_EQ(msg->length, oc_send_buffer2(msg, false));
   oc_message_unref(msg);

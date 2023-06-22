@@ -150,7 +150,8 @@ coap_separate_accept(const coap_packet_t *request,
     oc_message_t *message = oc_message_allocate_outgoing();
     if (message != NULL) {
       memcpy(&message->endpoint, endpoint, sizeof(oc_endpoint_t));
-      message->length = coap_serialize_message(ack, message->data);
+      message->length =
+        coap_serialize_message(ack, message->data, oc_message_buffer_size());
       bool success = false;
       if (message->length > 0) {
         coap_send_message(message);
