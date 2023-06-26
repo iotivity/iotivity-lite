@@ -116,20 +116,24 @@ coap_send_empty_response(coap_message_type_t type, uint16_t mid,
   coap_packet_t packet; // empty response
   coap_udp_init_message(&packet, type, code, mid);
   oc_message_t *message = oc_message_allocate_outgoing();
-  if (message) {
-    memcpy(&message->endpoint, endpoint, sizeof(*endpoint));
-    if (token && token_len > 0) {
-      coap_set_token(&packet, token, token_len);
-    }
-    size_t len =
-      coap_serialize_message(&packet, message->data, oc_message_buffer_size());
-    if (len > 0) {
-      message->length = len;
-      coap_send_message(message);
-    }
-    if (message->ref_count == 0) {
-      oc_message_unref(message);
-    }
+  if (message == NULL) {
+    return;
+  }
+  memcpy(&message->endpoint, endpoint, sizeof(*endpoint));
+  if (token && token_len > 0) {
+    coap_set_token(&packet, token, token_len);
+  }
+  size_t len =
+    coap_serialize_message(&packet, message->data, oc_message_buffer_size());
+  if (len == 0) {
+    oc_message_unref(message);
+    return;
+  }
+
+  message->length = len;
+  coap_send_message(message);
+  if (message->ref_count == 0) {
+    oc_message_unref(message);
   }
 }
 

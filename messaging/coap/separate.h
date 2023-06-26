@@ -72,10 +72,23 @@ typedef struct coap_separate
   oc_string_t uri;
 } coap_separate_t;
 
-int coap_separate_accept(const coap_packet_t *request,
-                         oc_separate_response_t *separate_response,
-                         const oc_endpoint_t *endpoint, int observe,
-                         uint16_t block2_size);
+/**
+ * \brief Initiate a separate response with an empty ACK
+ * \param request The request to accept
+ * \param separate_response A pointer to the data structure that will store the
+ *   relevant information for the response
+ * \return true if the response was initiated
+ * \return false otherwise
+ *
+ * When the server does not have enough resources left to store the information
+ * for a separate response or otherwise cannot execute the resource handler,
+ * this function will respond with 5.03 Service Unavailable. The client can
+ * then retry later.
+ */
+bool coap_separate_accept(const coap_packet_t *request,
+                          oc_separate_response_t *separate_response,
+                          const oc_endpoint_t *endpoint, int observe,
+                          uint16_t block2_size);
 void coap_separate_resume(coap_packet_t *response,
                           coap_separate_t *separate_store, uint8_t code,
                           uint16_t mid);

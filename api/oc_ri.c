@@ -1139,7 +1139,7 @@ ri_invoke_coap_entity_set_response(coap_packet_t *response,
      * send out a response with it.
      */
     if (coap_separate_accept(ctx.request, response_obj->separate_response,
-                             ctx.endpoint, ctx.observe, ctx.block2_size) == 1) {
+                             ctx.endpoint, ctx.observe, ctx.block2_size)) {
       response_obj->separate_response->active = 1;
     }
     return;
