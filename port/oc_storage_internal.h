@@ -19,6 +19,9 @@
 #ifndef OC_PORT_STORAGE_INTERNAL_H
 #define OC_PORT_STORAGE_INTERNAL_H
 
+#include <stdbool.h>
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -29,6 +32,17 @@ extern "C" {
  * @return <0 on failure
  */
 int oc_storage_reset(void);
+
+/**
+ * @brief get the storage path
+ *
+ * @param[out] buffer buffer to store the path
+ * @param buffer_size size of the buffer
+ *
+ * @return true if storage path is set
+ * @return false otherwise
+ */
+bool oc_storage_path(char *buffer, size_t buffer_size);
 
 #ifdef __cplusplus
 }

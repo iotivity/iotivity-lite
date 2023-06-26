@@ -23,24 +23,30 @@
 #include "port/oc_log_internal.h"
 #include "port/oc_storage.h"
 #include "port/oc_storage_internal.h"
+#include "util/oc_secure_string_internal.h"
+
 #include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <string.h>
 
-#define STORE_PATH_SIZE 64
+#define OC_STORE_PATH_SIZE 64
 
 #define NVS_PARTITION "appdata"
 // takes 4.94s
 
-static char g_store_path[STORE_PATH_SIZE] = { 0 };
+static char g_store_path[OC_STORE_PATH_SIZE] = { 0 };
 static bool g_path_set = false;
 
 int
 oc_storage_config(const char *store)
 {
+  if (store == NULL || store[0] == '\0') {
+    return -EINVAL;
+  }
+
   size_t store_len = strlen(store);
-  if (store_len >= STORE_PATH_SIZE) {
+  if (store_len >= OC_STORE_PATH_SIZE) {
     return -ENOENT;
   }
 
@@ -54,6 +60,22 @@ oc_storage_config(const char *store)
   g_store_path[store_len] = '\0';
   g_path_set = true;
   return 0;
+}
+
+bool
+oc_storage_path(char *buffer, size_t buffer_size)
+{
+  if (!g_path_set) {
+    return false;
+  }
+  if (buffer != NULL) {
+    size_t store_len = oc_strnlen(g_store_path, OC_STORE_PATH_SIZE);
+    if (store_len == OC_STORE_PATH_SIZE || store_len >= buffer_size) {
+      return false;
+    }
+    memcpy(buffer, g_store_path, store_len + 1);
+  }
+  return true;
 }
 
 int

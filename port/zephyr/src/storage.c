@@ -255,6 +255,14 @@ err:
   return -errno;
 }
 
+bool
+oc_storage_path(char *buffer, size_t buffer_size)
+{
+  (void)buffer;
+  (void)buffer_size;
+  return false;
+}
+
 int
 oc_storage_reset(void)
 {
