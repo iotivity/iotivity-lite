@@ -16,8 +16,8 @@ const uint8_t chipSelect = SDCARD_SS_PIN;
 #warning Please update Eth shield chip select
 #endif
 
-static char store_path[STORE_PATH_SIZE];
-static int8_t store_path_len;
+static char g_store_path[STORE_PATH_SIZE] = { 0 };
+static int8_t g_store_path_len = 0;
 
 void
 list_dir()
@@ -34,12 +34,15 @@ list_dir()
 int
 oc_storage_config(const char *store)
 {
-  store_path_len = strlen(store);
-  if (store_path_len > STORE_PATH_SIZE) {
+  if (store == NULL || store[0] == '\0') {
+    return -EINVAL;
+  }
+  g_store_path_len = strlen(store);
+  if (g_store_path_len > STORE_PATH_SIZE) {
     return -ENOENT;
   }
-  strncpy(store_path, store, store_path_len);
-  store_path[store_path_len] = '\0';
+  strncpy(g_store_path, store, g_store_path_len);
+  g_store_path[g_store_path_len] = '\0';
   _sd_holder = sdfat_create();
   /* Initialize at the highest speed supported by the board that is
    not over 50 MHz. Try a lower speed if SPI errors occur.*/
@@ -48,8 +51,8 @@ oc_storage_config(const char *store)
     return -1;
   }
   OC_WRN("initialization done.");
-  if (!sdfat_exists(_sd_holder, store_path)) {
-    if (!sdfat_mkdir(_sd_holder, store_path)) {
+  if (!sdfat_exists(_sd_holder, g_store_path)) {
+    if (!sdfat_mkdir(_sd_holder, g_store_path)) {
       OC_ERR("Error creating sec dir");
     }
   }
@@ -57,6 +60,22 @@ oc_storage_config(const char *store)
   list_dir();
   sdfile_close(_file_holder);
   return 0;
+}
+
+bool
+oc_storage_path(char *buffer, size_t buffer_size)
+{
+  if (g_store_path_len == 0) {
+    return false;
+  }
+  if (buffer != NULL) {
+    if (buffer_size < (size_t)(g_store_path_len + 1)) {
+      return false;
+    }
+    memcpy(buffer, g_store_path, g_store_path_len);
+    buffer[g_store_path_len] = '\0';
+  }
+  return true;
 }
 
 int
@@ -69,15 +88,15 @@ long
 oc_storage_write(const char *store, const uint8_t *buf, size_t len)
 {
   size_t store_len = strlen(store);
-  store_path[store_path_len] = '/';
-  strncpy(store_path + store_path_len + 1, store, store_len);
-  store_path[1 + store_path_len + store_len] = '\0';
-  sdfile_open_write(_file_holder, store_path, O_WRONLY | O_CREAT | O_TRUNC);
+  g_store_path[g_store_path_len] = '/';
+  strncpy(g_store_path + g_store_path_len + 1, store, store_len);
+  g_store_path[1 + g_store_path_len + store_len] = '\0';
+  sdfile_open_write(_file_holder, g_store_path, O_WRONLY | O_CREAT | O_TRUNC);
   if (!sdfile_isOpen(_file_holder)) {
     return -1;
   } else {
     if ((len = sdfile_write(_file_holder, buf, len)) == -1) {
-      OC_ERR("Error writing to: %s", store_path);
+      OC_ERR("Error writing to: %s", g_store_path);
       return -1;
     }
     sdfile_close(_file_holder);
@@ -89,18 +108,18 @@ long
 oc_storage_read(const char *store, uint8_t *buf, size_t len)
 {
   size_t store_len = strlen(store);
-  store_path[store_path_len] = '/';
-  strncpy(store_path + store_path_len + 1, store, store_len);
-  store_path[1 + store_path_len + store_len] = '\0';
-  sdfile_open_read(_file_holder, store_path, O_RDONLY);
+  g_store_path[g_store_path_len] = '/';
+  strncpy(g_store_path + g_store_path_len + 1, store, store_len);
+  g_store_path[1 + g_store_path_len + store_len] = '\0';
+  sdfile_open_read(_file_holder, g_store_path, O_RDONLY);
   if (!sdfile_isOpen(_file_holder)) {
-    OC_ERR("error opening %s", store_path);
+    OC_ERR("error opening %s", g_store_path);
     return -1;
   }
   while (sdfile_available(_file_holder)) {
     // TODO: check for overflow of buffer
     if ((len = sdfile_read(_file_holder, buf, len)) == -1) {
-      OC_ERR("Error reading from: %s", store_path);
+      OC_ERR("Error reading from: %s", g_store_path);
     }
   }
   sdfile_close(_file_holder);

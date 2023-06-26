@@ -21,50 +21,72 @@
 #ifdef OC_STORAGE
 #include "port/oc_storage.h"
 #include "port/oc_storage_internal.h"
+#include "storage.h"
 #include "util/oc_secure_string_internal.h"
 
+#include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
 
-#define STORE_PATH_SIZE (64)
-
-static char g_store_path[STORE_PATH_SIZE] = { 0 };
-static size_t g_store_path_len = 0;
-static bool g_path_set = false;
+static char g_store_path[OC_STORE_PATH_SIZE] = { 0 };
+static uint8_t g_store_path_len = 0;
 
 int
 oc_storage_config(const char *store)
 {
-  if (!store || !*store) {
+  if (store == NULL || store[0] == '\0') {
     return -EINVAL;
   }
-  size_t store_len = oc_strnlen(store, STORE_PATH_SIZE);
-  if (store_len >= STORE_PATH_SIZE) {
+
+  size_t store_len = oc_strnlen(store, OC_STORE_PATH_SIZE);
+  if (store_len >= OC_STORE_PATH_SIZE) {
     return -ENOENT;
   }
 
-  g_store_path_len = store_len;
+  // remove multiple trailing slashes
+  while (store_len > 1 &&
+         (store[store_len - 2] == '/' || store[store_len - 2] == '\\')) {
+    --store_len;
+  }
+
+  assert(store_len < UINT8_MAX);
+  g_store_path_len = (uint8_t)store_len;
   memcpy(g_store_path, store, g_store_path_len);
   if (g_store_path[g_store_path_len - 1] != '/' &&
       g_store_path[g_store_path_len - 1] != '\\') {
-    ++g_store_path_len;
-    if (g_store_path_len >= STORE_PATH_SIZE) {
+    if (g_store_path_len + 1 >= OC_STORE_PATH_SIZE) {
+      oc_storage_reset();
       return -ENOENT;
     }
-    g_store_path[g_store_path_len - 1] = '\\';
+    g_store_path[g_store_path_len] = '\\';
+    ++g_store_path_len;
   }
-  g_path_set = true;
-
+  g_store_path[g_store_path_len] = '\0';
   return 0;
+}
+
+bool
+oc_storage_path(char *buffer, size_t buffer_size)
+{
+  if (g_store_path_len == 0) {
+    return false;
+  }
+  if (buffer != NULL) {
+    if (buffer_size < (size_t)(g_store_path_len + 1)) {
+      return false;
+    }
+    memcpy(buffer, g_store_path, g_store_path_len);
+    buffer[g_store_path_len] = '\0';
+  }
+  return true;
 }
 
 int
 oc_storage_reset(void)
 {
-  g_path_set = false;
   g_store_path_len = 0;
   g_store_path[0] = '\0';
   return 0;
@@ -73,17 +95,18 @@ oc_storage_reset(void)
 long
 oc_storage_read(const char *store, uint8_t *buf, size_t size)
 {
-  if (!g_path_set) {
+  if (g_store_path_len == 0) {
     return -ENOENT;
   }
 
-  size_t store_len = oc_strnlen_s(store, STORE_PATH_SIZE);
-  if (store_len + g_store_path_len >= STORE_PATH_SIZE) {
+  size_t store_len = oc_strnlen_s(store, OC_STORE_PATH_SIZE);
+  if ((store_len == 0) ||
+      (store_len + g_store_path_len >= OC_STORE_PATH_SIZE)) {
     return -ENOENT;
   }
-
   memcpy(g_store_path + g_store_path_len, store, store_len);
   g_store_path[g_store_path_len + store_len] = '\0';
+
   FILE *fp = fopen(g_store_path, "rb");
   if (fp == NULL) {
     return -EINVAL;
@@ -116,16 +139,22 @@ error:
 long
 oc_storage_write(const char *store, const uint8_t *buf, size_t size)
 {
-  size_t store_len = oc_strnlen_s(store, STORE_PATH_SIZE);
-  if (!g_path_set || (store_len + g_store_path_len >= STORE_PATH_SIZE)) {
+  if (g_store_path_len == 0) {
     return -ENOENT;
   }
 
+  size_t store_len = oc_strnlen_s(store, OC_STORE_PATH_SIZE);
+  if ((store_len == 0) ||
+      (store_len + g_store_path_len >= OC_STORE_PATH_SIZE)) {
+    return -ENOENT;
+  }
   memcpy(g_store_path + g_store_path_len, store, store_len);
   g_store_path[g_store_path_len + store_len] = '\0';
+
   FILE *fp = fopen(g_store_path, "wb");
-  if (!fp)
+  if (fp == NULL) {
     return -EINVAL;
+  }
 
   size = fwrite(buf, 1, size, fp);
   fclose(fp);
