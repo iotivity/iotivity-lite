@@ -247,6 +247,8 @@ add_observer(oc_resource_t *resource, uint16_t block2_size,
 /*---------------------------------------------------------------------------*/
 /*- Removal -----------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
+
+// TODO: use oc_string_view_t
 static const char *
 get_iface_query(oc_interface_mask_t iface_mask)
 {
@@ -433,172 +435,196 @@ coap_remove_observer_by_resource(const oc_resource_t *rsc)
 /*- Notification ------------------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 
+static void
+send_notification_separate_response(const coap_observer_t *obs,
+                                    oc_response_t *response,
+                                    const oc_string_t *uri)
+{
+  coap_packet_t req;
+#ifdef OC_TCP
+  if (obs->endpoint.flags & TCP) {
+    coap_tcp_init_message(&req, COAP_GET);
+  } else
+#endif /* OC_TCP */
+  {
+    coap_udp_init_message(&req, COAP_TYPE_NON, COAP_GET, 0);
+  }
+  memcpy(&req.token, obs->token, obs->token_len);
+  req.token_len = obs->token_len;
+
+  coap_set_header_uri_path(&req, oc_string(*uri), oc_string_len(*uri));
+
+  OC_DBG("creating separate response for notification");
+#ifdef OC_BLOCK_WISE
+  uint16_t block2_size = obs->block2_size;
+#else  /* !OC_BLOCK_WISE */
+  uint16_t block2_size = 0;
+#endif /* OC_BLOCK_WISE */
+  if (coap_separate_accept(&req, response->separate_response, &obs->endpoint,
+                           obs->obs_counter, block2_size)) {
+    response->separate_response->active = 1;
+  }
+}
+
+#ifdef OC_BLOCK_WISE
+
+static int
+coap_prepare_notification_blockwise(coap_packet_t *notification,
+                                    coap_observer_t *obs,
+                                    const oc_response_t *response,
+                                    oc_blockwise_finish_cb_t *finish_cb)
+{
+  assert(oc_string_len(obs->resource->uri) > 0);
+  notification->type = COAP_TYPE_CON;
+  const char *query = get_iface_query(obs->iface_mask);
+  size_t query_len = query != NULL ? strlen(query) : 0;
+  oc_blockwise_state_t *response_state = oc_blockwise_find_response_buffer(
+    oc_string(obs->resource->uri) + 1, oc_string_len(obs->resource->uri) - 1,
+    &obs->endpoint, OC_GET, query, query_len, OC_BLOCKWISE_SERVER);
+  if (response_state != NULL) {
+    if (response_state->payload_size != response_state->next_block_offset) {
+      OC_DBG("skipping for blockwise transfer running");
+      return 0;
+    }
+    oc_blockwise_free_response_buffer(response_state);
+    response_state = NULL;
+  }
+  response_state = oc_blockwise_alloc_response_buffer(
+    oc_string(obs->resource->uri) + 1, oc_string_len(obs->resource->uri) - 1,
+    &obs->endpoint, OC_GET, OC_BLOCKWISE_SERVER,
+    (uint32_t)response->response_buffer->response_length);
+  if (response_state == NULL) {
+    OC_ERR("cannot allocate response buffer");
+    return -1;
+  }
+  if (query != NULL) {
+    oc_new_string(&response_state->uri_query, query, query_len);
+  }
+  if (finish_cb != NULL) {
+    response_state->finish_cb = finish_cb;
+  }
+  memcpy(response_state->buffer, response->response_buffer->buffer,
+         response->response_buffer->response_length);
+  response_state->payload_size =
+    (uint32_t)response->response_buffer->response_length;
+  uint32_t payload_size = 0;
+  void *payload = oc_blockwise_dispatch_block(response_state, 0,
+                                              obs->block2_size, &payload_size);
+  if (payload != NULL) {
+    coap_set_payload(notification, payload, payload_size);
+    coap_set_header_block2(notification, 0, 1, obs->block2_size);
+    coap_set_header_size2(notification, response_state->payload_size);
+    oc_blockwise_response_state_t *bwt_res_state =
+      (oc_blockwise_response_state_t *)response_state;
+    coap_set_header_etag(notification, bwt_res_state->etag, COAP_ETAG_LEN);
+  }
+  return 1;
+}
+
+#endif /* OC_BLOCK_WISE */
+
 static int
 send_notification(coap_observer_t *obs, oc_response_t *response,
                   oc_string_t uri, bool ignore_is_revert,
                   oc_blockwise_finish_cb_t *finish_cb)
 {
+  (void)finish_cb;
   OC_DBG("send_notification: send notification for resource %s",
          oc_string(uri));
-  if (!response || !obs) {
+  if (response == NULL || obs == NULL) {
     return 0;
   }
   if (response->separate_response) {
-    coap_packet_t req[1];
+    send_notification_separate_response(obs, response, &uri);
+    return 0;
+  }
+
+  OC_DBG("send_notification: notifying observer");
+  coap_transaction_t *transaction = NULL;
+  if (response->response_buffer == NULL) {
+    OC_DBG("send_notification: response buffer is NULL");
+    return 0;
+  }
+  bool is_revert = false;
+  uint8_t status_code = CONTENT_2_05;
+  if (obs->iface_mask == OC_IF_STARTUP_REVERT) {
+    OC_DBG(
+      "send_notification: Setting Valid response for a REVERT notification");
+    status_code = VALID_2_03;
+    response->response_buffer->code = VALID_2_03;
+    is_revert = !is_revert;
+  }
+
+  coap_packet_t notification;
 #ifdef OC_TCP
-    if (obs->endpoint.flags & TCP) {
-      coap_tcp_init_message(req, COAP_GET);
-    } else
+  if (obs->endpoint.flags & TCP) {
+    coap_tcp_init_message(&notification, status_code);
+  } else
 #endif /* OC_TCP */
+  {
+    coap_udp_init_message(&notification, COAP_TYPE_NON, status_code, 0);
+  }
+
+  if (ignore_is_revert || !is_revert) {
+#ifdef OC_BLOCK_WISE
+#ifdef OC_TCP
+    if ((obs->endpoint.flags & TCP) == 0 &&
+        response->response_buffer->response_length > obs->block2_size) {
+#else  /* OC_TCP */
+    if (response->response_buffer->response_length > obs->block2_size) {
+#endif /* !OC_TCP */
+      int ret = coap_prepare_notification_blockwise(&notification, obs,
+                                                    response, finish_cb);
+      if (ret <= 0) {
+        return ret;
+      }
+    } // blockwise transfer
+    else
+#endif /* OC_BLOCK_WISE */
     {
-      coap_udp_init_message(req, COAP_TYPE_NON, COAP_GET, 0);
-    }
-    memcpy(req->token, obs->token, obs->token_len);
-    req->token_len = obs->token_len;
-
-    coap_set_header_uri_path(req, oc_string(uri), oc_string_len(uri));
-
-    OC_DBG("send_notification: creating separate response for "
-           "notification");
-#ifdef OC_BLOCK_WISE
-    uint16_t block2_size = obs->block2_size;
-#else  /* !OC_BLOCK_WISE */
-    uint16_t block2_size = 0;
-#endif /* OC_BLOCK_WISE */
-    if (coap_separate_accept(req, response->separate_response, &obs->endpoint,
-                             obs->obs_counter, block2_size) == 1) {
-      response->separate_response->active = 1;
-    }
-  } // separate response
-  else {
-    OC_DBG("send_notification: notifying observer");
-    coap_transaction_t *transaction = NULL;
-    if (response->response_buffer) {
-      coap_packet_t notification[1];
-      bool is_revert = false;
-      uint8_t status_code = CONTENT_2_05;
-      if (obs->iface_mask == OC_IF_STARTUP_REVERT) {
-        OC_DBG("send_notification: Setting Valid response for a REVERT "
-               "notification");
-        status_code = VALID_2_03;
-        response->response_buffer->code = VALID_2_03;
-        is_revert = !is_revert;
-      }
 #ifdef OC_TCP
-      if (obs->endpoint.flags & TCP) {
-        coap_tcp_init_message(notification, status_code);
-      } else
-#endif /* OC_TCP */
-      {
-        coap_udp_init_message(notification, COAP_TYPE_NON, status_code, 0);
-      }
-
-      if (ignore_is_revert || !is_revert) {
-#ifdef OC_BLOCK_WISE
-#ifdef OC_TCP
-        if (!(obs->endpoint.flags & TCP) &&
-            response->response_buffer->response_length > obs->block2_size) {
+      if ((obs->endpoint.flags & TCP) == 0 &&
+          obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
 #else  /* OC_TCP */
-        if (response->response_buffer->response_length > obs->block2_size) {
+      if (obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
 #endif /* !OC_TCP */
-          notification->type = COAP_TYPE_CON;
-          const char *query = get_iface_query(obs->iface_mask);
-          oc_blockwise_state_t *response_state =
-            oc_blockwise_find_response_buffer(
-              oc_string(obs->resource->uri) + 1,
-              oc_string_len(obs->resource->uri) - 1, &obs->endpoint, OC_GET,
-              query, query != NULL ? strlen(query) : 0, OC_BLOCKWISE_SERVER);
-          if (response_state) {
-            if (response_state->payload_size ==
-                response_state->next_block_offset) {
-              oc_blockwise_free_response_buffer(response_state);
-              response_state = NULL;
-            } else {
-              OC_DBG("send_notification: Skipping for blockwise transfer "
-                     "running");
-              return 0;
-            }
-          }
-          response_state = oc_blockwise_alloc_response_buffer(
-            oc_string(obs->resource->uri) + 1,
-            oc_string_len(obs->resource->uri) - 1, &obs->endpoint, OC_GET,
-            OC_BLOCKWISE_SERVER, response->response_buffer->response_length);
-          if (!response_state) {
-            OC_ERR("send_notification: cannot allocate response buffer");
-            return -1;
-          }
-          if (query) {
-            oc_new_string(&response_state->uri_query, query, strlen(query));
-          }
-          if (finish_cb) {
-            response_state->finish_cb = finish_cb;
-          }
-          memcpy(response_state->buffer, response->response_buffer->buffer,
-                 response->response_buffer->response_length);
-          response_state->payload_size =
-            response->response_buffer->response_length;
-          uint32_t payload_size = 0;
-          void *payload = oc_blockwise_dispatch_block(
-            response_state, 0, obs->block2_size, &payload_size);
-          if (payload) {
-            coap_set_payload(notification, payload, payload_size);
-            coap_set_header_block2(notification, 0, 1, obs->block2_size);
-            coap_set_header_size2(notification, response_state->payload_size);
-            oc_blockwise_response_state_t *bwt_res_state =
-              (oc_blockwise_response_state_t *)response_state;
-            coap_set_header_etag(notification, bwt_res_state->etag,
-                                 COAP_ETAG_LEN);
-          }
-        } // blockwise transfer
-        else
-#endif /* OC_BLOCK_WISE */
-        {
-#ifdef OC_TCP
-          if (!(obs->endpoint.flags & TCP) &&
-              obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
-#else  /* OC_TCP */
-          if (obs->obs_counter % COAP_OBSERVE_REFRESH_INTERVAL == 0) {
-#endif /* !OC_TCP */
-            OC_DBG("send_notification: forcing CON notification to check "
-                   "for client liveness");
-            notification->type = COAP_TYPE_CON;
-          }
-          coap_set_payload(
-            notification, response->response_buffer->buffer,
-            (uint32_t)response->response_buffer->response_length);
-        } //! blockwise transfer
-      }   // !is_revert
+        OC_DBG("send_notification: forcing CON notification to check for "
+               "client liveness");
+        notification.type = COAP_TYPE_CON;
+      }
+      coap_set_payload(&notification, response->response_buffer->buffer,
+                       (uint32_t)response->response_buffer->response_length);
+    } //! blockwise transfer
+  }   // !is_revert
 
-      coap_set_status_code(notification, response->response_buffer->code);
-      if (notification->code < BAD_REQUEST_4_00 &&
-          obs->resource->num_observers) {
-        coap_set_header_observe(
-          notification, observe_increment_observe_counter(&obs->obs_counter));
-        observe_increment_observe_counter(&g_observe_counter);
-      } else {
-        coap_set_header_observe(notification,
-                                OC_COAP_OPTION_OBSERVE_UNREGISTER);
-      }
-      if (response->response_buffer->content_format > 0) {
-        coap_set_header_content_format(
-          notification, response->response_buffer->content_format);
-      }
-      coap_set_token(notification, obs->token, obs->token_len);
-      transaction = coap_new_transaction(coap_get_mid(), obs->token,
-                                         obs->token_len, &obs->endpoint);
-      if (transaction) {
-        obs->last_mid = transaction->mid;
-        notification->mid = transaction->mid;
-        transaction->message->length = coap_serialize_message(
-          notification, transaction->message->data, oc_message_buffer_size());
-        if (transaction->message->length > 0) {
-          coap_send_transaction(transaction);
-        } else {
-          coap_clear_transaction(transaction);
-        }
-      } // transaction
-    }   // response_buf != NULL
-  }     //! separate response
+  coap_set_status_code(&notification, response->response_buffer->code);
+  if (notification.code < BAD_REQUEST_4_00 && obs->resource->num_observers) {
+    coap_set_header_observe(
+      &notification, observe_increment_observe_counter(&obs->obs_counter));
+    observe_increment_observe_counter(&g_observe_counter);
+  } else {
+    coap_set_header_observe(&notification, OC_COAP_OPTION_OBSERVE_UNREGISTER);
+  }
+  if (response->response_buffer->content_format > 0) {
+    coap_set_header_content_format(&notification,
+                                   response->response_buffer->content_format);
+  }
+  coap_set_token(&notification, obs->token, obs->token_len);
+  transaction = coap_new_transaction(coap_get_mid(), obs->token, obs->token_len,
+                                     &obs->endpoint);
+  if (transaction == NULL) {
+    return 0;
+  }
+
+  obs->last_mid = transaction->mid;
+  notification.mid = transaction->mid;
+  transaction->message->length = coap_serialize_message(
+    &notification, transaction->message->data, oc_message_buffer_size());
+  if (transaction->message->length > 0) {
+    coap_send_transaction(transaction);
+  } else {
+    coap_clear_transaction(transaction);
+  }
   return 0;
 }
 

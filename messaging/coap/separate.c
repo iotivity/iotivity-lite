@@ -66,18 +66,8 @@ OC_MEMB(g_separate_requests, coap_separate_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 /*- Separate Response API ---------------------------------------------------*/
 /*---------------------------------------------------------------------------*/
 /*----------------------------------------------------------------------------*/
-/**
- * \brief Initiate a separate response with an empty ACK
- * \param request The request to accept
- * \param separate_response A pointer to the data structure that will store the
- *   relevant information for the response
- *
- * When the server does not have enough resources left to store the information
- * for a separate response or otherwise cannot execute the resource handler,
- * this function will respond with 5.03 Service Unavailable. The client can
- * then retry later.
- */
-int
+
+bool
 coap_separate_accept(const coap_packet_t *request,
                      oc_separate_response_t *separate_response,
                      const oc_endpoint_t *endpoint, int observe,
@@ -95,7 +85,7 @@ coap_separate_accept(const coap_packet_t *request,
     separate_response->buffer = (uint8_t *)malloc(OC_MAX_APP_DATA_SIZE);
     if (!separate_response->buffer) {
       OC_WRN("insufficient memory to store separate response");
-      return 0;
+      return false;
     }
 #endif /* OC_DYNAMIC_ALLOCATION */
   }
@@ -116,7 +106,7 @@ coap_separate_accept(const coap_packet_t *request,
 
     if (!separate_store) {
       OC_WRN("insufficient memory to store new request for separate response");
-      return 0;
+      return false;
     }
 
     /* store correct response type */
@@ -144,35 +134,32 @@ coap_separate_accept(const coap_packet_t *request,
   /* send separate ACK for CON */
   if (request->type == COAP_TYPE_CON) {
     OC_DBG("Sending ACK for separate response");
-    coap_packet_t ack[1];
+    coap_packet_t ack;
     /* ACK with empty code (0) */
-    coap_udp_init_message(ack, COAP_TYPE_ACK, 0, request->mid);
+    coap_udp_init_message(&ack, COAP_TYPE_ACK, 0, request->mid);
     oc_message_t *message = oc_message_allocate_outgoing();
-    if (message != NULL) {
-      memcpy(&message->endpoint, endpoint, sizeof(oc_endpoint_t));
-      message->length =
-        coap_serialize_message(ack, message->data, oc_message_buffer_size());
-      bool success = false;
-      if (message->length > 0) {
-        coap_send_message(message);
-        success = true;
-      }
-      if (message->ref_count == 0) {
-        oc_message_unref(message);
-      }
-      if (!success) {
-        coap_separate_clear(separate_response, separate_store);
-        return 0;
-      }
-    } else {
+    if (message == NULL) {
       coap_separate_clear(separate_response, separate_store);
-      return 0;
+      return false;
+    }
+    message->length =
+      coap_serialize_message(&ack, message->data, oc_message_buffer_size());
+    if (message->length == 0) {
+      oc_message_unref(message);
+      coap_separate_clear(separate_response, separate_store);
+      return false;
+    }
+    memcpy(&message->endpoint, endpoint, sizeof(oc_endpoint_t));
+    coap_send_message(message);
+
+    if (message->ref_count == 0) {
+      oc_message_unref(message);
     }
   }
 
-  return 1;
+  return true;
 }
-/*----------------------------------------------------------------------------*/
+
 void
 coap_separate_resume(coap_packet_t *response, coap_separate_t *separate_store,
                      uint8_t code, uint16_t mid)

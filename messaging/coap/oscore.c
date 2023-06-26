@@ -46,22 +46,25 @@ oscore_send_error(const coap_packet_t *packet, uint8_t code,
   coap_udp_init_message(&msg, type, code, mid);
   msg.transport_type = packet->transport_type;
   oc_message_t *message = oc_message_allocate_outgoing();
-  if (message) {
-    memcpy(&message->endpoint, endpoint, sizeof(*endpoint));
-    memset(&message->endpoint.di, 0, sizeof(oc_uuid_t));
-    if (packet->token_len > 0) {
-      coap_set_token(&msg, packet->token, packet->token_len);
-    }
-    coap_set_header_max_age(&msg, 0);
-    size_t len =
-      coap_serialize_message(&msg, message->data, oc_message_buffer_size());
-    if (len > 0) {
-      message->length = len;
-      coap_send_message(message);
-
-      OC_DBG("*** send OSCORE error (%u) ***", code);
-    }
+  if (message == NULL) {
+    return;
   }
+  memcpy(&message->endpoint, endpoint, sizeof(*endpoint));
+  memset(&message->endpoint.di, 0, sizeof(oc_uuid_t));
+  if (packet->token_len > 0) {
+    coap_set_token(&msg, packet->token, packet->token_len);
+  }
+  coap_set_header_max_age(&msg, 0);
+  size_t len =
+    coap_serialize_message(&msg, message->data, oc_message_buffer_size());
+  if (len == 0) {
+    oc_message_unref(message);
+    return;
+  }
+
+  message->length = len;
+  coap_send_message(message);
+  OC_DBG("*** send OSCORE error (%u) ***", code);
 }
 
 int
@@ -267,6 +270,10 @@ coap_parse_oscore_option(coap_packet_t *packet, const uint8_t *current_option,
     option_length--;
 
     /* Store kid context */
+    if (kid_ctx_len > OSCORE_IDCTX_LEN) {
+      OC_ERR("oscore: invalid kid context length(%d)", kid_ctx_len);
+      return -1;
+    }
     memcpy(kid_ctx, current_option, kid_ctx_len);
     current_option += kid_ctx_len;
     option_length -= kid_ctx_len;
@@ -280,7 +287,7 @@ coap_parse_oscore_option(coap_packet_t *packet, const uint8_t *current_option,
   uint8_t kid[OSCORE_CTXID_LEN];
   uint8_t kid_len = 0;
   if ((oscore_flags & OSCORE_FLAGS_KID_BITMASK) != 0) {
-    if (option_length > UINT8_MAX) {
+    if (option_length > OSCORE_CTXID_LEN) {
       OC_ERR("oscore: invalid option length for kid(%zu)", option_length);
       return -1;
     }

@@ -95,7 +95,6 @@ coap_new_transaction(uint16_t mid, const uint8_t *token, uint8_t token_len,
 
   t->message = oc_message_allocate_outgoing();
   if (t->message == NULL) {
-
     oc_memb_free(&transactions_memb, t);
     return NULL;
   }

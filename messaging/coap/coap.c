@@ -732,7 +732,7 @@ coap_oscore_parse_inner_option(coap_packet_t *packet,
     ) {
       return NOT_ACCEPTABLE_4_06;
     }
-    packet->accept = accept;
+    packet->accept = (uint16_t)accept;
     return COAP_NO_ERROR;
   }
   case COAP_OPTION_URI_PATH:
@@ -862,6 +862,52 @@ coap_oscore_parse_inner_option(coap_packet_t *packet,
 }
 
 static coap_status_t
+coap_oscore_parse_outer_option(coap_packet_t *packet,
+                               unsigned int option_number, uint8_t *option,
+                               size_t option_length, bool validate)
+{
+  switch (option_number) {
+  case COAP_OPTION_PROXY_URI:
+    if (validate) {
+      return COAP_NO_ERROR;
+    }
+    /* coap_merge_multi_option() operates in-place on the IPBUF, but final
+     * packet field should be const string -> cast to string */
+    coap_merge_multi_option((char **)&(packet->proxy_uri),
+                            &(packet->proxy_uri_len), option, option_length,
+                            '\0');
+    OC_DBG("Proxy-Uri [%.*s]", (int)packet->proxy_uri_len, packet->proxy_uri);
+    return COAP_NO_ERROR;
+  case COAP_OPTION_URI_HOST:
+    packet->uri_host = (char *)option;
+    packet->uri_host_len = option_length;
+    OC_DBG("Uri-Host [%.*s]", (int)packet->uri_host_len, packet->uri_host);
+    return COAP_NO_ERROR;
+  case COAP_OPTION_URI_PORT: {
+    int64_t uri_port = coap_parse_int_option(option, option_length);
+    if (uri_port < 0 || uri_port > UINT16_MAX) {
+      return BAD_OPTION_4_02;
+    }
+    packet->uri_port = (uint16_t)uri_port;
+    OC_DBG("  Uri-Port [%u]", packet->uri_port);
+    return COAP_NO_ERROR;
+  }
+#if 0
+  case COAP_OPTION_PROXY_SCHEME:
+#if COAP_PROXY_OPTION_PROCESSING
+    packet->proxy_scheme = (char *)current_option;
+    packet->proxy_scheme_len = option_length;
+#endif
+    OC_DBG("Proxy-Scheme NOT IMPLEMENTED [%.*s]", (int)packet->proxy_scheme_len,
+           packet->proxy_scheme);
+    return PROXYING_NOT_SUPPORTED_5_05;
+#endif
+  }
+
+  return BAD_OPTION_4_02;
+}
+
+static coap_status_t
 coap_oscore_parse_option(coap_packet_t *packet, uint8_t *current_option,
                          bool inner, bool outer, bool oscore, bool validate,
                          unsigned int option_number, size_t option_length)
@@ -876,16 +922,6 @@ coap_oscore_parse_option(coap_packet_t *packet, uint8_t *current_option,
 #endif /* OC_TCP */
 
   switch (option_number) {
-#if defined(OC_OSCORE) && defined(OC_SECURITY)
-  case COAP_OPTION_OSCORE:
-    if (!outer || !oscore) {
-      return BAD_OPTION_4_02;
-    }
-    if (coap_parse_oscore_option(packet, current_option, option_length) != 0) {
-      return BAD_OPTION_4_02;
-    }
-    break;
-#endif /* OC_OSCORE && OC_SECURITY */
   case COAP_OPTION_CONTENT_FORMAT:
   case COAP_OPTION_ETAG:
   case COAP_OPTION_ACCEPT:
@@ -914,6 +950,33 @@ coap_oscore_parse_option(coap_packet_t *packet, uint8_t *current_option,
     }
     break;
   }
+#if defined(OC_OSCORE) && defined(OC_SECURITY)
+  case COAP_OPTION_OSCORE:
+    if (!outer || !oscore) {
+      return BAD_OPTION_4_02;
+    }
+    if (coap_parse_oscore_option(packet, current_option, option_length) != 0) {
+      return BAD_OPTION_4_02;
+    }
+    break;
+#endif /* OC_OSCORE && OC_SECURITY */
+  case COAP_OPTION_PROXY_URI:
+  case COAP_OPTION_URI_HOST:
+  case COAP_OPTION_URI_PORT:
+#if 0
+  case COAP_OPTION_PROXY_SCHEME:
+#endif
+  {
+    if (!outer) {
+      return BAD_OPTION_4_02;
+    }
+    coap_status_t ret = coap_oscore_parse_outer_option(
+      packet, option_number, current_option, option_length, validate);
+    if (ret != COAP_NO_ERROR) {
+      return ret;
+    }
+    break;
+  }
   case COAP_OPTION_MAX_AGE: {
     int64_t max_age = coap_parse_int_option(current_option, option_length);
     if (max_age < 0) {
@@ -921,54 +984,6 @@ coap_oscore_parse_option(coap_packet_t *packet, uint8_t *current_option,
     }
     packet->max_age = (uint32_t)max_age;
     OC_DBG("  Max-Age [%lu]", (unsigned long)packet->max_age);
-    break;
-  }
-  case COAP_OPTION_PROXY_URI:
-    if (!outer) {
-      return BAD_OPTION_4_02;
-    }
-    if (validate) {
-      break;
-    }
-    /* coap_merge_multi_option() operates in-place on the IPBUF, but final
-     * packet field should be const string -> cast to string */
-    coap_merge_multi_option((char **)&(packet->proxy_uri),
-                            &(packet->proxy_uri_len), current_option,
-                            option_length, '\0');
-    OC_DBG("Proxy-Uri [%.*s]", (int)packet->proxy_uri_len, packet->proxy_uri);
-    break;
-#if 0
-    case COAP_OPTION_PROXY_SCHEME:
-      if (!outer) {
-	return BAD_OPTION_4_02;
-      }
-#if COAP_PROXY_OPTION_PROCESSING
-      packet->proxy_scheme = (char *)current_option;
-      packet->proxy_scheme_len = option_length;
-#endif
-      OC_DBG("Proxy-Scheme NOT IMPLEMENTED [%.*s]",
-             (int)packet->proxy_scheme_len, packet->proxy_scheme);
-      return PROXYING_NOT_SUPPORTED_5_05;
-      break;
-#endif
-  case COAP_OPTION_URI_HOST:
-    if (!outer) {
-      return BAD_OPTION_4_02;
-    }
-    packet->uri_host = (char *)current_option;
-    packet->uri_host_len = option_length;
-    OC_DBG("Uri-Host [%.*s]", (int)packet->uri_host_len, packet->uri_host);
-    break;
-  case COAP_OPTION_URI_PORT: {
-    if (!outer) {
-      return BAD_OPTION_4_02;
-    }
-    int64_t uri_port = coap_parse_int_option(current_option, option_length);
-    if (uri_port < 0 || uri_port > UINT16_MAX) {
-      return BAD_OPTION_4_02;
-    }
-    packet->uri_port = (uint16_t)uri_port;
-    OC_DBG("  Uri-Port [%u]", packet->uri_port);
     break;
   }
   case COAP_OPTION_OBSERVE: {
