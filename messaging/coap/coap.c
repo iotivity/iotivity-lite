@@ -163,15 +163,16 @@ coap_log_2(uint16_t value)
   return (result - 1);
 }
 
-static uint32_t
+static int64_t
 coap_parse_int_option(const uint8_t *bytes, size_t length)
 {
+  if (length > 4) {
+    return -1;
+  }
   uint32_t var = 0;
-  size_t i = 0;
-
-  while (i < length) {
+  for (size_t i = 0; i < length; ++i) {
     var <<= 8;
-    var |= bytes[i++];
+    var |= bytes[i];
   }
   return var;
 }
@@ -630,12 +631,19 @@ coap_parse_signal_options(coap_packet_t *packet, unsigned int option_number,
   switch (packet->code) {
   case CSM_7_01:
     if (option_number == COAP_SIGNAL_OPTION_MAX_MSG_SIZE) {
-      packet->max_msg_size =
+      int64_t max_msg_size =
         coap_parse_int_option(current_option, option_length);
+      if (max_msg_size < 0) {
+        return BAD_OPTION_4_02;
+      }
+      packet->max_msg_size = (uint32_t)max_msg_size;
       OC_DBG("  Max-Message-Size [%" PRIu32 "]", packet->max_msg_size);
-    } else if (option_number == COAP_SIGNAL_OPTION_BLOCKWISE_TRANSFER) {
+      break;
+    }
+    if (option_number == COAP_SIGNAL_OPTION_BLOCKWISE_TRANSFER) {
       packet->blockwise_transfer = 1;
       OC_DBG("  Bert [%u]", packet->blockwise_transfer);
+      break;
     }
     break;
   case PING_7_02:
@@ -651,15 +659,25 @@ coap_parse_signal_options(coap_packet_t *packet, unsigned int option_number,
       packet->alt_addr_len = option_length;
       OC_DBG("  Alternative-Address [%.*s]", (int)packet->alt_addr_len,
              packet->alt_addr);
-    } else if (option_number == COAP_SIGNAL_OPTION_HOLD_OFF) {
-      packet->hold_off = coap_parse_int_option(current_option, option_length);
+      break;
+    }
+    if (option_number == COAP_SIGNAL_OPTION_HOLD_OFF) {
+      int64_t hold_off = coap_parse_int_option(current_option, option_length);
+      if (hold_off < 0) {
+        return BAD_OPTION_4_02;
+      }
+      packet->hold_off = (uint32_t)hold_off;
       OC_DBG("  Hold-Off [%" PRIu32 "]", packet->hold_off);
+      break;
     }
     break;
   case ABORT_7_05:
     if (option_number == COAP_SIGNAL_OPTION_BAD_CSM) {
-      packet->bad_csm_opt =
-        (uint16_t)coap_parse_int_option(current_option, option_length);
+      int64_t bad_csm = coap_parse_int_option(current_option, option_length);
+      if (bad_csm < 0 || bad_csm > UINT16_MAX) {
+        return BAD_OPTION_4_02;
+      }
+      packet->bad_csm_opt = (uint16_t)bad_csm;
       OC_DBG("  Bad-CSM-Option [%u]", packet->bad_csm_opt);
     }
     break;
@@ -667,7 +685,6 @@ coap_parse_signal_options(coap_packet_t *packet, unsigned int option_number,
     OC_ERR("unknown signal message.[%u]", packet->code);
     return BAD_REQUEST_4_00;
   }
-
   return COAP_NO_ERROR;
 }
 #endif /* OC_TCP */
@@ -679,9 +696,8 @@ coap_oscore_parse_inner_option(coap_packet_t *packet,
 {
   switch (option_number) {
   case COAP_OPTION_CONTENT_FORMAT: {
-    uint16_t content_format =
-      (uint16_t)coap_parse_int_option(option, option_length);
-    OC_DBG("  Content-Format [%u]", content_format);
+    int64_t content_format = coap_parse_int_option(option, option_length);
+    OC_DBG("  Content-Format [%" PRId64 "]", content_format);
     if (content_format != APPLICATION_VND_OCF_CBOR
 #ifdef OC_SPEC_VER_OIC
         && content_format != APPLICATION_CBOR
@@ -689,7 +705,7 @@ coap_oscore_parse_inner_option(coap_packet_t *packet,
     ) {
       return UNSUPPORTED_MEDIA_TYPE_4_15;
     }
-    packet->content_format = content_format;
+    packet->content_format = (uint16_t)content_format;
     return COAP_NO_ERROR;
   }
   case COAP_OPTION_ETAG:
@@ -701,8 +717,8 @@ coap_oscore_parse_inner_option(coap_packet_t *packet,
            packet->etag[7]); /*FIXME always prints 8 bytes */
     return COAP_NO_ERROR;
   case COAP_OPTION_ACCEPT: {
-    uint16_t accept = (uint16_t)coap_parse_int_option(option, option_length);
-    OC_DBG("  Accept [%u]", accept);
+    int64_t accept = coap_parse_int_option(option, option_length);
+    OC_DBG("  Accept [%" PRId64 "]", accept);
     if (accept != APPLICATION_VND_OCF_CBOR
 #ifdef OC_SPEC_VER_OIC
         && accept != APPLICATION_CBOR
@@ -741,8 +757,12 @@ coap_oscore_parse_inner_option(coap_packet_t *packet,
                             '&');
     OC_DBG("  Uri-Query [%.*s]", (int)packet->uri_query_len, packet->uri_query);
     return COAP_NO_ERROR;
-  case COAP_OPTION_BLOCK2:
-    packet->block2_num = coap_parse_int_option(option, option_length);
+  case COAP_OPTION_BLOCK2: {
+    int64_t block2_num = coap_parse_int_option(option, option_length);
+    if (block2_num < 0) {
+      return BAD_OPTION_4_02;
+    }
+    packet->block2_num = (uint32_t)block2_num;
     packet->block2_more = (packet->block2_num & 0x08) >> 3;
     packet->block2_size = (uint16_t)(16 << (packet->block2_num & 0x07));
     packet->block2_offset = (packet->block2_num & ~0x0000000F)
@@ -751,8 +771,13 @@ coap_oscore_parse_inner_option(coap_packet_t *packet,
     OC_DBG("  Block2 [%lu%s (%u B/blk)]", (unsigned long)packet->block2_num,
            packet->block2_more ? "+" : "", packet->block2_size);
     return COAP_NO_ERROR;
-  case COAP_OPTION_BLOCK1:
-    packet->block1_num = coap_parse_int_option(option, option_length);
+  }
+  case COAP_OPTION_BLOCK1: {
+    int64_t block1_num = coap_parse_int_option(option, option_length);
+    if (block1_num < 0) {
+      return BAD_OPTION_4_02;
+    }
+    packet->block1_num = (uint32_t)block1_num;
     packet->block1_more = (packet->block1_num & 0x08) >> 3;
     packet->block1_size = (uint16_t)(16 << (packet->block1_num & 0x07));
     packet->block1_offset = (packet->block1_num & ~0x0000000F)
@@ -761,24 +786,35 @@ coap_oscore_parse_inner_option(coap_packet_t *packet,
     OC_DBG("  Block1 [%lu%s (%u B/blk)]", (unsigned long)packet->block1_num,
            packet->block1_more ? "+" : "", packet->block1_size);
     return COAP_NO_ERROR;
-  case COAP_OPTION_SIZE2:
-    packet->size2 = coap_parse_int_option(option, option_length);
+  }
+  case COAP_OPTION_SIZE2: {
+    int64_t size2 = coap_parse_int_option(option, option_length);
+    if (size2 < 0) {
+      return BAD_OPTION_4_02;
+    }
+    packet->size2 = (uint32_t)size2;
     OC_DBG("  Size2 [%lu]", (unsigned long)packet->size2);
     return COAP_NO_ERROR;
-  case COAP_OPTION_SIZE1:
-    packet->size1 = coap_parse_int_option(option, option_length);
+  }
+  case COAP_OPTION_SIZE1: {
+    int64_t size1 = coap_parse_int_option(option, option_length);
+    if (size1 < 0) {
+      return BAD_OPTION_4_02;
+    }
+    packet->size1 = (uint32_t)size1;
     OC_DBG("  Size1 [%lu]", (unsigned long)packet->size1);
     return COAP_NO_ERROR;
+  }
   case OCF_OPTION_CONTENT_FORMAT_VER:
   case OCF_OPTION_ACCEPT_CONTENT_FORMAT_VER: {
-    uint16_t version = (uint16_t)coap_parse_int_option(option, option_length);
-    OC_DBG("  Content-format/accept-Version: [%u]", version);
+    int64_t version = coap_parse_int_option(option, option_length);
+    OC_DBG("  Content-format/accept-Version: [%" PRId64 "]", version);
     if (version < OCF_VER_1_0_0
 #ifdef OC_SPEC_VER_OIC
         && version != OIC_VER_1_1_0
 #endif /* OC_SPEC_VER_OIC */
     ) {
-      OC_WRN("Unsupported version %d %u", option_number, version);
+      OC_WRN("Unsupported version %d %" PRId64, option_number, version);
       return UNSUPPORTED_MEDIA_TYPE_4_15;
     }
     return COAP_NO_ERROR;
@@ -878,10 +914,15 @@ coap_oscore_parse_option(coap_packet_t *packet, uint8_t *current_option,
     }
     break;
   }
-  case COAP_OPTION_MAX_AGE:
-    packet->max_age = coap_parse_int_option(current_option, option_length);
+  case COAP_OPTION_MAX_AGE: {
+    int64_t max_age = coap_parse_int_option(current_option, option_length);
+    if (max_age < 0) {
+      return BAD_OPTION_4_02;
+    }
+    packet->max_age = (uint32_t)max_age;
     OC_DBG("  Max-Age [%lu]", (unsigned long)packet->max_age);
     break;
+  }
   case COAP_OPTION_PROXY_URI:
     if (!outer) {
       return BAD_OPTION_4_02;
@@ -918,19 +959,27 @@ coap_oscore_parse_option(coap_packet_t *packet, uint8_t *current_option,
     packet->uri_host_len = option_length;
     OC_DBG("Uri-Host [%.*s]", (int)packet->uri_host_len, packet->uri_host);
     break;
-  case COAP_OPTION_URI_PORT:
+  case COAP_OPTION_URI_PORT: {
     if (!outer) {
       return BAD_OPTION_4_02;
     }
-    packet->uri_port =
-      (uint16_t)coap_parse_int_option(current_option, option_length);
+    int64_t uri_port = coap_parse_int_option(current_option, option_length);
+    if (uri_port < 0 || uri_port > UINT16_MAX) {
+      return BAD_OPTION_4_02;
+    }
+    packet->uri_port = (uint16_t)uri_port;
     OC_DBG("  Uri-Port [%u]", packet->uri_port);
     break;
-  case COAP_OPTION_OBSERVE:
-    packet->observe =
-      (int32_t)coap_parse_int_option(current_option, option_length);
+  }
+  case COAP_OPTION_OBSERVE: {
+    int64_t observe = coap_parse_int_option(current_option, option_length);
+    if (observe < 0) {
+      return BAD_OPTION_4_02;
+    }
+    packet->observe = (int32_t)observe;
     OC_DBG("  Observe [%lu]", (unsigned long)packet->observe);
     break;
+  }
   default:
     OC_DBG("  unknown (%u)", option_number);
     /* check if critical (odd) */
