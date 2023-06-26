@@ -922,7 +922,7 @@ receive:
 
   // TODO: oc_message_shrink_buffer
   oc_network_receive_event(message);
-  return s == ADAPTER_STATUS_NONE ? 0 : 1;
+  return 1;
 }
 
 static int
