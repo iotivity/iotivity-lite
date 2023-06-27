@@ -325,14 +325,13 @@ oc_conv_byte_array_to_hex_string(const uint8_t *array, size_t array_len,
   if (*hex_str_len < array_len * 2 + 1) {
     return -1;
   }
-
-  *hex_str_len = 0;
+  size_t hlen = 0;
   for (size_t i = 0; i < array_len; i++) {
-    snprintf(hex_str + *hex_str_len, 3, "%02x", array[i]);
-    *hex_str_len += 2;
+    snprintf(hex_str + hlen, 3, "%02x", array[i]);
+    hlen += 2;
   }
-  hex_str[*hex_str_len++] = '\0';
-
+  hex_str[hlen] = '\0';
+  *hex_str_len = hlen;
   return 0;
 }
 

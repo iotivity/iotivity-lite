@@ -21,9 +21,11 @@
 #ifndef OC_HELPERS_H
 #define OC_HELPERS_H
 
+#include "oc_export.h"
+#include "util/oc_compiler.h"
 #include "util/oc_list.h"
 #include "util/oc_mmem.h"
-#include "oc_export.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -282,7 +284,8 @@ void _oc_free_array(
  * @param str_len size of the string
  */
 OC_API
-void oc_set_string(oc_string_t *dst, const char *str, size_t str_len);
+void oc_set_string(oc_string_t *dst, const char *str, size_t str_len)
+  OC_NONNULL(1);
 
 /**
  * @brief copy ocstring
@@ -292,7 +295,7 @@ void oc_set_string(oc_string_t *dst, const char *str, size_t str_len);
  * is memset to zeroes)
  */
 OC_API
-void oc_copy_string(oc_string_t *dst, const oc_string_t *src);
+void oc_copy_string(oc_string_t *dst, const oc_string_t *src) OC_NONNULL(1);
 
 /**
  * @brief new array
@@ -324,28 +327,32 @@ void _oc_alloc_string_array(
 /**
  * @brief convert array to hex
  *
- * @param[in] array array of bytes
+ * @param[in] array array of bytes (cannot be NULL)
  * @param[in] array_len length of the array
- * @param hex_str data as hex
- * @param hex_str_len lenght of the hex string
+ * @param[out] hex_str data as hex (cannot be NULL)
+ * @param[in,out] hex_str_len in: size of the hex_str array, out: string length
+ * of the output hex string (cannot be NULL)
  * @return int 0 success
  * @return int -1 on failure
  */
 int oc_conv_byte_array_to_hex_string(const uint8_t *array, size_t array_len,
-                                     char *hex_str, size_t *hex_str_len);
+                                     char *hex_str, size_t *hex_str_len)
+  OC_NONNULL();
 
 /**
  * @brief convert hex string to byte array
  *
- * @param[in] hex_str hex string input
+ * @param[in] hex_str hex string input (cannot be NULL)
  * @param[in] hex_str_len size of the hex string
- * @param array array of bytes
- * @param array_len byte array
+ * @param[out] array array of bytes (cannot be NULL)
+ * @param[in,out] array_len in: size of the of the \p array, out: length of the
+ * output array (cannot be NULL)
  * @return int 0 success
  * @return int -1 on failure
  */
 int oc_conv_hex_string_to_byte_array(const char *hex_str, size_t hex_str_len,
-                                     uint8_t *array, size_t *array_len);
+                                     uint8_t *array, size_t *array_len)
+  OC_NONNULL();
 
 #ifdef __cplusplus
 }

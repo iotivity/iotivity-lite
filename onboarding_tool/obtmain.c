@@ -1637,7 +1637,6 @@ provision_ace2(void)
   i = 0;
   while (i < num_resources) {
     oc_ace_res_t *res = oc_obt_ace_new_resource(ace);
-
     if (!res) {
       OC_PRINTF("\nERROR: Could not allocate new resource for ACE\n");
       oc_obt_free_ace(ace);
@@ -1715,6 +1714,7 @@ provision_ace2(void)
     OC_PRINTF("\nSuccessfully issued request to provision ACE\n");
   } else {
     OC_PRINTF("\nERROR issuing request to provision ACE\n");
+    oc_obt_free_ace(ace);
   }
 }
 

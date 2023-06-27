@@ -1312,6 +1312,7 @@ py_provision_ace_cloud_access(const char *uuid)
     OC_PRINTF("[C] Successfully issued request to provision ACE\n");
   } else {
     OC_PRINTF("[C] ERROR issuing request to provision ACE\n");
+    oc_obt_free_ace(ace);
   }
 }
 
@@ -1347,6 +1348,7 @@ py_provision_ace_to_obt(const char *uuid, const char *res_uri)
     OC_PRINTF("[C] Successfully issued request to provision ACE %s\n", res_uri);
   } else {
     OC_PRINTF("[C] ERROR issuing request to provision ACE %s\n", res_uri);
+    oc_obt_free_ace(ace);
   }
 }
 
@@ -1385,6 +1387,7 @@ py_provision_ace_device_resources(const char *device_uuid,
     OC_PRINTF("[C] Successfully issued request to provision ACE\n");
   } else {
     OC_PRINTF("[C] ERROR issuing request to provision ACE\n");
+    oc_obt_free_ace(ace);
   }
 }
 
@@ -1463,6 +1466,7 @@ py_provision_ace2(const char *target, const char *subject, const char *href,
     OC_PRINTF("[C] Successfully issued request to provision ACE\n");
   } else {
     OC_PRINTF("[C] ERROR issuing request to provision ACE\n");
+    oc_obt_free_ace(ace);
   }
 }
 
