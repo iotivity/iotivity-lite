@@ -30,12 +30,15 @@
  * callback prototypes to inform python layer that the onboarded/unonboarded
  * list has changed
  */
-typedef void (*changedCB)(char *uuid, char *state, char *event);
-typedef void (*diplomatCB)(char *anchor, char *uri, char *state, char *event,
-                           char *target, char *target_cred);
-typedef void (*resourceCB)(char *anchor, char *uri, char *types,
-                           char *interfaces);
-typedef void (*clientCB)(char *uuid, char *state, char *event);
+typedef void (*changedCB)(const char *uuid, const char *state,
+                          const char *event);
+typedef void (*diplomatCB)(const char *anchor, const char *uri,
+                           const char *state, const char *event,
+                           const char *target, const char *target_cred);
+typedef void (*resourceCB)(const char *anchor, const char *uri,
+                           const char *types, const char *interfaces);
+typedef void (*clientCB)(const char *uuid, const char *state,
+                         const char *event);
 
 /* Structure in app to track currently discovered owned/unowned devices */
 typedef struct device_handle_t
@@ -319,9 +322,6 @@ void factory_presets_cb(size_t device, void *data);
 
 OC_API
 void py_discover_resources(const char *uuid);
-
-OC_API
-void py_post(const char *uri, int value);
 
 OC_API
 void display_device_uuid(void);
