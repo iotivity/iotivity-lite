@@ -141,9 +141,14 @@ oc_oscore_add_context(size_t device, const char *senderid,
                       const char *recipientid, uint64_t ssn, const char *desc,
                       void *cred_entry, bool from_storage)
 {
-  oc_oscore_context_t *ctx = (oc_oscore_context_t *)oc_memb_alloc(&ctx_s);
+  if ((!senderid && !recipientid) || !cred_entry) {
+    OC_ERR("oc_oscore_add_context: invalid parameters");
+    return NULL;
+  }
 
-  if (!ctx || (!senderid && !recipientid) || !cred_entry) {
+  oc_oscore_context_t *ctx = (oc_oscore_context_t *)oc_memb_alloc(&ctx_s);
+  if (ctx == NULL) {
+    OC_ERR("oc_oscore_add_context: no memory to add new context");
     return NULL;
   }
 

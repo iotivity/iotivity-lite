@@ -182,7 +182,7 @@ oscore_parse_message(oc_message_t *message)
   const uint8_t *key = oscore_ctx->recvkey;
   uint8_t AAD[OSCORE_AAD_MAX_LEN];
   uint8_t AAD_len = 0;
-  uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
+  uint8_t nonce[OSCORE_AEAD_NONCE_LEN] = { 0 };
   /* If received Partial IV in message */
   if (oscore_pkt.piv_len > 0) {
     /* If message is request */

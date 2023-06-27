@@ -860,6 +860,8 @@ oc_cred_read_credusage(oc_sec_credusage_t credusage)
 const char *
 oc_cred_read_encoding(oc_sec_encoding_t encoding)
 {
+  // TODO: use oc_string_view_t
+
   switch (encoding) {
   case OC_ENCODING_BASE64:
     return OC_ENCODING_BASE64_STR;
@@ -897,15 +899,18 @@ oc_sec_encode_roles(const oc_tls_peer_t *client, size_t device,
     oc_rep_set_int(roles, credtype, cr->credtype);
     /* credusage */
     const char *credusage_string = oc_cred_read_credusage(cr->credusage);
-    if (strlen(credusage_string) > 4) {
-      oc_rep_set_text_string(roles, credusage, credusage_string);
+    size_t credusage_string_len = strlen(credusage_string);
+    if (credusage_string_len > 4) {
+      oc_rep_set_text_string_v1(roles, credusage, credusage_string,
+                                credusage_string_len);
     }
     /* publicdata */
     if (oc_string_len(cr->publicdata.data) > 0) {
       oc_rep_set_object(roles, publicdata);
       if (cr->publicdata.encoding == OC_ENCODING_PEM) {
-        oc_rep_set_text_string(publicdata, data,
-                               oc_string(cr->publicdata.data));
+        oc_rep_set_text_string_v1(publicdata, data,
+                                  oc_string(cr->publicdata.data),
+                                  oc_string_len(cr->publicdata.data));
       } else {
         oc_rep_set_byte_string(publicdata, data,
                                oc_cast(cr->publicdata.data, const uint8_t),
@@ -913,8 +918,10 @@ oc_sec_encode_roles(const oc_tls_peer_t *client, size_t device,
       }
       const char *encoding_string =
         oc_cred_read_encoding(cr->publicdata.encoding);
-      if (strlen(encoding_string) > 7) {
-        oc_rep_set_text_string(publicdata, encoding, encoding_string);
+      size_t encoding_string_len = strlen(encoding_string);
+      if (encoding_string_len > 7) {
+        oc_rep_set_text_string_v1(publicdata, encoding, encoding_string,
+                                  encoding_string_len);
       }
       oc_rep_close_object(roles, publicdata);
     }
@@ -946,7 +953,7 @@ oc_sec_encode_cred(size_t device, oc_interface_mask_t iface_mask,
     oc_rep_set_int(creds, credtype, cr->credtype);
     /* subjectuuid */
     if (cr->subjectuuid.id[0] == '*') {
-      oc_rep_set_text_string(creds, subjectuuid, "*");
+      oc_rep_set_text_string_v1(creds, subjectuuid, "*", 1);
     } else {
       oc_uuid_to_str(&cr->subjectuuid, uuid, OC_UUID_LEN);
       oc_rep_set_text_string(creds, subjectuuid, uuid);
@@ -955,10 +962,12 @@ oc_sec_encode_cred(size_t device, oc_interface_mask_t iface_mask,
     if ((to_storage || cr->credtype == OC_CREDTYPE_PSK) &&
         oc_string_len(cr->role.role) > 0) {
       oc_rep_set_object(creds, roleid);
-      oc_rep_set_text_string(roleid, role, oc_string(cr->role.role));
+      oc_rep_set_text_string_v1(roleid, role, oc_string(cr->role.role),
+                                oc_string_len(cr->role.role));
       if (oc_string_len(cr->role.authority) > 0) {
-        oc_rep_set_text_string(roleid, authority,
-                               oc_string(cr->role.authority));
+        oc_rep_set_text_string_v1(roleid, authority,
+                                  oc_string(cr->role.authority),
+                                  oc_string_len(cr->role.authority));
       }
       oc_rep_close_object(creds, roleid);
     }
@@ -970,46 +979,49 @@ oc_sec_encode_cred(size_t device, oc_interface_mask_t iface_mask,
                                oc_cast(cr->privatedata.data, const uint8_t),
                                oc_string_len(cr->privatedata.data));
       } else {
-        oc_rep_set_text_string(privatedata, data,
-                               oc_string(cr->privatedata.data));
+        oc_rep_set_text_string_v1(privatedata, data,
+                                  oc_string(cr->privatedata.data),
+                                  oc_string_len(cr->privatedata.data));
       }
     } else {
       if (cr->privatedata.encoding == OC_ENCODING_RAW) {
         oc_rep_set_byte_string(privatedata, data,
                                oc_cast(cr->privatedata.data, const uint8_t), 0);
       } else {
-        oc_rep_set_text_string(privatedata, data, "");
+        oc_rep_set_text_string_v1(privatedata, data, "", 0);
       }
     }
     const char *encoding_string =
       oc_cred_read_encoding(cr->privatedata.encoding);
-    if (strlen(encoding_string) > 7) {
-      oc_rep_set_text_string(privatedata, encoding, encoding_string);
-    } else {
-      oc_rep_set_text_string(privatedata, encoding, OC_ENCODING_RAW_STR);
+    size_t encoding_string_len = strlen(encoding_string);
+    if (encoding_string_len <= 7) {
+      encoding_string = OC_ENCODING_RAW_STR;
+      encoding_string_len = OC_CHAR_ARRAY_LEN(OC_ENCODING_RAW_STR);
     }
+    oc_rep_set_text_string_v1(privatedata, encoding, encoding_string,
+                              encoding_string_len);
     oc_rep_close_object(creds, privatedata);
 #ifdef OC_OSCORE
     /* oscore */
     if (cr->oscore_ctx) {
       oc_oscore_context_t *oscore_ctx = (oc_oscore_context_t *)cr->oscore_ctx;
       char hex_str[OSCORE_CTXID_LEN * 2 + 1];
-      size_t hex_str_len;
       oc_rep_set_object(creds, oscore);
       if (cr->credtype != OC_CREDTYPE_OSCORE_MCAST_SERVER) {
-        hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
+        size_t hex_str_len = sizeof(hex_str);
         oc_conv_byte_array_to_hex_string(
           oscore_ctx->sendid, oscore_ctx->sendid_len, hex_str, &hex_str_len);
-        oc_rep_set_text_string(oscore, senderid, hex_str);
+        oc_rep_set_text_string_v1(oscore, senderid, hex_str, hex_str_len);
       }
       if (cr->credtype != OC_CREDTYPE_OSCORE_MCAST_CLIENT) {
-        hex_str_len = OSCORE_CTXID_LEN * 2 + 1;
+        size_t hex_str_len = sizeof(hex_str);
         oc_conv_byte_array_to_hex_string(
           oscore_ctx->recvid, oscore_ctx->recvid_len, hex_str, &hex_str_len);
-        oc_rep_set_text_string(oscore, recipientid, hex_str);
+        oc_rep_set_text_string_v1(oscore, recipientid, hex_str, hex_str_len);
       }
       if (cr->credtype != OC_CREDTYPE_OSCORE) {
-        oc_rep_set_text_string(oscore, desc, oc_string(oscore_ctx->desc));
+        oc_rep_set_text_string_v1(oscore, desc, oc_string(oscore_ctx->desc),
+                                  oc_string_len(oscore_ctx->desc));
       }
       if (cr->credtype != OC_CREDTYPE_OSCORE_MCAST_SERVER) {
         oc_rep_set_int(oscore, ssn, oscore_ctx->ssn);
@@ -1020,15 +1032,18 @@ oc_sec_encode_cred(size_t device, oc_interface_mask_t iface_mask,
 #ifdef OC_PKI
     /* credusage */
     const char *credusage_string = oc_cred_read_credusage(cr->credusage);
-    if (strlen(credusage_string) > 4) {
-      oc_rep_set_text_string(creds, credusage, credusage_string);
+    size_t credusage_string_len = strlen(credusage_string);
+    if (credusage_string_len > 4) {
+      oc_rep_set_text_string_v1(creds, credusage, credusage_string,
+                                credusage_string_len);
     }
     /* publicdata */
     if (oc_string_len(cr->publicdata.data) > 0) {
       oc_rep_set_object(creds, publicdata);
       if (cr->publicdata.encoding == OC_ENCODING_PEM) {
-        oc_rep_set_text_string(publicdata, data,
-                               oc_string(cr->publicdata.data));
+        oc_rep_set_text_string_v1(publicdata, data,
+                                  oc_string(cr->publicdata.data),
+                                  oc_string_len(cr->publicdata.data));
       } else {
         oc_rep_set_byte_string(publicdata, data,
                                oc_cast(cr->publicdata.data, const uint8_t),
@@ -1036,15 +1051,18 @@ oc_sec_encode_cred(size_t device, oc_interface_mask_t iface_mask,
       }
       const char *encoding_string =
         oc_cred_read_encoding(cr->publicdata.encoding);
-      if (strlen(encoding_string) > 7) {
-        oc_rep_set_text_string(publicdata, encoding, encoding_string);
+      size_t encoding_string_len = strlen(encoding_string);
+      if (encoding_string_len > 7) {
+        oc_rep_set_text_string_v1(publicdata, encoding, encoding_string,
+                                  encoding_string_len);
       }
       oc_rep_close_object(creds, publicdata);
     }
     if (to_storage) {
       oc_rep_set_boolean(creds, owner_cred, cr->owner_cred);
-      if ((oc_string(cr->tag) != NULL) && (oc_string_len(cr->tag) > 0)) {
-        oc_rep_set_text_string(creds, tag, oc_string(cr->tag));
+      if (oc_string_len(cr->tag) > 0) {
+        oc_rep_set_text_string_v1(creds, tag, oc_string(cr->tag),
+                                  oc_string_len(cr->tag));
       }
     }
 #endif /* OC_PKI */
