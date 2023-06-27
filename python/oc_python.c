@@ -18,8 +18,6 @@
  *
  ****************************************************************************/
 
-// #define OC_SERVER
-
 #include "oc_api.h"
 #include "oc_clock_util.h"
 #include "oc_core_res.h"
@@ -56,11 +54,11 @@
 #define MAX_URI_LENGTH (30)
 
 /* Pool of device handles */
-OC_MEMB(device_handles, device_handle_t, MAX_NUM_DEVICES);
+OC_MEMB(g_device_handles_s, device_handle_t, MAX_NUM_DEVICES);
 /* List of known owned devices */
-OC_LIST(owned_devices);
+OC_LIST(g_owned_devices);
 /* List of known un-owned devices */
-OC_LIST(unowned_devices);
+OC_LIST(g_unowned_devices);
 
 #ifdef OC_SO
 /* Diplomat resource information */
@@ -180,7 +178,7 @@ inform_python(const char *uuid, const char *state, const char *event)
 {
   // OC_PRINTF("[C]inform_python %p\n",my_CBFunctions.changedFCB);
   if (my_CBFunctions.changedFCB != NULL) {
-    my_CBFunctions.changedFCB((char *)uuid, (char *)state, (char *)event);
+    my_CBFunctions.changedFCB(uuid, state, event);
   }
 }
 
@@ -191,8 +189,7 @@ inform_resource_python(const char *anchor, const char *uri, const char *types,
   // OC_PRINTF("[C]inform_resource_python %p %s %s [%s]
   // [%s]\n",my_CBFunctions.resourceFCB, anchor, uri, types, interfaces);
   if (my_CBFunctions.resourceFCB != NULL) {
-    my_CBFunctions.resourceFCB((char *)anchor, (char *)uri, (char *)types,
-                               (char *)interfaces);
+    my_CBFunctions.resourceFCB(anchor, uri, types, interfaces);
   }
 }
 
@@ -232,9 +229,7 @@ inform_diplomat_python(const char *anchor, const char *uri, const char *state,
   // OC_PRINTF("[C]inform_python %p\n", (void
   // *)(uintptr_t)my_CBFunctions.diplomatFCB);
   if (my_CBFunctions.diplomatFCB != NULL) {
-    my_CBFunctions.diplomatFCB((char *)anchor, (char *)uri, (char *)state,
-                               (char *)event, (char *)target,
-                               (char *)target_cred);
+    my_CBFunctions.diplomatFCB(anchor, uri, state, event, target, target_cred);
   }
 }
 
@@ -244,7 +239,7 @@ inform_client_python(const char *uuid, const char *state, const char *event)
   // OC_PRINTF("[C]inform_python %p\n", (void
   // *)(uintptr_t)my_CBFunctions.clientFCB);
   if (my_CBFunctions.clientFCB != NULL) {
-    my_CBFunctions.clientFCB((char *)uuid, (char *)state, (char *)event);
+    my_CBFunctions.clientFCB(uuid, state, event);
   }
 }
 
@@ -253,9 +248,9 @@ py_getdevice_from_uuid(const char *uuid, int owned)
 {
   device_handle_t *device = NULL;
   if (owned == 1) {
-    device = (device_handle_t *)oc_list_head(owned_devices);
+    device = (device_handle_t *)oc_list_head(g_owned_devices);
   } else {
-    device = (device_handle_t *)oc_list_head(unowned_devices);
+    device = (device_handle_t *)oc_list_head(g_unowned_devices);
   }
 
   while (device != NULL) {
@@ -394,24 +389,18 @@ is_device_in_list(const oc_uuid_t *uuid, oc_list_t list)
   return NULL;
 }
 
-static device_handle_t *
-get_obt_device(oc_uuid_t *uuid, const char *device_name)
+static void
+set_obt_device(device_handle_t *device, const oc_uuid_t *uuid,
+               const char *device_name)
 {
-  device_handle_t *device;
-  device = oc_memb_alloc(&device_handles);
-  if (!device) {
-    return false;
-  }
-  memcpy(device->uuid.id, uuid->id, 16);
-
+  memcpy(device->uuid.id, uuid->id, sizeof(uuid->id));
   size_t len = 0;
-  if (device_name) {
+  if (device_name != NULL) {
     len = strlen(device_name);
     len = (len > 63) ? 63 : len;
     memcpy(device->device_name, device_name, len);
   }
   device->device_name[len] = '\0';
-  return device;
 }
 
 static bool
@@ -421,7 +410,7 @@ add_device_to_list(const oc_uuid_t *uuid, const char *device_name,
   device_handle_t *device = is_device_in_list(uuid, list);
 
   if (!device) {
-    device = oc_memb_alloc(&device_handles);
+    device = oc_memb_alloc(&g_device_handles_s);
     if (!device) {
       return false;
     }
@@ -444,7 +433,7 @@ empty_device_list(oc_list_t list)
 {
   device_handle_t *device = (device_handle_t *)oc_list_pop(list);
   while (device != NULL) {
-    oc_memb_free(&device_handles, device);
+    oc_memb_free(&g_device_handles_s, device);
     device = (device_handle_t *)oc_list_pop(list);
   }
 }
@@ -464,26 +453,29 @@ get_cb_result(void)
 static void
 get_device(oc_client_response_t *data)
 {
-  oc_rep_t *rep = data->payload;
-  char *di = NULL, *n = NULL;
-  size_t di_len = 0, n_len = 0;
-
-  if (oc_rep_get_string(rep, "di", &di, &di_len)) {
-    oc_uuid_t uuid;
-    oc_str_to_uuid(di, &uuid);
-    if (!oc_rep_get_string(rep, "n", &n, &n_len)) {
-      n = NULL;
-      n_len = 0;
-    }
-
-    OC_PRINTF("[C] adding device to list.%s.%s\n", di, n);
-    add_device_to_list(&uuid, n, data->user_data);
-
-    bool owned = oc_obt_is_owned_device(&uuid);
-    const char *state = owned ? "owned" : "unowned";
-    OC_PRINTF("[C] adding device to list...\n");
-    inform_python(di, state, NULL);
+  const oc_rep_t *rep = data->payload;
+  char *di = NULL;
+  size_t di_len = 0;
+  if (!oc_rep_get_string(rep, "di", &di, &di_len)) {
+    return;
   }
+
+  char *n = NULL;
+  size_t n_len = 0;
+  oc_uuid_t uuid;
+  oc_str_to_uuid(di, &uuid);
+  if (!oc_rep_get_string(rep, "n", &n, &n_len)) {
+    n = NULL;
+    n_len = 0;
+  }
+
+  OC_PRINTF("[C] adding device to list.%s.%s\n", di, n);
+  add_device_to_list(&uuid, n, data->user_data);
+
+  bool owned = oc_obt_is_owned_device(&uuid);
+  const char *state = owned ? "owned" : "unowned";
+  OC_PRINTF("[C] adding device to list...\n");
+  inform_python(di, state, NULL);
 }
 
 static void
@@ -491,17 +483,7 @@ unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 {
   (void)data;
   (void)uuid;
-  // char di[OC_UUID_LEN];
-  // oc_uuid_to_str(uuid, di, sizeof(di));
-  const oc_endpoint_t *ep = eps;
-
-  // while (eps != NULL) {
-  // OC_PRINTipaddr(*eps);
-  // OC_PRINTF("[C]\n");
-  // eps = eps->next;
-  //}
-
-  oc_do_get("/oic/d", ep, NULL, &get_device, HIGH_QOS, unowned_devices);
+  oc_do_get("/oic/d", eps, NULL, &get_device, HIGH_QOS, g_unowned_devices);
 }
 
 static void
@@ -509,18 +491,7 @@ owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 {
   (void)data;
   (void)uuid;
-  //(void) eps;
-  // char di[OC_UUID_LEN];
-  // oc_uuid_to_str(uuid, di, sizeof(di));
-  const oc_endpoint_t *ep = eps;
-
-  // while (eps != NULL) {
-  // OC_PRINTipaddr(*eps);
-  // OC_PRINTF("[C]\n");
-  //  eps = eps->next;
-  //}
-
-  oc_do_get("/oic/d", ep, NULL, &get_device, HIGH_QOS, owned_devices);
+  oc_do_get("/oic/d", eps, NULL, &get_device, HIGH_QOS, g_owned_devices);
 }
 
 void
@@ -575,27 +546,27 @@ static void
 otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
 {
   device_handle_t *device = (device_handle_t *)data;
-  memcpy(device->uuid.id, uuid->id, 16);
   char di[OC_UUID_LEN];
   oc_uuid_to_str(uuid, di, sizeof(di));
-
-  if (status >= 0) {
-    OC_PRINTF("[C]\nSuccessfully performed OTM on device %s\n", di);
-    oc_list_add(owned_devices, device);
-    inform_python(NULL, NULL, NULL);
-  } else {
+  if (status < 0) {
     OC_PRINTF("[C]\nERROR performing ownership transfer on device %s\n", di);
-    oc_memb_free(&device_handles, device);
+    oc_memb_free(&g_device_handles_s, device);
+    return;
   }
+
+  memcpy(device->uuid.id, uuid->id, sizeof(uuid->id));
+  OC_PRINTF("[C]\nSuccessfully performed OTM on device %s\n", di);
+  oc_list_add(g_owned_devices, device);
+  inform_python(NULL, NULL, NULL);
 }
 
 void
 py_otm_rdp(const char *uuid, const char *pin)
 {
-  device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
+  device_handle_t *device = (device_handle_t *)oc_list_head(g_unowned_devices);
   device_handle_t *devices[MAX_NUM_DEVICES];
-  int i = 0, c = -1;
-
+  int i = 0;
+  int c = -1;
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
@@ -620,7 +591,7 @@ py_otm_rdp(const char *uuid, const char *pin)
     /* Having issued an OTM request, remove this item from the unowned device
      * list
      */
-    oc_list_remove(unowned_devices, devices[c]);
+    oc_list_remove(g_unowned_devices, devices[c]);
   } else {
     OC_PRINTF("[C]\nERROR issuing request to perform Random PIN OTM\n");
   }
@@ -648,10 +619,10 @@ random_pin_cb(oc_uuid_t *uuid, int status, void *data)
 void
 py_request_random_pin(const char *uuid)
 {
-  device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
+  device_handle_t *device = (device_handle_t *)oc_list_head(g_unowned_devices);
   device_handle_t *devices[MAX_NUM_DEVICES];
-  int i = 0, c = -1;
-
+  int i = 0;
+  int c = -1;
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
@@ -684,18 +655,18 @@ void
 otm_cert_cb(oc_uuid_t *uuid, int status, void *data)
 {
   device_handle_t *device = (device_handle_t *)data;
-  memcpy(device->uuid.id, uuid->id, 16);
   char di[OC_UUID_LEN];
   oc_uuid_to_str(uuid, di, sizeof(di));
-
-  if (status >= 0) {
-    OC_PRINTF("[C]\nSuccessfully performed OTM on device %s\n", di);
-    oc_list_add(owned_devices, device);
-    inform_python(NULL, NULL, NULL);
-  } else {
+  if (status < 0) {
     OC_PRINTF("[C]\nERROR performing ownership transfer on device %s\n", di);
-    oc_memb_free(&device_handles, device);
+    oc_memb_free(&g_device_handles_s, device);
+    return;
   }
+
+  memcpy(device->uuid.id, uuid->id, sizeof(uuid->id));
+  OC_PRINTF("[C]\nSuccessfully performed OTM on device %s\n", di);
+  oc_list_add(g_owned_devices, device);
+  inform_python(NULL, NULL, NULL);
 }
 
 #endif /* OC_PKI */
@@ -704,28 +675,27 @@ static void
 otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
 {
   device_handle_t *device = (device_handle_t *)data;
-  memcpy(device->uuid.id, uuid->id, 16);
+  memcpy(device->uuid.id, uuid->id, sizeof(uuid->id));
   char di[OC_UUID_LEN];
   oc_uuid_to_str(uuid, di, sizeof(di));
 
-  if (status >= 0) {
-    OC_PRINTF("[C]\nSuccessfully performed OTM on device with UUID %s\n", di);
-    oc_list_add(owned_devices, device);
-    inform_python(NULL, NULL, NULL);
-    cb_result = true;
-  } else {
-    oc_memb_free(&device_handles, device);
+  if (status < 0) {
+    oc_memb_free(&g_device_handles_s, device);
     OC_PRINTF("[C]\nERROR performing ownership transfer on device %s\n", di);
     cb_result = false;
+    return;
   }
+  OC_PRINTF("[C]\nSuccessfully performed OTM on device with UUID %s\n", di);
+  oc_list_add(g_owned_devices, device);
+  inform_python(NULL, NULL, NULL);
+  cb_result = true;
 }
 
 void
 py_list_unowned_devices(void)
 {
-  device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
+  device_handle_t *device = (device_handle_t *)oc_list_head(g_unowned_devices);
   int i = 0;
-
   OC_PRINTF("[C] py_list_unowned_devices:\n");
   while (device != NULL) {
     char di[OC_UUID_LEN];
@@ -739,9 +709,8 @@ py_list_unowned_devices(void)
 void
 py_list_owned_devices(void)
 {
-  device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
+  device_handle_t *device = (device_handle_t *)oc_list_head(g_owned_devices);
   int i = 0;
-
   OC_PRINTF("[C] py_list_owned_devices:\n");
   while (device != NULL) {
     char di[OC_UUID_LEN];
@@ -755,10 +724,10 @@ py_list_owned_devices(void)
 void
 py_otm_just_works(const char *uuid)
 {
-  device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
+  device_handle_t *device = (device_handle_t *)oc_list_head(g_unowned_devices);
   device_handle_t *devices[MAX_NUM_DEVICES];
-  int i = 0, c = -1;
-
+  int i = 0;
+  int c = -1;
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
@@ -784,7 +753,7 @@ py_otm_just_works(const char *uuid)
     /* Having issued an OTM request, remove this item from the unowned device
      * list
      */
-    oc_list_remove(unowned_devices, devices[c]);
+    oc_list_remove(g_unowned_devices, devices[c]);
     inform_python(NULL, NULL, NULL);
   } else {
     OC_PRINTF("[C] ERROR issuing request to perform ownership transfer\n");
@@ -990,7 +959,7 @@ reset_device_cb(oc_uuid_t *uuid, int status, void *data)
 
   if (status < 0) {
     OC_PRINTF("[C]\nERROR performing hard RESET to device %s\n", di);
-    oc_memb_free(&device_handles, data);
+    oc_memb_free(&g_device_handles_s, data);
     cb_result = false;
     return;
   }
@@ -999,8 +968,8 @@ reset_device_cb(oc_uuid_t *uuid, int status, void *data)
   inform_python(NULL, NULL, NULL);
 
   device_handle_t *device = py_getdevice_from_uuid(di, 1);
-  oc_list_remove(owned_devices, device);
-  oc_memb_free(&device_handles, data);
+  oc_list_remove(g_owned_devices, device);
+  oc_memb_free(&g_device_handles_s, data);
 
   const char *state = "reset";
   inform_python(di, state, NULL);
@@ -1010,7 +979,7 @@ reset_device_cb(oc_uuid_t *uuid, int status, void *data)
 int
 py_get_nr_owned_devices(void)
 {
-  return (oc_list_length(owned_devices));
+  return (oc_list_length(g_owned_devices));
 }
 
 const char *
@@ -1018,9 +987,9 @@ get_uuid(int owned, int index)
 {
   device_handle_t *device = NULL;
   if (owned == 1) {
-    device = (device_handle_t *)oc_list_head(owned_devices);
+    device = (device_handle_t *)oc_list_head(g_owned_devices);
   } else {
-    device = (device_handle_t *)oc_list_head(unowned_devices);
+    device = (device_handle_t *)oc_list_head(g_unowned_devices);
   }
 
   int i = 0;
@@ -1041,9 +1010,9 @@ get_device_name(int owned, int index)
 {
   device_handle_t *device = NULL;
   if (owned == 1) {
-    device = (device_handle_t *)oc_list_head(owned_devices);
+    device = (device_handle_t *)oc_list_head(g_owned_devices);
   } else {
-    device = (device_handle_t *)oc_list_head(unowned_devices);
+    device = (device_handle_t *)oc_list_head(g_unowned_devices);
   }
 
   int i = 0;
@@ -1063,7 +1032,7 @@ const char *
 get_device_name_from_uuid(const char *uuid)
 {
   device_handle_t *device = NULL;
-  device = (device_handle_t *)oc_list_head(owned_devices);
+  device = (device_handle_t *)oc_list_head(g_owned_devices);
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
@@ -1073,7 +1042,7 @@ get_device_name_from_uuid(const char *uuid)
     device = device->next;
   }
 
-  device = (device_handle_t *)oc_list_head(unowned_devices);
+  device = (device_handle_t *)oc_list_head(g_unowned_devices);
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
@@ -1088,7 +1057,7 @@ get_device_name_from_uuid(const char *uuid)
 int
 py_get_nr_unowned_devices(void)
 {
-  return (oc_list_length(unowned_devices));
+  return (oc_list_length(g_unowned_devices));
 }
 
 void
@@ -1249,7 +1218,7 @@ void
 py_provision_pairwise_credentials(const char *uuid1, const char *uuid2)
 {
   OC_PRINTF("[C] Source %s, Target %s", uuid1, uuid2);
-  if (oc_list_length(owned_devices) == 0) {
+  if (oc_list_length(g_owned_devices) == 0) {
     OC_PRINTF("[C]\n\nPlease Re-Discover Owned devices\n");
     return;
   }
@@ -1423,28 +1392,29 @@ void
 py_provision_ace2(const char *target, const char *subject, const char *href,
                   char *crudn)
 {
+  assert(target != NULL);
+  assert(subject != NULL);
+  assert(href != NULL);
+  assert(crudn != NULL);
   OC_PRINTF("[C] Provision ACE2: %s,%s,%s,%s\n", target, subject, href, crudn);
   const device_handle_t *device = py_getdevice_from_uuid(target, 1);
+  device_handle_t subject_device_obt;
   const device_handle_t *subject_device = py_getdevice_from_uuid(subject, 1);
 
   /*check if subject is OBT device*/
-  oc_uuid_t *obt_uuid = oc_core_get_device_id(0);
+  const oc_uuid_t *obt_uuid = oc_core_get_device_id(0);
   char di[OC_UUID_LEN];
   oc_uuid_to_str(obt_uuid, di, OC_UUID_LEN);
   if (strncmp(di, subject, OC_UUID_LEN) == 0) {
-    subject_device = get_obt_device(obt_uuid, "OBT");
-    if (subject_device == NULL) {
-      OC_PRINTF("[C]py_provision_ace_access ERROR: Invalid OBT subject uuid\n");
-      return;
-    }
+    memset(&subject_device_obt, 0, sizeof(device_handle_t));
+    set_obt_device(&subject_device_obt, obt_uuid, "OBT");
+    subject_device = &subject_device_obt;
   }
-
   if (device == NULL) {
     OC_PRINTF("[C]py_provision_ace_access ERROR: Invalid uuid\n");
     return;
   }
   if (subject_device == NULL) {
-
     OC_PRINTF("[C]py_provision_ace_access ERROR: Invalid subject uuid\n");
     return;
   }
@@ -1459,8 +1429,7 @@ py_provision_ace2(const char *target, const char *subject, const char *href,
   OC_PRINTF("[C] py_provision_ace: name = %s  href = %s crudn=%s",
             device->device_name, href, crudn);
 
-  oc_sec_ace_t *ace = NULL;
-  ace = oc_obt_new_ace_for_subject(&subject_device->uuid);
+  oc_sec_ace_t *ace = oc_obt_new_ace_for_subject(&subject_device->uuid);
 
   oc_ace_res_t *res = oc_obt_ace_new_resource(ace);
   oc_obt_ace_resource_set_href(res, href);
@@ -1874,8 +1843,8 @@ factory_presets_cb(size_t device, void *data)
   (void)device;
   (void)data;
   oc_obt_shutdown();
-  empty_device_list(owned_devices);
-  empty_device_list(unowned_devices);
+  empty_device_list(g_owned_devices);
+  empty_device_list(g_unowned_devices);
   oc_obt_init();
 #if defined(OC_SECURITY) && defined(OC_PKI)
   char cert[8192];
@@ -1931,7 +1900,7 @@ resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
     strcat(json, "\"types\": [");
     int array_size = (int)oc_string_array_get_allocated_size(types);
     for (int i = 0; i < array_size; i++) {
-      char *t = oc_string_array_get_item(types, i);
+      const char *t = oc_string_array_get_item(types, i);
       strcat(strtypes, "\"");
       strcat(strtypes, t);
       strcat(strtypes, "\"");
@@ -2035,26 +2004,6 @@ py_discover_resources(const char *uuid)
 }
 
 void
-py_post(const char *uri, int value)
-{
-  OC_PRINTF("[C] POST_light: %s-> %d\n", uri, value);
-  // static oc_endpoint_t *light_server;
-  /*
-  if (oc_init_post(a_light, light_server, NULL, &post2_light, LOW_QOS, NULL)) {
-    oc_rep_start_root_object();
-    oc_rep_set_boolean(root, state, true);
-    oc_rep_set_int(root, power, 55);
-    oc_rep_end_root_object();
-    if (oc_do_post())
-      OC_PRINTF("Sent POST request\n");
-    else
-      OC_PRINTF("Could not send POST request\n");
-  } else
-    OC_PRINTF("Could not init POST request\n");
-  */
-}
-
-void
 display_device_uuid(void)
 {
   char buffer[OC_UUID_LEN];
@@ -2092,9 +2041,9 @@ so_otm_cb(oc_uuid_t *uuid, int status, void *data)
   if (status >= 0) {
     OC_PRINTF("\nSuccessfully performed OTM on device with UUID %s\n", di);
     inform_diplomat_python("", "", "", "so_otm:true", di, "");
-    // oc_list_add(owned_devices, device);
+    // oc_list_add(g_owned_devices, device);
   } else {
-    // oc_memb_free(&device_handles, device);
+    // oc_memb_free(&g_device_handles_s, device);
     OC_PRINTF("\nERROR performing ownership transfer on device %s\n", di);
     inform_diplomat_python("", "", "", "so_otm:false", di, "");
   }
@@ -2283,18 +2232,15 @@ post_light_response_cb(oc_client_response_t *data)
   if (data->code > OC_STATUS_CHANGED) {
     OC_PRINTF("ERROR: POST returned unexpected response code %d\n", data->code);
   }
-  // external_cb(&my_state);
-  // my_state.error_state = false;
 }
 static void
 get_light_cb(oc_client_response_t *data)
 {
   OC_PRINTF("GET_light:\n");
-  oc_rep_t *rep = data->payload;
+  const oc_rep_t *rep = data->payload;
 
   if (data->code > 4) {
     OC_PRINTF("GET failed with code %d\n", data->code);
-    // char* c = (char *) data->code;
     char code[40];
     snprintf(code, sizeof(code), "observe_fail:%d", data->code);
     return;
@@ -2313,8 +2259,8 @@ get_light_cb(oc_client_response_t *data)
     case OC_REP_STRING:
       OC_PRINTF("%s\n", oc_string(rep->value.string));
       oc_free_string(&name);
-      //  oc_new_string(&name, oc_string(rep->value.string),
-      //  oc_string_len(rep->value.string));
+      oc_new_string(&name, oc_string(rep->value.string),
+                    oc_string_len(rep->value.string));
       break;
     default:
       break;
@@ -2322,6 +2268,7 @@ get_light_cb(oc_client_response_t *data)
     rep = rep->next;
   }
 }
+
 static oc_discovery_flags_t
 discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
              oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
@@ -2375,14 +2322,16 @@ doxm_discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
     OC_PRINTF("\n");
     ep = ep->next;
   }
-  /*
+
+#if 0
   if (oc_rep_get_int_array(data->payload, "oxms", &oxms, &oxms_len)) {
     size_t i;
     for (i = 0; i < oxms_len; i++) {
      OC_PRINTF("[C] %d \n",oxms[i]);
     }
   }
-  */
+#endif
+
   return OC_STOP_DISCOVERY;
 }
 
@@ -2395,12 +2344,12 @@ discover_doxm(void)
   }
   otb_mutex_unlock(app_sync_lock);
 
-  /*
+#if 0
   OC_PRINTF("[C] Discover Doxm %s\n",uuid);
-  if (oc_do_get("/oic/sec/doxm", ep, NULL, &doxm_discovery_cb, HIGH_QOS, NULL))
-  { OC_PRINTF("[C] doxm return\n");
+  if (oc_do_get("/oic/sec/doxm", ep, NULL, &doxm_discovery_cb, HIGH_QOS, NULL)) { 
+    OC_PRINTF("[C] doxm return\n");
   }
-  */
+#endif
 }
 
 void
@@ -2416,32 +2365,32 @@ void
 change_light(int value)
 {
   OC_PRINTF("[C] POST_light: %d\n", value);
-  //(void)value;
   bool light_cmd;
   if (value == 1) {
     light_cmd = true;
   } else {
     light_cmd = false;
   }
-  /*
+
+#if 0
   OC_PRINTF("SETTING LIGHT\n");
-    otb_mutex_lock(app_sync_lock);
+  otb_mutex_lock(app_sync_lock);
   if (!oc_do_ip_discovery("core.light", &discovery_cb, NULL)) {
-  OC_PRINTF("Failed to discover Devices\n");
-  }
-  else{
+    OC_PRINTF("Failed to discover Devices\n");
+  } else {
     OC_PRINTF("Discovered device\n");
   }
   if(!discovered){
+    otb_mutex_unlock(app_sync_lock);
     return;
   }
-    otb_mutex_unlock(app_sync_lock);
-    */
+  otb_mutex_unlock(app_sync_lock);
+#endif
+
   if (oc_init_post(a_light, light_server, NULL, &post_light_response_cb,
                    LOW_QOS, NULL)) {
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, state, light_cmd);
-    // oc_rep_set_int(root, power, 55);
     oc_rep_end_root_object();
     if (oc_do_post())
       OC_PRINTF("Sent POST request\n");
@@ -2585,15 +2534,15 @@ python_main(void)
 #endif
 
   /* Free all device_handle_t objects allocated by this application */
-  device_handle_t *device = (device_handle_t *)oc_list_pop(owned_devices);
+  device_handle_t *device = (device_handle_t *)oc_list_pop(g_owned_devices);
   while (device) {
-    oc_memb_free(&device_handles, device);
-    device = (device_handle_t *)oc_list_pop(owned_devices);
+    oc_memb_free(&g_device_handles_s, device);
+    device = (device_handle_t *)oc_list_pop(g_owned_devices);
   }
-  device = (device_handle_t *)oc_list_pop(unowned_devices);
+  device = (device_handle_t *)oc_list_pop(g_unowned_devices);
   while (device) {
-    oc_memb_free(&device_handles, device);
-    device = (device_handle_t *)oc_list_pop(unowned_devices);
+    oc_memb_free(&g_device_handles_s, device);
+    device = (device_handle_t *)oc_list_pop(g_unowned_devices);
   }
 
   deinit();
