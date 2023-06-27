@@ -1888,95 +1888,96 @@ resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
   (void)bm;
   (void)types;
   (void)endpoint;
-  char strtypes[200] = " ";
-  char strinterfaces[200] = " ";
-  char json[1024] = "";
 
-  if (uri) {
-    strcat(json, "{\"uri\" : \"");
-    strcat(json, uri);
-    strcat(json, "\",");
-
-    strcat(json, "\"types\": [");
-    int array_size = (int)oc_string_array_get_allocated_size(types);
-    for (int i = 0; i < array_size; i++) {
-      const char *t = oc_string_array_get_item(types, i);
-      strcat(strtypes, "\"");
-      strcat(strtypes, t);
-      strcat(strtypes, "\"");
-      if (i < array_size - 1) {
-        strcat(strtypes, ",");
-      }
-    }
-    strcat(json, strtypes);
-    strcat(json, "],");
-
-    strcat(json, "\"if\": [");
-    bool comma = false;
-
-    // OC_PRINTF ("  %d", if)
-    if ((iface_mask & OC_IF_BASELINE) == OC_IF_BASELINE) {
-      strcat(strinterfaces, "\"oic.r.baseline\"");
-      comma = true;
-    }
-    if ((iface_mask & OC_IF_RW) == OC_IF_RW) {
-      if (comma)
-        strcat(strinterfaces, ",");
-      strcat(strinterfaces, "\"oic.r.rw\"");
-      comma = true;
-    }
-    if ((iface_mask & OC_IF_R) == OC_IF_R) {
-      if (comma)
-        strcat(strinterfaces, ",");
-      strcat(strinterfaces, "\"oic.r.r\"");
-      comma = true;
-    }
-    if ((iface_mask & OC_IF_S) == OC_IF_S) {
-      if (comma)
-        strcat(strinterfaces, ",");
-      strcat(strinterfaces, "\"oic.r.s\"");
-      comma = true;
-    }
-    if ((iface_mask & OC_IF_A) == OC_IF_A) {
-      if (comma)
-        strcat(strinterfaces, ",");
-      strcat(strinterfaces, "\"oic.r.a\"");
-      comma = true;
-    }
-    if ((iface_mask & OC_IF_CREATE) == OC_IF_CREATE) {
-      if (comma)
-        strcat(strinterfaces, ",");
-      strcat(strinterfaces, "\"oic.r.create\"");
-      comma = true;
-    }
-    if ((iface_mask & OC_IF_LL) == OC_IF_LL) {
-      if (comma)
-        strcat(strinterfaces, ",");
-      strcat(strinterfaces, "\"oic.r.ll\"");
-      comma = true;
-    }
-    if ((iface_mask & OC_IF_B) == OC_IF_B) {
-      if (comma)
-        strcat(strinterfaces, ",");
-      strcat(strinterfaces, "\"oic.r.b\"");
-    }
-    strcat(json, strinterfaces);
-    strcat(json, "]");
-    strcat(json, "}");
-
-    // OC_PRINTF("[C]anchor %s, uri : %s\n", anchor, uri);
-    inform_resource_python(anchor, uri, strtypes, json);
-    if (!more) {
-      OC_PRINTF("[C]----End of discovery response---\n");
-      cb_result = true;
-      return OC_STOP_DISCOVERY;
-    }
-    return OC_CONTINUE_DISCOVERY;
-  } else {
+  if (uri == NULL) {
     OC_PRINTF("[C]\nERROR DISCOVERING RESOURCES\n");
     cb_result = false;
     return OC_STOP_DISCOVERY;
   }
+
+  char json[1024] = "";
+  strcat(json, "{\"uri\" : \"");
+  strcat(json, uri);
+  strcat(json, "\",");
+
+  char strtypes[200] = " ";
+  strcat(json, "\"types\": [");
+  int array_size = (int)oc_string_array_get_allocated_size(types);
+  for (int i = 0; i < array_size; i++) {
+    const char *t = oc_string_array_get_item(types, i);
+    strcat(strtypes, "\"");
+    strcat(strtypes, t);
+    strcat(strtypes, "\"");
+    if (i < array_size - 1) {
+      strcat(strtypes, ",");
+    }
+  }
+  strcat(json, strtypes);
+  strcat(json, "],");
+
+  strcat(json, "\"if\": [");
+  bool comma = false;
+
+  char strinterfaces[200] = " ";
+  // OC_PRINTF ("  %d", if)
+  if ((iface_mask & OC_IF_BASELINE) == OC_IF_BASELINE) {
+    strcat(strinterfaces, "\"oic.r.baseline\"");
+    comma = true;
+  }
+  if ((iface_mask & OC_IF_RW) == OC_IF_RW) {
+    if (comma) {
+      strcat(strinterfaces, ",");
+    }
+    strcat(strinterfaces, "\"oic.r.rw\"");
+    comma = true;
+  }
+  if ((iface_mask & OC_IF_R) == OC_IF_R) {
+    if (comma)
+      strcat(strinterfaces, ",");
+    strcat(strinterfaces, "\"oic.r.r\"");
+    comma = true;
+  }
+  if ((iface_mask & OC_IF_S) == OC_IF_S) {
+    if (comma)
+      strcat(strinterfaces, ",");
+    strcat(strinterfaces, "\"oic.r.s\"");
+    comma = true;
+  }
+  if ((iface_mask & OC_IF_A) == OC_IF_A) {
+    if (comma)
+      strcat(strinterfaces, ",");
+    strcat(strinterfaces, "\"oic.r.a\"");
+    comma = true;
+  }
+  if ((iface_mask & OC_IF_CREATE) == OC_IF_CREATE) {
+    if (comma)
+      strcat(strinterfaces, ",");
+    strcat(strinterfaces, "\"oic.r.create\"");
+    comma = true;
+  }
+  if ((iface_mask & OC_IF_LL) == OC_IF_LL) {
+    if (comma)
+      strcat(strinterfaces, ",");
+    strcat(strinterfaces, "\"oic.r.ll\"");
+    comma = true;
+  }
+  if ((iface_mask & OC_IF_B) == OC_IF_B) {
+    if (comma)
+      strcat(strinterfaces, ",");
+    strcat(strinterfaces, "\"oic.r.b\"");
+  }
+  strcat(json, strinterfaces);
+  strcat(json, "]");
+  strcat(json, "}");
+
+  // OC_PRINTF("[C]anchor %s, uri : %s\n", anchor, uri);
+  inform_resource_python(anchor, uri, strtypes, json);
+  if (!more) {
+    OC_PRINTF("[C]----End of discovery response---\n");
+    cb_result = true;
+    return OC_STOP_DISCOVERY;
+  }
+  return OC_CONTINUE_DISCOVERY;
 }
 
 void

@@ -117,27 +117,34 @@ cloud_update_from_request(oc_cloud_context_t *ctx, const oc_request_t *request)
   cloud_conf_update_t data;
   memset(&data, 0, sizeof(data));
 
-  char *access_token;
+  char *access_token = NULL;
   bool has_at =
     oc_rep_get_string(request->request_payload, OC_RSRVD_ACCESSTOKEN,
                       &access_token, &data.access_token_len);
-  data.access_token = access_token;
+  if (has_at) {
+    data.access_token = access_token;
+  }
 
-  char *auth_provider;
-  oc_rep_get_string(request->request_payload, OC_RSRVD_AUTHPROVIDER,
-                    &auth_provider, &data.auth_provider_len);
-  data.auth_provider = auth_provider;
+  char *auth_provider = NULL;
+  if (oc_rep_get_string(request->request_payload, OC_RSRVD_AUTHPROVIDER,
+                        &auth_provider, &data.auth_provider_len)) {
+    data.auth_provider = auth_provider;
+  }
 
-  char *ci_server;
+  char *ci_server = NULL;
   bool has_cis = oc_rep_get_string(request->request_payload, OC_RSRVD_CISERVER,
                                    &ci_server, &data.ci_server_len);
-  data.ci_server = ci_server;
+  if (has_cis) {
+    data.ci_server = ci_server;
+  }
 
   // OCF 2.0 spec version added sid property.
-  char *sid;
+  char *sid = NULL;
   bool has_sid = oc_rep_get_string(request->request_payload, OC_RSRVD_SERVERID,
                                    &sid, &data.sid_len);
-  data.sid = sid;
+  if (has_sid) {
+    data.sid = sid;
+  }
 
   if (has_cis && (data.ci_server_len == 0 || (has_at && has_sid))) {
     cloud_update_by_resource(ctx, &data);
@@ -173,9 +180,9 @@ post_cloud(oc_request_t *request, oc_interface_mask_t interface,
     //
     char *cis;
     size_t cis_len = 0;
-    oc_rep_get_string(request->request_payload, OC_RSRVD_CISERVER, &cis,
-                      &cis_len);
-    if (cis_len == 0) {
+    if (oc_rep_get_string(request->request_payload, OC_RSRVD_CISERVER, &cis,
+                          &cis_len) &&
+        cis_len == 0) {
       request_invalid_in_state = false;
     }
   }
