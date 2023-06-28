@@ -707,9 +707,10 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_ABORT)
   uint16_t bad_csm_opt = 10;
   coap_signal_set_bad_csm(&packet, bad_csm_opt);
 
-  std::string diagnostic = "BAD CSM OPTION";
-  coap_set_payload(&packet, diagnostic.c_str(),
-                   static_cast<uint32_t>(diagnostic.length() + 1));
+  std::vector<uint8_t> diagnostic{ 'B', 'A', 'D', ' ', 'C', 'S', 'M', ' ',
+                                   'O', 'P', 'T', 'I', 'O', 'N', '\0' };
+  coap_set_payload(&packet, diagnostic.data(),
+                   static_cast<uint32_t>(diagnostic.size()));
 
   std::vector<uint8_t> buffer;
   buffer.reserve(OC_PDU_SIZE);
@@ -723,7 +724,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_ABORT)
   ASSERT_EQ(COAP_NO_ERROR, ret);
   ASSERT_EQ(packet.code, parse_packet.code);
   ASSERT_EQ(packet.bad_csm_opt, parse_packet.bad_csm_opt);
-  ASSERT_STREQ(diagnostic.c_str(), (char *)parse_packet.payload);
+  ASSERT_STREQ((char *)diagnostic.data(), (char *)parse_packet.payload);
 }
 
 #endif /* OC_TCP && IPV4 */

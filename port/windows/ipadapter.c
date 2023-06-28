@@ -957,15 +957,14 @@ check_if_address_unset(uint8_t *address, int size)
 
 static void
 set_source_address_for_interface(ADDRESS_FAMILY family, uint8_t *address,
-                                 int address_size, int interface_index)
+                                 int address_size, unsigned interface_index)
 {
   if (!check_if_address_unset(address, address_size)) {
     return;
   }
   ifaddr_t *ifaddr_list = get_network_addresses(), *addr;
   for (addr = ifaddr_list; addr != NULL; addr = addr->next) {
-    if (addr->addr.ss_family == family &&
-        (int)addr->if_index == interface_index) {
+    if (addr->addr.ss_family == family && addr->if_index == interface_index) {
       if (family == AF_INET6) {
         struct sockaddr_in6 *a = (struct sockaddr_in6 *)&addr->addr;
         memcpy(address, a->sin6_addr.u.Byte, 16);

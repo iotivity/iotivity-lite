@@ -1236,6 +1236,9 @@ oc_tls_trust_anchors_is_empty(void)
 {
   mbedtls_x509_crt crt;
   memset(&crt, 0, sizeof(mbedtls_x509_crt));
+  // mbedtls_x509_crt_init memsets g_trust_anchors to 0, so comparing it to
+  // zeroed memory is correct
+  // NOLINTNEXTLINE(bugprone-suspicious-memory-comparison)
   return memcmp(&g_trust_anchors, &crt, sizeof(mbedtls_x509_crt)) == 0;
 }
 

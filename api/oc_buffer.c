@@ -87,7 +87,7 @@ message_allocate_with_size(struct oc_memb *pool, size_t size)
   message->length = 0;
   message->next = 0;
   message->ref_count = 1;
-  message->endpoint.interface_index = -1;
+  message->endpoint.interface_index = 0;
 #ifdef OC_SECURITY
   message->encrypted = 0;
 #endif /* OC_SECURITY */

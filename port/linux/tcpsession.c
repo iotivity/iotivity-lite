@@ -142,23 +142,22 @@ is_matching_address(const struct sockaddr *first, const struct sockaddr *second)
   return false;
 }
 
-static int
+static long
 get_interface_index(int sock)
 {
   struct sockaddr_storage addr;
   socklen_t socklen = sizeof(addr);
   if (getsockname(sock, (struct sockaddr *)&addr, &socklen) == -1) {
-    OC_ERR("obtaining socket information %d", errno);
+    OC_ERR("failed obtaining socket information %d", errno);
     return -1;
   }
 
   struct ifaddrs *ifs = NULL;
   if (getifaddrs(&ifs) < 0) {
-    OC_ERR("querying interfaces: %d", errno);
+    OC_ERR("failed querying interfaces: %d", errno);
     return -1;
   }
 
-  int interface_index = -1;
   for (struct ifaddrs *interface = ifs; interface != NULL;
        interface = interface->ifa_next) {
     if ((interface->ifa_flags & IFF_UP) == 0 ||
@@ -168,13 +167,20 @@ get_interface_index(int sock)
     }
 
     if (is_matching_address(interface->ifa_addr, (struct sockaddr *)&addr)) {
-      interface_index = if_nametoindex(interface->ifa_name);
-      break;
+      unsigned if_index = if_nametoindex(interface->ifa_name);
+      if (if_index == 0) {
+        OC_ERR("failed obtaining interface index for %s (error=%d)",
+               interface->ifa_name, (int)errno);
+        freeifaddrs(ifs);
+        return -1;
+      }
+      freeifaddrs(ifs);
+      return if_index;
     }
   }
 
   freeifaddrs(ifs);
-  return interface_index;
+  return 0;
 }
 
 #if OC_DBG_IS_ENABLED
@@ -193,24 +199,16 @@ log_new_session(oc_endpoint_t *endpoint, int sock, bool is_connected)
 }
 #endif /* OC_DBG_IS_ENABLED */
 
-static void
-connect_session_locked(tcp_session_t *session, tcp_csm_state_t state,
-                       int iface_index)
-{
-  session->csm_state = state;
-  session->endpoint.interface_index = iface_index;
-
-  oc_list_add(g_session_list, session);
-
-  if ((session->endpoint.flags & SECURED) == 0) {
-    oc_session_start_event(&session->endpoint);
-  }
-}
-
 static tcp_session_t *
 add_new_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
                        tcp_csm_state_t state)
 {
+  long if_index = get_interface_index(sock);
+  if (if_index < 0) {
+    OC_ERR("could not obtain interface index for TCP session");
+    return NULL;
+  }
+
   tcp_session_t *session = oc_memb_alloc(&g_tcp_session_s);
   if (session == NULL) {
     OC_ERR("could not allocate new TCP session object");
@@ -219,14 +217,17 @@ add_new_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
   OC_DBG("new TCP session(%p, fd=%d)", (void *)session, sock);
 
   session->dev = dev;
+  endpoint->interface_index = (unsigned)if_index;
   memcpy(&session->endpoint, endpoint, sizeof(oc_endpoint_t));
   session->endpoint.next = NULL;
   session->sock = sock;
+  session->csm_state = state;
 
-  int iface_index = get_interface_index(session->sock);
-  endpoint->interface_index = iface_index;
+  oc_list_add(g_session_list, session);
 
-  connect_session_locked(session, state, iface_index);
+  if ((session->endpoint.flags & SECURED) == 0) {
+    oc_session_start_event(&session->endpoint);
+  }
 #if OC_DBG_IS_ENABLED
   log_new_session(&session->endpoint, sock, true);
 #endif /* OC_DBG_IS_ENABLED */

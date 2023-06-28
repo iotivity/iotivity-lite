@@ -659,7 +659,7 @@ oc_endpoint_is_empty(const oc_endpoint_t *endpoint)
 {
   oc_endpoint_t empty;
   memset(&empty, 0, sizeof(oc_endpoint_t));
-  return memcmp(&empty, endpoint, sizeof(oc_endpoint_t)) == 0;
+  return memcmp(&empty, endpoint, sizeof(oc_endpoint_t)) == 0; // NOLINT(bugprone-suspicious-memory-comparison)
 }
 
 void
@@ -722,7 +722,7 @@ oc_endpoint_list_free(oc_endpoint_t *eps)
 
 #ifdef OC_CLIENT
 void
-oc_endpoint_set_local_address(oc_endpoint_t *ep, int interface_index)
+oc_endpoint_set_local_address(oc_endpoint_t *ep, unsigned interface_index)
 {
   oc_endpoint_t *e = oc_connectivity_get_endpoints(ep->device);
   transport_flags conn = (ep->flags & IPV6) ? IPV6 : IPV4;

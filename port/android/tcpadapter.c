@@ -110,51 +110,66 @@ get_assigned_tcp_port(int sock, struct sockaddr_storage *sock_info)
   return 0;
 }
 
-static int
+static long
 get_interface_index(int sock)
 {
-  int interface_index = -1;
-
   struct sockaddr_storage addr;
   socklen_t socklen = sizeof(addr);
   if (getsockname(sock, (struct sockaddr *)&addr, &socklen) == -1) {
-    OC_ERR("obtaining socket information %d", errno);
+    OC_ERR("failed obtaining socket information %d", errno);
     return -1;
   }
 
-  struct ifaddrs *ifs = NULL, *interface = NULL;
+  struct ifaddrs *ifs = NULL;
   if (OC_GETIFADDRS(&ifs) < 0) {
-    OC_ERR("querying interfaces: %d", errno);
+    OC_ERR("failed querying interfaces: %d", errno);
     return -1;
   }
 
-  for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
-    if (!(interface->ifa_flags & IFF_UP) || interface->ifa_flags & IFF_LOOPBACK)
+  unsigned if_index = 0;
+  for (struct ifaddrs *interface = ifs; interface != NULL;
+       interface = interface->ifa_next) {
+    if ((interface->ifa_flags & IFF_UP) == 0 ||
+        (interface->ifa_flags & IFF_LOOPBACK) != 0)
       continue;
-    if (addr.ss_family == interface->ifa_addr->sa_family) {
-      if (addr.ss_family == AF_INET6) {
-        struct sockaddr_in6 *a = (struct sockaddr_in6 *)interface->ifa_addr;
-        struct sockaddr_in6 *b = (struct sockaddr_in6 *)&addr;
-        if (memcmp(a->sin6_addr.s6_addr, b->sin6_addr.s6_addr, 16) == 0) {
-          interface_index = if_nametoindex(interface->ifa_name);
-          break;
-        }
-      }
-#ifdef OC_IPV4
-      else if (addr.ss_family == AF_INET) {
-        struct sockaddr_in *a = (struct sockaddr_in *)interface->ifa_addr;
-        struct sockaddr_in *b = (struct sockaddr_in *)&addr;
-        if (a->sin_addr.s_addr == b->sin_addr.s_addr) {
-          interface_index = if_nametoindex(interface->ifa_name);
-          break;
-        }
-      }
-#endif /* OC_IPV4 */
+
+    if (addr.ss_family != interface->ifa_addr->sa_family) {
+      continue;
     }
+    if (addr.ss_family == AF_INET6) {
+      struct sockaddr_in6 *a = (struct sockaddr_in6 *)interface->ifa_addr;
+      struct sockaddr_in6 *b = (struct sockaddr_in6 *)&addr;
+      if (memcmp(a->sin6_addr.s6_addr, b->sin6_addr.s6_addr, 16) == 0) {
+        if_index = if_nametoindex(interface->ifa_name);
+        if (if_index == 0) {
+          OC_ERR("failed obtaining interface(%s) index: %d",
+                 interface->ifa_name, (int)errno);
+          OC_FREEIFADDRS(ifs);
+          return -1;
+        }
+        break;
+      }
+    }
+#ifdef OC_IPV4
+    else if (addr.ss_family == AF_INET) {
+      struct sockaddr_in *a = (struct sockaddr_in *)interface->ifa_addr;
+      struct sockaddr_in *b = (struct sockaddr_in *)&addr;
+      if (a->sin_addr.s_addr == b->sin_addr.s_addr) {
+        unsigned if_index = if_nametoindex(interface->ifa_name);
+        if (if_index == 0) {
+          OC_ERR("failed obtaining interface(%s) index: %d",
+                 interface->ifa_name, (int)errno);
+          OC_FREEIFADDRS(ifs);
+          return -1;
+        }
+        break;
+      }
+    }
+#endif /* OC_IPV4 */
   }
 
   OC_FREEIFADDRS(ifs);
-  return interface_index;
+  return if_index;
 }
 
 void
@@ -202,13 +217,19 @@ static int
 add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
                 tcp_csm_state_t state)
 {
+  long if_index = get_interface_index(sock);
+  if (if_index == -1) {
+    OC_ERR("could not obtain interface index");
+    return -1;
+  }
+
   tcp_session_t *session = oc_memb_alloc(&tcp_session_s);
   if (!session) {
     OC_ERR("could not allocate new TCP session object");
     return -1;
   }
 
-  endpoint->interface_index = get_interface_index(sock);
+  endpoint->interface_index = (unsigned)if_index;
 
   session->dev = dev;
   memcpy(&session->endpoint, endpoint, sizeof(oc_endpoint_t));
@@ -223,7 +244,6 @@ add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
   }
 
   OC_DBG("recorded new TCP session");
-
   return 0;
 }
 

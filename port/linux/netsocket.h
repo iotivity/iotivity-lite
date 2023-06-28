@@ -49,7 +49,7 @@ int oc_netsocket_create_ipv6(uint16_t port);
 int oc_netsocket_create_mcast_ipv6(uint16_t port);
 
 /** Add IPv6 Multicast socket to defined CoAP IPv6 groups. */
-bool oc_netsocket_add_sock_to_ipv6_mcast_group(int sock, int interface_index);
+bool oc_netsocket_add_sock_to_ipv6_mcast_group(int sock, unsigned if_index);
 
 #ifdef OC_IPV4
 
@@ -76,7 +76,7 @@ int oc_netsocket_create_mcast_ipv4(uint16_t port);
 /** Add IPv4 Multicast socket to a defined IPv4 group. */
 bool oc_netsocket_add_sock_to_ipv4_mcast_group(int sock,
                                                const struct in_addr *local,
-                                               int interface_index);
+                                               unsigned if_index);
 
 #endif /* OC_IPV4 */
 

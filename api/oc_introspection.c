@@ -122,7 +122,8 @@ oc_introspection_wk_get_uri(size_t device, int interface_index,
    */
   oc_endpoint_t *eps = oc_connectivity_get_endpoints(device);
   while (eps != NULL) {
-    if ((interface_index == -1 || eps->interface_index == interface_index) &&
+    if ((interface_index == -1 ||
+         eps->interface_index == (unsigned)interface_index) &&
         (eps->flags == flags)) {
       oc_string_t ep;
       if (oc_endpoint_to_string(eps, &ep) == 0) {
@@ -160,14 +161,13 @@ oc_core_introspection_wk_handler(oc_request_t *request,
 {
   (void)data;
 
-  int interface_index =
-    (request->origin) ? request->origin->interface_index : -1;
+  int if_index = (request->origin) ? (int)request->origin->interface_index : -1;
   transport_flags flags =
     (request->origin && (request->origin->flags & IPV6)) ? IPV6 : IPV4;
   oc_string_t uri;
   memset(&uri, 0, sizeof(oc_string_t));
-  if (!oc_introspection_wk_get_uri(request->resource->device, interface_index,
-                                   flags, &uri)) {
+  if (!oc_introspection_wk_get_uri(request->resource->device, if_index, flags,
+                                   &uri)) {
     OC_ERR("could not obtain introspection resource uri");
     oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
     return;
