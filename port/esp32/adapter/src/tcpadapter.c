@@ -139,7 +139,7 @@ get_interface_index(int sock)
     }
   }
   OC_ERR("interface not found");
-  return -1;
+  return 0;
 }
 
 void
@@ -187,13 +187,19 @@ static int
 add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
                 tcp_csm_state_t state)
 {
+  int if_index = get_interface_index(sock);
+  if (if_index < 0) {
+    OC_ERR("could not get interface index");
+    return -1;
+  }
+
   tcp_session_t *session = oc_memb_alloc(&tcp_session_s);
   if (!session) {
     OC_ERR("could not allocate new TCP session object");
     return -1;
   }
 
-  endpoint->interface_index = get_interface_index(sock);
+  endpoint->interface_index = (unsigned)if_index;
 
   session->dev = dev;
   memcpy(&session->endpoint, endpoint, sizeof(oc_endpoint_t));

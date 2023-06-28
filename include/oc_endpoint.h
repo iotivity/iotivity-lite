@@ -97,9 +97,10 @@ typedef struct oc_endpoint_t
     oc_ipv4_addr_t ipv4; ///< ipv4 address
     oc_le_addr_t bt;     ///< blue tooth address
   } addr, addr_local;
-  int interface_index;   ///< interface index
-  uint8_t priority;      ///< priority
-  ocf_version_t version; ///< ocf version
+  unsigned interface_index; ///< interface index (valid intefaces are >0, 0
+                            ///< means no index or error)
+  uint8_t priority;         ///< priority
+  ocf_version_t version;    ///< ocf version
 #ifdef OC_OSCORE
   uint8_t piv[OSCORE_PIV_LEN];
   uint8_t piv_len;
@@ -223,7 +224,7 @@ bool oc_endpoint_is_empty(const oc_endpoint_t *endpoint);
  * @param interface_index the interface index
  */
 OC_API
-void oc_endpoint_set_local_address(oc_endpoint_t *ep, int interface_index);
+void oc_endpoint_set_local_address(oc_endpoint_t *ep, unsigned interface_index);
 
 /**
  * @brief copy endpoint

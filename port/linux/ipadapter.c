@@ -87,7 +87,7 @@ OC_MEMB(g_device_eps, oc_endpoint_t, 8 * OC_MAX_NUM_DEVICES); // fix
 typedef struct ip_interface
 {
   struct ip_interface *next;
-  int if_index;
+  unsigned if_index;
 } ip_interface_t;
 
 OC_LIST(g_ip_interface_list);
@@ -98,7 +98,7 @@ OC_MEMB(oc_network_interface_cb_s, oc_network_interface_cb_t,
         OC_MAX_NETWORK_INTERFACE_CBS);
 
 static ip_interface_t *
-get_ip_interface(int target_index)
+get_ip_interface(unsigned target_index)
 {
   ip_interface_t *if_item = oc_list_head(g_ip_interface_list);
   while (if_item != NULL && if_item->if_index != target_index) {
@@ -108,13 +108,14 @@ get_ip_interface(int target_index)
 }
 
 static bool
-add_ip_interface(int target_index)
+add_ip_interface(unsigned target_index)
 {
-  if (get_ip_interface(target_index))
+  if (get_ip_interface(target_index)) {
     return false;
+  }
 
   ip_interface_t *new_if = oc_memb_alloc(&g_ip_interface_s);
-  if (!new_if) {
+  if (new_if == NULL) {
     OC_ERR("interface item alloc failed");
     return false;
   }
@@ -129,18 +130,23 @@ check_new_ip_interfaces(void)
 {
   struct ifaddrs *ifs = NULL;
   if (getifaddrs(&ifs) < 0) {
-    OC_ERR("querying interface address");
+    OC_ERR("failed querying interface address");
     return false;
   }
   for (struct ifaddrs *interface = ifs; interface != NULL;
        interface = interface->ifa_next) {
     /* Ignore interfaces that are down and the loopback interface */
-    if (!(interface->ifa_flags & IFF_UP) ||
-        (interface->ifa_flags & IFF_LOOPBACK)) {
+    if ((interface->ifa_flags & IFF_UP) == 0 ||
+        (interface->ifa_flags & IFF_LOOPBACK) != 0) {
       continue;
     }
     /* Obtain interface index for this address */
-    int if_index = if_nametoindex(interface->ifa_name);
+    unsigned if_index = if_nametoindex(interface->ifa_name);
+    if (if_index == 0) {
+      OC_ERR("failed obtaining interface(%s) index: %d", interface->ifa_name,
+             (int)errno);
+      continue;
+    }
 
     add_ip_interface(if_index);
   }
@@ -149,7 +155,7 @@ check_new_ip_interfaces(void)
 }
 
 static bool
-remove_ip_interface(int target_index)
+remove_ip_interface(unsigned target_index)
 {
   ip_interface_t *if_item = get_ip_interface(target_index);
   if (!if_item) {
@@ -317,7 +323,7 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, int port,
     return false;
   }
 
-  int prev_interface_index = -1;
+  long prev_interface_index = -1;
   bool done = false;
   while (!done) {
     ssize_t response_len = get_data_size(nl_sock);
@@ -348,7 +354,7 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, int port,
       bool include = false;
       struct ifaddrmsg *addrmsg = (struct ifaddrmsg *)NLMSG_DATA(response);
       if (addrmsg->ifa_scope < RT_SCOPE_HOST) {
-        if ((int)addrmsg->ifa_index == prev_interface_index) {
+        if ((long)addrmsg->ifa_index == prev_interface_index) {
           goto next_ifaddr;
         }
         ep.interface_index = addrmsg->ifa_index;
@@ -729,7 +735,7 @@ recv_msg(int sock, uint8_t *recv_buf, long recv_buf_size,
       memcpy(endpoint->addr.ipv4.address, &c4->sin_addr.s_addr,
              sizeof(c4->sin_addr.s_addr));
       endpoint->addr.ipv4.port = ntohs(c4->sin_port);
-      endpoint->interface_index = pktinfo->ipi_ifindex;
+      endpoint->interface_index = (unsigned)pktinfo->ipi_ifindex;
       if (!multicast) {
         memcpy(endpoint->addr_local.ipv4.address, &pktinfo->ipi_addr.s_addr, 4);
       } else {
@@ -1114,7 +1120,7 @@ send_msg(int sock, struct sockaddr_storage *receiver,
     CLANG_IGNORE_WARNING_END
     memset(pktinfo, 0, sizeof(struct in6_pktinfo));
 
-    /* Get the outgoing interface index from message->endpint */
+    /* Get the outgoing interface index from message->endpoint */
     pktinfo->ipi6_ifindex = message->endpoint.interface_index;
     /* Set the source address of this message using the address
      * from the endpoint's addr_local attribute.
@@ -1141,7 +1147,7 @@ send_msg(int sock, struct sockaddr_storage *receiver,
     CLANG_IGNORE_WARNING_END
     memset(pktinfo, 0, sizeof(struct in_pktinfo));
 
-    pktinfo->ipi_ifindex = message->endpoint.interface_index;
+    pktinfo->ipi_ifindex = (int)message->endpoint.interface_index;
     memcpy(&pktinfo->ipi_spec_dst, message->endpoint.addr_local.ipv4.address,
            4);
   }
@@ -1278,43 +1284,57 @@ send_ipv6_discovery_request(oc_message_t *message,
     OC_ERR("server socket for IPv6 is disabled");
     return false;
   }
-#define IN6_IS_ADDR_MC_REALM_LOCAL(addr)                                       \
-  IN6_IS_ADDR_MULTICAST(addr) && ((((const uint8_t *)(addr))[1] & 0x0f) == 0x03)
 
   CLANG_IGNORE_WARNING_START
   CLANG_IGNORE_WARNING("-Wcast-align")
   const struct sockaddr_in6 *addr = (struct sockaddr_in6 *)interface->ifa_addr;
   CLANG_IGNORE_WARNING_END
-  if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
-    unsigned int mif = if_nametoindex(interface->ifa_name);
-    if (setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, &mif,
-                   sizeof(mif)) == -1) {
-      OC_ERR("setting socket option for default IPV6_MULTICAST_IF: %d", errno);
-      return false;
-    }
-    message->endpoint.interface_index = mif;
-    if (IN6_IS_ADDR_MC_LINKLOCAL(message->endpoint.addr.ipv6.address)) {
-      message->endpoint.addr.ipv6.scope = mif;
-      unsigned int hops = 1;
-      setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
-                 sizeof(hops));
-    } else if (IN6_IS_ADDR_MC_REALM_LOCAL(
-                 message->endpoint.addr.ipv6.address)) {
-      unsigned int hops = 255;
-      setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
-                 sizeof(hops));
-      message->endpoint.addr.ipv6.scope = 0;
-    } else if (IN6_IS_ADDR_MC_SITELOCAL(message->endpoint.addr.ipv6.address)) {
-      unsigned int hops = 255;
-      setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
-                 sizeof(hops));
-      message->endpoint.addr.ipv6.scope = 0;
-    }
-    if (oc_send_buffer(message) < 0) {
-      OC_WRN("failed to send ipv6 discovery request");
-    }
+  if (!IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
+    OC_ERR(
+      "cannot send discovery request: only link-local addresses are supported");
+    return false;
+  }
+
+  unsigned mif = if_nametoindex(interface->ifa_name);
+  if (mif == 0) {
+    OC_ERR("cannot send discovery request: cannot obtain interface(%s) "
+           "index(error: %d)",
+           interface->ifa_name, (int)errno);
+    return false;
+  }
+
+  if (setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, &mif,
+                 sizeof(mif)) == -1) {
+    OC_ERR("setting socket option for default IPV6_MULTICAST_IF: %d", errno);
+    return false;
+  }
+  message->endpoint.interface_index = mif;
+
+#define IN6_IS_ADDR_MC_REALM_LOCAL(addr)                                       \
+  IN6_IS_ADDR_MULTICAST(addr) && ((((const uint8_t *)(addr))[1] & 0x0f) == 0x03)
+
+  if (IN6_IS_ADDR_MC_LINKLOCAL(message->endpoint.addr.ipv6.address)) {
+    message->endpoint.addr.ipv6.scope = mif;
+    unsigned int hops = 1;
+    setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
+               sizeof(hops));
+  } else if (IN6_IS_ADDR_MC_REALM_LOCAL(message->endpoint.addr.ipv6.address)) {
+    unsigned int hops = 255;
+    setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
+               sizeof(hops));
+    message->endpoint.addr.ipv6.scope = 0;
+  } else if (IN6_IS_ADDR_MC_SITELOCAL(message->endpoint.addr.ipv6.address)) {
+    unsigned int hops = 255;
+    setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
+               sizeof(hops));
+    message->endpoint.addr.ipv6.scope = 0;
   }
 #undef IN6_IS_ADDR_MC_REALM_LOCAL
+
+  if (oc_send_buffer(message) < 0) {
+    OC_ERR("failed to send ipv6 discovery request");
+    return false;
+  }
   return true;
 }
 
@@ -1333,10 +1353,16 @@ send_ipv4_discovery_request(oc_message_t *message,
   CLANG_IGNORE_WARNING_END
   if (setsockopt(server_sock, IPPROTO_IP, IP_MULTICAST_IF, &addr->sin_addr,
                  sizeof(addr->sin_addr)) == -1) {
-    OC_ERR("setting socket option for default IP_MULTICAST_IF: %d", errno);
+    OC_ERR("setting socket option for default IP_MULTICAST_IF: %d", (int)errno);
     return false;
   }
-  message->endpoint.interface_index = if_nametoindex(interface->ifa_name);
+  unsigned if_index = if_nametoindex(interface->ifa_name);
+  if (if_index == 0) {
+    OC_ERR("could not get interface index for %s (error: %d)",
+           interface->ifa_name, (int)errno);
+    return false;
+  }
+  message->endpoint.interface_index = if_index;
   if (oc_send_buffer(message) < 0) {
     OC_WRN("failed to send ipv4 discovery request");
   }

@@ -413,11 +413,8 @@ value */
 #define oc_rep_set_text_string_v1(object, key, value, value_len)               \
   do {                                                                         \
     g_err |= oc_rep_encode_text_string(&object##_map, #key, sizeof(#key) - 1); \
-    if ((value) != NULL) {                                                     \
-      g_err |= oc_rep_encode_text_string(&object##_map, value, value_len);     \
-    } else {                                                                   \
-      g_err |= oc_rep_encode_text_string(&object##_map, "", 0);                \
-    }                                                                          \
+    g_err |= oc_rep_encode_text_string(                                        \
+      &object##_map, (value) == NULL ? "" : (value), (value_len));             \
   } while (0)
 
 /**

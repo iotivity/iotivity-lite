@@ -95,7 +95,7 @@ OC_MEMB(device_eps, oc_endpoint_t, 8 * OC_MAX_NUM_DEVICES); // fix
 typedef struct ip_interface
 {
   struct ip_interface *next;
-  int if_index;
+  unsigned if_index;
 } ip_interface_t;
 
 OC_LIST(ip_interface_list);
@@ -106,7 +106,7 @@ OC_MEMB(oc_network_interface_cb_s, oc_network_interface_cb_t,
         OC_MAX_NETWORK_INTERFACE_CBS);
 
 static ip_interface_t *
-get_ip_interface(int target_index)
+get_ip_interface(unsigned target_index)
 {
   ip_interface_t *if_item = oc_list_head(ip_interface_list);
   while (if_item != NULL && if_item->if_index != target_index) {
@@ -116,10 +116,11 @@ get_ip_interface(int target_index)
 }
 
 static bool
-add_ip_interface(int target_index)
+add_ip_interface(unsigned target_index)
 {
-  if (get_ip_interface(target_index))
+  if (get_ip_interface(target_index)) {
     return false;
+  }
 
   ip_interface_t *new_if = oc_memb_alloc(&ip_interface_s);
   if (!new_if) {
@@ -135,20 +136,24 @@ add_ip_interface(int target_index)
 static bool
 check_new_ip_interfaces(void)
 {
-  struct ifaddrs *ifs = NULL, *interface = NULL;
+  struct ifaddrs *ifs = NULL;
   if (OC_GETIFADDRS(&ifs) < 0) {
-    OC_ERR("querying interface address");
+    OC_ERR("failed querying interface address");
     return false;
   }
-  for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
+  for (struct ifaddrs *interface = ifs; interface != NULL;
+       interface = interface->ifa_next) {
     /* Ignore interfaces that are down and the loopback interface */
     if (!(interface->ifa_flags & IFF_UP) ||
         (interface->ifa_flags & IFF_LOOPBACK)) {
       continue;
     }
     /* Obtain interface index for this address */
-    int if_index = if_nametoindex(interface->ifa_name);
-
+    unsigned if_index = if_nametoindex(interface->ifa_name);
+    if (if_index == 0) {
+      OC_ERR("failed obtaining interface(%s) index", interface->ifa_name);
+      continue;
+    }
     add_ip_interface(if_index);
   }
   OC_FREEIFADDRS(ifs);
@@ -250,13 +255,13 @@ get_ip_context_for_device(size_t device)
 #ifdef OC_IPV4
 static int
 add_mcast_sock_to_ipv4_mcast_group(int mcast_sock, const struct in_addr *local,
-                                   int interface_index)
+                                   unsigned iface_index)
 {
   struct ip_mreqn mreq;
 
   memset(&mreq, 0, sizeof(mreq));
   mreq.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4);
-  mreq.imr_ifindex = interface_index;
+  mreq.imr_ifindex = (int)iface_index;
   memcpy(&mreq.imr_address, local, sizeof(struct in_addr));
 
   (void)setsockopt(mcast_sock, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq,
@@ -273,14 +278,14 @@ add_mcast_sock_to_ipv4_mcast_group(int mcast_sock, const struct in_addr *local,
 #endif /* OC_IPV4 */
 
 static int
-add_mcast_sock_to_ipv6_mcast_group(int mcast_sock, int interface_index)
+add_mcast_sock_to_ipv6_mcast_group(int mcast_sock, unsigned if_index)
 {
   struct ipv6_mreq mreq;
 
   /* Link-local scope */
   memset(&mreq, 0, sizeof(mreq));
   memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_OCF_NODES_LL, 16);
-  mreq.ipv6mr_interface = interface_index;
+  mreq.ipv6mr_interface = if_index;
 
   (void)setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq,
                    sizeof(mreq));
@@ -294,7 +299,7 @@ add_mcast_sock_to_ipv6_mcast_group(int mcast_sock, int interface_index)
   /* Realm-local scope */
   memset(&mreq, 0, sizeof(mreq));
   memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_OCF_NODES_RL, 16);
-  mreq.ipv6mr_interface = interface_index;
+  mreq.ipv6mr_interface = if_index;
 
   (void)setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq,
                    sizeof(mreq));
@@ -308,7 +313,7 @@ add_mcast_sock_to_ipv6_mcast_group(int mcast_sock, int interface_index)
   /* Site-local scope */
   memset(&mreq, 0, sizeof(mreq));
   memcpy(mreq.ipv6mr_multiaddr.s6_addr, ALL_OCF_NODES_SL, 16);
-  mreq.ipv6mr_interface = interface_index;
+  mreq.ipv6mr_interface = if_index;
 
   (void)setsockopt(mcast_sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq,
                    sizeof(mreq));
@@ -326,12 +331,13 @@ static int
 configure_mcast_socket(int mcast_sock, int sa_family)
 {
   int ret = 0;
-  struct ifaddrs *ifs = NULL, *interface = NULL;
+  struct ifaddrs *ifs = NULL;
   if (OC_GETIFADDRS(&ifs) < 0) {
-    OC_ERR("querying interface addrs");
+    OC_ERR("failed querying interface addrs");
     return -1;
   }
-  for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
+  for (struct ifaddrs *interface = ifs; interface != NULL;
+       interface = interface->ifa_next) {
     /* Ignore interfaces that are down and the loopback interface */
     if (!(interface->ifa_flags & IFF_UP) ||
         (interface->ifa_flags & IFF_LOOPBACK)) {
@@ -343,7 +349,12 @@ configure_mcast_socket(int mcast_sock, int sa_family)
       continue;
     }
     /* Obtain interface index for this address */
-    int if_index = if_nametoindex(interface->ifa_name);
+    unsigned if_index = if_nametoindex(interface->ifa_name);
+    if (if_index == 0) {
+      OC_ERR("failed obtaining interface(%s) index", interface->ifa_name);
+      continue;
+    }
+
     /* Accordingly handle IPv6/IPv4 addresses */
     if (sa_family == AF_INET6) {
       struct sockaddr_in6 *a = (struct sockaddr_in6 *)interface->ifa_addr;
@@ -401,7 +412,7 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
     return;
   }
 
-  int prev_interface_index = -1;
+  long prev_interface_index = -1;
   bool done = false;
   while (!done) {
     int guess = 512, response_len;
@@ -438,7 +449,7 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
       bool include = false;
       struct ifaddrmsg *addrmsg = (struct ifaddrmsg *)NLMSG_DATA(response);
       if (addrmsg->ifa_scope < RT_SCOPE_HOST) {
-        if ((int)addrmsg->ifa_index == prev_interface_index) {
+        if ((long)addrmsg->ifa_index == prev_interface_index) {
           goto next_ifaddr;
         }
         ep.interface_index = addrmsg->ifa_index;
@@ -732,7 +743,7 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
       memcpy(endpoint->addr.ipv4.address, &c4->sin_addr.s_addr,
              sizeof(c4->sin_addr.s_addr));
       endpoint->addr.ipv4.port = ntohs(c4->sin_port);
-      endpoint->interface_index = pktinfo->ipi_ifindex;
+      endpoint->interface_index = (unsigned)pktinfo->ipi_ifindex;
       if (!multicast) {
         memcpy(endpoint->addr_local.ipv4.address, &pktinfo->ipi_addr.s_addr, 4);
       } else {
@@ -976,7 +987,7 @@ send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
     pktinfo = (struct in_pktinfo *)CMSG_DATA(cmsg);
     memset(pktinfo, 0, sizeof(struct in_pktinfo));
 
-    pktinfo->ipi_ifindex = message->endpoint.interface_index;
+    pktinfo->ipi_ifindex = (int)message->endpoint.interface_index;
     memcpy(&pktinfo->ipi_spec_dst, message->endpoint.addr_local.ipv4.address,
            4);
   }
@@ -1087,7 +1098,7 @@ oc_send_buffer2(oc_message_t *message, bool queue)
 void
 oc_send_discovery_request(oc_message_t *message)
 {
-  struct ifaddrs *ifs = NULL, *interface = NULL;
+  struct ifaddrs *ifs = NULL;
   if (OC_GETIFADDRS(&ifs) < 0) {
     OC_ERR("querying interfaces: %d", errno);
     goto done;
@@ -1102,7 +1113,8 @@ oc_send_discovery_request(oc_message_t *message)
 #define IN6_IS_ADDR_MC_REALM_LOCAL(addr)                                       \
   IN6_IS_ADDR_MULTICAST(addr) && ((((const uint8_t *)(addr))[1] & 0x0f) == 0x03)
 
-  for (interface = ifs; interface != NULL; interface = interface->ifa_next) {
+  for (struct ifaddrs *interface = ifs; interface != NULL;
+       interface = interface->ifa_next) {
     /* Only broadcast on LAN/WLAN. 3G/4G/5G should not have the broadcast
        and multicast flags set. */
     if ((interface->ifa_flags & (OCF_IF_FLAGS | IFF_LOOPBACK)) !=
@@ -1115,7 +1127,7 @@ oc_send_discovery_request(oc_message_t *message)
         interface->ifa_addr->sa_family == AF_INET6) {
       struct sockaddr_in6 *addr = (struct sockaddr_in6 *)interface->ifa_addr;
       if (IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
-        unsigned int mif = if_nametoindex(interface->ifa_name);
+        unsigned mif = if_nametoindex(interface->ifa_name);
         if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, &mif,
                        sizeof(mif)) == -1) {
           OC_ERR("setting socket option for default IPV6_MULTICAST_IF: %d",

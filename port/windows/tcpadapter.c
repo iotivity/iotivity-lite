@@ -123,44 +123,41 @@ get_assigned_tcp_port(SOCKET sock, struct sockaddr_storage *sock_info)
   return 0;
 }
 
-static int
+static long
 get_interface_index(SOCKET sock)
 {
-  int interface_index = SOCKET_ERROR;
-
   struct sockaddr_storage addr;
   if (get_assigned_tcp_port(sock, &addr) == SOCKET_ERROR) {
     return SOCKET_ERROR;
   }
 
   ifaddr_t *ifaddr_list = get_network_addresses();
-  ifaddr_t *iface;
-
-  for (iface = ifaddr_list; iface != NULL; iface = iface->next) {
-    if (addr.ss_family == iface->addr.ss_family) {
-      if (addr.ss_family == AF_INET6) {
-        struct sockaddr_in6 *a = (struct sockaddr_in6 *)&iface->addr;
-        struct sockaddr_in6 *b = (struct sockaddr_in6 *)&addr;
-        if (memcmp(a->sin6_addr.s6_addr, b->sin6_addr.s6_addr, 16) == 0) {
-          interface_index = iface->if_index;
-          break;
-        }
-      }
-#ifdef OC_IPV4
-      else if (addr.ss_family == AF_INET) {
-        struct sockaddr_in *a = (struct sockaddr_in *)&iface->addr;
-        struct sockaddr_in *b = (struct sockaddr_in *)&addr;
-        if (a->sin_addr.s_addr == b->sin_addr.s_addr) {
-          interface_index = iface->if_index;
-          break;
-        }
-      }
-#endif /* OC_IPV4 */
+  for (ifaddr_t *iface = ifaddr_list; iface != NULL; iface = iface->next) {
+    if (addr.ss_family != iface->addr.ss_family) {
+      continue;
     }
+    if (addr.ss_family == AF_INET6) {
+      struct sockaddr_in6 *a = (struct sockaddr_in6 *)&iface->addr;
+      struct sockaddr_in6 *b = (struct sockaddr_in6 *)&addr;
+      if (memcmp(a->sin6_addr.s6_addr, b->sin6_addr.s6_addr, 16) == 0) {
+        free_network_addresses(ifaddr_list);
+        return iface->if_index;
+      }
+    }
+#ifdef OC_IPV4
+    else if (addr.ss_family == AF_INET) {
+      struct sockaddr_in *a = (struct sockaddr_in *)&iface->addr;
+      struct sockaddr_in *b = (struct sockaddr_in *)&addr;
+      if (a->sin_addr.s_addr == b->sin_addr.s_addr) {
+        free_network_addresses(ifaddr_list);
+        return iface->if_index;
+      }
+    }
+#endif /* OC_IPV4 */
   }
 
   free_network_addresses(ifaddr_list);
-  return interface_index;
+  return 0;
 }
 
 static void
@@ -227,6 +224,14 @@ add_new_session_locked(SOCKET sock, ip_context_t *dev, oc_endpoint_t *endpoint,
     OC_ERR("creating socket session event %d", WSAGetLastError());
     return SOCKET_ERROR;
   }
+
+  long if_index = get_interface_index(sock);
+  if (if_index == SOCKET_ERROR) {
+    WSACloseEvent(sock_event);
+    OC_ERR("could not obtain interface index");
+    return SOCKET_ERROR;
+  }
+
   tcp_session_t *session = oc_memb_alloc(&tcp_session_s);
   if (!session) {
     WSACloseEvent(sock_event);
@@ -234,7 +239,7 @@ add_new_session_locked(SOCKET sock, ip_context_t *dev, oc_endpoint_t *endpoint,
     return SOCKET_ERROR;
   }
 
-  endpoint->interface_index = get_interface_index(sock);
+  endpoint->interface_index = (unsigned)if_index;
   memcpy(&session->endpoint, endpoint, sizeof(oc_endpoint_t));
   session->dev = dev;
   session->endpoint.next = NULL;

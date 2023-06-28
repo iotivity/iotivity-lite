@@ -59,13 +59,13 @@ static const uint8_t ALL_COAP_NODES_SL[] = { 0xff, 0x05, 0, 0, 0, 0, 0, 0,
 #ifdef OC_IPV4
 bool
 oc_netsocket_add_sock_to_ipv4_mcast_group(int sock, const struct in_addr *local,
-                                          int interface_index)
+                                          unsigned if_index)
 {
   assert(sock != -1);
   struct ip_mreqn mreq;
   memset(&mreq, 0, sizeof(mreq));
   mreq.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4);
-  mreq.imr_ifindex = interface_index;
+  mreq.imr_ifindex = (int)if_index;
   memcpy(&mreq.imr_address, local, sizeof(struct in_addr));
 
   (void)setsockopt(sock, IPPROTO_IP, IP_DROP_MEMBERSHIP, &mreq, sizeof(mreq));
@@ -80,14 +80,14 @@ oc_netsocket_add_sock_to_ipv4_mcast_group(int sock, const struct in_addr *local,
 #endif /* OC_IPV4 */
 
 static bool
-netsocket_add_sock_to_ipv6_mcast_group(int sock, int interface_index,
+netsocket_add_sock_to_ipv6_mcast_group(int sock, unsigned if_index,
                                        const uint8_t addr[], size_t addr_size)
 {
   assert(addr_size == 16);
   struct ipv6_mreq mreq;
   memset(&mreq, 0, sizeof(mreq));
   memcpy(mreq.ipv6mr_multiaddr.s6_addr, addr, addr_size);
-  mreq.ipv6mr_interface = interface_index;
+  mreq.ipv6mr_interface = if_index;
 
   (void)setsockopt(sock, IPPROTO_IPV6, IPV6_DROP_MEMBERSHIP, &mreq,
                    sizeof(mreq));
@@ -101,29 +101,26 @@ netsocket_add_sock_to_ipv6_mcast_group(int sock, int interface_index,
 }
 
 bool
-oc_netsocket_add_sock_to_ipv6_mcast_group(int sock, int interface_index)
+oc_netsocket_add_sock_to_ipv6_mcast_group(int sock, unsigned if_index)
 {
   assert(sock != -1);
   /* Link-local scope */
   if (!netsocket_add_sock_to_ipv6_mcast_group(
-        sock, interface_index, ALL_OCF_NODES_LL,
-        OC_ARRAY_SIZE(ALL_OCF_NODES_LL))) {
+        sock, if_index, ALL_OCF_NODES_LL, OC_ARRAY_SIZE(ALL_OCF_NODES_LL))) {
     OC_ERR("failed joining link-local IPv6 multicast group: %d", (int)errno);
     return false;
   }
 
   /* Realm-local scope */
   if (!netsocket_add_sock_to_ipv6_mcast_group(
-        sock, interface_index, ALL_OCF_NODES_RL,
-        OC_ARRAY_SIZE(ALL_OCF_NODES_RL))) {
+        sock, if_index, ALL_OCF_NODES_RL, OC_ARRAY_SIZE(ALL_OCF_NODES_RL))) {
     OC_ERR("failed joining realm-local IPv6 multicast group: %d", (int)errno);
     return false;
   }
 
   /* Site-local scope */
   if (!netsocket_add_sock_to_ipv6_mcast_group(
-        sock, interface_index, ALL_OCF_NODES_SL,
-        OC_ARRAY_SIZE(ALL_OCF_NODES_SL))) {
+        sock, if_index, ALL_OCF_NODES_SL, OC_ARRAY_SIZE(ALL_OCF_NODES_SL))) {
     OC_ERR("failed joining site-local IPv6 multicast group: %d", (int)errno);
     return false;
   }
@@ -132,8 +129,7 @@ oc_netsocket_add_sock_to_ipv6_mcast_group(int sock, int interface_index)
   OC_DBG("Adding all CoAP Nodes");
   /* Link-local scope ALL COAP nodes  */
   if (!netsocket_add_sock_to_ipv6_mcast_group(
-        sock, interface_index, ALL_COAP_NODES_LL,
-        OC_ARRAY_SIZE(ALL_COAP_NODES_LL))) {
+        sock, if_index, ALL_COAP_NODES_LL, OC_ARRAY_SIZE(ALL_COAP_NODES_LL))) {
     OC_ERR("failed joining link-local CoAP IPv6 multicast group: %d",
            (int)errno);
     return false;
@@ -141,8 +137,7 @@ oc_netsocket_add_sock_to_ipv6_mcast_group(int sock, int interface_index)
 
   /* Realm-local scope ALL COAP nodes  */
   if (!netsocket_add_sock_to_ipv6_mcast_group(
-        sock, interface_index, ALL_COAP_NODES_RL,
-        OC_ARRAY_SIZE(ALL_COAP_NODES_RL))) {
+        sock, if_index, ALL_COAP_NODES_RL, OC_ARRAY_SIZE(ALL_COAP_NODES_RL))) {
     OC_ERR("failed joining realm-local CoAP IPv6 multicast group: %d",
            (int)errno);
     return false;
@@ -150,8 +145,7 @@ oc_netsocket_add_sock_to_ipv6_mcast_group(int sock, int interface_index)
 
   /* Site-local scope ALL COAP nodes */
   if (!netsocket_add_sock_to_ipv6_mcast_group(
-        sock, interface_index, ALL_COAP_NODES_SL,
-        OC_ARRAY_SIZE(ALL_COAP_NODES_SL))) {
+        sock, if_index, ALL_COAP_NODES_SL, OC_ARRAY_SIZE(ALL_COAP_NODES_SL))) {
     OC_ERR("failed joining site-local CoAP IPv6 multicast group: %d",
            (int)errno);
     return false;
@@ -175,8 +169,8 @@ netsocket_configure_mcast(int mcast_sock, int sa_family)
   for (struct ifaddrs *interface = ifs; interface != NULL;
        interface = interface->ifa_next) {
     /* Ignore interfaces that are down and the loopback interface */
-    if (!(interface->ifa_flags & IFF_UP) ||
-        (interface->ifa_flags & IFF_LOOPBACK)) {
+    if ((interface->ifa_flags & IFF_UP) == 0 ||
+        (interface->ifa_flags & IFF_LOOPBACK) != 0) {
       continue;
     }
     /* Ignore interfaces not belonging to the address family under consideration
@@ -185,7 +179,14 @@ netsocket_configure_mcast(int mcast_sock, int sa_family)
       continue;
     }
     /* Obtain interface index for this address */
-    int if_index = if_nametoindex(interface->ifa_name);
+    unsigned if_index = if_nametoindex(interface->ifa_name);
+    if (if_index == 0) {
+      OC_ERR("cannot configure multicast socket: failed obtaining interface "
+             "index for %s: %d",
+             interface->ifa_name, (int)errno);
+      continue;
+    }
+
     /* Accordingly handle IPv6/IPv4 addresses */
     if (sa_family == AF_INET6) {
       CLANG_IGNORE_WARNING_START
@@ -197,6 +198,7 @@ netsocket_configure_mcast(int mcast_sock, int sa_family)
         continue;
       }
       if (!oc_netsocket_add_sock_to_ipv6_mcast_group(mcast_sock, if_index)) {
+        freeifaddrs(ifs);
         return false;
       }
       continue;
@@ -213,6 +215,7 @@ netsocket_configure_mcast(int mcast_sock, int sa_family)
       }
       if (!oc_netsocket_add_sock_to_ipv4_mcast_group(
             mcast_sock, &addr->sin_addr, if_index)) {
+        freeifaddrs(ifs);
         return false;
       }
       continue;

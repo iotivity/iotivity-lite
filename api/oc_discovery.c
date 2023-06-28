@@ -100,7 +100,7 @@ oc_filter_out_ep_for_resource(const oc_endpoint_t *ep,
 #endif /* OC_SECURITY */
         ) &&
        !(ep->flags & SECURED)) ||
-      (request_origin && request_origin->interface_index != -1 &&
+      (request_origin && request_origin->interface_index != 0 &&
        request_origin->interface_index != ep->interface_index)) {
     return true;
   }
