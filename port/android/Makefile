@@ -60,7 +60,7 @@
 
 # Location of the installation directory and the API level.
 export OS=android
-export ANDROID_API := 23
+export ANDROID_API ?= 23
 ifeq (${NDK_HOME},)
 export ANDROID_BASE := "${HOME}/android-arm-${ANDROID_API}"
 else
@@ -93,7 +93,7 @@ MKDIR ?= mkdir
 ifeq (${MYGITHUB_ACTIONS}, true)
 export HOST_TAG := linux-x86_64
 GITHUBBASE := ${ANDROID_NDK_HOME}/toolchains/llvm/prebuilt/${HOST_TAG}/bin
-export CC := ${GITHUBBASE}/aarch64-linux-android23-clang
+export CC := ${GITHUBBASE}/aarch64-linux-android${ANDROID_API}-clang
 AR := ${GITHUBBASE}/llvm-ar
 endif
 

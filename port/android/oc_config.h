@@ -28,8 +28,13 @@ typedef uint64_t oc_clock_time_t;
 /* Maximum wait time for select function */
 #define SELECT_TIMEOUT_SEC (1)
 
+/* The current implementation in Android port relies on notifications from a
+ * NETLINK socket to retrieve interface change notifications, but this is
+ * restricted from ANDROID_API >= 30  */
+#if __ANDROID_API__ < 30
 /* Add support for passing network up/down events to the app */
 #define OC_NETWORK_MONITOR
+#endif /* __ANDROID_API__ < 30 */
 /* Add support for passing TCP/TLS/DTLS session connection events to the app */
 #define OC_SESSION_EVENTS
 

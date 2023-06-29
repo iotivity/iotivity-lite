@@ -36,6 +36,14 @@ jobs:
           - args: "DYNAMIC=0"
           # secure off, dynamic allocation off
           - args: "SECURE=0 DYNAMIC=0"
+          # android 10
+          - args: "ANDROID_API=29"
+          # android 11
+          - args: "ANDROID_API=30"
+          # android 12
+          - args: "ANDROID_API=31"
+          # android 13
+          - args: "ANDROID_API=33"
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
