@@ -38,6 +38,8 @@
 #include <getopt.h>
 #endif /* _MSC_VER */
 
+#define CHAR_ARRAY_LEN(x) (sizeof(x) - 1)
+
 static bool quit = false;
 
 #ifdef _WIN32
@@ -443,38 +445,30 @@ register_lights(void)
 static int64_t g_battery_level = 94;
 
 static bool
-set_switches_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+set_switches_properties(const oc_resource_t *resource, const oc_rep_t *rep,
+                        void *data)
 {
   (void)resource;
   (void)data;
-  while (rep != NULL) {
-    switch (rep->type) {
-    case OC_REP_INT:
-      if (oc_string_len(rep->name) == 2 &&
-          memcmp(oc_string(rep->name), "bl", 2) == 0) {
+  for (; rep != NULL; rep = rep->next) {
+    if (rep->type == OC_REP_INT) {
+      if (oc_string_len(rep->name) == CHAR_ARRAY_LEN("bl") &&
+          memcmp(oc_string(rep->name), "bl", CHAR_ARRAY_LEN("bl")) == 0) {
         g_battery_level = rep->value.integer;
       }
-      break;
-    default:
-      break;
     }
-    rep = rep->next;
   }
   return true;
 }
 
 static void
-get_switches_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
-                        void *data)
+get_switches_properties(const oc_resource_t *resource,
+                        oc_interface_mask_t iface_mask, void *data)
 {
   (void)resource;
   (void)data;
-  switch (iface_mask) {
-  case OC_IF_BASELINE:
+  if (iface_mask == OC_IF_BASELINE) {
     oc_rep_set_int(root, x.org.openconnectivity.bl, g_battery_level);
-    break;
-  default:
-    break;
   }
 }
 
@@ -492,26 +486,22 @@ OC_MEMB(switch_s, oc_switch_t, 1);
 OC_LIST(switches);
 
 static bool
-set_switch_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+set_switch_properties(const oc_resource_t *resource, const oc_rep_t *rep,
+                      void *data)
 {
   (void)resource;
   oc_switch_t *cswitch = (oc_switch_t *)data;
-  while (rep != NULL) {
-    switch (rep->type) {
-    case OC_REP_BOOL:
+  for (; rep != NULL; rep = rep->next) {
+    if (rep->type == OC_REP_BOOL) {
       cswitch->state = rep->value.boolean;
-      break;
-    default:
-      break;
     }
-    rep = rep->next;
   }
   return true;
 }
 
 static void
-get_switch_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
-                      void *data)
+get_switch_properties(const oc_resource_t *resource,
+                      oc_interface_mask_t iface_mask, void *data)
 {
   oc_switch_t *cswitch = (oc_switch_t *)data;
   switch (iface_mask) {
@@ -537,14 +527,14 @@ post_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
   while (rep) {
     switch (rep->type) {
     case OC_REP_BOOL:
-      if (oc_string_len(rep->name) != 5 ||
-          memcmp(oc_string(rep->name), "value", 5) != 0) {
+      if (oc_string_len(rep->name) != CHAR_ARRAY_LEN("value") ||
+          memcmp(oc_string(rep->name), "value", CHAR_ARRAY_LEN("value")) != 0) {
         bad_request = true;
       }
       break;
     default:
-      if (oc_string_len(rep->name) > 2) {
-        if (strncmp(oc_string(rep->name), "x.", 2) == 0) {
+      if (oc_string_len(rep->name) > CHAR_ARRAY_LEN("x.")) {
+        if (strncmp(oc_string(rep->name), "x.", CHAR_ARRAY_LEN("x.")) == 0) {
           break;
         }
       }
@@ -601,7 +591,7 @@ register_to_cloud(void *res)
 }
 
 static oc_resource_t *
-get_switch_instance(const char *href, oc_string_array_t *types,
+get_switch_instance(const char *href, const oc_string_array_t *types,
                     oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
                     size_t device)
 {

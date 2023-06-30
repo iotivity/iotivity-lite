@@ -370,7 +370,8 @@ OC_MEMB(switch_s, oc_switch_t, 1);
 OC_LIST(switches);
 
 static bool
-set_switch_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+set_switch_properties(const oc_resource_t *resource, const oc_rep_t *rep,
+                      void *data)
 {
   (void)resource;
   oc_switch_t *cswitch = (oc_switch_t *)data;
@@ -388,8 +389,8 @@ set_switch_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 }
 
 static void
-get_switch_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
-                      void *data)
+get_switch_properties(const oc_resource_t *resource,
+                      oc_interface_mask_t iface_mask, void *data)
 {
   oc_switch_t *cswitch = (oc_switch_t *)data;
   switch (iface_mask) {
@@ -458,7 +459,7 @@ get_cswitch(oc_request_t *request, oc_interface_mask_t iface_mask,
 }
 
 static oc_resource_t *
-get_switch_instance(const char *href, oc_string_array_t *types,
+get_switch_instance(const char *href, const oc_string_array_t *types,
                     oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
                     size_t device)
 {
@@ -512,7 +513,8 @@ free_switch_instance(oc_resource_t *resource)
 /* Setting custom Collection-level properties */
 int64_t battery_level = 94;
 static bool
-set_platform_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+set_platform_properties(const oc_resource_t *resource, const oc_rep_t *rep,
+                        void *data)
 {
   (void)resource;
   (void)data;
@@ -533,8 +535,8 @@ set_platform_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 }
 
 static void
-get_platform_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
-                        void *data)
+get_platform_properties(const oc_resource_t *resource,
+                        oc_interface_mask_t iface_mask, void *data)
 {
   (void)resource;
   (void)data;

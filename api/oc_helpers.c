@@ -137,18 +137,44 @@ oc_set_string(oc_string_t *dst, const char *str, size_t str_len)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
+oc_string_view_t
+oc_string_view(const char *data, size_t length)
+{
+  oc_string_view_t view = {
+    .data = data,
+    .length = length,
+  };
+  return view;
+}
+
+oc_string_view_t
+oc_string_view2(const oc_string_t *str)
+{
+  if (str == NULL) {
+    return oc_string_view(NULL, 0);
+  }
+  return oc_string_view(oc_string(*str), oc_string_len(*str));
+}
+
+bool
+oc_string_view_is_equal(oc_string_view_t str1, oc_string_view_t str2)
+{
+  return str1.length == str2.length &&
+         (str1.length == 0 || memcmp(str1.data, str2.data, str1.length) == 0);
+}
+
 bool
 oc_string_is_equal(const oc_string_t *str1, const oc_string_t *str2)
 {
-  return oc_string_is_cstr_equal(str1, oc_string(*str2), oc_string_len(*str2));
+  return oc_string_view_is_equal(oc_string_view2(str1), oc_string_view2(str2));
 }
 
 bool
 oc_string_is_cstr_equal(const oc_string_t *str1, const char *str2,
                         size_t str2_len)
 {
-  return oc_string_len(*str1) == str2_len &&
-         memcmp(oc_string(*str1), str2, str2_len) == 0;
+  return oc_string_view_is_equal(oc_string_view2(str1),
+                                 oc_string_view(str2, str2_len));
 }
 
 void

@@ -30,6 +30,40 @@ extern "C" {
 #endif
 
 /**
+ * @brief Non-mutable view into a C-string or an oc_string_t.
+ *
+ * @note It is the programmer's responsibility to ensure that oc_string_view_t
+ * does not outlive the pointed-to string.
+ * This is especially important with dynamic allocation disabled. Because
+ * then oc_string_t values are taken from a preallocated pool and when an
+ * oc_string_t is "deallocated" then data is returned to the pool and
+ * oc_string_t values allocated after this value are reallocated so that the
+ * pool is always contiguous. This means that the data pointer might become
+ * invalid after a call to oc_free_string.
+ */
+typedef struct oc_string_view_t
+{
+  const char *data;
+  size_t length;
+} oc_string_view_t;
+
+/** Create an oc_string_view_t from a C-string. */
+oc_string_view_t oc_string_view(const char *data, size_t length);
+
+/** Create an oc_string_view_t from an oc_string_t. */
+oc_string_view_t oc_string_view2(const oc_string_t *str);
+
+/**
+ * @brief Compare two oc_string_view_t values.
+ *
+ * @param str1 first oc_string_view_t
+ * @param str2 second oc_string_view_t
+ * @return true strings are equal
+ * @return false strings are not equal
+ */
+bool oc_string_view_is_equal(oc_string_view_t str1, oc_string_view_t str2);
+
+/**
  * @brief Compare two oc_strings.
  *
  * @param str1 first oc_string (cannot be NULL)

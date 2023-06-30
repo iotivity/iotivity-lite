@@ -219,7 +219,7 @@
     <ClInclude Include="..\..\..\api\oc_introspection_internal.h" />
     <ClInclude Include="..\..\..\api\oc_main.h" />
     <ClInclude Include="..\..\..\api\oc_mnt_internal.h" />
-    <ClInclude Include="..\..\..\api\oc_resource_factory.h" />
+    <ClInclude Include="..\..\..\api\oc_resource_factory_internal.h" />
     <ClInclude Include="..\..\..\api\oc_session_events_internal.h" />
     <ClInclude Include="..\..\..\api\oc_swupdate_internal.h" />
     <ClInclude Include="..\..\..\api\oc_tcp_internal.h" />

@@ -263,7 +263,8 @@ oc_set_on_push_arrived(oc_on_push_arrived_t func)
  * @return true:success, false:fail
  */
 static bool
-set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+set_ns_properties(const oc_resource_t *resource, const oc_rep_t *rep,
+                  void *data)
 {
   (void)resource;
   bool pushtarget_is_updated = false;
@@ -517,7 +518,7 @@ set_ns_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
  * "oic.r.pushproxy"] Resource)
  */
 static void
-get_ns_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+get_ns_properties(const oc_resource_t *resource, oc_interface_mask_t iface_mask,
                   void *data)
 {
   /*
@@ -707,7 +708,7 @@ delete_ns(oc_request_t *request, oc_interface_mask_t iface_mask,
  * @return oc_resource_t for new `Notification Selector + Push Proxy`
  */
 static oc_resource_t *
-get_ns_instance(const char *href, oc_string_array_t *types,
+get_ns_instance(const char *href, const oc_string_array_t *types,
                 oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
                 size_t device)
 {

@@ -161,7 +161,8 @@ OC_MEMB(ec_s, oc_ec_t, 1);
 OC_LIST(ecs);
 
 static bool
-set_ec_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+set_ec_properties(const oc_resource_t *resource, const oc_rep_t *rep,
+                  void *data)
 {
   (void)resource;
   oc_ec_t *ec = (oc_ec_t *)data;
@@ -185,7 +186,7 @@ set_ec_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 }
 
 static void
-get_ec_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
+get_ec_properties(const oc_resource_t *resource, oc_interface_mask_t iface_mask,
                   void *data)
 {
   oc_ec_t *ec = (oc_ec_t *)data;
@@ -212,7 +213,7 @@ get_ec(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
 }
 
 static oc_resource_t *
-get_ec_instance(const char *href, oc_string_array_t *types,
+get_ec_instance(const char *href, const oc_string_array_t *types,
                 oc_resource_properties_t bm, oc_interface_mask_t iface_mask,
                 size_t device)
 {

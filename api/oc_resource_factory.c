@@ -20,7 +20,7 @@
 
 #if defined(OC_SERVER) && defined(OC_COLLECTIONS) &&                           \
   defined(OC_COLLECTIONS_IF_CREATE)
-#include "api/oc_resource_factory.h"
+#include "api/oc_resource_factory_internal.h"
 #include "port/oc_random.h"
 #include <limits.h>
 #include <stdio.h>
@@ -167,7 +167,7 @@ get_collection_instance_uri(oc_collection_t *collection, char *uri,
 
 oc_rt_created_t *
 oc_rt_factory_create_resource(oc_collection_t *collection,
-                              oc_string_array_t *rtypes,
+                              const oc_string_array_t *rtypes,
                               oc_resource_properties_t bm,
                               oc_interface_mask_t interfaces,
                               oc_rt_factory_t *rf, size_t device)
@@ -248,9 +248,9 @@ oc_rt_get_factory_create_for_resource(const oc_resource_t *resource)
 void
 oc_rt_factory_free_created_resources(size_t device)
 {
-  oc_rt_created_t *rtc = (oc_rt_created_t *)oc_list_head(created_res), *next;
+  oc_rt_created_t *rtc = (oc_rt_created_t *)oc_list_head(created_res);
   while (rtc) {
-    next = rtc->next;
+    oc_rt_created_t *next = rtc->next;
     if (rtc->resource->device == device) {
       oc_rt_factory_free_created_resource(rtc, rtc->rf);
     }

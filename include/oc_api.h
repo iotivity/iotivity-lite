@@ -1232,7 +1232,8 @@ void oc_collection_add_link(oc_resource_t *collection, oc_link_t *link);
  *                 freed.
  */
 OC_API
-void oc_collection_remove_link(oc_resource_t *collection, oc_link_t *link);
+void oc_collection_remove_link(oc_resource_t *collection,
+                               const oc_link_t *link);
 
 /**
  * Returns the list of links belonging to this collection.
@@ -1327,7 +1328,7 @@ void oc_resource_set_properties_cbs(oc_resource_t *resource,
  * Callback invoked to retrieve an resource
  */
 typedef oc_resource_t *(*oc_resource_get_instance_t)(const char *,
-                                                     oc_string_array_t *,
+                                                     const oc_string_array_t *,
                                                      oc_resource_properties_t,
                                                      oc_interface_mask_t,
                                                      size_t);
