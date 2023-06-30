@@ -4,24 +4,17 @@
 %include "stdint.i";
 %include "iotivity.swg";
 
+%import "oc_link.i";
 %import "oc_ri.i";
 %import "oc_uuid.i";
 %import "oc_enums.i";
 
 %{
+#include "api/oc_collection_internal.h"
 #include "oc_collection.h"
 %}
 
 /*******************Begin oc_collection.h*******************/
-%rename(OCLinkParams) oc_link_params_t;
-typedef struct oc_link_s oc_link_t;
-%rename(OCLink) oc_link_s;
-%ignore oc_link_s::OC_LIST_STRUCT(params);
-%extend oc_link_s {
-  oc_link_params_t *getParamsListHead() {
-    return oc_list_head(self->params);
-  }
-}
 %rename(OCResourceType) oc_rt_t;
 typedef struct oc_collection_s oc_collection_t;
 %ignore oc_collection_s::get_handler;
@@ -64,6 +57,10 @@ typedef struct oc_collection_s oc_collection_t;
 %rename(getLinkByUri) oc_get_link_by_uri;
 %rename(checkIfCollection) oc_check_if_collection;
 %rename(collectionAdd) oc_collection_add;
+
+#define OC_API
 #define OC_NO_DISCARD_RETURN
+#define OC_NONNULL(...)
 %include "oc_collection.h"
+%include "api/oc_collection_internal.h"
 /*******************End oc_collection.h*********************/

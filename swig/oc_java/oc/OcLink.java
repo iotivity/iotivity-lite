@@ -5,7 +5,8 @@ import org.iotivity.*;
 /**
  * OcLink is a resource link.
  * <p>
- * Links are typically added to a collection in the registerResources() method of the platform's initialize handler.
+ * Links are typically added to a collection in the registerResources() method
+ * of the platform's initialize handler.
  *
  * @see OcPlatform#systemInit
  * @see OcCollection#addLink
@@ -19,7 +20,8 @@ public class OcLink {
     /**
      * Constructs an OcLink.
      * <p>
-     * @param resource  the resource this link represents
+     *
+     * @param resource the resource this link represents
      */
     public OcLink(OcResource resource) {
         this(resource, 0, null);
@@ -28,13 +30,14 @@ public class OcLink {
     /**
      * Constructs an OcLink.
      * <p>
+     *
      * @param resource  the resource this link represents
      * @param instance  the instance of this link
-     * @param relations  array of the relationships
+     * @param relations array of the relationships
      */
     public OcLink(OcResource resource, long instance, String[] relations) {
         if (resource != null) {
-            nativeLink = OCMain.newLink(resource.getNativeResource());
+            nativeLink = OCLinkUtil.newLink(resource.getNativeResource());
             if (nativeLink != null) {
                 this.resource = resource;
                 setInstance(instance);
@@ -73,7 +76,7 @@ public class OcLink {
 
     public void addRelation(String relation) {
         if (relation != null) {
-            OCMain.linkAddRelation(nativeLink, relation);
+            OCLinkUtil.linkAddRelation(nativeLink, relation);
         }
     }
 

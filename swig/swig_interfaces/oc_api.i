@@ -22,6 +22,7 @@ CLANG_IGNORE_WARNING_END
 %import "oc_collection.i"
 %import "oc_clock.i"
 %import "oc_endpoint.i"
+%import "oc_link.i"
 %import "oc_rep.i"
 %import "oc_uuid.i"
 %import "oc_enums.i"
@@ -370,7 +371,11 @@ int jni_oc_add_device(const char *uri, const char *rt, const char *name,
 }
 %}
 
-%rename(addDevice) jni_oc_add_device1;
+%rename(OCConnectivityListeningPortFlags) oc_connectivity_listening_port_flags_t;
+%rename(OCConnectivityListeningPorts) oc_connectivity_listening_ports_s;
+%rename(OCConnectivityPorts) oc_connectivity_ports_s;
+
+%rename(addDevice) jni_oc_add_device_v1;
 %inline %{
 int jni_oc_add_device_v1(const char *uri, const char *rt, const char *name,
                          const char *spec_version, const char *data_model_version,
@@ -746,56 +751,6 @@ void jni_remove_ownership_status_cb(jobject cb)
 %rename(deleteCollection) oc_delete_collection;
 
 // DOCUMENTATION workaround
-%javamethodmodifiers oc_new_link "/**
-   * Creates a new link for collections with the specified resource.
-   *
-   * @param resource Resource to set in the link. The resource is not copied.
-   *  Must not be NULL
-   *
-   * @return The created link or NULL if out of memory or resource is NULL.
-   *
-   * @see deleteLink
-   * @see collectionAddLink
-   * @see newResource
-   */
-  public";
-%rename(newLink) oc_new_link;
-
-// DOCUMENTATION workaround
-%javamethodmodifiers oc_delete_link "/**
-   * Deletes the link.
-   * <p>
-   * <strong>Note</strong>: the function neither removes the resource set on this link
-   *  nor does it remove it from any collection.
-   *
-   * @param link The link to delete. The function does nothing, if
-   *  the parameter is NULL
-   */
-  public";
-%rename(deleteLink) oc_delete_link;
-
-// DOCUMENTATION workaround
-%javamethodmodifiers oc_link_add_rel "/**
-   * Adds a relation to the link.
-   *
-   * @param link Link to add the relation to. Must not be null
-   * @param rel Relation to add. Must not be null
-   */
-  public";
-%rename(linkAddRelation) oc_link_add_rel;
-
-// DOCUMENTATION workaround
-%javamethodmodifiers oc_link_add_link_param "/**
-   * Adds a link parameter with specified key and value.
-   *
-   * @param link Link to which to add a link parameter. Must not be null.
-   * @param key Key to identify the link parameter. Must not be null.
-   * @param value Link parameter value. Must not be null.
-   */
-  public";
-%rename(linkAddLinkParameter) oc_link_add_link_param;
-
-// DOCUMENTATION workaround
 %javamethodmodifiers oc_collection_add_link "/**
    * Adds the link to the collection.
    * <p>
@@ -959,7 +914,7 @@ void jni_oc_resource_set_request_handler(oc_resource_t *resource,
 %}
 /* Code and typemaps for mapping the oc_get_properties_cb_t to the java OCGetPropertiesHandler */
 %{
-void jni_oc_get_properties_callback(oc_resource_t *resource, oc_interface_mask_t iface_mask, void *user_data) {
+void jni_oc_get_properties_callback(const oc_resource_t *resource, oc_interface_mask_t iface_mask, void *user_data) {
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
   jint getEnvResult = 0;
@@ -1013,7 +968,7 @@ void jni_oc_get_properties_callback(oc_resource_t *resource, oc_interface_mask_t
 
 /* Code and typemaps for mapping the oc_set_properties_cb_t to the java OCSetPropertiesHandler */
 %{
-bool jni_oc_set_properties_callback(oc_resource_t *resource, oc_rep_t *rep, void *user_data) {
+bool jni_oc_set_properties_callback(const oc_resource_t *resource, const oc_rep_t *rep, void *user_data) {
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
   jint getEnvResult = 0;

@@ -51,14 +51,15 @@
 #ifdef OC_SERVER
 #include "api/oc_ri_server_internal.h"
 #include "api/oc_server_api_internal.h"
-#endif /* OC_SERVER */
-
-#if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+#ifdef OC_COLLECTIONS
+#include "api/oc_collection_internal.h"
+#include "api/oc_link_internal.h"
 #include "oc_collection.h"
 #ifdef OC_COLLECTIONS_IF_CREATE
 #include "oc_resource_factory_internal.h"
 #endif /* OC_COLLECTIONS_IF_CREATE */
-#endif /* OC_COLLECTIONS && OC_SERVER */
+#endif /* OC_COLLECTIONS */
+#endif /* OC_SERVER */
 
 #ifdef OC_HAS_FEATURE_PUSH
 #include "oc_push_internal.h"
@@ -604,6 +605,7 @@ oc_method_to_str(oc_method_t method)
 }
 
 #ifdef OC_SERVER
+
 oc_resource_t *
 oc_ri_alloc_resource(void)
 {
@@ -639,9 +641,7 @@ oc_ri_delete_resource(oc_resource_t *resource)
   oc_list_remove(g_app_resources, resource);
   oc_list_remove(g_app_resources_to_be_deleted, resource);
 
-#ifdef OC_SERVER
   oc_remove_delayed_callback(resource, oc_delayed_delete_resource_cb);
-#endif /* OC_SERVER */
 
 #if defined(OC_COLLECTIONS)
 #if defined(OC_COLLECTIONS_IF_CREATE)

@@ -367,7 +367,6 @@ struct oc_resource_s
 #endif
 };
 
-typedef struct oc_link_s oc_link_t;
 typedef struct oc_collection_s oc_collection_t;
 
 typedef enum {

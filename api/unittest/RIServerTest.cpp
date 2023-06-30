@@ -18,7 +18,9 @@
  *
  ******************************************************************/
 
+#include "api/oc_collection_internal.h"
 #include "api/oc_event_callback_internal.h"
+#include "api/oc_link_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_ri_server_internal.h"
 #include "oc_api.h"

@@ -16,9 +16,11 @@
  *
  ****************************************************************************/
 
+#include "api/oc_collection_internal.h"
 #include "api/oc_core_res_internal.h"
 #include "api/oc_event_callback_internal.h"
 #include "api/oc_events_internal.h"
+#include "api/oc_link_internal.h"
 #include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_ri.h"

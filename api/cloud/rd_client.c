@@ -21,7 +21,9 @@
 
 #ifdef OC_CLOUD
 
+#include "api/oc_collection_internal.h"
 #include "api/oc_core_res_internal.h"
+#include "api/oc_link_internal.h"
 #include "oc_api.h"
 #include "oc_collection.h"
 #include "oc_core_res.h"

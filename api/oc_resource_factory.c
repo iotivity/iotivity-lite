@@ -20,6 +20,8 @@
 
 #if defined(OC_SERVER) && defined(OC_COLLECTIONS) &&                           \
   defined(OC_COLLECTIONS_IF_CREATE)
+#include "api/oc_collection_internal.h"
+#include "api/oc_link_internal.h"
 #include "api/oc_resource_factory_internal.h"
 #include "port/oc_random.h"
 #include <limits.h>

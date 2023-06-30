@@ -74,6 +74,7 @@
 #endif /* OC_BLOCK_WISE */
 
 #ifdef OC_COLLECTIONS
+#include "api/oc_collection_internal.h"
 #include "oc_collection.h"
 #ifdef OC_COLLECTIONS_IF_CREATE
 #include "api/oc_resource_factory_internal.h"

@@ -21,6 +21,7 @@
 #ifndef OC_COLLECTION_H
 #define OC_COLLECTION_H
 
+#include "oc_link.h"
 #include "oc_ri.h"
 #include "util/oc_compiler.h"
 #include "util/oc_list.h"
@@ -28,40 +29,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-typedef struct oc_link_params_t
-{
-  struct oc_link_params_t *next;
-  oc_string_t key;
-  oc_string_t value;
-} oc_link_params_t;
-
-struct oc_link_s
-{
-  struct oc_link_s *next;
-  oc_resource_t *resource;
-  oc_interface_mask_t interfaces;
-  int64_t ins;
-  oc_string_array_t rel;
-  OC_LIST_STRUCT(params);
-};
-
-typedef struct oc_rt_t
-{
-  struct oc_rt_t *next;
-  oc_string_t rt;
-} oc_rt_t;
-
-struct oc_collection_s
-{
-  struct oc_resource_s res;
-  OC_LIST_STRUCT(mandatory_rts);
-  OC_LIST_STRUCT(supported_rts);
-  OC_LIST_STRUCT(links); ///< list of links ordered by href length and value
-};
-
-void oc_link_set_interfaces(oc_link_t *link,
-                            oc_interface_mask_t new_interfaces);
 
 OC_NO_DISCARD_RETURN
 bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
