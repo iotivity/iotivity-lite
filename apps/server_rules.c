@@ -674,7 +674,8 @@ post_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
  * Callbacks for handling Collection level Properties on Scene Collection
  */
 static bool
-set_scenecol_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
+set_scenecol_properties(const oc_resource_t *resource, const oc_rep_t *rep,
+                        void *data)
 {
   (void)resource;
   (void)data;
@@ -710,8 +711,8 @@ set_scenecol_properties(oc_resource_t *resource, oc_rep_t *rep, void *data)
 }
 
 static void
-get_scenecol_properties(oc_resource_t *resource, oc_interface_mask_t iface_mask,
-                        void *data)
+get_scenecol_properties(const oc_resource_t *resource,
+                        oc_interface_mask_t iface_mask, void *data)
 {
   (void)resource;
   (void)data;

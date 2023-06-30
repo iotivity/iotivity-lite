@@ -739,7 +739,7 @@
     <ClInclude Include="..\mutex.h">
       <Filter>Port</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\api\oc_resource_factory.h">
+    <ClInclude Include="..\..\..\api\oc_resource_factory_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\api\oc_swupdate_internal.h">

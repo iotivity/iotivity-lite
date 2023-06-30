@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#ifndef OC_RESOURCE_FACTORY_H
-#define OC_RESOURCE_FACTORY_H
+#ifndef OC_RESOURCE_FACTORY_INTERNAL_H
+#define OC_RESOURCE_FACTORY_INTERNAL_H
 
 #include "oc_api.h"
 
@@ -42,7 +42,7 @@ typedef struct oc_rt_created_t
 } oc_rt_created_t;
 
 oc_rt_created_t *oc_rt_factory_create_resource(oc_collection_t *collection,
-                                               oc_string_array_t *rtypes,
+                                               const oc_string_array_t *rtypes,
                                                oc_resource_properties_t bm,
                                                oc_interface_mask_t interfaces,
                                                oc_rt_factory_t *rf,
@@ -62,4 +62,4 @@ void oc_fi_factory_free_all_created_resources(void);
 }
 #endif
 
-#endif /* OC_RESOURCE_FACTORY_H */
+#endif /* OC_RESOURCE_FACTORY_INTERNAL_H */

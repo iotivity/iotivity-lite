@@ -288,16 +288,15 @@ typedef struct oc_request_handler_s
 
 /**
  * @brief set properties callback
- *
  */
-typedef bool (*oc_set_properties_cb_t)(oc_resource_t *, oc_rep_t *, void *);
+typedef bool (*oc_set_properties_cb_t)(const oc_resource_t *, const oc_rep_t *,
+                                       void *);
 
 /**
  * @brief get properties callback
- *
  */
-typedef void (*oc_get_properties_cb_t)(oc_resource_t *, oc_interface_mask_t,
-                                       void *);
+typedef void (*oc_get_properties_cb_t)(const oc_resource_t *,
+                                       oc_interface_mask_t, void *);
 
 #ifdef OC_HAS_FEATURE_PUSH
 /**

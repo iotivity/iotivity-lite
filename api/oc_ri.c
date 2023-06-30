@@ -56,7 +56,7 @@
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "oc_collection.h"
 #ifdef OC_COLLECTIONS_IF_CREATE
-#include "oc_resource_factory.h"
+#include "oc_resource_factory_internal.h"
 #endif /* OC_COLLECTIONS_IF_CREATE */
 #endif /* OC_COLLECTIONS && OC_SERVER */
 

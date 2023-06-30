@@ -76,7 +76,7 @@
 #ifdef OC_COLLECTIONS
 #include "oc_collection.h"
 #ifdef OC_COLLECTIONS_IF_CREATE
-#include "api/oc_resource_factory.h"
+#include "api/oc_resource_factory_internal.h"
 #endif /* OC_COLLECTIONS_IF_CREATE */
 #endif /* OC_COLLECTIONS */
 
