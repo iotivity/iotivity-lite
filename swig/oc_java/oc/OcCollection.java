@@ -8,7 +8,8 @@ import org.iotivity.*;
 /**
  * OcCollection is a collection of a device.
  * <p>
- * Collections are typically added to a device in the registerResources() method of the platform's initialize handler.
+ * Collections are typically added to a device in the registerResources() method
+ * of the platform's initialize handler.
  *
  * @see OcPlatform#systemInit
  * @see OcDevice#addCollection
@@ -25,12 +26,13 @@ public class OcCollection extends OcResource {
     /**
      * Constructs an OcCollection.
      * <p>
-     * @param device  the device owning this collection
-     * @param name  the name of this collection
-     * @param uri  the uri of this collection
-     * @param rts  array of the resource types
-     * @param sRts  array of the supported resource types
-     * @param mRts  array of the mandatory resource types
+     *
+     * @param device the device owning this collection
+     * @param name   the name of this collection
+     * @param uri    the uri of this collection
+     * @param rts    array of the resource types
+     * @param sRts   array of the supported resource types
+     * @param mRts   array of the mandatory resource types
      */
     public OcCollection(OcDevice device, String name, String uri, String[] rts, String[] sRts, String[] mRts) {
         super();
@@ -82,7 +84,7 @@ public class OcCollection extends OcResource {
     public void deleteLink(OcLink link) {
         if (link != null) {
             linkLookup.remove(link);
-            OCMain.deleteLink(link.getNativeLink());
+            OCLinkUtil.deleteLink(link.getNativeLink());
         }
     }
 

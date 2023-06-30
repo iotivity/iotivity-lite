@@ -19,6 +19,7 @@
 #include "oc_api.h"
 #include "oc_collection.h"
 #include "oc_core_res.h"
+#include "oc_link.h"
 #include "oc_log.h"
 #include "oc_ri.h"
 #include "port/oc_clock.h"
@@ -847,8 +848,7 @@ register_resources(void)
 
   oc_link_t *ric1 = oc_new_link(res_binaryswitch);
   // Replace the default rel array with ["hosts"] with just "ruleinput"
-  oc_free_string_array(&(ric1->rel));
-  oc_new_string_array(&ric1->rel, 3);
+  oc_link_clear_rels(ric1);
   oc_link_add_rel(ric1, "ruleinput");
   oc_link_add_link_param(ric1, "anchor", "switch");
   oc_link_set_interfaces(ric1, OC_IF_A);

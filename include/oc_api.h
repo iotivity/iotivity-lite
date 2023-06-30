@@ -36,6 +36,7 @@
 #include "oc_cloud.h"
 #include "oc_config.h"
 #include "oc_export.h"
+#include "oc_link.h"
 #include "oc_rep.h"
 #include "oc_ri.h"
 #include "oc_role.h"
@@ -1140,7 +1141,8 @@ void oc_process_baseline_interface(const oc_resource_t *resource);
  */
 OC_API
 oc_resource_t *oc_new_collection(const char *name, const char *uri,
-                                 uint8_t num_resource_types, size_t device);
+                                 uint8_t num_resource_types, size_t device)
+  OC_NONNULL(2);
 
 /**
  * Deletes the specified collection.
@@ -1161,53 +1163,6 @@ OC_API
 void oc_delete_collection(oc_resource_t *collection);
 
 /**
- * Creates a new link for collections with the specified resource.
- *
- * @param[in] resource Resource to set in the link. The resource is not copied.
- *                     Must not be NULL
- *
- * @return The created link or NULL if out of memory or resource is NULL.
- *
- * @see oc_delete_link
- * @see oc_collection_add_link
- * @see oc_new_resource
- */
-OC_API
-oc_link_t *oc_new_link(oc_resource_t *resource);
-
-/**
- * Deletes the link.
- *
- * @note The function neither removes the resource set on this link  nor does it
- *       remove it from any collection.
- *
- * @param[in,out] link The link to delete. The function does nothing, if the
- *                     parameter is NULL
- */
-OC_API
-void oc_delete_link(oc_link_t *link);
-
-/**
- * Adds a relation to the link.
- *
- * @param[in,out] link Link to add the relation to. Must not be NULL
- * @param[in] rel Relation to add. Must not be NULL
- */
-OC_API
-void oc_link_add_rel(oc_link_t *link, const char *rel);
-
-/**
- * Adds a link parameter with specified key and value.
- *
- * @param[in,out] link Link to which to add a link parameter. Must not be NULL
- * @param[in] key Key to identify the link parameter. Must not be NULL
- * @param[in] value Link parameter value. Must not be NULL
- */
-OC_API
-void oc_link_add_link_param(oc_link_t *link, const char *key,
-                            const char *value);
-
-/**
  * Adds the link to the collection.
  *
  * @param[in,out] collection Collection to add the link to. Must not be NULL
@@ -1220,7 +1175,8 @@ void oc_link_add_link_param(oc_link_t *link, const char *key,
  * @see oc_collection_remove_link
  */
 OC_API
-void oc_collection_add_link(oc_resource_t *collection, oc_link_t *link);
+void oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
+  OC_NONNULL();
 
 /**
  * Removes a link from the collection.
@@ -1262,7 +1218,7 @@ oc_link_t *oc_collection_get_links(oc_resource_t *collection);
  * @see oc_new_collection
  */
 OC_API
-void oc_add_collection(oc_resource_t *collection);
+void oc_add_collection(oc_resource_t *collection) OC_NONNULL();
 
 /**
  * Gets all known collections.
@@ -1283,12 +1239,15 @@ oc_resource_t *oc_collection_get_collections(void);
  * exposed by the collection.
  *
  * @param[in] collection the collection the the Resource Type will be added to
+ * (cannot be NULL)
  * @param[in] rt the supported Resource Type being added to the collection
+ * (cannot be NULL)
  *
  * @return true on success
  */
 OC_API
-bool oc_collection_add_supported_rt(oc_resource_t *collection, const char *rt);
+bool oc_collection_add_supported_rt(oc_resource_t *collection, const char *rt)
+  OC_NONNULL();
 
 /**
  * Add a mandatory Resource Type to a collection
@@ -1298,12 +1257,15 @@ bool oc_collection_add_supported_rt(oc_resource_t *collection, const char *rt);
  * in an array of Links exposed by the collection.
  *
  * @param[in] collection the collection the the Resource Type will be added to
+ * (cannot be NULL)
  * @param[in] rt the mandatory Resource Type being added to the collection
+ * (cannot be NULL)
  *
  * @return true on success
  */
 OC_API
-bool oc_collection_add_mandatory_rt(oc_resource_t *collection, const char *rt);
+bool oc_collection_add_mandatory_rt(oc_resource_t *collection, const char *rt)
+  OC_NONNULL();
 
 /**
  * @brief sets the callback properties for set properties and get properties

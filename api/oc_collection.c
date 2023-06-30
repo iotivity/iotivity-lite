@@ -19,7 +19,9 @@
 #include "oc_collection.h"
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
+#include "api/oc_collection_internal.h"
 #include "api/oc_helpers_internal.h"
+#include "api/oc_link_internal.h"
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/observe.h"
 #include "oc_api.h"
@@ -40,12 +42,8 @@
 
 OC_MEMB(oc_collections_s, oc_collection_t, OC_MAX_NUM_COLLECTIONS);
 OC_LIST(oc_collections);
-/* Allocator for links */
-OC_MEMB(oc_links_s, oc_link_t, OC_MAX_APP_RESOURCES);
 /* Allocator for oc_rtt_t */
 OC_MEMB(oc_rtt_s, oc_rt_t, 1);
-/* Allocator for link parameters */
-OC_MEMB(oc_params_s, oc_link_params_t, 1);
 #ifdef OC_COLLECTIONS_IF_CREATE
 /* Allocator for resource factories */
 OC_MEMB(oc_rts_s, oc_rt_factory_t, 1);
@@ -64,7 +62,7 @@ oc_collection_alloc(void)
     OC_LIST_STRUCT_INIT(collection, links);
     return collection;
   }
-  OC_WRN("insufficient memory to create new collection");
+  OC_ERR("insufficient memory to create new collection");
   return NULL;
 }
 
@@ -103,47 +101,6 @@ oc_collection_free(oc_collection_t *collection)
   oc_memb_free(&oc_collections_s, collection);
 }
 
-oc_link_t *
-oc_new_link(oc_resource_t *resource)
-{
-  if (resource) {
-    oc_link_t *link = (oc_link_t *)oc_memb_alloc(&oc_links_s);
-    if (link) {
-      oc_new_string_array(&link->rel, 3);
-      oc_string_array_add_item(link->rel, "hosts");
-      link->resource = resource;
-      link->interfaces = resource->interfaces;
-      resource->num_links++;
-      link->next = 0;
-      link->ins = (int64_t)oc_random_value();
-      OC_LIST_STRUCT_INIT(link, params);
-      return link;
-    }
-    OC_WRN("insufficient memory to create new link");
-  }
-  return NULL;
-}
-
-void
-oc_delete_link(oc_link_t *link)
-{
-  if (link) {
-    oc_link_params_t *p = (oc_link_params_t *)oc_list_pop(link->params);
-    while (p) {
-      oc_free_string(&p->key);
-      oc_free_string(&p->value);
-      oc_memb_free(&oc_params_s, p);
-      p = (oc_link_params_t *)oc_list_pop(link->params);
-    }
-    if (oc_ri_is_app_resource_valid(link->resource) ||
-        oc_check_if_collection(link->resource)) {
-      link->resource->num_links--;
-    }
-    oc_free_string_array(&(link->rel));
-    oc_memb_free(&oc_links_s, link);
-  }
-}
-
 static oc_event_callback_retval_t
 batch_notify_collection(void *data)
 {
@@ -177,9 +134,8 @@ oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
 {
   oc_collection_t *c = (oc_collection_t *)collection;
 
-  if (link->resource != NULL && oc_string_len(link->resource->uri) > 0) {
-    const char *link_uri = oc_string(link->resource->uri);
-    const size_t link_uri_len = oc_string_len(link->resource->uri);
+  oc_string_view_t link_uri = oc_string_view2(&link->resource->uri);
+  if (link->resource != NULL && link_uri.length > 0) {
     // Find position to insert to keep the list sorted by primarily by href
     // length and secondarily by href value.
     // Keeping the links ordered like this enables use to use O(n) algorithm
@@ -192,12 +148,12 @@ oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
       if ((next->resource != NULL) &&
           (oc_string_len(next->resource->uri) > 0)) {
         // primary order by length
-        if (link_uri_len < oc_string_len(next->resource->uri)) {
+        if (link_uri.length < oc_string_len(next->resource->uri)) {
           break;
         }
         // secondary order by value
-        if (link_uri_len == oc_string_len(next->resource->uri) &&
-            strcmp(link_uri, oc_string(next->resource->uri)) < 0) {
+        if (link_uri.length == oc_string_len(next->resource->uri) &&
+            strcmp(link_uri.data, oc_string(next->resource->uri)) < 0) {
           break;
         }
       }
@@ -235,36 +191,10 @@ oc_collection_remove_link(oc_resource_t *collection, const oc_link_t *link)
 oc_link_t *
 oc_collection_get_links(oc_resource_t *collection)
 {
-  if (collection)
+  if (collection != NULL) {
     return (oc_link_t *)oc_list_head(((oc_collection_t *)collection)->links);
+  }
   return NULL;
-}
-
-void
-oc_link_add_rel(oc_link_t *link, const char *rel)
-{
-  if (link) {
-    oc_string_array_add_item(link->rel, rel);
-  }
-}
-
-void
-oc_link_add_link_param(oc_link_t *link, const char *key, const char *value)
-{
-  if (link) {
-    oc_link_params_t *p = oc_memb_alloc(&oc_params_s);
-    if (p) {
-      oc_new_string(&p->key, key, strlen(key));
-      oc_new_string(&p->value, value, strlen(value));
-      oc_list_add(link->params, p);
-    }
-  }
-}
-
-void
-oc_link_set_interfaces(oc_link_t *link, oc_interface_mask_t new_interfaces)
-{
-  link->interfaces = new_interfaces;
 }
 
 oc_collection_t *
@@ -398,13 +328,10 @@ oc_collections_add_rt_factory(const char *rt,
 static void
 link_param_add(oc_string_view_t key, oc_string_view_t value)
 {
-  oc_link_params_t *p = oc_memb_alloc(&oc_params_s);
+  oc_link_params_t *p = oc_link_param_allocate(key, value);
   if (p == NULL) {
-    OC_ERR("insufficient memory to allocate link param");
     return;
   }
-  oc_new_string(&p->key, key.data, key.length);
-  oc_new_string(&p->value, value.data, value.length);
   oc_list_add(oc_params_list, p);
 }
 
@@ -413,9 +340,7 @@ link_params_free(void)
 {
   oc_link_params_t *p = (oc_link_params_t *)oc_list_pop(oc_params_list);
   while (p != NULL) {
-    oc_free_string(&p->key);
-    oc_free_string(&p->value);
-    oc_memb_free(&oc_params_s, p);
+    oc_link_param_free(p);
     p = (oc_link_params_t *)oc_list_pop(oc_params_list);
   }
 }

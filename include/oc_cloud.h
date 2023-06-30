@@ -25,6 +25,7 @@
 
 #include "oc_client_state.h"
 #include "oc_export.h"
+#include "oc_link.h"
 #include "oc_ri.h"
 #include "oc_session_events.h"
 
