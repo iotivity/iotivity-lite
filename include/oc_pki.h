@@ -26,6 +26,7 @@
  */
 #ifndef OC_PKI_H
 #define OC_PKI_H
+
 #ifdef OC_PKI
 
 #ifdef __cplusplus
@@ -323,5 +324,7 @@ bool oc_pki_get_pk_functions(oc_pki_pk_functions_t *pk_functions);
 #ifdef __cplusplus
 }
 #endif
+
 #endif /* OC_PKI */
+
 #endif /* OC_PKI_H */

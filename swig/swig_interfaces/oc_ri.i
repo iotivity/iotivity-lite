@@ -16,13 +16,15 @@
 %}
 
 %{
-#include "../../messaging/coap/oc_coap.h"
-#include "../../include/oc_ri.h"
+#include "messaging/coap/oc_coap.h"
+#include "messaging/coap/constants.h"
+#include "oc_ri.h"
 %}
 
 %rename (OCMethod) oc_method_t;
 %ignore oc_resource_properties_t;
 %rename (OCStatus) oc_status_t;
+%rename (OCContentFormat) oc_content_format_t;
 %rename(OCResponse) oc_response_t;
 %rename (separateResponse) oc_response_t::separate_response;
 %rename (responseBuffer) oc_response_t::response_buffer;
@@ -77,6 +79,10 @@
 %ignore oc_ri_shutdown;
 %ignore oc_ri_add_timed_event_callback_ticks;
 %ignore oc_ri_remove_timed_event_callback;
+%ignore oc_ri_has_timed_event_callback;
+%ignore oc_ri_timed_event_filter_t;
+%ignore oc_ri_timed_event_on_delete_t;
+%ignore oc_ri_remove_timed_event_callback_by_filter;
 %ignore oc_status_code;
 %ignore oc_ri_get_app_resource_by_uri;
 %ignore oc_ri_get_app_resources;
@@ -124,6 +130,9 @@ typedef struct oc_response_buffer_s
   size_t response_length;
   int code;
 } oc_response_buffer_t;
+
+%rename (OCCoapStatus) coap_status_t;
+%include "messaging/coap/constants.h"
 
 #define OC_API
 #define OC_NONNULL(...)

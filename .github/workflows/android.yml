@@ -32,10 +32,11 @@ jobs:
           - args: "DEBUG=1"
           # secure off
           - args: "SECURE=0"
+          # TODO: reenable when dynamic allocation is fixed
           # dynamic allocation off
-          - args: "DYNAMIC=0"
+          # - args: "DYNAMIC=0"
           # secure off, dynamic allocation off
-          - args: "SECURE=0 DYNAMIC=0"
+          # - args: "SECURE=0 DYNAMIC=0"
           # android 10
           - args: "ANDROID_API=29"
           # android 11

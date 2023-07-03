@@ -20,6 +20,9 @@
 %{
 #include "oc_endpoint.h"
 #include "oc_iotivity_lite_jni.h"
+#include "port/oc_log_internal.h"
+
+#include <assert.h>
 %}
 
 /*******************Begin oc_endpoint.h*********************/
@@ -119,7 +122,20 @@
 %ignore transport_flags;
 //%rename (OCTransportFlags) transport_flags;
 %rename(DevAddr) dev_addr;
+%{
+#include "util/oc_macros_internal.h"
+
+CLANG_IGNORE_WARNING_START
+CLANG_IGNORE_WARNING("-Wunused-function")
+GCC_IGNORE_WARNING_START
+GCC_IGNORE_WARNING("-Wunused-function")
+%}
 %include "arrays_java.i"
+%{
+GCC_IGNORE_WARNING_END
+CLANG_IGNORE_WARNING_END
+%}
+
 //if uncommented the following apply lines will cause the output to be byte[] vs short[]
 //%apply signed char[ANY] { uint8_t address[4] };
 //%apply signed char[ANY] { uint8_t address[16] };

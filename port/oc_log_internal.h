@@ -76,7 +76,7 @@
 #define OC_LOGipaddr(endpoint)
 #define OC_LOGbytes(bytes, length)
 #endif /* !defined(OC_DEBUG) && !defined(OC_PUSHDEBUG) */
-#endif
+#endif /* __ANDROID__ */
 
 // port's layer can override this macro to provide its own logger
 #ifndef OC_LOG
@@ -208,8 +208,12 @@
 #define OC_LOGipaddr_local(endpoint) OC_LOG_ENDPOINT_ADDR(endpoint, addr_local)
 #endif /* !OC_LOGipaddr_local */
 #else  /* OC_DBG_IS_ENABLED */
+#ifndef OC_LOGipaddr
 #define OC_LOGipaddr(endpoint)
+#endif /* !OC_LOGipaddr */
+#ifndef OC_LOGipaddr_local
 #define OC_LOGipaddr_local(endpoint)
+#endif /* !OC_LOGipaddr_local */
 #endif /* !OC_DBG_IS_ENABLED */
 
 #ifndef OC_LOGbytes

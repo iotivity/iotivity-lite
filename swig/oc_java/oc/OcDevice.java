@@ -10,8 +10,10 @@ import org.iotivity.*;
 /**
  * OcDevice is a device of the platform.
  * <p>
- * Devices can only be added to the platform after the platform has been initialized.
- * Devices are typically added to the platform in the platform's initialize handler.
+ * Devices can only be added to the platform after the platform has been
+ * initialized.
+ * Devices are typically added to the platform in the platform's initialize
+ * handler.
  *
  * @see OcPlatform#platformInit
  * @see OcPlatform#addDevice
@@ -28,15 +30,17 @@ public class OcDevice {
     private String dataModelVersion;
 
     private int deviceIndex; // set by platform in addDevice()
+    private OCConnectivityPorts listeningPorts; // TODO: implement and set by addDeviceV1
 
     /**
      * Constructs an OcDevice.
      * <p>
-     * @param uri  the uri of the device
-     * @param rt  the resource type of the device
-     * @param name  the name of the device
-     * @param specVersion  the spec version of the device
-     * @param dataModelVersion  the data model version of the device
+     *
+     * @param uri              the uri of the device
+     * @param rt               the resource type of the device
+     * @param name             the name of the device
+     * @param specVersion      the spec version of the device
+     * @param dataModelVersion the data model version of the device
      */
     public OcDevice(String uri, String rt, String name, String specVersion, String dataModelVersion) {
         this.uri = (uri != null) ? uri : "";
@@ -49,6 +53,7 @@ public class OcDevice {
     /**
      * Returns the uri of this device.
      * <p>
+     *
      * @return uri
      */
     public String getUri() {
@@ -58,6 +63,7 @@ public class OcDevice {
     /**
      * Returns the resource type of this device.
      * <p>
+     *
      * @return resource type
      */
     public String getRt() {
@@ -67,6 +73,7 @@ public class OcDevice {
     /**
      * Returns the name of this device.
      * <p>
+     *
      * @return name
      */
     public String getName() {
@@ -76,6 +83,7 @@ public class OcDevice {
     /**
      * Returns the spec version of this device.
      * <p>
+     *
      * @return spec version
      */
     public String getSpecVersion() {
@@ -85,6 +93,7 @@ public class OcDevice {
     /**
      * Returns the data model version of this device.
      * <p>
+     *
      * @return data model version
      */
     public String getDataModelVersion() {
@@ -94,6 +103,7 @@ public class OcDevice {
     /**
      * Returns the id of this device.
      * <p>
+     *
      * @return OCUuid
      *
      * @see OCUuid
@@ -105,7 +115,8 @@ public class OcDevice {
     /**
      * Sets the introspection data of to this device.
      * <p>
-     * @param idd  the introspection data byte array
+     *
+     * @param idd the introspection data byte array
      */
     public void setIntrospectionData(byte[] idd) {
         OCIntrospection.setIntrospectionData(deviceIndex, idd);
@@ -114,7 +125,8 @@ public class OcDevice {
     /**
      * Sets the immutable device id of to this device.
      * <p>
-     * @param piid  the immutable device id
+     *
+     * @param piid the immutable device id
      *
      * @see OCUuid
      */
@@ -125,7 +137,8 @@ public class OcDevice {
     /**
      * Adds a resource to this device.
      * <p>
-     * @param resource  the resource to add
+     *
+     * @param resource the resource to add
      *
      * @see OcResource
      */
@@ -145,7 +158,8 @@ public class OcDevice {
     /**
      * Deletes a resource from this device.
      * <p>
-     * @param resource  the resource to delete
+     *
+     * @param resource the resource to delete
      * @return true on success, false otherwise
      *
      * @see OcResource
@@ -166,7 +180,8 @@ public class OcDevice {
     /**
      * Adds a collection to this device.
      * <p>
-     * @param collection  the collection to add
+     *
+     * @param collection the collection to add
      *
      * @see OcCollection
      */
@@ -177,7 +192,8 @@ public class OcDevice {
     /**
      * Deletes a collection from this device.
      * <p>
-     * @param collection  the collection to delete
+     *
+     * @param collection the collection to delete
      * @return true on success, false otherwise
      *
      * @see OcCollection
@@ -189,6 +205,7 @@ public class OcDevice {
     /**
      * Returns the resources of this device.
      * <p>
+     *
      * @return Array of OcResource
      *
      * @see OcResource
@@ -200,6 +217,7 @@ public class OcDevice {
     /**
      * Returns the collections of this device.
      * <p>
+     *
      * @return Array of OcCollection
      *
      * @see OcCollection
@@ -218,7 +236,8 @@ public class OcDevice {
     /**
      * Binds a resource type to this device.
      * <p>
-     * @param rt  the resource type
+     *
+     * @param rt the resource type
      */
     public void bindResourceType(String rt) {
         OCMain.deviceBindResourceType(deviceIndex, rt);
@@ -234,10 +253,11 @@ public class OcDevice {
     /**
      * Initializes connectivity to this device.
      * <p>
+     *
      * @return 0 on success, -1 otherwise
      */
     public int initConnectivity() {
-        return OCConnectivity.init(deviceIndex);
+        return OCConnectivity.init(deviceIndex, listeningPorts);
     }
 
     /**
@@ -253,5 +273,13 @@ public class OcDevice {
 
     void setDeviceIndex(int deviceIndex) {
         this.deviceIndex = deviceIndex;
+    }
+
+    OCConnectivityPorts getListeningPorts() {
+        return listeningPorts;
+    }
+
+    void setListeningPorts(OCConnectivityPorts listeningPorts) {
+        this.listeningPorts = listeningPorts;
     }
 }

@@ -399,6 +399,8 @@ TEST_F(TestOcRiWithServer, RiDelayedDeleteResourceOnShutdown)
 
 #if !defined(OC_SECURITY) || defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM)
 
+#ifdef OC_TEST
+
 TEST_F(TestOcRiWithServer, RiMultipleDeleteResourceRequests)
 {
   // get insecure connection to the testing device
@@ -493,5 +495,7 @@ TEST_F(TestOcRiWithServer, RiRequestAfterDeleteResourceRequest)
   // to be deleted
   EXPECT_EQ(0, onGetCounter);
 }
+
+#endif /* OC_TEST */
 
 #endif /* !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */

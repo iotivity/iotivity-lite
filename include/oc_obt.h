@@ -1299,33 +1299,6 @@ int oc_obt_retrieve_cloud_conf_device(const oc_uuid_t *uuid, const char *url,
                                       oc_response_handler_t cb,
                                       void *user_data);
 
-int oc_obt_retrieve_d2dserverlist(const oc_uuid_t *uuid,
-                                  oc_response_handler_t cb, void *data);
-
-int oc_obt_post_d2dserverlist(const oc_uuid_t *uuid, const char *query,
-                              const char *url, oc_response_handler_t cb,
-                              void *user_data);
-
-int oc_obt_retrieve_d2dserverlist(const oc_uuid_t *uuid,
-                                  oc_response_handler_t cb, void *data);
-
-int oc_obt_post_d2dserverlist(const oc_uuid_t *uuid, const char *query,
-                              const char *url, oc_response_handler_t cb,
-                              void *user_data);
-
-int oc_obt_general_get(const oc_uuid_t *uuid, const char *url,
-                       oc_response_handler_t cb, void *data);
-
-int oc_obt_general_post(const oc_uuid_t *uuid, const char *query,
-                        const char *url, oc_response_handler_t cb,
-                        void *user_data, char **payload_properties,
-                        char **payload_values, char **payload_types,
-                        int array_size);
-
-int oc_obt_general_delete(const oc_uuid_t *uuid, const char *query,
-                          const char *url, oc_response_handler_t cb,
-                          void *data);
-
 /**
  * sets the secure domain info
  *

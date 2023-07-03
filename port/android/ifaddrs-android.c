@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
 #include "ifaddrs-android.h"
+#include "util/oc_macros_internal.h"
 #include <errno.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
@@ -188,8 +189,11 @@ android_getifaddrs(struct ifaddrs **result)
   while (amount_read > 0) {
     struct nlmsghdr *header = (struct nlmsghdr *)&buf[0];
     size_t header_size = (size_t)amount_read;
+    CLANG_IGNORE_WARNING_START
+    CLANG_IGNORE_WARNING("-Wsign-compare")
     for (; NLMSG_OK(header, header_size);
          header = NLMSG_NEXT(header, header_size)) {
+      CLANG_IGNORE_WARNING_END
       switch (header->nlmsg_type) {
       case NLMSG_DONE:
         /* Success. Return. */

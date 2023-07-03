@@ -22,6 +22,7 @@
 #include "oc_iotivity_lite_jni.h"
 
 #include "oc_cred.h"
+#include "port/oc_log_internal.h"
 %}
 
 %rename(OCCredType) oc_sec_credtype_t;
@@ -106,6 +107,7 @@ const char * jni_cred_read_credusage(oc_sec_credusage_t credusage)
   const char *return_value = oc_cred_read_credusage(credusage);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI returning \"None\" as default.", __func__);
+  (void)credusage;
   const char *return_value = "None";
 #endif /* OC_SECURITY and OC_PKI */
   return return_value;
@@ -122,6 +124,7 @@ const char *jni_cred_read_encoding(oc_sec_encoding_t encoding)
   const char *return_value = oc_cred_read_encoding(encoding);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning \"Unknown\" as default.", __func__);
+  (void)encoding;
   const char *return_value = "Unknown";
 #endif /* OC_SECURITY */
   return return_value;
@@ -139,6 +142,7 @@ oc_sec_credusage_t jni_cred_parse_credusage(oc_string_t *credusageString)
   oc_sec_credusage_t return_value = oc_cred_parse_credusage(credusageString);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI returning OC_CREDUSAGE_NULL(0) as default.", __func__);
+  (void)credusageString;
   oc_sec_credusage_t return_value = OC_CREDUSAGE_NULL;
 #endif /* OC_SECURITY and OC_PKI */
   return return_value;
@@ -156,6 +160,7 @@ oc_sec_encoding_t jni_cred_parse_encoding(oc_string_t *encodingString)
   oc_sec_encoding_t return_value = oc_cred_parse_encoding(encodingString);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning OC_ENCODING_UNSUPPORTED(0) as default.", __func__);
+  (void)encodingString;
   oc_sec_encoding_t return_value = OC_ENCODING_UNSUPPORTED;
 #endif /* OC_SECURITY */
   return return_value;
@@ -172,10 +177,25 @@ const char *jni_cred_credtype_string(oc_sec_credtype_t credType)
   const char *return_value = oc_cred_credtype_string(credType);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning \"Unknown\" as default.", __func__);
+  (void)credType;
   const char *return_value = "Unknown";
 #endif /* OC_SECURITY */
   return return_value;
 }
 %}
+
+// TODO: implement oc_cred_verify_certificate_chain
+%ignore oc_sec_certs_data_t;
+%ignore oc_verify_sec_certs_data_fn_t;
+%ignore oc_cred_verify_certificate_chain;
+
+// TODO: implement oc_sec_cred_clear
+%ignore oc_sec_cred_filter_t;
+%ignore oc_sec_cred_clear;
+
+// TODO: oc_sec_apply_cred
+%ignore oc_sec_on_apply_cred_data_t;
+%ignore oc_sec_on_apply_cred_cb_t;
+%ignore oc_sec_apply_cred;
 
 %include "oc_cred.h"

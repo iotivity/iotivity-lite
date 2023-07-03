@@ -66,6 +66,8 @@ TrustAnchor::TrustAnchor(const std::string &certificatePath, bool isMfg)
 {
 }
 
+#ifdef OC_SECURITY
+
 bool
 TrustAnchor::Add(size_t device)
 {
@@ -94,6 +96,8 @@ TrustAnchor::Add(size_t device)
   return true;
 }
 
+#endif /* OC_SECURITY */
+
 IdentityCertificate::IdentityCertificate(const std::string &certificatePath,
                                          const std::string &keyPath, bool isMfg)
   : certificate_{ certificatePath }
@@ -101,6 +105,8 @@ IdentityCertificate::IdentityCertificate(const std::string &certificatePath,
   , isMfg_{ isMfg }
 {
 }
+
+#ifdef OC_SECURITY
 
 bool
 IdentityCertificate::Add(size_t device)
@@ -132,11 +138,15 @@ IdentityCertificate::Add(size_t device)
   return true;
 }
 
+#endif /* OC_SECURITY */
+
 IntermediateCertificate::IntermediateCertificate(
   const std::string &certificatePath)
   : certificate_{ certificatePath }
 {
 }
+
+#ifdef OC_SECURITY
 
 bool
 IntermediateCertificate::Add(size_t device, int entity_credid)
@@ -162,6 +172,8 @@ IntermediateCertificate::Add(size_t device, int entity_credid)
   credid_ = credid;
   return true;
 }
+
+#endif /* OC_SECURITY */
 
 void
 PKDummyFunctions::Clear()

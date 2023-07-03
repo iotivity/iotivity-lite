@@ -24,6 +24,7 @@
 #include "storage.h"
 #include "util/oc_secure_string_internal.h"
 
+#include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>

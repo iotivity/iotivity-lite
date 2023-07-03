@@ -23,16 +23,17 @@
 #error __ANDROID_API__ not defined
 #endif
 #include "api/oc_network_events_internal.h"
-#include "port/oc_assert.h"
-#include "port/oc_connectivity.h"
-#include "port/oc_connectivity_internal.h"
-#include "port/oc_log_internal.h"
-#include "port/oc_network_event_handler_internal.h"
 #include "ipcontext.h"
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_network_monitor.h"
+#include "port/oc_assert.h"
+#include "port/oc_connectivity.h"
+#include "port/oc_connectivity_internal.h"
+#include "port/oc_log_internal.h"
+#include "port/oc_network_event_handler_internal.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_SESSION_EVENTS
 #include "api/oc_session_events_internal.h"
@@ -448,7 +449,10 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
       return;
     }
 
+    CLANG_IGNORE_WARNING_START
+    CLANG_IGNORE_WARNING("-Wsign-compare")
     while (NLMSG_OK(response, response_len)) {
+      CLANG_IGNORE_WARNING_END
       if (response->nlmsg_type == NLMSG_DONE) {
         done = true;
         break;
@@ -621,7 +625,10 @@ process_interface_change_event(void)
 
   bool if_state_changed = false;
 
+  CLANG_IGNORE_WARNING_START
+  CLANG_IGNORE_WARNING("-Wsign-compare")
   while (NLMSG_OK(response, response_len)) {
+    CLANG_IGNORE_WARNING_END
     if (response->nlmsg_type == RTM_NEWADDR) {
       struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(response);
       if (ifa) {

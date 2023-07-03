@@ -46,6 +46,9 @@ void jni_set_introspection_data(size_t device, uint8_t *IDD, size_t IDD_size){
     oc_set_introspection_data(device, IDD, IDD_size);
 #else
     OC_DBG("JNI: OC_SECURITY or OC_IDD_API disabled setIntrospectionFile ignored");
+    (void)device;
+    (void)IDD;
+    (void)IDD_size;
 #endif
  }
  %}

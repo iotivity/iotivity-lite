@@ -228,6 +228,26 @@ void oc_obt_free_otm_ctx(oc_otm_ctx_t *ctx, int status, oc_obt_otm_t);
 oc_event_callback_retval_t oc_obt_otm_request_timeout_cb(void *data);
 bool oc_obt_is_otm_ctx_valid(const oc_otm_ctx_t *ctx);
 
+int oc_obt_retrieve_d2dserverlist(const oc_uuid_t *uuid,
+                                  oc_response_handler_t cb, void *data);
+
+int oc_obt_post_d2dserverlist(const oc_uuid_t *uuid, const char *query,
+                              const char *url, oc_response_handler_t cb,
+                              void *user_data);
+
+int oc_obt_general_get(const oc_uuid_t *uuid, const char *url,
+                       oc_response_handler_t cb, void *data);
+
+int oc_obt_general_post(const oc_uuid_t *uuid, const char *query,
+                        const char *url, oc_response_handler_t cb,
+                        void *user_data, char **payload_properties,
+                        char **payload_values, char **payload_types,
+                        int array_size);
+
+int oc_obt_general_delete(const oc_uuid_t *uuid, const char *query,
+                          const char *url, oc_response_handler_t cb,
+                          void *data);
+
 #ifdef OC_PKI
 
 typedef struct oc_obt_generate_root_cert_data_t

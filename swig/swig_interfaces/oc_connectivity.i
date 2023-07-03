@@ -4,6 +4,7 @@
 %include "enums.swg"
 %javaconst(1);
 
+%import "oc_api.i"
 %import "oc_endpoint.i"
 
 #define OC_DYNAMIC_ALLOCATION
@@ -22,6 +23,8 @@
 %{
 #include "oc_iotivity_lite_jni.h"
 #include "port/oc_connectivity.h"
+#include "port/oc_connectivity_internal.h"
+#include "port/oc_log_internal.h"
 %}
 
 %ignore oc_message_s;
@@ -29,12 +32,12 @@
 %ignore oc_connectivity_init;
 %rename(init) jni_connectivity_init;
 %inline %{
-int jni_connectivity_init(size_t device)
+int jni_connectivity_init(size_t device, oc_connectivity_ports_t ports)
 {
   OC_DBG("JNI: %s\n", __func__);
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
-  int return_value = oc_connectivity_init(device);
+  int return_value = oc_connectivity_init(device, ports);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
   return return_value;

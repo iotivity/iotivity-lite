@@ -178,8 +178,9 @@ HEADERS_UTIL := $(filter-out %_internal.h,$(wildcard ../../util/*.h))
 HEADERS_UTIL_PT := $(filter-out %_internal.h,$(wildcard ../../util/pt/*.h))
 HEADERS_PORT := $(filter-out %_internal.h,$(wildcard ../../port/*.h))
 
+WARNING_FLAGS=-Wall -Wextra -Werror -Wno-error=deprecated-declarations -pedantic
 CFLAGS_CLOUD=-I../../api/cloud -DOC_CLIENT -DOC_SERVER
-CFLAGS?=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow -I./ -I../../include/ -I../../deps/tinycbor/src -I../../ -std=gnu99 -Wall -DLONG_BIT=64 -D__ANDROID_MIN_SDK_VERSION__=${ANDROID_API}
+CFLAGS?=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow -I./ -I../../include/ -I../../deps/tinycbor/src -I../../ -std=gnu99 $(WARNING_FLAGS) -DLONG_BIT=64 -D__ANDROID_MIN_SDK_VERSION__=${ANDROID_API}
 OBJ_COMMON=$(addprefix ${OBJDIR}/,$(notdir $(SRC_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix ${OBJDIR}/client/,$(notdir $(SRC:.c=.o) $(SRC_CLIENT:.c=.o)))
 OBJ_SERVER=$(addprefix ${OBJDIR}/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o oc_obt_otm_cert.o oc_obt_certs.o,$(notdir $(SRC:.c=.o))))
