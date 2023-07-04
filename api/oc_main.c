@@ -33,7 +33,7 @@
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER) &&                           \
   defined(OC_COLLECTIONS_IF_CREATE)
-#include "oc_collection.h"
+#include "api/oc_collection_internal.h"
 #endif /* OC_COLLECTIONS && OC_SERVER && OC_COLLECTIONS_IF_CREATE */
 
 #ifdef OC_SECURITY

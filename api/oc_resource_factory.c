@@ -28,11 +28,11 @@
 #include <stdio.h>
 #include <string.h>
 
-OC_MEMB(rtc_s, oc_rt_created_t, 1);
-OC_LIST(created_res);
+OC_MEMB(g_rtc_s, oc_rt_created_t, 1);
+OC_LIST(g_created_res);
 
 #ifndef OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE
-#define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE 64
+#define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
 #endif
 
 static void
@@ -174,7 +174,7 @@ oc_rt_factory_create_resource(oc_collection_t *collection,
                               oc_interface_mask_t interfaces,
                               oc_rt_factory_t *rf, size_t device)
 {
-  oc_rt_created_t *rtc = (oc_rt_created_t *)oc_memb_alloc(&rtc_s);
+  oc_rt_created_t *rtc = (oc_rt_created_t *)oc_memb_alloc(&g_rtc_s);
 
   if (!rtc) {
     return NULL;
@@ -191,14 +191,14 @@ oc_rt_factory_create_resource(oc_collection_t *collection,
     rf->get_instance(href, rtypes, bm, interfaces, device);
 
   if (!resource) {
-    oc_memb_free(&rtc_s, rtc);
+    oc_memb_free(&g_rtc_s, rtc);
     return NULL;
   }
 
   rtc->resource = resource;
   rtc->rf = rf;
   rtc->collection = collection;
-  oc_list_add(created_res, rtc);
+  oc_list_add(g_created_res, rtc);
 
   if (!resource->set_properties.cb.set_props ||
       !resource->get_properties.cb.get_props) {
@@ -213,21 +213,21 @@ void
 oc_rt_factory_free_created_resource(oc_rt_created_t *rtc,
                                     const oc_rt_factory_t *rf)
 {
-  if (oc_list_remove2(created_res, rtc) == NULL) {
+  if (oc_list_remove2(g_created_res, rtc) == NULL) {
     /* protection against cyclical call of oc_rt_factory_free_created_resource
      * from rf->free_instance */
     return;
   }
   rf->free_instance(rtc->resource);
-  oc_memb_free(&rtc_s, rtc);
+  oc_memb_free(&g_rtc_s, rtc);
 }
 
 void
 oc_fi_factory_free_all_created_resources(void)
 {
-  oc_rt_created_t *rtc = (oc_rt_created_t *)oc_list_head(created_res), *next;
-  while (rtc) {
-    next = rtc->next;
+  oc_rt_created_t *rtc = (oc_rt_created_t *)oc_list_head(g_created_res);
+  while (rtc != NULL) {
+    oc_rt_created_t *next = rtc->next;
     oc_rt_factory_free_created_resource(rtc, rtc->rf);
     rtc = next;
   }
@@ -236,7 +236,7 @@ oc_fi_factory_free_all_created_resources(void)
 oc_rt_created_t *
 oc_rt_get_factory_create_for_resource(const oc_resource_t *resource)
 {
-  oc_rt_created_t *rtc = (oc_rt_created_t *)oc_list_head(created_res);
+  oc_rt_created_t *rtc = (oc_rt_created_t *)oc_list_head(g_created_res);
   while (rtc) {
     if (rtc->resource == resource) {
       return rtc;
@@ -250,7 +250,7 @@ oc_rt_get_factory_create_for_resource(const oc_resource_t *resource)
 void
 oc_rt_factory_free_created_resources(size_t device)
 {
-  oc_rt_created_t *rtc = (oc_rt_created_t *)oc_list_head(created_res);
+  oc_rt_created_t *rtc = (oc_rt_created_t *)oc_list_head(g_created_res);
   while (rtc) {
     oc_rt_created_t *next = rtc->next;
     if (rtc->resource->device == device) {
@@ -259,6 +259,5 @@ oc_rt_factory_free_created_resources(size_t device)
     rtc = next;
   }
 }
-#else  /* OC_SERVER && OC_COLLECTIONS */
-typedef int dummy_declaration;
+
 #endif /* OC_SERVER && OC_COLLECTIONS && OC_COLLECTIONS_IF_CREATE */

@@ -638,6 +638,12 @@ value */
 #define oc_rep_set_value_byte_string(parent, value, value_len)                 \
   g_err |= oc_rep_encode_byte_string(&parent##_map, value, value_len)
 
+/** Alternative to oc_rep_add_text_string in case we know the length of the
+value */
+#define oc_rep_add_text_string_v1(parent, value, value_len)                    \
+  g_err |= oc_rep_encode_text_string(                                          \
+    &parent##_array, (value) != NULL ? (value) : "", (value_len))
+
 /**
  * Add a text string `value` to a `parent` array. Currently the only way to make
  * an array of text strings is using this macro
@@ -680,23 +686,16 @@ value */
  * @see oc_rep_close_array
  */
 #define oc_rep_add_text_string(parent, value)                                  \
-  do {                                                                         \
-    if ((value) != NULL) {                                                     \
-      g_err |=                                                                 \
-        oc_rep_encode_text_string(&parent##_array, value, strlen(value));      \
-    } else {                                                                   \
-      g_err |= oc_rep_encode_text_string(&parent##_array, "", 0);              \
-    }                                                                          \
-  } while (0)
+  oc_rep_add_text_string_v1(parent, value, (value) != NULL ? strlen(value) : 0)
+
+/** Alternative to oc_rep_set_value_text_string in case we know the length of
+the value */
+#define oc_rep_set_value_text_string_v1(parent, value, value_len)              \
+  g_err |= oc_rep_encode_text_string(                                          \
+    &parent##_map, (value) != NULL ? (value) : "", (value_len))
 
 #define oc_rep_set_value_text_string(parent, value)                            \
-  do {                                                                         \
-    if ((value) != NULL) {                                                     \
-      g_err |= oc_rep_encode_text_string(&parent##_map, value, strlen(value)); \
-    } else {                                                                   \
-      g_err |= oc_rep_encode_text_string(&parent##_map, "", 0);                \
-    }                                                                          \
-  } while (0)
+  oc_rep_set_value_text_string_v1(parent, (value), (value) != NULL ? strlen(value))
 
 /**
  * Add an `double` `value` to a `parent` array. Using oc_rep_add_double can be
@@ -812,6 +811,14 @@ value */
 #define oc_rep_set_value_boolean(parent, value)                                \
   g_err |= oc_rep_encode_boolean(&parent##_map, value)
 
+/** Alternative to oc_rep_set_key in case we know the length of the key */
+#define oc_rep_set_key_v1(parent, key, key_len)                                \
+  do {                                                                         \
+    if ((const char *)(key) != NULL) {                                         \
+      g_err |= oc_rep_encode_text_string((parent), (key), (key_len));          \
+    }                                                                          \
+  } while (0)
+
 /**
  * End users are very unlikely to use this macro.
  *
@@ -826,8 +833,7 @@ value */
  * @see oc_rep_begin_array
  */
 #define oc_rep_set_key(parent, key)                                            \
-  if ((const char *)(key) != NULL)                                             \
-  g_err |= oc_rep_encode_text_string(parent, key, strlen(key))
+  oc_rep_set_key_v1(parent, key, (key) != NULL ? strlen(key) : 0)
 
 /**
  * This macro has been replaced with oc_rep_open_array

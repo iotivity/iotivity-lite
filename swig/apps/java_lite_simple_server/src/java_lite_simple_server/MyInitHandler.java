@@ -56,16 +56,16 @@ public class MyInitHandler implements OCMainInitHandler {
         OCMain.resourceSetRequestHandler(resource2, OCMethod.OC_POST, new PostCounter());
         OCMain.addResource(resource2);
 
-        OCResource collection = OCMain.newCollection("roomlights", "/lights", (short) 1, 0);
+        OCResource collection = OCCollectionUtil.newCollection("roomlights", "/lights", (short) 1, 0);
         OCMain.resourceBindResourceType(collection, "oic.wk.col");
         OCMain.resourceSetDiscoverable(collection, true);
 
-        OCLink link1 = OCMain.newLink(resource1);
-        OCMain.collectionAddLink(collection, link1);
+        OCLink link1 = OCLinkUtil.newLink(resource1);
+        OCCollectionUtil.collectionAddLink(collection, link1);
 
-        OCLink link2 = OCMain.newLink(resource2);
-        OCMain.collectionAddLink(collection, link2);
-        OCMain.addCollection(collection);
+        OCLink link2 = OCLinkUtil.newLink(resource2);
+        OCCollectionUtil.collectionAddLink(collection, link2);
+        OCCollectionUtil.addCollection(collection);
     }
 
     @Override

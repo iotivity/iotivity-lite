@@ -20,8 +20,14 @@
 #ifndef OC_COLLECTION_INTERNAL_H
 #define OC_COLLECTION_INTERNAL_H
 
+#include "oc_config.h"
+
+#ifdef OC_COLLECTIONS
+
+#include "oc_collection.h"
 #include "oc_helpers.h"
 #include "oc_ri.h"
+#include "util/oc_compiler.h"
 #include "util/oc_list.h"
 
 #ifdef __cplusplus
@@ -34,6 +40,11 @@ typedef struct oc_rt_t
   oc_string_t rt;
 } oc_rt_t;
 
+enum {
+  OC_COLLECTION_RESOURCE_TYPES_COUNT_MAX =
+    1, ///< maximal number allowed of statically allocated resource types
+};
+
 struct oc_collection_s
 {
   struct oc_resource_s res;
@@ -42,8 +53,43 @@ struct oc_collection_s
   OC_LIST_STRUCT(links); ///< list of links ordered by href length and value
 };
 
+/** @brief Allocate a new collection */
+oc_collection_t *oc_collection_alloc(void);
+
+/** @brief Deallocate a collection */
+void oc_collection_free(oc_collection_t *collection);
+
+/** @brief Add collection to global list */
+void oc_collection_add(oc_collection_t *collection) OC_NONNULL();
+
+/** @brief Get head of the global list of collections */
+oc_collection_t *oc_collection_get_all(void);
+
+/** @brief Iterate the global list of colletions and return the next collection
+ * linked with the given resource */
+oc_collection_t *oc_get_next_collection_with_link(const oc_resource_t *resource,
+                                                  oc_collection_t *start)
+  OC_NONNULL(1);
+
+/** @brief Process CoAP request on a collection. */
+OC_NO_DISCARD_RETURN
+bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
+                                  oc_interface_mask_t iface_mask,
+                                  const oc_resource_t *notify_resource)
+  OC_NONNULL(2);
+
+#ifdef OC_COLLECTIONS_IF_CREATE
+
+/** @brief Free all resource type factories and resources that have been created
+ * by them. */
+void oc_collections_free_rt_factories(void);
+
+#endif /* OC_COLLECTIONS_IF_CREATE */
+
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* OC_COLLECTIONS */
 
 #endif /* OC_COLLECTION_INTERNAL_H */

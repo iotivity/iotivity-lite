@@ -50,7 +50,7 @@ public:
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
     ASSERT_TRUE(oc::SetAccessInRFOTM(OCF_INTROSPECTION_WK, kDeviceID, false,
                                      OC_PERM_RETRIEVE));
-    ASSERT_TRUE(oc::SetAccessInRFOTM(OCF_INTROSPECTION_DATA, false, kDeviceID,
+    ASSERT_TRUE(oc::SetAccessInRFOTM(OCF_INTROSPECTION_DATA, kDeviceID, false,
                                      OC_PERM_RETRIEVE));
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 

@@ -38,7 +38,7 @@
 #endif /* OC_SECURITY && OC_RES_BATCH_SUPPORT*/
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
-#include "oc_collection.h"
+#include "api/oc_collection_internal.h"
 #endif /* OC_COLLECTIONS  && OC_SERVER */
 
 #ifdef OC_SECURITY

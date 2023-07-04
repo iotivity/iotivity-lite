@@ -145,7 +145,7 @@ public class OcDevice {
     public void addResource(OcResource resource) {
         if (resource != null) {
             if (resource instanceof OcCollection) {
-                OCMain.addCollection(resource.getNativeResource());
+                OCCollectionUtil.addCollection(resource.getNativeResource());
             } else {
                 OCMain.addResource(resource.getNativeResource());
             }
@@ -168,7 +168,7 @@ public class OcDevice {
         if (resource != null) {
             resourceLookup.remove(resource);
             if (resource instanceof OcCollection) {
-                OCMain.deleteCollection(resource.getNativeResource());
+                OCCollectionUtil.deleteCollection(resource.getNativeResource());
                 return true;
             } else {
                 return OCMain.deleteResource(resource.getNativeResource());

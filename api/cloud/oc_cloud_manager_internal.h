@@ -21,6 +21,7 @@
 
 #include "oc_cloud.h"
 #include "oc_rep.h"
+#include "util/oc_compiler.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -58,7 +59,8 @@ bool cloud_manager_set_retry(const uint8_t retry_timeout[],
  *
  * @warning not thread-safe
  */
-size_t cloud_manager_get_retry(uint8_t *buffer, size_t buffer_size);
+size_t cloud_manager_get_retry(uint8_t *buffer, size_t buffer_size)
+  OC_NONNULL();
 
 #define ACCESS_TOKEN_KEY "accesstoken"
 #define REFRESH_TOKEN_KEY "refreshtoken"
@@ -76,7 +78,8 @@ size_t cloud_manager_get_retry(uint8_t *buffer, size_t buffer_size);
  * @return false on failure
  */
 bool cloud_manager_handle_register_response(oc_cloud_context_t *ctx,
-                                            const oc_rep_t *payload);
+                                            const oc_rep_t *payload)
+  OC_NONNULL();
 
 /**
  * @brief Parse received response and handle redirect key if it is present.
@@ -87,7 +90,8 @@ bool cloud_manager_handle_register_response(oc_cloud_context_t *ctx,
  * @return false otherwise
  */
 bool cloud_manager_handle_redirect_response(oc_cloud_context_t *ctx,
-                                            const oc_rep_t *payload);
+                                            const oc_rep_t *payload)
+  OC_NONNULL();
 
 /**
  * @brief Parse refresh token response retrieved from the server and store the
@@ -99,21 +103,22 @@ bool cloud_manager_handle_redirect_response(oc_cloud_context_t *ctx,
  * @return false on failure
  */
 bool cloud_manager_handle_refresh_token_response(oc_cloud_context_t *ctx,
-                                                 const oc_rep_t *payload);
+                                                 const oc_rep_t *payload)
+  OC_NONNULL();
 
 /**
  * @brief Start executing cloud provisioning steps
  *
  * @param ctx cloud context (cannot be NULL)
  */
-void cloud_manager_start(oc_cloud_context_t *ctx);
+void cloud_manager_start(oc_cloud_context_t *ctx) OC_NONNULL();
 
 /**
  * @brief Stop executing cloud provisioning steps
  *
  * @param ctx cloud context (cannot be NULL)
  */
-void cloud_manager_stop(oc_cloud_context_t *ctx);
+void cloud_manager_stop(const oc_cloud_context_t *ctx) OC_NONNULL();
 
 #ifdef __cplusplus
 }

@@ -120,7 +120,7 @@ cloud_manager_start(oc_cloud_context_t *ctx)
 }
 
 void
-cloud_manager_stop(oc_cloud_context_t *ctx)
+cloud_manager_stop(const oc_cloud_context_t *ctx)
 {
   OC_DBG("[CM] cloud_manager_stop");
   oc_remove_delayed_callback(ctx, cloud_manager_reconnect_async);

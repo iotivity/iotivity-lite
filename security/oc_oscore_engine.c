@@ -223,7 +223,6 @@ oscore_parse_message(oc_message_t *message)
     OC_DBG("---got request_piv from client callback");
     OC_LOGbytes(request_piv, request_piv_len);
 
-    /* If oc_message_t->endpoint.piv_len == 0 */
     if (message->endpoint.piv_len == 0) {
       /* Copy request_piv from client cb/transaction into
        * oc_message_t->endpoint */

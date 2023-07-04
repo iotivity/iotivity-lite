@@ -18,37 +18,36 @@
 
 #pragma once
 
-#include "oc_ri.h"
-#include "util/oc_features.h"
+#include "api/oc_collection_internal.h"
+#include "oc_rep.h"
+#include "tests/gtest/Link.h"
+#include "tests/gtest/Resource.h"
 
-#include <cstddef>
+#include <map>
+#include <memory>
 #include <optional>
 #include <string>
-#include <vector>
 
 namespace oc {
 
-struct BaselineData
+using oc_collection_unique_ptr =
+  std::unique_ptr<oc_collection_t, decltype(&oc_delete_collection)>;
+
+struct CollectionData
 {
-  std::string name;
+  std::optional<BaselineData> baseline;
   std::vector<std::string> rts;
-  std::vector<std::string> ifs;
-  std::string tag_locn;
-  std::vector<double> tag_pos_rel;
-  std::string tag_pos_desc;
-  std::string tag_func_desc;
+  std::vector<std::string> rts_m;
+  std::vector<LinkData> links;
+  std::map<std::string, const oc_rep_t *> properties;
 };
 
-std::optional<BaselineData> ParseBaselineData(const oc_rep_t *rep);
+class Collection {
+public:
+  static std::optional<CollectionData> ParsePayload(const oc_rep_t *rep);
 
-#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+private:
+  oc_collection_unique_ptr collection_;
+};
 
-bool SetAccessInRFOTM(oc_resource_t *resource, bool make_public,
-                      unsigned permissions);
-
-bool SetAccessInRFOTM(oc_core_resource_t index, size_t device, bool make_public,
-                      unsigned permissions);
-
-#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
-
-} // namespace oc
+}

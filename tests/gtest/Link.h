@@ -18,37 +18,54 @@
 
 #pragma once
 
+#include "api/oc_link_internal.h"
+#include "oc_rep.h"
 #include "oc_ri.h"
-#include "util/oc_features.h"
 
-#include <cstddef>
+#include <memory>
 #include <optional>
 #include <string>
 #include <vector>
 
 namespace oc {
 
-struct BaselineData
+using oc_link_unique_ptr =
+  std::unique_ptr<oc_link_t, decltype(&oc_delete_link)>;
+
+struct LinkParamData
 {
-  std::string name;
-  std::vector<std::string> rts;
-  std::vector<std::string> ifs;
-  std::string tag_locn;
-  std::vector<double> tag_pos_rel;
-  std::string tag_pos_desc;
-  std::string tag_func_desc;
+  std::string key;
+  std::string value;
 };
 
-std::optional<BaselineData> ParseBaselineData(const oc_rep_t *rep);
+struct LinkData
+{
+  std::string href;
+  std::vector<std::string> rts;
+  std::vector<oc_interface_mask_t> ifs;
+  std::vector<std::string> rels;
+  int64_t ins;
+  std::vector<LinkParamData> params;
+  oc_resource_properties_t bm;
+  std::string tag_pos_desc;
+  std::string tag_func_desc;
+  std::vector<double> tag_pos_rel;
+  std::vector<std::string> eps;
+};
 
-#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+class Link {
+public:
+  Link(oc_resource_t *resource)
+    : link_(oc_new_link(resource), oc_delete_link)
+  {
+  }
 
-bool SetAccessInRFOTM(oc_resource_t *resource, bool make_public,
-                      unsigned permissions);
+  ~Link() = default;
 
-bool SetAccessInRFOTM(oc_core_resource_t index, size_t device, bool make_public,
-                      unsigned permissions);
+  static std::optional<LinkData> ParsePayload(const oc_rep_t *rep);
 
-#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+private:
+  oc_link_unique_ptr link_;
+};
 
 } // namespace oc
