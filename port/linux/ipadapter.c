@@ -1276,13 +1276,23 @@ oc_send_buffer2(oc_message_t *message, bool queue)
 }
 
 #ifdef OC_CLIENT
-static bool
+
+typedef enum {
+  SEND_DISCOVERY_OK = 0,
+  SEND_DISCOVERY_SKIPPED = 1,
+
+  SEND_DISCOVERY_ERROR = -1,
+} send_discovery_t;
+
+static send_discovery_t
 send_ipv6_discovery_request(oc_message_t *message,
                             const struct ifaddrs *interface, int server_sock)
 {
   if (server_sock == -1) {
-    OC_ERR("server socket for IPv6 is disabled");
-    return false;
+    IN6_IS_ADDR_LINKLOCAL(
+      "skipping sending of discovery request: server socket for IPv6 is "
+      "disabled");
+    return SEND_DISCOVERY_SKIPPED;
   }
 
   CLANG_IGNORE_WARNING_START
@@ -1290,9 +1300,9 @@ send_ipv6_discovery_request(oc_message_t *message,
   const struct sockaddr_in6 *addr = (struct sockaddr_in6 *)interface->ifa_addr;
   CLANG_IGNORE_WARNING_END
   if (!IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr)) {
-    OC_ERR(
-      "cannot send discovery request: only link-local addresses are supported");
-    return false;
+    OC_DBG("skipping sending of discovery request: only link-local addresses "
+           "are supported");
+    return SEND_DISCOVERY_SKIPPED;
   }
 
   unsigned mif = if_nametoindex(interface->ifa_name);
@@ -1300,13 +1310,13 @@ send_ipv6_discovery_request(oc_message_t *message,
     OC_ERR("cannot send discovery request: cannot obtain interface(%s) "
            "index(error: %d)",
            interface->ifa_name, (int)errno);
-    return false;
+    return SEND_DISCOVERY_ERROR;
   }
 
   if (setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_IF, &mif,
                  sizeof(mif)) == -1) {
     OC_ERR("setting socket option for default IPV6_MULTICAST_IF: %d", errno);
-    return false;
+    return SEND_DISCOVERY_ERROR;
   }
   message->endpoint.interface_index = mif;
 
@@ -1333,19 +1343,21 @@ send_ipv6_discovery_request(oc_message_t *message,
 
   if (oc_send_buffer(message) < 0) {
     OC_ERR("failed to send ipv6 discovery request");
-    return false;
+    return SEND_DISCOVERY_ERROR;
   }
-  return true;
+  OC_DBG("sent discovery request on interface %s", interface->ifa_name);
+  return SEND_DISCOVERY_OK;
 }
 
 #ifdef OC_IPV4
-static bool
+static send_discovery_t
 send_ipv4_discovery_request(oc_message_t *message,
                             const struct ifaddrs *interface, int server_sock)
 {
   if (server_sock == -1) {
-    OC_ERR("server socket for IPv4 is disabled");
-    return false;
+    OC_DBG("skipping sending of discovery request: server socket for IPv4 is "
+           "disabled");
+    return SEND_DISCOVERY_SKIPPED;
   }
   CLANG_IGNORE_WARNING_START
   CLANG_IGNORE_WARNING("-Wcast-align")
@@ -1354,43 +1366,41 @@ send_ipv4_discovery_request(oc_message_t *message,
   if (setsockopt(server_sock, IPPROTO_IP, IP_MULTICAST_IF, &addr->sin_addr,
                  sizeof(addr->sin_addr)) == -1) {
     OC_ERR("setting socket option for default IP_MULTICAST_IF: %d", (int)errno);
-    return false;
+    return SEND_DISCOVERY_ERROR;
   }
   unsigned if_index = if_nametoindex(interface->ifa_name);
   if (if_index == 0) {
     OC_ERR("could not get interface index for %s (error: %d)",
            interface->ifa_name, (int)errno);
-    return false;
+    return SEND_DISCOVERY_ERROR;
   }
   message->endpoint.interface_index = if_index;
   if (oc_send_buffer(message) < 0) {
-    OC_WRN("failed to send ipv4 discovery request");
+    OC_ERR("failed to send ipv4 discovery request");
+    return SEND_DISCOVERY_ERROR;
   }
-  return true;
+  OC_DBG("sent discovery request on interface %s", interface->ifa_name);
+  return SEND_DISCOVERY_OK;
 }
 #endif /* OC_IPV4 */
 
-static bool
+static send_discovery_t
 send_discovery_request(oc_message_t *message, const struct ifaddrs *interface,
                        const ip_context_t *dev)
 {
-  if ((message->endpoint.flags & IPV6) != 0 && interface->ifa_addr != NULL &&
-      interface->ifa_addr->sa_family == AF_INET6) {
-    if (!send_ipv6_discovery_request(message, interface, dev->server.sock)) {
-      return false;
+  if (interface->ifa_addr != NULL) {
+    if ((message->endpoint.flags & IPV6) != 0 &&
+        interface->ifa_addr->sa_family == AF_INET6) {
+      return send_ipv6_discovery_request(message, interface, dev->server.sock);
     }
-    return true;
-  }
 #ifdef OC_IPV4
-  if ((message->endpoint.flags & IPV4) != 0 && interface->ifa_addr != NULL &&
-      interface->ifa_addr->sa_family == AF_INET) {
-    if (!send_ipv4_discovery_request(message, interface, dev->server4.sock)) {
-      return false;
+    if ((message->endpoint.flags & IPV4) != 0 &&
+        interface->ifa_addr->sa_family == AF_INET) {
+      return send_ipv4_discovery_request(message, interface, dev->server4.sock);
     }
-    return true;
-  }
 #endif /* OC_IPV4 */
-  return true;
+  }
+  return SEND_DISCOVERY_SKIPPED;
 }
 
 void
@@ -1416,8 +1426,10 @@ oc_send_discovery_request(oc_message_t *message)
       continue;
     }
 
-    if (!send_discovery_request(message, interface, dev)) {
-      break;
+    if (send_discovery_request(message, interface, dev) ==
+        SEND_DISCOVERY_ERROR) {
+      freeifaddrs(ifs);
+      return;
     }
   }
   freeifaddrs(ifs);
