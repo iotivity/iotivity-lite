@@ -35,7 +35,7 @@
 #endif /* OC_SERVER */
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
-#include "oc_collection.h"
+#include "api/oc_collection_internal.h"
 #endif /* OC_COLLECTIONS && OC_SERVER */
 
 #ifdef OC_SECURITY
@@ -462,7 +462,11 @@ oc_populate_resource_object(oc_resource_t *resource, const char *name,
     memset(&resource->name, 0, sizeof(oc_string_t));
   }
   oc_store_uri(uri, &resource->uri);
-  oc_new_string_array(&resource->types, num_resource_types);
+  if (num_resource_types > 0) {
+    oc_new_string_array(&resource->types, num_resource_types);
+  } else {
+    memset(&resource->types, 0, sizeof(oc_string_array_t));
+  }
   resource->properties = 0;
   resource->device = device;
 

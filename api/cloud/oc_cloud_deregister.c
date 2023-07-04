@@ -351,7 +351,7 @@ cloud_free_api_param(void *cb_data)
 }
 
 void
-cloud_deregister_stop(oc_cloud_context_t *ctx)
+cloud_deregister_stop(const oc_cloud_context_t *ctx)
 {
   oc_remove_delayed_callback_by_filter(cloud_deregister_refreshed_token_async,
                                        cloud_match_context, ctx, true,

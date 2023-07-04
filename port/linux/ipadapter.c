@@ -784,7 +784,8 @@ process_shutdown(const ip_context_t *dev)
 }
 
 static adapter_receive_state_t
-oc_udp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
+oc_udp_receive_message(const ip_context_t *dev, fd_set *fds,
+                       oc_message_t *message)
 {
   if (oc_sock_listener_fd_isset(&dev->server, fds)) {
     OC_DBG("udp receive server.sock(fd=%d)", dev->server.sock);

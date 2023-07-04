@@ -48,7 +48,7 @@ public class OcCollection extends OcResource {
         supportedRts = (sRts != null) ? sRts : new String[0];
         mandatoryRts = (mRts != null) ? mRts : new String[0];
 
-        nativeResource = OCMain.newCollection(this.name, this.uri, (short) this.resourceTypes.length,
+        nativeResource = OCCollectionUtil.newCollection(this.name, this.uri, (short) this.resourceTypes.length,
                 device.getDeviceIndex());
 
         if (nativeResource != null) {
@@ -56,10 +56,10 @@ public class OcCollection extends OcResource {
                 OCMain.resourceBindResourceType(nativeResource, resourceType);
             }
             for (String resourceType : supportedRts) {
-                OCMain.collectionAddSupportedResourceType(nativeResource, resourceType);
+                OCCollectionUtil.collectionAddSupportedResourceType(nativeResource, resourceType);
             }
             for (String resourceType : mandatoryRts) {
-                OCMain.collectionAddMandatoryResourceType(nativeResource, resourceType);
+                OCCollectionUtil.collectionAddMandatoryResourceType(nativeResource, resourceType);
             }
         }
     }
@@ -74,7 +74,7 @@ public class OcCollection extends OcResource {
 
     public void addLink(OcLink link) {
         if (link != null) {
-            OCMain.collectionAddLink(nativeResource, link.getNativeLink());
+            OCCollectionUtil.collectionAddLink(nativeResource, link.getNativeLink());
 
             // save the OCLink for future lookup
             linkLookup.put(link, link.getNativeLink());

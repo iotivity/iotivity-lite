@@ -20,6 +20,7 @@
 #define OC_CLOUD_DEREGISTER_INTERNAL_H
 
 #include "oc_cloud.h"
+#include "util/oc_compiler.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -55,7 +56,7 @@ extern "C" {
  * @return -1 on other errors
  */
 int cloud_deregister(oc_cloud_context_t *ctx, bool sync, uint16_t timeout,
-                     oc_cloud_cb_t cb, void *data);
+                     oc_cloud_cb_t cb, void *data) OC_NONNULL(1);
 
 /**
  * @brief Execute cloud deregister triggered by cloud_reset.
@@ -68,14 +69,14 @@ int cloud_deregister(oc_cloud_context_t *ctx, bool sync, uint16_t timeout,
  * @return false on failure
  */
 bool cloud_deregister_on_reset(oc_cloud_context_t *ctx, bool sync,
-                               uint16_t timeout);
+                               uint16_t timeout) OC_NONNULL();
 
 /**
  * @brief Clean-up all events by deregister.
  *
  * @param ctx device context (cannot be NULL);
  */
-void cloud_deregister_stop(oc_cloud_context_t *ctx);
+void cloud_deregister_stop(const oc_cloud_context_t *ctx) OC_NONNULL();
 
 #ifdef __cplusplus
 }

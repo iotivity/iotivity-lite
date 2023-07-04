@@ -181,7 +181,7 @@ oc_ri_get_client_cb(const char *uri, const oc_endpoint_t *endpoint,
 }
 
 static void
-client_cb_remove_from_lists(oc_client_cb_t *cb)
+client_cb_remove_from_lists(const oc_client_cb_t *cb)
 {
   oc_ri_remove_timed_event_callback(cb, &oc_client_cb_remove_async);
   oc_ri_remove_timed_event_callback(
