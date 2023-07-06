@@ -23,16 +23,17 @@
 #error __ANDROID_API__ not defined
 #endif
 #include "api/oc_network_events_internal.h"
-#include "port/oc_assert.h"
-#include "port/oc_connectivity.h"
-#include "port/oc_connectivity_internal.h"
-#include "port/oc_log_internal.h"
-#include "port/oc_network_event_handler_internal.h"
 #include "ipcontext.h"
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_network_monitor.h"
+#include "port/oc_assert.h"
+#include "port/oc_connectivity.h"
+#include "port/oc_connectivity_internal.h"
+#include "port/oc_log_internal.h"
+#include "port/oc_network_event_handler_internal.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_SESSION_EVENTS
 #include "api/oc_session_events_internal.h"
@@ -66,6 +67,10 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#if __ANDROID_API__ < 30
+#define OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE
+#endif /* __ANDROID_API__ < 30 */
+
 #define OCF_PORT_UNSECURED (5683)
 static const uint8_t ALL_OCF_NODES_LL[] = {
   0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
@@ -78,10 +83,13 @@ static const uint8_t ALL_OCF_NODES_SL[] = {
 };
 #define ALL_COAP_NODES_V4 0xe00001bb
 
-static pthread_mutex_t mutex;
-struct sockaddr_nl ifchange_nl;
-int ifchange_sock;
-bool ifchange_initialized;
+static pthread_mutex_t g_network_event_mutex;
+
+#ifdef OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE
+static bool g_ifchange_initialized;
+struct sockaddr_nl g_ifchange_nl;
+static int g_ifchange_sock;
+#endif /* OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE */
 
 OC_LIST(ip_contexts);
 OC_MEMB(ip_context_s, ip_context_t, OC_MAX_NUM_DEVICES);
@@ -207,7 +215,7 @@ remove_all_network_interface_cbs(void)
 void
 oc_network_event_handler_mutex_init(void)
 {
-  if (pthread_mutex_init(&mutex, NULL) != 0) {
+  if (pthread_mutex_init(&g_network_event_mutex, NULL) != 0) {
     oc_abort("error initializing network event handler mutex");
   }
 }
@@ -215,28 +223,30 @@ oc_network_event_handler_mutex_init(void)
 void
 oc_network_event_handler_mutex_lock(void)
 {
-  pthread_mutex_lock(&mutex);
+  pthread_mutex_lock(&g_network_event_mutex);
 }
 
 void
 oc_network_event_handler_mutex_unlock(void)
 {
-  pthread_mutex_unlock(&mutex);
+  pthread_mutex_unlock(&g_network_event_mutex);
 }
 
 void
 oc_network_event_handler_mutex_destroy(void)
 {
-  ifchange_initialized = false;
-  close(ifchange_sock);
+#ifdef OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE
+  g_ifchange_initialized = false;
+  close(g_ifchange_sock);
 #ifdef OC_NETWORK_MONITOR
   remove_all_ip_interface();
   remove_all_network_interface_cbs();
 #endif /* OC_NETWORK_MONITOR */
+#endif /* OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE */
 #ifdef OC_SESSION_EVENTS
   oc_session_events_remove_all_callbacks();
 #endif /* OC_SESSION_EVENTS */
-  pthread_mutex_destroy(&mutex);
+  pthread_mutex_destroy(&g_network_event_mutex);
 }
 
 static ip_context_t *
@@ -439,7 +449,10 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
       return;
     }
 
+    CLANG_IGNORE_WARNING_START
+    CLANG_IGNORE_WARNING("-Wsign-compare")
     while (NLMSG_OK(response, response_len)) {
+      CLANG_IGNORE_WARNING_END
       if (response->nlmsg_type == NLMSG_DONE) {
         done = true;
         break;
@@ -574,6 +587,8 @@ oc_connectivity_get_endpoints(size_t device)
   return oc_list_head(dev->eps);
 }
 
+#ifdef OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE
+
 /* Called after network interface up/down events.
  * This function reconfigures IPv6/v4 multicast sockets for
  * all logical devices.
@@ -588,7 +603,7 @@ process_interface_change_event(void)
   do {
     guess <<= 1;
     uint8_t dummy[guess];
-    response_len = recv(ifchange_sock, dummy, guess, MSG_PEEK);
+    response_len = recv(g_ifchange_sock, dummy, guess, MSG_PEEK);
     if (response_len < 0) {
       OC_ERR("reading payload size from netlink interface");
       return -1;
@@ -596,7 +611,7 @@ process_interface_change_event(void)
   } while (response_len == guess);
 
   uint8_t buffer[response_len];
-  response_len = recv(ifchange_sock, buffer, response_len, 0);
+  response_len = recv(g_ifchange_sock, buffer, response_len, 0);
   if (response_len < 0) {
     OC_ERR("reading payload from netlink interface");
     return -1;
@@ -610,7 +625,10 @@ process_interface_change_event(void)
 
   bool if_state_changed = false;
 
+  CLANG_IGNORE_WARNING_START
+  CLANG_IGNORE_WARNING("-Wsign-compare")
   while (NLMSG_OK(response, response_len)) {
+    CLANG_IGNORE_WARNING_END
     if (response->nlmsg_type == RTM_NEWADDR) {
       struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(response);
       if (ifa) {
@@ -670,6 +688,8 @@ process_interface_change_event(void)
 
   return ret;
 }
+
+#endif /* OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE */
 
 static int
 recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
@@ -764,12 +784,15 @@ network_event_thread(void *data)
 
   fd_set setfds;
   FD_ZERO(&dev->rfds);
+
+#ifdef OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE
   /* Monitor network interface changes on the platform from only the 0th logical
    * device
    */
   if (dev->device == 0) {
-    FD_SET(ifchange_sock, &dev->rfds);
+    FD_SET(g_ifchange_sock, &dev->rfds);
   }
+#endif /* OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE */
   FD_SET(dev->shutdown_pipe[0], &dev->rfds);
   FD_SET(dev->server_sock, &dev->rfds);
   FD_SET(dev->mcast_sock, &dev->rfds);
@@ -808,15 +831,17 @@ network_event_thread(void *data)
     }
 
     for (i = 0; i < n; i++) {
+#ifdef OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE
       if (dev->device == 0) {
-        if (FD_ISSET(ifchange_sock, &setfds)) {
+        if (FD_ISSET(g_ifchange_sock, &setfds)) {
           if (process_interface_change_event() < 0) {
             OC_WRN("caught errors while handling a network interface change");
           }
-          FD_CLR(ifchange_sock, &setfds);
+          FD_CLR(g_ifchange_sock, &setfds);
           continue;
         }
       }
+#endif /* OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE */
 
       oc_message_t *message = oc_allocate_message();
 
@@ -1530,23 +1555,24 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   }
 #endif /* OC_TCP */
 
+#ifdef OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE
   /* Netlink socket to listen for network interface changes.
    * Only initialized once, and change events are captured by only
    * the network event thread for the 0th logical device.
    */
-  if (!ifchange_initialized) {
-    memset(&ifchange_nl, 0, sizeof(struct sockaddr_nl));
-    ifchange_nl.nl_family = AF_NETLINK;
-    ifchange_nl.nl_groups =
+  if (!g_ifchange_initialized) {
+    memset(&g_ifchange_nl, 0, sizeof(struct sockaddr_nl));
+    g_ifchange_nl.nl_family = AF_NETLINK;
+    g_ifchange_nl.nl_groups =
       RTMGRP_LINK | RTMGRP_IPV4_IFADDR | RTMGRP_IPV6_IFADDR;
-    ifchange_sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
-    if (ifchange_sock < 0) {
+    g_ifchange_sock = socket(AF_NETLINK, SOCK_RAW, NETLINK_ROUTE);
+    if (g_ifchange_sock < 0) {
       OC_ERR("creating netlink socket to monitor network interface changes %d",
              errno);
       return -1;
     }
-    if (bind(ifchange_sock, (struct sockaddr *)&ifchange_nl,
-             sizeof(ifchange_nl)) == -1) {
+    if (bind(g_ifchange_sock, (struct sockaddr *)&g_ifchange_nl,
+             sizeof(g_ifchange_nl)) == -1) {
       OC_ERR("binding netlink socket %d", errno);
       return -1;
     }
@@ -1556,8 +1582,9 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
       return -1;
     }
 #endif /* OC_NETWORK_MONITOR */
-    ifchange_initialized = true;
+    g_ifchange_initialized = true;
   }
+#endif /* OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE */
 
   if (pthread_create(&dev->event_thread, NULL, &network_event_thread, dev) !=
       0) {

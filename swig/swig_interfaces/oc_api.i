@@ -1,10 +1,21 @@
 /* File oc_api.i */
 %module OCMain
+
+%{
+#include "util/oc_macros_internal.h"
+
+CLANG_IGNORE_WARNING_START
+CLANG_IGNORE_WARNING("-Wunused-function")
+GCC_IGNORE_WARNING_START
+GCC_IGNORE_WARNING("-Wunused-function")
+%}
 %include "arrays_java.i";
-%include "carrays.i"
+%{
+GCC_IGNORE_WARNING_END
+CLANG_IGNORE_WARNING_END
+%}
+
 %include "stdint.i"
-%include "typemaps.i"
-%include "various.i"
 
 %include "iotivity.swg"
 %include "oc_ri.i"
@@ -42,6 +53,7 @@
 #include "oc_collection.h"
 #include "oc_helpers.h"
 #include "oc_role.h"
+#include "port/oc_log_internal.h"
 #include <assert.h>
 %}
 
@@ -308,6 +320,10 @@ void jni_set_factory_presets_cb(oc_factory_presets_cb_t cb, jni_callback_data *j
 }
 %}
 
+%rename(OCConnectivityListeningPortFlags) oc_connectivity_listening_port_flags_t;
+%rename(OCConnectivityListeningPorts) oc_connectivity_listening_ports_s;
+%rename(OCConnectivityPorts) oc_connectivity_ports_s;
+
 /* Code and typemaps for mapping the oc_add_device to the java OCAddDeviceHandler */
 %{
 void jni_oc_add_device_callback(void *user_data)
@@ -344,12 +360,11 @@ void jni_oc_add_device_callback(void *user_data)
 }
 %ignore oc_add_device;
 %ignore oc_add_new_device_s;
-%ignore oc_connectivity_ports_s;
 %ignore oc_add_device_v1;
 %rename(addDevice) jni_oc_add_device;
 %inline %{
 int jni_oc_add_device(const char *uri, const char *rt, const char *name,
-                       const char *spec_version, const char *data_model_version) {
+                      const char *spec_version, const char *data_model_version) {
   OC_DBG("JNI: %s\n", __func__);
   return oc_add_device(uri, rt, name, spec_version, data_model_version, NULL, NULL);
 }
@@ -357,9 +372,9 @@ int jni_oc_add_device(const char *uri, const char *rt, const char *name,
 
 %rename(addDevice) jni_oc_add_device1;
 %inline %{
-int jni_oc_add_device1(const char *uri, const char *rt, const char *name,
-                       const char *spec_version, const char *data_model_version,
-                       oc_add_device_cb_t add_device_cb, jni_callback_data *jcb) {
+int jni_oc_add_device_v1(const char *uri, const char *rt, const char *name,
+                         const char *spec_version, const char *data_model_version,
+                         oc_add_device_cb_t add_device_cb, jni_callback_data *jcb) {
   OC_DBG("JNI: %s\n", __func__);
   return oc_add_device(uri, rt, name, spec_version, data_model_version, add_device_cb, jcb);
 }
@@ -422,6 +437,7 @@ int jni_oc_init_platform1(const char *mfg_name, oc_init_platform_cb_t init_platf
 void jni_oc_random_pin_callback(const unsigned char *pin, size_t pin_len, void *user_data)
 {
   OC_DBG("JNI: %s\n", __func__);
+  (void)pin_len;
   jni_callback_data *data = (jni_callback_data *)user_data;
   jint getEnvResult = 0;
   data->jenv = get_jni_env(&getEnvResult);
@@ -477,11 +493,15 @@ void jni_oc_random_pin_callback(const unsigned char *pin, size_t pin_len, void *
 %inline %{
 void jni_set_random_pin_callback(oc_random_pin_cb_t cb, jni_callback_data *jcb) {
   OC_DBG("JNI: %s\n", __func__);
-  #ifdef OC_SECURITY
+#ifdef OC_SECURITY
   oc_set_random_pin_callback(cb, jcb);
-  #endif /* OC_SECURITY */
+#else
+  (void)cb;
+  (void)jcb;
+#endif /* OC_SECURITY */
 }
 %}
+
 // DOCUMENTATION workaround
 %javamethodmodifiers oc_get_con_res_announced "/**
    * Returns whether the oic.wk.con res is announced.
@@ -511,9 +531,9 @@ void jni_set_random_pin_callback(oc_random_pin_cb_t cb, jni_callback_data *jcb) 
 %inline %{
 void jni_reset() {
   OC_DBG("JNI: %s\n", __func__);
-  #ifdef OC_SECURITY
+#ifdef OC_SECURITY
   oc_reset();
-  #endif /* OC_SECURITY */
+#endif /* OC_SECURITY */
 }
 %}
 
@@ -522,9 +542,11 @@ void jni_reset() {
 %inline %{
 void jni_reset_device(size_t device) {
   OC_DBG("JNI: %s\n", __func__);
-  #ifdef OC_SECURITY
+#ifdef OC_SECURITY
   oc_reset_device(device);
-  #endif /* OC_SECURITY */
+#else
+  (void)device;
+#endif /* OC_SECURITY */
 }
 %}
 
@@ -612,6 +634,9 @@ void jni_add_ownership_status_cb(oc_ownership_status_cb_t cb, jni_callback_data 
   OC_DBG("JNI: %s\n", __func__);
 #ifdef OC_SECURITY
   oc_add_ownership_status_cb(cb, jcb);
+#else
+  (void)cb;
+  (void)jcb;
 #endif
 }
 %}
@@ -638,6 +663,8 @@ void jni_remove_ownership_status_cb(jobject cb)
     oc_remove_ownership_status_cb(jni_ownership_status_cb, item);
   }
   jni_list_remove(item);
+#else
+  (void)cb;
 #endif
 }
 %}
@@ -658,6 +685,10 @@ void jni_remove_ownership_status_cb(jobject cb)
    */
   public";
 %rename (isOwnedDevice) oc_is_owned_device;
+
+// TODO: oc_set_select_oxms_cb
+%ignore oc_select_oxms_cb_t;
+%ignore oc_set_select_oxms_cb;
 
 // server side
 %rename(newResource) oc_new_resource;
@@ -851,6 +882,8 @@ void jni_resource_make_public(oc_resource_t *resource) {
   OC_DBG("JNI: %s\n", __func__);
 #ifdef OC_SECURITY
   oc_resource_make_public(resource);
+#else
+  (void)resource;
 #endif /* OC_SECURITY */
 }
 %}
@@ -1251,6 +1284,18 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCMainJNI_getQueryValues(JNIEnv *je
 %rename(setSeparateResponseBuffer) oc_set_separate_response_buffer;
 %rename(sendSeparateResponse) oc_send_separate_response;
 %rename(notifyObservers) oc_notify_observers;
+%rename(notifyObserversDelayed) oc_notify_observers_delayed;
+%rename(notifyObserversDelayedMs) oc_notify_observers_delayed_ms;
+
+// TODO: implement
+%ignore oc_send_response_with_callback;
+%ignore oc_send_response_cb_t;
+%ignore oc_set_send_response_callback;
+%ignore oc_get_request_payload_raw;
+%ignore oc_send_response_raw;
+%ignore oc_get_response_payload_raw;
+%ignore oc_send_diagnostic_message;
+%ignore oc_get_diagnostic_message;
 
 // client side
 %{
@@ -1736,6 +1781,11 @@ bool jni_send_ping(bool custody, oc_endpoint_t *endpoint, uint16_t timeout_secon
   OC_DBG("JNI: - unlock %s\n", __func__);
   return return_value;
 #else
+  (void)custody;
+  (void)endpoint;
+  (void)timeout_seconds;
+  (void)handler;
+  (void)jcb;
   return false;
 #endif /* OC_TCP */
 }
@@ -1826,6 +1876,17 @@ void jni_oc_remove_delayed_callback(jobject callback) {
   jni_list_remove(item);
 }
 %}
+
+// TODO: implement oc_set_delayed_callback_ms, oc_set_delayed_callback_ms_v1, oc_has_delayed_callback
+%ignore oc_set_delayed_callback_ms;
+%ignore oc_set_delayed_callback_ms_v1;
+%ignore oc_has_delayed_callback;
+
+// TODO: implement oc_remove_delayed_callback_by_filter
+%ignore oc_ri_timed_event_filter_t;
+%ignore oc_ri_timed_event_on_delete_t;
+%ignore oc_remove_delayed_callback_by_filter;
+
 #define OC_API
 #define OC_DEPRECATED(...)
 %include "oc_api.h"
@@ -1863,6 +1924,11 @@ bool jni_assert_role(const char *role, const char *authority, oc_endpoint_t *end
   OC_DBG("JNI: - unlock %s\n", __func__);
   return return_value;
 #else
+  (void)role;
+  (void)authority;
+  (void)endpoint;
+  (void)handler;
+  (void)jcb;
   return false;
 #endif /* OC_SECURITY && OC_PKI */
 }
@@ -1875,6 +1941,8 @@ void jni_auto_assert_roles(bool auto_assert) {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY) && defined(OC_PKI)
   oc_auto_assert_roles(auto_assert);
+#else
+  (void)auto_assert;
 #endif /* OC_SECURITY && OC_PKI */
 }
 %}
@@ -1890,6 +1958,10 @@ void jni_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler
   oc_assert_all_roles(endpoint, handler, jcb);
   jni_mutex_unlock(jni_sync_lock);
   OC_DBG("JNI: - unlock %s\n", __func__);
+#else
+  (void)endpoint;
+  (void)handler;
+  (void)jcb;
 #endif /* OC_SECURITY && OC_PKI */
 }
 %}

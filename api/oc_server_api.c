@@ -716,7 +716,7 @@ handle_separate_response_request(coap_separate_t *request,
   if (t == NULL) {
     return;
   }
-  assert(response_buffer->code <= UINT8_MAX);
+  assert(response_buffer->code <= (int)UINT8_MAX);
   coap_separate_resume(&response, request, (uint8_t)response_buffer->code,
                        t->mid);
   coap_set_header_content_format(&response, response_buffer->content_format);

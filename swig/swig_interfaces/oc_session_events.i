@@ -34,6 +34,7 @@ void jni_session_events_set_event_delay(int secs)
   oc_session_events_set_event_delay(secs);
 #else /* OC_TCP */
   OC_DBG("JNI: %s - Must build with OC_TCP defined to use this function.\n", __func__);
+  (void)secs;
 #endif /* !OC_TCP */
 }
 %}

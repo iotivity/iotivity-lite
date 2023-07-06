@@ -25,6 +25,9 @@
 %{
 #include "oc_iotivity_lite_jni.h"
 #include "oc_cloud.h"
+#include "port/oc_log_internal.h"
+
+#include <assert.h>
 %}
 
 /* code and typemaps for mapping the oc_cloud_cb_t to the java OCCloudHandler */
@@ -91,6 +94,11 @@ static void jni_cloud_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void
   $2 = user_data;
 }
 
+// TODO: implement
+%ignore oc_cloud_on_keepalive_response_cb_t;
+%ignore oc_cloud_keepalive_t;
+%ignore oc_cloud_set_keepalive;
+
 // oc_cloud_status is a bitmask exposed through OCCloudStatusMask.java as ints
 %ignore oc_cloud_status_t;
 %rename (OCCloudPrivisoningStatus) oc_cps_t;
@@ -105,6 +113,7 @@ static void jni_cloud_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void
 %rename (OCCloudContext) oc_cloud_context_t;
 %ignore oc_cloud_context_t::callback;
 %ignore oc_cloud_context_t::user_data;
+%ignore oc_cloud_context_t::keepalive;
 %rename (cloudEndpointState) oc_cloud_context_t::cloud_ep_state;
 %rename (cloudEndpoint) oc_cloud_context_t::cloud_ep;
 %rename (retryCount) oc_cloud_context_t::retry_count;
@@ -127,6 +136,7 @@ oc_cloud_context_t *jni_cloud_get_context(size_t device)
   return oc_cloud_get_context(device);
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)device;
   return NULL;
 #endif /* !OC_CLOUD */
 }
@@ -148,6 +158,9 @@ int jni_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni
   return return_value;
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  (void)callback;
+  (void)jcb;
   return -1;
 #endif /* !OC_CLOUD */
 }
@@ -165,6 +178,7 @@ int jni_cloud_manager_stop(oc_cloud_context_t *ctx)
   return ret;
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
   return -1;
 #endif /* !OC_CLOUD */
 }
@@ -179,6 +193,7 @@ void jni_cloud_manager_restart(oc_cloud_context_t *ctx)
   oc_cloud_manager_restart(ctx);
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
 #endif /* !OC_CLOUD */
 }
 %}
@@ -199,6 +214,9 @@ int jni_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni_call
   return return_value;
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  (void)callback;
+  (void)jcb;
   return -1;
 #endif /* !OC_CLOUD */
 }
@@ -220,6 +238,9 @@ int jni_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni_callbac
   return return_value;
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  (void)callback;
+  (void)jcb;
   return -1;
 #endif /* !OC_CLOUD */
 }
@@ -241,6 +262,9 @@ int jni_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni_callba
   return return_value;
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  (void)callback;
+  (void)jcb;
   return -1;
 #endif /* !OC_CLOUD */
 }
@@ -262,6 +286,9 @@ int jni_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni_ca
   return return_value;
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  (void)callback;
+  (void)jcb;
   return -1;
 #endif /* !OC_CLOUD */
 }
@@ -283,6 +310,9 @@ int jni_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t callback, jni
   return return_value;
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  (void)callback;
+  (void)jcb;
   return -1;
 #endif /* !OC_CLOUD */
 }
@@ -298,6 +328,8 @@ void jni_cloud_set_published_resources_ttl(oc_cloud_context_t *ctx,
   oc_cloud_set_published_resources_ttl(ctx, ttl);
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  (void)ttl;
 #endif /* !OC_CLOUD */
 }
 %}
@@ -311,6 +343,7 @@ int jni_cloud_get_token_expiry(oc_cloud_context_t *ctx)
   return oc_cloud_get_token_expiry(ctx);
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
   return -1;
 #endif /* !OC_CLOUD */
 }
@@ -325,6 +358,7 @@ int jni_cloud_add_resource(oc_resource_t *resource)
   return oc_cloud_add_resource(resource);
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)resource;
   return -1;
 #endif /* !OC_CLOUD */
 }
@@ -339,6 +373,7 @@ void jni_cloud_delete_resource(oc_resource_t *resource)
   oc_cloud_delete_resource(resource);
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)resource;
 #endif /* !OC_CLOUD */
 }
 %}
@@ -352,6 +387,7 @@ int jni_cloud_publish_resources(size_t device)
   return oc_cloud_publish_resources(device);
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)device;
   return -1;
 #endif /* !OC_CLOUD */
 }
@@ -375,6 +411,9 @@ int jni_cloud_discover_resources( oc_cloud_context_t *ctx,
   return return_value;
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  (void)handler;
+  (void)jcb;
   return -1;
 #endif /* !OC_CLOUD */
 }
@@ -393,6 +432,11 @@ int jni_cloud_provision_conf_resource(oc_cloud_context_t *ctx,
   return oc_cloud_provision_conf_resource(ctx, server, accessToken, serverId, authProvider);
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  (void)server;
+  (void)accessToken;
+  (void)serverId;
+  (void)authProvider;
   return -1;
 #endif /* !OC_CLOUD */
 }
@@ -408,6 +452,8 @@ void jni_cloud_set_identity_cert_chain(oc_cloud_context_t *ctx,
   oc_cloud_set_identity_cert_chain(ctx, selected_identity_cred_id);
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  (void)selected_identity_cred_id;
 #endif /* !OC_CLOUD */
 }
 %}
@@ -421,6 +467,7 @@ int jni_cloud_get_identity_cert_chain(oc_cloud_context_t *ctx)
   return oc_cloud_get_identity_cert_chain(ctx);
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
   return -1;
 #endif /* !OC_CLOUD */
 }

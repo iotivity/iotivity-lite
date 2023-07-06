@@ -58,8 +58,9 @@ SWIG_INTERFACES_DIR = swig_interfaces/
 SWIG_CFLAG = 
 HEADER_FILE = -I../ -I../include -I../port -I../util/ -I../deps/tinycbor/src/ -I../security -I../cloud
 
-JNIFLAG = -fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow -Wno-unused-function
-EXTRA_FLAG = -std=gnu99 -Wall -DOC_CLIENT -DOC_SERVER -DOC_IPV4 -DOC_DYNAMIC_ALLOCATION -DLONG_BIT=64
+WARNING_FLAGS=-Wall -Wextra -Werror -Wno-error=deprecated-declarations -pedantic
+JNIFLAG = -fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow
+EXTRA_FLAG = -std=gnu99 $(WARNING_FLAGS) -DOC_CLIENT -DOC_SERVER -DOC_IPV4 -DOC_DYNAMIC_ALLOCATION -DLONG_BIT=64
 DTLSFLAGS=-I../deps/mbedtls/include
 LDFLAG += -lm
 
@@ -101,9 +102,9 @@ ifeq ($(SWUPDATE),1)
 	SWIG_CFLAG += -DOC_SOFTWARE_UPDATE
 endif
 
-SRC = oc_api oc_buffer_settings oc_clock oc_cloud oc_collection oc_connectivity \
-		oc_core_res oc_cred oc_endpoint oc_enums oc_introspection oc_obt oc_pki \
-		oc_random oc_rep oc_session_events oc_swupdate oc_storage oc_uuid
+SRC = oc_api oc_buffer_settings oc_clock oc_cloud oc_collection oc_connectivity oc_core_res oc_cred \
+		oc_endpoint oc_enums oc_introspection oc_obt oc_pki oc_random oc_rep oc_session_events oc_swupdate \
+		oc_storage oc_uuid
 
 # Swig interfaces source
 SWIG_INTERFACE_SRC = $(addsuffix .i, $(SRC))

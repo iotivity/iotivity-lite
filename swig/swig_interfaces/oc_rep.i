@@ -25,9 +25,8 @@
 #include "oc_collection.h"
 #include "oc_helpers.h"
 #include "port/oc_log_internal.h"
+
 #include <assert.h>
-
-
 %}
 
 /*******************Begin cbor.h******************************/
@@ -1135,6 +1134,7 @@ void clearCborErrno() {
 %ignore oc_rep_set_pool;
 %ignore oc_parse_rep;
 %ignore oc_free_rep;
+%ignore oc_rep_is_null;
 
 %typemap(in, numinputs=0, noblock=1) bool *jni_rep_get_error_flag {
   bool temp_jni_rep_get_error_flag;

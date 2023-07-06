@@ -24,6 +24,9 @@
 #include "oc_iotivity_lite_jni.h"
 
 #include "oc_obt.h"
+#include "port/oc_log_internal.h"
+
+#include <assert.h>
 %}
 
 /*******************Begin oc_acl.h*****************/
@@ -73,10 +76,41 @@
   }
 }
 %rename(subjectType) oc_sec_ace_t::subject_type;
-%rename(OCSecurityAcl) oc_sec_acl_s;
 /* We are relying on the iotivity-lite library to create and destroy instances of oc_sec_ace_t */
 %nodefaultctor oc_sec_ace_t;
 %nodefaultdtor oc_sec_ace_t;
+
+// TODO: implement oc_sec_acl_clear, oc_sec_remove_ace, oc_sec_get_ace_by_aceid, oc_sec_remove_ace_by_aceid, oc_sec_acl_add_bootstrap_acl
+%ignore oc_sec_ace_filter_t;
+%ignore oc_sec_acl_clear;
+%ignore oc_sec_remove_ace;
+%ignore oc_sec_get_ace_by_aceid;
+%ignore oc_sec_remove_ace_by_aceid;
+%ignore oc_sec_acl_add_bootstrap_acl;
+
+// TODO: implement oc_sec_apply_acl
+%ignore oc_sec_on_apply_acl_data_t;
+%ignore oc_sec_on_apply_acl_cb_t;
+%ignore oc_sec_apply_acl;
+
+%ignore oc_resource_set_access_in_RFOTM;
+%rename (setAccessInRTOFM) jni_resource_set_access_in_RFOTM;
+%inline %{
+void jni_resource_set_access_in_RFOTM(oc_resource_t *resource, bool state,
+                                     oc_ace_permissions_t permission)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY) && defined(OC_RESOURCE_ACCESS_IN_RFOTM)
+  oc_resource_set_access_in_RFOTM(resource, state, permission);
+#else
+  OC_DBG("JNI: %s requires OC_SECURITY and OC_RESOURCE_ACCESS_IN_RFOTM.", __func__);
+  (void)resource;
+  (void)state;
+  (void)permission;
+#endif /* OC_SECURITY && OC_RESOURCE_ACCESS_IN_RFOTM */
+}
+%}
+
 /*******************End oc_acl.h*****************/
 
 %ignore oc_obt_init;
@@ -193,6 +227,8 @@ int jni_oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t callback, jni_call
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY */
   return return_value;
@@ -213,6 +249,8 @@ int jni_obt_discover_unowned_devices_realm_local_ipv6(oc_obt_discovery_cb_t call
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY */
   return return_value;
@@ -233,6 +271,8 @@ int jni_obt_discover_unowned_devices_site_local_ipv6(oc_obt_discovery_cb_t callb
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY */
   return return_value;
@@ -253,6 +293,8 @@ int jni_oc_obt_discover_owned_devices(oc_obt_discovery_cb_t callback, jni_callba
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY */
   return return_value;
@@ -273,6 +315,8 @@ int jni_obt_discover_owned_devices_realm_local_ipv6(oc_obt_discovery_cb_t callba
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY */
   return return_value;
@@ -293,6 +337,8 @@ int jni_obt_discover_owned_devices_site_local_ipv6(oc_obt_discovery_cb_t callbac
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY */
   return return_value;
@@ -313,6 +359,9 @@ int jni_obt_discover_all_resources(oc_uuid_t *uuid, oc_discovery_all_handler_t h
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  (void)uuid;
+  (void)handler;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY */
   return return_value;
@@ -391,6 +440,9 @@ int jni_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t ca
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  (void)uuid;
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY */
   return return_value;
@@ -411,6 +463,9 @@ int jni_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t callba
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  (void)uuid;
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY */
   return return_value;
@@ -445,6 +500,11 @@ int jni_obt_perform_random_pin_otm(oc_uuid_t *uuid, char *pin, size_t pin_len,
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  (void)uuid;
+  (void)pin;
+  (void)pin_len;
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY */
   return return_value;
@@ -465,6 +525,9 @@ int jni_obt_perform_cert_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI returning error.", __func__);
+  (void)uuid;
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY && OC_PKI */
   return return_value;
@@ -481,6 +544,9 @@ oc_role_t *jni_obt_add_roleid(oc_role_t *roles, const char *role, const char *au
   return oc_obt_add_roleid(roles, role, authority);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI returning NULL.", __func__);
+  (void)roles;
+  (void)role;
+  (void)authority;
   return NULL;
 #endif /* OC_SECURITY && OC_PKI */
 }
@@ -495,6 +561,7 @@ void jni_obt_free_roleid(oc_role_t *roles)
   oc_obt_free_roleid(roles);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI.", __func__);
+  (void)roles;
 #endif /* OC_SECURITY && OC_PKI */
 }
 %}
@@ -513,6 +580,9 @@ int jni_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t callbac
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  (void)uuid;
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY */
   return return_value;
@@ -578,6 +648,10 @@ int jni_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2, o
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  (void)uuid1;
+  (void)uuid2;
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY */
   return return_value;
@@ -598,6 +672,9 @@ int jni_obt_provision_identity_certificate(oc_uuid_t *uuid, oc_obt_status_cb_t c
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI returning error.", __func__);
+  (void)uuid;
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY && OC_PKI */
   return return_value;
@@ -626,6 +703,12 @@ int jni_oc_obt_pki_add_identity_cert(size_t device, const unsigned char *cert,
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI returning error.", __func__);
+  (void)device;
+  (void)cert;
+  (void)cert_size;
+  (void)key;
+  (void)key_size;
+  (void)credusage;
   int return_value = -1;
 #endif /* OC_SECURITY && OC_PKI */
   return return_value;
@@ -648,6 +731,10 @@ int jni_obt_provision_role_certificate(oc_role_t *roles, oc_uuid_t *uuid, oc_obt
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI returning error.", __func__);
+  (void)roles;
+  (void)uuid;
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY && OC_PKI */
   return return_value;
@@ -673,6 +760,12 @@ int jni_oc_obt_provision_trust_anchor(const char *cert, size_t cert_size, char* 
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY and OC_PKI returning error.", __func__);
+  (void)cert;
+  (void)cert_size;
+  (void)subject;
+  (void)uuid;
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY && OC_PKI */
   return return_value;
@@ -690,6 +783,7 @@ oc_sec_ace_t *jni_obt_new_ace_for_subject(oc_uuid_t *uuid)
   return oc_obt_new_ace_for_subject(uuid);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning NULL.", __func__);
+  (void)uuid;
   return NULL;
 #endif /* OC_SECURITY */
 }
@@ -704,6 +798,7 @@ oc_sec_ace_t *jni_obt_new_ace_for_connection(oc_ace_connection_type_t conn)
   return oc_obt_new_ace_for_connection(conn);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning NULL.", __func__);
+  (void)conn;
   return NULL;
 #endif /* OC_SECURITY */
 }
@@ -718,6 +813,8 @@ oc_sec_ace_t *jni_obt_new_ace_for_role(const char *role, const char *authority)
   return oc_obt_new_ace_for_role(role, authority);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning NULL.", __func__);
+  (void)role;
+  (void)authority;
   return NULL;
 #endif /* OC_SECURITY */
 }
@@ -732,6 +829,7 @@ oc_ace_res_t *jni_obt_ace_new_resource(oc_sec_ace_t *ace)
   return oc_obt_ace_new_resource(ace);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning NULL.", __func__);
+  (void)ace;
   return NULL;
 #endif /* OC_SECURITY */
 }
@@ -746,6 +844,8 @@ void jni_obt_ace_resource_set_href(oc_ace_res_t *resource, const char *href)
   oc_obt_ace_resource_set_href(resource, href);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
+  (void)resource;
+  (void)href;
 #endif /* OC_SECURITY */
 }
 %}
@@ -759,6 +859,8 @@ void jni_obt_ace_resource_set_wc(oc_ace_res_t *resource, oc_ace_wildcard_t wc)
   oc_obt_ace_resource_set_wc(resource, wc);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
+  (void)resource;
+  (void)wc;
 #endif /* OC_SECURITY */
 }
 %}
@@ -773,6 +875,8 @@ void jni_obt_ace_add_permission(oc_sec_ace_t *ace,
   oc_obt_ace_add_permission(ace, permission);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
+  (void)ace;
+  (void)permission;
 #endif /* OC_SECURITY */
 }
 %}
@@ -790,6 +894,10 @@ int jni_obt_provision_ace(oc_uuid_t *subject, oc_sec_ace_t *ace, oc_obt_device_s
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  (void)subject;
+  (void)ace;
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY */
   return return_value;
@@ -805,6 +913,7 @@ void jni_obt_free_ace(oc_sec_ace_t *ace)
   oc_obt_free_ace(ace);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
+  (void)ace;
 #endif /* OC_SECURITY */
 }
 %}
@@ -823,6 +932,11 @@ int jni_obt_provision_role_wildcard_ace(oc_uuid_t *subject, const char *role, co
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  (void)subject;
+  (void)role;
+  (void)authority;
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY */
   return return_value;
@@ -843,6 +957,9 @@ int jni_obt_provision_auth_wildcard_ace(oc_uuid_t *subject, oc_obt_device_status
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning error.", __func__);
+  (void)subject;
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY */
   return return_value;
@@ -874,6 +991,7 @@ int jni_obt_delete_own_cred_by_credid(int credid)
   return oc_obt_delete_own_cred_by_credid(credid);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
+  (void)credid;
   return -1;
 #endif /* OC_SECURITY */
 }
@@ -946,6 +1064,9 @@ int jni_obt_retrieve_creds(oc_uuid_t *subject, oc_obt_creds_cb_t callback, jni_c
   return return_value;
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
+  (void)subject;
+  (void)callback;
+  (void)jcb;
   return -1;
 #endif /* OC_SECURITY */
 }
@@ -961,6 +1082,7 @@ void jni_obt_free_creds(oc_sec_creds_t *creds)
   oc_obt_free_creds(creds);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
+  (void)creds;
 #endif /* OC_SECURITY */
 }
 %}
@@ -981,6 +1103,10 @@ int jni_obt_delete_cred_by_credid(oc_uuid_t *uuid, int credid,
   return return_value;
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
+  (void)uuid;
+  (void)credid;
+  (void)callback;
+  (void)jcb;
   return -1;
 #endif /* OC_SECURITY */
 }
@@ -1053,6 +1179,9 @@ int jni_obt_retrieve_acl(oc_uuid_t *uuid, oc_obt_acl_cb_t callback, jni_callback
   OC_DBG("JNI: - unlock %s\n", __func__);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
+  (void)uuid;
+  (void)callback;
+  (void)jcb;
   int return_value = -1;
 #endif /* OC_SECURITY */
   return return_value;
@@ -1069,6 +1198,7 @@ void jni_obt_free_acl(oc_sec_acl_t *acl)
   oc_obt_free_acl(acl);
 #else
   OC_DBG("JNI: %s requires OC_SECURITY.", __func__);
+  (void)acl;
 #endif /* OC_SECURITY */
 }
 %}
@@ -1089,6 +1219,10 @@ int jni_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid,
   return return_value;
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
+  (void)uuid;
+  (void)aceid;
+  (void)callback;
+  (void)jcb;
   return -1;
 #endif /* OC_SECURITY */
 }
@@ -1169,6 +1303,10 @@ int jni_oc_obt_retrieve_cloud_conf_device(oc_uuid_t* uuid, const char* url,
   return return_value;
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
+  (void)uuid;
+  (void)url;
+  (void)handler;
+  (void)jcb;
   return -1;
 #endif /* OC_SECURITY */
 }
@@ -1192,11 +1330,18 @@ int jni_oc_obt_update_cloud_conf_device(oc_uuid_t* uuid,
   return return_value;
 #else
   OC_DBG("JNI: %s requires OC_SECURITY returning -1.", __func__);
+  (void)uuid;
+  (void)url;
+  (void)at;
+  (void)apn;
+  (void)cis;
+  (void)sid;
+  (void)handler;
+  (void)jcb;
   return -1;
 #endif /* OC_SECURITY */
 }
 %}
-
 
 %include "oc_acl.h"
 %include "oc_obt.h";

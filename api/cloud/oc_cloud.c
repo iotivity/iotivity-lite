@@ -258,6 +258,8 @@ cloud_ep_session_event_handler(const oc_endpoint_t *endpoint,
 }
 #endif /* OC_SESSION_EVENTS */
 
+#ifdef OC_NETWORK_MONITOR
+
 static void
 cloud_interface_up_event_handler(oc_cloud_context_t *ctx, void *user_data)
 {
@@ -274,6 +276,8 @@ cloud_interface_event_handler(oc_interface_event_t event)
     cloud_context_iterate(cloud_interface_up_event_handler, NULL);
   }
 }
+
+#endif /* OC_NETWORK_MONITOR */
 
 void
 cloud_set_last_error(oc_cloud_context_t *ctx, oc_cloud_error_t error)
@@ -342,10 +346,12 @@ oc_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 #ifdef OC_SESSION_EVENTS
   oc_remove_session_event_callback_v1(cloud_ep_session_event_handler, ctx,
                                       false);
-  oc_remove_network_interface_event_callback(cloud_interface_event_handler);
   oc_add_session_event_callback_v1(cloud_ep_session_event_handler, ctx);
-  oc_add_network_interface_event_callback(cloud_interface_event_handler);
 #endif /* OC_SESSION_EVENTS */
+#ifdef OC_NETWORK_MONITOR
+  oc_remove_network_interface_event_callback(cloud_interface_event_handler);
+  oc_add_network_interface_event_callback(cloud_interface_event_handler);
+#endif /* OC_NETWORK_MONITOR */
 
   return 0;
 }
@@ -359,10 +365,12 @@ oc_cloud_manager_stop(oc_cloud_context_t *ctx)
 #ifdef OC_SESSION_EVENTS
   oc_remove_session_event_callback_v1(cloud_ep_session_event_handler, ctx,
                                       false);
+#endif /* OC_SESSION_EVENTS */
+#ifdef OC_NETWORK_MONITOR
   if (cloud_context_size() == 0) {
     oc_remove_network_interface_event_callback(cloud_interface_event_handler);
   }
-#endif /* OC_SESSION_EVENTS */
+#endif /* OC_NETWORK_MONITOR */
   oc_remove_delayed_callback(ctx, restart_manager);
   oc_remove_delayed_callback(ctx, start_manager);
   cloud_rd_reset_context(ctx);

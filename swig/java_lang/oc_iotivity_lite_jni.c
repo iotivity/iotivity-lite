@@ -85,6 +85,7 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
 {
   OC_DBG("JNI: %s\n", __func__);
   OC_DBG("JNI: %s - Setting global JavaVM variable", __func__);
+  (void)reserved;
   jvm = vm;
 
   JNIEnv *jenv = NULL;

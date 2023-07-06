@@ -20,6 +20,8 @@
 %{
 #include "oc_swupdate.h"
 #include "oc_iotivity_lite_jni.h"
+#include "port/oc_log_internal.h"
+#include <assert.h>
 
 static jni_callback_data jni_swupdate_callback_data;
 %}
@@ -37,6 +39,11 @@ void jni_swupdate_notify_new_version_available(size_t device,
 {
 #ifdef OC_SOFTWARE_UPDATE
   oc_swupdate_notify_new_version_available(device, version, result);
+#else
+  OC_DBG("JNI: OC_SOFTWARE_UPDATE disabled");
+  (void)device;
+  (void)version;
+  (void)result;
 #endif
 }
 %}
@@ -49,6 +56,11 @@ void jni_swupdate_notify_downloaded(size_t device, const char *version,
 {
 #ifdef OC_SOFTWARE_UPDATE
   oc_swupdate_notify_downloaded(device, version, result);
+#else
+  OC_DBG("JNI: OC_SOFTWARE_UPDATE disabled");
+  (void)device;
+  (void)version;
+  (void)result;
 #endif
 }
 %}
@@ -63,6 +75,12 @@ void jni_swupdate_notify_upgrading(size_t device,
 {
 #ifdef OC_SOFTWARE_UPDATE
   oc_swupdate_notify_upgrading(device, version, timestamp, result);
+#else
+  OC_DBG("JNI: OC_SOFTWARE_UPDATE disabled");
+  (void)device;
+  (void)version;
+  (void)timestamp;
+  (void)result;
 #endif
 }
 %}
@@ -74,6 +92,10 @@ void jni_swupdate_notify_done(size_t device, oc_swupdate_result_t result)
 {
 #ifdef OC_SOFTWARE_UPDATE
   oc_swupdate_notify_done(device, result);
+#else
+  OC_DBG("JNI: OC_SOFTWARE_UPDATE disabled");
+  (void)device;
+  (void)result;
 #endif
 }
 %}
@@ -208,9 +230,46 @@ void jni_swupdate_set_impl(const oc_swupdate_cb_t *swupdateImpl)
 {
 #ifdef OC_SOFTWARE_UPDATE
   oc_swupdate_set_impl(swupdateImpl);
+#else
+  OC_DBG("JNI: OC_SOFTWARE_UPDATE disabled");
+  (void)swupdateImpl;
 #endif
 }
 %}
+
+%ignore oc_swupdate_load;
+%rename(load) jni_swupdate_load;
+%inline %{
+long jni_swupdate_load(size_t device)
+{
+#ifdef OC_SOFTWARE_UPDATE
+  return oc_swupdate_load(device);
+#else
+  OC_DBG("JNI: OC_SOFTWARE_UPDATE disabled");
+  (void)device;
+  return -1;
+#endif
+}
+%}
+
+%ignore oc_swupdate_dump;
+%rename(dump) jni_swupdate_dump;
+%inline %{
+long jni_swupdate_dump(size_t device)
+{
+#ifdef OC_SOFTWARE_UPDATE
+  return oc_swupdate_dump(device);
+#else
+  OC_DBG("JNI: OC_SOFTWARE_UPDATE disabled");
+  (void)device;
+  return -1;
+#endif
+}
+%}
+
+// TODO: implement oc_swupdate_validate_update
+%ignore oc_swupdate_on_validate_update_error_fn_t;
+%ignore oc_swupdate_validate_update;
 
 #define OC_API
 #define OC_NONNULL(...)
