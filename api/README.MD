@@ -13,7 +13,7 @@ For each resource, an ETAG is stored, which can be represented as either the epo
 
 During device startup, the ETAGs are loaded from storage on a per-resource basis, and the highest value is stored in memory. When updating an ETAG, a comparison is made between the epoch time and the highest value. If the epoch time is lower than the highest value, the highest value plus 1 is used. Otherwise, the epoch time itself is used.
 
-To minimize write operations, the update of ETAGs in storage is not immediate after each update. Instead, it is delayed and executed after a specific interval. The delay time can be set using `oc_etag_set_delayed_dump()`. Setting the delay to 0 will cause each update to be immediately written to storage. By default, the delay is set to 5 seconds after the first ETAG change. To forcefully update ETAGs in storage, `oc_etag_dump()` can be used. When a resource is deleted, the ETAG is immediately removed from storage.
+To minimize write operations, the update of ETAGs in storage is not immediate after each update or create the resource. Instead, it is delayed and executed after a specific interval. The delay time can be set using `oc_etag_set_delayed_dump()`. Setting the delay to 0 will cause each update to be immediately written to storage. By default, the delay is set to 5 seconds after the first ETAG change. To forcefully update ETAGs in storage, `oc_etag_dump()` can be used. When a resource is deleted, the ETAG is immediately removed from storage.
 
 
 ## Dynamic and static allocation
