@@ -41,10 +41,16 @@ oc_clock_time_monotonic(void)
   return oc_clock_time();
 }
 
+uint64_t
+oc_clock_seconds_v1(void)
+{
+  return (oc_clock_time() + OC_CLOCK_SECOND - 1) / OC_CLOCK_SECOND;
+}
+
 unsigned long
 oc_clock_seconds(void)
 {
-  return (oc_clock_time() + OC_CLOCK_SECOND - 1) / OC_CLOCK_SECOND;
+  return (unsigned long)oc_clock_seconds_v1();
 }
 
 void
