@@ -337,7 +337,7 @@ handle_session_disconnected(const oc_endpoint_t *endpoint)
 #endif /* OC_SECURITY */
 #ifdef OC_SERVER
   /* remove all observations for the endpoint */
-  coap_remove_observer_by_client(endpoint);
+  coap_remove_observers_by_client(endpoint);
 #endif /* OC_SERVER */
 }
 

@@ -958,7 +958,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
     oc_package_add_test(TARGET platformtest SOURCES ${COMMONTEST_SRC} ${PLATFORMTEST_SRC})
 
     file(GLOB MESSAGINGTEST_SRC messaging/coap/unittest/*.cpp)
-    oc_package_add_test(TARGET messagingtest SOURCES ${MESSAGINGTEST_SRC})
+    oc_package_add_test(TARGET messagingtest SOURCES ${COMMONTEST_SRC} ${MESSAGINGTEST_SRC})
 
     if(OC_SECURITY_ENABLED)
         file(GLOB SECURITYTEST_SRC security/unittest/*.cpp)

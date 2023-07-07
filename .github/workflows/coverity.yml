@@ -24,6 +24,7 @@ jobs:
             -DOC_WKCORE_ENABLED=ON
             -DOC_SOFTWARE_UPDATE_ENABLED=ON
             -DOC_PUSH_ENABLED=ON
+            -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON
             -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON
             -DPLGD_DEV_TIME_ENABLED=ON
             -B ${{github.workspace}}/build

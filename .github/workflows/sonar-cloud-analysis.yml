@@ -26,7 +26,7 @@ jobs:
       matrix:
         include:
           # cloud (ipv4+tcp) on, collection create on, push on, rfotm on
-          - build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+          - build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           # ipv6 dns on, oscore off, rep realloc on
           - build_args: "-DOC_DNS_LOOKUP_IPV6_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_REP_ENCODING_REALLOC=ON"
           # ipv4 on, tcp on, dynamic allocation off, rfotm on

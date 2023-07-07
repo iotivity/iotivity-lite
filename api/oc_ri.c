@@ -672,7 +672,7 @@ oc_ri_delete_resource(oc_resource_t *resource)
 #endif /* (OC_COLLECTIONS) */
 
   if (resource->num_observers > 0) {
-    int removed_num = coap_remove_observer_by_resource(resource);
+    int removed_num = coap_remove_observers_by_resource(resource);
     OC_DBG("removing resource observers: removed(%d) vs expected(%d)",
            removed_num, resource->num_observers);
 #if !OC_DBG_IS_ENABLED
@@ -1087,7 +1087,7 @@ oc_observe_notification_resource_defaults_delayed(void *data)
   oc_resource_defaults_data_t *resource_defaults_data =
     (oc_resource_defaults_data_t *)data;
   notify_resource_defaults_observer(resource_defaults_data->resource,
-                                    resource_defaults_data->iface_mask, NULL);
+                                    resource_defaults_data->iface_mask);
   oc_ri_dealloc_resource_defaults(resource_defaults_data);
   return OC_EVENT_DONE;
 }
