@@ -56,14 +56,20 @@ oc_clock_time_monotonic(void)
          (oc_clock_time_t)ceil((double)t.tv_nsec / (1.e09 / OC_CLOCK_SECOND));
 }
 
-unsigned long
-oc_clock_seconds(void)
+uint64_t
+oc_clock_seconds_v1(void)
 {
   struct timespec t;
   if (clock_gettime(CLOCK_REALTIME, &t) != -1) {
     return t.tv_sec;
   }
   return 0;
+}
+
+unsigned long
+oc_clock_seconds(void)
+{
+  return (unsigned long)oc_clock_seconds_v1();
 }
 
 void

@@ -54,6 +54,8 @@
 
 #include "oc_clock_util.h"
 #include "oc_export.h"
+#include "util/oc_compiler.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -121,13 +123,22 @@ oc_clock_time_t oc_clock_time_monotonic(void);
 /**
  * Get the current value of the platform seconds.
  *
- * This could be the number of seconds since startup, or
- * since a standard epoch.
+ * This could be the number of seconds since startup, or since a standard epoch.
  *
  * \return The value.
  */
 OC_API
-unsigned long oc_clock_seconds(void);
+uint64_t oc_clock_seconds_v1(void);
+
+/**
+ * Get the current value of the platform seconds.
+
+ * @deprecated Use oc_clock_seconds_v1 instead because it returns a 64-bit value
+ * on all platforms and thus is safe for years 2038+.
+ */
+OC_API
+unsigned long oc_clock_seconds(void)
+  OC_DEPRECATED("replaced by oc_clock_seconds_v1 in v2.2.5.7");
 
 /**
  * Wait for a given number of ticks.

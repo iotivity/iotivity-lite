@@ -54,10 +54,16 @@ oc_clock_time_monotonic(void)
   return oc_clock_time();
 }
 
+uint64_t
+oc_clock_seconds_v1(void)
+{
+  return (uint64_t)secondNow();
+}
+
 unsigned long
 oc_clock_seconds(void)
 {
-  return (unsigned long)secondNow();
+  return (unsigned long)oc_clock_seconds_v1();
 }
 
 void

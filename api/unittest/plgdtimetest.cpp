@@ -148,6 +148,7 @@ TEST_F(TestPlgdTime, Seconds)
   oc_clock_time_t start_ts = start / OC_CLOCK_SECOND;
   EXPECT_LE(start_ts, now_ts);
   EXPECT_GT(oc_clock_seconds(), now_ts);
+  EXPECT_GT(oc_clock_seconds_v1(), now_ts);
 }
 
 TEST_F(TestPlgdTime, IsActive)

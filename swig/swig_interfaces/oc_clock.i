@@ -31,8 +31,10 @@ typedef long long oc_clock_time_t;
 %rename(clockTime) oc_clock_time;
 %rename(clockTimeMonotonic) oc_clock_time_monotonic;
 %rename(clockSeconds) oc_clock_seconds;
+%rename(clockSecondsV1) oc_clock_seconds_v1;
 %rename(clockWait) oc_clock_wait;
 
 #define OC_API
+#define OC_DEPRECATED(...)
 #define OC_NONNULL(...)
 %include "port/oc_clock.h"
