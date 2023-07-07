@@ -15,6 +15,15 @@ During device startup, the ETAGs are loaded from storage on a per-resource basis
 
 To minimize write operations, the update of ETAGs in storage is not immediate after each update or create the resource. Instead, it is delayed and executed after a specific interval. The delay time can be set using `oc_etag_set_delayed_dump()`. Setting the delay to 0 will cause each update to be immediately written to storage. By default, the delay is set to 5 seconds after the first ETAG change. To forcefully update ETAGs in storage, `oc_etag_dump()` can be used. When a resource is deleted, the ETAG is immediately removed from storage.
 
+Questions:
+
+- Should the ETAGs be periodically stored in storage? This means that during startup (`oc_etag_load_and_clear` via API), the ETAGs are loaded, and then the existing storage is cleared. Additionally, when iotivity-lite is properly shutdown (`oc_etag_dump` via API), the ETAGs are stored in the storage. However, if iotivity-lite is not shutdown properly, the ETAGs are not stored, resulting in the device not having the ETAGs upon restart. Is this behavior considered acceptable? This mitigate the issue of storage failure and ETAG reset.
+
+### Edge Cases
+
+1. Time Synchronization: Time synchronization is important to ensure that the epoch time used for ETAG generation is accurate. If the system clock is not properly synchronized, it can still lead to inconsistencies when comparing ETAG values: Mitigated by using highest ETAG value plus 1 if the epoch time is less than the current ETAG value.
+2. Storage Failure: If there is a failure in storing the ETAG values, it can result in the loss of ETAG information and inconsistencies when determining resource modification.
+3. ETAG Reset: The scenario of system restart or power outage causing the loss of the in-memory highest ETAG value. Proper handling during the startup process is required to ensure the correct highest ETAG value is loaded from storage.
 
 ## Dynamic and static allocation
 
