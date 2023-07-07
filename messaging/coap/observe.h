@@ -51,10 +51,14 @@
 #define OBSERVE_H
 
 #include "coap.h"
+#include "oc_endpoint.h"
 #include "oc_ri.h"
 #include "transactions.h"
 #include "util/oc_compiler.h"
 #include "util/oc_list.h"
+
+#include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -82,23 +86,74 @@ typedef struct coap_observer
   uint8_t retrans_counter;
 } coap_observer_t;
 
+/** @brief Get global list of observers */
 oc_list_t coap_get_observers(void);
-void coap_remove_observer(coap_observer_t *o);
-int coap_remove_observer_by_client(const oc_endpoint_t *endpoint);
-int coap_remove_observer_by_token(const oc_endpoint_t *endpoint,
-                                  const uint8_t *token, size_t token_len);
-int coap_remove_observer_by_mid(const oc_endpoint_t *endpoint, uint16_t mid);
-int coap_remove_observer_by_resource(const oc_resource_t *rsc);
-void coap_remove_discovery_batch_observers_by_resource(oc_resource_t *resource);
+
+/**
+ * @brief Create observer and add it to global list of observers.
+ *
+ * @return new observer on success
+ * @return NULL on error
+ */
+coap_observer_t *coap_add_observer(oc_resource_t *resource,
+                                   uint16_t block2_size,
+                                   const oc_endpoint_t *endpoint,
+                                   const uint8_t *token, size_t token_len,
+                                   const char *uri, size_t uri_len,
+                                   oc_interface_mask_t iface_mask) OC_NONNULL();
+
+/**
+ * @brief Deallocate all observers with matching endpoint and remove them from
+ * the global list of observers.
+ *
+ * @param endpoint endpoint to match (cannot be NULL)
+ * @return number of observers removed
+ */
+int coap_remove_observers_by_client(const oc_endpoint_t *endpoint) OC_NONNULL();
+
+/**
+ * @brief Deallocate the first observer with matching endpoint and token and
+ * remove it from the global list of observers.
+ *
+ * @return true if observer was removed
+ * @return false otherwise
+ */
+bool coap_remove_observer_by_token(const oc_endpoint_t *endpoint,
+                                   const uint8_t *token, size_t token_len)
+  OC_NONNULL();
+
+/**
+ * @brief Deallocate the first observer with matching endpoint and messageID and
+ * remove it from the global list of observers.
+
+ * @return true if observer was removed
+ * @return false otherwise
+ */
+bool coap_remove_observer_by_mid(const oc_endpoint_t *endpoint, uint16_t mid)
+  OC_NONNULL();
+
+/**
+ * @brief Deallocate all observers with matching resource and the observation
+ * URI matches the resource URI.
+ *
+ * @return number of observers removed
+ */
+int coap_remove_observers_by_resource(const oc_resource_t *rsc) OC_NONNULL();
+
+/** @brief Deallocate and remove all observers on DOS change */
+int coap_remove_observers_on_dos_change(size_t device, bool reset);
+
+/** @brief Deallocate and remove all observers. */
 void coap_free_all_observers(void);
+
+void coap_remove_discovery_batch_observers_by_resource(oc_resource_t *resource);
 void coap_notify_discovery_batch_observers(oc_resource_t *resource);
 int coap_notify_observers(oc_resource_t *resource,
                           oc_response_buffer_t *response_buf,
                           const oc_endpoint_t *endpoint);
 bool coap_want_be_notified(const oc_resource_t *resource);
 void notify_resource_defaults_observer(oc_resource_t *resource,
-                                       oc_interface_mask_t iface_mask,
-                                       oc_response_buffer_t *response_buf);
+                                       oc_interface_mask_t iface_mask);
 
 /**
  * @brief Construct observation response with OC_IF_LL interface and send it to
@@ -147,8 +202,6 @@ int coap_observe_handler(const coap_packet_t *request,
                          const coap_packet_t *response, oc_resource_t *resource,
                          uint16_t block2_size, const oc_endpoint_t *endpoint,
                          oc_interface_mask_t iface_mask) OC_NONNULL();
-
-int coap_remove_observers_on_dos_change(size_t device, bool reset);
 
 #ifdef __cplusplus
 }

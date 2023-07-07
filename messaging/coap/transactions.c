@@ -167,7 +167,7 @@ coap_send_transaction(coap_transaction_t *t)
       OC_WRN("Timeout");
 #ifdef OC_SERVER
       /* remove observers */
-      coap_remove_observer_by_client(&t->message->endpoint);
+      coap_remove_observers_by_client(&t->message->endpoint);
 #endif /* OC_SERVER */
 
 #ifdef OC_CLIENT

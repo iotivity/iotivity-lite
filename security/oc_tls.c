@@ -445,7 +445,7 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 
 #ifdef OC_SERVER
   /* remove all observations by this peer */
-  coap_remove_observer_by_client(&endpoint);
+  coap_remove_observers_by_client(&endpoint);
 #endif /* OC_SERVER */
   /* remove all open transactions associated to this endpoint */
   coap_free_transactions_by_endpoint(&endpoint, OC_CONNECTION_CLOSED);
