@@ -601,7 +601,7 @@ obt_check_owned(oc_client_response_t *data)
 
   oc_uuid_t uuid;
   int owned = -1;
-  oc_rep_t *rep = data->payload;
+  const oc_rep_t *rep = data->payload;
 
   while (rep != NULL) {
     switch (rep->type) {
@@ -628,20 +628,21 @@ obt_check_owned(oc_client_response_t *data)
   }
 
   const oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-  if (memcmp(my_uuid->id, uuid.id, 16) == 0) {
+  if (memcmp(my_uuid->id, uuid.id, sizeof(uuid.id)) == 0) {
     return;
   }
 
   oc_device_t *device = NULL;
-
   if (owned == 0) {
     device = cache_new_device(oc_cache, &uuid, data->endpoint);
   }
-
-  if (device) {
-    device->ctx = data->user_data;
-    oc_do_get("/oic/res", device->endpoint, "rt=oic.r.doxm", &get_endpoints,
-              HIGH_QOS, device);
+  if (device == NULL) {
+    return;
+  }
+  device->ctx = data->user_data;
+  if (!oc_do_get("/oic/res", device->endpoint, "rt=oic.r.doxm", &get_endpoints,
+                 HIGH_QOS, device)) {
+    OC_ERR("Could not send GET request to retrieve endpoints");
   }
 }
 

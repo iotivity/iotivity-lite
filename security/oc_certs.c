@@ -100,6 +100,9 @@ oc_sec_certs_md_algorithms_allowed(void)
 bool
 oc_sec_certs_md_algorithm_is_allowed(mbedtls_md_type_t md)
 {
+  // check for valid enum values so MBEDTLS_X509_ID_FLAG doesn't overflow
+  assert(md >= 0);
+  assert(md <= 31);
   return md != MBEDTLS_MD_NONE &&
          (MBEDTLS_X509_ID_FLAG(md) & g_allowed_mds_mask) != 0;
 }
