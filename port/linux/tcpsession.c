@@ -1156,34 +1156,47 @@ tcp_try_connect_waiting_session_locked(tcp_waiting_session_t *ws, int *err)
   return true;
 }
 
-enum {
-  TCP_WAITING_SESSION_VALID,
-  TCP_WAITING_SESSION_RETRY,
-  TCP_WAITING_SESSION_EXPIRED,
-  TCP_WAITING_SESSION_ERROR,
-};
+typedef enum {
+  TCP_WAITING_SESSION_STATE_VALID,
+  TCP_WAITING_SESSION_STATE_RETRY,
+  TCP_WAITING_SESSION_STATE_EXPIRED,
+  TCP_WAITING_SESSION_STATE_ERROR,
+} tcp_waiting_session_state_t;
 
-static int
+typedef struct
+{
+  tcp_waiting_session_state_t state;
+  oc_clock_time_t expires_in;
+} tcp_waiting_session_check_result_t;
+
+static tcp_waiting_session_check_result_t
 tcp_waiting_session_check(const tcp_waiting_session_t *session,
                           oc_clock_time_t now_mt,
                           oc_tcp_connect_retry_t connect_retry)
 {
+  tcp_waiting_session_check_result_t result = { TCP_WAITING_SESSION_STATE_ERROR,
+                                                0 };
   if (session->retry.error != 0) {
-    return TCP_WAITING_SESSION_ERROR;
+    return result;
   }
   bool retry = session->retry.force != 0;
   if (!retry) {
-    oc_clock_time_t expires_in = connect_retry.timeout * OC_CLOCK_SECOND;
+    oc_clock_time_t timeout_ticks =
+      (oc_clock_time_t)connect_retry.timeout * OC_CLOCK_SECOND;
     oc_clock_time_t elapsed = now_mt - session->retry.start;
-    retry = elapsed >= expires_in;
-  }
-  if (retry) {
-    if (session->retry.count >= connect_retry.max_count) {
-      return TCP_WAITING_SESSION_EXPIRED;
+    retry = elapsed >= timeout_ticks;
+    if (!retry) {
+      result.state = TCP_WAITING_SESSION_STATE_VALID;
+      result.expires_in = timeout_ticks - elapsed;
+      return result;
     }
-    return TCP_WAITING_SESSION_RETRY;
   }
-  return TCP_WAITING_SESSION_VALID;
+  if (session->retry.count >= connect_retry.max_count) {
+    result.state = TCP_WAITING_SESSION_STATE_EXPIRED;
+    return result;
+  }
+  result.state = TCP_WAITING_SESSION_STATE_RETRY;
+  return result;
 }
 
 static int
@@ -1236,35 +1249,31 @@ tcp_check_expiring_sessions(oc_clock_time_t now_mt)
          (tcp_waiting_session_t *)oc_list_head(g_waiting_session_list);
        ws != NULL;) {
     tcp_waiting_session_t *ws_next = ws->next;
-    int check = tcp_waiting_session_check(ws, now_mt, connect_retry);
-    switch (check) {
-    case TCP_WAITING_SESSION_RETRY: {
+    tcp_waiting_session_check_result_t check =
+      tcp_waiting_session_check(ws, now_mt, connect_retry);
+    switch (check.state) {
+    case TCP_WAITING_SESSION_STATE_RETRY: {
       int state = tcp_retry_waiting_session_locked(ws, now_mt);
       if (state == OC_TCP_SOCKET_STATE_CONNECTED) {
         break;
       }
       if (state == OC_TCP_SOCKET_STATE_CONNECTING) {
-        expires_in = connect_retry.timeout * OC_CLOCK_SECOND;
+        expires_in = (oc_clock_time_t)connect_retry.timeout * OC_CLOCK_SECOND;
         break;
       }
       free_waiting_session_locked(ws, true, false);
       break;
     }
-    case TCP_WAITING_SESSION_VALID: {
-      oc_clock_time_t ei =
-        (connect_retry.timeout * OC_CLOCK_SECOND) - (now_mt - ws->retry.start);
-      if (expires_in == 0 || ei < expires_in) {
-        expires_in = ei;
+    case TCP_WAITING_SESSION_STATE_VALID:
+      if (expires_in == 0 || check.expires_in < expires_in) {
+        expires_in = check.expires_in;
       }
       break;
-    }
-    case TCP_WAITING_SESSION_ERROR:
+    case TCP_WAITING_SESSION_STATE_ERROR:
       free_waiting_session_locked(ws, false, false);
       break;
-    case TCP_WAITING_SESSION_EXPIRED:
+    case TCP_WAITING_SESSION_STATE_EXPIRED:
       free_waiting_session_locked(ws, true, false);
-      break;
-    default:
       break;
     }
     ws = ws_next;
