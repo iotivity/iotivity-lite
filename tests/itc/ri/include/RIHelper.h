@@ -77,7 +77,7 @@ private:
   static bool s_lightState;
   static oc_string_t s_lightName;
   static oc_resource_t *s_pResource;
-  static oc_endpoint_t *s_pLightEndpoint;
+  static const oc_endpoint_t *s_pLightEndpoint;
   static int s_generalQuit;
   static pthread_mutex_t s_mutex;
   static pthread_cond_t s_cv;

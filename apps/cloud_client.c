@@ -253,7 +253,7 @@ app_init(void)
 
 static oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+          oc_interface_mask_t iface_mask, const oc_endpoint_t *endpoint,
           oc_resource_properties_t bm, bool more, void *user_data)
 {
   (void)anchor;

@@ -174,7 +174,7 @@ oscore_parse_message(oc_message_t *message)
   }
 
   /* Copy "subjectuuid" of cred with OSCORE context to oc_endpoint_t */
-  oc_sec_cred_t *oscore_cred = (oc_sec_cred_t *)oscore_ctx->cred;
+  const oc_sec_cred_t *oscore_cred = (const oc_sec_cred_t *)oscore_ctx->cred;
   memcpy(message->endpoint.di.id, oscore_cred->subjectuuid.id,
          sizeof(oscore_cred->subjectuuid.id));
 
@@ -610,7 +610,7 @@ oc_oscore_send_message(oc_message_t *msg)
         coap_pkt->code == CSM_7_01
 #endif /* OC_TCP */
     ) {
-      oc_sec_pstat_t *pstat = oc_sec_get_pstat(message->endpoint.device);
+      const oc_sec_pstat_t *pstat = oc_sec_get_pstat(message->endpoint.device);
       if (pstat->s != OC_DOS_RFNOP) {
         OC_ERR("### device not in RFNOP; stop further processing ###");
         goto oscore_send_error;

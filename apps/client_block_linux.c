@@ -107,7 +107,7 @@ get_array(oc_client_response_t *data)
 
 static oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+          oc_interface_mask_t iface_mask, const oc_endpoint_t *endpoint,
           oc_resource_properties_t bm, void *user_data)
 {
   (void)anchor;
@@ -125,7 +125,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       array_1[uri_len] = '\0';
 
       OC_PRINTF("Resource %s hosted at endpoints:\n", array_1);
-      oc_endpoint_t *ep = endpoint;
+      const oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
         OC_PRINTipaddr(*ep);
         OC_PRINTF("\n");

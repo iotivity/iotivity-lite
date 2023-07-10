@@ -202,7 +202,7 @@ void release_jni_env(jint getEnvResult);
  */
 oc_discovery_flags_t jni_oc_discovery_all_handler_callback(
   const char *anchor, const char *uri, oc_string_array_t types,
-  oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
+  oc_interface_mask_t interfaces, const oc_endpoint_t *endpoint,
   oc_resource_properties_t bm, bool more, void *user_data);
 
 #endif /* OC_IOTIVITY_LITE_H */

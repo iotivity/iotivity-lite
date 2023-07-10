@@ -429,7 +429,7 @@ check_uuid_from_cert_raw(size_t publicdata_size, const uint8_t *publicdata,
 static const oc_uuid_t *
 get_device_uuid(size_t device)
 {
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+  const oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   return doxm ? &doxm->deviceuuid : NULL;
 }
 
@@ -527,13 +527,13 @@ oc_sec_is_duplicate_cred(const oc_sec_cred_t *cred, oc_sec_credtype_t credtype,
 }
 
 #ifdef OC_PKI
-static oc_ecdsa_keypair_t *
+static const oc_ecdsa_keypair_t *
 oc_sec_get_valid_ecdsa_keypair(size_t device, size_t public_key_len,
                                const oc_string_t *public_key,
                                size_t publicdata_size,
                                const uint8_t *publicdata)
 {
-  oc_ecdsa_keypair_t *kp = oc_sec_ecdsa_get_keypair(device);
+  const oc_ecdsa_keypair_t *kp = oc_sec_ecdsa_get_keypair(device);
   if (kp == NULL) {
     return NULL;
   }
@@ -595,7 +595,7 @@ oc_sec_add_new_cred(size_t device, bool roles_resource,
   oc_sec_cred_set_subject(credusage, subjectuuid, &subject);
 
 #ifdef OC_PKI
-  oc_ecdsa_keypair_t *kp = NULL;
+  const oc_ecdsa_keypair_t *kp = NULL;
   if (credusage == OC_CREDUSAGE_IDENTITY_CERT && privatedata_size == 0) {
     kp = oc_sec_get_valid_ecdsa_keypair(device, public_key_len, &public_key,
                                         publicdata_size, publicdata);

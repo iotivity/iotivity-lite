@@ -323,8 +323,9 @@ oc_obt_load_state(void)
 #ifdef OC_PKI
         case OC_REP_INT:
 #define CREDID "credid"
-          if (oc_string_len(rep->name) == strlen(CREDID) &&
-              memcmp(oc_string(rep->name), CREDID, strlen(CREDID)) == 0) {
+          if (oc_string_len(rep->name) == OC_CHAR_ARRAY_LEN(CREDID) &&
+              memcmp(oc_string(rep->name), CREDID, OC_CHAR_ARRAY_LEN(CREDID)) ==
+                0) {
             g_root_cert_credid = (int)rep->value.integer;
           }
           break;
@@ -333,9 +334,9 @@ oc_obt_load_state(void)
         case OC_REP_BYTE_STRING:
 #ifdef OC_PKI
 #define PRIVATE_KEY "private_key"
-          if (oc_string_len(rep->name) == strlen(PRIVATE_KEY) &&
-              memcmp(oc_string(rep->name), PRIVATE_KEY, strlen(PRIVATE_KEY)) ==
-                0) {
+          if (oc_string_len(rep->name) == OC_CHAR_ARRAY_LEN(PRIVATE_KEY) &&
+              memcmp(oc_string(rep->name), PRIVATE_KEY,
+                     OC_CHAR_ARRAY_LEN(PRIVATE_KEY)) == 0) {
             g_private_key_size = oc_string_len(rep->value.string);
             memcpy(g_private_key, oc_string(rep->value.string),
                    g_private_key_size);
@@ -344,17 +345,16 @@ oc_obt_load_state(void)
 #endif /* OC_PKI */
 #ifdef OC_OSCORE
 #define GROUP_ID "groupid"
-#define GROUP_ID_LEN (sizeof(GROUP_ID) - 1)
-          if (oc_string_len(rep->name) == GROUP_ID_LEN &&
-              memcmp(oc_string(rep->name), GROUP_ID, GROUP_ID_LEN) == 0) {
+          if (oc_string_len(rep->name) == OC_CHAR_ARRAY_LEN(GROUP_ID) &&
+              memcmp(oc_string(rep->name), GROUP_ID,
+                     OC_CHAR_ARRAY_LEN(GROUP_ID)) == 0) {
             memcpy(g_groupid, oc_string(rep->value.string), OSCORE_CTXID_LEN);
             break;
           }
 #define GROUP_SECRET "group_secret"
-#define GROUP_SECRET_LEN (sizeof(GROUP_SECRET) - 1)
-          if (oc_string_len(rep->name) == GROUP_SECRET_LEN &&
-              memcmp(oc_string(rep->name), GROUP_SECRET, GROUP_SECRET_LEN) ==
-                0) {
+          if (oc_string_len(rep->name) == OC_CHAR_ARRAY_LEN(GROUP_SECRET) &&
+              memcmp(oc_string(rep->name), GROUP_SECRET,
+                     OC_CHAR_ARRAY_LEN(GROUP_SECRET)) == 0) {
             memcpy(g_group_secret, oc_string(rep->value.string),
                    OSCORE_MASTER_SECRET_LEN);
             break;
@@ -569,7 +569,7 @@ get_endpoints(oc_client_response_t *data)
 
   oc_discovery_cb_t *cb = NULL;
   oc_device_t *device = NULL;
-  oc_client_cb_t *ccb = (oc_client_cb_t *)data->client_cb;
+  const oc_client_cb_t *ccb = (oc_client_cb_t *)data->client_cb;
   if (ccb->multicast) {
     cb = (oc_discovery_cb_t *)data->user_data;
     if (links && oc_obt_is_owned_device(&di)) {
@@ -3628,7 +3628,7 @@ oc_obt_general_post(const oc_uuid_t *uuid, const char *query, const char *url,
         size_t byte_string_len = (strlen(payload_values[i]) + 1) / 2;
         unsigned char payload_byte_string[10240];
 
-        char *pos = payload_values[i];
+        const char *pos = payload_values[i];
         for (size_t j = 0; j < byte_string_len; j++) {
           sscanf(pos, "%2hhx", &payload_byte_string[j]);
           pos += 2;

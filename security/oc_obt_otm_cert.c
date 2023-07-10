@@ -351,9 +351,9 @@ obt_cert_9(oc_client_response_t *data)
 #define OXM_MFG_CERT "oic.sec.doxm.mfgcert"
   uint8_t key[16];
   bool derived = oc_sec_derive_owner_psk(
-    ep, (const uint8_t *)OXM_MFG_CERT, strlen(OXM_MFG_CERT), device->uuid.id,
-    OC_ARRAY_SIZE(device->uuid.id), my_uuid->id, OC_ARRAY_SIZE(my_uuid->id),
-    key, OC_ARRAY_SIZE(key));
+    ep, (const uint8_t *)OXM_MFG_CERT, OC_CHAR_ARRAY_LEN(OXM_MFG_CERT),
+    device->uuid.id, OC_ARRAY_SIZE(device->uuid.id), my_uuid->id,
+    OC_ARRAY_SIZE(my_uuid->id), key, OC_ARRAY_SIZE(key));
 #undef OXM_MFG_CERT
   if (!derived) {
     goto err_obt_cert_9;

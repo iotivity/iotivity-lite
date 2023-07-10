@@ -397,9 +397,9 @@ int jni_cloud_publish_resources(size_t device)
 %rename (discoverResources) jni_cloud_discover_resources;
 
 %inline %{
-int jni_cloud_discover_resources( oc_cloud_context_t *ctx,
-                                  oc_discovery_all_handler_t handler,
-                                  jni_callback_data *jcb)
+int jni_cloud_discover_resources(oc_cloud_context_t *ctx,
+                                oc_discovery_all_handler_t handler,
+                                jni_callback_data *jcb)
 {
 #ifdef OC_CLOUD
   OC_DBG("JNI: %s\n", __func__);

@@ -57,10 +57,6 @@
 extern "C" {
 #endif
 
-/* Features that can be disabled to achieve smaller memory footprint */
-#define COAP_LINK_FORMAT_FILTERING 0
-#define COAP_PROXY_OPTION_PROCESSING 0
-
 /* The number of concurrent messages that can be stored for retransmission in
  * the transaction layer. */
 #ifndef COAP_MAX_OPEN_TRANSACTIONS

@@ -1000,7 +1000,7 @@ oc_discovery_flags_t
 jni_oc_discovery_handler_callback(const char *anchor, const char *uri,
                                   oc_string_array_t types,
                                   oc_interface_mask_t interfaces,
-                                  oc_endpoint_t *endpoint,
+                                  const oc_endpoint_t *endpoint,
                                   oc_resource_properties_t bm, void *user_data)
 {
   OC_DBG("JNI: %s\n", __func__);
@@ -1187,7 +1187,7 @@ bool jni_oc_do_ip_discovery_all(oc_discovery_all_handler_t handler, jni_callback
 %inline %{
 bool jni_oc_do_ip_discovery_at_endpoint(const char *rt,
                                          oc_discovery_handler_t handler, jni_callback_data *jcb,
-                                         oc_endpoint_t *endpoint)
+                                         const oc_endpoint_t *endpoint)
 {
   OC_DBG("JNI: %s\n", __func__);
   OC_DBG("JNI: - lock %s\n", __func__);
@@ -1203,7 +1203,7 @@ bool jni_oc_do_ip_discovery_at_endpoint(const char *rt,
 %rename(doIPDiscoveryAllAtEndpoint) jni_oc_do_ip_discovery_all_at_endpoint;
 %inline %{
 bool jni_oc_do_ip_discovery_all_at_endpoint(oc_discovery_all_handler_t handler, jni_callback_data *jcb,
-                                            oc_endpoint_t *endpoint)
+                                            const oc_endpoint_t *endpoint)
 {
   OC_DBG("JNI: %s\n", __func__);
   OC_DBG("JNI: - lock %s\n", __func__);
@@ -1273,7 +1273,7 @@ void jni_oc_response_handler(oc_client_response_t *response)
 %ignore oc_do_get;
 %rename(doGet) jni_oc_do_get;
 %inline %{
-bool jni_oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
+bool jni_oc_do_get(const char *uri, const oc_endpoint_t *endpoint, const char *query,
                    oc_response_handler_t handler,  jni_callback_data *jcb,
                    oc_qos_t qos) {
   OC_DBG("JNI: %s\n", __func__);
@@ -1289,7 +1289,7 @@ bool jni_oc_do_get(const char *uri, oc_endpoint_t *endpoint, const char *query,
 %ignore oc_do_delete;
 %rename(doDelete) jni_oc_do_delete;
 %inline %{
-bool jni_oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *query,
+bool jni_oc_do_delete(const char *uri, const oc_endpoint_t *endpoint, const char *query,
                       oc_response_handler_t handler, jni_callback_data *jcb,
                       oc_qos_t qos){
   OC_DBG("JNI: %s\n", __func__);
@@ -1305,7 +1305,7 @@ bool jni_oc_do_delete(const char *uri, oc_endpoint_t *endpoint, const char *quer
 %ignore oc_init_put;
 %rename(initPut) jni_oc_init_put;
 %inline %{
-bool jni_oc_init_put(const char *uri, oc_endpoint_t *endpoint, const char *query,
+bool jni_oc_init_put(const char *uri, const oc_endpoint_t *endpoint, const char *query,
                      oc_response_handler_t handler, jni_callback_data *jcb,
                      oc_qos_t qos) {
   OC_DBG("JNI: %s\n", __func__);
@@ -1335,7 +1335,7 @@ bool jni_do_put(void) {
 %ignore oc_init_post;
 %rename(initPost) jni_oc_init_post;
 %inline %{
-bool jni_oc_init_post(const char *uri, oc_endpoint_t *endpoint, const char *query,
+bool jni_oc_init_post(const char *uri, const oc_endpoint_t *endpoint, const char *query,
                       oc_response_handler_t handler, jni_callback_data *jcb,
                       oc_qos_t qos) {
   OC_DBG("JNI: %s\n", __func__);
@@ -1365,7 +1365,7 @@ bool jni_do_post(void) {
 %ignore oc_do_observe;
 %rename(doObserve) jni_oc_do_observe;
 %inline %{
-bool jni_oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *query,
+bool jni_oc_do_observe(const char *uri, const oc_endpoint_t *endpoint, const char *query,
                        oc_response_handler_t handler, jni_callback_data *jcb,
                        oc_qos_t qos) {
   OC_DBG("JNI: %s\n", __func__);
@@ -1381,7 +1381,7 @@ bool jni_oc_do_observe(const char *uri, oc_endpoint_t *endpoint, const char *que
 %ignore oc_stop_observe;
 %rename(stopObserve) jni_stop_observe;
 %inline %{
-bool jni_stop_observe(const char *uri, oc_endpoint_t *endpoint) {
+bool jni_stop_observe(const char *uri, const oc_endpoint_t *endpoint) {
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);
   bool return_value = oc_stop_observe(uri, endpoint);
@@ -1466,7 +1466,7 @@ void jni_free_server_endpoints(oc_endpoint_t *endpoints) {
 %ignore oc_send_ping;
 %rename(sendPing) jni_send_ping;
 %inline %{
-bool jni_send_ping(bool custody, oc_endpoint_t *endpoint, uint16_t timeout_seconds,
+bool jni_send_ping(bool custody, const oc_endpoint_t *endpoint, uint16_t timeout_seconds,
                    oc_response_handler_t handler, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
@@ -1609,7 +1609,7 @@ oc_role_t *jni_get_all_roles(void) {
 %ignore oc_assert_role;
 %rename(assertRole) jni_assert_role;
 %inline %{
-bool jni_assert_role(const char *role, const char *authority, oc_endpoint_t *endpoint,
+bool jni_assert_role(const char *role, const char *authority, const oc_endpoint_t *endpoint,
                      oc_response_handler_t handler, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
@@ -1647,7 +1647,7 @@ void jni_auto_assert_roles(bool auto_assert) {
 %ignore oc_assert_all_roles;
 %rename(assertAllRoles) jni_assert_all_roles;
 %inline %{
-void jni_assert_all_roles(oc_endpoint_t *endpoint, oc_response_handler_t handler, jni_callback_data *jcb) {
+void jni_assert_all_roles(const oc_endpoint_t *endpoint, oc_response_handler_t handler, jni_callback_data *jcb) {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY) && defined(OC_PKI)
   OC_DBG("JNI: - lock %s\n", __func__);

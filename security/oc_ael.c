@@ -85,7 +85,7 @@ oc_sec_ael_free_event(oc_sec_ael_event_t *event)
 static inline size_t
 oc_sec_ael_max_space(size_t device)
 {
-  oc_sec_ael_t *a = &ael[device];
+  const oc_sec_ael_t *a = &ael[device];
   size_t res = (size_t)OC_SEC_AEL_MAX_SIZE;
   switch (a->unit) {
   case OC_SEC_AEL_UNIT_BYTE:
@@ -100,7 +100,7 @@ oc_sec_ael_max_space(size_t device)
 static inline size_t
 oc_sec_ael_used_space(size_t device)
 {
-  oc_sec_ael_t *a = &ael[device];
+  const oc_sec_ael_t *a = &ael[device];
   size_t res = 0;
   switch (ael->unit) {
   case OC_SEC_AEL_UNIT_BYTE:
@@ -186,7 +186,7 @@ post_ael(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   (void)iface_mask;
   (void)data;
   if (request) {
-    oc_sec_pstat_t *ps = oc_sec_get_pstat(request->resource->device);
+    const oc_sec_pstat_t *ps = oc_sec_get_pstat(request->resource->device);
     if (ps->s == OC_DOS_RFNOP) {
       OC_ERR("oc_ael: Cannot UPDATE AEL in RFNOP");
       oc_send_response_with_callback(request, OC_STATUS_FORBIDDEN, true);
@@ -428,7 +428,7 @@ oc_sec_ael_add_event(size_t device, uint8_t category, uint8_t priority,
       oc_sec_ael_free_event(t);
     }
     // create/add event
-    oc_sec_ael_event_t *e =
+    const oc_sec_ael_event_t *e =
       oc_sec_ael_create_event(device, category, priority, timestamp, aeid,
                               message, aux, aux_len, event_sz);
     if (!e) {

@@ -27,7 +27,7 @@ bool RIHelper::s_isRequestSucessfull = false;
 bool RIHelper::s_lightState = false;
 int RIHelper::s_generalQuit = 0;
 oc_resource_t *RIHelper::s_pResource = NULL;
-oc_endpoint_t *RIHelper::s_pLightEndpoint = NULL;
+const oc_endpoint_t *RIHelper::s_pLightEndpoint = NULL;
 oc_string_t RIHelper::s_lightName;
 
 pthread_mutex_t RIHelper::s_mutex;
@@ -315,8 +315,9 @@ RIHelper::deleteLightClientCb(oc_client_response_t *data)
 
 oc_discovery_flags_t
 RIHelper::discovery(const char *di, const char *uri, oc_string_array_t types,
-                    oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
-                    oc_resource_properties_t bm, void *user_data)
+                    oc_interface_mask_t interfaces,
+                    const oc_endpoint_t *endpoint, oc_resource_properties_t bm,
+                    void *user_data)
 {
   (void)di;
   (void)interfaces;

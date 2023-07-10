@@ -58,7 +58,7 @@ static oc_endpoint_t targetserver_ep;
 
 #define PING_RETRY_COUNT (4)
 
-typedef void (*custom_func_t)(oc_endpoint_t *, char *,
+typedef void (*custom_func_t)(const oc_endpoint_t *, const char *,
                               oc_resource_properties_t);
 
 typedef struct
@@ -261,7 +261,7 @@ retrieve_push_origin_rsc(void)
 
 static oc_discovery_flags_t
 cb_discovery(const char *anchor, const char *uri, oc_string_array_t types,
-             oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+             oc_interface_mask_t iface_mask, const oc_endpoint_t *endpoint,
              oc_resource_properties_t bm, void *user_data)
 {
   oc_discovery_flags_t ret = OC_CONTINUE_DISCOVERY;
@@ -324,10 +324,10 @@ retrieve_pushreceiver_rsc(void)
 }
 
 static void
-find_same_endpoint(oc_endpoint_t *endpoint, char *uri,
+find_same_endpoint(const oc_endpoint_t *endpoint, const char *uri,
                    oc_resource_properties_t bm)
 {
-  oc_endpoint_t *ep = endpoint;
+  const oc_endpoint_t *ep = endpoint;
   while (ep != NULL) {
     OC_PRINTF(" |__");
     OC_PRINTipaddr(*ep);

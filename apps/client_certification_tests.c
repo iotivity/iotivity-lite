@@ -477,7 +477,7 @@ post_resource(bool tcp, bool mcast)
 
 static oc_discovery_flags_t
 discovery(const char *di, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+          oc_interface_mask_t iface_mask, const oc_endpoint_t *endpoint,
           oc_resource_properties_t bm, bool more, void *user_data)
 {
   (void)di;
@@ -507,7 +507,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
 
 static oc_discovery_flags_t
 null_discovery(const char *di, const char *uri, oc_string_array_t types,
-               oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+               oc_interface_mask_t iface_mask, const oc_endpoint_t *endpoint,
                oc_resource_properties_t bm, void *user_data)
 {
   (void)di;

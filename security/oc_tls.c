@@ -2270,20 +2270,20 @@ oc_sec_derive_owner_psk(const oc_endpoint_t *endpoint, const uint8_t *oxm,
     return false;
   }
   size_t j;
-  for (j = 0; j < 48; j++) {
+  for (j = 0; j < OC_ARRAY_SIZE(peer->master_secret); j++) {
     if (peer->master_secret[j] != 0) {
       break;
     }
   }
-  if (j == 48) {
+  if (j == OC_ARRAY_SIZE(peer->master_secret)) {
     return false;
   }
-  for (j = 0; j < 64; j++) {
+  for (j = 0; j < OC_ARRAY_SIZE(peer->client_server_random); j++) {
     if (peer->client_server_random[j] != 0) {
       break;
     }
   }
-  if (j == 64) {
+  if (j == OC_ARRAY_SIZE(peer->client_server_random)) {
     return false;
   }
   uint8_t key_block[184];
@@ -2333,10 +2333,10 @@ oc_sec_derive_owner_psk(const oc_endpoint_t *endpoint, const uint8_t *oxm,
 
   key_block_len = 2 * (mac_key_len + key_size + iv_size);
 
-  if (oc_tls_prf(peer->master_secret, 48, key_block, key_block_len, 3, label,
-                 OC_ARRAY_SIZE(label), peer->client_server_random + 32,
-                 (size_t)32, peer->client_server_random,
-                 (size_t)32) != key_block_len) {
+  if (oc_tls_prf(peer->master_secret, OC_ARRAY_SIZE(peer->master_secret),
+                 key_block, key_block_len, 3, label, OC_ARRAY_SIZE(label),
+                 peer->client_server_random + 32, (size_t)32,
+                 peer->client_server_random, (size_t)32) != key_block_len) {
     return false;
   }
 
@@ -2347,9 +2347,10 @@ oc_sec_derive_owner_psk(const oc_endpoint_t *endpoint, const uint8_t *oxm,
   }
 
   OC_DBG("oc_tls: master secret:");
-  OC_LOGbytes(peer->master_secret, 48);
+  OC_LOGbytes(peer->master_secret, OC_ARRAY_SIZE(peer->master_secret));
   OC_DBG("oc_tls: client_server_random:");
-  OC_LOGbytes(peer->client_server_random, 64);
+  OC_LOGbytes(peer->client_server_random,
+              OC_ARRAY_SIZE(peer->client_server_random));
   OC_DBG("oc_tls: key_block");
   OC_LOGbytes(key_block, key_block_len);
   OC_DBG("oc_tls: PSK ");

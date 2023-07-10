@@ -63,7 +63,7 @@ extern "C" {
  * }
  *
  * static void
- * unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
+ * unowned_device_cb(const oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
  * {
  *   (void)data;
  *   char di[OC_UUID_LEN];
@@ -549,7 +549,7 @@ int oc_obt_perform_cert_otm(const oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
  * Example:
  * ```
  * static void
- * reset_device_cb(oc_uuid_t *uuid, int status, void *data)
+ * reset_device_cb(const oc_uuid_t *uuid, int status, void *data)
  * {
  *   char di[OC_UUID_LEN];
  *   oc_uuid_to_str(uuid, di, OC_UUID_LEN);
@@ -1005,7 +1005,7 @@ void oc_obt_ace_add_permission(oc_sec_ace_t *ace,
  * Example:
  * ```
  * static void
- * provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
+ * provision_ace2_cb(const oc_uuid_t *uuid, int status, void *data)
  * {
  *   char di[OC_UUID_LEN];
  *   oc_uuid_to_str(uuid, di, OC_UUID_LEN);
