@@ -1669,6 +1669,10 @@ int
 coap_set_header_etag(coap_packet_t *packet, const uint8_t *etag,
                      size_t etag_len)
 {
+  if (etag_len == 0) {
+    UNSET_OPTION(packet, COAP_OPTION_ETAG);
+    return 0;
+  }
   packet->etag_len = (uint8_t)MIN(COAP_ETAG_LEN, etag_len);
   memcpy(packet->etag, etag, packet->etag_len);
   SET_OPTION(packet, COAP_OPTION_ETAG);

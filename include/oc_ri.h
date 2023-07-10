@@ -366,6 +366,10 @@ struct oc_resource_s
   oc_ace_permissions_t
     anon_permission_in_rfotm; ///< permissions for anonymous connection in RFOTM
 #endif
+#ifdef OC_HAS_FEATURE_ETAG
+  uint64_t
+    last_update; ///< last time of update of the resource, used as ETag option
+#endif
 };
 
 typedef struct oc_link_s oc_link_t;

@@ -76,6 +76,9 @@ enum { OPTION_MAP_SIZE = sizeof(uint8_t) * 8 };
 
 #define SET_OPTION(packet, opt)                                                \
   ((packet)->options[(opt) / OPTION_MAP_SIZE] |= 1 << ((opt) % OPTION_MAP_SIZE))
+#define UNSET_OPTION(packet, opt)                                              \
+  ((packet)->options[(opt) / OPTION_MAP_SIZE] &=                               \
+   ~(1 << ((opt) % OPTION_MAP_SIZE)))
 #define IS_OPTION(packet, opt)                                                 \
   ((packet)->options[(opt) / OPTION_MAP_SIZE] &                                \
    (1 << ((opt) % OPTION_MAP_SIZE)))
@@ -253,10 +256,34 @@ int coap_get_header_max_age(const coap_packet_t *packet, uint32_t *age)
   OC_NONNULL();
 int coap_set_header_max_age(coap_packet_t *packet, uint32_t age) OC_NONNULL();
 
+/**
+ * @brief Get ETag value.
+ *
+ * @param packet packet to read
+ * @param[out] etag pointer to the etag
+ * @return length of the ETag value stored in \p etag if option is set
+ * @return 0 otherwise
+ */
 int coap_get_header_etag(const coap_packet_t *packet, const uint8_t **etag)
   OC_NONNULL();
+
+/**
+ * @brief Set ETag value.
+ *
+ * @note Using empty ETag value (etag_len equal to 0) will remove the option
+ * from the packet.
+ *
+ * @note If the value is longer than COAP_ETAG_LEN then it will be truncated.
+ *
+ * @param packet packet to update
+ * @param etag ETag value
+ * @param etag_len length of the ETag value
+ *
+ * @return length of the ETag value stored in \p etag if option is set
+ * @return 0 if option is removed
+ */
 int coap_set_header_etag(coap_packet_t *packet, const uint8_t *etag,
-                         size_t etag_len) OC_NONNULL();
+                         size_t etag_len) OC_NONNULL(1);
 
 size_t coap_get_header_proxy_uri(const coap_packet_t *packet, const char **uri)
   OC_NONNULL(); /* in-place string might not be 0-terminated. */
