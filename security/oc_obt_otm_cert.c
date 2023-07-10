@@ -34,6 +34,7 @@
 #include "security/oc_sdi_internal.h"
 #include "security/oc_sp_internal.h"
 #include "security/oc_tls_internal.h"
+#include "util/oc_macros_internal.h"
 
 /* Manufacturer certificate-based ownership transfer */
 static void
@@ -349,17 +350,19 @@ obt_cert_9(oc_client_response_t *data)
 
 #define OXM_MFG_CERT "oic.sec.doxm.mfgcert"
   uint8_t key[16];
-  bool derived = oc_sec_derive_owner_psk(ep, (const uint8_t *)OXM_MFG_CERT,
-                                         strlen(OXM_MFG_CERT), device->uuid.id,
-                                         16, my_uuid->id, 16, key, 16);
+  bool derived = oc_sec_derive_owner_psk(
+    ep, (const uint8_t *)OXM_MFG_CERT, strlen(OXM_MFG_CERT), device->uuid.id,
+    OC_ARRAY_SIZE(device->uuid.id), my_uuid->id, OC_ARRAY_SIZE(my_uuid->id),
+    key, OC_ARRAY_SIZE(key));
 #undef OXM_MFG_CERT
   if (!derived) {
     goto err_obt_cert_9;
   }
 
-  int credid = oc_sec_add_new_cred(0, false, NULL, -1, OC_CREDTYPE_PSK,
-                                   OC_CREDUSAGE_NULL, suuid, OC_ENCODING_RAW,
-                                   16, key, 0, 0, NULL, NULL, NULL, NULL, NULL);
+  int credid =
+    oc_sec_add_new_cred(0, false, NULL, -1, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL,
+                        suuid, OC_ENCODING_RAW, OC_ARRAY_SIZE(key), key, 0, 0,
+                        NULL, NULL, NULL, NULL, NULL);
 
   if (credid == -1) {
     goto err_obt_cert_9;
@@ -526,7 +529,7 @@ obt_cert_5(oc_client_response_t *data)
 
   oc_device_t *device = o->device;
   /* Store peer device's random uuid in local device object */
-  memcpy(device->uuid.id, dev_uuid.id, 16);
+  memcpy(device->uuid.id, dev_uuid.id, OC_ARRAY_SIZE(dev_uuid.id));
   oc_endpoint_t *ep = device->endpoint;
   while (ep) {
     oc_endpoint_set_di(ep, &dev_uuid);

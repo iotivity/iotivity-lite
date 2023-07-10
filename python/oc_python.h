@@ -157,7 +157,7 @@ void py_request_random_pin(const char *uuid);
 
 #ifdef OC_PKI
 OC_API
-void otm_cert_cb(oc_uuid_t *uuid, int status, void *data);
+void otm_cert_cb(const oc_uuid_t *uuid, int status, void *data);
 #endif /* OC_PKI */
 
 // function to list the unowned devices in iotivity (printed in C)
@@ -239,12 +239,13 @@ void py_provision_role_cert(const char *uuid, const char *role,
                             const char *auth);
 
 OC_API
-void provision_role_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data);
+void provision_role_wildcard_ace_cb(const oc_uuid_t *uuid, int status,
+                                    void *data);
 #endif /* OC_PKI */
 
 #ifdef OC_OSCORE
 OC_API
-void provision_group_context_cb(oc_uuid_t *uuid, int status, void *data);
+void provision_group_context_cb(const oc_uuid_t *uuid, int status, void *data);
 
 OC_API
 void provision_oscore_contexts_cb(int status, void *data);
@@ -254,7 +255,7 @@ OC_API
 void py_provision_pairwise_credentials(const char *uuid1, const char *uuid2);
 
 OC_API
-void provision_authcrypt_wildcard_ace_cb(oc_uuid_t *uuid, int status,
+void provision_authcrypt_wildcard_ace_cb(const oc_uuid_t *uuid, int status,
                                          void *data);
 
 OC_API

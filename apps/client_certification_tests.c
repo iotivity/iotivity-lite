@@ -685,7 +685,7 @@ is_device_in_list(const oc_uuid_t *uuid, oc_list_t list)
 {
   device_handle_t *device = (device_handle_t *)oc_list_head(list);
   while (device != NULL) {
-    if (memcmp(device->uuid.id, uuid->id, 16) == 0) {
+    if (memcmp(device->uuid.id, uuid->id, sizeof(uuid->id)) == 0) {
       return device;
     }
     device = device->next;
@@ -704,7 +704,7 @@ add_device_to_list(const oc_uuid_t *uuid, const char *device_name,
     if (!device) {
       return false;
     }
-    memcpy(device->uuid.id, uuid->id, 16);
+    memcpy(device->uuid.id, uuid->id, sizeof(uuid->id));
     oc_list_add(list, device);
   }
 
@@ -741,7 +741,7 @@ get_device(oc_client_response_t *data)
 }
 
 static void
-unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
+unowned_device_cb(const oc_uuid_t *uuid, const oc_endpoint_t *eps, void *data)
 {
   (void)data;
   char di[OC_UUID_LEN];
@@ -759,12 +759,11 @@ unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 }
 
 static void
-otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
+otm_just_works_cb(const oc_uuid_t *uuid, int status, void *data)
 {
   (void)status;
-  (void)data;
   device_handle_t *device = (device_handle_t *)data;
-  memcpy(device->uuid.id, uuid->id, 16);
+  memcpy(device->uuid.id, uuid->id, sizeof(uuid->id));
   char di[OC_UUID_LEN];
   oc_uuid_to_str(uuid, di, sizeof(di));
   oc_memb_free(&device_handles, device);

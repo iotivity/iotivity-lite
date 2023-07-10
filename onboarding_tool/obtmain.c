@@ -23,6 +23,7 @@
 #include "oc_obt.h"
 #include "port/oc_clock.h"
 #include "util/oc_atomic.h"
+#include "util/oc_macros_internal.h"
 
 #if defined(_WIN32)
 #include <windows.h>
@@ -242,7 +243,7 @@ is_device_in_list(const oc_uuid_t *uuid, oc_list_t list)
 {
   device_handle_t *device = (device_handle_t *)oc_list_head(list);
   while (device != NULL) {
-    if (memcmp(device->uuid.id, uuid->id, 16) == 0) {
+    if (memcmp(device->uuid.id, uuid->id, OC_ARRAY_SIZE(uuid->id)) == 0) {
       return device;
     }
     device = device->next;
@@ -261,15 +262,15 @@ add_device_to_list(const oc_uuid_t *uuid, const char *device_name,
     if (!device) {
       return false;
     }
-    memcpy(device->uuid.id, uuid->id, 16);
+    memcpy(device->uuid.id, uuid->id, OC_ARRAY_SIZE(uuid->id));
     oc_list_add(list, device);
   }
 
   size_t len = 0;
   if (device_name != NULL) {
     len = strlen(device_name);
-    len = len > sizeof(device->device_name) - 1
-            ? sizeof(device->device_name) - 1
+    len = len > OC_ARRAY_SIZE(device->device_name) - 1
+            ? OC_ARRAY_SIZE(device->device_name) - 1
             : len;
     memcpy(device->device_name, device_name, len);
   }
@@ -309,11 +310,11 @@ get_device(oc_client_response_t *data)
 }
 
 static void
-unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
+unowned_device_cb(const oc_uuid_t *uuid, const oc_endpoint_t *eps, void *data)
 {
   (void)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
   const oc_endpoint_t *ep = eps;
 
   OC_PRINTF("\nDiscovered unowned device: %s at:\n", di);
@@ -327,11 +328,11 @@ unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 }
 
 static void
-owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
+owned_device_cb(const oc_uuid_t *uuid, const oc_endpoint_t *eps, void *data)
 {
   (void)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
   const oc_endpoint_t *ep = eps;
 
   OC_PRINTF("\nDiscovered owned device: %s at:\n", di);
@@ -375,12 +376,12 @@ discover_unowned_devices(uint8_t scope)
 }
 
 static void
-otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
+otm_rdp_cb(const oc_uuid_t *uuid, int status, void *data)
 {
   device_handle_t *device = (device_handle_t *)data;
-  memcpy(device->uuid.id, uuid->id, 16);
+  memcpy(device->uuid.id, uuid->id, OC_ARRAY_SIZE(uuid->id));
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   if (status >= 0) {
     OC_PRINTF("\nSuccessfully performed OTM on device %s\n", di);
@@ -440,11 +441,11 @@ otm_rdp(void)
 }
 
 static void
-random_pin_cb(oc_uuid_t *uuid, int status, void *data)
+random_pin_cb(const oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   if (status >= 0) {
     OC_PRINTF("\nSuccessfully requested device %s to generate a Random PIN\n",
@@ -496,12 +497,12 @@ request_random_pin(void)
 
 #ifdef OC_PKI
 static void
-otm_cert_cb(oc_uuid_t *uuid, int status, void *data)
+otm_cert_cb(const oc_uuid_t *uuid, int status, void *data)
 {
   device_handle_t *device = (device_handle_t *)data;
-  memcpy(device->uuid.id, uuid->id, 16);
+  memcpy(device->uuid.id, uuid->id, OC_ARRAY_SIZE(uuid->id));
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   if (status >= 0) {
     OC_PRINTF("\nSuccessfully performed OTM on device %s\n", di);
@@ -558,12 +559,12 @@ otm_cert(void)
 #endif /* OC_PKI */
 
 static void
-otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
+otm_just_works_cb(const oc_uuid_t *uuid, int status, void *data)
 {
   device_handle_t *device = (device_handle_t *)data;
-  memcpy(device->uuid.id, uuid->id, 16);
+  memcpy(device->uuid.id, uuid->id, OC_ARRAY_SIZE(uuid->id));
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   if (status >= 0) {
     OC_PRINTF("\nSuccessfully performed OTM on device with UUID %s\n", di);
@@ -961,11 +962,10 @@ delete_cred_by_credid(void)
 }
 
 static void
-reset_device_cb(oc_uuid_t *uuid, int status, void *data)
+reset_device_cb(const oc_uuid_t *uuid, int status, void *data)
 {
-  (void)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   oc_memb_free(&device_handles, data);
 
@@ -1138,11 +1138,11 @@ provision_role_cert(void)
 }
 
 static void
-provision_role_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
+provision_role_wildcard_ace_cb(const oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   if (status >= 0) {
     OC_PRINTF("\nSuccessfully provisioned rold * ACE to device %s\n", di);
@@ -1213,11 +1213,11 @@ provision_role_wildcard_ace(void)
 
 #ifdef OC_OSCORE
 static void
-provision_group_context_cb(oc_uuid_t *uuid, int status, void *data)
+provision_group_context_cb(const oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   if (status >= 0) {
     OC_PRINTF("\nSuccessfully provisioned group OSCORE context to device %s\n",
@@ -1445,11 +1445,12 @@ provision_credentials(void)
 }
 
 static void
-provision_authcrypt_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
+provision_authcrypt_wildcard_ace_cb(const oc_uuid_t *uuid, int status,
+                                    void *data)
 {
   (void)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   if (status >= 0) {
     OC_PRINTF("\nSuccessfully provisioned auth-crypt * ACE to device %s\n", di);
@@ -1505,11 +1506,11 @@ provision_authcrypt_wildcard_ace(void)
 }
 
 static void
-provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
+provision_ace2_cb(const oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   if (status >= 0) {
     OC_PRINTF("\nSuccessfully provisioned ACE to device %s\n", di);
@@ -2161,7 +2162,7 @@ static void
 display_device_uuid(void)
 {
   char buffer[OC_UUID_LEN];
-  oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
+  oc_uuid_to_str(oc_core_get_device_id(0), buffer, OC_ARRAY_SIZE(buffer));
 
   OC_PRINTF("Started device with ID: %s\n", buffer);
 }

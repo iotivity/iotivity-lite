@@ -790,7 +790,7 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
       return -1;
     }
 
-    if (mbedtls_ssl_set_hs_psk(ssl, key, 16) != 0) {
+    if (mbedtls_ssl_set_hs_psk(ssl, key, OC_ARRAY_SIZE(key)) != 0) {
       OC_ERR("oc_tls: error applying PPSK to current handshake");
       return -1;
     }
@@ -1102,7 +1102,7 @@ oc_tls_reload_trust_anchors(void)
     cert->cert = c;
 #if OC_DBG_IS_ENABLED
     char buf[256];
-    if (mbedtls_x509_serial_gets(buf, sizeof(buf) - 1, &c->serial) > 0) {
+    if (mbedtls_x509_serial_gets(buf, OC_ARRAY_SIZE(buf) - 1, &c->serial) > 0) {
       OC_DBG("trust anchor(serial: %s) added to chain", buf);
     }
     OC_DBG("trust anchor chain is now of size %d", chain_length);
@@ -1414,7 +1414,7 @@ add_new_trust_anchor(oc_sec_cred_t *cred, size_t device)
   cert->cert = c;
 #if OC_DBG_IS_ENABLED
   char buf[256];
-  if (mbedtls_x509_serial_gets(buf, sizeof(buf) - 1, &c->serial) > 0) {
+  if (mbedtls_x509_serial_gets(buf, OC_ARRAY_SIZE(buf) - 1, &c->serial) > 0) {
     OC_DBG("trust anchor(serial: %s) added to chain", buf);
   }
   OC_DBG("trust anchor chain is now of size %d", chain_length);
@@ -1685,7 +1685,7 @@ verify_manufacturer_or_identity_certificate(oc_tls_peer_t *peer,
 
     /* Parse the peer's subjectuuid from its end-entity certificate */
     char uuid[OC_UUID_LEN] = { 0 };
-    if (!oc_certs_extract_CN_for_UUID(crt, uuid, sizeof(uuid))) {
+    if (!oc_certs_extract_CN_for_UUID(crt, uuid, OC_ARRAY_SIZE(uuid))) {
       if (id_cert && id_cert->cred->credusage == OC_CREDUSAGE_IDENTITY_CERT) {
         OC_ERR("unable to retrieve UUID from the cert's CN");
         return -1;
@@ -1734,14 +1734,17 @@ verify_manufacturer_or_identity_certificate(oc_tls_peer_t *peer,
 #if OC_DBG_IS_ENABLED
         if (ca_cert->cred->subjectuuid.id[0] != '*') {
           char ca_uuid[OC_UUID_LEN] = { 0 };
-          oc_uuid_to_str(&ca_cert->cred->subjectuuid, ca_uuid, sizeof(ca_uuid));
+          oc_uuid_to_str(&ca_cert->cred->subjectuuid, ca_uuid,
+                         OC_ARRAY_SIZE(ca_uuid));
           OC_DBG("trustca cred UUID is %s", ca_uuid);
         } else {
           OC_DBG("trustca cred UUID is the wildcard *");
         }
 #endif /* OC_DBG_IS_ENABLED */
-        if (memcmp(ca_cert->cred->subjectuuid.id, peer->uuid.id, 16) != 0) {
-          if (memcmp(ca_cert->cred->subjectuuid.id, wildcard_sub.id, 16) != 0) {
+        if (memcmp(ca_cert->cred->subjectuuid.id, peer->uuid.id,
+                   OC_ARRAY_SIZE(peer->uuid.id)) != 0) {
+          if (memcmp(ca_cert->cred->subjectuuid.id, wildcard_sub.id,
+                     OC_ARRAY_SIZE(wildcard_sub.id)) != 0) {
             OC_DBG("trustca cred's UUID does not match with with peer's UUID "
                    "or the wildcard subject *; checking next known trustca");
             continue;
@@ -1778,7 +1781,7 @@ verify_cloud_certificate(oc_tls_peer_t *peer, const mbedtls_x509_crt *crt,
     return 0;
   }
   char uuid[OC_UUID_LEN] = { 0 };
-  if (!oc_certs_extract_CN_for_UUID(crt, uuid, sizeof(uuid))) {
+  if (!oc_certs_extract_CN_for_UUID(crt, uuid, OC_ARRAY_SIZE(uuid))) {
     peer->uuid.id[0] = '*';
   } else {
     oc_str_to_uuid(uuid, &peer->uuid);
@@ -1900,14 +1903,15 @@ oc_tls_export_keys(void *p_expkey, mbedtls_ssl_key_export_type type,
 
   oc_tls_peer_t *peer = (oc_tls_peer_t *)p_expkey;
   OC_DBG("oc_tls: Got master secret (len=%zu)", secret_len);
-  assert(secret_len == sizeof(peer->master_secret));
+  assert(secret_len == OC_ARRAY_SIZE(peer->master_secret));
   memcpy(peer->master_secret, secret, secret_len);
   OC_LOGbytes(peer->master_secret, secret_len);
 
   memcpy(peer->client_server_random, client_random, 32);
   memcpy(peer->client_server_random + 32, server_random, 32);
   OC_DBG("oc_tls: Got nonce");
-  OC_LOGbytes(peer->client_server_random, sizeof(peer->client_server_random));
+  OC_LOGbytes(peer->client_server_random,
+              OC_ARRAY_SIZE(peer->client_server_random));
 }
 
 static int
@@ -2330,8 +2334,9 @@ oc_sec_derive_owner_psk(const oc_endpoint_t *endpoint, const uint8_t *oxm,
   key_block_len = 2 * (mac_key_len + key_size + iv_size);
 
   if (oc_tls_prf(peer->master_secret, 48, key_block, key_block_len, 3, label,
-                 sizeof(label), peer->client_server_random + 32, (size_t)32,
-                 peer->client_server_random, (size_t)32) != key_block_len) {
+                 OC_ARRAY_SIZE(label), peer->client_server_random + 32,
+                 (size_t)32, peer->client_server_random,
+                 (size_t)32) != key_block_len) {
     return false;
   }
 
@@ -2394,7 +2399,7 @@ oc_tls_send_message_internal(oc_message_t *message)
         ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
 #if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
       char buf[256]; // NOLINT(readability-magic-numbers)
-      mbedtls_strerror(ret, buf, sizeof(buf));
+      mbedtls_strerror(ret, buf, OC_ARRAY_SIZE(buf));
       OC_ERR("oc_tls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
       oc_tls_free_peer(peer, false);
@@ -2448,7 +2453,7 @@ write_application_data(oc_tls_peer_t *peer)
         ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
 #if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
       char buf[256]; // NOLINT(readability-magic-numbers)
-      mbedtls_strerror(ret, buf, sizeof(buf));
+      mbedtls_strerror(ret, buf, OC_ARRAY_SIZE(buf));
       OC_ERR("oc_tls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
       oc_tls_free_peer(peer, false);
@@ -2466,7 +2471,7 @@ oc_tls_handshake(oc_tls_peer_t *peer)
       ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
 #if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
     char buf[256]; // NOLINT(readability-magic-numbers)
-    mbedtls_strerror(ret, buf, sizeof(buf));
+    mbedtls_strerror(ret, buf, OC_ARRAY_SIZE(buf));
     OC_ERR("oc_tls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
     oc_tls_free_peer(peer, false);
@@ -2634,7 +2639,7 @@ tls_read_application_data_tcp_error(int err)
 
 #if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
   char buf[256]; // NOLINT(readability-magic-numbers)
-  mbedtls_strerror(err, buf, sizeof(buf));
+  mbedtls_strerror(err, buf, OC_ARRAY_SIZE(buf));
   OC_ERR("oc_tls_tcp: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
 }
@@ -2728,7 +2733,7 @@ tls_read_application_data_error(int err)
 
 #if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
   char buf[256];
-  mbedtls_strerror(err, buf, sizeof(buf));
+  mbedtls_strerror(err, buf, OC_ARRAY_SIZE(buf));
   OC_ERR("oc_tls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
 }
@@ -2758,7 +2763,7 @@ tls_handshake_step(oc_tls_peer_t *peer)
       }
 #if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
       char buf[256]; // NOLINT(readability-magic-numbers)
-      mbedtls_strerror(ret, buf, sizeof(buf));
+      mbedtls_strerror(ret, buf, OC_ARRAY_SIZE(buf));
       OC_ERR("oc_tls: mbedtls_error: %s", buf);
 #endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
       oc_tls_free_peer(peer, false);
@@ -2833,7 +2838,7 @@ tls_read_application_data_udp(oc_tls_peer_t *peer)
   msg->length = message->length;
   memcpy(msg->data, message->data, message->length);
 #endif /* OC_INOUT_BUFFER_SIZE */
-  memcpy(&msg->endpoint.di.id, &peer->uuid.id, sizeof(peer->uuid.id));
+  memcpy(&msg->endpoint.di.id, &peer->uuid.id, OC_ARRAY_SIZE(peer->uuid.id));
 
 #ifdef OC_OSCORE
   if (oc_process_post(&oc_oscore_handler,
