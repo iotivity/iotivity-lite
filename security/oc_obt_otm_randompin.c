@@ -33,6 +33,7 @@
 #include "security/oc_sdi_internal.h"
 #include "security/oc_sp_internal.h"
 #include "security/oc_tls_internal.h"
+#include "util/oc_macros_internal.h"
 
 /* Random PIN OTM */
 
@@ -349,17 +350,19 @@ obt_rdp_7(oc_client_response_t *data)
 
 #define OXM_RDP "oic.sec.doxm.rdp"
   uint8_t key[16];
-  bool derived =
-    oc_sec_derive_owner_psk(ep, (const uint8_t *)OXM_RDP, strlen(OXM_RDP),
-                            device->uuid.id, 16, my_uuid->id, 16, key, 16);
+  bool derived = oc_sec_derive_owner_psk(
+    ep, (const uint8_t *)OXM_RDP, strlen(OXM_RDP), device->uuid.id,
+    OC_ARRAY_SIZE(device->uuid.id), my_uuid->id, OC_ARRAY_SIZE(my_uuid->id),
+    key, OC_ARRAY_SIZE(key));
 #undef OXM_RDP
   if (!derived) {
     goto err_obt_rdp_7;
   }
 
-  int credid = oc_sec_add_new_cred(0, false, NULL, -1, OC_CREDTYPE_PSK,
-                                   OC_CREDUSAGE_NULL, suuid, OC_ENCODING_RAW,
-                                   16, key, 0, 0, NULL, NULL, NULL, NULL, NULL);
+  int credid =
+    oc_sec_add_new_cred(0, false, NULL, -1, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL,
+                        suuid, OC_ENCODING_RAW, OC_ARRAY_SIZE(key), key, 0, 0,
+                        NULL, NULL, NULL, NULL, NULL);
 
   if (credid == -1) {
     goto err_obt_rdp_7;
@@ -529,11 +532,11 @@ obt_rdp_3(oc_client_response_t *data)
    * and has served its purpose.
    */
   char suuid[37];
-  oc_uuid_to_str(&device->uuid, suuid, 37);
+  oc_uuid_to_str(&device->uuid, suuid, OC_ARRAY_SIZE(suuid));
   oc_cred_remove_subject(suuid, 0);
 
   /* Store peer device's random uuid in local device object */
-  memcpy(device->uuid.id, dev_uuid.id, 16);
+  memcpy(device->uuid.id, dev_uuid.id, OC_ARRAY_SIZE(dev_uuid.id));
   oc_endpoint_t *ep = device->endpoint;
   while (ep) {
     oc_endpoint_set_di(ep, &dev_uuid);
@@ -542,7 +545,6 @@ obt_rdp_3(oc_client_response_t *data)
 
   const oc_endpoint_t *cep = oc_obt_get_secure_endpoint(device->endpoint);
   if (oc_init_post("/oic/sec/doxm", cep, NULL, &obt_rdp_4, HIGH_QOS, o)) {
-
     oc_rep_start_root_object();
     /* Set random uuid as deviceuuid */
     oc_rep_set_text_string(root, deviceuuid, uuid);
@@ -627,7 +629,7 @@ oc_obt_perform_random_pin_otm(const oc_uuid_t *uuid, const unsigned char *pin,
   }
 
   uint8_t key[16];
-  if (oc_tls_pbkdf2(pin, pin_len, uuid, 1000, key, 16) != 0) {
+  if (oc_tls_pbkdf2(pin, pin_len, uuid, 1000, key, OC_ARRAY_SIZE(key)) != 0) {
     return -1;
   }
 
@@ -637,7 +639,7 @@ oc_obt_perform_random_pin_otm(const oc_uuid_t *uuid, const unsigned char *pin,
   }
 
   char subjectuuid[37];
-  oc_uuid_to_str(uuid, subjectuuid, 37);
+  oc_uuid_to_str(uuid, subjectuuid, OC_ARRAY_SIZE(subjectuuid));
 
   /* 1) provision PSK cred locally
    * Note: This is an implementation detail where this provisioning of a local
@@ -645,9 +647,10 @@ oc_obt_perform_random_pin_otm(const oc_uuid_t *uuid, const unsigned char *pin,
    * TLS layer.
    */
 
-  int credid = oc_sec_add_new_cred(
-    0, false, NULL, -1, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL, subjectuuid,
-    OC_ENCODING_RAW, 16, key, 0, 0, NULL, NULL, NULL, NULL, NULL);
+  int credid =
+    oc_sec_add_new_cred(0, false, NULL, -1, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL,
+                        subjectuuid, OC_ENCODING_RAW, OC_ARRAY_SIZE(key), key,
+                        0, 0, NULL, NULL, NULL, NULL, NULL);
 
   if (credid == -1) {
     oc_obt_free_otm_ctx(o, -1, OC_OBT_OTM_RDP);

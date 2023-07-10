@@ -145,7 +145,8 @@ get_device_handle(const oc_uuid_t *uuid, oc_list_t list)
 {
   oc_device_t *device = (oc_device_t *)oc_list_head(list);
   while (device) {
-    if (memcmp(uuid->id, device->uuid.id, sizeof(device->uuid.id)) == 0) {
+    if (memcmp(uuid->id, device->uuid.id, OC_ARRAY_SIZE(device->uuid.id)) ==
+        0) {
       return device;
     }
     device = device->next;
@@ -172,7 +173,8 @@ oc_obt_is_owned_device(const oc_uuid_t *uuid)
   oc_sec_creds_t *creds = oc_sec_get_creds(0);
   oc_sec_cred_t *c = (oc_sec_cred_t *)oc_list_head(creds->creds);
   while (c != NULL) {
-    if (memcmp(c->subjectuuid.id, uuid->id, 16) == 0 && c->owner_cred) {
+    if (memcmp(c->subjectuuid.id, uuid->id, OC_ARRAY_SIZE(uuid->id)) == 0 &&
+        c->owner_cred) {
       return true;
     }
     c = c->next;
@@ -219,7 +221,7 @@ cache_new_device(oc_list_t list, const oc_uuid_t *uuid,
 {
   oc_device_t *device = (oc_device_t *)oc_list_head(list);
   while (device != NULL) {
-    if (memcmp(device->uuid.id, uuid->id, sizeof(oc_uuid_t)) == 0) {
+    if (memcmp(device->uuid.id, uuid->id, OC_ARRAY_SIZE(uuid->id)) == 0) {
       break;
     }
     device = device->next;
@@ -230,7 +232,7 @@ cache_new_device(oc_list_t list, const oc_uuid_t *uuid,
     if (!device) {
       return NULL;
     }
-    memcpy(device->uuid.id, uuid->id, sizeof(oc_uuid_t));
+    memcpy(device->uuid.id, uuid->id, OC_ARRAY_SIZE(uuid->id));
     oc_list_add(list, device);
   }
 
@@ -561,7 +563,7 @@ get_endpoints(oc_client_response_t *data)
   // skip "ocf://" prefix
   oc_str_to_uuid(oc_string(*anchor) + 6, &di);
   const oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-  if (memcmp(my_uuid->id, di.id, sizeof(di.id)) == 0) {
+  if (memcmp(my_uuid->id, di.id, OC_ARRAY_SIZE(di.id)) == 0) {
     return;
   }
 
@@ -628,7 +630,7 @@ obt_check_owned(oc_client_response_t *data)
   }
 
   const oc_uuid_t *my_uuid = oc_core_get_device_id(0);
-  if (memcmp(my_uuid->id, uuid.id, sizeof(uuid.id)) == 0) {
+  if (memcmp(my_uuid->id, uuid.id, OC_ARRAY_SIZE(uuid.id)) == 0) {
     return;
   }
 
@@ -1065,12 +1067,12 @@ device1oscore_cred(oc_client_response_t *data)
   oc_rep_set_object(creds, oscore);
 
   char hex_str[OSCORE_CTXID_LEN * 2 + 1];
-  size_t hex_str_len = sizeof(hex_str);
+  size_t hex_str_len = OC_ARRAY_SIZE(hex_str);
   oc_conv_byte_array_to_hex_string(p->recvid, OSCORE_CTXID_LEN, hex_str,
                                    &hex_str_len);
   oc_rep_set_text_string_v1(oscore, senderid, hex_str, hex_str_len);
 
-  hex_str_len = sizeof(hex_str);
+  hex_str_len = OC_ARRAY_SIZE(hex_str);
   oc_conv_byte_array_to_hex_string(p->sendid, OSCORE_CTXID_LEN, hex_str,
                                    &hex_str_len);
   oc_rep_set_text_string_v1(oscore, recipientid, hex_str, hex_str_len);
@@ -1107,7 +1109,7 @@ device2oscore_RFPRO(int status, void *data)
 
   gen_oscore_ctxid(p->sendid, false);
   gen_oscore_ctxid(p->recvid, false);
-  oc_random_buffer(p->secret, sizeof(p->secret));
+  oc_random_buffer(p->secret, OC_ARRAY_SIZE(p->secret));
 
   char d2uuid[OC_UUID_LEN];
   oc_uuid_to_str(&p->device2->uuid, d2uuid, OC_UUID_LEN);
@@ -1134,12 +1136,12 @@ device2oscore_RFPRO(int status, void *data)
   oc_rep_set_object(creds, oscore);
 
   char hex_str[OSCORE_CTXID_LEN * 2 + 1];
-  size_t hex_str_len = sizeof(hex_str);
+  size_t hex_str_len = OC_ARRAY_SIZE(hex_str);
   oc_conv_byte_array_to_hex_string(p->sendid, OSCORE_CTXID_LEN, hex_str,
                                    &hex_str_len);
   oc_rep_set_text_string_v1(oscore, senderid, hex_str, hex_str_len);
 
-  hex_str_len = sizeof(hex_str);
+  hex_str_len = OC_ARRAY_SIZE(hex_str);
   oc_conv_byte_array_to_hex_string(p->recvid, OSCORE_CTXID_LEN, hex_str,
                                    &hex_str_len);
   oc_rep_set_text_string_v1(oscore, recipientid, hex_str, hex_str_len);
@@ -1316,7 +1318,7 @@ deviceoscoregroup_RFPRO(int status, void *data)
   oc_rep_set_object(creds, oscore);
 
   char hex_str[OSCORE_CTXID_LEN * 2 + 1];
-  size_t hex_str_len = sizeof(hex_str);
+  size_t hex_str_len = OC_ARRAY_SIZE(hex_str);
   oc_conv_byte_array_to_hex_string(g_groupid, OSCORE_CTXID_LEN, hex_str,
                                    &hex_str_len);
   if (p->type == OC_CREDTYPE_OSCORE_MCAST_CLIENT) {
@@ -1369,7 +1371,7 @@ obt_provision_group_oscore_context(const oc_uuid_t *uuid,
   if (desc) {
     oc_new_string(&p->desc, desc, strlen(desc));
   }
-  memcpy(p->subjectuuid.id, subjectuuid->id, sizeof(subjectuuid->id));
+  memcpy(p->subjectuuid.id, subjectuuid->id, OC_ARRAY_SIZE(subjectuuid->id));
 
   oc_tls_select_psk_ciphersuite();
 
@@ -1530,7 +1532,7 @@ device1_cred(oc_client_response_t *data)
     oc_rep_set_text_string(creds, subjectuuid, d1uuid);
 
     oc_rep_set_object(creds, privatedata);
-    oc_rep_set_byte_string(privatedata, data, p->key, sizeof(p->key));
+    oc_rep_set_byte_string(privatedata, data, p->key, OC_ARRAY_SIZE(p->key));
     oc_rep_set_text_string_v1(privatedata, encoding, OC_ENCODING_RAW_STR,
                               OC_CHAR_ARRAY_LEN(OC_ENCODING_RAW_STR));
     oc_rep_close_object(creds, privatedata);
@@ -1557,7 +1559,7 @@ device2_RFPRO(int status, void *data)
   p->switch_dos = NULL;
 
   if (status >= 0) {
-    oc_random_buffer(p->key, sizeof(p->key));
+    oc_random_buffer(p->key, OC_ARRAY_SIZE(p->key));
 
     char d2uuid[OC_UUID_LEN];
     oc_uuid_to_str(&p->device2->uuid, d2uuid, OC_UUID_LEN);
@@ -1573,7 +1575,7 @@ device2_RFPRO(int status, void *data)
       oc_rep_set_text_string(creds, subjectuuid, d2uuid);
 
       oc_rep_set_object(creds, privatedata);
-      oc_rep_set_byte_string(privatedata, data, p->key, sizeof(p->key));
+      oc_rep_set_byte_string(privatedata, data, p->key, OC_ARRAY_SIZE(p->key));
       oc_rep_set_text_string_v1(privatedata, encoding, OC_ENCODING_RAW_STR,
                                 OC_CHAR_ARRAY_LEN(OC_ENCODING_RAW_STR));
       oc_rep_close_object(creds, privatedata);
@@ -1817,12 +1819,12 @@ device_generate_cert_for_CSR(const unsigned char *csr, size_t csr_len,
   }
 
   char subject[512] = { 0 };
-  if (oc_sec_csr_extract_subject_DN(&c, subject, sizeof(subject)) < 0) {
+  if (oc_sec_csr_extract_subject_DN(&c, subject, OC_ARRAY_SIZE(subject)) < 0) {
     goto err_device_generate_cert_for_CSR;
   }
 
   uint8_t pub_key[OC_ECDSA_PUBKEY_SIZE] = { 0 };
-  ret = oc_sec_csr_extract_public_key(&c, pub_key, sizeof(pub_key));
+  ret = oc_sec_csr_extract_public_key(&c, pub_key, OC_ARRAY_SIZE(pub_key));
   if (ret < 0) {
     goto err_device_generate_cert_for_CSR;
   }
@@ -1902,8 +1904,9 @@ device_CSR(oc_client_response_t *data)
   csr_len++;
 
   unsigned char cert_pem[4096] = { '\0' };
-  int ret = device_generate_cert_for_CSR((const unsigned char *)csr, csr_len,
-                                         p->roles, cert_pem, sizeof(cert_pem));
+  int ret =
+    device_generate_cert_for_CSR((const unsigned char *)csr, csr_len, p->roles,
+                                 cert_pem, OC_ARRAY_SIZE(cert_pem));
   if (ret < 0) {
     goto err_device_CSR;
   }
@@ -2394,7 +2397,7 @@ oc_obt_new_ace_for_subject(const oc_uuid_t *uuid)
   oc_sec_ace_t *ace = oc_obt_new_ace();
   if (ace) {
     ace->subject_type = OC_SUBJECT_UUID;
-    memcpy(ace->subject.uuid.id, uuid->id, 16);
+    memcpy(ace->subject.uuid.id, uuid->id, OC_ARRAY_SIZE(uuid->id));
   }
   return ace;
 }
@@ -3549,7 +3552,7 @@ oc_obt_general_get(const oc_uuid_t *uuid, const char *url,
   }
 
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(&(device->uuid), di, sizeof(di));
+  oc_uuid_to_str(&(device->uuid), di, OC_ARRAY_SIZE(di));
   OC_DBG("[C] Target uuid = %s", di);
 
   oc_tls_select_psk_ciphersuite();
@@ -3668,7 +3671,7 @@ oc_obt_general_delete(const oc_uuid_t *uuid, const char *query, const char *url,
   }
 
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(&(device->uuid), di, sizeof(di));
+  oc_uuid_to_str(&(device->uuid), di, OC_ARRAY_SIZE(di));
   OC_DBG("[C] Target uuid = %s", di);
 
   oc_tls_select_psk_ciphersuite();
@@ -3704,7 +3707,7 @@ oc_obt_generate_root_cred(void)
   size_t public_key_size = 0;
   if (oc_sec_ecdsa_generate_keypair(0, oc_sec_certs_ecp_group_id(), public_key,
                                     OC_ECDSA_PUBKEY_SIZE, &public_key_size,
-                                    g_private_key, sizeof(g_private_key),
+                                    g_private_key, OC_ARRAY_SIZE(g_private_key),
                                     &g_private_key_size) < 0) {
     OC_ERR("oc_obt: could not generate ECDSA keypair for local domain root "
            "certificate");
@@ -3748,7 +3751,7 @@ oc_obt_init(void)
   OC_DBG("oc_obt: generating OSCORE group context id");
   gen_oscore_ctxid(g_groupid, true);
   OC_DBG("oc_obt: generating OSCORE group secret");
-  oc_random_buffer(g_group_secret, sizeof(g_group_secret));
+  oc_random_buffer(g_group_secret, OC_ARRAY_SIZE(g_group_secret));
 #endif /* OC_OSCORE */
 
 #if defined(OC_PKI) || defined(OC_OSCORE)

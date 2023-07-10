@@ -26,6 +26,7 @@
 #include "oc_python.h"
 #include "port/oc_clock.h"
 #include "util/oc_atomic.h"
+#include "util/oc_macros_internal.h"
 #include "util/oc_secure_string_internal.h"
 
 #ifdef OC_SECURITY
@@ -381,7 +382,7 @@ is_device_in_list(const oc_uuid_t *uuid, oc_list_t list)
 {
   device_handle_t *device = (device_handle_t *)oc_list_head(list);
   while (device != NULL) {
-    if (memcmp(device->uuid.id, uuid->id, 16) == 0) {
+    if (memcmp(device->uuid.id, uuid->id, OC_ARRAY_SIZE(uuid->id)) == 0) {
       return device;
     }
     device = device->next;
@@ -393,7 +394,7 @@ static void
 set_obt_device(device_handle_t *device, const oc_uuid_t *uuid,
                const char *device_name)
 {
-  memcpy(device->uuid.id, uuid->id, sizeof(uuid->id));
+  memcpy(device->uuid.id, uuid->id, OC_ARRAY_SIZE(uuid->id));
   size_t len = 0;
   if (device_name != NULL) {
     len = strlen(device_name);
@@ -414,7 +415,7 @@ add_device_to_list(const oc_uuid_t *uuid, const char *device_name,
     if (!device) {
       return false;
     }
-    memcpy(device->uuid.id, uuid->id, sizeof(device->uuid.id));
+    memcpy(device->uuid.id, uuid->id, OC_ARRAY_SIZE(device->uuid.id));
     oc_list_add(list, device);
   }
 
@@ -479,7 +480,7 @@ get_device(oc_client_response_t *data)
 }
 
 static void
-unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
+unowned_device_cb(const oc_uuid_t *uuid, const oc_endpoint_t *eps, void *data)
 {
   (void)data;
   (void)uuid;
@@ -487,7 +488,7 @@ unowned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
 }
 
 static void
-owned_device_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *data)
+owned_device_cb(const oc_uuid_t *uuid, const oc_endpoint_t *eps, void *data)
 {
   (void)data;
   (void)uuid;
@@ -543,18 +544,18 @@ py_discover_unowned_devices(int scope)
 }
 
 static void
-otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
+otm_rdp_cb(const oc_uuid_t *uuid, int status, void *data)
 {
   device_handle_t *device = (device_handle_t *)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
   if (status < 0) {
     OC_PRINTF("[C]\nERROR performing ownership transfer on device %s\n", di);
     oc_memb_free(&g_device_handles_s, device);
     return;
   }
 
-  memcpy(device->uuid.id, uuid->id, sizeof(uuid->id));
+  memcpy(device->uuid.id, uuid->id, OC_ARRAY_SIZE(uuid->id));
   OC_PRINTF("[C]\nSuccessfully performed OTM on device %s\n", di);
   oc_list_add(g_owned_devices, device);
   inform_python(NULL, NULL, NULL);
@@ -600,11 +601,11 @@ py_otm_rdp(const char *uuid, const char *pin)
 }
 
 static void
-random_pin_cb(oc_uuid_t *uuid, int status, void *data)
+random_pin_cb(const oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   if (status >= 0) {
     OC_PRINTF(
@@ -652,18 +653,18 @@ py_request_random_pin(const char *uuid)
 
 #ifdef OC_PKI
 void
-otm_cert_cb(oc_uuid_t *uuid, int status, void *data)
+otm_cert_cb(const oc_uuid_t *uuid, int status, void *data)
 {
   device_handle_t *device = (device_handle_t *)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
   if (status < 0) {
     OC_PRINTF("[C]\nERROR performing ownership transfer on device %s\n", di);
     oc_memb_free(&g_device_handles_s, device);
     return;
   }
 
-  memcpy(device->uuid.id, uuid->id, sizeof(uuid->id));
+  memcpy(device->uuid.id, uuid->id, OC_ARRAY_SIZE(uuid->id));
   OC_PRINTF("[C]\nSuccessfully performed OTM on device %s\n", di);
   oc_list_add(g_owned_devices, device);
   inform_python(NULL, NULL, NULL);
@@ -672,12 +673,12 @@ otm_cert_cb(oc_uuid_t *uuid, int status, void *data)
 #endif /* OC_PKI */
 
 static void
-otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
+otm_just_works_cb(const oc_uuid_t *uuid, int status, void *data)
 {
   device_handle_t *device = (device_handle_t *)data;
-  memcpy(device->uuid.id, uuid->id, sizeof(uuid->id));
+  memcpy(device->uuid.id, uuid->id, OC_ARRAY_SIZE(uuid->id));
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   if (status < 0) {
     oc_memb_free(&g_device_handles_s, device);
@@ -875,7 +876,7 @@ display_cred_rsrc(const oc_sec_creds_t *creds)
     OC_PRINTF("[C]\n################################################\n");
     while (cr) {
       char uuid[OC_UUID_LEN];
-      oc_uuid_to_str(&cr->subjectuuid, uuid, sizeof(uuid));
+      oc_uuid_to_str(&cr->subjectuuid, uuid, OC_ARRAY_SIZE(uuid));
       OC_PRINTF("[C]credid: %d\n", cr->credid);
       OC_PRINTF("[C]subjectuuid: %s\n", uuid);
       OC_PRINTF("[C]credtype: %s\n", oc_cred_credtype_string(cr->credtype));
@@ -952,10 +953,10 @@ delete_cred_by_credid_cb(int status, void *data)
  * function to handle the reset
  */
 static void
-reset_device_cb(oc_uuid_t *uuid, int status, void *data)
+reset_device_cb(const oc_uuid_t *uuid, int status, void *data)
 {
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   if (status < 0) {
     OC_PRINTF("[C]\nERROR performing hard RESET to device %s\n", di);
@@ -995,7 +996,7 @@ get_uuid(int owned, int index)
   int i = 0;
   static char di[OC_UUID_LEN];
   while (device != NULL) {
-    oc_uuid_to_str(&device->uuid, di, sizeof(di));
+    oc_uuid_to_str(&device->uuid, di, OC_ARRAY_SIZE(di));
     if (index == i) {
       return di;
     }
@@ -1158,11 +1159,11 @@ py_provision_role_cert(const char *uuid, const char *role, const char *auth)
 }
 
 void
-provision_role_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
+provision_role_wildcard_ace_cb(const oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   if (status >= 0) {
     OC_PRINTF("[C]\nSuccessfully provisioned rold * ACE to device %s\n", di);
@@ -1175,11 +1176,11 @@ provision_role_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
 
 #ifdef OC_OSCORE
 void
-provision_group_context_cb(oc_uuid_t *uuid, int status, void *data)
+provision_group_context_cb(const oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   if (status >= 0) {
     OC_PRINTF(
@@ -1247,11 +1248,12 @@ py_provision_pairwise_credentials(const char *uuid1, const char *uuid2)
 }
 
 void
-provision_authcrypt_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
+provision_authcrypt_wildcard_ace_cb(const oc_uuid_t *uuid, int status,
+                                    void *data)
 {
   (void)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   if (status >= 0) {
     OC_PRINTF("[C]\nSuccessfully provisioned auth-crypt * ACE to device %s\n",
@@ -1262,11 +1264,11 @@ provision_authcrypt_wildcard_ace_cb(oc_uuid_t *uuid, int status, void *data)
 }
 
 static void
-provision_ace2_cb(oc_uuid_t *uuid, int status, void *data)
+provision_ace2_cb(const oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   if (status >= 0) {
     OC_PRINTF("[C]\nSuccessfully provisioned ACE to device %s\n", di);
@@ -2012,7 +2014,7 @@ void
 display_device_uuid(void)
 {
   char buffer[OC_UUID_LEN];
-  oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
+  oc_uuid_to_str(oc_core_get_device_id(0), buffer, OC_ARRAY_SIZE(buffer));
 
   OC_PRINTF("[C] OBT Started device with ID: %s\n", buffer);
 }
@@ -2021,7 +2023,7 @@ char *
 py_get_obt_uuid(void)
 {
   char buffer[OC_UUID_LEN];
-  oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
+  oc_uuid_to_str(oc_core_get_device_id(0), buffer, OC_ARRAY_SIZE(buffer));
 
   char *uuid = malloc(sizeof(char) * OC_UUID_LEN);
   strncpy(uuid, buffer, OC_UUID_LEN);
@@ -2041,7 +2043,7 @@ so_otm_cb(oc_uuid_t *uuid, int status, void *data)
 {
   (void)data;
   char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, sizeof(di));
+  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
 
   if (status >= 0) {
     OC_PRINTF("\nSuccessfully performed OTM on device with UUID %s\n", di);
@@ -2102,7 +2104,7 @@ observe_diplomat_cb(oc_client_response_t *data)
     OC_PRINTF("Observe GET failed with code %d\n", data->code);
     // char* c = (char *) data->code;
     char code[40];
-    snprintf(code, sizeof(code), "observe_fail:%d", data->code);
+    snprintf(code, OC_ARRAY_SIZE(code), "observe_fail:%d", data->code);
     inform_diplomat_python("", "", "", code, "", "");
     return;
   }
@@ -2122,7 +2124,7 @@ observe_diplomat_cb(oc_client_response_t *data)
         OC_PRINTF("Onboarding device with UUID %s and cred %s\n", so_info->uuid,
                   so_info->cred);
         char target_uuid[OC_UUID_LEN];
-        snprintf(target_uuid, sizeof(target_uuid), "%s", so_info->uuid);
+        snprintf(target_uuid, OC_ARRAY_SIZE(target_uuid), "%s", so_info->uuid);
         inform_diplomat_python("", "", "", "", target_uuid, "");
         perform_streamlined_discovery(so_info);
         break;
@@ -2247,7 +2249,7 @@ get_light_cb(oc_client_response_t *data)
   if (data->code > 4) {
     OC_PRINTF("GET failed with code %d\n", data->code);
     char code[40];
-    snprintf(code, sizeof(code), "observe_fail:%d", data->code);
+    snprintf(code, OC_ARRAY_SIZE(code), "observe_fail:%d", data->code);
     return;
   }
   while (rep != NULL) {

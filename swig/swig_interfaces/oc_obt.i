@@ -144,7 +144,7 @@ void jni_obt_shutdown(void)
 
 /* code and typemaps for mapping the oc_obt_discover_cb to the java OCObtDiscoveryHandler */
 %{
-static void jni_obt_discovery_cb(oc_uuid_t *uuid, oc_endpoint_t *eps, void *user_data)
+static void jni_obt_discovery_cb(const oc_uuid_t *uuid, const oc_endpoint_t *eps, void *user_data)
 {
   OC_DBG("JNI: %s\n", __func__);
   assert(user_data);
@@ -348,7 +348,7 @@ int jni_obt_discover_owned_devices_site_local_ipv6(oc_obt_discovery_cb_t callbac
 %ignore oc_obt_discover_all_resources;
 %rename (discoverAllResources) jni_obt_discover_all_resources;
 %inline %{
-int jni_obt_discover_all_resources(oc_uuid_t *uuid, oc_discovery_all_handler_t handler, jni_callback_data *jcb)
+int jni_obt_discover_all_resources(const oc_uuid_t *uuid, oc_discovery_all_handler_t handler, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
@@ -370,7 +370,7 @@ int jni_obt_discover_all_resources(oc_uuid_t *uuid, oc_discovery_all_handler_t h
 
 /* code and typemaps for mapping the oc_obt_device_status_cb_t to the java OCObtDeviceStatusHandler */
 %{
-static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_data)
+static void jni_obt_device_status_cb(const oc_uuid_t *uuid, int status, void *user_data)
 {
   OC_DBG("JNI: %s\n", __func__);
   jni_callback_data *data = (jni_callback_data *)user_data;
@@ -429,7 +429,7 @@ static void jni_obt_device_status_cb(oc_uuid_t *uuid, int status, void *user_dat
 %ignore oc_obt_perform_just_works_otm;
 %rename(performJustWorksOtm) jni_obt_perform_just_works_otm;
 %inline %{
-int jni_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
+int jni_obt_perform_just_works_otm(const oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
@@ -452,7 +452,7 @@ int jni_obt_perform_just_works_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t ca
 %ignore oc_obt_request_random_pin;
 %rename(requestRandomPin) jni_obt_request_random_pin;
 %inline %{
-int jni_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
+int jni_obt_request_random_pin(const oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
@@ -488,7 +488,7 @@ int jni_obt_request_random_pin(oc_uuid_t *uuid, oc_obt_device_status_cb_t callba
 %ignore oc_obt_perform_random_pin_otm;
 %rename(performRandomPinOtm) jni_obt_perform_random_pin_otm;
 %inline %{
-int jni_obt_perform_random_pin_otm(oc_uuid_t *uuid, char *pin, size_t pin_len,
+int jni_obt_perform_random_pin_otm(const oc_uuid_t *uuid, char *pin, size_t pin_len,
                                    oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
@@ -514,7 +514,7 @@ int jni_obt_perform_random_pin_otm(oc_uuid_t *uuid, char *pin, size_t pin_len,
 %ignore oc_obt_perform_cert_otm;
 %rename(performCertOtm) jni_obt_perform_cert_otm;
 %inline %{
-int jni_obt_perform_cert_otm(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
+int jni_obt_perform_cert_otm(const oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY) && defined(OC_PKI)
@@ -569,7 +569,7 @@ void jni_obt_free_roleid(oc_role_t *roles)
 %ignore oc_obt_device_hard_reset;
 %rename(deviceHardReset) jni_obt_device_hard_reset;
 %inline %{
-int jni_obt_device_hard_reset(oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
+int jni_obt_device_hard_reset(const oc_uuid_t *uuid, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
@@ -637,7 +637,7 @@ static void jni_obt_status_cb(int status, void *user_data)
 %ignore oc_obt_provision_pairwise_credentials;
 %rename(provisionPairwiseCredentials) jni_obt_provision_pairwise_credentials;
 %inline %{
-int jni_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2, oc_obt_status_cb_t callback, jni_callback_data *jcb)
+int jni_obt_provision_pairwise_credentials(const oc_uuid_t *uuid1, const oc_uuid_t *uuid2, oc_obt_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
@@ -661,7 +661,7 @@ int jni_obt_provision_pairwise_credentials(oc_uuid_t *uuid1, oc_uuid_t *uuid2, o
 %ignore oc_obt_provision_identity_certificate;
 %rename(provisionIdentityCertificate) jni_obt_provision_identity_certificate;
 %inline %{
-int jni_obt_provision_identity_certificate(oc_uuid_t *uuid, oc_obt_status_cb_t callback, jni_callback_data *jcb)
+int jni_obt_provision_identity_certificate(const oc_uuid_t *uuid, oc_obt_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY) && defined(OC_PKI)
@@ -776,7 +776,7 @@ int jni_oc_obt_provision_trust_anchor(const char *cert, size_t cert_size, char* 
 %ignore oc_obt_new_ace_for_subject;
 %rename(newAceForSubject) jni_obt_new_ace_for_subject;
 %inline %{
-oc_sec_ace_t *jni_obt_new_ace_for_subject(oc_uuid_t *uuid)
+oc_sec_ace_t *jni_obt_new_ace_for_subject(const oc_uuid_t *uuid)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
@@ -883,7 +883,7 @@ void jni_obt_ace_add_permission(oc_sec_ace_t *ace,
 %ignore oc_obt_provision_ace;
 %rename(provisionAce) jni_obt_provision_ace;
 %inline %{
-int jni_obt_provision_ace(oc_uuid_t *subject, oc_sec_ace_t *ace, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
+int jni_obt_provision_ace(const oc_uuid_t *subject, oc_sec_ace_t *ace, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
@@ -920,7 +920,7 @@ void jni_obt_free_ace(oc_sec_ace_t *ace)
 %ignore oc_obt_provision_role_wildcard_ace;
 %rename(provisionRoleWildcardAce) jni_obt_provision_role_wildcard_ace;
 %inline %{
-int jni_obt_provision_role_wildcard_ace(oc_uuid_t *subject, const char *role, const char *authority,
+int jni_obt_provision_role_wildcard_ace(const oc_uuid_t *subject, const char *role, const char *authority,
                                         oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
@@ -946,7 +946,7 @@ int jni_obt_provision_role_wildcard_ace(oc_uuid_t *subject, const char *role, co
 %ignore oc_obt_provision_auth_wildcard_ace;
 %rename(provisionAuthWildcardAce) jni_obt_provision_auth_wildcard_ace;
 %inline %{
-int jni_obt_provision_auth_wildcard_ace(oc_uuid_t *subject, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
+int jni_obt_provision_auth_wildcard_ace(const oc_uuid_t *subject, oc_obt_device_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
@@ -1052,7 +1052,7 @@ void jni_obt_creds_cb(struct oc_sec_creds_t *creds, void *user_data)
 %ignore oc_obt_retrieve_creds;
 %rename(retrieveCreds) jni_obt_retrieve_creds;
 %inline %{
-int jni_obt_retrieve_creds(oc_uuid_t *subject, oc_obt_creds_cb_t callback, jni_callback_data *jcb)
+int jni_obt_retrieve_creds(const oc_uuid_t *subject, oc_obt_creds_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
@@ -1090,7 +1090,7 @@ void jni_obt_free_creds(oc_sec_creds_t *creds)
 %ignore oc_obt_delete_cred_by_credid;
 %rename(deleteCredByCredId) jni_obt_delete_cred_by_credid;
 %inline %{
-int jni_obt_delete_cred_by_credid(oc_uuid_t *uuid, int credid,
+int jni_obt_delete_cred_by_credid(const oc_uuid_t *uuid, int credid,
                                  oc_obt_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
@@ -1168,7 +1168,7 @@ void jni_obt_acl_cb(oc_sec_acl_t *acl, void *user_data)
 %ignore oc_obt_retrieve_acl;
 %rename(retrieveAcl) jni_obt_retrieve_acl;
 %inline %{
-int jni_obt_retrieve_acl(oc_uuid_t *uuid, oc_obt_acl_cb_t callback, jni_callback_data *jcb)
+int jni_obt_retrieve_acl(const oc_uuid_t *uuid, oc_obt_acl_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);
 #if defined(OC_SECURITY)
@@ -1206,7 +1206,7 @@ void jni_obt_free_acl(oc_sec_acl_t *acl)
 %ignore oc_obt_delete_ace_by_aceid;
 %rename(deleteAceByAceId) jni_obt_delete_ace_by_aceid;
 %inline %{
-int jni_obt_delete_ace_by_aceid(oc_uuid_t *uuid, int aceid,
+int jni_obt_delete_ace_by_aceid(const oc_uuid_t *uuid, int aceid,
                                oc_obt_status_cb_t callback, jni_callback_data *jcb)
 {
   OC_DBG("JNI: %s\n", __func__);

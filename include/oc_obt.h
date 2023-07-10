@@ -94,8 +94,8 @@ extern "C" {
  * @see oc_obt_discover_owned_devices_realm_local_ipv6
  * @see oc_obt_discover_owned_devices_site_local_ipv6
  */
-typedef void (*oc_obt_discovery_cb_t)(oc_uuid_t *uuid, oc_endpoint_t *eps,
-                                      void *data);
+typedef void (*oc_obt_discovery_cb_t)(const oc_uuid_t *uuid,
+                                      const oc_endpoint_t *eps, void *data);
 
 /**
  * Callback invoked to report the status resulting from many of the onboarding
@@ -115,7 +115,7 @@ typedef void (*oc_obt_discovery_cb_t)(oc_uuid_t *uuid, oc_endpoint_t *eps,
  * @see oc_obt_provision_role_wilecard_ace
  * @see oc_obt_provision_auth_wildcard_ace
  */
-typedef void (*oc_obt_device_status_cb_t)(oc_uuid_t *uuid, int status,
+typedef void (*oc_obt_device_status_cb_t)(const oc_uuid_t *uuid, int status,
                                           void *data);
 
 /**
@@ -369,7 +369,7 @@ int oc_obt_discover_all_resources(const oc_uuid_t *uuid,
  * Example:
  * ```
  * static void
- * otm_just_works_cb(oc_uuid_t *uuid, int status, void *data)
+ * otm_just_works_cb(const oc_uuid_t *uuid, int status, void *data)
  * {
  *   char di[OC_UUID_LEN];
  *   oc_uuid_to_str(uuid, di, OC_UUID_LEN);
@@ -451,7 +451,7 @@ int oc_obt_request_random_pin(const oc_uuid_t *uuid,
  * Example:
  * ```
  * static void
- * otm_rdp_cb(oc_uuid_t *uuid, int status, void *data)
+ * otm_rdp_cb(const oc_uuid_t *uuid, int status, void *data)
  * {
  *   char di[OC_UUID_LEN];
  *   oc_uuid_to_str(uuid, di, OC_UUID_LEN);
@@ -464,7 +464,7 @@ int oc_obt_request_random_pin(const oc_uuid_t *uuid,
  * }
  *
  * static void
- * random_pin_cb(oc_uuid_t *uuid, int status, void *data)
+ * random_pin_cb(const oc_uuid_t *uuid, int status, void *data)
  * {
  *   char di[OC_UUID_LEN];
  *   oc_uuid_to_str(uuid, di, OC_UUID_LEN);

@@ -890,7 +890,8 @@ protected:
   }
 
 public:
-  static void onDeviceDiscovered(oc_uuid_t *uuid, oc_endpoint_t *, void *data)
+  static void onDeviceDiscovered(const oc_uuid_t *uuid, const oc_endpoint_t *,
+                                 void *data)
   {
     auto *devices = static_cast<std::vector<std::string> *>(data);
     std::string buffer(OC_UUID_LEN, '\0');
