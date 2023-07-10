@@ -290,54 +290,17 @@ coap_serialize_int_option(unsigned int number, unsigned int current_number,
 
 static size_t
 coap_serialize_array_option(unsigned int number, unsigned int current_number,
-                            uint8_t *buffer, uint8_t *array, size_t length,
-                            unsigned char split_char)
+                            uint8_t *buffer, const uint8_t *array,
+                            size_t length, unsigned char split_char)
 {
-  size_t i = 0;
 
   if (buffer) {
     OC_DBG("ARRAY type %u, len %zu, full [%.*s]", number, length, (int)length,
            array);
   }
 
-  if (split_char != '\0') {
-    size_t j;
-    uint8_t *part_start = array;
-    uint8_t *part_end = NULL;
-    size_t temp_length;
-
-    for (j = 0; j <= length + 1; ++j) {
-      if (buffer) {
-        OC_DBG("STEP %zu/%zu (%c)", j, length, array[j]);
-      }
-
-      if (array[j] == split_char || j == length) {
-        part_end = array + j;
-        temp_length = part_end - part_start;
-
-        if (buffer) {
-          i += coap_set_option_header(number - current_number, temp_length,
-                                      &buffer[i]);
-          memcpy(&buffer[i], part_start, temp_length);
-        } else {
-          i +=
-            coap_set_option_header(number - current_number, temp_length, NULL);
-        }
-
-        i += temp_length;
-
-        if (buffer) {
-          OC_DBG("OPTION type %u, delta %u, len %zu, part [%.*s]", number,
-                 number - current_number, i, (int)temp_length, part_start);
-        }
-
-        ++j; /* skip the splitter */
-        current_number = number;
-        part_start = array + j;
-      }
-    } /* for */
-  } else {
-
+  if (split_char == '\0') {
+    size_t i = 0;
     if (buffer) {
       i += coap_set_option_header(number - current_number, length, &buffer[i]);
       memcpy(&buffer[i], array, length);
@@ -350,6 +313,41 @@ coap_serialize_array_option(unsigned int number, unsigned int current_number,
     if (buffer) {
       OC_DBG("OPTION type %u, delta %u, len %zu", number,
              number - current_number, length);
+    }
+    return i;
+  }
+
+  size_t i = 0;
+  const uint8_t *part_start = array;
+  const uint8_t *part_end = NULL;
+  size_t temp_length;
+  for (size_t j = 0; j <= length + 1; ++j) {
+    if (buffer) {
+      OC_DBG("STEP %zu/%zu (%c)", j, length, array[j]);
+    }
+
+    if (array[j] == split_char || j == length) {
+      part_end = array + j;
+      temp_length = part_end - part_start;
+
+      if (buffer) {
+        i += coap_set_option_header(number - current_number, temp_length,
+                                    &buffer[i]);
+        memcpy(&buffer[i], part_start, temp_length);
+      } else {
+        i += coap_set_option_header(number - current_number, temp_length, NULL);
+      }
+
+      i += temp_length;
+
+      if (buffer) {
+        OC_DBG("OPTION type %u, delta %u, len %zu, part [%.*s]", number,
+               number - current_number, i, (int)temp_length, part_start);
+      }
+
+      ++j; /* skip the splitter */
+      current_number = number;
+      part_start = array + j;
     }
   }
 
@@ -894,10 +892,8 @@ coap_oscore_parse_outer_option(coap_packet_t *packet,
   }
 #if 0
   case COAP_OPTION_PROXY_SCHEME:
-#if COAP_PROXY_OPTION_PROCESSING
     packet->proxy_scheme = (char *)current_option;
     packet->proxy_scheme_len = option_length;
-#endif
     OC_DBG("Proxy-Scheme NOT IMPLEMENTED [%.*s]", (int)packet->proxy_scheme_len,
            packet->proxy_scheme);
     return PROXYING_NOT_SUPPORTED_5_05;

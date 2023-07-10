@@ -99,7 +99,7 @@ observe_light(oc_client_response_t *data)
 
 static oc_discovery_flags_t
 discovery(const char *di, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+          oc_interface_mask_t iface_mask, const oc_endpoint_t *endpoint,
           oc_resource_properties_t bm, void *user_data)
 {
   (void)di;
@@ -116,7 +116,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
       light_server = endpoint;
 
       OC_PRINTF("Resource %s hosted at endpoints:\n", light_1);
-      oc_endpoint_t *ep = endpoint;
+      const oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
         OC_PRINTipaddr(*ep);
         OC_PRINTF("\n");

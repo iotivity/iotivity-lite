@@ -56,7 +56,7 @@ static oc_endpoint_t set_ep;
 static size_t ping_count = 0;
 static uint16_t ping_timeout = 1;
 
-typedef void (*custom_func_t)(oc_endpoint_t *);
+typedef void (*custom_func_t)(const oc_endpoint_t *);
 
 typedef struct
 {
@@ -240,7 +240,7 @@ get_request(void)
 
 static oc_discovery_flags_t
 discovery_handler(const char *anchor, const char *uri, oc_string_array_t types,
-                  oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+                  oc_interface_mask_t iface_mask, const oc_endpoint_t *endpoint,
                   oc_resource_properties_t bm, void *user_data)
 {
   oc_discovery_flags_t ret = OC_CONTINUE_DISCOVERY;
@@ -275,9 +275,9 @@ exit:
 }
 
 static void
-find_first_endpoint(oc_endpoint_t *endpoint)
+find_first_endpoint(const oc_endpoint_t *endpoint)
 {
-  oc_endpoint_t *ep = endpoint;
+  const oc_endpoint_t *ep = endpoint;
   memcpy(&target_ep, ep, sizeof(oc_endpoint_t));
   resource_found = true;
   while (ep != NULL) {
@@ -289,9 +289,9 @@ find_first_endpoint(oc_endpoint_t *endpoint)
 }
 
 static void
-find_same_endpoint(oc_endpoint_t *endpoint)
+find_same_endpoint(const oc_endpoint_t *endpoint)
 {
-  oc_endpoint_t *ep = endpoint;
+  const oc_endpoint_t *ep = endpoint;
   while (ep != NULL) {
     OC_PRINTipaddr(*ep);
     OC_PRINTF("\n");

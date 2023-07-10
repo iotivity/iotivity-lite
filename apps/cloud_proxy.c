@@ -1276,7 +1276,7 @@ delete_resource(oc_request_t *request, oc_interface_mask_t interfaces,
  */
 STATIC oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+          oc_interface_mask_t iface_mask, const oc_endpoint_t *endpoint,
           oc_resource_properties_t bm, bool x, void *user_data)
 {
   (void)user_data;
@@ -1321,7 +1321,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
     if (is_vertical(t)) {
       OC_PRINTF("  discovery: To REGISTER resource type: %s\n", t);
       OC_PRINTF("  discovery: Resource %s hosted at endpoints:\n", uri);
-      oc_endpoint_t *ep = endpoint;
+      const oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
         char uuid[OC_UUID_LEN] = { 0 };
         oc_uuid_to_str(&ep->di, uuid, OC_UUID_LEN);

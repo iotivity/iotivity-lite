@@ -127,7 +127,7 @@ check_resource_cb(oc_client_response_t *data)
 
 static oc_discovery_flags_t
 discovery_cb(const char *di, const char *uri, oc_string_array_t types,
-             oc_interface_mask_t iface_mask, oc_endpoint_t *server,
+             oc_interface_mask_t iface_mask, const oc_endpoint_t *server,
              oc_resource_properties_t bm, void *user_data)
 {
   (void)bm;

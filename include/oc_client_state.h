@@ -82,14 +82,14 @@ typedef enum {
  */
 typedef oc_discovery_flags_t (*oc_discovery_all_handler_t)(
   const char *, const char *, oc_string_array_t, oc_interface_mask_t,
-  oc_endpoint_t *, oc_resource_properties_t, bool, void *);
+  const oc_endpoint_t *, oc_resource_properties_t, bool, void *);
 
 /**
  * @brief discovery handler
  */
 typedef oc_discovery_flags_t (*oc_discovery_handler_t)(
   const char *, const char *, oc_string_array_t, oc_interface_mask_t,
-  oc_endpoint_t *, oc_resource_properties_t, void *);
+  const oc_endpoint_t *, oc_resource_properties_t, void *);
 
 /**
  * @brief client response handler

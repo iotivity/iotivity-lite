@@ -317,7 +317,7 @@ update_light_switch(bool multicast)
 
 static oc_discovery_flags_t
 discovery(const char *di, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+          oc_interface_mask_t iface_mask, const oc_endpoint_t *endpoint,
           oc_resource_properties_t bm, void *user_data)
 {
   (void)di;
@@ -327,7 +327,7 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   (void)types;
   (void)bm;
 
-  oc_endpoint_t *ep = endpoint;
+  const oc_endpoint_t *ep = endpoint;
   oc_string_t ep_str;
   bool supports_mcast = false;
   while (ep) {

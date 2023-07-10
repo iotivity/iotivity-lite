@@ -350,7 +350,7 @@ obt_jw_9(oc_client_response_t *data)
 #define OXM_JUST_WORKS "oic.sec.doxm.jw"
   uint8_t key[16];
   bool derived = oc_sec_derive_owner_psk(
-    ep, (const uint8_t *)OXM_JUST_WORKS, strlen(OXM_JUST_WORKS),
+    ep, (const uint8_t *)OXM_JUST_WORKS, OC_CHAR_ARRAY_LEN(OXM_JUST_WORKS),
     device->uuid.id, OC_ARRAY_SIZE(device->uuid.id), my_uuid->id,
     OC_ARRAY_SIZE(my_uuid->id), key, OC_ARRAY_SIZE(key));
 #undef OXM_JUST_WORKS

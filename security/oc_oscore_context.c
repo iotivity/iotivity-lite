@@ -35,7 +35,7 @@ oc_oscore_find_group_context(void)
   oc_oscore_context_t *ctx = (oc_oscore_context_t *)oc_list_head(contexts);
 
   while (ctx != NULL) {
-    oc_sec_cred_t *cred = (oc_sec_cred_t *)ctx->cred;
+    const oc_sec_cred_t *cred = (oc_sec_cred_t *)ctx->cred;
 
     if (cred->credtype == OC_CREDTYPE_OSCORE_MCAST_CLIENT) {
       return ctx;
@@ -69,10 +69,10 @@ oc_oscore_find_context_by_token_mid(size_t device, const uint8_t *token,
                                     const uint8_t **request_piv,
                                     uint8_t *request_piv_len, bool tcp)
 {
-  oc_uuid_t *uuid;
+  const oc_uuid_t *uuid;
 #ifdef OC_CLIENT
   /* Search for client cb by token */
-  oc_client_cb_t *cb = oc_ri_find_client_cb_by_token(token, token_len);
+  const oc_client_cb_t *cb = oc_ri_find_client_cb_by_token(token, token_len);
 
   if (cb) {
     *request_piv = cb->piv;
@@ -81,7 +81,8 @@ oc_oscore_find_context_by_token_mid(size_t device, const uint8_t *token,
   } else {
 #endif /* OC_CLIENT */
     /* Search transactions by token and mid */
-    coap_transaction_t *t = coap_get_transaction_by_token(token, token_len);
+    const coap_transaction_t *t =
+      coap_get_transaction_by_token(token, token_len);
     if (!t) {
       if (!tcp) {
         t = coap_get_transaction_by_mid(mid);
@@ -99,7 +100,7 @@ oc_oscore_find_context_by_token_mid(size_t device, const uint8_t *token,
 #endif /* OC_CLIENT */
   oc_oscore_context_t *ctx = (oc_oscore_context_t *)oc_list_head(contexts);
   while (ctx != NULL) {
-    oc_sec_cred_t *cred = (oc_sec_cred_t *)ctx->cred;
+    const oc_sec_cred_t *cred = (oc_sec_cred_t *)ctx->cred;
     if (memcmp(cred->subjectuuid.id, uuid->id, sizeof(uuid->id)) == 0 &&
         ctx->device == device) {
       return ctx;
@@ -114,7 +115,7 @@ oc_oscore_find_context_by_UUID(size_t device, const oc_uuid_t *uuid)
 {
   oc_oscore_context_t *ctx = (oc_oscore_context_t *)oc_list_head(contexts);
   while (ctx != NULL) {
-    oc_sec_cred_t *cred = (oc_sec_cred_t *)ctx->cred;
+    const oc_sec_cred_t *cred = (oc_sec_cred_t *)ctx->cred;
     if (memcmp(cred->subjectuuid.id, uuid->id, sizeof(uuid->id)) == 0 &&
         ctx->device == device) {
       return ctx;

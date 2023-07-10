@@ -415,7 +415,7 @@ add_device_to_list(const oc_uuid_t *uuid, const char *device_name,
     if (!device) {
       return false;
     }
-    memcpy(device->uuid.id, uuid->id, OC_ARRAY_SIZE(device->uuid.id));
+    memcpy(device->uuid.id, uuid->id, OC_ARRAY_SIZE(uuid->id));
     oc_list_add(list, device);
   }
 
@@ -968,7 +968,7 @@ reset_device_cb(const oc_uuid_t *uuid, int status, void *data)
   OC_PRINTF("[C]\nSuccessfully performed hard RESET to device %s\n", di);
   inform_python(NULL, NULL, NULL);
 
-  device_handle_t *device = py_getdevice_from_uuid(di, 1);
+  const device_handle_t *device = py_getdevice_from_uuid(di, 1);
   oc_list_remove(g_owned_devices, device);
   oc_memb_free(&g_device_handles_s, data);
 
@@ -1886,8 +1886,9 @@ factory_presets_cb(size_t device, void *data)
 
 static oc_discovery_flags_t
 resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
-                   oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-                   oc_resource_properties_t bm, bool more, void *user_data)
+                   oc_interface_mask_t iface_mask,
+                   const oc_endpoint_t *endpoint, oc_resource_properties_t bm,
+                   bool more, void *user_data)
 {
   (void)user_data;
   (void)iface_mask;
@@ -2140,8 +2141,9 @@ observe_diplomat_cb(oc_client_response_t *data)
 
 static oc_discovery_flags_t
 diplomat_discovery(const char *anchor, const char *uri, oc_string_array_t types,
-                   oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-                   oc_resource_properties_t bm, void *user_data)
+                   oc_interface_mask_t iface_mask,
+                   const oc_endpoint_t *endpoint, oc_resource_properties_t bm,
+                   void *user_data)
 {
   OC_PRINTF("[C] Diplomat discovery requested\n");
   (void)anchor;
@@ -2150,7 +2152,7 @@ diplomat_discovery(const char *anchor, const char *uri, oc_string_array_t types,
   (void)user_data;
   size_t uri_len = oc_strnlen(uri, MAX_URI_LENGTH - 1);
   for (size_t i = 0; i < oc_string_array_get_allocated_size(types); i++) {
-    char *t = oc_string_array_get_item(types, i);
+    const char *t = oc_string_array_get_item(types, i);
     if (oc_strnlen(t, STRING_ARRAY_ITEM_MAX_LEN) == 14 &&
         strncmp(t, "oic.r.diplomat", 14) == 0) {
       oc_endpoint_list_copy(&diplomat_ep, endpoint);
@@ -2175,7 +2177,7 @@ diplomat_discovery(const char *anchor, const char *uri, oc_string_array_t types,
 
       inform_diplomat_python(anchor, diplomat_uri, state, NULL, NULL, NULL);
 
-      oc_endpoint_t *ep = endpoint;
+      const oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
         OC_PRINTipaddr(*ep);
         OC_PRINTF("\n");
@@ -2278,7 +2280,7 @@ get_light_cb(oc_client_response_t *data)
 
 static oc_discovery_flags_t
 discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
-             oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+             oc_interface_mask_t iface_mask, const oc_endpoint_t *endpoint,
              oc_resource_properties_t bm, void *user_data)
 {
   (void)anchor;
@@ -2288,7 +2290,7 @@ discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
   size_t uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
   for (size_t i = 0; i < oc_string_array_get_allocated_size(types); i++) {
-    char *t = oc_string_array_get_item(types, i);
+    const char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 10 && strncmp(t, "core.light", 10) == 0) {
       oc_endpoint_list_copy(&light_server, endpoint);
       strncpy(a_light, uri, uri_len);
@@ -2296,7 +2298,7 @@ discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
 
       OC_PRINTF("Resource %s hosted at endpoints:\n", a_light);
       discovered = true;
-      oc_endpoint_t *ep = endpoint;
+      const oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
         OC_PRINTipaddr(*ep);
         OC_PRINTF("\n");
@@ -2311,7 +2313,7 @@ discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
 
 static oc_discovery_flags_t
 doxm_discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
-                  oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+                  oc_interface_mask_t iface_mask, const oc_endpoint_t *endpoint,
                   oc_resource_properties_t bm, void *user_data)
 {
 
@@ -2323,7 +2325,7 @@ doxm_discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
   (void)endpoint;
   (void)uri;
   OC_PRINTF("DOXM CB\n");
-  oc_endpoint_t *ep = endpoint;
+  const oc_endpoint_t *ep = endpoint;
   while (ep != NULL) {
     OC_PRINTipaddr(*ep);
     OC_PRINTF("\n");

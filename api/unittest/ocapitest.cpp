@@ -593,7 +593,7 @@ protected:
 public:
   static oc_discovery_flags_t onResourceDiscovered(
     const char *, const char *uri, oc_string_array_t, oc_interface_mask_t,
-    oc_endpoint_t *ep, oc_resource_properties_t, void *user_data)
+    const oc_endpoint_t *ep, oc_resource_properties_t, void *user_data)
   {
     auto *rd = static_cast<ResourceDiscovered *>(user_data);
     if (uri == nullptr) {

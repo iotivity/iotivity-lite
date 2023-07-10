@@ -1097,7 +1097,7 @@ oc_sec_decode_acl(const oc_rep_t *rep, bool from_storage, size_t device,
         oc_ace_subject_type_t subject_type = 0;
         uint16_t permission = 0;
         int aceid = -1;
-        char *tag = NULL;
+        const char *tag = NULL;
         const oc_rep_t *resources = 0;
         const oc_rep_t *ace = aclist2->value.object;
         while (ace != NULL) {

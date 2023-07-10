@@ -568,7 +568,7 @@ process_interface_change_event(void)
   bool if_state_changed = false;
   while (NLMSG_OK(response, response_len)) {
     if (response->nlmsg_type == RTM_NEWADDR) {
-      struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(response);
+      const struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(response);
       if (ifa) {
 #ifdef OC_NETWORK_MONITOR
         if (add_ip_interface(ifa->ifa_index)) {
@@ -616,7 +616,7 @@ process_interface_change_event(void)
       }
       if_state_changed = true;
     } else if (response->nlmsg_type == RTM_DELADDR) {
-      struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(response);
+      const struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(response);
       if (ifa) {
 #ifdef OC_NETWORK_MONITOR
         if (remove_ip_interface(ifa->ifa_index)) {
@@ -695,7 +695,7 @@ recv_msg(int sock, uint8_t *recv_buf, long recv_buf_size,
         return -1;
       }
       /* Set source address of packet in endpoint structure */
-      struct sockaddr_in6 *c6 = (struct sockaddr_in6 *)&client;
+      const struct sockaddr_in6 *c6 = (struct sockaddr_in6 *)&client;
       memcpy(endpoint->addr.ipv6.address, c6->sin6_addr.s6_addr,
              sizeof(c6->sin6_addr.s6_addr));
       endpoint->addr.ipv6.scope = c6->sin6_scope_id;
@@ -704,7 +704,8 @@ recv_msg(int sock, uint8_t *recv_buf, long recv_buf_size,
       /* Set receiving network interface index */
       CLANG_IGNORE_WARNING_START
       CLANG_IGNORE_WARNING("-Wcast-align")
-      struct in6_pktinfo *pktinfo = (struct in6_pktinfo *)CMSG_DATA(cmsg);
+      const struct in6_pktinfo *pktinfo =
+        (const struct in6_pktinfo *)CMSG_DATA(cmsg);
       CLANG_IGNORE_WARNING_END
       endpoint->interface_index = pktinfo->ipi6_ifindex;
 
@@ -729,9 +730,9 @@ recv_msg(int sock, uint8_t *recv_buf, long recv_buf_size,
       }
       CLANG_IGNORE_WARNING_START
       CLANG_IGNORE_WARNING("-Wcast-align")
-      struct in_pktinfo *pktinfo = (struct in_pktinfo *)CMSG_DATA(cmsg);
+      const struct in_pktinfo *pktinfo = (struct in_pktinfo *)CMSG_DATA(cmsg);
       CLANG_IGNORE_WARNING_END
-      struct sockaddr_in *c4 = (struct sockaddr_in *)&client;
+      const struct sockaddr_in *c4 = (struct sockaddr_in *)&client;
       memcpy(endpoint->addr.ipv4.address, &c4->sin_addr.s_addr,
              sizeof(c4->sin_addr.s_addr));
       endpoint->addr.ipv4.port = ntohs(c4->sin_port);
@@ -1362,7 +1363,7 @@ send_ipv4_discovery_request(oc_message_t *message,
   }
   CLANG_IGNORE_WARNING_START
   CLANG_IGNORE_WARNING("-Wcast-align")
-  struct sockaddr_in *addr = (struct sockaddr_in *)interface->ifa_addr;
+  const struct sockaddr_in *addr = (struct sockaddr_in *)interface->ifa_addr;
   CLANG_IGNORE_WARNING_END
   if (setsockopt(server_sock, IPPROTO_IP, IP_MULTICAST_IF, &addr->sin_addr,
                  sizeof(addr->sin_addr)) == -1) {

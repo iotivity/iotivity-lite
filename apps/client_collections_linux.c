@@ -47,20 +47,17 @@ static void get_lights_oic_if_b(oc_client_response_t *data);
 #ifdef OC_COLLECTIONS_IF_CREATE
 static oc_discovery_flags_t
 dishand(const char *anchor, const char *uri, oc_string_array_t types,
-        oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
+        oc_interface_mask_t interfaces, const oc_endpoint_t *endpoint,
         oc_resource_properties_t bm, void *user_data)
 {
   (void)anchor;
+  (void)types;
   (void)interfaces;
   (void)user_data;
   (void)bm;
   (void)endpoint;
 
   OC_PRINTF("\n\nURI %s\n\n", uri);
-
-  (void)types;
-  (void)interfaces;
-
   return OC_CONTINUE_DISCOVERY;
 }
 
@@ -353,7 +350,7 @@ get_lights_oic_if_ll(oc_client_response_t *data)
 
 static oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
+          oc_interface_mask_t iface_mask, const oc_endpoint_t *endpoint,
           oc_resource_properties_t bm, void *user_data)
 {
   (void)anchor;
@@ -371,7 +368,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       lights[uri_len] = '\0';
 
       OC_PRINTF("Resource %s hosted at endpoints:\n", lights);
-      oc_endpoint_t *ep = endpoint;
+      const oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
         OC_PRINTipaddr(*ep);
         OC_PRINTF("\n");

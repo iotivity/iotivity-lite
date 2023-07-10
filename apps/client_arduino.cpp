@@ -186,7 +186,7 @@ get_light(oc_client_response_t *data)
 
 static oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
-          oc_interface_mask_t interfaces, oc_endpoint_t *endpoint,
+          oc_interface_mask_t interfaces, const oc_endpoint_t *endpoint,
           oc_resource_properties_t bm, void *user_data)
 {
   (void)anchor;
@@ -213,7 +213,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       a_light[uri_len] = '\0';
 
       OC_DBG("Resource %s hosted at endpoints:", a_light);
-      oc_endpoint_t *ep = endpoint;
+      const oc_endpoint_t *ep = endpoint;
       while (ep != NULL) {
         OC_PRINTipaddr(*ep);
         OC_PRINTF("\n");

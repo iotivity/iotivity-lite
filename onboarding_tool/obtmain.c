@@ -293,13 +293,15 @@ empty_device_list(oc_list_t list)
 static void
 get_device(oc_client_response_t *data)
 {
-  oc_rep_t *rep = data->payload;
-  char *di = NULL, *n = NULL;
-  size_t di_len = 0, n_len = 0;
-
+  const oc_rep_t *rep = data->payload;
+  char *di = NULL;
+  size_t di_len = 0;
   if (oc_rep_get_string(rep, "di", &di, &di_len)) {
     oc_uuid_t uuid;
     oc_str_to_uuid(di, &uuid);
+
+    char *n = NULL;
+    size_t n_len = 0;
     if (!oc_rep_get_string(rep, "n", &n, &n_len)) {
       n = NULL;
       n_len = 0;
@@ -402,8 +404,7 @@ otm_rdp(void)
 
   device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
   device_handle_t *devices[MAX_NUM_DEVICES];
-  int i = 0, c;
-
+  int i = 0;
   OC_PRINTF("\nUnowned Devices:\n");
   while (device != NULL) {
     char di[OC_UUID_LEN];
@@ -413,7 +414,9 @@ otm_rdp(void)
     i++;
     device = device->next;
   }
+
   OC_PRINTF("\n\nSelect device: ");
+  int c;
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -465,8 +468,7 @@ request_random_pin(void)
 
   device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
   device_handle_t *devices[MAX_NUM_DEVICES];
-  int i = 0, c;
-
+  int i = 0;
   OC_PRINTF("\nUnowned Devices:\n");
   while (device != NULL) {
     char di[OC_UUID_LEN];
@@ -476,7 +478,9 @@ request_random_pin(void)
     i++;
     device = device->next;
   }
+
   OC_PRINTF("\n\nSelect device: ");
+  int c;
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -523,8 +527,7 @@ otm_cert(void)
 
   device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
   device_handle_t *devices[MAX_NUM_DEVICES];
-  int i = 0, c;
-
+  int i = 0;
   OC_PRINTF("\nUnowned Devices:\n");
   while (device != NULL) {
     char di[OC_UUID_LEN];
@@ -534,7 +537,9 @@ otm_cert(void)
     i++;
     device = device->next;
   }
+
   OC_PRINTF("\n\nSelect device: ");
+  int c;
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -585,8 +590,7 @@ otm_just_works(void)
 
   device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
   device_handle_t *devices[MAX_NUM_DEVICES];
-  int i = 0, c;
-
+  int i = 0;
   OC_PRINTF("\nUnowned Devices:\n");
   while (device != NULL) {
     char di[OC_UUID_LEN];
@@ -596,7 +600,9 @@ otm_just_works(void)
     i++;
     device = device->next;
   }
+
   OC_PRINTF("\n\nSelect device: ");
+  int c;
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -709,8 +715,7 @@ retrieve_acl2_rsrc(void)
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, c;
-
+  int i = 0;
   OC_PRINTF("\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -720,7 +725,9 @@ retrieve_acl2_rsrc(void)
     i++;
     device = device->next;
   }
+
   OC_PRINTF("\nSelect device: ");
+  int c;
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -807,8 +814,7 @@ retrieve_cred_rsrc(void)
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, c;
-
+  int i = 0;
   OC_PRINTF("\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -818,7 +824,9 @@ retrieve_cred_rsrc(void)
     i++;
     device = device->next;
   }
+
   OC_PRINTF("\nSelect device: ");
+  int c;
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -857,8 +865,7 @@ delete_ace_by_aceid(void)
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, c;
-
+  int i = 0;
   OC_PRINTF("\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -868,7 +875,9 @@ delete_ace_by_aceid(void)
     i++;
     device = device->next;
   }
+
   OC_PRINTF("\nSelect device: ");
+  int c;
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -928,8 +937,7 @@ delete_cred_by_credid(void)
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, c;
-
+  int i = 0;
   OC_PRINTF("\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -939,7 +947,9 @@ delete_cred_by_credid(void)
     i++;
     device = device->next;
   }
+
   OC_PRINTF("\nSelect device: ");
+  int c;
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -986,8 +996,7 @@ reset_device(void)
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, c;
-
+  int i = 0;
   OC_PRINTF("\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -997,7 +1006,9 @@ reset_device(void)
     i++;
     device = device->next;
   }
+
   OC_PRINTF("\nSelect device: ");
+  int c;
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -1038,8 +1049,7 @@ provision_id_cert(void)
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, c;
-
+  int i = 0;
   OC_PRINTF("\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -1049,7 +1059,9 @@ provision_id_cert(void)
     i++;
     device = device->next;
   }
+
   OC_PRINTF("\nSelect device: ");
+  int c;
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -1089,8 +1101,7 @@ provision_role_cert(void)
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, c;
-
+  int i = 0;
   OC_PRINTF("\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -1100,7 +1111,9 @@ provision_role_cert(void)
     i++;
     device = device->next;
   }
+
   OC_PRINTF("\nSelect device: ");
+  int c;
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -1186,14 +1199,14 @@ provision_role_wildcard_ace(void)
     return;
   }
 
-  char role[64], authority[64];
+  char role[64];
   OC_PRINTF("\nEnter role: ");
   SCANF("%63s", role);
   int d;
   OC_PRINTF("\nAuthority? [0-No, 1-Yes]: ");
   SCANF("%d", &d);
+  char authority[64];
   if (d == 1) {
-    char authority[64];
     OC_PRINTF("\nEnter Authority: ");
     SCANF("%63s", authority);
   }
@@ -1237,8 +1250,7 @@ provision_server_group_oscore_context(void)
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, dev, subject;
-
+  int i = 0;
   OC_PRINTF("\nProvision server group OSCORE context\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -1256,6 +1268,7 @@ provision_server_group_oscore_context(void)
   }
 
   OC_PRINTF("\n\nSelect Server device for provisioning: ");
+  int dev;
   SCANF("%d", &dev);
   if (dev < 0 || dev >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -1263,6 +1276,7 @@ provision_server_group_oscore_context(void)
   }
 
   OC_PRINTF("\n\nSelect Client with secure multicast capability: ");
+  int subject;
   SCANF("%d", &subject);
   if (subject < 0 || subject >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -1293,8 +1307,7 @@ provision_client_group_oscore_context(void)
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, dev;
-
+  int i = 0;
   OC_PRINTF("\nProvision client group OSCORE context\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -1312,6 +1325,7 @@ provision_client_group_oscore_context(void)
   }
 
   OC_PRINTF("\n\nSelect device for provisioning: ");
+  int dev;
   SCANF("%d", &dev);
   if (dev < 0 || dev >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -1352,8 +1366,7 @@ provision_oscore_contexts(void)
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, c1, c2;
-
+  int i = 0;
   OC_PRINTF("\nProvision pairwise OSCORE contexts\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -1363,13 +1376,17 @@ provision_oscore_contexts(void)
     i++;
     device = device->next;
   }
+
   OC_PRINTF("\nSelect device 1: ");
+  int c1;
   SCANF("%d", &c1);
   if (c1 < 0 || c1 >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
     return;
   }
+
   OC_PRINTF("Select device 2: ");
+  int c2;
   SCANF("%d", &c2);
   if (c2 < 0 || c2 >= i || c2 == c1) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -1409,8 +1426,7 @@ provision_credentials(void)
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, c1, c2;
-
+  int i = 0;
   OC_PRINTF("\nProvision pairwise (PSK) credentials\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -1420,13 +1436,17 @@ provision_credentials(void)
     i++;
     device = device->next;
   }
+
   OC_PRINTF("\nSelect device 1: ");
+  int c1;
   SCANF("%d", &c1);
   if (c1 < 0 || c1 >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
     return;
   }
+
   OC_PRINTF("Select device 2: ");
+  int c2;
   SCANF("%d", &c2);
   if (c2 < 0 || c2 >= i || c2 == c1) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -1469,8 +1489,7 @@ provision_authcrypt_wildcard_ace(void)
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, dev;
-
+  int i = 0;
   OC_PRINTF("\nProvision auth-crypt * ACE\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -1488,6 +1507,7 @@ provision_authcrypt_wildcard_ace(void)
   }
 
   OC_PRINTF("\n\nSelect device for provisioning: ");
+  int dev;
   SCANF("%d", &dev);
   if (dev < 0 || dev >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -1532,8 +1552,7 @@ provision_ace2(void)
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, dev, sub;
-
+  int i = 0;
   OC_PRINTF("\nProvision ACL2\nMy Devices:\n");
   while (device != NULL) {
     devices[i] = device;
@@ -1551,6 +1570,7 @@ provision_ace2(void)
   }
 
   OC_PRINTF("\n\nSelect device for provisioning: ");
+  int dev;
   SCANF("%d", &dev);
   if (dev < 0 || dev >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
@@ -1578,6 +1598,7 @@ provision_ace2(void)
     }
   }
   OC_PRINTF("\nSelect subject: ");
+  int sub;
   SCANF("%d", &sub);
 
   if ((sub > (i + 3)) || (sub < 0)) {
@@ -1814,12 +1835,10 @@ set_sd_info(void)
  *
  */
 static void
-print_rep(oc_rep_t *rep, bool pretty_print)
+print_rep(const oc_rep_t *rep, bool pretty_print)
 {
-  char *json;
-  size_t json_size;
-  json_size = oc_rep_to_json(rep, NULL, 0, pretty_print);
-  json = (char *)malloc(json_size + 1);
+  size_t json_size = oc_rep_to_json(rep, NULL, 0, pretty_print);
+  char *json = (char *)malloc(json_size + 1);
   oc_rep_to_json(rep, json, json_size + 1, pretty_print);
   printf("%s\n", json);
   free(json);
@@ -1858,8 +1877,7 @@ set_cloud_info(void)
   }
 
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, c1;
-
+  int i = 0;
   OC_PRINTF("\nMy Devices:\n");
   while (device != NULL) {
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
@@ -1867,9 +1885,11 @@ set_cloud_info(void)
     i++;
     device = device->next;
   }
+
   OC_PRINTF("\nSelect device to configure: ");
-  SCANF("%d", &c1);
-  if (c1 < 0 || c1 >= i) {
+  int c;
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
     return;
   }
@@ -1879,7 +1899,7 @@ set_cloud_info(void)
   while (device != NULL) {
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     oc_str_to_uuid(di, &device_uuid);
-    if (c1 == i) {
+    if (c == i) {
       OC_PRINTF("configuring: [%d]: %s - %s\n", i, di, device->device_name);
       break;
     }
@@ -1920,8 +1940,7 @@ get_cloud_info(void)
   }
 
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, c1;
-
+  int i = 0;
   OC_PRINTF("\nMy Devices:\n");
   while (device != NULL) {
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
@@ -1929,9 +1948,11 @@ get_cloud_info(void)
     i++;
     device = device->next;
   }
+
   OC_PRINTF("\nSelect device to retrieve Cloud config from: ");
-  SCANF("%d", &c1);
-  if (c1 < 0 || c1 >= i) {
+  int c;
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
     return;
   }
@@ -1941,7 +1962,7 @@ get_cloud_info(void)
   while (device != NULL) {
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     oc_str_to_uuid(di, &device_uuid);
-    if (c1 == i) {
+    if (c == i) {
       OC_PRINTF("retrieving: [%d]: %s - %s\n", i, di, device->device_name);
       break;
     }
@@ -1983,8 +2004,7 @@ set_cloud_trust_anchor(void)
   }
 
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
-  int i = 0, c1;
-
+  int i = 0;
   OC_PRINTF("\nMy Devices:\n");
   while (device != NULL) {
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
@@ -1992,9 +2012,11 @@ set_cloud_trust_anchor(void)
     i++;
     device = device->next;
   }
+
   OC_PRINTF("\nSelect device to set cloud trust anchor: ");
-  SCANF("%d", &c1);
-  if (c1 < 0 || c1 >= i) {
+  int c;
+  SCANF("%d", &c);
+  if (c < 0 || c >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
     return;
   }
@@ -2004,7 +2026,7 @@ set_cloud_trust_anchor(void)
   while (device != NULL) {
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
     oc_str_to_uuid(di, &device_uuid);
-    if (c1 == i) {
+    if (c == i) {
       OC_PRINTF("setting trust anchor on: [%d]: %s - %s\n", i, di,
                 device->device_name);
       break;
@@ -2019,7 +2041,6 @@ set_cloud_trust_anchor(void)
   char cert[8192];
   size_t cert_len = 0;
   OC_PRINTF("\nPaste certificate here, then hit <ENTER> and type \"done\": ");
-  int c;
   while ((c = getchar()) == '\n' || c == '\r')
     ;
   for (; (cert_len < 4 ||
@@ -2091,8 +2112,9 @@ factory_presets_cb(size_t device, void *data)
 
 static oc_discovery_flags_t
 resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
-                   oc_interface_mask_t iface_mask, oc_endpoint_t *endpoint,
-                   oc_resource_properties_t bm, bool more, void *user_data)
+                   oc_interface_mask_t iface_mask,
+                   const oc_endpoint_t *endpoint, oc_resource_properties_t bm,
+                   bool more, void *user_data)
 {
   (void)user_data;
   (void)iface_mask;
@@ -2117,8 +2139,7 @@ discover_resources(void)
   }
 
   device_handle_t *devices[MAX_NUM_DEVICES];
-  int i = 0, c;
-
+  int i = 0;
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
   OC_PRINTF("\nMy Devices:\n");
   while (device != NULL) {
@@ -2141,6 +2162,7 @@ discover_resources(void)
   }
 
   OC_PRINTF("\nSelect device: ");
+  int c;
   SCANF("%d", &c);
   if (c < 0 || c >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
