@@ -2,28 +2,32 @@
 
 ## Entity Tag (ETAG): Tracking Resource Changes
 
-`OC_ETAG` need to be enabled to use this feature.
+To utilize this feature, you must enable `OC_ETAG`.
 
-The Entity Tag (ETAG) mechanism allows clients to determine whether a resource has been modified since its last access. There are two methods for updating the ETAG when a resource changes:
+The Entity Tag (ETAG) mechanism allows clients to determine if a resource has been modified since its last access. There are two methods for updating the ETAG when a resource changes:
 
-- `oc_notify_observers`: This function notifies all observers that the resource has changed and calls `oc_resource_update_etag`.
-- `oc_resource_update_etag`: If the resource is not observable, this function can be used to update the ETAG.
+- `oc_notify_observers`: Notifies all observers that the resource has changed and calls `oc_resource_update_etag`.
+- `oc_resource_update_etag`: Updates the ETAG for non-observable resources.
 
-For each resource, an ETAG is stored, which can be represented as either the epoch time in milliseconds (`oc_clock_time()`) or as the highest ETAG value plus 1 if the epoch time is less than the current ETAG value. The availability of ETAG relies on enabling `OC_STORAGE`. When performing batch observation over a collection, the highest ETAG value among all resources in the collection is utilized.
+For each resource, an ETAG is stored, represented either as the epoch time in milliseconds (`oc_clock_time()`) or as the highest ETAG value plus 1 if the epoch time is less than the current highest ETAG value. Enabling `OC_STORAGE` is necessary for ETAG availability after device restart.
 
-During device startup, the ETAGs are loaded from storage on a per-resource basis, and the highest value is stored in memory. When updating an ETAG, a comparison is made between the epoch time and the highest value. If the epoch time is lower than the highest value, the highest value plus 1 is used. Otherwise, the epoch time itself is used.
+During device startup, the device developer loads the ETAGs using `oc_etag_load_and_clear` via the public API and clears the existing storage. Additionally, when properly shutting down iotivity-lite, the ETAGs are stored in the storage using `oc_etag_dump` via the public API. Improper shutdown results in the ETAGs not being stored, leading to their absence upon restart. The device developer should call `oc_etag_load_and_clear` after creating all resources and before calling `oc_main_init`, and `oc_etag_dump` before calling `oc_main_shutdown`.
 
-To minimize write operations, the update of ETAGs in storage is not immediate after each update or create the resource. Instead, it is delayed and executed after a specific interval. The delay time can be set using `oc_etag_set_delayed_dump()`. Setting the delay to 0 will cause each update to be immediately written to storage. By default, the delay is set to 5 seconds after the first ETAG change. To forcefully update ETAGs in storage, `oc_etag_dump()` can be used. When a resource is deleted, the ETAG is immediately removed from storage.
+### GET/Observations
 
-Questions:
+When creating or closing an observation, the client can include the latest ETAG to request. If the ETAG is equal to the resource's latest ETAG, the device responds with a `VALID` code and an empty body. If the ETAG is not equal to the resource's latest ETAG, the device responds with a `CONTENT` code and the content along with the latest ETAG. Subsequent observation notifications will contain the ETAG value from the resource.
 
-- Should the ETAGs be periodically stored in storage? This means that during startup (`oc_etag_load_and_clear` via API), the ETAGs are loaded, and then the existing storage is cleared. Additionally, when iotivity-lite is properly shutdown (`oc_etag_dump` via API), the ETAGs are stored in the storage. However, if iotivity-lite is not shutdown properly, the ETAGs are not stored, resulting in the device not having the ETAGs upon restart. Is this behavior considered acceptable? This mitigate the issue of storage failure and ETAG reset.
+#### Batch Observation over /oic/res
+
+Similar to regular observations, but the ETAG value used is the highest ETAG value among all device resources in the collection.
 
 ### Edge Cases
 
-1. Time Synchronization: Time synchronization is important to ensure that the epoch time used for ETAG generation is accurate. If the system clock is not properly synchronized, it can still lead to inconsistencies when comparing ETAG values: Mitigated by using highest ETAG value plus 1 if the epoch time is less than the current ETAG value.
-2. Storage Failure: If there is a failure in storing the ETAG values, it can result in the loss of ETAG information and inconsistencies when determining resource modification.
-3. ETAG Reset: The scenario of system restart or power outage causing the loss of the in-memory highest ETAG value. Proper handling during the startup process is required to ensure the correct highest ETAG value is loaded from storage.
+1. Time Synchronization: Ensuring proper time synchronization is crucial for accurate generation of epoch time used in ETAGs. Inconsistent system clock synchronization can lead to disparities when comparing ETAG values. To address this, if the epoch time is less than the current ETAG value, the highest ETAG value plus 1 is used as a mitigation strategy.
+2. Storage Failure: If storing ETAG values fails, it can result in the loss of ETAG information and inconsistencies when determining resource modification. To mitigate this issue, the device developer should verify the return value from `oc_etag_dump` to confirm the success of the operation. Storage failures often occur due to insufficient storage space.
+3. ETAG Reset: In the event of a system restart or power outage, the highest ETAG value stored in memory may be lost. To mitigate this, the ETAG values are not loaded through `oc_etag_load_and_clear`, requiring the client to resynchronize with the device.
+4. Absence of Resources after Device Reboot: ETAG values for non-existing resources are considered when calculating the highest ETAG value. This ensures that ETAG values are not reused by new resources, avoiding conflicts and maintaining consistency.
+5. Addition of Resources after Device Reboot: Similar to creating a new resource, the ETAG value for a newly added resource is set either as the epoch time in milliseconds (`oc_clock_time()`) or as the highest ETAG value plus 1 if the epoch time is less than the current highest ETAG value. This ensures proper tracking of changes for the newly added resource.
 
 ## Dynamic and static allocation
 
