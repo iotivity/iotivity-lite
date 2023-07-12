@@ -18,6 +18,7 @@
 
 #include "api/oc_buffer_internal.h"
 #include "api/oc_ri_internal.h"
+#include "messaging/coap/coap_options.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
 #include "messaging/coap/observe.h"
@@ -724,7 +725,7 @@ handle_separate_response_request(coap_separate_t *request,
   assert(response_buffer->code <= (int)UINT8_MAX);
   coap_separate_resume(&response, request, (uint8_t)response_buffer->code,
                        t->mid);
-  coap_set_header_content_format(&response, response_buffer->content_format);
+  coap_options_set_content_format(&response, response_buffer->content_format);
 
 #ifdef OC_BLOCK_WISE
   oc_blockwise_state_t *response_state = NULL;
@@ -762,11 +763,11 @@ handle_separate_response_request(coap_separate_t *request,
       response_state, 0, request->block2_size, &payload_size);
     if (payload != NULL) {
       coap_set_payload(&response, payload, payload_size);
-      coap_set_header_block2(&response, 0, 1, request->block2_size);
-      coap_set_header_size2(&response, response_state->payload_size);
+      coap_options_set_block2(&response, 0, 1, request->block2_size, 0);
+      coap_options_set_size2(&response, response_state->payload_size);
       oc_blockwise_response_state_t *bwt_res_state =
         (oc_blockwise_response_state_t *)response_state;
-      coap_set_header_etag(&response, bwt_res_state->etag, COAP_ETAG_LEN);
+      coap_options_set_etag(&response, bwt_res_state->etag, COAP_ETAG_LEN);
     }
     handle_separate_response_transaction(t, &response,
                                          (uint8_t)response_buffer->code);

@@ -55,6 +55,7 @@
 #include "api/oc_main.h"
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/coap_internal.h"
+#include "messaging/coap/coap_options.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
 #include "util/oc_macros_internal.h"
@@ -246,17 +247,17 @@ coap_receive(oc_message_t *msg)
 #endif /* OC_TCP */
 
     /* extract block options */
-    if (coap_get_header_block1(message, &block1_num, &block1_more, &block1_size,
-                               &block1_offset))
+    if (coap_options_get_block1(message, &block1_num, &block1_more,
+                                &block1_size, &block1_offset)) {
       block1 = true;
-    if (coap_get_header_block2(message, &block2_num, &block2_more, &block2_size,
-                               &block2_offset))
+    }
+    if (coap_options_get_block2(message, &block2_num, &block2_more,
+                                &block2_size, &block2_offset)) {
       block2 = true;
+    }
 
-#ifdef OC_BLOCK_WISE
     block1_size = MIN(block1_size, (uint16_t)OC_BLOCK_SIZE);
     block2_size = MIN(block2_size, (uint16_t)OC_BLOCK_SIZE);
-#endif /* OC_BLOCK_WISE */
 
 #ifdef OC_TCP
     if (!(msg->endpoint.flags & TCP))
@@ -279,7 +280,7 @@ coap_receive(oc_message_t *msg)
       OC_DBG("  Payload: %.*s", (int)message->payload_len, message->payload);
 #endif /* OC_DBG_IS_ENABLED */
       const char *href;
-      size_t href_len = coap_get_header_uri_path(message, &href);
+      size_t href_len = coap_options_get_uri_path(message, &href);
 #ifdef OC_TCP
       if (msg->endpoint.flags & TCP) {
         coap_tcp_init_message(response, CONTENT_2_05);
@@ -341,7 +342,7 @@ coap_receive(oc_message_t *msg)
               goto init_reset_message;
             }
             uint32_t buffer_size = (uint32_t)OC_MAX_APP_DATA_SIZE;
-            if (coap_get_header_size1(message, &buffer_size) &&
+            if (coap_options_get_size1(message, &buffer_size) &&
                 buffer_size == 0) {
               buffer_size = (uint32_t)OC_MAX_APP_DATA_SIZE;
             }
@@ -367,8 +368,8 @@ coap_receive(oc_message_t *msg)
                 OC_DBG(
                   "more blocks expected; issuing request for the next block");
                 response->code = CONTINUE_2_31;
-                coap_set_header_block1(response, block1_num, block1_more,
-                                       block1_size);
+                coap_options_set_block1(response, block1_num, block1_more,
+                                        block1_size, 0);
                 request_buffer->ref_count = 1;
                 goto send_message;
               } else {
@@ -380,9 +381,9 @@ coap_receive(oc_message_t *msg)
                 coap_udp_init_message(response, COAP_TYPE_CON, CONTENT_2_05,
                                       coap_get_mid());
                 transaction->mid = response->mid;
-                coap_set_header_block1(response, block1_num, block1_more,
-                                       block1_size);
-                coap_set_header_accept(response, APPLICATION_VND_OCF_CBOR);
+                coap_options_set_block1(response, block1_num, block1_more,
+                                        block1_size, 0);
+                coap_options_set_accept(response, APPLICATION_VND_OCF_CBOR);
                 request_buffer->payload_size =
                   request_buffer->next_block_offset;
                 request_buffer->ref_count = 0;
@@ -427,16 +428,17 @@ coap_receive(oc_message_t *msg)
                 coap_udp_init_message(response, COAP_TYPE_CON, CONTENT_2_05,
                                       coap_get_mid());
                 transaction->mid = response->mid;
-                coap_set_header_accept(response, APPLICATION_VND_OCF_CBOR);
+                coap_options_set_accept(response, APPLICATION_VND_OCF_CBOR);
               }
-              coap_set_header_content_format(response,
-                                             APPLICATION_VND_OCF_CBOR);
+              coap_options_set_content_format(response,
+                                              APPLICATION_VND_OCF_CBOR);
               coap_set_payload(response, payload, payload_size);
-              coap_set_header_block2(response, block2_num, more, block2_size);
+              coap_options_set_block2(response, block2_num, more, block2_size,
+                                      0);
               oc_blockwise_response_state_t *response_state =
                 (oc_blockwise_response_state_t *)response_buffer;
-              coap_set_header_etag(response, response_state->etag,
-                                   COAP_ETAG_LEN);
+              coap_options_set_etag(response, response_state->etag,
+                                    COAP_ETAG_LEN);
               response_buffer->ref_count = more;
               goto send_message;
             } else {
@@ -460,7 +462,7 @@ coap_receive(oc_message_t *msg)
                     goto init_reset_message;
                   }
                   uint32_t buffer_size = (uint32_t)OC_MAX_APP_DATA_SIZE;
-                  if (coap_get_header_size2(message, &buffer_size) &&
+                  if (coap_options_get_size2(message, &buffer_size) &&
                       (buffer_size == 0)) {
                     buffer_size = (uint32_t)OC_MAX_APP_DATA_SIZE;
                   }
@@ -516,7 +518,7 @@ coap_receive(oc_message_t *msg)
                 request_buffer = NULL;
               }
               uint32_t buffer_size = (uint32_t)OC_MAX_APP_DATA_SIZE;
-              if (coap_get_header_size1(message, &buffer_size) &&
+              if (coap_options_get_size1(message, &buffer_size) &&
                   buffer_size == 0) {
                 buffer_size = (uint32_t)OC_MAX_APP_DATA_SIZE;
               }
@@ -593,15 +595,15 @@ coap_receive(oc_message_t *msg)
               coap_set_payload(response, payload, payload_size);
             }
             if (block2 || response_buffer->payload_size > block2_size) {
-              coap_set_header_block2(
+              coap_options_set_block2(
                 response, 0,
                 (response_buffer->payload_size > block2_size) ? 1 : 0,
-                block2_size);
-              coap_set_header_size2(response, response_buffer->payload_size);
+                block2_size, 0);
+              coap_options_set_size2(response, response_buffer->payload_size);
               oc_blockwise_response_state_t *response_state =
                 (oc_blockwise_response_state_t *)response_buffer;
-              coap_set_header_etag(response, response_state->etag,
-                                   COAP_ETAG_LEN);
+              coap_options_set_etag(response, response_state->etag,
+                                    COAP_ETAG_LEN);
             } else {
               response_buffer->ref_count = 0;
             }
@@ -679,7 +681,7 @@ coap_receive(oc_message_t *msg)
         } else {
           OC_DBG("initiating block-wise transfer with block1 option");
           uint32_t peer_mtu = 0;
-          if (coap_get_header_size1(message, (uint32_t *)&peer_mtu) == 1) {
+          if (coap_options_get_size1(message, &peer_mtu) == 1) {
             block1_size = MIN((uint16_t)peer_mtu, (uint16_t)OC_BLOCK_SIZE);
           } else {
             block1_size = (uint16_t)OC_BLOCK_SIZE;
@@ -699,22 +701,22 @@ coap_receive(oc_message_t *msg)
               (request_buffer->next_block_offset < request_buffer->payload_size)
                 ? 1
                 : 0;
-            coap_set_header_uri_path(response, oc_string(client_cb->uri),
-                                     oc_string_len(client_cb->uri));
+            coap_options_set_uri_path(response, oc_string(client_cb->uri),
+                                      oc_string_len(client_cb->uri));
             coap_set_payload(response, payload, payload_size);
             if (block1) {
-              coap_set_header_block1(response, block1_num + 1, more,
-                                     block1_size);
+              coap_options_set_block1(response, block1_num + 1, more,
+                                      block1_size, 0);
             } else {
-              coap_set_header_block1(response, 0, more, block1_size);
-              coap_set_header_size1(response, request_buffer->payload_size);
+              coap_options_set_block1(response, 0, more, block1_size, 0);
+              coap_options_set_size1(response, request_buffer->payload_size);
             }
             if (oc_string_len(client_cb->query) > 0) {
-              coap_set_header_uri_query(response, oc_string(client_cb->query),
-                                        oc_string_len(client_cb->query));
+              coap_options_set_uri_query(response, oc_string(client_cb->query),
+                                         oc_string_len(client_cb->query));
             }
-            coap_set_header_accept(response, APPLICATION_VND_OCF_CBOR);
-            coap_set_header_content_format(response, APPLICATION_VND_OCF_CBOR);
+            coap_options_set_accept(response, APPLICATION_VND_OCF_CBOR);
+            coap_options_set_content_format(response, APPLICATION_VND_OCF_CBOR);
             request_buffer->mid = response_mid;
             goto send_message;
           }
@@ -758,7 +760,7 @@ coap_receive(oc_message_t *msg)
         client_cb = (oc_client_cb_t *)response_buffer->client_cb;
         oc_blockwise_response_state_t *response_state =
           (oc_blockwise_response_state_t *)response_buffer;
-        coap_get_header_observe(message, &response_state->observe_seq);
+        coap_options_get_observe(message, &response_state->observe_seq);
 
         const uint8_t *incoming_block;
         uint32_t incoming_block_len =
@@ -777,13 +779,15 @@ coap_receive(oc_message_t *msg)
                                     response_mid);
               response_buffer->mid = response_mid;
               client_cb->mid = response_mid;
-              coap_set_header_accept(response, APPLICATION_VND_OCF_CBOR);
-              coap_set_header_block2(response, block2_num + 1, 0, block2_size);
-              coap_set_header_uri_path(response, oc_string(client_cb->uri),
-                                       oc_string_len(client_cb->uri));
+              coap_options_set_accept(response, APPLICATION_VND_OCF_CBOR);
+              coap_options_set_block2(response, block2_num + 1, 0, block2_size,
+                                      0);
+              coap_options_set_uri_path(response, oc_string(client_cb->uri),
+                                        oc_string_len(client_cb->uri));
               if (oc_string_len(client_cb->query) > 0) {
-                coap_set_header_uri_query(response, oc_string(client_cb->query),
-                                          oc_string_len(client_cb->query));
+                coap_options_set_uri_query(response,
+                                           oc_string(client_cb->query),
+                                           oc_string_len(client_cb->query));
               }
               goto send_message;
             }

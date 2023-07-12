@@ -44,6 +44,7 @@
 #include "port/oc_storage.h"
 #include "util/oc_compiler.h"
 #include "util/oc_features.h"
+#include "util/oc_process.h"
 
 #ifdef OC_COLLECTIONS
 #include "oc_collection.h"

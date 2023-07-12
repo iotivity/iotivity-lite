@@ -21,6 +21,7 @@
 #include "api/oc_buffer_internal.h"
 #include "api/oc_event_callback_internal.h"
 #include "messaging/coap/coap_internal.h"
+#include "messaging/coap/coap_options.h"
 #include "messaging/coap/constants.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
@@ -982,8 +983,8 @@ static ocf_version_t
 ri_get_ocf_version_from_header(const coap_packet_t *request)
 {
 #ifdef OC_SPEC_VER_OIC
-  unsigned int accept = 0;
-  if (coap_get_header_accept(request, &accept) == 1) {
+  uint16_t accept = 0;
+  if (coap_options_get_accept(request, &accept) == 1) {
     if (accept == APPLICATION_CBOR) {
       return = OIC_VER_1_1_0;
     }
@@ -1108,7 +1109,7 @@ ri_handle_observation(const coap_packet_t *request, coap_packet_t *response,
    */
   int32_t observe = OC_COAP_OPTION_OBSERVE_NOT_SET;
   if ((resource->properties & OC_OBSERVABLE) == 0 ||
-      !coap_get_header_observe(request, &observe)) {
+      !coap_options_get_observe(request, &observe)) {
     return OC_COAP_OPTION_OBSERVE_NOT_SET;
   }
 
@@ -1118,7 +1119,7 @@ ri_handle_observation(const coap_packet_t *request, coap_packet_t *response,
   if (observe == OC_COAP_OPTION_OBSERVE_REGISTER) {
     if (ri_add_observation(request, response, resource, resource_is_collection,
                            block2_size, endpoint, iface_query)) {
-      coap_set_header_observe(response, OC_COAP_OPTION_OBSERVE_REGISTER);
+      coap_options_set_observe(response, OC_COAP_OPTION_OBSERVE_REGISTER);
     } else {
       coap_remove_observer_by_token(endpoint, request->token,
                                     request->token_len);
@@ -1188,9 +1189,9 @@ ri_invoke_coap_entity_set_response(coap_packet_t *response,
    */
   if (response_obj->separate_response != NULL) {
     /* Attempt to register a client request to the separate response tracker
-     * and pass in the observe option (if present) or the value 2 as
+     * and pass in the observe option (if present) or the value -1 as
      * determined by the code block above. Values 0 and 1 result in their
-     * expected behaviors whereas 2 indicates an absence of an observe
+     * expected behaviors whereas -1 indicates an absence of an observe
      * option and hence a one-off request.
      * Following a successful registration, the separate response tracker
      * is flagged as "active". In this way, the function that later executes
@@ -1247,13 +1248,14 @@ ri_invoke_coap_entity_set_response(coap_packet_t *response,
                      response_buffer->response_length);
 #endif /* !OC_BLOCK_WISE */
     if (response_buffer->content_format > 0) {
-      coap_set_header_content_format(response, response_buffer->content_format);
+      coap_options_set_content_format(response,
+                                      response_buffer->content_format);
     }
   }
 
   if (response_buffer->code ==
       oc_status_code(OC_STATUS_REQUEST_ENTITY_TOO_LARGE)) {
-    coap_set_header_size1(response, (uint32_t)OC_BLOCK_SIZE);
+    coap_options_set_size1(response, (uint32_t)OC_BLOCK_SIZE);
   }
 
   /* response_buffer->code at this point contains a valid CoAP status
@@ -1300,19 +1302,19 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
 
   /* Obtain request uri from the CoAP request. */
   const char *uri_path = NULL;
-  size_t uri_path_len = coap_get_header_uri_path(request, &uri_path);
+  size_t uri_path_len = coap_options_get_uri_path(request, &uri_path);
 
   /* Obtain query string from CoAP request. */
-  const char *uri_query = 0;
-  size_t uri_query_len = coap_get_header_uri_query(request, &uri_query);
+  const char *uri_query = NULL;
+  size_t uri_query_len = coap_options_get_uri_query(request, &uri_query);
 
   /* Read the Content-Format CoAP option in the request */
   oc_content_format_t cf = 0;
-  coap_get_header_content_format(request, &cf);
+  coap_options_get_content_format(request, &cf);
 
   /* Read the accept CoAP option in the request */
-  unsigned int accept = 0;
-  coap_get_header_accept(request, &accept);
+  uint16_t accept = 0;
+  coap_options_get_accept(request, &accept);
 
   /* Initialize OCF interface selector. */
   oc_interface_mask_t iface_query = 0;
@@ -1403,8 +1405,9 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
   /* Check against list of declared application resources.
    */
   if (!cur_resource && !bad_request) {
-    request_obj.resource = cur_resource =
+    cur_resource =
       oc_ri_get_app_resource_by_uri(uri_path, uri_path_len, endpoint->device);
+    request_obj.resource = cur_resource;
 
 #if defined(OC_COLLECTIONS)
     if (cur_resource && oc_check_if_collection(cur_resource)) {
@@ -1487,7 +1490,7 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
     }
   }
 #else  /* OC_BLOCK_WISE */
-  response_buffer.buffer = buffer;
+  response_buffer.buffer = ctx.buffer;
   response_buffer.buffer_size = OC_BLOCK_SIZE;
 #endif /* !OC_BLOCK_WISE */
 
@@ -1504,7 +1507,7 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
      * points to memory allocated in the messaging layer for the "CoAP
      * Transaction" to service this request.
      */
-#ifdef OC_DYNAMIC_ALLOCATION
+#if defined(OC_BLOCK_WISE) && defined(OC_DYNAMIC_ALLOCATION)
     if (response_state_allocated) {
       oc_rep_new_realloc_v1(&response_buffer.buffer,
                             response_buffer.buffer_size, OC_MAX_APP_DATA_SIZE);
@@ -1602,12 +1605,12 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
 
 #ifdef OC_SERVER
   int32_t observe = OC_COAP_OPTION_OBSERVE_NOT_SET;
-  if (success && response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
 #ifdef OC_BLOCK_WISE
-    uint16_t block2_size = ctx.block2_size;
+  uint16_t block2_size = ctx.block2_size;
 #else  /* !OC_BLOCK_WISE */
-    uint16_t block2_size = 0;
+  uint16_t block2_size = 0;
 #endif /* OC_BLOCK_WISE */
+  if (success && response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
     observe = ri_handle_observation(request, response, cur_resource,
                                     resource_is_collection, block2_size,
                                     endpoint, iface_query);
@@ -1630,7 +1633,7 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
     .method = method,
     .iface_mask = iface_mask,
     .observe = observe,
-    .block2_size = ctx.block2_size,
+    .block2_size = block2_size,
     .resource = cur_resource,
 #ifdef OC_COLLECTIONS
     .resource_is_collection = resource_is_collection,

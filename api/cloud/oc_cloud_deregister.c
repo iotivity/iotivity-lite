@@ -22,6 +22,7 @@
 
 #include "oc_cloud_deregister_internal.h"
 #include "api/oc_server_api_internal.h"
+#include "messaging/coap/conf.h"
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
 #include "oc_cloud_access.h"

@@ -54,9 +54,9 @@
 extern "C" {
 #endif
 
-#define COAP_DEFAULT_PORT 5683
+#define COAP_DEFAULT_PORT (5683)
 
-#define COAP_DEFAULT_MAX_AGE 60
+#define COAP_DEFAULT_MAX_AGE (60)
 
 #define COAP_RESPONSE_TIMEOUT (2)
 #define COAP_RESPONSE_RANDOM_FACTOR (1.5)
@@ -77,38 +77,39 @@ extern "C" {
 #define OC_EXCHANGE_LIFETIME (247)
 
 #define COAP_HEADER_LEN                                                        \
-  4 /* | version:0x03 type:0x0C tkl:0xF0 | code | mid:0x00FF | mid:0xFF00 | */
-#define COAP_TOKEN_LEN 8 /* The maximum number of bytes for the Token */
-#define COAP_ETAG_LEN 8  /* The maximum number of bytes for the ETag */
+  (4) /* | version:0x03 type:0x0C tkl:0xF0 | code | mid:0x00FF | mid:0xFF00 |  \
+       */
+#define COAP_TOKEN_LEN (8) /* The maximum number of bytes for the Token */
+#define COAP_ETAG_LEN (8)  /* The maximum number of bytes for the ETag */
 
-#define COAP_HEADER_VERSION_MASK 0xC0
-#define COAP_HEADER_VERSION_POSITION 6
-#define COAP_HEADER_TYPE_MASK 0x30
-#define COAP_HEADER_TYPE_POSITION 4
-#define COAP_HEADER_TOKEN_LEN_MASK 0x0F
-#define COAP_HEADER_TOKEN_LEN_POSITION 0
+#define COAP_HEADER_VERSION_MASK (0xC0)
+#define COAP_HEADER_VERSION_POSITION (6)
+#define COAP_HEADER_TYPE_MASK (0x30)
+#define COAP_HEADER_TYPE_POSITION (4)
+#define COAP_HEADER_TOKEN_LEN_MASK (0x0F)
+#define COAP_HEADER_TOKEN_LEN_POSITION (0)
 
-#define COAP_HEADER_OPTION_DELTA_MASK 0xF0
-#define COAP_HEADER_OPTION_SHORT_LENGTH_MASK 0x0F
+#define COAP_HEADER_OPTION_DELTA_MASK (0xF0)
+#define COAP_HEADER_OPTION_SHORT_LENGTH_MASK (0x0F)
 
 #define COAP_TCP_DEFAULT_HEADER_LEN                                            \
-  2 /* | len:0xF0 tkl:0x0F | .... | code |                                     \
-     */
+  (2) /* | len:0xF0 tkl:0x0F | .... | code |                                   \
+       */
 #define COAP_TCP_MAX_EXTENDED_LENGTH_LEN 4
 #define COAP_PAYLOAD_MARKER (0xFF)
 #define COAP_PAYLOAD_MARKER_LEN (1) /* 0xFF */
 
-#define COAP_TCP_HEADER_LEN_MASK 0xF0
-#define COAP_TCP_HEADER_LEN_POSITION 4
+#define COAP_TCP_HEADER_LEN_MASK (0xF0)
+#define COAP_TCP_HEADER_LEN_POSITION (4)
 
-#define COAP_TCP_EXTENDED_LENGTH_1 13
-#define COAP_TCP_EXTENDED_LENGTH_1_DEFAULT_LEN 13
+#define COAP_TCP_EXTENDED_LENGTH_1 (13)
+#define COAP_TCP_EXTENDED_LENGTH_1_DEFAULT_LEN (13)
 
-#define COAP_TCP_EXTENDED_LENGTH_2 14
-#define COAP_TCP_EXTENDED_LENGTH_2_DEFAULT_LEN 269
+#define COAP_TCP_EXTENDED_LENGTH_2 (14)
+#define COAP_TCP_EXTENDED_LENGTH_2_DEFAULT_LEN (269)
 
-#define COAP_TCP_EXTENDED_LENGTH_3 15
-#define COAP_TCP_EXTENDED_LENGTH_3_DEFAULT_LEN 65805
+#define COAP_TCP_EXTENDED_LENGTH_3 (15)
+#define COAP_TCP_EXTENDED_LENGTH_3_DEFAULT_LEN (65805)
 
 /* CoAP message types */
 typedef enum {

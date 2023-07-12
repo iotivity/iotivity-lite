@@ -27,6 +27,7 @@
 #include "api/oc_event_callback_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_ri_internal.h"
+#include "messaging/coap/coap_options.h"
 #include "oc_client_state.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
@@ -351,7 +352,7 @@ ri_prepare_client_response(const coap_packet_t *packet,
   }
 #else  /* !OC_BLOCK_WISE */
   (void)response_state;
-  coap_get_header_observe(packet, &client_response.observe_option);
+  coap_options_get_observe(packet, &client_response.observe_option);
 #endif /* OC_BLOCK_WISE */
 
   return client_response;
@@ -395,7 +396,7 @@ oc_client_cb_invoke(const coap_packet_t *response, oc_client_cb_t *cb,
 #endif /* OC_BLOCK_WISE */
 {
   oc_content_format_t cf = 0;
-  coap_get_header_content_format(response, &cf);
+  coap_options_get_content_format(response, &cf);
   endpoint->version = ri_get_ocf_version(cf);
 
   cb->ref_count = 1;

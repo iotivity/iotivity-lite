@@ -58,6 +58,7 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_uuid.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_udp.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/coap.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/coap_options.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/engine.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/observe.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/separate.c

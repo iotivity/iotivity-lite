@@ -444,8 +444,6 @@ TEST_F(TestObserver, RemoveAllObserversByResource)
   coap_free_all_observers();
 }
 
-#ifdef OC_SECURITY
-
 static constexpr size_t kDeviceID{ 0 };
 
 class TestObserverWithServer : public testing::Test {
@@ -454,6 +452,8 @@ public:
 
   static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 };
+
+#ifdef OC_SECURITY
 
 TEST_F(TestObserverWithServer, RemoveAllObserversOnDOSChange)
 {

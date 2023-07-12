@@ -416,6 +416,7 @@
     <ClCompile Include="..\..\..\deps\tinycbor\src\cborencoder_close_container_checked.c" />
     <ClCompile Include="..\..\..\deps\tinycbor\src\cborparser.c" />
     <ClCompile Include="..\..\..\messaging\coap\coap.c" />
+    <ClCompile Include="..\..\..\messaging\coap\coap_options.c" />
     <ClCompile Include="..\..\..\messaging\coap\coap_signal.c" />
     <ClCompile Include="..\..\..\messaging\coap\engine.c" />
     <ClCompile Include="..\..\..\messaging\coap\observe.c" />
