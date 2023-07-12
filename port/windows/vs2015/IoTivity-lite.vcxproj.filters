@@ -47,6 +47,9 @@
     <ClCompile Include="..\..\..\messaging\coap\coap.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\messaging\coap\coap_options.c">
+      <Filter>Core</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\deps\mbedtls\library\ctr_drbg.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>

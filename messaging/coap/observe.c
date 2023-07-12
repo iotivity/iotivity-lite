@@ -53,15 +53,17 @@
 
 #include "api/oc_buffer_internal.h"
 #include "api/oc_server_api_internal.h"
+#include "messaging/coap/coap_options.h"
+#include "messaging/coap/observe.h"
+#include "messaging/coap/separate.h"
 #include "oc_api.h"
+#include "oc_blockwise.h"
 #include "oc_buffer.h"
 #include "oc_coap.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_rep.h"
 #include "oc_ri.h"
-#include "observe.h"
-#include "separate.h"
 #include "util/oc_memb.h"
 
 #ifdef OC_SECURITY
@@ -70,7 +72,6 @@
 #endif /* OC_SECURITY */
 
 #ifdef OC_BLOCK_WISE
-#include "oc_blockwise.h"
 #endif /* OC_BLOCK_WISE */
 
 #ifdef OC_COLLECTIONS
@@ -567,7 +568,7 @@ send_notification_separate_response(const coap_observer_t *obs,
   memcpy(&req.token, obs->token, obs->token_len);
   req.token_len = obs->token_len;
 
-  coap_set_header_uri_path(&req, oc_string(*uri), oc_string_len(*uri));
+  coap_options_set_uri_path(&req, oc_string(*uri), oc_string_len(*uri));
 
   OC_DBG("creating separate response for notification");
 #ifdef OC_BLOCK_WISE
@@ -627,11 +628,11 @@ coap_prepare_notification_blockwise(coap_packet_t *notification,
                                               obs->block2_size, &payload_size);
   if (payload != NULL) {
     coap_set_payload(notification, payload, payload_size);
-    coap_set_header_block2(notification, 0, 1, obs->block2_size);
-    coap_set_header_size2(notification, response_state->payload_size);
+    coap_options_set_block2(notification, 0, 1, obs->block2_size, 0);
+    coap_options_set_size2(notification, response_state->payload_size);
     const oc_blockwise_response_state_t *bwt_res_state =
       (oc_blockwise_response_state_t *)response_state;
-    coap_set_header_etag(notification, bwt_res_state->etag, COAP_ETAG_LEN);
+    coap_options_set_etag(notification, bwt_res_state->etag, COAP_ETAG_LEN);
   }
   return 1;
 }
@@ -714,15 +715,15 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
 
   coap_set_status_code(&notification, response->response_buffer->code);
   if (notification.code < BAD_REQUEST_4_00 && obs->resource->num_observers) {
-    coap_set_header_observe(
+    coap_options_set_observe(
       &notification, observe_increment_observe_counter(&obs->obs_counter));
     observe_increment_observe_counter(&g_observe_counter);
   } else {
-    coap_set_header_observe(&notification, OC_COAP_OPTION_OBSERVE_UNREGISTER);
+    coap_options_set_observe(&notification, OC_COAP_OPTION_OBSERVE_UNREGISTER);
   }
   if (response->response_buffer->content_format > 0) {
-    coap_set_header_content_format(&notification,
-                                   response->response_buffer->content_format);
+    coap_options_set_content_format(&notification,
+                                    response->response_buffer->content_format);
   }
   coap_set_token(&notification, obs->token, obs->token_len);
   transaction = coap_new_transaction(coap_get_mid(), obs->token, obs->token_len,

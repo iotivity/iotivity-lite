@@ -64,6 +64,7 @@
 #include "oscore_constants.h"
 #endif /* OC_OSCORE */
 
+#include <stdbool.h>
 #include <stddef.h> /* size_t */
 #include <stdint.h>
 
@@ -76,6 +77,9 @@ enum { OPTION_MAP_SIZE = sizeof(uint8_t) * 8 };
 
 #define SET_OPTION(packet, opt)                                                \
   ((packet)->options[(opt) / OPTION_MAP_SIZE] |= 1 << ((opt) % OPTION_MAP_SIZE))
+#define UNSET_OPTION(packet, opt)                                              \
+  ((packet)->options[(opt) / OPTION_MAP_SIZE] &=                               \
+   ~(1 << ((opt) % OPTION_MAP_SIZE)))
 #define IS_OPTION(packet, opt)                                                 \
   ((packet)->options[(opt) / OPTION_MAP_SIZE] &                                \
    (1 << ((opt) % OPTION_MAP_SIZE)))
@@ -133,6 +137,7 @@ typedef struct
   uint8_t if_match_len;
   uint8_t if_match[COAP_ETAG_LEN];
 #endif
+
   uint32_t block2_num;
   uint8_t block2_more;
   uint16_t block2_size;
@@ -238,66 +243,6 @@ int coap_set_status_code(coap_packet_t *packet, unsigned int code) OC_NONNULL();
 
 int coap_set_token(coap_packet_t *packet, const uint8_t *token,
                    size_t token_len) OC_NONNULL();
-
-int coap_get_header_content_format(const coap_packet_t *packet,
-                                   oc_content_format_t *format) OC_NONNULL();
-int coap_set_header_content_format(coap_packet_t *packet,
-                                   oc_content_format_t format) OC_NONNULL();
-
-int coap_get_header_accept(const coap_packet_t *packet, unsigned int *accept)
-  OC_NONNULL();
-int coap_set_header_accept(coap_packet_t *packet, unsigned int accept)
-  OC_NONNULL();
-
-int coap_get_header_max_age(const coap_packet_t *packet, uint32_t *age)
-  OC_NONNULL();
-int coap_set_header_max_age(coap_packet_t *packet, uint32_t age) OC_NONNULL();
-
-int coap_get_header_etag(const coap_packet_t *packet, const uint8_t **etag)
-  OC_NONNULL();
-int coap_set_header_etag(coap_packet_t *packet, const uint8_t *etag,
-                         size_t etag_len) OC_NONNULL();
-
-size_t coap_get_header_proxy_uri(const coap_packet_t *packet, const char **uri)
-  OC_NONNULL(); /* in-place string might not be 0-terminated. */
-size_t coap_set_header_proxy_uri(coap_packet_t *packet, const char *uri,
-                                 size_t uri_len) OC_NONNULL();
-
-size_t coap_get_header_uri_path(const coap_packet_t *packet, const char **path)
-  OC_NONNULL(); /* in-place string might not be 0-terminated. */
-size_t coap_set_header_uri_path(coap_packet_t *packet, const char *path,
-                                size_t path_len) OC_NONNULL();
-
-size_t coap_get_header_uri_query(const coap_packet_t *packet,
-                                 const char **query)
-  OC_NONNULL(); /* in-place string might not be 0-terminated. */
-size_t coap_set_header_uri_query(coap_packet_t *packet, const char *query,
-                                 size_t query_len) OC_NONNULL();
-
-int coap_get_header_observe(const coap_packet_t *packet, int32_t *observe)
-  OC_NONNULL();
-void coap_set_header_observe(coap_packet_t *packet, int32_t observe)
-  OC_NONNULL();
-
-int coap_get_header_block2(const coap_packet_t *packet, uint32_t *num,
-                           uint8_t *more, uint16_t *size, uint32_t *offset)
-  OC_NONNULL(1);
-int coap_set_header_block2(coap_packet_t *packet, uint32_t num, uint8_t more,
-                           uint16_t size) OC_NONNULL();
-
-int coap_get_header_block1(const coap_packet_t *packet, uint32_t *num,
-                           uint8_t *more, uint16_t *size, uint32_t *offset)
-  OC_NONNULL(1);
-int coap_set_header_block1(coap_packet_t *packet, uint32_t num, uint8_t more,
-                           uint16_t size) OC_NONNULL();
-
-int coap_get_header_size2(const coap_packet_t *packet, uint32_t *size)
-  OC_NONNULL();
-int coap_set_header_size2(coap_packet_t *packet, uint32_t size) OC_NONNULL();
-
-int coap_get_header_size1(const coap_packet_t *packet, uint32_t *size)
-  OC_NONNULL();
-int coap_set_header_size1(coap_packet_t *packet, uint32_t size) OC_NONNULL();
 
 uint32_t coap_get_payload(const coap_packet_t *packet, const uint8_t **payload)
   OC_NONNULL();

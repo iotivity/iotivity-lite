@@ -22,6 +22,7 @@
 #include "api/oc_buffer_internal.h"
 #include "oscore.h"
 #include "coap.h"
+#include "coap_options.h"
 #include "coap_signal.h"
 #include "oc_ri.h"
 #include <stdint.h>
@@ -54,7 +55,7 @@ oscore_send_error(const coap_packet_t *packet, uint8_t code,
   if (packet->token_len > 0) {
     coap_set_token(&msg, packet->token, packet->token_len);
   }
-  coap_set_header_max_age(&msg, 0);
+  coap_options_set_max_age(&msg, 0);
   size_t len =
     coap_serialize_message(&msg, message->data, oc_message_buffer_size());
   if (len == 0) {

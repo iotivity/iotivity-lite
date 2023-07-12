@@ -23,6 +23,7 @@
 #include "api/oc_rep_internal.h"
 #include "api/oc_storage_internal.h"
 #include "oc_api.h"
+#include "port/oc_connectivity.h"
 #include "port/oc_storage.h"
 #include "port/oc_storage_internal.h"
 #include "util/oc_macros_internal.h"

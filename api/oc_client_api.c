@@ -24,6 +24,7 @@
 #include "api/oc_helpers_internal.h"
 #include "api/client/oc_client_cb_internal.h"
 #include "messaging/coap/coap.h"
+#include "messaging/coap/coap_options.h"
 #include "messaging/coap/transactions.h"
 #include "oc_api.h"
 #include "oc_ri_internal.h"
@@ -79,8 +80,8 @@ dispatch_coap_request(void)
         g_request_buffer, 0, (uint32_t)OC_BLOCK_SIZE, &block_size);
       if (payload) {
         coap_set_payload(g_request, payload, block_size);
-        coap_set_header_block1(g_request, 0, 1, (uint16_t)block_size);
-        coap_set_header_size1(g_request, (uint32_t)payload_size);
+        coap_options_set_block1(g_request, 0, 1, (uint16_t)block_size, 0);
+        coap_options_set_size1(g_request, (uint32_t)payload_size);
         g_request->type = COAP_TYPE_CON;
         g_dispatch.client_cb->qos = HIGH_QOS;
       }
@@ -99,11 +100,11 @@ dispatch_coap_request(void)
   if (payload_size > 0) {
 #ifdef OC_SPEC_VER_OIC
     if (g_dispatch.client_cb->endpoint.version == OIC_VER_1_1_0) {
-      coap_set_header_content_format(g_request, APPLICATION_CBOR);
+      coap_options_set_content_format(g_request, APPLICATION_CBOR);
     } else
 #endif /* OC_SPEC_VER_OIC */
     {
-      coap_set_header_content_format(g_request, APPLICATION_VND_OCF_CBOR);
+      coap_options_set_content_format(g_request, APPLICATION_VND_OCF_CBOR);
     }
   }
 
@@ -202,25 +203,25 @@ prepare_coap_request(oc_client_cb_t *cb)
 
 #ifdef OC_SPEC_VER_OIC
   if (cb->endpoint.version == OIC_VER_1_1_0) {
-    coap_set_header_accept(g_request, APPLICATION_CBOR);
+    coap_options_set_accept(g_request, APPLICATION_CBOR);
   } else
 #endif /* OC_SPEC_VER_OIC */
   {
-    coap_set_header_accept(g_request, APPLICATION_VND_OCF_CBOR);
+    coap_options_set_accept(g_request, APPLICATION_VND_OCF_CBOR);
   }
 
   coap_set_token(g_request, cb->token, cb->token_len);
 
-  coap_set_header_uri_path(g_request, oc_string(cb->uri),
-                           oc_string_len(cb->uri));
+  coap_options_set_uri_path(g_request, oc_string(cb->uri),
+                            oc_string_len(cb->uri));
 
   if (cb->observe_seq != OC_COAP_OPTION_OBSERVE_NOT_SET) {
-    coap_set_header_observe(g_request, cb->observe_seq);
+    coap_options_set_observe(g_request, cb->observe_seq);
   }
 
   if (oc_string_len(cb->query) > 0) {
-    coap_set_header_uri_query(g_request, oc_string(cb->query),
-                              oc_string_len(cb->query));
+    coap_options_set_uri_query(g_request, oc_string(cb->query),
+                               oc_string_len(cb->query));
   }
 
   g_dispatch.client_cb = cb;
@@ -263,7 +264,7 @@ oc_do_multicast_update(void)
   }
 
   if (payload_size > 0) {
-    coap_set_header_content_format(g_request, APPLICATION_VND_OCF_CBOR);
+    coap_options_set_content_format(g_request, APPLICATION_VND_OCF_CBOR);
   }
 
   g_multicast_update->length = coap_serialize_message(
@@ -307,15 +308,15 @@ oc_init_multicast_update(const char *uri, const char *query)
 
   coap_udp_init_message(g_request, type, OC_POST, coap_get_mid());
 
-  coap_set_header_accept(g_request, APPLICATION_VND_OCF_CBOR);
+  coap_options_set_accept(g_request, APPLICATION_VND_OCF_CBOR);
 
   g_request->token_len = sizeof(g_request->token);
   oc_random_buffer(g_request->token, g_request->token_len);
 
-  coap_set_header_uri_path(g_request, uri, strlen(uri));
+  coap_options_set_uri_path(g_request, uri, strlen(uri));
 
   if (query) {
-    coap_set_header_uri_query(g_request, query, strlen(query));
+    coap_options_set_uri_query(g_request, query, strlen(query));
   }
 
   return true;
@@ -367,7 +368,8 @@ oc_get_diagnostic_message(const oc_client_response_t *response,
 static oc_client_cb_t *
 oc_do_request(oc_method_t method, const char *uri,
               const oc_endpoint_t *endpoint, const char *query,
-              oc_response_handler_t handler, oc_qos_t qos, void *user_data)
+              uint16_t timeout_seconds, oc_response_handler_t handler,
+              oc_qos_t qos, void *user_data)
 {
   assert(handler != NULL);
   oc_client_handler_t client_handler = {
@@ -388,36 +390,20 @@ oc_do_request(oc_method_t method, const char *uri,
   }
   if (!status) {
     oc_client_cb_free(cb);
-    cb = NULL;
-  }
-  return cb;
-}
-
-static bool
-oc_do_request_with_timeout(oc_method_t method, const char *uri,
-                           const oc_endpoint_t *endpoint, const char *query,
-                           uint16_t timeout_seconds,
-                           oc_response_handler_t handler, oc_qos_t qos,
-                           void *user_data)
-
-{
-  oc_client_cb_t *cb =
-    oc_do_request(method, uri, endpoint, query, handler, qos, user_data);
-  if (cb == NULL) {
-    return false;
+    return NULL;
   }
   if (timeout_seconds > 0) {
     oc_set_delayed_callback(cb, oc_client_cb_remove_with_notify_timeout_async,
                             timeout_seconds);
   }
-  return true;
+  return cb;
 }
 
 bool
 oc_do_delete(const char *uri, const oc_endpoint_t *endpoint, const char *query,
              oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
-  return oc_do_request(OC_DELETE, uri, endpoint, query, handler, qos,
+  return oc_do_request(OC_DELETE, uri, endpoint, query, 0, handler, qos,
                        user_data) != NULL;
 }
 
@@ -427,16 +413,16 @@ oc_do_delete_with_timeout(const char *uri, const oc_endpoint_t *endpoint,
                           oc_response_handler_t handler, oc_qos_t qos,
                           void *user_data)
 {
-  return oc_do_request_with_timeout(OC_DELETE, uri, endpoint, query,
-                                    timeout_seconds, handler, qos, user_data);
+  return oc_do_request(OC_DELETE, uri, endpoint, query, timeout_seconds,
+                       handler, qos, user_data);
 }
 
 bool
 oc_do_get(const char *uri, const oc_endpoint_t *endpoint, const char *query,
           oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
-  return oc_do_request(OC_GET, uri, endpoint, query, handler, qos, user_data) !=
-         NULL;
+  return oc_do_request(OC_GET, uri, endpoint, query, 0, handler, qos,
+                       user_data) != NULL;
 }
 
 bool
@@ -445,8 +431,8 @@ oc_do_get_with_timeout(const char *uri, const oc_endpoint_t *endpoint,
                        oc_response_handler_t handler, oc_qos_t qos,
                        void *user_data)
 {
-  return oc_do_request_with_timeout(OC_GET, uri, endpoint, query,
-                                    timeout_seconds, handler, qos, user_data);
+  return oc_do_request(OC_GET, uri, endpoint, query, timeout_seconds, handler,
+                       qos, user_data);
 }
 
 // preparation step for sending coap request using async methods (POST or PUT)

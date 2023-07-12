@@ -26,7 +26,7 @@
 #include "oc_cloud_internal.h"
 #include "oc_cloud_store_internal.h"
 #include "oc_rep.h"
-
+#include "port/oc_connectivity.h"
 #include "port/oc_log_internal.h"
 
 #include <stdint.h>

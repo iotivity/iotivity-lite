@@ -24,6 +24,7 @@
 #include "oc_core_res.h"
 #include "oc_push.h"
 #include "port/oc_clock.h"
+#include "port/oc_connectivity.h"
 #include "util/oc_atomic.h"
 
 #include <inttypes.h>
