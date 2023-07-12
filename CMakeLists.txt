@@ -60,6 +60,7 @@ set(OC_INOUT_BUFFER_SIZE "" CACHE STRING "Custom static buffer size for network 
 set(OC_INOUT_BUFFER_POOL "" CACHE STRING "Custom static pool size of network messages.")
 set(OC_APP_DATA_BUFFER_SIZE "" CACHE STRING "Custom static buffer size for application messages.")
 set(OC_APP_DATA_BUFFER_POOL "" CACHE STRING "Custom static size of application messages.")
+set(OC_ETAG_ENABLED OFF CACHE BOOL "Enable Entity Tag (ETag) support.")
 set(PLGD_DEV_TIME_ENABLED OFF CACHE BOOL "Enable plgd time feature.")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -397,6 +398,10 @@ if (NOT("${OC_APP_DATA_BUFFER_POOL}" STREQUAL ""))
     endif()
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_APP_DATA_BUFFER_POOL=(${OC_APP_DATA_BUFFER_POOL})")
     list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_APP_DATA_BUFFER_POOL=(${OC_APP_DATA_BUFFER_POOL})")
+endif()
+
+if(OC_ETAG_ENABLED)
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_ETAG")
 endif()
 
 if(PLGD_DEV_TIME_ENABLED)
@@ -1117,6 +1122,7 @@ install(DIRECTORY include/
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
     FILES_MATCHING
     PATTERN "*.h"
+    PATTERN "oc_etag.h" EXCLUDE
     PATTERN "oc_introspection.h" EXCLUDE
     PATTERN "server_introspection.dat.h" EXCLUDE
     PATTERN "plgd" EXCLUDE
@@ -1139,6 +1145,12 @@ if (PLGD_DEV_TIME_ENABLED)
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
         FILES_MATCHING
         PATTERN "*.h"
+    )
+endif()
+
+if(OC_ETAG_ENABLED)
+    install(FILES include/oc_etag.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
     )
 endif()
 

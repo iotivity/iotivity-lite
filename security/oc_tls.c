@@ -21,7 +21,6 @@
 #include "oc_tls_internal.h"
 #include "api/oc_buffer_internal.h"
 #include "api/oc_events_internal.h"
-#include "api/oc_main.h"
 #include "api/oc_network_events_internal.h"
 #include "api/oc_session_events_internal.h"
 #include "messaging/coap/engine.h"
@@ -76,6 +75,12 @@
 #include <stdint.h>
 #include <string.h>
 #include <inttypes.h>
+
+typedef struct oc_random_pin_t
+{
+  oc_random_pin_cb_t cb;
+  void *data;
+} oc_random_pin_t;
 
 OC_PROCESS(oc_tls_handler, "TLS Process");
 OC_MEMB(g_tls_peers_s, oc_tls_peer_t, OC_MAX_TLS_PEERS);

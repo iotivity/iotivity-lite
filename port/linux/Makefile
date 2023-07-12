@@ -14,7 +14,8 @@ export SECURE ?= 1
 export PKI ?= 1
 export OSCORE ?= 1
 INTROSPECTION ?= 1
-IDD ?= 1
+export IDD ?= 1
+export ETAG ?= 0
 DESTDIR ?= /usr/local
 install_bin_dir?=${DESTDIR}/opt/iotivity-lite/bin/
 prefix = $(DESTDIR)
@@ -125,6 +126,9 @@ SRC_API:=$(wildcard ../../api/*.c)
 ifneq ($(INTROSPECTION),1)
 SRC_API:=$(filter-out %oc_introspection.c,${SRC_API})
 endif
+ifneq ($(ETAG),1)
+SRC_API:=$(filter-out %oc_etag.c,${SRC_API})
+endif
 SRC:=${SRC_API} $(wildcard ../../messaging/coap/*.c ../../port/linux/*.c)
 SRC_CLIENT:=$(wildcard ../../api/client/*.c)
 SRC_CLOUD:=$(wildcard ../../api/cloud/*.c)
@@ -139,6 +143,9 @@ HEADERS:=$(filter-out %server_introspection.dat.h,${HEADERS})
 else
 HEADERS:=$(filter-out %oc_introspection.h,${HEADERS})
 endif
+endif
+ifneq ($(ETAG),1)
+HEADERS:=$(filter-out %oc_etag.h,${HEADERS})
 endif
 HEADERS_COAP := $(filter-out %_internal.h,$(wildcard ../../messaging/coap/*.h))
 HEADERS_UTIL := $(filter-out %_internal.h,$(wildcard ../../util/*.h))
@@ -242,7 +249,6 @@ ifeq ($(PLGD_DEV_TIME),1)
 	EXTRA_CFLAGS += -DPLGD_DEV_TIME
 endif
 
-
 # for PUSH NOTIFICATION
 ifeq ($(PUSH), 1)
 	EXTRA_CFLAGS += -DOC_PUSH
@@ -251,7 +257,6 @@ ifeq ($(PUSH_DEBUG), 1)
 	EXTRA_CFLAGS += -DOC_PUSHDEBUG
 endif
 endif
-
 
 ifneq ($(SECURE),0)
 	SRC += $(addprefix ../../security/,	oc_acl.c oc_ael.c oc_audit.c oc_certs.c oc_certs_generate.c oc_certs_validate.c oc_cred.c oc_csr.c oc_doxm.c oc_entropy.c \
@@ -295,6 +300,10 @@ endif
 
 ifeq ($(OICRES_OBSERVABLE),1)
 	EXTRA_CFLAGS += -DOC_DISCOVERY_RESOURCE_OBSERVABLE
+endif
+
+ifeq ($(ETAG),1)
+	EXTRA_CFLAGS += -DOC_ETAG
 endif
 
 # DPP-baesd Streamlined Onboarding applications

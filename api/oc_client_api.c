@@ -21,6 +21,7 @@
 #ifdef OC_CLIENT
 
 #include "api/oc_buffer_internal.h"
+#include "api/oc_client_api_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/client/oc_client_cb_internal.h"
 #include "messaging/coap/coap.h"
@@ -145,7 +146,8 @@ dispatch_coap_request(void)
 }
 
 static bool
-prepare_coap_request(oc_client_cb_t *cb)
+prepare_coap_request(oc_client_cb_t *cb, coap_configure_request_fn_t configure,
+                     void *configure_data)
 {
   coap_message_type_t type = COAP_TYPE_NON;
 
@@ -224,6 +226,10 @@ prepare_coap_request(oc_client_cb_t *cb)
                                oc_string_len(cb->query));
   }
 
+  if (configure != NULL) {
+    configure(g_request, configure_data);
+  }
+
   g_dispatch.client_cb = cb;
 
   return true;
@@ -256,12 +262,11 @@ oc_do_multicast_update(void)
 {
   int payload_size = oc_rep_get_encoded_payload_size();
 
-  if (payload_size > 0) {
-    coap_set_payload(g_request, g_multicast_update->data + COAP_MAX_HEADER_SIZE,
-                     (uint32_t)payload_size);
-  } else {
+  if (payload_size <= 0) {
     goto do_multicast_update_error;
   }
+  coap_set_payload(g_request, g_multicast_update->data + COAP_MAX_HEADER_SIZE,
+                   (uint32_t)payload_size);
 
   if (payload_size > 0) {
     coap_options_set_content_format(g_request, APPLICATION_VND_OCF_CBOR);
@@ -269,11 +274,11 @@ oc_do_multicast_update(void)
 
   g_multicast_update->length = coap_serialize_message(
     g_request, g_multicast_update->data, oc_message_buffer_size());
-  if (g_multicast_update->length > 0) {
-    oc_send_message(g_multicast_update);
-  } else {
+  if (g_multicast_update->length <= 0) {
     goto do_multicast_update_error;
   }
+
+  oc_send_message(g_multicast_update);
 
 #ifdef OC_IPV4
   oc_do_multicast_update_ipv4();
@@ -281,6 +286,7 @@ oc_do_multicast_update(void)
 
   g_multicast_update = NULL;
   return true;
+
 do_multicast_update_error:
   oc_message_unref(g_multicast_update);
   g_multicast_update = NULL;
@@ -365,11 +371,13 @@ oc_get_diagnostic_message(const oc_client_response_t *response,
   return false;
 }
 
-static oc_client_cb_t *
+oc_client_cb_t *
 oc_do_request(oc_method_t method, const char *uri,
               const oc_endpoint_t *endpoint, const char *query,
               uint16_t timeout_seconds, oc_response_handler_t handler,
-              oc_qos_t qos, void *user_data)
+              oc_qos_t qos, void *user_data,
+              coap_configure_request_fn_t configure_request,
+              void *configure_request_data)
 {
   assert(handler != NULL);
   oc_client_handler_t client_handler = {
@@ -384,7 +392,8 @@ oc_do_request(oc_method_t method, const char *uri,
     return NULL;
   }
 
-  bool status = prepare_coap_request(cb);
+  bool status =
+    prepare_coap_request(cb, configure_request, configure_request_data);
   if (status) {
     status = dispatch_coap_request();
   }
@@ -404,7 +413,7 @@ oc_do_delete(const char *uri, const oc_endpoint_t *endpoint, const char *query,
              oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   return oc_do_request(OC_DELETE, uri, endpoint, query, 0, handler, qos,
-                       user_data) != NULL;
+                       user_data, NULL, NULL) != NULL;
 }
 
 bool
@@ -414,15 +423,15 @@ oc_do_delete_with_timeout(const char *uri, const oc_endpoint_t *endpoint,
                           void *user_data)
 {
   return oc_do_request(OC_DELETE, uri, endpoint, query, timeout_seconds,
-                       handler, qos, user_data);
+                       handler, qos, user_data, NULL, NULL);
 }
 
 bool
 oc_do_get(const char *uri, const oc_endpoint_t *endpoint, const char *query,
           oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
-  return oc_do_request(OC_GET, uri, endpoint, query, 0, handler, qos,
-                       user_data) != NULL;
+  return oc_do_request(OC_GET, uri, endpoint, query, 0, handler, qos, user_data,
+                       NULL, NULL) != NULL;
 }
 
 bool
@@ -432,7 +441,7 @@ oc_do_get_with_timeout(const char *uri, const oc_endpoint_t *endpoint,
                        void *user_data)
 {
   return oc_do_request(OC_GET, uri, endpoint, query, timeout_seconds, handler,
-                       qos, user_data);
+                       qos, user_data, NULL, NULL);
 }
 
 // preparation step for sending coap request using async methods (POST or PUT)
@@ -454,7 +463,7 @@ oc_init_async_request(oc_method_t method, const char *uri,
     return false;
   }
 
-  if (!prepare_coap_request(cb)) {
+  if (!prepare_coap_request(cb, NULL, NULL)) {
     oc_client_cb_free(cb);
     return false;
   }
@@ -541,7 +550,7 @@ oc_do_observe(const char *uri, const oc_endpoint_t *endpoint, const char *query,
 
   bool status = false;
 
-  status = prepare_coap_request(cb);
+  status = prepare_coap_request(cb, NULL, NULL);
 
   if (status)
     status = dispatch_coap_request();
@@ -562,7 +571,7 @@ oc_stop_observe(const char *uri, const oc_endpoint_t *endpoint)
 
   bool status = false;
 
-  status = prepare_coap_request(cb);
+  status = prepare_coap_request(cb, NULL, NULL);
 
   if (status)
     status = dispatch_coap_request();
@@ -626,7 +635,7 @@ oc_do_ipv4_discovery(const char *query, oc_client_handler_t handler,
     return NULL;
   }
   cb->discovery = true;
-  if (prepare_coap_request(cb)) {
+  if (prepare_coap_request(cb, NULL, NULL)) {
     dispatch_coap_request();
   }
   return cb;
@@ -653,7 +662,7 @@ oc_do_ipv4_multicast(const char *uri, const char *query,
 
   cb->multicast = true;
 
-  bool status = prepare_coap_request(cb);
+  bool status = prepare_coap_request(cb, NULL, NULL);
 
   if (status) {
     status = dispatch_coap_request();
@@ -702,7 +711,7 @@ multi_scope_ipv6_multicast(const oc_client_cb_t *cb4, uint8_t scope,
       memcpy(cb->token, cb4->token, cb4->token_len);
     }
     cb->multicast = true;
-    if (prepare_coap_request(cb) && dispatch_coap_request()) {
+    if (prepare_coap_request(cb, NULL, NULL) && dispatch_coap_request()) {
       return true;
     }
 
@@ -771,7 +780,7 @@ dispatch_ip_discovery(const oc_client_cb_t *cb4, const char *query,
     memcpy(cb->token, cb4->token, cb4->token_len);
   }
 
-  if (prepare_coap_request(cb) && dispatch_coap_request()) {
+  if (prepare_coap_request(cb, NULL, NULL) && dispatch_coap_request()) {
     return true;
   }
 

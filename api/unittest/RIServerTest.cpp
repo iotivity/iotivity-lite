@@ -23,11 +23,14 @@
 #include "api/oc_link_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_ri_server_internal.h"
+#include "api/oc_server_api_internal.h"
 #include "oc_api.h"
 #include "oc_collection.h"
 #include "oc_config.h"
+#include "oc_core_res.h"
 #include "oc_helpers.h"
 #include "oc_ri.h"
+#include "oc_uuid.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "tests/gtest/Device.h"
 #include "util/oc_process_internal.h"
@@ -312,6 +315,48 @@ TEST_F(TestOcServerRi, RiCleanupCollection_P)
 
 #endif /* OC_COLLECTIONS */
 
+TEST_F(TestOcServerRi, NotifyObservers_F)
+{
+  oc_resource_t res{};
+  EXPECT_EQ(0, oc_notify_observers(&res));
+}
+
+TEST_F(TestOcServerRi, NotifyObserversDelayed_F)
+{
+  oc_resource_t res{};
+  oc_notify_observers_delayed(&res, 0);
+}
+
+TEST_F(TestOcServerRi, NotifyObserversDelayedMs_F)
+{
+  oc_resource_t res{};
+  oc_notify_observers_delayed_ms(&res, 0);
+}
+
+TEST_F(TestOcServerRi, NotifyResourceChanged_F)
+{
+  oc_resource_t res{};
+  oc_notify_resource_changed(&res);
+}
+
+TEST_F(TestOcServerRi, NotifyResourceChangedDelayedMs_F)
+{
+  oc_resource_t res{};
+  oc_notify_resource_changed_delayed_ms(&res, 0);
+}
+
+TEST_F(TestOcServerRi, NotifyResourceAdded_F)
+{
+  oc_resource_t res{};
+  oc_notify_resource_added(&res);
+}
+
+TEST_F(TestOcServerRi, NotifyResourceRemoved_F)
+{
+  oc_resource_t res{};
+  oc_notify_resource_removed(&res);
+}
+
 class TestOcRiWithServer : public testing::Test {
 public:
   static void onGet(oc_request_t *request, oc_interface_mask_t, void *data)
@@ -403,6 +448,32 @@ std::unordered_map<std::string, int>
 int TestOcRiWithServer::onGetCounter = 0;
 int TestOcRiWithServer::onPostCounter = 0;
 int TestOcRiWithServer::onPutCounter = 0;
+
+TEST_F(TestOcRiWithServer, SetImmutableDeviceIdentifier_F)
+{
+  // invalid uuid
+  oc_set_immutable_device_identifier(kDeviceID, nullptr);
+
+  oc_uuid_t uuid{};
+  // invalid device
+  oc_set_immutable_device_identifier(SIZE_MAX, &uuid);
+}
+
+TEST_F(TestOcRiWithServer, SetImmutableDeviceIdentifier_P)
+{
+  const oc_device_info_t *info = oc_core_get_device_info(kDeviceID);
+  ASSERT_NE(nullptr, info);
+
+  oc_uuid_t original_uuid = info->piid;
+  oc_uuid_t new_uuid{};
+  do {
+    oc_gen_uuid(&new_uuid);
+  } while (memcmp(&new_uuid, &original_uuid, sizeof(oc_uuid_t)) == 0);
+
+  // set new immutable device identifier
+  oc_set_immutable_device_identifier(kDeviceID, &new_uuid);
+  EXPECT_EQ(0, memcmp(&new_uuid, &info->piid, sizeof(oc_uuid_t)));
+}
 
 TEST_F(TestOcRiWithServer, RiAddResourceWithTheSameURI_F)
 {

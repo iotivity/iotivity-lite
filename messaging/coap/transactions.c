@@ -49,7 +49,7 @@
 
 #include "transactions.h"
 #include "api/oc_buffer_internal.h"
-#include "api/oc_main.h"
+#include "api/oc_main_internal.h"
 #include "observe.h"
 #include "oc_buffer.h"
 #include "util/oc_list.h"

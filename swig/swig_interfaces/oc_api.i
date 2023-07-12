@@ -983,6 +983,7 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCMainJNI_getQueryValues(JNIEnv *je
 %rename(notifyObservers) oc_notify_observers;
 %rename(notifyObserversDelayed) oc_notify_observers_delayed;
 %rename(notifyObserversDelayedMs) oc_notify_observers_delayed_ms;
+%rename(notifyResourceChanged) oc_notify_resource_changed;
 
 // TODO: implement
 %ignore oc_send_response_with_callback;

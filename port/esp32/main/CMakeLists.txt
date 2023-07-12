@@ -183,6 +183,13 @@ if(CONFIG_SECURE)
 	)
 endif()
 
+if (CONFIG_ETAG)
+	add_definitions(-DOC_ETAG)
+	list(APPEND sources
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_etag.c
+	)
+endif()
+
 if (CONFIG_PLGD_DEV_TIME)
 	add_definitions(-DPLGD_DEV_TIME)
 	list(APPEND sources

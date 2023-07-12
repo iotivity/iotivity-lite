@@ -87,7 +87,7 @@ plgd_time_t *plgd_time_get(void);
  * @param last_synced_time synchronization time
  * @param update_time monotonic time of the synchronization
  * @param dump save persistent data to storage after the update
- * @param notify notify observers about the change
+ * @param notify notify about the resource change
  *
  * @note the status of the global plgd time is changed to
  * PLGD_TIME_STATUS_IN_SYNC

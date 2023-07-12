@@ -248,8 +248,10 @@ TEST_F(TestClientCBWithServer, RemoveAsync)
 {
   oc_client_cb_t *cb = TestClientCB::allocDummyClientCB("/test");
   ASSERT_NE(nullptr, cb);
+  EXPECT_FALSE(oc_has_delayed_callback(cb, &oc_client_cb_remove_async, false));
 
   oc_set_delayed_callback(cb, &oc_client_cb_remove_async, 0);
+  EXPECT_TRUE(oc_has_delayed_callback(cb, &oc_client_cb_remove_async, false));
   oc::TestDevice::PoolEventsMs(10);
 
   EXPECT_FALSE(oc_ri_is_client_cb_valid(cb));
@@ -259,9 +261,13 @@ TEST_F(TestClientCBWithServer, RemoveWithTimeoutAsync)
 {
   oc_client_cb_t *cb = TestClientCB::allocDummyClientCB("/test");
   ASSERT_NE(nullptr, cb);
+  EXPECT_FALSE(oc_has_delayed_callback(
+    cb, &oc_client_cb_remove_with_notify_timeout_async, false));
 
-  oc_set_delayed_callback(cb, &oc_client_cb_remove_with_notify_timeout_async,
-                          0);
+  oc_set_delayed_callback_ms(cb, &oc_client_cb_remove_with_notify_timeout_async,
+                             0);
+  EXPECT_TRUE(oc_has_delayed_callback(
+    cb, &oc_client_cb_remove_with_notify_timeout_async, false));
   oc::TestDevice::PoolEventsMs(10);
 
   EXPECT_TRUE(TestClientCB::responseHandlerInvoked);

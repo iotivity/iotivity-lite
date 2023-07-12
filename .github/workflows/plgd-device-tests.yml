@@ -42,6 +42,8 @@ jobs:
       matrix:
         include:
           - name: cloud-server
+            # same configuration as "cloud-server" in the SonarCloud scan job, skip for events that trigger both jobs
+            skip: ${{ github.event_name != 'workflow_dispatch' }}
             args: ""
           - name: cloud-server-asan
             args: "-DOC_ASAN_ENABLED=ON"
@@ -76,17 +78,20 @@ jobs:
           - name: cloud-server-rep-realloc-tsan
             args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
 
-          - name: cloud-server-discovery-resource-observable-rep-realloc
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
-          - name: cloud-server-discovery-resource-observable-rep-realloc-asan
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
-          - name: cloud-server-discovery-resource-observable-rep-realloc-tsan
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+          - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc
+            # same configuration as "cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc" in the SonarCloud scan job, skip for events that trigger both jobs
+            skip: ${{ github.event_name != 'workflow_dispatch' }}
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
+          - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc-asan
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON-DOC_ASAN_ENABLED=ON"
+          - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc-tsan
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
 
     uses: ./.github/workflows/plgd-device-test-with-cfg.yml
     with:
       name: ${{ matrix.name }}
-      build_args: -DOC_DEBUG_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DPLGD_DEV_TIME_ENABLED=ON ${{ matrix.args }}
+      build_args: -DOC_DEBUG_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON ${{ matrix.args }}
       build_type: Debug
       cert_signature_algorithm: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_signature_algorithm) || 'ECDSA-SHA256' }}
       cert_elliptic_curve: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_elliptic_curve) || 'P256' }}
+      skip: ${{ matrix.skip || false }}

@@ -165,7 +165,7 @@ public:
   static oc_resource_t *GetDynamicResource(size_t device, size_t index);
 
   static void ClearDynamicResource(size_t device, size_t index, bool doDelete);
-
+  static bool ClearDynamicResource(oc_resource_t *resource, bool doDelete);
   static void ClearDynamicResources();
 #endif /* OC_SERVER */
 

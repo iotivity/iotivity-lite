@@ -79,24 +79,44 @@ collection_free_resource_types(oc_list_t list)
   }
 }
 
-void
-oc_collection_free(oc_collection_t *collection)
+static void
+collection_free(oc_collection_t *collection, bool notify)
 {
-  if (collection == NULL) {
-    return;
-  }
-  oc_list_remove(g_collections, collection);
-  oc_ri_free_resource_properties((oc_resource_t *)collection);
+  bool removed = oc_list_remove2(g_collections, collection) != NULL;
 
   oc_link_t *link;
   while ((link = (oc_link_t *)oc_list_pop(collection->links)) != NULL) {
     oc_delete_link(link);
   }
 
+  if (notify && removed) {
+    oc_notify_resource_removed(&collection->res);
+  }
+
+  oc_ri_free_resource_properties(&collection->res);
   collection_free_resource_types(collection->supported_rts);
   collection_free_resource_types(collection->mandatory_rts);
 
   oc_memb_free(&g_collections_s, collection);
+}
+
+void
+oc_collection_free(oc_collection_t *collection)
+{
+  if (collection == NULL) {
+    return;
+  }
+  collection_free(collection, true);
+}
+
+void
+oc_collections_free_all(void)
+{
+  oc_collection_t *collection = (oc_collection_t *)oc_list_pop(g_collections);
+  while (collection != NULL) {
+    collection_free(collection, false);
+    collection = (oc_collection_t *)oc_list_pop(g_collections);
+  }
 }
 
 static oc_event_callback_retval_t

@@ -125,7 +125,7 @@ plgd_time_set(oc_clock_time_t last_synced_time, oc_clock_time_t update_time,
     // all devices should be iterated, not just device 0
     oc_resource_t *r = oc_core_get_resource_by_index(PLGD_TIME, 0);
     if (r != NULL) {
-      oc_notify_observers(r);
+      oc_notify_resource_changed(r);
     }
   }
 #else  /* !OC_SERVER */
@@ -487,8 +487,8 @@ store_encode_plgd_time(size_t device, void *data)
 bool
 plgd_time_dump(void)
 {
-  long ret = oc_storage_save_resource(PLGD_TIME_STORE_NAME, /*device*/ 0,
-                                      store_encode_plgd_time, &g_oc_plgd_time);
+  long ret = oc_storage_data_save(PLGD_TIME_STORE_NAME, /*device*/ 0,
+                                  store_encode_plgd_time, &g_oc_plgd_time);
   if (ret <= 0) {
     OC_ERR("cannot dump plgd-time to storage: error(%ld)", ret);
     return false;
@@ -512,8 +512,8 @@ bool
 plgd_time_load(void)
 {
   plgd_time_t pt = { 0 };
-  if (oc_storage_load_resource(PLGD_TIME_STORE_NAME, 0, store_decode_plgd_time,
-                               &pt) <= 0) {
+  if (oc_storage_data_load(PLGD_TIME_STORE_NAME, 0, store_decode_plgd_time,
+                           &pt) <= 0) {
     OC_ERR("failed to load plgd-time from storage");
     return false;
   }

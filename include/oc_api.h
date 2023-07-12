@@ -966,15 +966,17 @@ oc_resource_t *oc_new_resource(const char *name, const char *uri,
  * The read-only and sensor are also very similar in general a sensor value is
  * read directly or indirectly from a real world sensor.
  *
- * @param[in] resource the resource that the interface(s) will be added to
- * @param[in] iface_mask a bitwise ORed list of all interfaces supported by the
- *                       resource.
+ * @param resource the resource that the interface(s) will be added to (cannot
+ * be NULL)
+ * @param iface_mask a bitwise ORed list of all interfaces supported by the
+ * resource.
  * @see oc_interface_mask_t
  * @see oc_resource_set_default_interface
  */
 OC_API
 void oc_resource_bind_resource_interface(oc_resource_t *resource,
-                                         oc_interface_mask_t iface_mask);
+                                         oc_interface_mask_t iface_mask)
+  OC_NONNULL();
 
 /**
  * Select the default interface.
@@ -988,13 +990,15 @@ void oc_resource_bind_resource_interface(oc_resource_t *resource,
  * If the default interface is not set then the OC_IF_BASELINE will be used
  * by the stack.
  *
- * @param[in] resource the resource that the default interface will be set on
- * @param[in] iface_mask a single interface that will will be used as the
- *                       default interface
+ * @param resource the resource that the default interface will be set on
+ * (cannot be NULL)
+ * @param iface_mask a single interface that will will be used as the default
+ * interface
  */
 OC_API
 void oc_resource_set_default_interface(oc_resource_t *resource,
-                                       oc_interface_mask_t iface_mask);
+                                       oc_interface_mask_t iface_mask)
+  OC_NONNULL();
 
 /**
  * Add a Resource Type "rt" property to the resource.
@@ -1014,14 +1018,17 @@ void oc_resource_set_default_interface(oc_resource_t *resource,
  * resource. When using a Mulit-value Resource the different resources
  * properties must not conflict.
  *
- * @param[in] resource the resource that the Resource Type will be set on
- * @param[in] type the Resource Type to add to the Resource Type "rt" property
+ * @param resource the resource that the Resource Type will be set on (cannot be
+ * NULL)
+ * @param type the Resource Type to add to the Resource Type "rt" property
+ * (cannot be NULL)
  *
  * @see oc_new_resource
  * @see oc_device_bind_resource_type
  */
 OC_API
-void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type);
+void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type)
+  OC_NONNULL();
 
 /**
  * Add a Resource Type "rt" property to the an `/oic/d` resource.
@@ -1029,52 +1036,53 @@ void oc_resource_bind_resource_type(oc_resource_t *resource, const char *type);
  * This function can be used to bind a new Resource Type to a logical device's
  * `/oic/d` resource.
  *
- * @param[in] device index of a logical device
- * @param[in] type the Resource type to add to the Resource Type "rt" property
+ * @param device index of a logical device
+ * @param type the Resource type to add to the Resource Type "rt" property
  * (cannot be NULL)
  */
 OC_API
-void oc_device_bind_resource_type(size_t device, const char *type);
+void oc_device_bind_resource_type(size_t device, const char *type) OC_NONNULL();
 
 /**
  * @brief Sets the tag value for tag "tag-pos-desc" on the resource
  *
- * @param resource the resource
+ * @param resource the resource (cannot be NULL)
  * @param pos the descriptive text for the tag
  */
 OC_API
-void oc_resource_tag_pos_desc(oc_resource_t *resource,
-                              oc_pos_description_t pos);
+void oc_resource_tag_pos_desc(oc_resource_t *resource, oc_pos_description_t pos)
+  OC_NONNULL();
 
 /**
  * @brief Sets the value for the relative position "tag-pos-rel" tag
  *
- * @param resource the resource to apply the tag too.
+ * @param resource the resource to apply the tag too (cannot be NULL).
  * @param x the x value in 3D space
  * @param y the y value in 3D space
  * @param z the z value in 3D space
  */
 OC_API
 void oc_resource_tag_pos_rel(oc_resource_t *resource, double x, double y,
-                             double z);
+                             double z) OC_NONNULL();
 
 /**
  * @brief Sets the tag value for the relatvie position "tag_func_rel" tag
  *
- * @param resource the resource to apply the tag too.
+ * @param resource the resource to apply the tag too (cannot be NULL).
  * @param func the function description
  */
 OC_API
-void oc_resource_tag_func_desc(oc_resource_t *resource, oc_enum_t func);
+void oc_resource_tag_func_desc(oc_resource_t *resource, oc_enum_t func)
+  OC_NONNULL();
 
 /**
  * @brief sets the value of the "tag_locn" tag
  *
- * @param resource the resource to apply the tag too.
+ * @param resource the resource to apply the tag too (cannot be NULL).
  * @param locn the location
  */
 OC_API
-void oc_resource_tag_locn(oc_resource_t *resource, oc_locn_t locn);
+void oc_resource_tag_locn(oc_resource_t *resource, oc_locn_t locn) OC_NONNULL();
 
 /**
  * Helper function used when responding to a GET request to add Common
@@ -1106,50 +1114,53 @@ void oc_resource_tag_locn(oc_resource_t *resource, oc_locn_t locn);
  * }
  * ```
  *
- * @param[in] resource the resource the baseline Common Properties will be read
- *            from to respond to the GET request (cannot be NULL)
+ * @param resource the resource the baseline Common Properties will be read
+ * from to respond to the GET request (cannot be NULL)
  */
 OC_API
-void oc_process_baseline_interface(const oc_resource_t *resource);
+void oc_process_baseline_interface(const oc_resource_t *resource) OC_NONNULL();
 
 /**
  * Expose unsecured coap:// endpoints (in addition to secured coaps://
  * endpoints) for this resource in /oic/res.
  *
  * @note While the resource may advertise unsecured endpoints, the resource
- *       shall remain inaccessible until the hosting device is configured with
- *       an anon-clear Access Control Entry (ACE).
+ * shall remain inaccessible until the hosting device is configured with an
+ * anon-clear Access Control Entry (ACE).
  *
- * @param[in] resource the resource to make public
+ * @param resource the resource to make public (cannot be NULL)
  *
  * @see oc_new_resource
  */
 OC_API
-void oc_resource_make_public(oc_resource_t *resource);
+void oc_resource_make_public(oc_resource_t *resource) OC_NONNULL();
 
 /**
  * Specify if a resource can be found using OCF discover mechanisms.
  *
- * @param[in] resource to specify as discoverable or non-discoverable
- * @param[in] state if true the resource will be discoverable if false the
- *                  resource will be non-discoverable
+ * @param resource to specify as discoverable or non-discoverable (cannot be
+ * NULL)
+ * @param state if true the resource will be discoverable if false the resource
+ * will be non-discoverable
  *
  * @see oc_new_resource for example code using this function
  */
 OC_API
-void oc_resource_set_discoverable(oc_resource_t *resource, bool state);
+void oc_resource_set_discoverable(oc_resource_t *resource, bool state)
+  OC_NONNULL();
 
 #ifdef OC_HAS_FEATURE_PUSH
 /**
  * Specify if a resource can be pushable.
  *
- * @param[in] resource to specify as pushable or non-pushable
- * @param[in] state if true the resource will be pushable if false the
- *                  resource will be non-pushable
+ * @param resource to specify as pushable or non-pushable (cannot be NULL)
+ * @param state if true the resource will be pushable if false the resource will
+ * be non-pushable
  */
 OC_API
-void oc_resource_set_pushable(oc_resource_t *resource, bool state);
-#endif
+void oc_resource_set_pushable(oc_resource_t *resource, bool state) OC_NONNULL();
+
+#endif /* OC_HAS_FEATURE_PUSH */
 
 /**
  * Specify that a resource should notify clients when a property has been
@@ -1158,15 +1169,16 @@ void oc_resource_set_pushable(oc_resource_t *resource, bool state);
  * @note this function can be used to make a periodic observable resource
  *       unobservable.
  *
- * @param[in] resource the resource to specify the observability
- * @param[in] state true to make resource observable, false to make resource
- *                  unobservable
+ * @param resource the resource to specify the observability (cannot be NULL)
+ * @param state true to make resource observable, false to make resource
+ * unobservable
  *
  * @see oc_new_resource to see example code using this function
  * @see oc_resource_set_periodic_observable
  */
 OC_API
-void oc_resource_set_observable(oc_resource_t *resource, bool state);
+void oc_resource_set_observable(oc_resource_t *resource, bool state)
+  OC_NONNULL();
 
 /**
  * The resource will periodically notify observing clients of is property
@@ -1178,13 +1190,14 @@ void oc_resource_set_observable(oc_resource_t *resource, bool state);
  * Setting a `seconds` frequency of zero `0` is invalid and will result in an
  * invalid resource.
  *
- * @param[in] resource the resource to specify the periodic observability
- * @param[in] seconds the frequency in seconds that the resource will send out
+ * @param resource the resource to specify the periodic observability (cannot be
+ * NULL)
+ * @param seconds the frequency in seconds that the resource will send out
  *                    an notification of is property values.
  */
 OC_API
 void oc_resource_set_periodic_observable(oc_resource_t *resource,
-                                         uint16_t seconds);
+                                         uint16_t seconds) OC_NONNULL();
 
 /**
  * Specify a request_callback for GET, PUT, POST, and DELETE methods
@@ -1206,14 +1219,13 @@ void oc_resource_set_periodic_observable(oc_resource_t *resource,
  * @note Some methods may never by invoked based on the resources Interface as
  *       well as the provisioning permissions of the client.
  *
- * @param[in] resource the resource the callback handler will be registered to
- * @param[in] method specify if type method the callback is responsible for
- *                   handling
- * @param[in] callback the callback handler that will be invoked when a the
- *                     method is called on the resource.
- * @param[in] user_data context pointer that is passed to the
- *                      oc_request_callback_t. The pointer must remain valid as
- *                      long as the resource exists.
+ * @param resource the resource the callback handler will be registered to
+ * (cannot be NULL)
+ * @param method specify if type method the callback is responsible for handling
+ * @param callback the callback handler that will be invoked when a the method
+ * is called on the resource.
+ * @param user_data context pointer that is passed to the oc_request_callback_t.
+ * The pointer must remain valid as long as the resource exists.
  *
  * @see oc_new_resource to see example code using this function
  */
@@ -1221,7 +1233,7 @@ OC_API
 void oc_resource_set_request_handler(oc_resource_t *resource,
                                      oc_method_t method,
                                      oc_request_callback_t callback,
-                                     void *user_data);
+                                     void *user_data) OC_NONNULL(1);
 #ifdef OC_OSCORE
 /**
  * @brief sets the support of the secure multicast feature
@@ -1238,7 +1250,7 @@ void oc_resource_set_secure_mcast(oc_resource_t *resource, bool supported);
  *
  * The resource will be validated then added to the stack.
  *
- * @param[in] resource the resource to add to the stack
+ * @param resource the resource to add to the stack
  *
  * @return
  *  - true: the resource was successfully added to the stack.
@@ -1254,7 +1266,7 @@ bool oc_add_resource(oc_resource_t *resource);
  *
  * This will free the memory associated with the resource.
  *
- * @param[in] resource the resource to delete
+ * @param resource the resource to delete
  *
  * @return
  *  - true: when the resource has been deleted and memory freed.
@@ -1266,7 +1278,7 @@ bool oc_delete_resource(oc_resource_t *resource);
 /**
  * Schedule a callback to remove a resource.
  *
- * @param[in] resource the resource to delete
+ * @param resource the resource to delete
  */
 OC_API
 void oc_delayed_delete_resource(oc_resource_t *resource);
@@ -1342,8 +1354,10 @@ void oc_init_query_iterator(void);
  * ```
  *
  * @param[in] request the oc_request_t that contains the query parameters
+ * (cannot be NULL)
  * @param[out] key pointer to the location of the the key of the key=value pair
- * @param[out] key_len the length of the key string
+ * (cannot be NULL)
+ * @param[out] key_len the length of the key string (cannot be NULL)
  * @param[out] value pointer the location of the value string assigned to the
  *             key=value pair
  * @param[out] value_len the length of the value string
@@ -1354,7 +1368,8 @@ void oc_init_query_iterator(void);
  */
 OC_API
 int oc_iterate_query(const oc_request_t *request, const char **key,
-                     size_t *key_len, const char **value, size_t *value_len);
+                     size_t *key_len, const char **value, size_t *value_len)
+  OC_NONNULL(1, 2, 3);
 
 /**
  * Iterate though the URI query parameters for a specific key.
@@ -1394,7 +1409,8 @@ int oc_iterate_query(const oc_request_t *request, const char **key,
  */
 OC_API
 bool oc_iterate_query_get_values(const oc_request_t *request, const char *key,
-                                 const char **value, int *value_len);
+                                 const char **value, int *value_len)
+  OC_NONNULL();
 
 /**
  * Get a pointer to the start of the value in a URL query parameter key=value
@@ -1677,14 +1693,15 @@ void oc_send_separate_response(oc_separate_response_t *handle,
  * @note no need to call oc_notify_observers about resource changes that
  *       result from a PUT, or POST oc_request_callback_t.
  *
- * @param[in] resource the oc_resource_t that has a modified property
+ * @param[in] resource the oc_resource_t that has a modified property (cannot be
+ * NULL)
  *
  * @return
  *  - the number observers notified on success
  *  - `0` on failure could also mean no registered observers
  */
 OC_API
-int oc_notify_observers(oc_resource_t *resource);
+int oc_notify_observers(oc_resource_t *resource) OC_NONNULL();
 
 /**
  * Schedule notify all observers to invoke after a set number of seconds.
@@ -1692,11 +1709,13 @@ int oc_notify_observers(oc_resource_t *resource);
  * @note no need to call oc_notify_observers about resource changes that
  *       result from a PUT, or POST oc_request_callback_t.
  *
- * @param[in] resource the oc_resource_t that has a modified property
+ * @param[in] resource the oc_resource_t that has a modified property (cannot be
+ * NULL)
  * @param[in] seconds the number of seconds to wait till the callback is invoked
  */
 OC_API
-void oc_notify_observers_delayed(oc_resource_t *resource, uint16_t seconds);
+void oc_notify_observers_delayed(oc_resource_t *resource, uint16_t seconds)
+  OC_NONNULL();
 
 /**
  * Schedule notify all observers to invoke after a set number of milliseconds.
@@ -1704,13 +1723,22 @@ void oc_notify_observers_delayed(oc_resource_t *resource, uint16_t seconds);
  * @note no need to call oc_notify_observers about resource changes that
  *       result from a PUT, or POST oc_request_callback_t.
  *
- * @param[in] resource the oc_resource_t that has a modified property
+ * @param[in] resource the oc_resource_t that has a modified property (cannot be
+ * NULL)
  * @param[in] milliseconds the number of milliseconds to wait till the callback
  * is invoked
  */
 OC_API
 void oc_notify_observers_delayed_ms(oc_resource_t *resource,
-                                    uint16_t milliseconds);
+                                    uint16_t milliseconds) OC_NONNULL();
+
+/**
+ * @brief Notify all relevant mechanisms of a change to a given resource.
+ *
+ * @param resource resource that has a modified property (cannot be NULL)
+ */
+OC_API
+void oc_notify_resource_changed(oc_resource_t *resource) OC_NONNULL();
 
 #ifdef __cplusplus
 }

@@ -215,9 +215,10 @@
     <ClInclude Include="..\..\..\api\c-timestamp\timestamp.h" />
     <ClInclude Include="..\..\..\api\cloud\oc_cloud_internal.h" />
     <ClInclude Include="..\..\..\api\cloud\rd_client.h" />
+    <ClInclude Include="..\..\..\api\oc_etag_internal.h" />
     <ClInclude Include="..\..\..\api\oc_events_internal.h" />
     <ClInclude Include="..\..\..\api\oc_introspection_internal.h" />
-    <ClInclude Include="..\..\..\api\oc_main.h" />
+    <ClInclude Include="..\..\..\api\oc_main_internal.h" />
     <ClInclude Include="..\..\..\api\oc_mnt_internal.h" />
     <ClInclude Include="..\..\..\api\oc_resource_factory_internal.h" />
     <ClInclude Include="..\..\..\api\oc_session_events_internal.h" />
@@ -242,6 +243,7 @@
     <ClInclude Include="..\..\..\include\oc_discovery.h" />
     <ClInclude Include="..\..\..\include\oc_endpoint.h" />
     <ClInclude Include="..\..\..\include\oc_enums.h" />
+    <ClInclude Include="..\..\..\include\oc_etag.h" />
     <ClInclude Include="..\..\..\include\oc_helpers.h" />
     <ClInclude Include="..\..\..\include\oc_introspection.h" />
     <ClInclude Include="..\..\..\include\oc_log.h" />
@@ -331,6 +333,7 @@
     <ClCompile Include="..\..\..\api\oc_discovery.c" />
     <ClCompile Include="..\..\..\api\oc_endpoint.c" />
     <ClCompile Include="..\..\..\api\oc_enums.c" />
+    <ClCompile Include="..\..\..\api\oc_tag.c" />
     <ClCompile Include="..\..\..\api\oc_helpers.c" />
     <ClCompile Include="..\..\..\api\oc_introspection.c" />
     <ClCompile Include="..\..\..\api\oc_log.c" />

@@ -183,9 +183,9 @@ void oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2);
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 bool _oc_copy_string_to_array(oc_string_array_t *ocstringarray,
-                              const char str[], size_t index);
+                              const char str[], size_t index) OC_NONNULL();
 bool _oc_string_array_add_item(oc_string_array_t *ocstringarray,
-                               const char str[]);
+                               const char str[]) OC_NONNULL();
 
 /**
  * @brief Join a string array into a single string using ' ' as a delimiter.

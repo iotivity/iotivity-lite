@@ -28,7 +28,7 @@
 #include "oc_rep.h"
 #include "oc_resource_internal.h"
 #include "oc_ri_internal.h"
-#include "oc_main.h"
+#include "oc_main_internal.h"
 #include "oc_server_api_internal.h"
 #include "oc_swupdate_internal.h"
 #include "port/oc_assert.h"
@@ -55,13 +55,17 @@
 #include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
 
-#ifdef OC_HAS_FEATURE_PUSH
-#include "api/oc_push_internal.h"
-#endif /* OC_HAS_FEATURE_PUSH */
+#ifdef OC_HAS_FEATURE_ETAG
+#include "api/oc_etag_internal.h"
+#endif
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 #include "api/plgd/plgd_time_internal.h"
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
+
+#ifdef OC_HAS_FEATURE_PUSH
+#include "api/oc_push_internal.h"
+#endif /* OC_HAS_FEATURE_PUSH */
 
 #include <assert.h>
 #include <stdarg.h>
@@ -555,6 +559,9 @@ oc_core_populate_resource(int core_resource, size_t device_index,
   r->put_handler.cb = put;
   r->post_handler.cb = post;
   r->delete_handler.cb = delete;
+#ifdef OC_HAS_FEATURE_ETAG
+  r->etag = oc_etag_get();
+#endif /* OC_HAS_FEATURE_ETAG */
 }
 
 oc_uuid_t *

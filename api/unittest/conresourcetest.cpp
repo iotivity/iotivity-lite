@@ -47,8 +47,6 @@ class TestConResourceWithDevice : public ::testing::Test {
 public:
   static void SetUpTestCase()
   {
-    oc_log_set_level(OC_LOG_LEVEL_DEBUG);
-
     oc::TestDevice::SetServerDevices({
       {
         /*rt=*/"oic.d.test1",

@@ -16,10 +16,12 @@
  *
  ****************************************************************************/
 
-#ifndef OC_MAIN_H
-#define OC_MAIN_H
+#ifndef OC_MAIN_INTERNAL_H
+#define OC_MAIN_INTERNAL_H
 
 #include "oc_api.h"
+#include <stdbool.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,12 +35,7 @@ typedef struct oc_factory_presets_t
 
 oc_factory_presets_t *oc_get_factory_presets_cb(void);
 
-typedef struct oc_random_pin_t
-{
-  oc_random_pin_cb_t cb;
-  void *data;
-} oc_random_pin_t;
-
+/** @brief Check if the IoT stack is initialized. */
 bool oc_main_initialized(void);
 
 /**
@@ -67,4 +64,4 @@ bool oc_drop_command(size_t device);
 }
 #endif
 
-#endif /* OC_MAIN_H */
+#endif /* OC_MAIN_INTERNAL_H */

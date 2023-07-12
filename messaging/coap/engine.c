@@ -52,7 +52,7 @@
 #include "api/oc_buffer_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_events_internal.h"
-#include "api/oc_main.h"
+#include "api/oc_main_internal.h"
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/coap_internal.h"
 #include "messaging/coap/coap_options.h"
@@ -575,7 +575,8 @@ coap_receive(oc_message_t *msg)
         handler_ctx.buffer = transaction->message->data + COAP_MAX_HEADER_SIZE;
 #endif /* OC_BLOCK_WISE */
         if (oc_ri_invoke_coap_entity_handler(message, response, &msg->endpoint,
-                                             handler_ctx)) {
+                                             handler_ctx) &&
+            (response->code != VALID_2_03)) {
 #ifdef OC_BLOCK_WISE
           uint32_t payload_size = 0;
 #ifdef OC_TCP
@@ -614,10 +615,12 @@ coap_receive(oc_message_t *msg)
         }
 #ifdef OC_BLOCK_WISE
         else {
-          if (request_buffer)
+          if (request_buffer) {
             request_buffer->ref_count = 0;
-          if (response_buffer)
+          }
+          if (response_buffer) {
             response_buffer->ref_count = 0;
+          }
         }
 #endif /* OC_BLOCK_WISE */
         if (response->code != 0) {

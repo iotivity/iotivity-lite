@@ -72,6 +72,9 @@ bool oc_collection_add(oc_collection_t *collection) OC_NONNULL();
 /** @brief Get head of the global list of collections */
 oc_collection_t *oc_collection_get_all(void);
 
+/** @brief Free all collections from the global list */
+void oc_collections_free_all(void);
+
 /** @brief Iterate the global list of colletions and return the next collection
  * linked with the given resource */
 oc_collection_t *oc_get_next_collection_with_link(const oc_resource_t *resource,

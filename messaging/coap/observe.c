@@ -52,6 +52,7 @@
 #ifdef OC_SERVER
 
 #include "api/oc_buffer_internal.h"
+#include "api/oc_helpers_internal.h"
 #include "api/oc_server_api_internal.h"
 #include "messaging/coap/coap_options.h"
 #include "messaging/coap/observe.h"
@@ -106,7 +107,7 @@ typedef struct batch_observer
 OC_LIST(g_batch_observers_list);
 OC_MEMB(g_batch_observers_memb, batch_observer_t, COAP_MAX_OBSERVERS);
 
-typedef bool cmp_batch_observer_t(batch_observer_t *o, void *ctx);
+typedef bool cmp_batch_observer_t(const batch_observer_t *o, const void *ctx);
 
 #if OC_DBG_IS_ENABLED
 static const char *
@@ -120,15 +121,15 @@ batch_observer_get_resource_uri(batch_observer_t *batch_obs)
 #endif
 
 static bool
-cmp_batch_by_observer(batch_observer_t *o, void *ctx)
+cmp_batch_by_observer(const batch_observer_t *o, const void *ctx)
 {
-  return o->obs == (coap_observer_t *)ctx;
+  return o->obs == (const coap_observer_t *)ctx;
 }
 
 static bool
-cmp_batch_by_resource(batch_observer_t *o, void *ctx)
+cmp_batch_by_resource(const batch_observer_t *o, const void *ctx)
 {
-  return o->resource == (oc_resource_t *)ctx;
+  return o->resource == (const oc_resource_t *)ctx;
 }
 
 static oc_event_callback_retval_t process_batch_observers(void *data);
@@ -144,15 +145,16 @@ free_batch_observer(batch_observer_t *batch_obs)
 }
 
 static void
-remove_discovery_batch_observers(cmp_batch_observer_t *cmp, void *ctx)
+remove_discovery_batch_observers(cmp_batch_observer_t *cmp, const void *ctx)
 {
   batch_observer_t *batch_obs =
     (batch_observer_t *)oc_list_head(g_batch_observers_list);
   while (batch_obs != NULL) {
     if (cmp(batch_obs, ctx)) {
+      batch_observer_t *next = batch_obs->next;
       oc_list_remove(g_batch_observers_list, batch_obs);
       free_batch_observer(batch_obs);
-      batch_obs = (batch_observer_t *)oc_list_head(g_batch_observers_list);
+      batch_obs = next;
     } else {
       batch_obs = batch_obs->next;
     }
@@ -186,31 +188,30 @@ coap_get_observers(void)
   return g_observers_list;
 }
 
-// TODO: use oc_string_view_t
-static const char *
+static oc_string_view_t
 get_iface_query(oc_interface_mask_t iface_mask)
 {
   switch (iface_mask) {
   case OC_IF_BASELINE:
-    return "if=oic.if.baseline";
+    return OC_STRING_VIEW("if=oic.if.baseline");
   case OC_IF_LL:
-    return "if=oic.if.ll";
+    return OC_STRING_VIEW("if=oic.if.ll");
   case OC_IF_B:
-    return "if=oic.if.b";
+    return OC_STRING_VIEW("if=oic.if.b");
   case OC_IF_R:
-    return "if=oic.if.r";
+    return OC_STRING_VIEW("if=oic.if.r");
   case OC_IF_RW:
-    return "if=oic.if.rw";
+    return OC_STRING_VIEW("if=oic.if.rw");
   case OC_IF_A:
-    return "if=oic.if.a";
+    return OC_STRING_VIEW("if=oic.if.a");
   case OC_IF_S:
-    return "if=oic.if.s";
+    return OC_STRING_VIEW("if=oic.if.s");
   case OC_IF_CREATE:
-    return "if=oic.if.create";
+    return OC_STRING_VIEW("if=oic.if.create");
   default:
     break;
   }
-  return NULL;
+  return oc_string_view_null();
 }
 
 static void
@@ -220,11 +221,10 @@ coap_remove_observer(coap_observer_t *o)
          o->token[0], o->token[1]);
 
 #ifdef OC_BLOCK_WISE
-  const char *query = get_iface_query(o->iface_mask);
+  oc_string_view_t query = get_iface_query(o->iface_mask);
   oc_blockwise_state_t *response_state = oc_blockwise_find_response_buffer(
     oc_string(o->resource->uri) + 1, oc_string_len(o->resource->uri) - 1,
-    &o->endpoint, OC_GET, query, query != NULL ? strlen(query) : 0,
-    OC_BLOCKWISE_SERVER);
+    &o->endpoint, OC_GET, query.data, query.length, OC_BLOCKWISE_SERVER);
   // If response_state->payload_size == 0 it means, that this blockwise state
   // doesn't belong to the observer. Because the observer always sets
   // payload_size to greater than 0. The payload_size with 0 happens when the
@@ -592,11 +592,10 @@ coap_prepare_notification_blockwise(coap_packet_t *notification,
 {
   assert(oc_string_len(obs->resource->uri) > 0);
   notification->type = COAP_TYPE_CON;
-  const char *query = get_iface_query(obs->iface_mask);
-  size_t query_len = query != NULL ? strlen(query) : 0;
+  oc_string_view_t query = get_iface_query(obs->iface_mask);
   oc_blockwise_state_t *response_state = oc_blockwise_find_response_buffer(
     oc_string(obs->resource->uri) + 1, oc_string_len(obs->resource->uri) - 1,
-    &obs->endpoint, OC_GET, query, query_len, OC_BLOCKWISE_SERVER);
+    &obs->endpoint, OC_GET, query.data, query.length, OC_BLOCKWISE_SERVER);
   if (response_state != NULL) {
     if (response_state->payload_size != response_state->next_block_offset) {
       OC_DBG("skipping for blockwise transfer running");
@@ -613,8 +612,8 @@ coap_prepare_notification_blockwise(coap_packet_t *notification,
     OC_ERR("cannot allocate response buffer");
     return -1;
   }
-  if (query != NULL) {
-    oc_new_string(&response_state->uri_query, query, query_len);
+  if (query.data != NULL) {
+    oc_new_string(&response_state->uri_query, query.data, query.length);
   }
   if (finish_cb != NULL) {
     response_state->finish_cb = finish_cb;
@@ -780,9 +779,9 @@ coap_notify_collection(oc_collection_t *collection,
   uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
   if (!buffer) {
 #if OC_WRN_IS_ENABLED
-    const char *iface = get_iface_query(iface_mask);
+    oc_string_view_t iface = get_iface_query(iface_mask);
     OC_WRN("coap_notify_collection(%s): out of memory allocating buffer",
-           iface != NULL ? iface : "NULL");
+           iface.data != NULL ? iface.data : "NULL");
 #endif /* OC_WRN_IS_ENABLED */
     return -1;
   }
@@ -811,9 +810,9 @@ coap_notify_collection(oc_collection_t *collection,
   int err = 0;
   if (!oc_handle_collection_request(OC_GET, &request, iface_mask, NULL)) {
 #if OC_WRN_IS_ENABLED
-    const char *iface = get_iface_query(iface_mask);
+    oc_string_view_t iface = get_iface_query(iface_mask);
     OC_WRN("coap_notify_collection(%s): failed to handle collection request",
-           iface != NULL ? iface : "NULL");
+           iface.data != NULL ? iface.data : "NULL");
 #endif /* OC_WRN_IS_ENABLED */
     err = -1;
     goto cleanup;
@@ -954,11 +953,6 @@ coap_notify_observers_internal(oc_resource_t *resource,
                                oc_response_buffer_t *response_buf,
                                const oc_endpoint_t *endpoint)
 {
-  if (!resource) {
-    OC_WRN("coap_notify_observers_internal: no resource passed; returning");
-    return 0;
-  }
-
 #ifdef OC_SECURITY
   const oc_sec_pstat_t *ps = oc_sec_get_pstat(resource->device);
   if (ps->s != OC_DOS_RFNOP) {
@@ -1136,12 +1130,12 @@ dispatch_process_batch_observers(void)
 }
 
 static void
-create_batch_for_removed_resource(CborEncoder *links_array,
+create_batch_for_removed_resource(CborEncoder *links,
                                   batch_observer_t *batch_obs)
 {
   OC_DBG("create_batch_for_removed_resource: resource %s",
          oc_string(batch_obs->removed_resource_uri));
-  oc_rep_start_object((links_array), links);
+  oc_rep_start_object(links, links_obj);
   char href[OC_MAX_OCF_URI_SIZE];
   memcpy(href, "ocf://", 6);
   oc_uuid_to_str(oc_core_get_device_id(batch_obs->obs->resource->device),
@@ -1150,26 +1144,25 @@ create_batch_for_removed_resource(CborEncoder *links_array,
          oc_string_len(batch_obs->removed_resource_uri));
   href[6 + OC_UUID_LEN - 1 + oc_string_len(batch_obs->removed_resource_uri)] =
     '\0';
-  oc_rep_set_text_string(links, href, href);
-  oc_rep_set_key(oc_rep_object(links), "rep");
-  memcpy(oc_rep_get_encoder(), &links_map, sizeof(CborEncoder));
+  oc_rep_set_text_string(links_obj, href, href);
+  oc_rep_set_key(oc_rep_object(links_obj), "rep");
+  memcpy(oc_rep_get_encoder(), oc_rep_object(links_obj), sizeof(CborEncoder));
   oc_rep_start_root_object();
   oc_rep_end_root_object();
-  memcpy(&links_map, oc_rep_get_encoder(), sizeof(CborEncoder));
-  oc_rep_end_object((links_array), links);
+  memcpy(oc_rep_object(links_obj), oc_rep_get_encoder(), sizeof(CborEncoder));
+  oc_rep_end_object(links, links_obj);
 }
 
 static void
-create_batch_for_batch_observer(CborEncoder *links_array,
-                                batch_observer_t *batch_obs,
-                                oc_endpoint_t *endpoint)
+create_batch_for_batch_observer(CborEncoder *links, batch_observer_t *batch_obs,
+                                const oc_endpoint_t *endpoint)
 {
-  if (batch_obs->resource) {
-    oc_discovery_create_batch_for_resource(links_array, batch_obs->resource,
+  if (batch_obs->resource != NULL) {
+    oc_discovery_create_batch_for_resource(links, batch_obs->resource,
                                            endpoint);
     return;
   }
-  create_batch_for_removed_resource(links_array, batch_obs);
+  create_batch_for_removed_resource(links, batch_obs);
 }
 
 static oc_event_callback_retval_t
@@ -1185,10 +1178,10 @@ process_batch_observers(void *data)
   uint8_t buffer[OC_MIN_OBSERVE_SIZE];
 #else  /* !OC_DYNAMIC_ALLOCATION */
   uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
-  if (!buffer) {
+  if (buffer == NULL) {
     OC_WRN("process_batch_observers: out of memory allocating buffer");
-    goto leave_notify_observers;
-  } //! buffer
+    return OC_EVENT_DONE;
+  }
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_response_buffer_t response_buffer;
   memset(&response_buffer, 0, sizeof(response_buffer));
@@ -1209,12 +1202,13 @@ process_batch_observers(void *data)
     }
     coap_observer_t *obs = batch_obs->obs;
 #ifdef OC_BLOCK_WISE
-    const char *query = get_iface_query(obs->iface_mask);
-    oc_blockwise_state_t *response_state = oc_blockwise_find_response_buffer(
-      oc_string(obs->resource->uri) + 1, oc_string_len(obs->resource->uri) - 1,
-      &obs->endpoint, OC_GET, query, query != NULL ? strlen(query) : 0,
-      OC_BLOCKWISE_SERVER);
-    if (response_state) {
+    oc_string_view_t query = get_iface_query(obs->iface_mask);
+    const oc_blockwise_state_t *response_state =
+      oc_blockwise_find_response_buffer(oc_string(obs->resource->uri) + 1,
+                                        oc_string_len(obs->resource->uri) - 1,
+                                        &obs->endpoint, OC_GET, query.data,
+                                        query.length, OC_BLOCKWISE_SERVER);
+    if (response_state != NULL) {
       batch_obs = batch_obs->next;
       continue;
     }
@@ -1279,9 +1273,9 @@ leave_notify_observers:
 }
 
 static bool
-cmp_add_batch_observer_resource(batch_observer_t *batch_obs,
-                                coap_observer_t *obs, oc_resource_t *resource,
-                                bool removed)
+cmp_add_batch_observer_resource(const batch_observer_t *batch_obs,
+                                const coap_observer_t *obs,
+                                const oc_resource_t *resource, bool removed)
 {
   if (batch_obs->obs != obs) {
     return false;
@@ -1306,9 +1300,8 @@ add_notification_batch_observers_list(oc_resource_t *resource, bool removed)
   if (resource == NULL) {
     return;
   }
-  oc_resource_t *discover_resource =
+  const oc_resource_t *discover_resource =
     oc_core_get_resource_by_index(OCF_RES, resource->device);
-
   if (discover_resource == resource) {
     return;
   }
@@ -1326,8 +1319,8 @@ add_notification_batch_observers_list(oc_resource_t *resource, bool removed)
 #endif /* OC_SECURITY */
     // deduplicate observations.
     bool found = false;
-    batch_observer_t *batch_obs = NULL;
-    for (batch_obs = (batch_observer_t *)oc_list_head(g_batch_observers_list);
+    for (batch_observer_t *batch_obs =
+           (batch_observer_t *)oc_list_head(g_batch_observers_list);
          batch_obs; batch_obs = batch_obs->next) {
       if (cmp_add_batch_observer_resource(batch_obs, obs, resource, removed)) {
         found = true;
