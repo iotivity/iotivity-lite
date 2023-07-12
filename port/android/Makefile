@@ -109,6 +109,7 @@ export CLOUD ?= 1
 JAVA ?= 1
 export INTROSPECTION ?= 1
 export IDD ?= 1
+export ETAG ?= 0
 
 ROOT_DIR = ../..
 SWIG_DIR = $(ROOT_DIR)/swig
@@ -153,6 +154,9 @@ SRC_API:=$(wildcard ../../api/*.c)
 ifneq ($(INTROSPECTION),1)
 SRC_API:=$(filter-out %oc_introspection.c,${SRC_API})
 endif
+ifneq ($(ETAG),1)
+SRC_API:=$(filter-out %oc_etag.c,${SRC_API})
+endif
 SRC:=${SRC_API} $(wildcard ../../messaging/coap/*.c ../../port/android/*.c)
 SRC_CLIENT:=$(wildcard ../../api/client/*.c)
 SRC_CLOUD:=$(wildcard ../../api/cloud/*.c)
@@ -172,6 +176,9 @@ HEADERS:=$(filter-out %server_introspection.dat.h,${HEADERS})
 else
 HEADERS:=$(filter-out %oc_introspection.h,${HEADERS})
 endif
+endif
+ifneq ($(ETAG),1)
+HEADERS:=$(filter-out %oc_etag.h,${SRC_API})
 endif
 HEADERS_COAP := $(filter-out %_internal.h,$(wildcard ../../messaging/coap/*.h))
 HEADERS_UTIL := $(filter-out %_internal.h,$(wildcard ../../util/*.h))
@@ -284,12 +291,16 @@ ifeq ($(TCP),1)
 	EXTRA_CFLAGS += -DOC_TCP
 endif
 
+ifeq ($(ETAG),1)
+	EXTRA_CFLAGS += -DOC_ETAG
+endif
+
 CFLAGS += $(EXTRA_CFLAGS)
 
 CONSTRAINED_LIBS = libiotivity-lite-server.a libiotivity-lite-client.a \
 		    libiotivity-lite-client-server.a
 
-ifeq ($(JAVA), 1)
+ifeq ($(JAVA),1)
 	SWIG = swig
 endif
 

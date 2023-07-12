@@ -675,6 +675,11 @@ process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
     return;
   }
 
+#ifdef OC_SECURITY
+  if (!oc_sec_check_acl(OC_GET, resource, endpoint)) {
+    return;
+  }
+#endif /* OC_SECURITY */
   oc_request_t rest_request = { 0 };
   oc_response_t response = { 0 };
   oc_response_buffer_t response_buffer;
@@ -684,60 +689,56 @@ process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
   rest_request.query = 0;
   rest_request.query_len = 0;
   rest_request.method = OC_GET;
-#ifdef OC_SECURITY
-  if (oc_sec_check_acl(OC_GET, resource, endpoint)) {
-#endif /* OC_SECURITY */
-    oc_rep_start_object((links_array), links);
 
-    char href[OC_MAX_OCF_URI_SIZE];
-    memcpy(href, "ocf://", 6);
-    oc_uuid_to_str(oc_core_get_device_id(resource->device), href + 6,
-                   OC_UUID_LEN);
-    memcpy(href + 6 + OC_UUID_LEN - 1, oc_string(resource->uri),
-           oc_string_len(resource->uri));
-    href[6 + OC_UUID_LEN - 1 + oc_string_len(resource->uri)] = '\0';
+  oc_rep_start_object((links_array), links_obj);
 
-    oc_rep_set_text_string(links, href, href);
-    oc_rep_set_key(oc_rep_object(links), "rep");
-    memcpy(oc_rep_get_encoder(), &links_map, sizeof(CborEncoder));
+  char href[OC_MAX_OCF_URI_SIZE];
+  memcpy(href, "ocf://", 6);
+  oc_uuid_to_str(oc_core_get_device_id(resource->device), href + 6,
+                 OC_UUID_LEN);
+  memcpy(href + 6 + OC_UUID_LEN - 1, oc_string(resource->uri),
+         oc_string_len(resource->uri));
+  href[6 + OC_UUID_LEN - 1 + oc_string_len(resource->uri)] = '\0';
 
-    int size_before = oc_rep_get_encoded_payload_size();
-    rest_request.resource = resource;
-    response_buffer.code = 0;
-    response_buffer.response_length = 0;
+  oc_rep_set_text_string(links_obj, href, href);
+  // TODO: add etag prop here
+  oc_rep_set_key(oc_rep_object(links_obj), "rep");
+  memcpy(oc_rep_get_encoder(), oc_rep_object(links_obj), sizeof(CborEncoder));
+
+  int size_before = oc_rep_get_encoded_payload_size();
+  rest_request.resource = resource;
+  response_buffer.code = 0;
+  response_buffer.response_length = 0;
 
 #if defined(OC_SERVER) && defined(OC_COLLECTIONS)
-    if (oc_check_if_collection(resource)) {
-      if (!oc_handle_collection_request(OC_GET, &rest_request,
-                                        resource->default_interface, NULL)) {
-        OC_WRN("failed to process batch response: failed to handle collection "
-               "request");
-      }
-    } else
+  if (oc_check_if_collection(resource)) {
+    if (!oc_handle_collection_request(OC_GET, &rest_request,
+                                      resource->default_interface, NULL)) {
+      OC_WRN("failed to process batch response: failed to handle collection "
+             "request");
+    }
+  } else
 #endif /* OC_SERVER && OC_COLLECTIONS */
-    {
-      resource->get_handler.cb(&rest_request, resource->default_interface,
-                               resource->get_handler.user_data);
-    }
-
-    int size_after = oc_rep_get_encoded_payload_size();
-    if (size_before == size_after) {
-      oc_rep_start_root_object();
-      oc_rep_end_root_object();
-    }
-    memcpy(&links_map, oc_rep_get_encoder(), sizeof(CborEncoder));
-    oc_rep_end_object((links_array), links);
-#ifdef OC_SECURITY
+  {
+    resource->get_handler.cb(&rest_request, resource->default_interface,
+                             resource->get_handler.user_data);
   }
-#endif /* OC_SECURITY */
+
+  int size_after = oc_rep_get_encoded_payload_size();
+  if (size_before == size_after) {
+    oc_rep_start_root_object();
+    oc_rep_end_root_object();
+  }
+  memcpy(oc_rep_object(links_obj), oc_rep_get_encoder(), sizeof(CborEncoder));
+  oc_rep_end_object((links_array), links_obj);
 }
 
 void
-oc_discovery_create_batch_for_resource(CborEncoder *links_array,
+oc_discovery_create_batch_for_resource(CborEncoder *links,
                                        oc_resource_t *resource,
                                        const oc_endpoint_t *endpoint)
 {
-  process_batch_response(links_array, resource, endpoint);
+  process_batch_response(links, resource, endpoint);
 }
 
 static void
@@ -871,7 +872,7 @@ oc_core_discovery_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
       matches++;
     }
   } break;
-#endif /* #ifdef OC_RES_BATCH_SUPPORT */
+#endif /* OC_RES_BATCH_SUPPORT */
   case OC_IF_BASELINE: {
     oc_rep_start_links_array();
     oc_rep_start_object(oc_rep_array(links), props);

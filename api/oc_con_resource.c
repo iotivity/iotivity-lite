@@ -19,6 +19,7 @@
 #include "api/oc_con_resource_internal.h"
 #include "api/oc_core_res_internal.h"
 #include "api/oc_rep_internal.h"
+#include "api/oc_server_api_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_rep.h"
@@ -120,7 +121,7 @@ con_resource_post(oc_request_t *request, oc_interface_mask_t iface_mask,
   if (name != NULL) {
     oc_core_device_set_name(device, oc_string(*name), oc_string_len(*name));
 #if defined(OC_SERVER)
-    oc_notify_observers_delayed(dev, 0);
+    oc_notify_resource_changed_delayed_ms(dev, 0);
 #endif /* OC_SERVER */
     oc_rep_start_root_object();
     oc_device_info_t *info = oc_core_get_device_info(device);

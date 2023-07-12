@@ -29,6 +29,7 @@
 #include "plgd/plgd_time.h"
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 
+#include <algorithm>
 #include <array>
 #include <gtest/gtest.h>
 #include <vector>
@@ -365,6 +366,22 @@ TestDevice::ClearDynamicResource(size_t device, size_t index, bool doDelete)
   if (doDelete) {
     oc_delete_resource(res);
   }
+}
+
+bool
+TestDevice::ClearDynamicResource(oc_resource_t *resource, bool doDelete)
+{
+  for (auto &dev : dynamic_resources) {
+    auto it = std::find(dev.second.begin(), dev.second.end(), resource);
+    if (it != dev.second.end()) {
+      dev.second.erase(it);
+      if (doDelete) {
+        oc_delete_resource(resource);
+      }
+      return true;
+    }
+  }
+  return false;
 }
 
 void

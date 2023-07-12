@@ -17,6 +17,7 @@
  ****************************************************************************/
 
 #include "api/oc_buffer_internal.h"
+#include "api/oc_main_internal.h"
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/coap_options.h"
 #include "messaging/coap/engine.h"
@@ -38,6 +39,10 @@
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "api/oc_collection_internal.h"
 #endif /* OC_COLLECTIONS && OC_SERVER */
+
+#ifdef OC_HAS_FEATURE_ETAG
+#include "api/oc_etag_internal.h"
+#endif /* OC_HAS_FEATURE_ETAG */
 
 #ifdef OC_SECURITY
 #include "oc_store.h"
@@ -175,18 +180,22 @@ oc_ignore_request(oc_request_t *request)
 void
 oc_set_immutable_device_identifier(size_t device, const oc_uuid_t *piid)
 {
-  if (piid && device < oc_core_get_num_devices()) {
-    oc_device_info_t *info = oc_core_get_device_info(device);
-    if (info) {
-#ifdef OC_SECURITY
-      oc_sec_load_unique_ids(device);
-#endif /* OC_SECURITY */
-      memcpy(info->piid.id, piid->id, sizeof(oc_uuid_t));
-#ifdef OC_SECURITY
-      oc_sec_dump_unique_ids(device);
-#endif /* OC_SECURITY */
-    }
+  if (piid == NULL) {
+    OC_ERR("cannot set immutable device identifier: invalid piid");
+    return;
   }
+  oc_device_info_t *info = oc_core_get_device_info(device);
+  if (info == NULL) {
+    OC_ERR("cannot set immutable device identifier: invalid device");
+    return;
+  }
+#ifdef OC_SECURITY
+  oc_sec_load_unique_ids(device);
+#endif /* OC_SECURITY */
+  memcpy(info->piid.id, piid->id, sizeof(oc_uuid_t));
+#ifdef OC_SECURITY
+  oc_sec_dump_unique_ids(device);
+#endif /* OC_SECURITY */
 }
 
 void
@@ -474,13 +483,10 @@ oc_populate_resource_object(oc_resource_t *resource, const char *name,
 #ifdef OC_SECURITY
   resource->properties |= OC_SECURE;
 #endif /* OC_SECURITY */
-#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-  coap_notify_discovery_batch_observers(resource);
-#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
-#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
-  oc_notify_observers_delayed(oc_core_get_resource_by_index(OCF_RES, device),
-                              0);
-#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
+
+#ifdef OC_HAS_FEATURE_ETAG
+  resource->etag = oc_etag_get();
+#endif /* OC_HAS_FEATURE_ETAG */
 }
 
 oc_resource_t *
@@ -531,6 +537,7 @@ oc_add_collection_v1(oc_resource_t *collection)
     return false;
   }
   oc_resource_set_observable(collection, true);
+  oc_notify_resource_added(collection);
   return true;
 }
 
@@ -821,6 +828,10 @@ oc_send_separate_response(oc_separate_response_t *handle,
 int
 oc_notify_observers(oc_resource_t *resource)
 {
+  assert(resource != NULL);
+  if (!oc_main_initialized()) {
+    return 0;
+  }
   return coap_notify_observers(resource, NULL, NULL);
 }
 
@@ -835,9 +846,7 @@ static void
 oc_notify_observers_delayed_ticks(oc_resource_t *resource,
                                   oc_clock_time_t ticks)
 {
-  if (resource == NULL) {
-    return;
-  }
+  assert(resource != NULL);
   if (!coap_want_be_notified(resource)) {
     return;
   }
@@ -861,10 +870,100 @@ oc_notify_observers_delayed_ms(oc_resource_t *resource, uint16_t milliseconds)
   oc_notify_observers_delayed_ticks(resource, ticks);
 }
 
+static void
+notify_resource_changed(oc_resource_t *resource)
+{
+  if ((resource->properties & OC_OBSERVABLE) != 0) {
+    oc_notify_observers(resource);
+  }
+#ifdef OC_HAS_FEATURE_ETAG
+  oc_resource_update_etag(resource);
+#endif /* OC_HAS_FEATURE_ETAG */
+}
+
+void
+oc_notify_resource_changed(oc_resource_t *resource)
+{
+  assert(resource != NULL);
+  if (!oc_main_initialized()) {
+    return;
+  }
+  notify_resource_changed(resource);
+}
+
+static oc_event_callback_retval_t
+notify_resource_changed_async(void *data)
+{
+  notify_resource_changed((oc_resource_t *)data);
+  return OC_EVENT_DONE;
+}
+
+static void
+notify_resource_changed_delayed_ms(oc_resource_t *resource,
+                                   uint64_t milliseconds)
+{
+  oc_reset_delayed_callback_ms(resource, &notify_resource_changed_async,
+                               milliseconds);
+}
+
+void
+oc_notify_resource_changed_delayed_ms(oc_resource_t *resource,
+                                      uint64_t milliseconds)
+{
+  assert(resource != NULL);
+  if (!oc_main_initialized()) {
+    return;
+  }
+  notify_resource_changed_delayed_ms(resource, milliseconds);
+}
+
+void
+oc_notify_resource_added(oc_resource_t *resource)
+{
+#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
+  if (!oc_main_initialized()) {
+    return;
+  }
+#ifdef OC_RES_BATCH_SUPPORT
+  coap_notify_discovery_batch_observers(resource);
+#endif /* OC_RES_BATCH_SUPPORT */
+  oc_resource_t *discovery =
+    oc_core_get_resource_by_index(OCF_RES, resource->device);
+  if (discovery != NULL) {
+    notify_resource_changed_delayed_ms(discovery, 0);
+  }
+#else  /* !OC_DISCOVERY_RESOURCE_OBSERVABLE */
+  (void)resource;
+#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
+}
+
+void
+oc_notify_resource_removed(oc_resource_t *resource)
+{
+#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
+  if (!oc_main_initialized()) {
+    return;
+  }
+
+#ifdef OC_RES_BATCH_SUPPORT
+  coap_remove_discovery_batch_observers_by_resource(resource);
+#endif /* OC_RES_BATCH_SUPPORT */
+
+  oc_resource_t *discovery =
+    oc_core_get_resource_by_index(OCF_RES, resource->device);
+  if (discovery != NULL) {
+    notify_resource_changed_delayed_ms(discovery, 0);
+  }
+#else  /* !OC_DISCOVERY_RESOURCE_OBSERVABLE */
+  (void)resource;
+#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
+}
+
 void
 oc_notify_clear(const oc_resource_t *resource)
 {
   assert(resource != NULL);
+  oc_remove_delayed_callback(resource, &notify_resource_changed_async);
   oc_remove_delayed_callback(resource, &notify_observers_async);
 }
 

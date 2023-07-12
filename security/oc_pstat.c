@@ -20,7 +20,7 @@
 
 #include "oc_pstat.h"
 #include "api/oc_buffer_internal.h"
-#include "api/oc_main.h"
+#include "api/oc_main_internal.h"
 #include "messaging/coap/coap_internal.h"
 #include "messaging/coap/observe.h"
 #include "oc_acl_internal.h"
@@ -506,7 +506,10 @@ oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm)
   oc_sec_pstat_t *ps = &g_pstat[device];
   ps->cm = cm;
 #ifdef OC_SERVER
-  oc_notify_observers(oc_core_get_resource_by_index(OCF_SEC_PSTAT, device));
+  oc_resource_t *r = oc_core_get_resource_by_index(OCF_SEC_PSTAT, device);
+  if (r != NULL) {
+    oc_notify_resource_changed(r);
+  }
 #endif /* OC_SERVER */
 }
 

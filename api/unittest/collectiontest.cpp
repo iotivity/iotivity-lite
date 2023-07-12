@@ -38,28 +38,14 @@
 #include <string>
 #include <vector>
 
-using oc_collection_unique_ptr =
-  std::unique_ptr<oc_collection_t, void (*)(oc_collection_t *)>;
-
 constexpr size_t kDeviceID = 0;
 
 namespace {
-oc_collection_unique_ptr
+oc::oc_collection_unique_ptr
 MakeCollection()
 {
-  return oc_collection_unique_ptr(oc_collection_alloc(), &oc_collection_free);
-}
-
-template<typename... Ts>
-oc_collection_unique_ptr
-NewCollection(std::string_view name, std::string_view uri,
-              size_t deviceID = kDeviceID, const Ts &...resourceTypes)
-{
-  oc_resource_t *res = oc_new_collection(name.data(), uri.data(),
-                                         sizeof...(resourceTypes), deviceID);
-  (oc_resource_bind_resource_type(res, resourceTypes), ...);
-  return oc_collection_unique_ptr(reinterpret_cast<oc_collection_t *>(res),
-                                  &oc_collection_free);
+  return oc::oc_collection_unique_ptr(oc_collection_alloc(),
+                                      &oc_collection_free);
 }
 
 size_t
@@ -113,7 +99,7 @@ TEST_F(TestCollections, Alloc)
 
 TEST_F(TestCollections, AllocFail)
 {
-  std::vector<oc_collection_unique_ptr> collections{};
+  std::vector<oc::oc_collection_unique_ptr> collections{};
   for (int i = 0; i < OC_MAX_NUM_COLLECTIONS; ++i) {
     auto collection = MakeCollection();
     ASSERT_NE(nullptr, collection);
@@ -125,19 +111,19 @@ TEST_F(TestCollections, AllocFail)
 
 TEST_F(TestCollections, Add)
 {
-  auto collection1 = NewCollection("name1", "/uri", 0);
+  auto collection1 = oc::NewCollection("name1", "/uri", 0);
   ASSERT_NE(nullptr, collection1);
   ASSERT_TRUE(oc_add_collection_v1(&collection1->res));
   EXPECT_EQ(1, CountCollections());
 
   // different device
-  auto collection2 = NewCollection("name2", "/uri", 1);
+  auto collection2 = oc::NewCollection("name2", "/uri", 1);
   ASSERT_NE(nullptr, collection2);
   ASSERT_TRUE(oc_add_collection_v1(&collection2->res));
   EXPECT_EQ(2, CountCollections());
 
   // different uri
-  auto collection3 = NewCollection("name3", "/uri2", 0);
+  auto collection3 = oc::NewCollection("name3", "/uri2", 0);
   ASSERT_NE(nullptr, collection3);
   ASSERT_TRUE(oc_add_collection_v1(&collection3->res));
   EXPECT_EQ(3, CountCollections());
@@ -145,7 +131,7 @@ TEST_F(TestCollections, Add)
 
 TEST_F(TestCollections, Add_FailSameCollection)
 {
-  auto collection1 = NewCollection("name1", "/uri");
+  auto collection1 = oc::NewCollection("name1", "/uri", kDeviceID);
   ASSERT_NE(nullptr, collection1);
   ASSERT_TRUE(oc_add_collection_v1(&collection1->res));
   EXPECT_FALSE(oc_add_collection_v1(&collection1->res));
@@ -395,7 +381,7 @@ TEST_F(TestCollectionsWithServer, New)
 TEST_F(TestCollectionsWithServer, Add_FailSameURI)
 {
   // cannot match core resource
-  auto col1 = NewCollection("name1", "/oic/p");
+  auto col1 = oc::NewCollection("name1", "/oic/p", kDeviceID);
   ASSERT_NE(nullptr, col1);
   EXPECT_FALSE(oc_add_collection_v1(&col1->res));
 
@@ -410,15 +396,15 @@ TEST_F(TestCollectionsWithServer, Add_FailSameURI)
     nullptr);
   ASSERT_TRUE(oc_ri_add_resource(dyn1));
 
-  auto col2 = NewCollection("name2", oc_string(dyn1->uri));
+  auto col2 = oc::NewCollection("name2", oc_string(dyn1->uri), kDeviceID);
   ASSERT_NE(nullptr, col2);
   EXPECT_FALSE(oc_add_collection_v1(&col2->res));
 
-  auto col3 = NewCollection("name3", "/col");
+  auto col3 = oc::NewCollection("name3", "/col", kDeviceID);
   ASSERT_NE(nullptr, col3);
   ASSERT_TRUE(oc_add_collection_v1(&col3->res));
 
-  auto col4 = NewCollection("name4", "/col");
+  auto col4 = oc::NewCollection("name4", "/col", kDeviceID);
   ASSERT_NE(nullptr, col4);
   EXPECT_FALSE(oc_add_collection_v1(&col4->res));
 
@@ -429,7 +415,7 @@ TEST_F(TestCollectionsWithServer, CheckIfCollection)
 {
   EXPECT_FALSE(oc_check_if_collection(nullptr));
 
-  auto col = NewCollection("col", "/col");
+  auto col = oc::NewCollection("col", "/col", kDeviceID);
   ASSERT_NE(nullptr, col);
 
   // collection hasn't been added to the global list of collections yet
@@ -450,7 +436,7 @@ TEST_F(TestCollectionsWithServer, GetByURI)
 {
   EXPECT_EQ(nullptr, oc_get_collection_by_uri("", 0, kDeviceID));
 
-  auto col = NewCollection("col", "/col");
+  auto col = oc::NewCollection("col", "/col", kDeviceID);
   ASSERT_NE(nullptr, col);
   ASSERT_TRUE(oc_collection_add(col.get()));
 
@@ -560,7 +546,7 @@ TEST_F(TestCollectionsWithServer, GetRequest_Baseline)
     oc_rep_set_int(root, power, cData->power);
   };
 
-  auto col = NewCollection(colName, colURI, kDeviceID, colRT);
+  auto col = oc::NewCollection(colName, colURI, kDeviceID, colRT);
   ASSERT_NE(nullptr, col);
   oc_collection_add(col.get());
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM

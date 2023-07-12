@@ -47,9 +47,6 @@ class TestRolesWithServer : public testing::Test {
 public:
   static void SetUpTestCase()
   {
-    // TOOD: rm
-    oc_log_set_level(OC_LOG_LEVEL_DEBUG);
-
     ASSERT_TRUE(oc::TestDevice::StartServer());
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
     ASSERT_TRUE(

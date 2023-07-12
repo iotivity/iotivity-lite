@@ -365,6 +365,9 @@ struct oc_resource_s
   oc_ace_permissions_t
     anon_permission_in_rfotm; ///< permissions for anonymous connection in RFOTM
 #endif
+#ifdef OC_HAS_FEATURE_ETAG
+  uint64_t etag; ///< entity tag (ETag) for the resource
+#endif
 };
 
 typedef struct oc_collection_s oc_collection_t;

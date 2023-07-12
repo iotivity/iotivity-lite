@@ -27,6 +27,7 @@
 #include "util/oc_compiler.h"
 
 #include <cbor.h>
+#include <stdbool.h>
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -129,6 +130,10 @@ bool oc_filter_resource_by_rt(const oc_resource_t *resource,
  * @return -1 on failure
  */
 int oc_core_get_resource_type_by_uri(const char *uri, size_t uri_len)
+  OC_NONNULL();
+
+/** @brief Set the device name */
+void oc_core_device_set_name(size_t device, const char *name, size_t name_len)
   OC_NONNULL();
 
 /** @brief Set the device name */

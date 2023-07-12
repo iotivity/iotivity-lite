@@ -22,6 +22,7 @@
 #include "oc_config.h"
 #include "oc_rep.h"
 #include "oc_ri.h"
+#include "util/oc_compiler.h"
 #include <stddef.h>
 #include <stdint.h>
 
@@ -78,15 +79,15 @@ void oc_storage_free_buffer(oc_storage_buffer_t sb);
  * @return -1 on error
  */
 int oc_storage_gen_svr_tag(const char *name, size_t device_index, char *svr_tag,
-                           size_t svr_tag_size);
+                           size_t svr_tag_size) OC_NONNULL();
 
 typedef int (*oc_decode_from_storage_fn_t)(const oc_rep_t *rep, size_t device,
                                            void *data);
 
 /**
- * @brief Load data of resource from storage.
+ * @brief Load data from storage.
  *
- * @param name tag name used for given resource (cannot be NULL)
+ * @param name tag name (cannot be NULL)
  * @param device device index
  * @param decode callback function invoked on successful load from storage,
  * used to decode data to a runtime structure representing the resource (cannot
@@ -94,10 +95,19 @@ typedef int (*oc_decode_from_storage_fn_t)(const oc_rep_t *rep, size_t device,
  * @return >= 0 number of read bytes
  * @return -1 on error
  */
-long oc_storage_load_resource(const char *name, size_t device,
-                              oc_decode_from_storage_fn_t decode,
-                              void *decode_data);
+long oc_storage_data_load(const char *name, size_t device,
+                          oc_decode_from_storage_fn_t decode, void *decode_data)
+  OC_NONNULL(1, 3);
 
+/**
+ * @brief Callback function invoked by oc_storage_data_save() to encode data
+ * for storage.
+ *
+ * @param device device index
+ * @param data custom user data provided to oc_storage_data_save()
+ *
+ * @return 0 on success
+ */
 typedef int (*oc_encode_to_storage_fn_t)(size_t device, void *data);
 
 /**
@@ -110,9 +120,12 @@ typedef int (*oc_encode_to_storage_fn_t)(size_t device, void *data);
  * @return >= 0 number of written bytes
  * @return -1 on error
  */
-long oc_storage_save_resource(const char *name, size_t device,
-                              oc_encode_to_storage_fn_t encode,
-                              void *encode_data);
+long oc_storage_data_save(const char *name, size_t device,
+                          oc_encode_to_storage_fn_t encode, void *encode_data)
+  OC_NONNULL(1, 3);
+
+/** @brief Truncate store with given name. */
+bool oc_storage_data_clear(const char *name, size_t device) OC_NONNULL();
 
 #ifdef __cplusplus
 }

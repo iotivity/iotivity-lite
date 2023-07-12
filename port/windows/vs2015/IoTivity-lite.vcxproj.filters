@@ -134,6 +134,12 @@
     <ClCompile Include="..\..\..\api\oc_endpoint.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_enums.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_tag.c">
+      <Filter>Core</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\util\oc_etimer.c">
       <Filter>Core</Filter>
     </ClCompile>
@@ -458,9 +464,6 @@
     <ClCompile Include="..\..\..\deps\mbedtls\library\platform_util.c">
       <Filter>mbedTLS</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\api\oc_enums.c">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\api\oc_resource_factory.c">
       <Filter>Core</Filter>
     </ClCompile>
@@ -548,6 +551,9 @@
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\util\oc_etimer_internal.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_etag_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\api\oc_events_internal.h">
@@ -673,7 +679,7 @@
     <ClInclude Include="..\..\..\security\oc_csr_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\api\oc_main.h">
+    <ClInclude Include="..\..\..\api\oc_main_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_clock_util.h">
@@ -758,6 +764,9 @@
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_enums.h">
+      <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\include\oc_etags.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\security\oc_ael.h">

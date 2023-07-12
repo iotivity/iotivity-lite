@@ -20,8 +20,9 @@
 #define OC_RESOURCE_INTERNAL_H
 
 #include "oc_ri.h"
-
+#include "util/oc_compiler.h"
 #include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +35,7 @@ extern "C" {
  * @return true resource is initialized
  * @return false resource is uninitialized
  */
-bool oc_resource_is_initialized(const oc_resource_t *resource);
+bool oc_resource_is_initialized(const oc_resource_t *resource) OC_NONNULL();
 
 #ifdef __cplusplus
 }

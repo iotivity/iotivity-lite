@@ -284,7 +284,9 @@ cloud_set_last_error(oc_cloud_context_t *ctx, oc_cloud_error_t error)
 {
   if (error != ctx->last_error) {
     ctx->last_error = error;
-    oc_notify_observers(ctx->cloud_conf);
+    if (ctx->cloud_conf != NULL) {
+      oc_notify_resource_changed(ctx->cloud_conf);
+    }
   }
 }
 
@@ -293,7 +295,9 @@ cloud_set_cps(oc_cloud_context_t *ctx, oc_cps_t cps)
 {
   if (cps != ctx->store.cps) {
     ctx->store.cps = cps;
-    oc_notify_observers(ctx->cloud_conf);
+    if (ctx->cloud_conf != NULL) {
+      oc_notify_resource_changed(ctx->cloud_conf);
+    }
   }
 }
 
@@ -304,7 +308,9 @@ cloud_set_cps_and_last_error(oc_cloud_context_t *ctx, oc_cps_t cps,
   if ((error != ctx->last_error) || (cps != ctx->store.cps)) {
     ctx->store.cps = cps;
     ctx->last_error = error;
-    oc_notify_observers(ctx->cloud_conf);
+    if (ctx->cloud_conf != NULL) {
+      oc_notify_resource_changed(ctx->cloud_conf);
+    }
   }
 }
 

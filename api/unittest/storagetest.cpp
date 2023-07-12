@@ -49,7 +49,7 @@ public:
       EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
       return 0;
     };
-    EXPECT_LT(0, oc_storage_save_resource("test", 0, encode, nullptr));
+    EXPECT_LT(0, oc_storage_data_save("test", 0, encode, nullptr));
   }
 
   static void TearDownTestCase()
@@ -123,17 +123,17 @@ TEST_F(TestCommonStorage, LoadResourceFail)
 {
   auto decode = [](const oc_rep_t *, size_t, void *) { return 0; };
   // not-existing file
-  EXPECT_EQ(-1, oc_storage_load_resource("fail", 0, decode, nullptr));
+  EXPECT_EQ(-1, oc_storage_data_load("fail", 0, decode, nullptr));
 
   auto decodeFail = [](const oc_rep_t *, size_t, void *) { return -1; };
   // failing to decode
-  EXPECT_EQ(-1, oc_storage_load_resource("test", 0, decodeFail, nullptr));
+  EXPECT_EQ(-1, oc_storage_data_load("test", 0, decodeFail, nullptr));
 }
 
 TEST_F(TestCommonStorage, SaveResourceFail)
 {
   auto encodeFail = [](size_t, void *) { return -1; };
-  EXPECT_EQ(-1, oc_storage_save_resource("fail", 0, encodeFail, nullptr));
+  EXPECT_EQ(-1, oc_storage_data_save("fail", 0, encodeFail, nullptr));
 
   auto encodeTooLarge = [](size_t, void *) {
     std::string str(OC_MAX_APP_DATA_SIZE, 'a');
@@ -143,7 +143,7 @@ TEST_F(TestCommonStorage, SaveResourceFail)
     EXPECT_NE(CborNoError, oc_rep_get_cbor_errno());
     return 0;
   };
-  EXPECT_EQ(-1, oc_storage_save_resource("fail", 0, encodeTooLarge, nullptr));
+  EXPECT_EQ(-1, oc_storage_data_save("fail", 0, encodeTooLarge, nullptr));
 }
 
 TEST_F(TestCommonStorage, SaveAndLoad)
@@ -167,7 +167,7 @@ TEST_F(TestCommonStorage, SaveAndLoad)
     EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
     return 0;
   };
-  EXPECT_LT(0, oc_storage_save_resource("test", 123, encode, &td));
+  EXPECT_LT(0, oc_storage_data_save("test", 123, encode, &td));
 
   TestData outTd{};
   auto decode = [](const oc_rep_t *rep, size_t, void *data) {
@@ -186,7 +186,7 @@ TEST_F(TestCommonStorage, SaveAndLoad)
     }
     return 0;
   };
-  EXPECT_LT(0, oc_storage_load_resource("test", 123, decode, &outTd));
+  EXPECT_LT(0, oc_storage_data_load("test", 123, decode, &outTd));
   EXPECT_STREQ(td.str.c_str(), outTd.str.c_str());
   EXPECT_EQ(td.num, outTd.num);
 }

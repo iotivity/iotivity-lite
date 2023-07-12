@@ -21,6 +21,7 @@
 
 #include "oc_helpers.h"
 #include "util/oc_compiler.h"
+#include "util/oc_macros_internal.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -47,11 +48,20 @@ typedef struct oc_string_view_t
   size_t length;
 } oc_string_view_t;
 
+#define OC_STRING_VIEW(str)                                                    \
+  (oc_string_view_t)                                                           \
+  {                                                                            \
+    .data = (str), .length = OC_CHAR_ARRAY_LEN(str),                           \
+  }
+
 /** Create an oc_string_view_t from a C-string. */
 oc_string_view_t oc_string_view(const char *data, size_t length);
 
 /** Create an oc_string_view_t from an oc_string_t. */
 oc_string_view_t oc_string_view2(const oc_string_t *str);
+
+/** Create empty oc_string_view_t. */
+oc_string_view_t oc_string_view_null(void);
 
 /**
  * @brief Compare two oc_string_view_t values.

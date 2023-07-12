@@ -48,7 +48,7 @@ store_decode_doxm(const oc_rep_t *rep, size_t device, void *data)
 void
 oc_sec_load_doxm(size_t device)
 {
-  if (oc_storage_load_resource("doxm", device, store_decode_doxm, NULL) <= 0) {
+  if (oc_storage_data_load("doxm", device, store_decode_doxm, NULL) <= 0) {
     oc_sec_doxm_default(device);
     OC_ERR("failed to load doxm from storage for device(%zu)", device);
     return;
@@ -71,7 +71,7 @@ store_encode_doxm(size_t device, void *data)
 void
 oc_sec_dump_doxm(size_t device)
 {
-  long ret = oc_storage_save_resource("doxm", device, store_encode_doxm, NULL);
+  long ret = oc_storage_data_save("doxm", device, store_encode_doxm, NULL);
   if (ret <= 0) {
     OC_ERR("cannot dump doxm to storage: error(%ld)", ret);
   }
@@ -91,8 +91,7 @@ store_decode_pstat(const oc_rep_t *rep, size_t device, void *data)
 void
 oc_sec_load_pstat(size_t device)
 {
-  if (oc_storage_load_resource("pstat", device, store_decode_pstat, NULL) <=
-      0) {
+  if (oc_storage_data_load("pstat", device, store_decode_pstat, NULL) <= 0) {
     oc_sec_pstat_default(device);
     OC_ERR("failed to load pstat from storage for device(%zu)", device);
     return;
@@ -111,8 +110,7 @@ store_encode_pstat(size_t device, void *data)
 void
 oc_sec_dump_pstat(size_t device)
 {
-  long ret =
-    oc_storage_save_resource("pstat", device, store_encode_pstat, NULL);
+  long ret = oc_storage_data_save("pstat", device, store_encode_pstat, NULL);
   if (ret <= 0) {
     OC_ERR("cannot dump pstat to storage: error(%ld)", ret);
   }
@@ -132,8 +130,8 @@ store_decode_sp(const oc_rep_t *rep, size_t device, void *data)
 void
 oc_sec_load_sp(size_t device)
 {
-  if (oc_storage_load_resource(OCF_SEC_SP_STORE_NAME, device, store_decode_sp,
-                               NULL) <= 0) {
+  if (oc_storage_data_load(OCF_SEC_SP_STORE_NAME, device, store_decode_sp,
+                           NULL) <= 0) {
     OC_ERR("failed to load sp from storage for device(%zu)", device);
     oc_sec_sp_default(device);
     return;
@@ -151,8 +149,8 @@ store_encode_sp(size_t device, void *data)
 void
 oc_sec_dump_sp(size_t device)
 {
-  long ret = oc_storage_save_resource(OCF_SEC_SP_STORE_NAME, device,
-                                      store_encode_sp, NULL);
+  long ret =
+    oc_storage_data_save(OCF_SEC_SP_STORE_NAME, device, store_encode_sp, NULL);
   if (ret <= 0) {
     OC_ERR("cannot dump sp for device(%zu) to store: error(%ld)", device, ret);
   }
@@ -492,8 +490,8 @@ store_decode_sdi(const oc_rep_t *rep, size_t device, void *data)
 void
 oc_sec_load_sdi(size_t device)
 {
-  if (oc_storage_load_resource(OCF_SEC_SDI_STORE_NAME, device, store_decode_sdi,
-                               NULL) <= 0) {
+  if (oc_storage_data_load(OCF_SEC_SDI_STORE_NAME, device, store_decode_sdi,
+                           NULL) <= 0) {
     OC_ERR("failed to load sdi from storage for device(%zu)", device);
     oc_sec_sdi_default(device);
     return;
@@ -511,8 +509,8 @@ store_encode_sdi(size_t device, void *data)
 void
 oc_sec_dump_sdi(size_t device)
 {
-  long ret = oc_storage_save_resource(OCF_SEC_SDI_STORE_NAME, device,
-                                      store_encode_sdi, NULL);
+  long ret = oc_storage_data_save(OCF_SEC_SDI_STORE_NAME, device,
+                                  store_encode_sdi, NULL);
   if (ret <= 0) {
     OC_ERR("cannot dump sdi to store: error(%ld)", ret);
   }

@@ -156,6 +156,12 @@ oc_string_view2(const oc_string_t *str)
   return oc_string_view(oc_string(*str), oc_string_len(*str));
 }
 
+oc_string_view_t
+oc_string_view_null(void)
+{
+  return oc_string_view(NULL, 0);
+}
+
 bool
 oc_string_view_is_equal(oc_string_view_t str1, oc_string_view_t str2)
 {

@@ -42,7 +42,7 @@ static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 static pthread_t event_thread;
 
-static oc_resource_t *res1;
+static oc_resource_t *res1 = NULL;
 
 static OC_ATOMIC_INT8_T quit = 0;
 
@@ -388,7 +388,7 @@ struct switch_t
   bool state;
 };
 
-struct switch_t bswitch = { 0 };
+static struct switch_t bswitch = { 0 };
 
 static void
 get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
@@ -474,6 +474,9 @@ static struct switch_t reg_bswitch = { 0 };
 static void
 add_resource(void)
 {
+  // clang-15 seems to have a bug in the analysis of the following code and
+  // thinks that reg_resource can be set to NULL by the oc_resource_* functions
+  // NOLINTBEGIN
   if (reg_resource != NULL) {
     return;
   }
@@ -485,8 +488,9 @@ add_resource(void)
                                   &reg_bswitch);
   oc_resource_set_request_handler(reg_resource, OC_POST, post_switch,
                                   &reg_bswitch);
-  oc_cloud_add_resource(reg_resource); /* Publish resource to the Cloud RD */
+  // NOLINTEND
   oc_add_resource(reg_resource);
+  oc_cloud_add_resource(reg_resource); /* Publish resource to the Cloud RD */
 }
 
 static void

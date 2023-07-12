@@ -62,6 +62,10 @@
 #endif /* OC_COLLECTIONS */
 #endif /* OC_SERVER */
 
+#ifdef OC_HAS_FEATURE_ETAG
+#include "api/oc_etag_internal.h"
+#endif /* OC_HAS_FEATURE_ETAG */
+
 #ifdef OC_HAS_FEATURE_PUSH
 #include "oc_push_internal.h"
 #endif /*OC_HAS_FEATURE_PUSH  */
@@ -606,7 +610,7 @@ oc_ri_init(void)
 
 #ifdef OC_HAS_FEATURE_PUSH
   oc_push_init();
-#endif
+#endif /* OC_HAS_FEATURE_PUSH */
 
   oc_process_init();
   start_processes();
@@ -661,12 +665,6 @@ ri_delete_resource(oc_resource_t *resource, bool notify)
 {
   OC_DBG("delete resource(%p)", (void *)resource);
 
-  oc_list_remove(g_app_resources, resource);
-  oc_list_remove(g_app_resources_to_be_deleted, resource);
-
-  oc_remove_delayed_callback(resource, oc_delayed_delete_resource_cb);
-  oc_notify_clear(resource);
-
 #if defined(OC_COLLECTIONS)
 #if defined(OC_COLLECTIONS_IF_CREATE)
   oc_rt_created_t *rtc = oc_rt_get_factory_create_for_resource(resource);
@@ -695,6 +693,13 @@ ri_delete_resource(oc_resource_t *resource, bool notify)
   }
 #endif /* (OC_COLLECTIONS) */
 
+  bool removed = oc_list_remove2(g_app_resources, resource) != NULL;
+  removed =
+    oc_list_remove2(g_app_resources_to_be_deleted, resource) != NULL || removed;
+
+  oc_remove_delayed_callback(resource, oc_delayed_delete_resource_cb);
+  oc_notify_clear(resource);
+
   if (resource->num_observers > 0) {
     int removed_num = coap_remove_observers_by_resource(resource);
     OC_DBG("removing resource observers: removed(%d) vs expected(%d)",
@@ -704,15 +709,8 @@ ri_delete_resource(oc_resource_t *resource, bool notify)
 #endif /* !OC_DBG_IS_ENABLED */
   }
 
-  if (notify) {
-#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-    coap_remove_discovery_batch_observers_by_resource(resource);
-#endif
-
-#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
-    oc_notify_observers_delayed(
-      oc_core_get_resource_by_index(OCF_RES, resource->device), 0);
-#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
+  if (removed && notify) {
+    oc_notify_resource_removed(resource);
   }
 
   oc_ri_free_resource_properties(resource);
@@ -764,6 +762,7 @@ oc_ri_add_resource(oc_resource_t *resource)
   }
 
   oc_list_add(g_app_resources, resource);
+  oc_notify_resource_added(resource);
   return true;
 }
 
@@ -924,20 +923,9 @@ oc_ri_audit_log(oc_method_t method, const oc_resource_t *resource,
 
 static oc_status_t
 ri_invoke_request_handler(oc_resource_t *resource, oc_method_t method,
-                          const oc_endpoint_t *endpoint, oc_request_t *request,
-                          oc_interface_mask_t iface_mask, bool is_collection)
+                          oc_request_t *request, oc_interface_mask_t iface_mask,
+                          bool is_collection)
 {
-#ifdef OC_SECURITY
-  /* If resource is a coaps:// resource, then query ACL to check if
-   * the requestor (the subject) is authorized to issue this request to
-   * the resource.
-   */
-  if (!oc_sec_check_acl(method, resource, endpoint)) {
-    return OC_STATUS_UNAUTHORIZED;
-  }
-#else  /* !OC_SECURITY */
-  (void)endpoint;
-#endif /* OC_SECURITY */
   /* If resource is a collection resource, invoke the framework's internal
    * handler for collections.
    */
@@ -1213,28 +1201,39 @@ ri_invoke_coap_entity_set_response(coap_packet_t *response,
     coap_set_global_status_code(CLEAR_TRANSACTION);
     return;
   }
+
 #ifdef OC_SERVER
-  /* If the recently handled request was a PUT/POST, it conceivably
-   * altered the resource state, so attempt to notify all observers
-   * of that resource with the change.
-   */
-  if (
+  if (ctx.resource != NULL) {
+#ifdef OC_HAS_FEATURE_ETAG
+    if (ctx.method == OC_GET &&
+        response_buffer->code == oc_status_code(OC_STATUS_OK)) {
+      coap_options_set_etag(response, (uint8_t *)&ctx.resource->etag,
+                            sizeof(ctx.resource->etag));
+    }
+#endif /* OC_HAS_FEATURE_ETAG */
+
+    /* If the recently handled request was a PUT/POST, it conceivably
+     * altered the resource state, so attempt to notify all observers
+     * of that resource with the change.
+     */
+    if (
 #ifdef OC_COLLECTIONS
-    !ctx.resource_is_collection &&
+      !ctx.resource_is_collection &&
 #endif /* OC_COLLECTIONS */
-    ctx.resource && (ctx.method == OC_PUT || ctx.method == OC_POST) &&
-    response_buffer->code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
-    if ((ctx.iface_mask == OC_IF_STARTUP) ||
-        (ctx.iface_mask == OC_IF_STARTUP_REVERT)) {
-      oc_resource_defaults_data_t *resource_defaults_data =
-        oc_ri_alloc_resource_defaults();
-      resource_defaults_data->resource = ctx.resource;
-      resource_defaults_data->iface_mask = ctx.iface_mask;
-      oc_ri_add_timed_event_callback_ticks(
-        resource_defaults_data,
-        &oc_observe_notification_resource_defaults_delayed, 0);
-    } else {
-      oc_notify_observers_delayed(ctx.resource, 0);
+      (ctx.method == OC_PUT || ctx.method == OC_POST) &&
+      response_buffer->code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
+      if ((ctx.iface_mask == OC_IF_STARTUP) ||
+          (ctx.iface_mask == OC_IF_STARTUP_REVERT)) {
+        oc_resource_defaults_data_t *resource_defaults_data =
+          oc_ri_alloc_resource_defaults();
+        resource_defaults_data->resource = ctx.resource;
+        resource_defaults_data->iface_mask = ctx.iface_mask;
+        oc_ri_add_timed_event_callback_ticks(
+          resource_defaults_data,
+          &oc_observe_notification_resource_defaults_delayed, 0);
+      } else {
+        oc_notify_resource_changed_delayed_ms(ctx.resource, 0);
+      }
     }
   }
 
@@ -1443,6 +1442,45 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
     }
   }
 
+#ifdef OC_SECURITY
+  bool authorized = true;
+  if (cur_resource && !bad_request) {
+    authorized = oc_sec_check_acl(method, cur_resource, endpoint);
+
+    /* If resource is a coaps:// resource, then query ACL to check if
+     * the requestor (the subject) is authorized to issue this request to
+     * the resource.
+     */
+    if (!authorized) {
+      oc_ri_audit_log(method, cur_resource, endpoint);
+    }
+  }
+#else  /* !OC_SECURITY */
+  bool authorized = true;
+#endif /* OC_SECURITY */
+
+#ifdef OC_HAS_FEATURE_ETAG
+  bool not_modified = false;
+  if (cur_resource != NULL && !bad_request && authorized && method == OC_GET &&
+      cur_resource->get_handler.cb != NULL) {
+    /* If the request is a GET request, check if the client has provided a valid
+     * ETag in the header. If so, and if the ETag matches the ETag of the
+     * resource, then the response will be a 2.03 response with an empty
+     * payload.
+     */
+    uint64_t etag = 0;
+    const uint8_t *etag_buf = NULL;
+    size_t etag_buf_len = coap_options_get_etag(request, &etag_buf);
+    if (etag_buf_len == sizeof(etag)) {
+      memcpy(&etag, etag_buf, etag_buf_len);
+      not_modified =
+        (etag != OC_ETAG_UNINITALIZED && etag == cur_resource->etag);
+    }
+  }
+#else  /* !OC_HAS_FEATURE_ETAG */
+  bool not_modified = false;
+#endif /* OC_HAS_FEATURE_ETAG */
+
 /* Alloc response_state. It also affects request_obj.response.
  */
 #ifdef OC_BLOCK_WISE
@@ -1450,7 +1488,7 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
   bool response_state_allocated = false;
   bool enable_realloc_rep = false;
 #endif /* OC_DYNAMIC_ALLOCATION */
-  if (cur_resource && !bad_request) {
+  if (cur_resource && !bad_request && authorized && !not_modified) {
     if (*ctx.response_state == NULL) {
       OC_DBG("creating new block-wise response state");
       *ctx.response_state = oc_blockwise_alloc_response_buffer(
@@ -1495,11 +1533,7 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
 #endif /* !OC_BLOCK_WISE */
 
   bool method_impl = true;
-#ifdef OC_SECURITY
-  bool authorized = true;
-#endif /* OC_SECURITY */
-
-  if (cur_resource && !bad_request) {
+  if (cur_resource && !bad_request && authorized && !not_modified) {
     /* Process a request against a valid resource, request payload, and
      * interface.
      */
@@ -1519,21 +1553,14 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
     oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-    oc_status_t ret =
-      ri_invoke_request_handler(cur_resource, method, endpoint, &request_obj,
-                                iface_mask, resource_is_collection);
+    oc_status_t ret = ri_invoke_request_handler(
+      cur_resource, method, &request_obj, iface_mask, resource_is_collection);
     switch (ret) {
     case OC_STATUS_OK:
       break;
     case OC_STATUS_METHOD_NOT_ALLOWED:
       method_impl = false;
       break;
-#ifdef OC_SECURITY
-    case OC_STATUS_UNAUTHORIZED:
-      authorized = false;
-      oc_ri_audit_log(method, cur_resource, endpoint);
-      break;
-#endif /* OC_SECURITY */
     default:
       bad_request = true;
       break;
@@ -1600,6 +1627,10 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
   }
 #endif /* OC_SECURITY */
   else {
+    if (not_modified) {
+      response_buffer.response_length = 0;
+      response_buffer.code = oc_status_code(OC_STATUS_NOT_MODIFIED);
+    }
     success = true;
   }
 
@@ -1671,12 +1702,7 @@ oc_ri_shutdown(void)
   oc_ri_on_delete_resource_remove_all();
 
 #ifdef OC_COLLECTIONS
-  oc_collection_t *collection = oc_collection_get_all();
-  while (collection != NULL) {
-    oc_collection_t *next = (oc_collection_t *)collection->res.next;
-    oc_collection_free(collection);
-    collection = next;
-  }
+  oc_collections_free_all();
 #endif /* OC_COLLECTIONS */
 
   ri_delete_all_app_resources();

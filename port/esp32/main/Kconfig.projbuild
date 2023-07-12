@@ -59,6 +59,11 @@ config CLOUD
     help
         enable or disable CLOUD
 
+config ETAG
+    bool "ETAG"
+    help
+        enable or disable ETAG
+
 config PLGD_DEV_TIME
     bool "PLGD_DEV_TIME"
     default "y"

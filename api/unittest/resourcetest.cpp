@@ -26,10 +26,78 @@
 #include "oc_ri.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
+#include "util/oc_features.h"
 
 #include <array>
 #include <gtest/gtest.h>
 #include <vector>
+
+static constexpr size_t kDeviceID = 0;
+
+class TestResource : public testing::Test {};
+
+TEST_F(TestResource, SetDiscoverable)
+{
+  oc_resource_t res{};
+  oc_resource_set_discoverable(&res, true);
+  EXPECT_NE(0, res.properties & OC_DISCOVERABLE);
+
+  oc_resource_set_discoverable(&res, false);
+  EXPECT_EQ(0, res.properties & OC_DISCOVERABLE);
+}
+
+#ifdef OC_HAS_FEATURE_PUSH
+
+TEST_F(TestResource, SetPushable)
+{
+  oc_resource_t res{};
+  oc_resource_set_pushable(&res, true);
+  EXPECT_NE(0, res.properties & OC_PUSHABLE);
+
+  oc_resource_set_pushable(&res, false);
+  EXPECT_EQ(0, res.properties & OC_PUSHABLE);
+}
+
+#endif /* OC_HAS_FEATURE_PUSH */
+
+TEST_F(TestResource, SetObservable)
+{
+  oc_resource_t res{};
+  oc_resource_set_observable(&res, true);
+  EXPECT_NE(0, res.properties & OC_OBSERVABLE);
+
+  oc_resource_set_observable(&res, false);
+  EXPECT_EQ(0, res.properties & OC_OBSERVABLE);
+}
+
+TEST_F(TestResource, SetPeriodicObservable)
+{
+  oc_resource_t res{};
+  oc_resource_set_periodic_observable(&res, 42);
+  EXPECT_EQ(OC_OBSERVABLE | OC_PERIODIC,
+            res.properties & (OC_OBSERVABLE | OC_PERIODIC));
+  EXPECT_EQ(42, res.observe_period_seconds);
+
+  oc_resource_set_observable(&res, false);
+  EXPECT_EQ(0, res.properties & (OC_OBSERVABLE | OC_PERIODIC));
+}
+
+#ifdef OC_OSCORE
+
+TEST_F(TestResource, SetSecureMcast)
+{
+  oc_resource_set_secure_mcast(nullptr, true);
+  oc_resource_set_secure_mcast(nullptr, false);
+
+  oc_resource_t res{};
+  oc_resource_set_secure_mcast(&res, true);
+  EXPECT_NE(0, res.properties & OC_SECURE_MCAST);
+
+  oc_resource_set_secure_mcast(&res, false);
+  EXPECT_EQ(0, res.properties & OC_SECURE_MCAST);
+}
+
+#endif /* OC_OSCORE */
 
 class TestResourceWithDevice : public testing::Test {
 public:
@@ -38,7 +106,7 @@ public:
     oc_set_send_response_callback(SendResponseCallback);
     EXPECT_TRUE(oc::TestDevice::StartServer());
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
-    oc_resource_t *con = oc_core_get_resource_by_index(OCF_CON, /*device*/ 0);
+    oc_resource_t *con = oc_core_get_resource_by_index(OCF_CON, kDeviceID);
     ASSERT_NE(nullptr, con);
     oc_resource_set_access_in_RFOTM(con, true, OC_PERM_RETRIEVE);
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
@@ -127,8 +195,7 @@ checkBaselineProperties(const oc_rep_t *rep)
 
 TEST_F(TestResourceWithDevice, BaselineInterfaceProperties)
 {
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto get_handler = [](oc_client_response_t *data) {
@@ -145,7 +212,7 @@ TEST_F(TestResourceWithDevice, BaselineInterfaceProperties)
     checkBaselineProperties(data->payload);
   };
 
-  oc_resource_t *con = oc_core_get_resource_by_index(OCF_CON, /*device*/ 0);
+  oc_resource_t *con = oc_core_get_resource_by_index(OCF_CON, kDeviceID);
   EXPECT_NE(nullptr, con);
 
   oc_resource_tag_pos_desc(con, kBaselinePosDesc);

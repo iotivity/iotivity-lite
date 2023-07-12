@@ -99,8 +99,8 @@ oc_storage_free_buffer(oc_storage_buffer_t sb)
 }
 
 long
-oc_storage_load_resource(const char *name, size_t device,
-                         oc_decode_from_storage_fn_t decode, void *decode_data)
+oc_storage_data_load(const char *name, size_t device,
+                     oc_decode_from_storage_fn_t decode, void *decode_data)
 {
   assert(decode != NULL);
   char svr_tag[OC_STORAGE_SVR_TAG_MAX];
@@ -129,7 +129,7 @@ oc_storage_load_resource(const char *name, size_t device,
     OC_ERR("cannot load from %s from store: cannot parse representation", name);
     goto error;
   }
-  if (decode(rep, device, decode_data) != 0) {
+  if (rep != NULL && decode(rep, device, decode_data) != 0) {
     OC_ERR("cannot load from %s from store: cannot decode data", name);
     oc_free_rep(rep);
     goto error;
@@ -144,8 +144,8 @@ error:
 }
 
 long
-oc_storage_save_resource(const char *name, size_t device,
-                         oc_encode_to_storage_fn_t encode, void *encode_data)
+oc_storage_data_save(const char *name, size_t device,
+                     oc_encode_to_storage_fn_t encode, void *encode_data)
 {
   assert(encode != NULL);
 
@@ -187,6 +187,17 @@ oc_storage_save_resource(const char *name, size_t device,
 error:
   oc_storage_free_buffer(sb);
   return -1;
+}
+
+bool
+oc_storage_data_clear(const char *name, size_t device)
+{
+  char svr_tag[OC_STORAGE_SVR_TAG_MAX];
+  if (oc_storage_gen_svr_tag(name, device, svr_tag, sizeof(svr_tag)) < 0) {
+    OC_ERR("cannot clear %s from store: cannot generate svr tag", name);
+    return false;
+  }
+  return oc_storage_write(svr_tag, (const uint8_t *)"", 0) == 0;
 }
 
 #endif /* OC_STORAGE */

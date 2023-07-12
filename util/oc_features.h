@@ -53,4 +53,8 @@
 #define OC_HAS_FEATURE_PLGD_HAWKBIT
 #endif /* PLGD_DEV_HAWKBIT */
 
+#if defined(OC_ETAG) && defined(OC_SERVER)
+#define OC_HAS_FEATURE_ETAG
+#endif /* OC_ETAG && OC_SERVER */
+
 #endif /* OC_FEATURES_H */

@@ -26,12 +26,15 @@
 #include <map>
 #include <memory>
 #include <optional>
+#include <stdint.h>
 #include <string>
+
+#ifdef OC_COLLECTIONS
 
 namespace oc {
 
 using oc_collection_unique_ptr =
-  std::unique_ptr<oc_collection_t, decltype(&oc_delete_collection)>;
+  std::unique_ptr<oc_collection_t, decltype(&oc_collection_free)>;
 
 struct CollectionData
 {
@@ -45,9 +48,20 @@ struct CollectionData
 class Collection {
 public:
   static std::optional<CollectionData> ParsePayload(const oc_rep_t *rep);
-
-private:
-  oc_collection_unique_ptr collection_;
 };
 
+template<typename... Ts>
+oc::oc_collection_unique_ptr
+NewCollection(std::string_view name, std::string_view uri, size_t deviceID,
+              const Ts &...resourceTypes)
+{
+  oc_resource_t *res = oc_new_collection(name.data(), uri.data(),
+                                         sizeof...(resourceTypes), deviceID);
+  (oc_resource_bind_resource_type(res, resourceTypes), ...);
+  return oc::oc_collection_unique_ptr(reinterpret_cast<oc_collection_t *>(res),
+                                      &oc_collection_free);
 }
+
+}
+
+#endif // OC_COLLECTIONS
