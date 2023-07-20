@@ -826,9 +826,8 @@ oc_notify_observers(oc_resource_t *resource)
 }
 
 static oc_event_callback_retval_t
-oc_observe_notification_delayed(void *data)
+notify_observers_async(void *data)
 {
-  (void)data;
   coap_notify_observers((oc_resource_t *)data, NULL, NULL);
   return OC_EVENT_DONE;
 }
@@ -843,9 +842,9 @@ oc_notify_observers_delayed_ticks(oc_resource_t *resource,
   if (!coap_want_be_notified(resource)) {
     return;
   }
-  oc_remove_delayed_callback(resource, &oc_observe_notification_delayed);
-  oc_ri_add_timed_event_callback_ticks(resource,
-                                       &oc_observe_notification_delayed, ticks);
+  oc_remove_delayed_callback(resource, &notify_observers_async);
+  oc_ri_add_timed_event_callback_ticks(resource, &notify_observers_async,
+                                       ticks);
 }
 
 void
@@ -861,6 +860,13 @@ oc_notify_observers_delayed_ms(oc_resource_t *resource, uint16_t milliseconds)
   oc_clock_time_t ticks =
     (oc_clock_time_t)milliseconds * OC_CLOCK_SECOND / 1000;
   oc_notify_observers_delayed_ticks(resource, ticks);
+}
+
+void
+oc_notify_clear(const oc_resource_t *resource)
+{
+  assert(resource != NULL);
+  oc_remove_delayed_callback(resource, &notify_observers_async);
 }
 
 #endif /* OC_SERVER */

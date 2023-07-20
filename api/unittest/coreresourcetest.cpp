@@ -46,6 +46,7 @@ class TestCoreResource : public testing::Test {
 protected:
   void SetUp() override
   {
+    oc_ri_init();
     oc_core_init();
     oc_network_event_handler_mutex_init();
     oc_random_init();
@@ -58,6 +59,7 @@ protected:
     oc_random_destroy();
     oc_network_event_handler_mutex_destroy();
     oc_core_shutdown();
+    oc_ri_shutdown();
   }
 };
 

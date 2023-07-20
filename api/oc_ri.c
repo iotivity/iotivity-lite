@@ -543,22 +543,6 @@ oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len, size_t device)
 #endif /* OC_COLLECTIONS */
   return NULL;
 }
-
-static void
-oc_ri_delete_all_app_resources(void)
-{
-  oc_resource_t *res = oc_ri_get_app_resources();
-  while (res) {
-    oc_ri_delete_resource(res);
-    res = oc_ri_get_app_resources();
-  }
-
-  res = oc_list_head(g_app_resources_to_be_deleted);
-  while (res) {
-    oc_ri_delete_resource(res);
-    res = oc_list_head(g_app_resources_to_be_deleted);
-  }
-}
 #endif /* OC_SERVER */
 
 void
@@ -599,8 +583,9 @@ static const char *method_strs[] = {
 const char *
 oc_method_to_str(oc_method_t method)
 {
-  if (method < 0 || method >= sizeof(method_strs) / sizeof(method_strs[0]))
+  if (method < 0 || method >= OC_ARRAY_SIZE(method_strs)) {
     return method_strs[0];
+  }
   return method_strs[method];
 }
 
@@ -630,18 +615,16 @@ oc_ri_dealloc_resource_defaults(oc_resource_defaults_data_t *data)
   oc_memb_free(&g_resource_default_s, data);
 }
 
-bool
-oc_ri_delete_resource(oc_resource_t *resource)
+static void
+ri_delete_resource(oc_resource_t *resource, bool notify)
 {
-  if (!resource) {
-    return false;
-  }
   OC_DBG("delete resource(%p)", (void *)resource);
 
   oc_list_remove(g_app_resources, resource);
   oc_list_remove(g_app_resources_to_be_deleted, resource);
 
   oc_remove_delayed_callback(resource, oc_delayed_delete_resource_cb);
+  oc_notify_clear(resource);
 
 #if defined(OC_COLLECTIONS)
 #if defined(OC_COLLECTIONS_IF_CREATE)
@@ -653,7 +636,7 @@ oc_ri_delete_resource(oc_resource_t *resource)
      * this if-branch will be skipped and normal resource deallocation will be
      * executed. */
     oc_rt_factory_free_created_resource(rtc, rtc->rf);
-    return true;
+    return;
   }
 #endif /* (OC_COLLECTIONS_IF_CREATE) */
 
@@ -679,17 +662,29 @@ oc_ri_delete_resource(oc_resource_t *resource)
     (void)removed_num;
 #endif /* !OC_DBG_IS_ENABLED */
   }
+
+  if (notify) {
 #if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-  coap_remove_discovery_batch_observers_by_resource(resource);
+    coap_remove_discovery_batch_observers_by_resource(resource);
 #endif
 
 #ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
-  oc_notify_observers_delayed(
-    oc_core_get_resource_by_index(OCF_RES, resource->device), 0);
+    oc_notify_observers_delayed(
+      oc_core_get_resource_by_index(OCF_RES, resource->device), 0);
 #endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
+  }
 
   oc_ri_free_resource_properties(resource);
   oc_ri_dealloc_resource(resource);
+}
+
+bool
+oc_ri_delete_resource(oc_resource_t *resource)
+{
+  if (!resource) {
+    return false;
+  }
+  ri_delete_resource(resource, true);
   return true;
 }
 
@@ -723,6 +718,23 @@ oc_ri_add_resource(oc_resource_t *resource)
   oc_list_add(g_app_resources, resource);
   return true;
 }
+
+static void
+ri_delete_all_app_resources(void)
+{
+  oc_resource_t *res = oc_ri_get_app_resources();
+  while (res) {
+    ri_delete_resource(res, false);
+    res = oc_ri_get_app_resources();
+  }
+
+  res = oc_list_head(g_app_resources_to_be_deleted);
+  while (res) {
+    ri_delete_resource(res, false);
+    res = oc_list_head(g_app_resources_to_be_deleted);
+  }
+}
+
 #endif /* OC_SERVER */
 
 void
@@ -1617,7 +1629,7 @@ oc_ri_shutdown(void)
   }
 #endif /* OC_COLLECTIONS */
 
-  oc_ri_delete_all_app_resources();
+  ri_delete_all_app_resources();
 #endif /* OC_SERVER */
 
   oc_random_destroy();

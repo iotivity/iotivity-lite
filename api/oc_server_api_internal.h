@@ -20,6 +20,7 @@
 #define OC_SERVER_API_INTERNAL_H
 
 #include "oc_ri.h"
+#include "util/oc_compiler.h"
 
 #ifdef OC_RES_BATCH_SUPPORT
 #include "oc_endpoint.h"
@@ -31,9 +32,12 @@
 
 /// Remove callback (if it exists) and schedule it again
 void oc_reset_delayed_callback(void *cb_data, oc_trigger_t callback,
-                               uint16_t seconds);
+                               uint16_t seconds) OC_NONNULL(2);
 void oc_reset_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
-                                  uint64_t milliseconds);
+                                  uint64_t milliseconds) OC_NONNULL(2);
+
+/// Remove scheduled notifications
+void oc_notify_clear(const oc_resource_t *resource) OC_NONNULL();
 
 #ifdef OC_RES_BATCH_SUPPORT
 
@@ -64,7 +68,8 @@ typedef bool (*oc_process_baseline_interface_filter_fn_t)(
  */
 void oc_process_baseline_interface_with_filter(
   const oc_resource_t *resource,
-  oc_process_baseline_interface_filter_fn_t filter, void *filter_data);
+  oc_process_baseline_interface_filter_fn_t filter, void *filter_data)
+  OC_NONNULL(1);
 
 /** Setup response for the request */
 void oc_send_response_internal(oc_request_t *request, oc_status_t response_code,
