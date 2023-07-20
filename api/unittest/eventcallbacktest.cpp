@@ -429,8 +429,10 @@ public:
     auto *col = reinterpret_cast<oc_collection_t *>(
       oc_new_collection(nullptr, uri.c_str(), 1, 0));
     oc_resource_bind_resource_type(&col->res, "oic.wk.col");
-    oc_collection_add_supported_rt(&col->res, "oic.r.switch.binary");
-    oc_collection_add_mandatory_rt(&col->res, "oic.r.switch.binary");
+    EXPECT_TRUE(
+      oc_collection_add_supported_rt(&col->res, "oic.r.switch.binary"));
+    EXPECT_TRUE(
+      oc_collection_add_mandatory_rt(&col->res, "oic.r.switch.binary"));
     oc_resource_set_discoverable(&col->res, true);
 #ifdef OC_SECURITY
     oc_resource_make_public(&col->res);
@@ -438,7 +440,7 @@ public:
     oc_resource_set_access_in_RFOTM(&col->res, true, OC_PERM_RETRIEVE);
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 #endif /* OC_SECURITY */
-    oc_add_collection(&col->res);
+    EXPECT_TRUE(oc_add_collection_v1(&col->res));
     return col;
   }
 

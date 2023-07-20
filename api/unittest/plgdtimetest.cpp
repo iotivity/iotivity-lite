@@ -69,19 +69,19 @@ public:
   {
     ASSERT_EQ(0, oc_storage_config(testStorage.c_str()));
 
+    oc_network_event_handler_mutex_init();
     oc_clock_init();
     oc_core_init();
     plgd_time_configure(
       /*use_in_mbedtls*/ true,
       /*set_system_time*/ nullptr,
       /*set_system_time_data*/ nullptr);
-    oc_network_event_handler_mutex_init();
   }
 
   static void TearDownTestCase()
   {
-    oc_network_event_handler_mutex_destroy();
     oc_core_shutdown();
+    oc_network_event_handler_mutex_destroy();
 
     for (const auto &entry : std::filesystem::directory_iterator(testStorage)) {
       std::filesystem::remove_all(entry.path());

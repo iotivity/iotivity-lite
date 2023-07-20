@@ -22,6 +22,7 @@
 #include "oc_link.h"
 #include "oc_log.h"
 #include "oc_ri.h"
+#include "port/oc_assert.h"
 #include "port/oc_clock.h"
 #include "util/oc_atomic.h"
 
@@ -71,8 +72,6 @@ static bool actionenable = false;
 /* Resource handles */
 /* Used as input to rule */
 static oc_resource_t *res_binaryswitch;
-/* Specification of the rule */
-static oc_resource_t *res_ruleexpression;
 /* Used in the rule action */
 static oc_resource_t *res_audio;
 
@@ -80,6 +79,8 @@ static oc_resource_t *res_audio;
 /* Collection of Scene Members. Records the "lastscene" following a rule action
  */
 static oc_resource_t *res_scenecol1;
+/* Specification of the rule */
+static oc_resource_t *res_ruleexpression;
 #endif /* OC_COLLECTIONS */
 
 static pthread_t toggle_switch_thread;
@@ -130,7 +131,9 @@ rule_notify_and_eval(void)
       ruleresult = false;
     }
 
+#ifdef OC_COLLECTIONS
     oc_notify_observers(res_ruleexpression);
+#endif /* OC_COLLECTIONS */
 
     if (actionenable && ruleresult) {
       perform_rule_action();
@@ -729,6 +732,352 @@ get_scenecol_properties(const oc_resource_t *resource,
 
 #endif /* OC_COLLECTIONS */
 
+static bool
+register_switch(void)
+{
+  OC_PRINTF("Register Resource with local path \"/binaryswitch\"\n");
+  res_binaryswitch = oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
+  if (res_binaryswitch == NULL) {
+    OC_PRINTF("ERROR: could not allocate /binaryswitch\n");
+    return false;
+  }
+  oc_resource_bind_resource_type(res_binaryswitch, "oic.r.switch.binary");
+  oc_resource_bind_resource_interface(res_binaryswitch, OC_IF_A);
+  oc_resource_set_default_interface(res_binaryswitch, OC_IF_A);
+  oc_resource_set_discoverable(res_binaryswitch, true);
+  oc_resource_set_periodic_observable(res_binaryswitch, 1);
+  oc_resource_set_request_handler(res_binaryswitch, OC_GET, get_binaryswitch,
+                                  NULL);
+  oc_resource_set_request_handler(res_binaryswitch, OC_POST, post_binaryswitch,
+                                  NULL);
+  if (!oc_add_resource(res_binaryswitch)) {
+    OC_PRINTF("ERROR: could not register /binaryswitch\n");
+    return false;
+  }
+  return true;
+}
+
+static bool
+register_audio(void)
+{
+  OC_PRINTF("Register Resource with local path \"/audio\"\n");
+  res_audio = oc_new_resource("Audio", "/audio", 1, 0);
+  if (res_audio == NULL) {
+    OC_PRINTF("ERROR: could not allocate /audio\n");
+    return false;
+  }
+  oc_resource_bind_resource_type(res_audio, "oic.r.audio");
+  oc_resource_bind_resource_interface(res_audio, OC_IF_A);
+  oc_resource_set_default_interface(res_audio, OC_IF_A);
+  oc_resource_set_discoverable(res_audio, true);
+  oc_resource_set_periodic_observable(res_audio, 1);
+  oc_resource_set_request_handler(res_audio, OC_GET, get_audio, NULL);
+  oc_resource_set_request_handler(res_audio, OC_POST, post_audio, NULL);
+  if (!oc_add_resource(res_audio)) {
+    OC_PRINTF("ERROR: could not register /audio\n");
+    return false;
+  }
+  return true;
+}
+
+#ifdef OC_COLLECTIONS
+static oc_resource_t *
+register_scenemember(void)
+{
+  OC_PRINTF("Register Resource with local path \"/scenemember1\"\n");
+  oc_resource_t *res_scenemember1 =
+    oc_new_resource("Scene Member 1", "/scenemember1", 1, 0);
+  if (res_scenemember1 == NULL) {
+    OC_PRINTF("ERROR: could not allocate /scenemember1\n");
+    return NULL;
+  }
+  oc_resource_bind_resource_type(res_scenemember1, "oic.wk.scenemember");
+  oc_resource_set_discoverable(res_scenemember1, true);
+  oc_resource_set_periodic_observable(res_scenemember1, 1);
+  oc_resource_set_request_handler(res_scenemember1, OC_GET, get_scenemember,
+                                  NULL);
+  if (!oc_add_resource(res_scenemember1)) {
+    OC_PRINTF("ERROR: could not register /scenemember1\n");
+    return NULL;
+  }
+  return res_scenemember1;
+}
+
+static bool
+register_scenecollection(oc_resource_t *res_scenemember1)
+{
+  OC_PRINTF("Register Collection with local path \"/scenecollection1\"\n");
+  res_scenecol1 =
+    oc_new_collection("Scene Collection 1", "/scenecollection1", 1, 0);
+  if (res_scenecol1 == NULL) {
+    OC_PRINTF("ERROR: could not allocate /scenecollection1\n");
+    return false;
+  }
+
+  // Remove batch from the set of supported interafaces
+  res_scenecol1->interfaces = OC_IF_BASELINE | OC_IF_LL;
+  oc_resource_bind_resource_type(res_scenecol1, "oic.wk.scenecollection");
+  oc_resource_set_discoverable(res_scenecol1, true);
+
+  if (!oc_collection_add_mandatory_rt(res_scenecol1, "oic.wk.scenemember")) {
+    OC_PRINTF("ERROR: could not add mandatory rt oic.wk.scenemember\n");
+    return false;
+  }
+  if (!oc_collection_add_supported_rt(res_scenecol1, "oic.wk.scenemember")) {
+    OC_PRINTF("ERROR: could not add supported rt oic.wk.scenemember\n");
+    return false;
+  }
+  oc_resource_set_properties_cbs(res_scenecol1, get_scenecol_properties, NULL,
+                                 set_scenecol_properties, NULL);
+  if (!oc_add_collection_v1(res_scenecol1)) {
+    OC_PRINTF("ERROR: could not register /scenecollection1\n");
+    return false;
+  }
+
+  oc_link_t *sm1 = oc_new_link(res_scenemember1);
+  if (sm1 == NULL) {
+    OC_PRINTF("ERROR: could not allocate /scenemember1 link\n");
+    return false;
+  }
+  oc_collection_add_link(res_scenecol1, sm1);
+
+  return true;
+}
+
+static bool
+register_scenelist(void)
+{
+  OC_PRINTF("Register Collection with local path \"/scenelist\"\n");
+  oc_resource_t *res_scenelist =
+    oc_new_collection("Scene List", "/scenelist", 1, 0);
+  if (res_scenelist == NULL) {
+    OC_PRINTF("ERROR: could not allocate /scenelist\n");
+    return false;
+  }
+  oc_resource_bind_resource_type(res_scenelist, "oic.wk.scenelist");
+  oc_resource_set_discoverable(res_scenelist, true);
+  // Remove batch from the set of supported interafaces
+  res_scenelist->interfaces = OC_IF_BASELINE | OC_IF_LL;
+
+  if (!oc_collection_add_mandatory_rt(res_scenelist,
+                                      "oic.wk.scenecollection")) {
+    OC_PRINTF("ERROR: could not add mandatory rt oic.wk.scenecollection\n");
+    return false;
+  }
+  if (!oc_collection_add_supported_rt(res_scenelist,
+                                      "oic.wk.scenecollection")) {
+    OC_PRINTF("ERROR: could not add supported rt oic.wk.scenecollection\n");
+    return false;
+  }
+
+  if (!oc_add_collection_v1(res_scenelist)) {
+    OC_PRINTF("ERROR: could not register /scenelist\n");
+    return false;
+  }
+
+  oc_link_t *sc1 = oc_new_link(res_scenecol1);
+  if (sc1 == NULL) {
+    OC_PRINTF("ERROR: could not allocate /scenecollection1 link\n");
+    return false;
+  }
+  oc_collection_add_link(res_scenelist, sc1);
+  return true;
+}
+
+static bool
+register_ruleexpression(void)
+{
+  OC_PRINTF("Register Resource with local path \"/ruleexpression\"\n");
+  res_ruleexpression =
+    oc_new_resource("Rule Expression", "/ruleexpression", 1, 0);
+  if (res_ruleexpression == NULL) {
+    OC_PRINTF("ERROR: could not allocate /ruleexpression\n");
+    return false;
+  }
+  oc_resource_bind_resource_type(res_ruleexpression, "oic.r.rule.expression");
+  oc_resource_bind_resource_interface(res_ruleexpression, OC_IF_RW);
+  oc_resource_set_default_interface(res_ruleexpression, OC_IF_RW);
+  oc_resource_set_discoverable(res_ruleexpression, true);
+  oc_resource_set_periodic_observable(res_ruleexpression, 1);
+  oc_resource_set_request_handler(res_ruleexpression, OC_GET,
+                                  get_ruleexpression, NULL);
+  oc_resource_set_request_handler(res_ruleexpression, OC_POST,
+                                  post_ruleexpression, NULL);
+  if (!oc_add_resource(res_ruleexpression)) {
+    OC_PRINTF("ERROR: could not register /ruleexpression\n");
+    return false;
+  }
+  return true;
+}
+
+static oc_resource_t *
+register_ruleaction(void)
+{
+  OC_PRINTF("Register Resource with local path \"/ruleaction\"\n");
+  oc_resource_t *res_ruleaction =
+    oc_new_resource("Rule Action", "/ruleaction", 1, 0);
+  if (res_ruleaction == NULL) {
+    OC_PRINTF("ERROR: could not allocate /ruleaction\n");
+    return NULL;
+  }
+  oc_resource_bind_resource_type(res_ruleaction, "oic.r.rule.action");
+  oc_resource_bind_resource_interface(res_ruleaction, OC_IF_RW);
+  oc_resource_set_default_interface(res_ruleaction, OC_IF_RW);
+  oc_resource_set_discoverable(res_ruleaction, true);
+  oc_resource_set_periodic_observable(res_ruleaction, 1);
+  oc_resource_set_request_handler(res_ruleaction, OC_GET, get_ruleaction, NULL);
+  oc_resource_set_request_handler(res_ruleaction, OC_POST, post_ruleaction,
+                                  NULL);
+  if (!oc_add_resource(res_ruleaction)) {
+    OC_PRINTF("ERROR: could not register /ruleaction\n");
+    return NULL;
+  }
+  return res_ruleaction;
+}
+
+static oc_resource_t *
+register_ruleinputcollection(void)
+{
+  OC_PRINTF("Register Collection with local path \"/ruleinputcollection\"\n");
+  oc_resource_t *res_ruleinputcol =
+    oc_new_collection("Rule Input Collection", "/ruleinputcollection", 1, 0);
+  if (res_ruleinputcol == NULL) {
+    OC_PRINTF("ERROR: could not allocate /ruleinputcollection\n");
+    return NULL;
+  }
+  // Remove batch from the set of supported interafaces
+  res_ruleinputcol->interfaces = OC_IF_BASELINE | OC_IF_LL;
+  oc_resource_bind_resource_type(res_ruleinputcol,
+                                 "oic.r.rule.inputcollection");
+  oc_resource_set_discoverable(res_ruleinputcol, true);
+
+  // oc_collection_add_mandatory_rt(res_ruleinputcol, "oic.r.switch.binary");
+  if (!oc_collection_add_supported_rt(res_ruleinputcol,
+                                      "oic.r.switch.binary")) {
+    OC_PRINTF("ERROR: could not add supported rt oic.r.switch.binary\n");
+    return NULL;
+  }
+  if (!oc_add_collection_v1(res_ruleinputcol)) {
+    OC_PRINTF("ERROR: could not register /ruleinputcollection\n");
+    return NULL;
+  }
+
+  oc_link_t *ric1 = oc_new_link(res_binaryswitch);
+  if (ric1 == NULL) {
+    OC_PRINTF("ERROR: could not allocate /binaryswitch link\n");
+    return NULL;
+  }
+  // Replace the default rel array with ["hosts"] with just "ruleinput"
+  oc_link_clear_rels(ric1);
+  oc_link_add_rel(ric1, "ruleinput");
+  if (!oc_link_add_link_param(ric1, "anchor", "switch")) {
+    OC_PRINTF("ERROR: could not add anchor link param to /binaryswitch\n");
+    return NULL;
+  }
+  oc_link_set_interfaces(ric1, OC_IF_A);
+  oc_collection_add_link(res_ruleinputcol, ric1);
+  return res_ruleinputcol;
+}
+
+static oc_resource_t *
+register_ruleactioncol(oc_resource_t *res_ruleaction)
+{
+  OC_PRINTF("Register Collection with local path \"/ruleactioncollection\"\n");
+  oc_resource_t *res_ruleactioncol =
+    oc_new_collection("Rule Action Collection", "/ruleactioncollection", 1, 0);
+  if (res_ruleactioncol == NULL) {
+    OC_PRINTF("ERROR: could not allocate /ruleactioncollection\n");
+    return NULL;
+  }
+  // Remove batch from the set of supported interafaces
+  res_ruleactioncol->interfaces = OC_IF_BASELINE | OC_IF_LL;
+  oc_resource_bind_resource_type(res_ruleactioncol,
+                                 "oic.r.rule.actioncollection");
+  oc_resource_set_discoverable(res_ruleactioncol, true);
+
+  if (!oc_collection_add_mandatory_rt(res_ruleactioncol, "oic.r.rule.action")) {
+    OC_PRINTF("ERROR: could not add mandatory rt oic.r.rule.action\n");
+    return NULL;
+  }
+  if (!oc_collection_add_supported_rt(res_ruleactioncol, "oic.r.rule.action")) {
+    OC_PRINTF("ERROR: could not add supported rt oic.r.rule.action\n");
+    return NULL;
+  }
+
+  if (!oc_add_collection_v1(res_ruleactioncol)) {
+    OC_PRINTF("ERROR: could not register /ruleactioncollection\n");
+    return NULL;
+  }
+
+  oc_link_t *rac1 = oc_new_link(res_ruleaction);
+  if (rac1 == NULL) {
+    OC_PRINTF("ERROR: could not allocate /ruleaction link\n");
+    return NULL;
+  }
+  oc_collection_add_link(res_ruleactioncol, rac1);
+  return res_ruleactioncol;
+}
+
+static bool
+register_rule(oc_resource_t *res_ruleinputcol, oc_resource_t *res_ruleactioncol)
+{
+  OC_PRINTF("Register Collection with local path \"/rule\"\n");
+  oc_resource_t *res_rule = oc_new_collection("Rule", "/rule", 1, 0);
+  if (res_rule == NULL) {
+    OC_PRINTF("ERROR: could not allocate /rule\n");
+    return false;
+  }
+  // Remove batch from the set of supported interafaces
+  res_rule->interfaces = OC_IF_BASELINE | OC_IF_LL;
+  oc_resource_bind_resource_type(res_rule, "oic.r.rule");
+  oc_resource_set_discoverable(res_rule, true);
+
+  if (!oc_collection_add_mandatory_rt(res_rule, "oic.r.rule.expression") ||
+      !oc_collection_add_mandatory_rt(res_rule, "oic.r.rule.inputcollection") ||
+      !oc_collection_add_mandatory_rt(res_rule,
+                                      "oic.r.rule.actioncollection")) {
+    OC_PRINTF("ERROR: could not add mandatory rt to /rule\n");
+    return false;
+  }
+
+  if (!oc_collection_add_supported_rt(res_rule, "oic.r.rule.expression") ||
+      !oc_collection_add_supported_rt(res_rule, "oic.r.rule.inputcollection") ||
+      !oc_collection_add_supported_rt(res_rule,
+                                      "oic.r.rule.actioncollection")) {
+    OC_PRINTF("ERROR: could not add supported rt to /rule\n");
+    return false;
+  }
+
+  if (!oc_add_collection_v1(res_rule)) {
+    OC_PRINTF("ERROR: could not register /rule\n");
+    return false;
+  }
+
+  oc_link_t *r1 = oc_new_link(res_ruleexpression);
+  if (r1 == NULL) {
+    OC_PRINTF("ERROR: could not allocate /ruleexpression link\n");
+    return false;
+  }
+  oc_collection_add_link(res_rule, r1);
+
+  oc_link_t *r2 = oc_new_link(res_ruleinputcol);
+  if (r2 == NULL) {
+    OC_PRINTF("ERROR: could not allocate /ruleinputcol link\n");
+    return false;
+  }
+  oc_collection_add_link(res_rule, r2);
+
+  oc_link_t *r3 = oc_new_link(res_ruleactioncol);
+  if (r3 == NULL) {
+    OC_PRINTF("ERROR: could not allocate /ruleactioncol link\n");
+    return false;
+  }
+  oc_collection_add_link(res_rule, r3);
+  return true;
+}
+
+#endif /* OC_COLLECTIONS */
+
 /**
  * register all the resources to the stack
  * this function registers all application level resources:
@@ -743,163 +1092,42 @@ get_scenecol_properties(const oc_resource_t *resource,
 static void
 register_resources(void)
 {
-  OC_PRINTF("Register Resource with local path \"/binaryswitch\"\n");
-  res_binaryswitch = oc_new_resource("Binary Switch", "/binaryswitch", 1, 0);
-  oc_resource_bind_resource_type(res_binaryswitch, "oic.r.switch.binary");
-  oc_resource_bind_resource_interface(res_binaryswitch, OC_IF_A);
-  oc_resource_set_default_interface(res_binaryswitch, OC_IF_A);
-  oc_resource_set_discoverable(res_binaryswitch, true);
-  oc_resource_set_periodic_observable(res_binaryswitch, 1);
-  oc_resource_set_request_handler(res_binaryswitch, OC_GET, get_binaryswitch,
-                                  NULL);
-  oc_resource_set_request_handler(res_binaryswitch, OC_POST, post_binaryswitch,
-                                  NULL);
-  oc_add_resource(res_binaryswitch);
-
-  OC_PRINTF("Register Resource with local path \"/audio\"\n");
-  res_audio = oc_new_resource("Audio", "/audio", 1, 0);
-  oc_resource_bind_resource_type(res_audio, "oic.r.audio");
-  oc_resource_bind_resource_interface(res_audio, OC_IF_A);
-  oc_resource_set_default_interface(res_audio, OC_IF_A);
-  oc_resource_set_discoverable(res_audio, true);
-  oc_resource_set_periodic_observable(res_audio, 1);
-  oc_resource_set_request_handler(res_audio, OC_GET, get_audio, NULL);
-  oc_resource_set_request_handler(res_audio, OC_POST, post_audio, NULL);
-  oc_add_resource(res_audio);
+  if (!register_switch()) {
+    oc_abort("Failed to register /binaryswitch resource\n");
+  }
+  if (!register_audio()) {
+    oc_abort("Failed to register /audio resource\n");
+  }
 
 #ifdef OC_COLLECTIONS
-  OC_PRINTF("Register Resource with local path \"/scenemember1\"\n");
-  oc_resource_t *res_scenemember1 =
-    oc_new_resource("Scene Member 1", "/scenemember1", 1, 0);
-  oc_resource_bind_resource_type(res_scenemember1, "oic.wk.scenemember");
-  oc_resource_set_discoverable(res_scenemember1, true);
-  oc_resource_set_periodic_observable(res_scenemember1, 1);
-  oc_resource_set_request_handler(res_scenemember1, OC_GET, get_scenemember,
-                                  NULL);
-  oc_add_resource(res_scenemember1);
-
-  OC_PRINTF("Register Collection with local path \"/scenecollection1\"\n");
-  res_scenecol1 =
-    oc_new_collection("Scene Collection 1", "/scenecollection1", 1, 0);
-  // Remove batch from the set of supported interafaces
-  res_scenecol1->interfaces = OC_IF_BASELINE | OC_IF_LL;
-  oc_resource_bind_resource_type(res_scenecol1, "oic.wk.scenecollection");
-  oc_resource_set_discoverable(res_scenecol1, true);
-
-  oc_link_t *sm1 = oc_new_link(res_scenemember1);
-  oc_collection_add_link(res_scenecol1, sm1);
-
-  oc_collection_add_mandatory_rt(res_scenecol1, "oic.wk.scenemember");
-  oc_collection_add_supported_rt(res_scenecol1, "oic.wk.scenemember");
-  oc_resource_set_properties_cbs(res_scenecol1, get_scenecol_properties, NULL,
-                                 set_scenecol_properties, NULL);
-  oc_add_collection(res_scenecol1);
-
-  OC_PRINTF("Register Collection with local path \"/scenelist\"\n");
-  oc_resource_t *res_scenelist =
-    oc_new_collection("Scene List", "/scenelist", 1, 0);
-  oc_resource_bind_resource_type(res_scenelist, "oic.wk.scenelist");
-  oc_resource_set_discoverable(res_scenelist, true);
-  // Remove batch from the set of supported interafaces
-  res_scenelist->interfaces = OC_IF_BASELINE | OC_IF_LL;
-  oc_link_t *sc1 = oc_new_link(res_scenecol1);
-  oc_collection_add_link(res_scenelist, sc1);
-
-  oc_collection_add_mandatory_rt(res_scenelist, "oic.wk.scenecollection");
-  oc_collection_add_supported_rt(res_scenelist, "oic.wk.scenecollection");
-
-  oc_add_collection(res_scenelist);
-
-  OC_PRINTF("Register Resource with local path \"/ruleexpression\"\n");
-  res_ruleexpression =
-    oc_new_resource("Rule Expression", "/ruleexpression", 1, 0);
-  oc_resource_bind_resource_type(res_ruleexpression, "oic.r.rule.expression");
-  oc_resource_bind_resource_interface(res_ruleexpression, OC_IF_RW);
-  oc_resource_set_default_interface(res_ruleexpression, OC_IF_RW);
-  oc_resource_set_discoverable(res_ruleexpression, true);
-  oc_resource_set_periodic_observable(res_ruleexpression, 1);
-  oc_resource_set_request_handler(res_ruleexpression, OC_GET,
-                                  get_ruleexpression, NULL);
-  oc_resource_set_request_handler(res_ruleexpression, OC_POST,
-                                  post_ruleexpression, NULL);
-  oc_add_resource(res_ruleexpression);
-
-  OC_PRINTF("Register Resource with local path \"/ruleaction\"\n");
-  oc_resource_t *res_ruleaction =
-    oc_new_resource("Rule Action", "/ruleaction", 1, 0);
-  oc_resource_bind_resource_type(res_ruleaction, "oic.r.rule.action");
-  oc_resource_bind_resource_interface(res_ruleaction, OC_IF_RW);
-  oc_resource_set_default_interface(res_ruleaction, OC_IF_RW);
-  oc_resource_set_discoverable(res_ruleaction, true);
-  oc_resource_set_periodic_observable(res_ruleaction, 1);
-  oc_resource_set_request_handler(res_ruleaction, OC_GET, get_ruleaction, NULL);
-  oc_resource_set_request_handler(res_ruleaction, OC_POST, post_ruleaction,
-                                  NULL);
-  oc_add_resource(res_ruleaction);
-
-  OC_PRINTF("Register Collection with local path \"/ruleinputcollection\"\n");
-  oc_resource_t *res_ruleinputcol =
-    oc_new_collection("Rule Input Collection", "/ruleinputcollection", 1, 0);
-  // Remove batch from the set of supported interafaces
-  res_ruleinputcol->interfaces = OC_IF_BASELINE | OC_IF_LL;
-  oc_resource_bind_resource_type(res_ruleinputcol,
-                                 "oic.r.rule.inputcollection");
-  oc_resource_set_discoverable(res_ruleinputcol, true);
-
-  oc_link_t *ric1 = oc_new_link(res_binaryswitch);
-  // Replace the default rel array with ["hosts"] with just "ruleinput"
-  oc_link_clear_rels(ric1);
-  oc_link_add_rel(ric1, "ruleinput");
-  oc_link_add_link_param(ric1, "anchor", "switch");
-  oc_link_set_interfaces(ric1, OC_IF_A);
-  oc_collection_add_link(res_ruleinputcol, ric1);
-
-  // oc_collection_add_mandatory_rt(res_ruleinputcol, "oic.r.switch.binary");
-  oc_collection_add_supported_rt(res_ruleinputcol, "oic.r.switch.binary");
-  oc_add_collection(res_ruleinputcol);
-
-  OC_PRINTF("Register Collection with local path \"/ruleactioncollection\"\n");
-  oc_resource_t *res_ruleactioncol =
-    oc_new_collection("Rule Action Collection", "/ruleactioncollection", 1, 0);
-  // Remove batch from the set of supported interafaces
-  res_ruleactioncol->interfaces = OC_IF_BASELINE | OC_IF_LL;
-  oc_resource_bind_resource_type(res_ruleactioncol,
-                                 "oic.r.rule.actioncollection");
-  oc_resource_set_discoverable(res_ruleactioncol, true);
-
-  oc_link_t *rac1 = oc_new_link(res_ruleaction);
-  oc_collection_add_link(res_ruleactioncol, rac1);
-
-  oc_collection_add_mandatory_rt(res_ruleactioncol, "oic.r.rule.action");
-  oc_collection_add_supported_rt(res_ruleactioncol, "oic.r.rule.action");
-
-  oc_add_collection(res_ruleactioncol);
-
-  OC_PRINTF("Register Collection with local path \"/rule\"\n");
-  oc_resource_t *res_rule = oc_new_collection("Rule", "/rule", 1, 0);
-  // Remove batch from the set of supported interafaces
-  res_rule->interfaces = OC_IF_BASELINE | OC_IF_LL;
-  oc_resource_bind_resource_type(res_rule, "oic.r.rule");
-  oc_resource_set_discoverable(res_rule, true);
-
-  oc_link_t *r1 = oc_new_link(res_ruleexpression);
-  oc_collection_add_link(res_rule, r1);
-
-  oc_link_t *r2 = oc_new_link(res_ruleinputcol);
-  oc_collection_add_link(res_rule, r2);
-
-  oc_link_t *r3 = oc_new_link(res_ruleactioncol);
-  oc_collection_add_link(res_rule, r3);
-
-  oc_collection_add_mandatory_rt(res_rule, "oic.r.rule.expression");
-  oc_collection_add_mandatory_rt(res_rule, "oic.r.rule.inputcollection");
-  oc_collection_add_mandatory_rt(res_rule, "oic.r.rule.actioncollection");
-
-  oc_collection_add_supported_rt(res_rule, "oic.r.rule.expression");
-  oc_collection_add_supported_rt(res_rule, "oic.r.rule.inputcollection");
-  oc_collection_add_supported_rt(res_rule, "oic.r.rule.actioncollection");
-
-  oc_add_collection(res_rule);
+  oc_resource_t *res_scenemember1 = register_scenemember();
+  if (res_scenemember1 == NULL) {
+    oc_abort("Failed to register /scenemember1 resource\n");
+  }
+  if (!register_scenecollection(res_scenemember1)) {
+    oc_abort("Failed to register /scenecollection1 resource\n");
+  }
+  if (!register_scenelist()) {
+    oc_abort("Failed to register /scenelist resource\n");
+  }
+  if (!register_ruleexpression()) {
+    oc_abort("Failed to register /ruleexpression resource\n");
+  }
+  oc_resource_t *res_ruleaction = register_ruleaction();
+  if (res_ruleaction == NULL) {
+    oc_abort("Failed to register /ruleaction resource\n");
+  }
+  oc_resource_t *res_ruleinputcol = register_ruleinputcollection();
+  if (res_ruleinputcol == NULL) {
+    oc_abort("Failed to register /ruleinputcollection resource\n");
+  }
+  oc_resource_t *res_ruleactioncol = register_ruleactioncol(res_ruleaction);
+  if (res_ruleactioncol == NULL) {
+    oc_abort("Failed to register /ruleactioncollection resource\n");
+  }
+  if (!register_rule(res_ruleinputcol, res_ruleactioncol)) {
+    oc_abort("Failed to register /rule resource\n");
+  }
 #endif /* OC_COLLECTIONS */
 }
 

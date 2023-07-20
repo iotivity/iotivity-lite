@@ -235,6 +235,8 @@ typedef struct oc_collection_s oc_collection_t;
   public";
 %rename(deleteCollection) oc_delete_collection;
 
+%rename(addCollection) oc_add_collection;
+
 // DOCUMENTATION workaround
 %javamethodmodifiers oc_add_collection "/**
    * Adds a collection to the list of collections.
@@ -252,7 +254,7 @@ typedef struct oc_collection_s oc_collection_t;
    * @see newCollection
    */
   public";
-%rename(addCollection) oc_add_collection;
+%rename(addCollectionV1) oc_add_collection_v1;
 
 
 // DOCUMENTATION workaround
@@ -317,6 +319,7 @@ typedef struct oc_collection_s oc_collection_t;
 %rename(collectionAddMandatoryResourceType) oc_collection_add_mandatory_rt;
 
 #define OC_API
+#define OC_DEPRECATED(...)
 #define OC_NO_DISCARD_RETURN
 #define OC_NONNULL(...)
 %include "oc_collection.h"

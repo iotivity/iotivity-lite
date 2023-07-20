@@ -207,9 +207,9 @@ oc_get_collection_by_uri(const char *uri_path, size_t uri_path_len,
   }
   oc_resource_t *collection = (oc_resource_t *)oc_list_head(g_collections);
   while (collection != NULL) {
-    if (oc_string_len(collection->uri) == (uri_path_len + 1) &&
-        strncmp(oc_string(collection->uri) + 1, uri_path, uri_path_len) == 0 &&
-        collection->device == device) {
+    if (collection->device == device &&
+        oc_string_len(collection->uri) == (uri_path_len + 1) &&
+        strncmp(oc_string(collection->uri) + 1, uri_path, uri_path_len) == 0) {
       break;
     }
     collection = collection->next;
@@ -262,10 +262,23 @@ oc_check_if_collection(const oc_resource_t *resource)
   return false;
 }
 
-void
+bool
 oc_collection_add(oc_collection_t *collection)
 {
+  // check if collection already exists
+  if (oc_check_if_collection((oc_resource_t *)collection)) {
+    return false;
+  }
+  // check if URI already exists in given device
+  if (oc_get_collection_by_uri(oc_string(collection->res.uri),
+                               oc_string_len(collection->res.uri),
+                               collection->res.device) != NULL) {
+    return false;
+  }
+  // check dynamic resources URI
+
   oc_list_add(g_collections, collection);
+  return true;
 }
 
 static bool

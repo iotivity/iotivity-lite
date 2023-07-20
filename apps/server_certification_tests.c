@@ -21,6 +21,7 @@
 #include "oc_log.h"
 #include "oc_pki.h"
 #include "oc_swupdate.h"
+#include "port/oc_assert.h"
 #include "port/oc_clock.h"
 #include "util/oc_atomic.h"
 
@@ -1710,10 +1711,14 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 }
 
-static void
-register_resources(void)
+static bool
+register_temp(void)
 {
   temp_resource = oc_new_resource(NULL, "/temp", 1, 0);
+  if (temp_resource == NULL) {
+    OC_PRINTF("ERROR: could not create /temp resource");
+    return false;
+  }
   oc_resource_bind_resource_type(temp_resource, "oic.r.temperature");
   oc_resource_bind_resource_interface(temp_resource, OC_IF_A);
   oc_resource_bind_resource_interface(temp_resource, OC_IF_S);
@@ -1724,12 +1729,27 @@ register_resources(void)
   oc_resource_set_request_handler(temp_resource, OC_POST, post_temp, NULL);
   oc_resource_tag_func_desc(temp_resource, OC_ENUM_HEATING);
   oc_resource_tag_pos_desc(temp_resource, OC_POS_CENTRE);
+  if (!oc_add_resource(temp_resource)) {
+    OC_PRINTF("ERROR: could not add /temp resource to device");
+    return false;
+  }
+
 #ifdef OC_OSCORE
   oc_resource_set_secure_mcast(temp_resource, true);
 #endif /* OC_OSCORE */
-  oc_add_resource(temp_resource);
+
   OC_PRINTF("\tTemperature resource added.\n");
+  return true;
+}
+
+static bool
+register_switch(void)
+{
   bswitch = oc_new_resource(NULL, "/switch", 1, 0);
+  if (bswitch == NULL) {
+    OC_PRINTF("ERROR: could not create /switch resource");
+    return false;
+  }
   oc_resource_bind_resource_type(bswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(bswitch, OC_IF_A);
 #ifdef OC_STORAGE
@@ -1745,11 +1765,23 @@ register_resources(void)
   oc_resource_tag_func_desc(bswitch, OC_ENUM_SMART);
   oc_resource_tag_pos_rel(bswitch, 0.34, 0.5, 0.8);
   oc_resource_tag_pos_desc(bswitch, OC_POS_TOP);
-  oc_add_resource(bswitch);
+  if (!oc_add_resource(bswitch)) {
+    OC_PRINTF("ERROR: could not add /switch resource to device");
+    return false;
+  }
   OC_PRINTF("\tSwitch resource added.\n");
+  return true;
+}
 
+static bool
+register_remotecontrol(void)
+{
   oc_resource_t *remotecontrol =
     oc_new_resource("Remote Control", "/remotecontrol", 1, 0);
+  if (remotecontrol == NULL) {
+    OC_PRINTF("ERROR: could not create /remotecontrol resource");
+    return false;
+  }
   oc_resource_bind_resource_type(remotecontrol, "oic.r.remotecontrol");
   oc_resource_bind_resource_interface(remotecontrol, OC_IF_A);
   oc_resource_set_default_interface(remotecontrol, OC_IF_A);
@@ -1758,10 +1790,23 @@ register_resources(void)
                                   NULL);
   oc_resource_set_request_handler(remotecontrol, OC_POST, post_remotecontrol,
                                   NULL);
-  oc_add_resource(remotecontrol);
+  if (!oc_add_resource(remotecontrol)) {
+    OC_PRINTF("ERROR: could not add /remotecontrol resource to device");
+    return false;
+  }
   OC_PRINTF("\t Remotecontrol resource added\n");
+  return true;
+}
 
+static bool
+register_dali(void)
+{
   oc_resource_t *res_dali = oc_new_resource(NULL, "/dali", 1, 0);
+  if (res_dali == NULL) {
+    OC_PRINTF("ERROR: could not create /dali resource\n");
+    return false;
+  }
+
   oc_resource_bind_resource_type(res_dali, "oic.r.dali");
   oc_resource_bind_resource_interface(res_dali,
                                       OC_IF_BASELINE);    /* oic.if.baseline */
@@ -1774,13 +1819,29 @@ register_resources(void)
   oc_resource_set_periodic_observable(res_dali, 1);
   oc_resource_set_request_handler(res_dali, OC_GET, get_dali, NULL);
   oc_resource_set_request_handler(res_dali, OC_POST, post_dali, NULL);
-#ifdef OC_CLOUD
-  oc_cloud_add_resource(res_dali);
-#endif
-  oc_add_resource(res_dali);
-  OC_PRINTF("\tDali resource added.\n");
+  if (!oc_add_resource(res_dali)) {
+    OC_PRINTF("ERROR: could not add /dali resource to device\n");
+    return false;
+  }
 
+#ifdef OC_CLOUD
+  if (oc_cloud_add_resource(res_dali) < 0) {
+    OC_PRINTF("ERROR: could not add /dali resource to cloud\n");
+    return false;
+  }
+#endif
+  OC_PRINTF("\tDali resource added.\n");
+  return true;
+}
+
+static bool
+register_dali_conf(void)
+{
   oc_resource_t *dali_config = oc_new_resource(NULL, "/dali_conf", 1, 0);
+  if (dali_config == NULL) {
+    OC_PRINTF("ERROR: could not create /dali_conf resource\n");
+    return false;
+  }
   oc_resource_bind_resource_type(dali_config, "oic.r.dali.conf");
 
   oc_resource_bind_resource_interface(dali_config, OC_IF_RW); /* oic.if.rw */
@@ -1801,35 +1862,99 @@ register_resources(void)
   oc_resource_set_request_handler(dali_config, OC_GET, get_dali_config, NULL);
   oc_resource_set_request_handler(dali_config, OC_POST, post_dali_config, NULL);
 
+  if (!oc_add_resource(dali_config)) {
+    OC_PRINTF("ERROR: could not add /dali_conf resource to device\n");
+    return false;
+  }
 #ifdef OC_CLOUD
-  oc_cloud_add_resource(dali_config);
-#endif
-  oc_add_resource(dali_config);
+  if (oc_cloud_add_resource(dali_config) < 0) {
+    OC_PRINTF("ERROR: could not add /dali_conf resource to cloud\n");
+    return false;
+  }
+#endif /* OC_CLOUD */
+  OC_PRINTF("\tDali config resource added.\n");
+  return true;
+}
 
 #ifdef OC_COLLECTIONS
+static bool
+register_platform_collection(void)
+{
   col = oc_new_collection(NULL, "/platform", 1, 0);
+  if (col == NULL) {
+    OC_PRINTF("ERROR: could not create /platform collection\n");
+    return false;
+  }
+
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
 
-  oc_collection_add_supported_rt(col, "oic.r.switch.binary");
-  oc_collection_add_mandatory_rt(col, "oic.r.switch.binary");
+  if (!oc_collection_add_supported_rt(col, "oic.r.switch.binary")) {
+    OC_PRINTF("ERROR: could not add supported resource type to collection\n");
+    return false;
+  }
+  if (!oc_collection_add_mandatory_rt(col, "oic.r.switch.binary")) {
+    OC_PRINTF("ERROR: could not add mandatory resource type to collection\n");
+    return false;
+  }
 
 #ifdef OC_COLLECTIONS_IF_CREATE
   oc_resource_bind_resource_interface(col, OC_IF_CREATE);
-  oc_collections_add_rt_factory("oic.r.switch.binary", get_switch_instance,
-                                free_switch_instance);
+  if (!oc_collections_add_rt_factory("oic.r.switch.binary", get_switch_instance,
+                                     free_switch_instance)) {
+    OC_PRINTF("ERROR: could not add factory for oic.r.switch.binary\n");
+    return false;
+  }
 #endif /* OC_COLLECTIONS_IF_CREATE */
   oc_link_t *l1 = oc_new_link(bswitch);
+  if (l1 == NULL) {
+    OC_PRINTF("ERROR: could not create link\n");
+    return false;
+  }
+
   oc_collection_add_link(col, l1);
   /* Add a defined or custom link parameter to this link */
-  oc_link_add_link_param(l1, "x.org.openconnectivity.name", "platform_switch");
+  if (!oc_link_add_link_param(l1, "x.org.openconnectivity.name",
+                              "platform_switch")) {
+    OC_PRINTF("ERROR: could not add link parameter\n");
+    return false;
+  }
 
   /* The following enables baseline RETRIEVEs/UPDATEs to Collection properties
    */
   oc_resource_set_properties_cbs(col, get_platform_properties, NULL,
                                  set_platform_properties, NULL);
-  oc_add_collection(col);
+  if (!oc_add_collection_v1(col)) {
+    OC_PRINTF("ERROR: could not add /platform collection\n");
+    return false;
+  }
   OC_PRINTF("\tResources added to collection.\n");
+  return true;
+}
+#endif /* OC_COLLECTIONS */
+
+static void
+register_resources(void)
+{
+  if (!register_temp()) {
+    oc_abort("Failed to register /temp resource");
+  }
+  if (!register_switch()) {
+    oc_abort("Failed to register /switch resource");
+  }
+  if (!register_remotecontrol()) {
+    oc_abort("Failed to register /remotecontrol resource");
+  }
+  if (!register_dali()) {
+    oc_abort("Failed to register /dali resource");
+  }
+  if (!register_dali_conf()) {
+    oc_abort("Failed to register /dali_conf resource");
+  }
+#ifdef OC_COLLECTIONS
+  if (!register_platform_collection()) {
+    oc_abort("Failed to register /platform resource");
+  }
 #endif /* OC_COLLECTIONS */
 
   oc_resource_t *device_resource = oc_core_get_resource_by_index(OCF_D, DEVICE);

@@ -19,6 +19,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_pki.h"
+#include "port/oc_assert.h"
 #include "port/oc_clock.h"
 #include "util/oc_atomic.h"
 
@@ -550,10 +551,14 @@ get_platform_properties(const oc_resource_t *resource,
 }
 #endif /* OC_COLLECTIONS */
 
-static void
-register_resources(void)
+static bool
+register_temp(void)
 {
   temp_resource = oc_new_resource(NULL, "/temp", 1, 0);
+  if (temp_resource == NULL) {
+    printf("ERROR: cannot allocate /temp resource\n");
+    return false;
+  }
   oc_resource_bind_resource_type(temp_resource, "oic.r.temperature");
   oc_resource_bind_resource_interface(temp_resource, OC_IF_A);
   oc_resource_bind_resource_interface(temp_resource, OC_IF_S);
@@ -564,9 +569,22 @@ register_resources(void)
   oc_resource_set_request_handler(temp_resource, OC_POST, post_temp, NULL);
   oc_resource_tag_func_desc(temp_resource, OC_ENUM_HEATING);
   oc_resource_tag_pos_desc(temp_resource, OC_POS_CENTRE);
-  oc_add_resource(temp_resource);
+  if (!oc_add_resource(temp_resource)) {
+    printf("ERROR: cannot add /temp resource to device\n");
+    return false;
+  }
   printf("\tTemperature resource added.\n");
+  return true;
+}
+
+static bool
+register_switch(void)
+{
   bswitch = oc_new_resource(NULL, "/switch", 1, 0);
+  if (bswitch == NULL) {
+    printf("ERROR: cannot allocate /switch resource\n");
+    return false;
+  }
   oc_resource_bind_resource_type(bswitch, "oic.r.switch.binary");
   oc_resource_bind_resource_interface(bswitch, OC_IF_A);
   oc_resource_set_default_interface(bswitch, OC_IF_A);
@@ -577,32 +595,89 @@ register_resources(void)
   oc_resource_tag_func_desc(bswitch, OC_ENUM_SMART);
   oc_resource_tag_pos_rel(bswitch, 0.34, 0.5, 0.8);
   oc_resource_tag_pos_desc(bswitch, OC_POS_TOP);
-  oc_add_resource(bswitch);
+  if (!oc_add_resource(bswitch)) {
+    printf("ERROR: cannot add /switch resource to device\n");
+    return false;
+  }
   printf("\tSwitch resource added.\n");
+  return true;
+}
+
 #ifdef OC_COLLECTIONS
+
+static bool
+register_platform_collection(void)
+{
   col = oc_new_collection(NULL, "/platform", 1, 0);
+  if (col == NULL) {
+    printf("ERROR: cannot allocate /platform collection\n");
+    return false;
+  }
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
 
-  oc_collection_add_supported_rt(col, "oic.r.switch.binary");
-  oc_collection_add_mandatory_rt(col, "oic.r.switch.binary");
+  if (!oc_collection_add_supported_rt(col, "oic.r.switch.binary")) {
+    printf(
+      "ERROR: cannot add supported resource type to /platform collection\n");
+    return false;
+  }
+  if (!oc_collection_add_mandatory_rt(col, "oic.r.switch.binary")) {
+    printf(
+      "ERROR: cannot add mandatory resource type to /platform collection\n");
+    return false;
+  }
 
 #ifdef OC_COLLECTIONS_IF_CREATE
   oc_resource_bind_resource_interface(col, OC_IF_CREATE);
-  oc_collections_add_rt_factory("oic.r.switch.binary", get_switch_instance,
-                                free_switch_instance);
+  if (!oc_collections_add_rt_factory("oic.r.switch.binary", get_switch_instance,
+                                     free_switch_instance)) {
+    printf("ERROR: cannot add factory for oic.r.switch.binary\n");
+    return false;
+  }
 #endif /* OC_COLLECTIONS_IF_CREATE */
-  oc_link_t *l1 = oc_new_link(bswitch);
-  oc_collection_add_link(col, l1);
-  /* Add a defined or custom link parameter to this link */
-  oc_link_add_link_param(l1, "x.org.openconnectivity.name", "platform_switch");
 
   /* The following enables baseline RETRIEVEs/UPDATEs to Collection properties
    */
   oc_resource_set_properties_cbs(col, get_platform_properties, NULL,
                                  set_platform_properties, NULL);
-  oc_add_collection(col);
+  if (!oc_add_collection_v1(col)) {
+    printf("ERROR: cannot add /platform collection\n");
+    return false;
+  }
+
+  oc_link_t *l1 = oc_new_link(bswitch);
+  if (l1 == NULL) {
+    printf("ERROR: cannot allocate /switch link\n");
+    return false;
+  }
+  oc_collection_add_link(col, l1);
+  /* Add a defined or custom link parameter to this link */
+  if (!oc_link_add_link_param(l1, "x.org.openconnectivity.name",
+                              "platform_switch")) {
+    printf("ERROR: cannot add link parameter to /switch link\n");
+    return false;
+  }
+
   printf("\tResources added to collection.\n");
+  return true;
+}
+
+#endif /* OC_COLLECTIONS */
+
+static void
+register_resources(void)
+{
+  if (!register_temp()) {
+    oc_abort("Failed to register /temp resource\n");
+  }
+  if (!register_switch()) {
+    oc_abort("Failed to register /switch resource\n");
+  }
+
+#ifdef OC_COLLECTIONS
+  if (!register_platform_collection()) {
+    oc_abort("Failed to register /platform collection\n");
+  }
 #endif /* OC_COLLECTIONS */
 }
 

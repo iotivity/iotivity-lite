@@ -523,11 +523,20 @@ oc_delete_collection(oc_resource_t *collection)
   oc_collection_free((oc_collection_t *)collection);
 }
 
+bool
+oc_add_collection_v1(oc_resource_t *collection)
+{
+  if (!oc_collection_add((oc_collection_t *)collection)) {
+    return false;
+  }
+  oc_resource_set_observable(collection, true);
+  return true;
+}
+
 void
 oc_add_collection(oc_resource_t *collection)
 {
-  oc_resource_set_observable(collection, true);
-  oc_collection_add((oc_collection_t *)collection);
+  oc_add_collection_v1(collection);
 }
 
 oc_resource_t *
