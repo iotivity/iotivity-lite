@@ -834,24 +834,26 @@ oc_create_pushconf_resource(size_t device_index)
   oc_resource_t *push_conf = oc_new_collection(
     "Push Configuration", PUSHCONFIG_RESOURCE_PATH, 1, device_index);
 
-  if (push_conf) {
-    oc_resource_bind_resource_type(push_conf, "oic.r.pushconfiguration");
-    oc_resource_bind_resource_interface(push_conf, OC_IF_LL | OC_IF_CREATE |
-                                                     OC_IF_BASELINE);
-    oc_resource_set_default_interface(push_conf, OC_IF_LL);
-    oc_resource_set_discoverable(push_conf, true);
-
-    /* set "rts" Property */
-    oc_collection_add_supported_rt(push_conf, "oic.r.notificationselector");
-    oc_collection_add_supported_rt(push_conf, "oic.r.pushproxy");
-
-    /* LINK creation, deletion handler */
-    oc_collections_add_rt_factory("oic.r.notificationselector", get_ns_instance,
-                                  free_ns_instance);
-
-    oc_add_collection(push_conf);
-  } else {
+  if (push_conf == NULL) {
     OC_PUSH_ERR("oc_new_collection() error!");
+    return;
+  }
+  oc_resource_bind_resource_type(push_conf, "oic.r.pushconfiguration");
+  oc_resource_bind_resource_interface(push_conf,
+                                      OC_IF_LL | OC_IF_CREATE | OC_IF_BASELINE);
+  oc_resource_set_default_interface(push_conf, OC_IF_LL);
+  oc_resource_set_discoverable(push_conf, true);
+
+  /* set "rts" Property */
+  oc_collection_add_supported_rt(push_conf, "oic.r.notificationselector");
+  oc_collection_add_supported_rt(push_conf, "oic.r.pushproxy");
+
+  /* LINK creation, deletion handler */
+  oc_collections_add_rt_factory("oic.r.notificationselector", get_ns_instance,
+                                free_ns_instance);
+
+  if (!oc_add_collection_v1(push_conf)) {
+    OC_PUSH_ERR("oc_add_collection_v1() error!");
   }
 }
 

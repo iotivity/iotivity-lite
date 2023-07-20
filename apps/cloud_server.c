@@ -23,6 +23,7 @@
 #include "oc_core_res.h"
 #include "oc_log.h"
 #include "oc_pki.h"
+#include "port/oc_assert.h"
 #include "util/oc_features.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
@@ -409,11 +410,15 @@ post_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response(request, OC_STATUS_CHANGED);
 }
 
-static void
+static bool
 register_lights(void)
 {
   if (num_resources > 0) {
     lights = (struct light_t *)calloc(num_resources, sizeof(struct light_t));
+    if (lights == NULL) {
+      OC_PRINTF("ERROR: Could not allocate memory for lights\n");
+      return false;
+    }
   }
   for (int i = 0; i < num_resources; i++) {
     char buf[32];
@@ -423,6 +428,11 @@ register_lights(void)
     }
     buf[n] = 0;
     oc_resource_t *res = oc_new_resource(NULL, buf, 1, 0);
+    if (res == NULL) {
+      OC_PRINTF("ERROR: could not create %s resource\n", buf);
+      return false;
+    }
+
     oc_resource_bind_resource_type(res, resource_rt);
     oc_resource_bind_resource_interface(res, OC_IF_RW);
     oc_resource_set_default_interface(res, OC_IF_RW);
@@ -434,9 +444,16 @@ register_lights(void)
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
     oc_resource_set_request_handler(res, OC_GET, get_handler, &lights[i]);
     oc_resource_set_request_handler(res, OC_POST, post_handler, &lights[i]);
-    oc_cloud_add_resource(res);
-    oc_add_resource(res);
+    if (!oc_add_resource(res)) {
+      OC_PRINTF("ERROR: Could not add %s resource to device\n", buf);
+      return false;
+    }
+    if (oc_cloud_add_resource(res) < 0) {
+      OC_PRINTF("ERROR: Could not add %s resource to cloud\n", buf);
+      return false;
+    }
   }
+  return true;
 }
 
 #ifdef OC_COLLECTIONS
@@ -648,7 +665,7 @@ free_switch_instance(oc_resource_t *resource)
 
 #endif /* OC_COLLECTIONS_IF_CREATE */
 
-static void
+static bool
 register_collection(void)
 {
   oc_resource_t *col = oc_new_collection(NULL, "/switches", 1, 0);
@@ -656,63 +673,90 @@ register_collection(void)
   oc_resource_set_discoverable(col, true);
   oc_resource_set_observable(col, true);
 
-  oc_collection_add_supported_rt(col, "oic.r.switch.binary");
-  oc_collection_add_mandatory_rt(col, "oic.r.switch.binary");
+  if (!oc_collection_add_supported_rt(col, "oic.r.switch.binary")) {
+    OC_PRINTF("ERROR: could not add supported resource type to collection\n");
+    return false;
+  }
+  if (!oc_collection_add_mandatory_rt(col, "oic.r.switch.binary")) {
+    OC_PRINTF("ERROR: could not add mandatory resource type to collection\n");
+    return false;
+  }
+
 #ifdef OC_COLLECTIONS_IF_CREATE
   oc_resource_bind_resource_interface(col, OC_IF_CREATE);
-  oc_collections_add_rt_factory("oic.r.switch.binary", get_switch_instance,
-                                free_switch_instance);
+  if (!oc_collections_add_rt_factory("oic.r.switch.binary", get_switch_instance,
+                                     free_switch_instance)) {
+    OC_PRINTF("ERROR: could not register rt factory\n");
+    return false;
+  }
 #endif /* OC_COLLECTIONS_IF_CREATE */
   /* The following enables baseline RETRIEVEs/UPDATEs to Collection properties
    */
   oc_resource_set_properties_cbs(col, get_switches_properties, NULL,
                                  set_switches_properties, NULL);
-  oc_add_collection(col);
+  if (!oc_add_collection_v1(col)) {
+    OC_PRINTF("ERROR: could not register /switches collection\n");
+    return false;
+  }
   OC_PRINTF("\tResources added to collection.\n");
 
-  oc_cloud_add_resource(col);
+  if (oc_cloud_add_resource(col) < 0) {
+    OC_PRINTF("ERROR: could not publish /switches collection\n");
+    return false;
+  }
   OC_PRINTF("\tCollection resource published.\n");
+  return true;
 }
 #endif /* OC_COLLECTIONS */
 
-static void
+static bool
 register_con(void)
 {
   oc_resource_t *con_res = oc_core_get_resource_by_index(OCF_CON, 0);
-  oc_cloud_add_resource(con_res);
+  return oc_cloud_add_resource(con_res) == 0;
 }
 
 #ifdef OC_MNT
-static void
+static bool
 register_mnt(void)
 {
   oc_resource_t *mnt_res = oc_core_get_resource_by_index(OCF_MNT, 0);
-  oc_cloud_add_resource(mnt_res);
+  return oc_cloud_add_resource(mnt_res) == 0;
 }
 #endif /* OC_MNT */
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
-static void
+static bool
 register_plgd_time(void)
 {
   oc_resource_t *ptime_res = oc_core_get_resource_by_index(PLGD_TIME, 0);
-  oc_cloud_add_resource(ptime_res);
+  return oc_cloud_add_resource(ptime_res) == 0;
 }
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 
 static void
 register_resources(void)
 {
-  register_lights();
+  if (!register_lights()) {
+    oc_abort("ERROR: could not register lights\n");
+  }
 #ifdef OC_COLLECTIONS
-  register_collection();
+  if (!register_collection()) {
+    oc_abort("ERROR: could not register collection\n");
+  }
 #endif /* OC_COLLECTIONS */
-  register_con();
+  if (!register_con()) {
+    oc_abort("ERROR: could not register con resource\n");
+  }
 #ifdef OC_MNT
-  register_mnt();
+  if (!register_mnt()) {
+    oc_abort("ERROR: could not register mnt resource\n");
+  }
 #endif /* OC_MNT */
 #ifdef OC_HAS_FEATURE_PLGD_TIME
-  register_plgd_time();
+  if (!register_plgd_time()) {
+    oc_abort("ERROR: could not register plgd time resource\n");
+  }
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 }
 

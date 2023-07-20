@@ -141,7 +141,14 @@ oc_link_t *oc_collection_get_links(oc_resource_t *collection);
  * @see oc_new_collection
  */
 OC_API
-void oc_add_collection(oc_resource_t *collection) OC_NONNULL();
+bool oc_add_collection_v1(oc_resource_t *collection) OC_NONNULL();
+
+/**
+ * @deprecated replaced by oc_add_collection_v1 in v2.2.5.7
+ */
+OC_API
+void oc_add_collection(oc_resource_t *collection) OC_NONNULL()
+  OC_DEPRECATED("replaced by oc_add_collection_v1 in v2.2.5.7");
 
 /**
  * Gets all known collections.

@@ -66,7 +66,7 @@ jobs:
           - args: "-DOC_SECURITY_ENABLED=OFF -DOC_TCP_ENABLED=ON"
           # secure off, ipv4 on, tcp on
           - args: "-DOC_SECURITY_ENABLED=OFF -DOC_TCP_ENABLED=ON -DOC_IPV4_ENABLED=ON"
-          # /oic/res observable on, rep realloc on
+          # rep realloc on
           - args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
           # everything off (dynamic allocation off, secure off, pki off, idd off, oscore off, well-known core resource off, software update off, maintenance resource off, /oic/res observable off, push notifications off, plgd-time off, introspection off)
           - args: "-DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_SECURITY_ENABLED=OFF -DOC_PKI_ENABLED=OFF -DOC_IDD_API_ENABLED=OFF -DOC_OSCORE_ENABLED=OFF -DOC_WKCORE_ENABLED=OFF -DOC_SOFTWARE_UPDATE_ENABLED=OFF -DOC_MNT_ENABLED=OFF -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=OFF -DOC_PUSH_ENABLED=OFF -DPLGD_DEV_TIME_ENABLED=OFF -DOC_INTROSPECTION_ENABLED=OFF"

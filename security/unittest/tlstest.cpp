@@ -45,8 +45,8 @@ class TestTlsConnection : public testing::Test {
 protected:
   void SetUp() override
   {
-    oc_ri_init();
     oc_network_event_handler_mutex_init();
+    oc_ri_init();
     oc_core_init();
     oc_init_platform(kManufacturerName.c_str(), nullptr, nullptr);
     oc_add_device(kDeviceURI.c_str(), kDeviceType.c_str(), kDeviceName.c_str(),
@@ -59,11 +59,11 @@ protected:
 #ifdef OC_HAS_FEATURE_PUSH
     oc_push_free();
 #endif /* OC_HAS_FEATURE_PUSH */
-    oc_ri_shutdown();
     oc_tls_shutdown();
     oc_connectivity_shutdown(0);
-    oc_network_event_handler_mutex_destroy();
     oc_core_shutdown();
+    oc_ri_shutdown();
+    oc_network_event_handler_mutex_destroy();
   }
 };
 

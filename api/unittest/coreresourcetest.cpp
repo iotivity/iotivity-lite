@@ -46,9 +46,9 @@ class TestCoreResource : public testing::Test {
 protected:
   void SetUp() override
   {
+    oc_network_event_handler_mutex_init();
     oc_ri_init();
     oc_core_init();
-    oc_network_event_handler_mutex_init();
     oc_random_init();
   }
   void TearDown() override
@@ -57,9 +57,9 @@ protected:
     oc_push_free();
 #endif /* OC_HAS_FEATURE_PUSH */
     oc_random_destroy();
-    oc_network_event_handler_mutex_destroy();
     oc_core_shutdown();
     oc_ri_shutdown();
+    oc_network_event_handler_mutex_destroy();
   }
 };
 

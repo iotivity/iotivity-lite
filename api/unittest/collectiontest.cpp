@@ -123,6 +123,45 @@ TEST_F(TestCollections, AllocFail)
 }
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+TEST_F(TestCollections, Add)
+{
+  auto collection1 = NewCollection("name1", "/uri", 0);
+  ASSERT_NE(nullptr, collection1);
+  ASSERT_TRUE(oc_add_collection_v1(&collection1->res));
+  EXPECT_EQ(1, CountCollections());
+
+  // different device
+  auto collection2 = NewCollection("name2", "/uri", 1);
+  ASSERT_NE(nullptr, collection2);
+  ASSERT_TRUE(oc_add_collection_v1(&collection2->res));
+  EXPECT_EQ(2, CountCollections());
+
+  // different uri
+  auto collection3 = NewCollection("name3", "/uri2", 0);
+  ASSERT_NE(nullptr, collection3);
+  ASSERT_TRUE(oc_add_collection_v1(&collection3->res));
+  EXPECT_EQ(3, CountCollections());
+}
+
+TEST_F(TestCollections, Add_FailSameCollection)
+{
+  auto collection1 = NewCollection("name1", "/uri");
+  ASSERT_NE(nullptr, collection1);
+  ASSERT_TRUE(oc_add_collection_v1(&collection1->res));
+  EXPECT_FALSE(oc_add_collection_v1(&collection1->res));
+}
+
+TEST_F(TestCollections, Add_FailSameURI)
+{
+  auto collection1 = NewCollection("name1", "/uri");
+  ASSERT_NE(nullptr, collection1);
+  ASSERT_TRUE(oc_add_collection_v1(&collection1->res));
+
+  auto collection2 = NewCollection("name2", "/uri");
+  ASSERT_NE(nullptr, collection2);
+  EXPECT_FALSE(oc_add_collection_v1(&collection2->res));
+}
+
 TEST_F(TestCollections, AddSupportedResourceType)
 {
   auto collection = MakeCollection();
@@ -376,7 +415,7 @@ TEST_F(TestCollectionsWithServer, CheckIfCollection)
   size_t num_collections = CountCollections();
 
   // add collection to the global list of collections
-  oc_collection_add(col.get());
+  ASSERT_TRUE(oc_collection_add(col.get()));
   EXPECT_TRUE(oc_check_if_collection(&col->res));
   EXPECT_EQ(num_collections + 1, CountCollections());
 
@@ -391,7 +430,7 @@ TEST_F(TestCollectionsWithServer, GetByURI)
 
   auto col = NewCollection("col", "/col");
   ASSERT_NE(nullptr, col);
-  oc_collection_add(col.get());
+  ASSERT_TRUE(oc_collection_add(col.get()));
 
   std::string uri = "/col";
   EXPECT_EQ(col.get(),

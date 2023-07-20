@@ -18,6 +18,7 @@
 
 #include "oc_api.h"
 #include "oc_log.h"
+#include "port/oc_assert.h"
 #include "port/oc_clock.h"
 
 #include <pthread.h>
@@ -260,10 +261,14 @@ free_ec_instance(oc_resource_t *resource)
 }
 #endif /* OC_COLLECTIONS_IF_CREATE */
 
-static void
-register_resources(void)
+static oc_resource_t *
+register_light(void)
 {
   oc_resource_t *res1 = oc_new_resource("lightbulb", "/light/1", 1, 0);
+  if (res1 == NULL) {
+    OC_PRINTF("ERROR: could not allocate /light/1\n");
+    return NULL;
+  }
   oc_resource_bind_resource_type(res1, "oic.r.light");
   oc_resource_bind_resource_interface(res1, OC_IF_RW);
   oc_resource_set_default_interface(res1, OC_IF_RW);
@@ -272,9 +277,21 @@ register_resources(void)
   oc_resource_set_request_handler(res1, OC_GET, get_light, NULL);
   oc_resource_set_request_handler(res1, OC_POST, post_light, NULL);
   oc_resource_set_request_handler(res1, OC_PUT, put_light, NULL);
-  oc_add_resource(res1);
+  if (!oc_add_resource(res1)) {
+    OC_PRINTF("ERROR: could not register /light/1\n");
+    return NULL;
+  }
+  return res1;
+}
 
+static oc_resource_t *
+register_counter(void)
+{
   oc_resource_t *res2 = oc_new_resource("counter", "/count/1", 1, 0);
+  if (res2 == NULL) {
+    OC_PRINTF("ERROR: could not allocate /count/1\n");
+    return NULL;
+  }
   oc_resource_bind_resource_type(res2, "oic.r.counter");
   oc_resource_bind_resource_interface(res2, OC_IF_R);
   oc_resource_set_default_interface(res2, OC_IF_R);
@@ -282,30 +299,81 @@ register_resources(void)
   oc_resource_set_periodic_observable(res2, 1);
   oc_resource_set_request_handler(res2, OC_GET, get_count, NULL);
   oc_resource_set_request_handler(res2, OC_POST, post_count, NULL);
-  oc_add_resource(res2);
+  if (!oc_add_resource(res2)) {
+    OC_PRINTF("ERROR: could not register /count/1\n");
+    return NULL;
+  }
+  return res2;
+}
 
-#if defined(OC_COLLECTIONS)
+#ifdef OC_COLLECTIONS
+
+static bool
+register_lights_collection(oc_resource_t *light, oc_resource_t *counter)
+{
   oc_resource_t *col = oc_new_collection("roomlights", "/lights", 1, 0);
+  if (col == NULL) {
+    OC_PRINTF("ERROR: could not allocate /lights collection\n");
+    return false;
+  }
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_bind_resource_interface(col, OC_IF_CREATE);
   oc_resource_set_discoverable(col, true);
 
-  oc_link_t *l1 = oc_new_link(res1);
-  oc_collection_add_link(col, l1);
-
-  oc_link_t *l2 = oc_new_link(res2);
-  oc_collection_add_link(col, l2);
-
-  oc_collection_add_supported_rt(col, "oic.r.counter");
-  oc_collection_add_supported_rt(col, "oic.r.light");
-  oc_collection_add_supported_rt(col, "oic.r.energy.consumption");
+  if (!oc_collection_add_supported_rt(col, "oic.r.counter") ||
+      !oc_collection_add_supported_rt(col, "oic.r.light") ||
+      !oc_collection_add_supported_rt(col, "oic.r.energy.consumption")) {
+    OC_PRINTF("ERROR: could not add supported resource type to collection\n");
+    return false;
+  }
 
 #ifdef OC_COLLECTIONS_IF_CREATE
-  oc_collections_add_rt_factory("oic.r.energy.consumption", get_ec_instance,
-                                free_ec_instance);
+  if (!oc_collections_add_rt_factory("oic.r.energy.consumption",
+                                     get_ec_instance, free_ec_instance)) {
+    OC_PRINTF("ERROR: could not add resource type factory\n");
+    return false;
+  }
 #endif /* OC_COLLECTIONS_IF_CREATE */
 
-  oc_add_collection(col);
+  if (!oc_add_collection_v1(col)) {
+    OC_PRINTF("ERROR: could not register /lights collection\n");
+    return false;
+  }
+
+  oc_link_t *l1 = oc_new_link(light);
+  if (l1 == NULL) {
+    OC_PRINTF("ERROR: could not allocate first link\n");
+    return false;
+  }
+  oc_collection_add_link(col, l1);
+
+  oc_link_t *l2 = oc_new_link(counter);
+  if (l2 == NULL) {
+    OC_PRINTF("ERROR: could not allocate second link\n");
+    return false;
+  }
+  oc_collection_add_link(col, l2);
+  return true;
+}
+
+#endif /* OC_COLLECTIONS */
+
+static void
+register_resources(void)
+{
+  oc_resource_t *light = register_light();
+  if (light == NULL) {
+    oc_abort("ERROR: could not register /light/1 resource\n");
+  }
+  oc_resource_t *counter = register_counter();
+  if (counter == NULL) {
+    oc_abort("ERROR: could not register /count/1 resource\n");
+  }
+
+#ifdef OC_COLLECTIONS
+  if (!register_lights_collection(light, counter)) {
+    oc_abort("ERROR: could not register /lights collection\n");
+  }
 #endif /* OC_COLLECTIONS */
 }
 

@@ -59,8 +59,15 @@ oc_collection_t *oc_collection_alloc(void);
 /** @brief Deallocate a collection */
 void oc_collection_free(oc_collection_t *collection);
 
-/** @brief Add collection to global list */
-void oc_collection_add(oc_collection_t *collection) OC_NONNULL();
+/** @brief Add collection to global list
+ *
+ * Cannot add the same collection twice or cannot add the same URI twice to a
+ * device.
+ *
+ * @return true if collection was added
+ * @return false otherwise
+ */
+bool oc_collection_add(oc_collection_t *collection) OC_NONNULL();
 
 /** @brief Get head of the global list of collections */
 oc_collection_t *oc_collection_get_all(void);

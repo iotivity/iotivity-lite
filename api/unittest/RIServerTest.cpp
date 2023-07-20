@@ -137,6 +137,26 @@ TEST_F(TestOcServerRi, RiAddResource_P)
   EXPECT_TRUE(oc_ri_delete_resource(res));
 }
 
+TEST_F(TestOcServerRi, RiAddResourceWithTheSameURI_F)
+{
+  /*
+  oc_resource_t *res1 =
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
+  oc_resource_set_discoverable(res1, true);
+  oc_resource_set_periodic_observable(res1, kObservePeriodSeconds);
+  oc_resource_set_request_handler(res1, OC_GET, dummyRequestHandler, nullptr);
+  EXPECT_TRUE(oc_ri_add_resource(res1));
+
+  oc_resource_t *res2 = oc_new_resource("test", kResourceURI.c_str(), 1, 0);
+  oc_resource_set_request_handler(res2, OC_GET, dummyRequestHandler, nullptr);
+  // cannot add the same resource URI twice
+  EXPECT_FALSE(oc_ri_add_resource(res2));
+
+  EXPECT_TRUE(oc_ri_delete_resource(res2));
+  EXPECT_TRUE(oc_ri_delete_resource(res1));
+  */
+}
+
 TEST_F(TestOcServerRi, RiAddResourceAfterDelayedDelete_F)
 {
   oc_resource_t *res =
@@ -225,9 +245,9 @@ TEST_F(TestOcServerRi, RiCleanupCollection_P)
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
   oc_resource_set_observable(col, true);
-  oc_collection_add_supported_rt(col, "oic.r.switch.binary");
-  oc_collection_add_mandatory_rt(col, "oic.r.switch.binary");
-  oc_add_collection(col);
+  ASSERT_TRUE(oc_collection_add_supported_rt(col, "oic.r.switch.binary"));
+  ASSERT_TRUE(oc_collection_add_mandatory_rt(col, "oic.r.switch.binary"));
+  ASSERT_TRUE(oc_add_collection_v1(col));
 
   oc_resource_t *res =
     oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
