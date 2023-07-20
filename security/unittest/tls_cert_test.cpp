@@ -24,6 +24,7 @@
                              // pass
 
 #include "api/oc_core_res_internal.h"
+#include "api/oc_ri_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_cred.h"
@@ -51,6 +52,7 @@ class TestTlsCertificates : public testing::Test {
 public:
   void SetUp() override
   {
+    oc_ri_init();
     oc_core_init();
     oc_random_init();
     oc_network_event_handler_mutex_init();
@@ -87,6 +89,7 @@ public:
     oc_network_event_handler_mutex_destroy();
     oc_random_destroy();
     oc_core_shutdown();
+    oc_ri_shutdown();
   }
 
   int device_{ -1 };
