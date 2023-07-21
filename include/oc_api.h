@@ -1292,7 +1292,7 @@ void oc_delayed_delete_resource(oc_resource_t *resource);
                       applied, 0 is the first device
   @param rep list of properties and their new values
 */
-typedef void (*oc_con_write_cb_t)(size_t device_index, oc_rep_t *rep);
+typedef void (*oc_con_write_cb_t)(size_t device_index, const oc_rep_t *rep);
 
 /**
  * Sets the callback to receive change notifications for

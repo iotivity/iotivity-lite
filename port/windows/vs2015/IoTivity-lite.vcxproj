@@ -326,6 +326,7 @@
     <ClCompile Include="..\..\..\api\oc_client_api.c" />
     <ClCompile Include="..\..\..\api\oc_clock.c" />
     <ClCompile Include="..\..\..\api\oc_collection.c" />
+    <ClCompile Include="..\..\..\api\oc_con_resource.c" />
     <ClCompile Include="..\..\..\api\oc_core_res.c" />
     <ClCompile Include="..\..\..\api\oc_discovery.c" />
     <ClCompile Include="..\..\..\api\oc_endpoint.c" />

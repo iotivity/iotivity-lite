@@ -666,17 +666,6 @@ oc_resource_set_secure_mcast(oc_resource_t *resource, bool supported)
 }
 #endif /* OC_OSCORE */
 
-void
-oc_set_con_write_cb(oc_con_write_cb_t callback)
-{
-  for (size_t i = 0; i < oc_core_get_num_devices(); i++) {
-    oc_resource_t *res = oc_core_get_resource_by_index(OCF_CON, i);
-    if (res) {
-      res->post_handler.user_data = *(void **)(&callback);
-    }
-  }
-}
-
 bool
 oc_add_resource(oc_resource_t *resource)
 {

@@ -119,6 +119,9 @@
     <ClCompile Include="..\..\..\api\oc_collection.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_con_resource.c">
+      <Filter>Core</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\api\oc_core_res.c">
       <Filter>Core</Filter>
     </ClCompile>

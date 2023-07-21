@@ -127,6 +127,10 @@ bool oc_filter_resource_by_rt(const oc_resource_t *resource,
  */
 int oc_core_get_resource_type_by_uri(const char *uri) OC_NONNULL();
 
+/** @brief Set the device name */
+void oc_core_device_set_name(size_t device, const char *name, size_t name_len)
+  OC_NONNULL();
+
 #ifdef __cplusplus
 }
 #endif

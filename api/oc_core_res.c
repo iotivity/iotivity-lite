@@ -16,6 +16,7 @@
  *
  ****************************************************************************/
 
+#include "api/oc_con_resource_internal.h"
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -77,15 +78,8 @@ static oc_device_info_t g_oc_device_info[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 static oc_platform_info_t g_oc_platform_info = { 0 };
 
-static bool g_announce_con_res = false;
 static int g_res_latency = 0;
 static OC_ATOMIC_UINT32_T g_device_count = 0;
-
-/* Although used several times in the OCF spec, "/oic/con" is not
-   accepted by the spec. Use a private prefix instead.
-   Update OC_NAMELEN_CON_RES if changing the value.
-   String must not have a leading slash. */
-#define OC_NAME_CON_RES "/oc/con"
 
 void
 oc_core_init(void)
@@ -239,103 +233,6 @@ oc_core_device_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   oc_send_response_with_callback(request, OC_STATUS_OK, true);
 }
 
-static void
-oc_core_con_handler_get(oc_request_t *request, oc_interface_mask_t iface_mask,
-                        void *data)
-{
-  (void)data;
-  size_t device = request->resource->device;
-  oc_rep_start_root_object();
-
-  switch (iface_mask) {
-  case OC_IF_BASELINE:
-    oc_process_baseline_interface(request->resource);
-  /* fall through */
-  case OC_IF_RW: {
-    /* oic.wk.d attribute n shall always be the same value as
-    oic.wk.con attribute n. */
-    oc_rep_set_text_string(root, n, oc_string(g_oc_device_info[device].name));
-
-    oc_locn_t oc_locn = oc_core_get_resource_by_index(OCF_D, device)->tag_locn;
-    if (oc_locn > 0) {
-      oc_rep_set_text_string(root, locn, oc_enum_locn_to_str(oc_locn));
-    }
-
-  } break;
-  default:
-    break;
-  }
-
-  oc_rep_end_root_object();
-  oc_send_response_with_callback(request, OC_STATUS_OK, true);
-}
-
-static void
-oc_core_con_handler_post(oc_request_t *request, oc_interface_mask_t iface_mask,
-                         void *data)
-{
-  (void)iface_mask;
-  oc_rep_t *rep = request->request_payload;
-  bool changed = false;
-  size_t device = request->resource->device;
-
-  while (rep != NULL) {
-    if (strcmp(oc_string(rep->name), "n") == 0) {
-      if (rep->type != OC_REP_STRING || oc_string_len(rep->value.string) == 0) {
-        oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
-        return;
-      }
-
-      oc_free_string(&g_oc_device_info[device].name);
-      oc_new_string(&g_oc_device_info[device].name,
-                    oc_string(rep->value.string),
-                    oc_string_len(rep->value.string));
-      oc_rep_start_root_object();
-      oc_rep_set_text_string(root, n, oc_string(g_oc_device_info[device].name));
-      oc_rep_end_root_object();
-
-#if defined(OC_SERVER)
-      oc_notify_observers_delayed(oc_core_get_resource_by_index(OCF_D, device),
-                                  0);
-#endif /* OC_SERVER */
-
-      changed = true;
-      break;
-    }
-    if (strcmp(oc_string(rep->name), "locn") == 0) {
-      if (rep->type != OC_REP_STRING || oc_string_len(rep->value.string) == 0) {
-        oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
-        return;
-      }
-      oc_resource_t *device_res = oc_core_get_resource_by_index(OCF_D, device);
-      if (device_res->tag_locn == 0) {
-        oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
-        return;
-      }
-
-      bool oc_defined = false;
-      oc_locn_t oc_locn = oc_str_to_enum_locn(rep->value.string, &oc_defined);
-      if (oc_defined) {
-        oc_resource_tag_locn(device_res, oc_locn);
-        changed = true;
-      }
-    }
-
-    rep = rep->next;
-  }
-
-  if (data) {
-    oc_con_write_cb_t cb = *(oc_con_write_cb_t *)(&data);
-    cb(device, request->request_payload);
-  }
-
-  if (changed) {
-    oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
-  } else {
-    oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
-  }
-}
-
 size_t
 oc_core_get_num_devices(void)
 {
@@ -346,12 +243,6 @@ static bool
 device_is_valid(size_t device)
 {
   return device < OC_ATOMIC_LOAD32(g_device_count);
-}
-
-bool
-oc_get_con_res_announced(void)
-{
-  return g_announce_con_res;
 }
 
 void
@@ -366,36 +257,31 @@ oc_core_get_latency(void)
   return g_res_latency;
 }
 
-void
-oc_set_con_res_announced(bool announce)
-{
-  g_announce_con_res = announce;
-}
-
 static void
 core_update_device_data(uint32_t device_count, oc_add_new_device_t cfg)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   size_t new_num = OC_NUM_CORE_PLATFORM_RESOURCES +
                    (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * (device_count + 1));
-  g_core_resources =
+  oc_resource_t *core_resources =
     (oc_resource_t *)realloc(g_core_resources, new_num * sizeof(oc_resource_t));
-
-  if (g_core_resources == NULL) {
+  if (core_resources == NULL) {
     oc_abort("Insufficient memory");
   }
   oc_resource_t *device =
-    &g_core_resources[new_num - OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES];
+    &core_resources[new_num - OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES];
   memset(device, 0,
          OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * sizeof(oc_resource_t));
+  g_core_resources = core_resources;
 
-  g_oc_device_info = (oc_device_info_t *)realloc(
+  oc_device_info_t *device_info = (oc_device_info_t *)realloc(
     g_oc_device_info, (device_count + 1) * sizeof(oc_device_info_t));
 
-  if (g_oc_device_info == NULL) {
+  if (device_info == NULL) {
     oc_abort("Insufficient memory");
   }
-  memset(&g_oc_device_info[device_count], 0, sizeof(oc_device_info_t));
+  memset(&device_info[device_count], 0, sizeof(oc_device_info_t));
+  g_oc_device_info = device_info;
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   oc_gen_uuid(&g_oc_device_info[device_count].di);
@@ -457,12 +343,7 @@ oc_core_add_new_device(oc_add_new_device_t cfg)
 
   if (oc_get_con_res_announced()) {
     /* Construct oic.wk.con resource for this device. */
-
-    oc_core_populate_resource(OCF_CON, device_count, OC_NAME_CON_RES,
-                              OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-                              OC_DISCOVERABLE | OC_OBSERVABLE | OC_SECURE,
-                              oc_core_con_handler_get, oc_core_con_handler_post,
-                              oc_core_con_handler_post, 0, 1, "oic.wk.con");
+    oc_create_con_resource(device_count);
   }
 
   oc_create_discovery_resource(OCF_RES, device_count);
@@ -521,6 +402,16 @@ oc_device_bind_rt(size_t device_index, const char *rt)
                              oc_string_array_get_item(types, (i - 1)));
   }
   oc_free_string_array(&types);
+}
+
+void
+oc_core_device_set_name(size_t device, const char *name, size_t name_len)
+{
+  oc_device_info_t *d = oc_core_get_device_info(device);
+  if (d == NULL) {
+    return;
+  }
+  oc_set_string(&d->name, name, name_len);
 }
 
 void
@@ -813,8 +704,8 @@ oc_core_get_resource_type_by_uri(const char *uri)
     return OCF_RES;
   }
   if (oc_get_con_res_announced() &&
-      core_is_resource_uri(uri, uri_len, OC_NAME_CON_RES,
-                           OC_CHAR_ARRAY_LEN(OC_NAME_CON_RES))) {
+      core_is_resource_uri(uri, uri_len, OC_CON_URI,
+                           OC_CHAR_ARRAY_LEN(OC_CON_URI))) {
     return OCF_CON;
   }
 #ifdef OC_INTROSPECTION
