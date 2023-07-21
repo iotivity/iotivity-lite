@@ -58,6 +58,7 @@ public:
         /*uri=*/"/oic/d",
       },
     });
+    oc_set_con_res_announced(true);
     ASSERT_TRUE(oc::TestDevice::StartServer());
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
     ASSERT_TRUE(oc::SetAccessInRFOTM(OCF_CON, kDeviceID, false,
@@ -127,13 +128,19 @@ TEST_F(TestConResourceWithDevice, GetResourceByIndex)
 
 TEST_F(TestConResourceWithDevice, GetResourceByURI_F)
 {
-  EXPECT_EQ(nullptr, oc_core_get_resource_by_uri(OC_CON_URI,
-                                                 /*device*/ SIZE_MAX));
+  oc_set_con_res_announced(false);
+  EXPECT_NE(nullptr, oc_core_get_resource_by_index(OCF_CON, kDeviceID));
+  oc_set_con_res_announced(true);
+
+  EXPECT_EQ(nullptr, oc_core_get_resource_by_uri_v1(
+                       OC_CON_URI, OC_CHAR_ARRAY_LEN(OC_CON_URI),
+                       /*device*/ SIZE_MAX));
 }
 
 TEST_F(TestConResourceWithDevice, GetResourceByURI)
 {
-  oc_resource_t *res = oc_core_get_resource_by_uri(OC_CON_URI, kDeviceID);
+  oc_resource_t *res = oc_core_get_resource_by_uri_v1(
+    OC_CON_URI, OC_CHAR_ARRAY_LEN(OC_CON_URI), kDeviceID);
   EXPECT_NE(nullptr, res);
 
   EXPECT_STREQ(OC_CON_URI, oc_string(res->uri));

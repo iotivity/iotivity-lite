@@ -33,6 +33,7 @@
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
 #include "tests/gtest/Resource.h"
+#include "util/oc_macros_internal.h"
 
 #include <array>
 #include <filesystem>
@@ -192,6 +193,8 @@ TEST_F(TestSdi, Decode)
   oc_free_string(&sdi.name);
 }
 
+static constexpr size_t kDeviceID{ 0 };
+
 class TestSdiWithServer : public testing::Test {
 public:
   static void SetUpTestCase()
@@ -201,7 +204,7 @@ public:
     ASSERT_TRUE(oc::TestDevice::StartServer());
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
     ASSERT_TRUE(
-      oc::SetAccessInRFOTM(OCF_SEC_SDI, /*device*/ 0, true,
+      oc::SetAccessInRFOTM(OCF_SEC_SDI, kDeviceID, true,
                            OC_PERM_RETRIEVE | OC_PERM_UPDATE | OC_PERM_DELETE));
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
@@ -219,13 +222,13 @@ public:
 
 TEST_F(TestSdiWithServer, GetResourceByIndex)
 {
-  EXPECT_NE(nullptr, oc_core_get_resource_by_index(OCF_SEC_SDI, /*device*/ 0));
+  EXPECT_NE(nullptr, oc_core_get_resource_by_index(OCF_SEC_SDI, kDeviceID));
 }
 
 TEST_F(TestSdiWithServer, GetResourceByURI)
 {
-  oc_resource_t *res =
-    oc_core_get_resource_by_uri(OCF_SEC_SDI_URI, /*device*/ 0);
+  oc_resource_t *res = oc_core_get_resource_by_uri_v1(
+    OCF_SEC_SDI_URI, OC_CHAR_ARRAY_LEN(OCF_SEC_SDI_URI), kDeviceID);
   EXPECT_NE(nullptr, res);
 
   EXPECT_STREQ(OCF_SEC_SDI_URI, oc_string(res->uri));
@@ -236,8 +239,7 @@ TEST_F(TestSdiWithServer, GetResourceByURI)
 TEST_F(TestSdiWithServer, GetRequest)
 {
   // get insecure connection to the testing device
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto get_handler = [](oc_client_response_t *data) {
@@ -254,15 +256,14 @@ TEST_F(TestSdiWithServer, GetRequest)
                         get_handler, HIGH_QOS, &sdi));
   oc::TestDevice::PoolEvents(5);
 
-  oc_sec_sdi_t *s = oc_sec_sdi_get(0);
+  oc_sec_sdi_t *s = oc_sec_sdi_get(kDeviceID);
   ASSERT_NE(nullptr, s);
   TestSdi::expectEqual(*s, sdi);
 }
 
 TEST_F(TestSdiWithServer, PostRequest)
 {
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto post_handler = [](oc_client_response_t *data) {
@@ -287,15 +288,14 @@ TEST_F(TestSdiWithServer, PostRequest)
   oc::TestDevice::PoolEvents(5);
 
   EXPECT_TRUE(invoked);
-  TestSdi::expectEqual(*oc_sec_sdi_get(0), sdi_new);
+  TestSdi::expectEqual(*oc_sec_sdi_get(kDeviceID), sdi_new);
 
   oc_free_string(&sdi_new.name);
 }
 
 TEST_F(TestSdiWithServer, PutRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto encode_payload = []() {
@@ -308,8 +308,7 @@ TEST_F(TestSdiWithServer, PutRequest_FailMethodNotSupported)
 
 TEST_F(TestSdiWithServer, DeleteRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
   oc::testNotSupportedMethod(OC_DELETE, ep, OCF_SEC_SDI_URI);
 }
@@ -346,22 +345,22 @@ TEST_F(TestSdiWithServer, Copy)
 TEST_F(TestSdiWithServer, DumpAndLoad)
 {
   // load default values and dump them to storage
-  oc_sec_sdi_default(0);
+  oc_sec_sdi_default(kDeviceID);
 
   oc_sec_sdi_t def{};
-  const oc_sec_sdi_t *sdi = oc_sec_sdi_get(0);
+  const oc_sec_sdi_t *sdi = oc_sec_sdi_get(kDeviceID);
   oc_sec_sdi_copy(&def, sdi);
 
   // overwrite sdi data
   oc_sec_sdi_t sdi_new{};
   TestSdi::createSdi(true, "test", sdi_new);
-  oc_sec_sdi_copy(oc_sec_sdi_get(0), &sdi_new);
+  oc_sec_sdi_copy(oc_sec_sdi_get(kDeviceID), &sdi_new);
 
-  EXPECT_TRUE(!TestSdi::isEqual(def, *oc_sec_sdi_get(0)));
+  EXPECT_TRUE(!TestSdi::isEqual(def, *oc_sec_sdi_get(kDeviceID)));
 
   // load values from storage
-  oc_sec_load_sdi(0);
-  EXPECT_TRUE(TestSdi::isEqual(def, *oc_sec_sdi_get(0)));
+  oc_sec_load_sdi(kDeviceID);
+  EXPECT_TRUE(TestSdi::isEqual(def, *oc_sec_sdi_get(kDeviceID)));
 
   oc_free_string(&sdi_new.name);
   oc_free_string(&def.name);

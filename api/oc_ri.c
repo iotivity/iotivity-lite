@@ -189,11 +189,10 @@ static bool
 ri_app_resource_is_in_list(oc_list_t list, const oc_resource_t *resource)
 {
   const oc_resource_t *res = oc_list_head(list);
-  while (res) {
+  for (; res != NULL; res = res->next) {
     if (res == resource) {
       return true;
     }
-    res = res->next;
   }
   return false;
 }
@@ -208,6 +207,47 @@ bool
 oc_ri_is_app_resource_to_be_deleted(const oc_resource_t *resource)
 {
   return ri_app_resource_is_in_list(g_app_resources_to_be_deleted, resource);
+}
+
+static bool
+ri_uri_is_in_list(oc_list_t list, const char *uri, size_t uri_len,
+                  size_t device)
+{
+  while (uri[0] == '/') {
+    uri++;
+    uri_len--;
+  }
+
+  const oc_resource_t *res = oc_list_head(list);
+  for (; res != NULL; res = res->next) {
+    if (res->device == device && oc_string_len(res->uri) == (uri_len + 1) &&
+        strncmp(oc_string(res->uri) + 1, uri, uri_len) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
+oc_ri_URI_is_in_use(size_t device, const char *uri, size_t uri_len)
+{
+  // check core resources
+  if (oc_core_get_resource_by_uri_v1(uri, uri_len, device) != NULL) {
+    return true;
+  }
+  // dynamic resources / dynamic resources scheduled to be deleted
+  if (ri_uri_is_in_list(g_app_resources, uri, uri_len, device) ||
+      ri_uri_is_in_list(g_app_resources_to_be_deleted, uri, uri_len, device)) {
+    return true;
+  }
+
+#ifdef OC_COLLECTIONS
+  // collections
+  if (oc_get_collection_by_uri(uri, uri_len, device) != NULL) {
+    return true;
+  }
+#endif /* OC_COLLECTIONS */
+  return false;
 }
 
 static void
@@ -232,7 +272,7 @@ oc_delayed_delete_resource_cb(void *data)
 void
 oc_delayed_delete_resource(oc_resource_t *resource)
 {
-  if (!resource) {
+  if (resource == NULL) {
     return;
   }
   OC_DBG("(re)scheduling delayed delete resource(%p)", (void *)resource);
@@ -681,7 +721,7 @@ ri_delete_resource(oc_resource_t *resource, bool notify)
 bool
 oc_ri_delete_resource(oc_resource_t *resource)
 {
-  if (!resource) {
+  if (resource == NULL) {
     return false;
   }
   ri_delete_resource(resource, true);
@@ -691,17 +731,19 @@ oc_ri_delete_resource(oc_resource_t *resource)
 bool
 oc_ri_add_resource(oc_resource_t *resource)
 {
-  if (!resource) {
+  if (resource == NULL) {
     return false;
   }
 
   if (!resource->get_handler.cb && !resource->put_handler.cb &&
       !resource->post_handler.cb && !resource->delete_handler.cb) {
+    OC_ERR("resource(%s) has no handlers", oc_string(resource->uri));
     return false;
   }
 
-  if ((resource->properties & OC_PERIODIC) &&
+  if ((resource->properties & OC_PERIODIC) != 0 &&
       resource->observe_period_seconds == 0) {
+    OC_ERR("resource(%s) has invalid observe period", oc_string(resource->uri));
     return false;
   }
 
@@ -712,6 +754,11 @@ oc_ri_add_resource(oc_resource_t *resource)
   }
   if (oc_ri_is_app_resource_to_be_deleted(resource)) {
     OC_ERR("resource(%s) is scheduled to be deleted", oc_string(resource->uri));
+    return false;
+  }
+  if (oc_ri_URI_is_in_use(resource->device, oc_string(resource->uri),
+                          oc_string_len(resource->uri))) {
+    OC_ERR("resource(%s) URI is already in use", oc_string(resource->uri));
     return false;
   }
 

@@ -33,6 +33,7 @@
 #include "tests/gtest/RepPool.h"
 #include "tests/gtest/Resource.h"
 #include "tests/gtest/Role.h"
+#include "util/oc_macros_internal.h"
 #include "util/oc_secure_string_internal.h"
 
 #include <algorithm>
@@ -267,7 +268,9 @@ TEST_F(TestRolesWithServer, GetResourceByIndex)
 
 TEST_F(TestRolesWithServer, GetResourceByURI)
 {
-  EXPECT_NE(nullptr, oc_core_get_resource_by_uri(OCF_SEC_ROLES_URI, kDeviceID));
+  EXPECT_NE(nullptr, oc_core_get_resource_by_uri_v1(
+                       OCF_SEC_ROLES_URI, OC_CHAR_ARRAY_LEN(OCF_SEC_ROLES_URI),
+                       kDeviceID));
 }
 
 #ifdef OC_DYNAMIC_ALLOCATION

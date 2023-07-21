@@ -24,6 +24,7 @@
 #include "port/oc_network_event_handler_internal.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
@@ -41,6 +42,11 @@ static const std::string kDeviceName{ "Table Lamp" };
 static const std::string kManufacturerName{ "Samsung" };
 static const std::string kOCFSpecVersion{ "ocf.1.0.0" };
 static const std::string kOCFDataModelVersion{ "ocf.res.1.0.0" };
+
+static constexpr size_t kDevice1ID{ 0 };
+static constexpr std::string_view kDevice1Name{ "Test Device 1" };
+static constexpr size_t kDevice2ID{ 1 };
+static constexpr std::string_view kDevice2Name{ "Test Device 2" };
 
 class TestCoreResource : public testing::Test {
 protected:
@@ -90,15 +96,16 @@ TEST_F(TestCoreResource, CoreDevice_P)
   ASSERT_NE(addcoredevice, nullptr);
   size_t numcoredevice = oc_core_get_num_devices();
   EXPECT_EQ(1, numcoredevice);
-  oc_connectivity_shutdown(0);
+  oc_connectivity_shutdown(kDevice1ID);
 }
 
-TEST_F(TestCoreResource, CoreGetResource_P)
+TEST_F(TestCoreResource, CoreGetResourceV1_P)
 {
   oc_core_init_platform(kManufacturerName.c_str(), nullptr, nullptr);
 
   std::string uri = "/oic/p";
-  oc_resource_t *res = oc_core_get_resource_by_uri(uri.c_str(), 0);
+  oc_resource_t *res =
+    oc_core_get_resource_by_uri_v1(uri.c_str(), uri.length(), kDevice1ID);
 
   ASSERT_NE(nullptr, res);
   EXPECT_EQ(uri.length(), oc_string_len(res->uri));
@@ -241,14 +248,14 @@ public:
     oc::TestDevice::SetServerDevices({
       {
         /*rt=*/"oic.d.test1",
-        /*name=*/"Test Device 2",
+        /*name=*/std::string(kDevice1Name),
         /*spec_version=*/"ocf.1.0.0",
         /*data_model_version=*/"ocf.res.1.0.0",
         /*uri=*/"/oic/d",
       },
       {
         /*rt=*/"oic.d.test2",
-        /*name=*/"Test Device 2",
+        /*name=*/std::string(kDevice2Name),
         /*spec_version=*/"ocf.1.0.0",
         /*data_model_version=*/"ocf.res.1.0.0",
         /*uri=*/"/oic/d",
@@ -279,15 +286,21 @@ TEST_F(TestCoreResourceWithDevice, CoreGetDeviceInfo_F)
 
 TEST_F(TestCoreResourceWithDevice, CoreGetResourceByIndex_F)
 {
-  EXPECT_EQ(nullptr, oc_core_get_resource_by_index(-1, /*device*/ 0));
-  EXPECT_EQ(nullptr, oc_core_get_resource_by_index(OCF_D + 1, /*device*/ 0));
+  EXPECT_EQ(nullptr, oc_core_get_resource_by_index(-1, kDevice1ID));
+  EXPECT_EQ(nullptr, oc_core_get_resource_by_index(OCF_D + 1, kDevice1ID));
   EXPECT_EQ(nullptr, oc_core_get_resource_by_index(OCF_D, SIZE_MAX));
 }
 
 TEST_F(TestCoreResourceWithDevice, CoreGetResourceByURI_F)
 {
-  EXPECT_EQ(nullptr, oc_core_get_resource_by_uri("", 0));
+  EXPECT_EQ(nullptr, oc_core_get_resource_by_uri("", kDevice1ID));
   EXPECT_EQ(nullptr, oc_core_get_resource_by_uri("/oic/d", SIZE_MAX));
+  std::string invalid(OC_MAX_OCF_URI_PATH_SIZE, 'a');
+  EXPECT_EQ(nullptr, oc_core_get_resource_by_uri(invalid.c_str(), kDevice1ID));
+
+  EXPECT_EQ(nullptr, oc_core_get_resource_by_uri_v1("", 0, kDevice1ID));
+  EXPECT_EQ(nullptr, oc_core_get_resource_by_uri_v1(
+                       "/oic/d", OC_CHAR_ARRAY_LEN("/oic/d"), SIZE_MAX));
 }
 
 TEST_F(TestCoreResourceWithDevice, CoreGetResourceByIndex_P)
@@ -295,14 +308,13 @@ TEST_F(TestCoreResourceWithDevice, CoreGetResourceByIndex_P)
   auto check_resource = [](int type, size_t device) {
     oc_resource_t *res = oc_core_get_resource_by_index(type, device);
     EXPECT_NE(nullptr, res);
-    const char *uri = oc_string(res->uri);
-    ASSERT_NE(nullptr, uri);
-    EXPECT_EQ(type, oc_core_get_resource_type_by_uri(uri));
+    EXPECT_EQ(type, oc_core_get_resource_type_by_uri(oc_string(res->uri),
+                                                     oc_string_len(res->uri)));
   };
 
   // platform-wide resources are DCRs
   for (int type = 0; type < OCF_CON; ++type) {
-    check_resource(type, /*device*/ 0);
+    check_resource(type, kDevice1ID);
   }
 
   // logical device resources
@@ -325,7 +337,7 @@ TEST_F(TestCoreResourceWithDevice, CoreGetResourceByURI_P)
 
   std::vector<std::string> uris{};
   for (int type = 0; type <= OCF_D; ++type) {
-    oc_resource_t *res = oc_core_get_resource_by_index(type, /*device*/ 0);
+    oc_resource_t *res = oc_core_get_resource_by_index(type, kDevice1ID);
     ASSERT_NE(nullptr, res) << "cannot get resource for type " << type;
     const char *res_uri = oc_string(res->uri);
     ASSERT_NE(nullptr, res_uri) << "invalid resource uri for type " << type;
@@ -334,7 +346,8 @@ TEST_F(TestCoreResourceWithDevice, CoreGetResourceByURI_P)
 
   auto check_uri = [&strip_leading_slash](const std::string &uri,
                                           size_t device) {
-    oc_resource_t *res = oc_core_get_resource_by_uri(uri.c_str(), device);
+    oc_resource_t *res =
+      oc_core_get_resource_by_uri_v1(uri.c_str(), uri.length(), device);
     ASSERT_NE(nullptr, res) << "cannot get resource for uri " << uri;
     const char *res_uri = oc_string(res->uri);
     ASSERT_NE(nullptr, res_uri) << "invalid uri for resource for uri " << uri;
@@ -344,7 +357,7 @@ TEST_F(TestCoreResourceWithDevice, CoreGetResourceByURI_P)
 
   // check uris without the leading '/'
   for (const auto &uri : uris) {
-    check_uri(uri, /*device*/ 0);
+    check_uri(uri, kDevice1ID);
   }
 
   // add leading '/' and recheck
@@ -357,12 +370,13 @@ TEST_F(TestCoreResourceWithDevice, CoreGetResourceByURI_P)
 
 TEST_F(TestCoreResourceWithDevice, CoreGetResourceIsDCR_P)
 {
-  EXPECT_FALSE(oc_core_is_DCR(nullptr, 0));
+  EXPECT_FALSE(oc_core_is_DCR(nullptr, kDevice1ID));
   EXPECT_FALSE(
-    oc_core_is_DCR(oc_core_get_resource_by_index(OCF_D, 0), SIZE_MAX));
+    oc_core_is_DCR(oc_core_get_resource_by_index(OCF_D, kDevice1ID), SIZE_MAX));
   // platform-wide resources are DCRs
   for (int i = 0; i < OCF_CON; ++i) {
-    EXPECT_TRUE(oc_core_is_DCR(oc_core_get_resource_by_index(i, 0), 0));
+    EXPECT_TRUE(
+      oc_core_is_DCR(oc_core_get_resource_by_index(i, 0), kDevice1ID));
   }
 
   // logical device resources
@@ -394,13 +408,14 @@ TEST_F(TestCoreResourceWithDevice, CoreGetResourceIsDCR_P)
 
 TEST_F(TestCoreResourceWithDevice, CoreGetResourceIsSVR_P)
 {
-  EXPECT_FALSE(oc_core_is_SVR(nullptr, 0));
+  EXPECT_FALSE(oc_core_is_SVR(nullptr, kDevice1ID));
   EXPECT_FALSE(
-    oc_core_is_SVR(oc_core_get_resource_by_index(OCF_D, 0), SIZE_MAX));
+    oc_core_is_SVR(oc_core_get_resource_by_index(OCF_D, kDevice1ID), SIZE_MAX));
 
   // platform-wide resources are not SVRs
   for (int i = 0; i < OCF_CON; ++i) {
-    EXPECT_FALSE(oc_core_is_SVR(oc_core_get_resource_by_index(i, 0), 0));
+    EXPECT_FALSE(
+      oc_core_is_SVR(oc_core_get_resource_by_index(i, kDevice1ID), kDevice1ID));
   }
 
   // logical device resources
@@ -425,14 +440,14 @@ TEST_F(TestCoreResourceWithDevice, CoreGetResourceIsSVR_P)
 
 TEST_F(TestCoreResourceWithDevice, CoreGetResourceIsVerticalResource_P)
 {
-  EXPECT_FALSE(oc_core_is_vertical_resource(nullptr, 0));
+  EXPECT_FALSE(oc_core_is_vertical_resource(nullptr, kDevice1ID));
   EXPECT_FALSE(oc_core_is_vertical_resource(
-    oc_core_get_resource_by_index(OCF_D, 0), SIZE_MAX));
+    oc_core_get_resource_by_index(OCF_D, kDevice1ID), SIZE_MAX));
 
   // platform-wide resources are DCRs
   for (int i = 0; i < OCF_CON; ++i) {
-    EXPECT_TRUE(
-      oc_core_is_vertical_resource(oc_core_get_resource_by_index(i, 0), 0));
+    EXPECT_TRUE(oc_core_is_vertical_resource(
+      oc_core_get_resource_by_index(i, kDevice1ID), kDevice1ID));
   }
 
   for (size_t device = 0; device < oc_core_get_num_devices(); ++device) {
@@ -450,6 +465,28 @@ TEST_F(TestCoreResourceWithDevice, CoreGetResourceIsVerticalResource_P)
 #endif /* OC_SERVER */
 }
 
+TEST_F(TestCoreResourceWithDevice, SetName_P)
+{
+  std::string name = "new name";
+  oc_core_device_set_name(kDevice1ID, name.c_str(), name.length());
+  EXPECT_STREQ(name.c_str(),
+               oc_string(oc_core_get_device_info(kDevice1ID)->name));
+
+  // restore name
+  oc_core_device_set_name(kDevice1ID, kDevice1Name.data(),
+                          kDevice1Name.length());
+  ASSERT_STREQ(kDevice1Name.data(),
+               oc_string(oc_core_get_device_info(kDevice1ID)->name));
+}
+
+TEST_F(TestCoreResourceWithDevice, SetName_F)
+{
+  std::string name = "Test Device 2";
+  oc_core_device_set_name(SIZE_MAX, name.c_str(), name.length());
+  ASSERT_STRNE(name.c_str(),
+               oc_string(oc_core_get_device_info(kDevice1ID)->name));
+}
+
 TEST_F(TestCoreResourceWithDevice, BindDeviceResourceType_F)
 {
   oc_device_bind_resource_type(SIZE_MAX, "");
@@ -459,8 +496,7 @@ TEST_F(TestCoreResourceWithDevice, BindDeviceResourceType_F)
 
 TEST_F(TestCoreResourceWithDevice, BindDeviceResourceType_P)
 {
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDevice1ID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto get_handler = [](oc_client_response_t *data) {
@@ -499,7 +535,7 @@ TEST_F(TestCoreResourceWithDevice, BindDeviceResourceType_P)
     "oic.d.test.dyn3",
   };
   for (const auto &add : to_add_rts) {
-    oc_device_bind_resource_type(/*device*/ 0, add.c_str());
+    oc_device_bind_resource_type(kDevice1ID, add.c_str());
     exp_rts.push_back(add);
   }
   sort(exp_rts.begin(), exp_rts.end());

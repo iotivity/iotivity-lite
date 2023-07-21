@@ -118,14 +118,18 @@ void oc_core_populate_resource(int core_resource, size_t device_index,
 bool oc_filter_resource_by_rt(const oc_resource_t *resource,
                               const oc_request_t *request) OC_NONNULL();
 
+#define OC_MAX_OCF_URI_PATH_SIZE (256)
+
 /**
  * @brief Convert URI of a core resource to oc_core_resource_t.
  *
  * @param uri URI of a core resource (cannot be NULL)
+ * @param uri_len length of the URI
  * @return oc_core_resource_t on success
  * @return -1 on failure
  */
-int oc_core_get_resource_type_by_uri(const char *uri) OC_NONNULL();
+int oc_core_get_resource_type_by_uri(const char *uri, size_t uri_len)
+  OC_NONNULL();
 
 /** @brief Set the device name */
 void oc_core_device_set_name(size_t device, const char *name, size_t name_len)

@@ -269,14 +269,12 @@ oc_collection_add(oc_collection_t *collection)
   if (oc_check_if_collection((oc_resource_t *)collection)) {
     return false;
   }
-  // check if URI already exists in given device
-  if (oc_get_collection_by_uri(oc_string(collection->res.uri),
-                               oc_string_len(collection->res.uri),
-                               collection->res.device) != NULL) {
+  // check if URI is already in use
+  if (oc_ri_URI_is_in_use(collection->res.device,
+                          oc_string(collection->res.uri),
+                          oc_string_len(collection->res.uri))) {
     return false;
   }
-  // check dynamic resources URI
-
   oc_list_add(g_collections, collection);
   return true;
 }

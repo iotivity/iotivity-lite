@@ -107,15 +107,26 @@ oc_platform_info_t *oc_core_get_platform_info(void);
 oc_resource_t *oc_core_get_resource_by_index(int type, size_t device);
 
 /**
- * @brief retrieve the resource by uri
+ * @brief retrieve a core resource by uri
  *
  * @param uri the uri (cannot be NULL)
+ * @param uri_len the length of the uri
  * @param device the device index
  * @return oc_resource_t* the resource handle
  * @return NULL on failure
  */
+oc_resource_t *oc_core_get_resource_by_uri_v1(const char *uri, size_t uri_len,
+                                              size_t device) OC_NONNULL();
+
+/**
+ * @brief retrieve a core resource by uri
+ *
+ * @deprecated replaced by replaced by oc_core_get_resource_by_uri_v1 in
+ * v2.2.5.7
+ */
 oc_resource_t *oc_core_get_resource_by_uri(const char *uri, size_t device)
-  OC_NONNULL();
+  OC_NONNULL()
+    OC_DEPRECATED("replaced by oc_core_get_resource_by_uri_v1 in v2.2.5.7");
 
 /**
  * @brief determine if a resource is a Device Configuration Resource

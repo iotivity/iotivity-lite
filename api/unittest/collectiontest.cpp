@@ -151,17 +151,6 @@ TEST_F(TestCollections, Add_FailSameCollection)
   EXPECT_FALSE(oc_add_collection_v1(&collection1->res));
 }
 
-TEST_F(TestCollections, Add_FailSameURI)
-{
-  auto collection1 = NewCollection("name1", "/uri");
-  ASSERT_NE(nullptr, collection1);
-  ASSERT_TRUE(oc_add_collection_v1(&collection1->res));
-
-  auto collection2 = NewCollection("name2", "/uri");
-  ASSERT_NE(nullptr, collection2);
-  EXPECT_FALSE(oc_add_collection_v1(&collection2->res));
-}
-
 TEST_F(TestCollections, AddSupportedResourceType)
 {
   auto collection = MakeCollection();
@@ -401,6 +390,39 @@ TEST_F(TestCollectionsWithServer, New)
   EXPECT_EQ(kDeviceID, col2->device);
 
   oc_delete_collection(col2);
+}
+
+TEST_F(TestCollectionsWithServer, Add_FailSameURI)
+{
+  // cannot match core resource
+  auto col1 = NewCollection("name1", "/oic/p");
+  ASSERT_NE(nullptr, col1);
+  EXPECT_FALSE(oc_add_collection_v1(&col1->res));
+
+  // cannot match an existing dynamic resource
+  oc_resource_t *dyn1 = oc_new_resource("platform", "/dyn1", 1, kDeviceID);
+  ASSERT_NE(nullptr, dyn1);
+  oc_resource_set_request_handler(
+    dyn1, OC_GET,
+    [](oc_request_t *, oc_interface_mask_t, void *) {
+      // no-op
+    },
+    nullptr);
+  ASSERT_TRUE(oc_ri_add_resource(dyn1));
+
+  auto col2 = NewCollection("name2", oc_string(dyn1->uri));
+  ASSERT_NE(nullptr, col2);
+  EXPECT_FALSE(oc_add_collection_v1(&col2->res));
+
+  auto col3 = NewCollection("name3", "/col");
+  ASSERT_NE(nullptr, col3);
+  ASSERT_TRUE(oc_add_collection_v1(&col3->res));
+
+  auto col4 = NewCollection("name4", "/col");
+  ASSERT_NE(nullptr, col4);
+  EXPECT_FALSE(oc_add_collection_v1(&col4->res));
+
+  ASSERT_TRUE(oc_ri_delete_resource(dyn1));
 }
 
 TEST_F(TestCollectionsWithServer, CheckIfCollection)
