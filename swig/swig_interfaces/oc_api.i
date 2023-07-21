@@ -827,7 +827,7 @@ bool jni_delete_resource(oc_resource_t *resource) {
 %{
 static struct jni_callback_data_s oc_con_write_cb_data;
 
-void jni_oc_con_callback(size_t device_index, oc_rep_t *rep)
+void jni_oc_con_callback(size_t device_index, const oc_rep_t *rep)
 {
   OC_DBG("JNI: %s\n", __func__);
 

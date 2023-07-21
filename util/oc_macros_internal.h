@@ -21,6 +21,9 @@
 
 #define OC_TO_STR(x) #x
 
+#define OC_EXPAND(x) x
+#define OC_EXPAND_TO_STR(x) OC_EXPAND(OC_TO_STR(x))
+
 // use only for C-string constants to get string length and not size of a
 // pointer, OC_CHAR_ARRAY_LEN(x) should be equal to strlen(x)
 #define OC_CHAR_ARRAY_LEN(x) (sizeof(x) - 1)
