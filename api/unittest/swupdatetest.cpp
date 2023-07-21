@@ -35,6 +35,7 @@
 #include "tests/gtest/RepPool.h"
 #include "tests/gtest/Resource.h"
 #include "tests/gtest/Storage.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
@@ -148,14 +149,15 @@ TEST_F(TestSWUpdate, GetResourceByIndex)
 
 TEST_F(TestSWUpdate, GetResourceByURI_F)
 {
-  EXPECT_EQ(nullptr, oc_core_get_resource_by_uri(OCF_SW_UPDATE_URI,
-                                                 /*device*/ SIZE_MAX));
+  EXPECT_EQ(nullptr, oc_core_get_resource_by_uri_v1(
+                       OCF_SW_UPDATE_URI, OC_CHAR_ARRAY_LEN(OCF_SW_UPDATE_URI),
+                       /*device*/ SIZE_MAX));
 }
 
 TEST_F(TestSWUpdate, GetResourceByURI)
 {
-  oc_resource_t *res =
-    oc_core_get_resource_by_uri(OCF_SW_UPDATE_URI, kDeviceID);
+  oc_resource_t *res = oc_core_get_resource_by_uri_v1(
+    OCF_SW_UPDATE_URI, OC_CHAR_ARRAY_LEN(OCF_SW_UPDATE_URI), kDeviceID);
   EXPECT_NE(nullptr, res);
 
   EXPECT_STREQ(OCF_SW_UPDATE_URI, oc_string(res->uri));

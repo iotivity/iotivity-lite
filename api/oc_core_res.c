@@ -36,6 +36,7 @@
 #include "util/oc_compiler.h"
 #include "util/oc_features.h"
 #include "util/oc_macros_internal.h"
+#include "util/oc_secure_string_internal.h"
 
 #ifdef OC_CLOUD
 #include "api/cloud/oc_cloud_resource_internal.h"
@@ -688,9 +689,8 @@ core_is_resource_uri(const char *uri, size_t uri_len, const char *r_uri,
 }
 
 int
-oc_core_get_resource_type_by_uri(const char *uri)
+oc_core_get_resource_type_by_uri(const char *uri, size_t uri_len)
 {
-  size_t uri_len = strlen(uri);
   if (core_is_resource_uri(uri, uri_len, "/oic/p",
                            OC_CHAR_ARRAY_LEN("/oic/p"))) {
     return OCF_P;
@@ -792,9 +792,9 @@ oc_core_get_resource_type_by_uri(const char *uri)
 }
 
 oc_resource_t *
-oc_core_get_resource_by_uri(const char *uri, size_t device)
+oc_core_get_resource_by_uri_v1(const char *uri, size_t uri_len, size_t device)
 {
-  int type = oc_core_get_resource_type_by_uri(uri);
+  int type = oc_core_get_resource_type_by_uri(uri, uri_len);
   if (type < 0) {
     return NULL;
   }
@@ -804,9 +804,18 @@ oc_core_get_resource_by_uri(const char *uri, size_t device)
   if (!device_is_valid(device)) {
     return NULL;
   }
-
   size_t res = OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * device + type;
   return &g_core_resources[res];
+}
+
+oc_resource_t *
+oc_core_get_resource_by_uri(const char *uri, size_t device)
+{
+  size_t uri_len = oc_strnlen(uri, OC_MAX_OCF_URI_PATH_SIZE);
+  if (uri_len == OC_MAX_OCF_URI_PATH_SIZE) {
+    return NULL;
+  }
+  return oc_core_get_resource_by_uri_v1(uri, uri_len, device);
 }
 
 bool

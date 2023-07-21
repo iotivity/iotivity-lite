@@ -41,6 +41,7 @@
 %rename (encodeInterfacesMask) oc_core_encode_interfaces_mask;
 %rename (getResourceByIndex) oc_core_get_resource_by_index;
 %rename (getResourceByUri) oc_core_get_resource_by_uri;
+%rename (getResourceByUriV1) oc_core_get_resource_by_uri_v1;
 /* TODO get oc_store_uri working */
 %ignore oc_store_uri;
 //%rename (storeUri) oc_store_uri;

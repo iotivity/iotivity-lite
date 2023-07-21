@@ -28,6 +28,7 @@
 #include "oc_server_api_internal.h"
 #include "port/oc_log_internal.h"
 #include "util/oc_features.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_CLIENT
 #include "oc_client_state.h"
@@ -941,7 +942,8 @@ oc_wkcore_discovery_handler(oc_request_t *request,
   const char *rt_device = NULL;
   size_t rt_devlen = 0;
   size_t device = request->resource->device;
-  oc_resource_t *resource = oc_core_get_resource_by_uri("oic/d", device);
+  oc_resource_t *resource =
+    oc_core_get_resource_by_uri_v1("oic/d", OC_CHAR_ARRAY_LEN("oic/d"), device);
   for (size_t i = 0; i < oc_string_array_get_allocated_size(resource->types);
        ++i) {
     size_t size = oc_string_array_get_item_size(resource->types, i);

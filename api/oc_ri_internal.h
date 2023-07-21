@@ -26,6 +26,7 @@
 #include "oc_ri.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -75,6 +76,19 @@ void oc_ri_shutdown(void);
  * @param resource the resource (cannot be NULL)
  */
 void oc_ri_free_resource_properties(oc_resource_t *resource) OC_NONNULL();
+
+/**
+ * @brief Check if given URI is in use by given device
+ *
+ * @param device index of device
+ * @param uri URI to check (cannot be NULL)
+ * @param uri_len length of URI
+ *
+ * @return true if URI is in use
+ * @return false otherwise
+ */
+bool oc_ri_URI_is_in_use(size_t device, const char *uri, size_t uri_len)
+  OC_NONNULL();
 
 typedef struct oc_ri_invoke_coap_entity_handler_ctx_t
 {

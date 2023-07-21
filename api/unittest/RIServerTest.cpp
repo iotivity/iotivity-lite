@@ -40,6 +40,7 @@
 static const std::string kResourceURI = "/LightResourceURI";
 static const std::string kResourceName = "roomlights";
 static constexpr uint16_t kObservePeriodSeconds = 1;
+static constexpr size_t kDeviceID = 0;
 
 class TestOcServerRi : public testing::Test {
 public:
@@ -69,29 +70,30 @@ public:
 TEST_F(TestOcServerRi, GetAppResourceByUri_P)
 {
   oc_resource_t *res =
-    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, kDeviceID);
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
   oc_resource_set_request_handler(res, OC_GET, dummyRequestHandler, nullptr);
   EXPECT_TRUE(oc_ri_add_resource(res));
 
   res = oc_ri_get_app_resource_by_uri(kResourceURI.c_str(),
-                                      kResourceURI.length(), 0);
+                                      kResourceURI.length(), kDeviceID);
   EXPECT_NE(nullptr, res);
   EXPECT_TRUE(oc_ri_delete_resource(res));
 }
 
 TEST_F(TestOcServerRi, GetAppResourceByUri_N)
 {
-  oc_resource_t *res = oc_ri_get_app_resource_by_uri(kResourceURI.c_str(),
-                                                     kResourceURI.length(), 0);
-  EXPECT_EQ(nullptr, res);
+  EXPECT_EQ(nullptr, oc_ri_get_app_resource_by_uri(nullptr, 0, kDeviceID));
+  EXPECT_EQ(nullptr, oc_ri_get_app_resource_by_uri("", 0, kDeviceID));
+  EXPECT_EQ(nullptr, oc_ri_get_app_resource_by_uri(
+                       kResourceURI.c_str(), kResourceURI.length(), kDeviceID));
 }
 
 TEST_F(TestOcServerRi, RiGetAppResource_P)
 {
   oc_resource_t *res =
-    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, kDeviceID);
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
   oc_resource_set_request_handler(res, OC_GET, dummyRequestHandler, nullptr);
@@ -117,7 +119,7 @@ TEST_F(TestOcServerRi, RiAllocResource_P)
 TEST_F(TestOcServerRi, RiFreeResourceProperties_P)
 {
   oc_resource_t *res =
-    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, kDeviceID);
   oc_ri_free_resource_properties(res);
   EXPECT_EQ(0, oc_string_len(res->name));
   EXPECT_TRUE(oc_ri_delete_resource(res));
@@ -126,7 +128,7 @@ TEST_F(TestOcServerRi, RiFreeResourceProperties_P)
 TEST_F(TestOcServerRi, RiAddResource_P)
 {
   oc_resource_t *res =
-    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, kDeviceID);
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
   oc_resource_set_request_handler(res, OC_GET, dummyRequestHandler, nullptr);
@@ -137,32 +139,56 @@ TEST_F(TestOcServerRi, RiAddResource_P)
   EXPECT_TRUE(oc_ri_delete_resource(res));
 }
 
-TEST_F(TestOcServerRi, RiAddResourceWithTheSameURI_F)
+TEST_F(TestOcServerRi, RiAddResource_F)
 {
-  /*
+  EXPECT_FALSE(oc_ri_add_resource(nullptr));
+
   oc_resource_t *res1 =
-    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
-  oc_resource_set_discoverable(res1, true);
-  oc_resource_set_periodic_observable(res1, kObservePeriodSeconds);
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, kDeviceID);
+  oc_ri_add_resource(res1);
+
+  oc_resource_t *res2 =
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, kDeviceID);
+  oc_resource_set_request_handler(res2, OC_GET, dummyRequestHandler, nullptr);
+  oc_resource_set_periodic_observable(res2, 0);
+  oc_ri_add_resource(res2);
+
+  ASSERT_TRUE(oc_ri_delete_resource(res2));
+  ASSERT_TRUE(oc_ri_delete_resource(res1));
+}
+
+TEST_F(TestOcServerRi, RiAddMultipleResources_P)
+{
+  oc_resource_t *res1 =
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, kDeviceID);
+  ASSERT_NE(nullptr, res1);
   oc_resource_set_request_handler(res1, OC_GET, dummyRequestHandler, nullptr);
   EXPECT_TRUE(oc_ri_add_resource(res1));
 
-  oc_resource_t *res2 = oc_new_resource("test", kResourceURI.c_str(), 1, 0);
+  // different device
+  size_t kDeviceID2 = 1;
+  oc_resource_t *res2 =
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, kDeviceID2);
+  ASSERT_NE(nullptr, res2);
   oc_resource_set_request_handler(res2, OC_GET, dummyRequestHandler, nullptr);
-  // cannot add the same resource URI twice
-  EXPECT_FALSE(oc_ri_add_resource(res2));
+  EXPECT_TRUE(oc_ri_add_resource(res2));
 
-  EXPECT_TRUE(oc_ri_delete_resource(res2));
-  EXPECT_TRUE(oc_ri_delete_resource(res1));
-  */
+  // different URI
+  oc_resource_t *res3 =
+    oc_new_resource(kResourceName.c_str(), "/test", 1, kDeviceID);
+  ASSERT_NE(nullptr, res3);
+  oc_resource_set_request_handler(res3, OC_GET, dummyRequestHandler, nullptr);
+  EXPECT_TRUE(oc_ri_add_resource(res3));
+
+  ASSERT_TRUE(oc_ri_delete_resource(res3));
+  ASSERT_TRUE(oc_ri_delete_resource(res2));
+  ASSERT_TRUE(oc_ri_delete_resource(res1));
 }
 
 TEST_F(TestOcServerRi, RiAddResourceAfterDelayedDelete_F)
 {
   oc_resource_t *res =
-    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
-  oc_resource_set_discoverable(res, true);
-  oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, kDeviceID);
   oc_resource_set_request_handler(res, OC_GET, dummyRequestHandler, nullptr);
   ASSERT_TRUE(oc_ri_add_resource(res));
 
@@ -171,7 +197,17 @@ TEST_F(TestOcServerRi, RiAddResourceAfterDelayedDelete_F)
   EXPECT_FALSE(oc_ri_add_resource(res));
 }
 
-TEST_F(TestOcServerRi, RiOnDeleteResourceCallbacksAdd)
+TEST_F(TestOcServerRi, RiDeleteResource_F)
+{
+  EXPECT_FALSE(oc_ri_delete_resource(nullptr));
+}
+
+TEST_F(TestOcServerRi, RiDelayedDeleteResource_F)
+{
+  oc_delayed_delete_resource(nullptr);
+}
+
+TEST_F(TestOcServerRi, RiOnDeleteResourceCallbacksAdd_P)
 {
 #ifndef OC_DYNAMIC_ALLOCATION
   std::array<oc_ri_delete_resource_cb_t, OC_MAX_ON_DELETE_RESOURCE_CBS>
@@ -192,7 +228,7 @@ TEST_F(TestOcServerRi, RiOnDeleteResourceCallbacksAdd)
   EXPECT_FALSE(oc_ri_on_delete_resource_add_callback(dummyOnDelete));
 }
 
-TEST_F(TestOcServerRi, RiOnDeleteResourceCallbacksRemove)
+TEST_F(TestOcServerRi, RiOnDeleteResourceCallbacksRemove_P)
 {
   EXPECT_EQ(nullptr, oc_ri_on_delete_resource_find_callback(dummyOnDelete));
   EXPECT_FALSE(oc_ri_on_delete_resource_remove_callback(dummyOnDelete));
@@ -241,7 +277,7 @@ find_resource_in_collections(const oc_resource_t *resource)
 
 TEST_F(TestOcServerRi, RiCleanupCollection_P)
 {
-  oc_resource_t *col = oc_new_collection(nullptr, "/switches", 1, 0);
+  oc_resource_t *col = oc_new_collection(nullptr, "/switches", 1, kDeviceID);
   oc_resource_bind_resource_type(col, "oic.wk.col");
   oc_resource_set_discoverable(col, true);
   oc_resource_set_observable(col, true);
@@ -250,7 +286,7 @@ TEST_F(TestOcServerRi, RiCleanupCollection_P)
   ASSERT_TRUE(oc_add_collection_v1(col));
 
   oc_resource_t *res =
-    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, 0);
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, kDeviceID);
   oc_resource_set_discoverable(res, true);
   oc_resource_set_periodic_observable(res, kObservePeriodSeconds);
   oc_resource_set_request_handler(res, OC_GET, dummyRequestHandler, nullptr);
@@ -333,7 +369,7 @@ public:
       },
     };
     for (const auto &dr : dynResources) {
-      oc_resource_t *res = oc::TestDevice::AddDynamicResource(dr, /*device*/ 0);
+      oc_resource_t *res = oc::TestDevice::AddDynamicResource(dr, kDeviceID);
       ASSERT_NE(nullptr, res);
     }
   }
@@ -368,10 +404,77 @@ int TestOcRiWithServer::onGetCounter = 0;
 int TestOcRiWithServer::onPostCounter = 0;
 int TestOcRiWithServer::onPutCounter = 0;
 
-TEST_F(TestOcRiWithServer, RiMultipleDelayedDeleteResource)
+TEST_F(TestOcRiWithServer, RiAddResourceWithTheSameURI_F)
+{
+  // cannot add resource with a URI of a core resource
+  oc_resource_t *res1 = oc_new_resource("platform", "/oic/p", 1, kDeviceID);
+  ASSERT_NE(nullptr, res1);
+  oc_resource_set_request_handler(res1, OC_GET,
+                                  TestOcServerRi::dummyRequestHandler, nullptr);
+  EXPECT_FALSE(oc_ri_add_resource(res1));
+
+  oc_resource_t *res2 =
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, kDeviceID);
+  ASSERT_NE(nullptr, res2);
+  oc_resource_set_request_handler(res2, OC_GET,
+                                  TestOcServerRi::dummyRequestHandler, nullptr);
+  EXPECT_TRUE(oc_ri_add_resource(res2));
+
+  oc_resource_t *res3 =
+    oc_new_resource("test", kResourceURI.c_str(), 1, kDeviceID);
+  ASSERT_NE(nullptr, res3);
+  oc_resource_set_request_handler(res3, OC_GET,
+                                  TestOcServerRi::dummyRequestHandler, nullptr);
+  // cannot add the same resource URI twice
+  EXPECT_FALSE(oc_ri_add_resource(res3));
+
+#ifdef OC_COLLECTIONS
+  oc_resource_t *col = oc_new_collection(nullptr, "/switches", 1, kDeviceID);
+  ASSERT_NE(nullptr, col);
+  ASSERT_TRUE(oc_collection_add_supported_rt(col, "oic.r.switch.binary"));
+  ASSERT_TRUE(oc_collection_add_mandatory_rt(col, "oic.r.switch.binary"));
+  ASSERT_TRUE(oc_add_collection_v1(col));
+
+  oc_resource_t *res4 = oc_new_resource("switches", "/switches", 1, kDeviceID);
+  ASSERT_NE(nullptr, res4);
+  oc_resource_set_request_handler(res4, OC_GET,
+                                  TestOcServerRi::dummyRequestHandler, nullptr);
+  EXPECT_FALSE(oc_ri_add_resource(res4));
+
+  ASSERT_TRUE(oc_ri_delete_resource(res4));
+  oc_delete_collection(col);
+#endif /* OC_COLLECTIONS */
+
+  ASSERT_TRUE(oc_ri_delete_resource(res3));
+  ASSERT_TRUE(oc_ri_delete_resource(res2));
+  ASSERT_TRUE(oc_ri_delete_resource(res1));
+}
+
+TEST_F(TestOcRiWithServer, RiAddResourceWithSameURIAfterDelayedDelete_F)
+{
+  oc_resource_t *res1 =
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, kDeviceID);
+  oc_resource_set_request_handler(res1, OC_GET,
+                                  TestOcServerRi::dummyRequestHandler, nullptr);
+  ASSERT_TRUE(oc_ri_add_resource(res1));
+  oc_delayed_delete_resource(res1);
+
+  oc_resource_t *res2 =
+    oc_new_resource(kResourceName.c_str(), kResourceURI.c_str(), 1, kDeviceID);
+  oc_resource_set_request_handler(res2, OC_GET,
+                                  TestOcServerRi::dummyRequestHandler, nullptr);
+  // cannot add resource with the same URI to application when it has been
+  // scheduled for deletion
+  EXPECT_FALSE(oc_ri_add_resource(res2));
+
+  EXPECT_TRUE(oc_ri_delete_resource(res2));
+  EXPECT_TRUE(oc_ri_delete_resource(res1));
+}
+
+TEST_F(TestOcRiWithServer, RiMultipleDelayedDeleteResource_P)
 {
   oc_resource_t *res =
-    oc::TestDevice::GetDynamicResource(/*device*/ 0, /*index*/ 0);
+    oc::TestDevice::GetDynamicResource(kDeviceID, /*index*/ 0);
   ASSERT_NE(nullptr, res);
   std::string uri{ oc_string(res->uri) };
 
@@ -384,7 +487,7 @@ TEST_F(TestOcRiWithServer, RiMultipleDelayedDeleteResource)
   oc_delayed_delete_resource(res);
   // give some time for the delayed events to fire
   oc::TestDevice::PoolEventsMs(100);
-  oc::TestDevice::ClearDynamicResource(/*device*/ 0, /*index*/ 0, false);
+  oc::TestDevice::ClearDynamicResource(kDeviceID, /*index*/ 0, false);
 
   EXPECT_EQ(1, onDelayedDeleteCounter.size());
   EXPECT_EQ(1, onDelayedDeleteCounter[uri]);
@@ -393,27 +496,27 @@ TEST_F(TestOcRiWithServer, RiMultipleDelayedDeleteResource)
   ASSERT_EQ(nullptr, oc_ri_on_delete_resource_find_callback(on_delete));
 }
 
-TEST_F(TestOcRiWithServer, RiDelayedDeleteAndDeleteResource)
+TEST_F(TestOcRiWithServer, RiDelayedDeleteAndDeleteResource_P)
 {
   oc_resource_t *res =
-    oc::TestDevice::GetDynamicResource(/*device*/ 0, /*index*/ 0);
+    oc::TestDevice::GetDynamicResource(kDeviceID, /*index*/ 0);
   ASSERT_NE(nullptr, res);
 
   oc_delayed_delete_resource(res);
   oc_delete_resource(res);
   // give some time for the delayed events to fire
   oc::TestDevice::PoolEventsMs(100);
-  oc::TestDevice::ClearDynamicResource(/*device*/ 0, /*index*/ 0, false);
+  oc::TestDevice::ClearDynamicResource(kDeviceID, /*index*/ 0, false);
 }
 
-TEST_F(TestOcRiWithServer, RiDelayedDeleteResourceOnShutdown)
+TEST_F(TestOcRiWithServer, RiDelayedDeleteResourceOnShutdown_P)
 {
   oc_resource_t *res =
-    oc::TestDevice::GetDynamicResource(/*device*/ 0, /*index*/ 0);
+    oc::TestDevice::GetDynamicResource(kDeviceID, /*index*/ 0);
   ASSERT_NE(nullptr, res);
 
   oc_delayed_delete_resource(res);
-  oc::TestDevice::ClearDynamicResource(/*device*/ 0, /*index*/ 0, false);
+  oc::TestDevice::ClearDynamicResource(kDeviceID, /*index*/ 0, false);
 
   oc::TestDevice::StopServer();
   ASSERT_TRUE(oc::TestDevice::StartServer());
@@ -423,17 +526,16 @@ TEST_F(TestOcRiWithServer, RiDelayedDeleteResourceOnShutdown)
 
 #ifdef OC_TEST
 
-TEST_F(TestOcRiWithServer, RiMultipleDeleteResourceRequests)
+TEST_F(TestOcRiWithServer, RiMultipleDeleteResourceRequests_P)
 {
   // get insecure connection to the testing device
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   oc_resource_t *res =
-    oc::TestDevice::GetDynamicResource(/*device*/ 0, /*index*/ 0);
+    oc::TestDevice::GetDynamicResource(kDeviceID, /*index*/ 0);
   ASSERT_NE(nullptr, res);
-  oc::TestDevice::ClearDynamicResource(/*device*/ 0, /*index*/ 0, false);
+  oc::TestDevice::ClearDynamicResource(kDeviceID, /*index*/ 0, false);
 
   int onDeleteResponseCounter = 0;
   auto onDeleteResponse = [](oc_client_response_t *data) {
@@ -464,17 +566,16 @@ TEST_F(TestOcRiWithServer, RiMultipleDeleteResourceRequests)
   EXPECT_EQ(1, onDeleteCounter);
 }
 
-TEST_F(TestOcRiWithServer, RiRequestAfterDeleteResourceRequest)
+TEST_F(TestOcRiWithServer, RiRequestAfterDeleteResourceRequest_P)
 {
   // get insecure connection to the testing device
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   oc_resource_t *res =
-    oc::TestDevice::GetDynamicResource(/*device*/ 0, /*index*/ 0);
+    oc::TestDevice::GetDynamicResource(kDeviceID, /*index*/ 0);
   ASSERT_NE(nullptr, res);
-  oc::TestDevice::ClearDynamicResource(/*device*/ 0, /*index*/ 0, false);
+  oc::TestDevice::ClearDynamicResource(kDeviceID, /*index*/ 0, false);
 
   int responseCounter = 0;
   auto onDeleteResponse = [](oc_client_response_t *data) {
