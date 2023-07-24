@@ -82,10 +82,6 @@ extern "C" {
   (OC_MAX_APP_RESOURCES + OC_MAX_NUM_CONCURRENT_REQUESTS)
 #endif /* COAP_MAX_OBSERVERS */
 
-/* Interval in notifies in which NON notifies are changed to CON notifies to
- * check client. */
-#define COAP_OBSERVE_REFRESH_INTERVAL 5
-
 #ifdef __cplusplus
 }
 #endif

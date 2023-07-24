@@ -371,8 +371,7 @@ TEST_F(TestSecurityProfileWithServer, PostRequest)
     EXPECT_EQ(OC_STATUS_CHANGED, data->code);
     oc::TestDevice::Terminate();
     OC_DBG("POST payload: %s", oc::RepPool::GetJson(data->payload).data());
-    auto *invoked = static_cast<bool *>(data->user_data);
-    *invoked = true;
+    *static_cast<bool *>(data->user_data) = true;
   };
 
   bool invoked = false;
@@ -399,8 +398,7 @@ TEST_F(TestSecurityProfileWithServer, PostRequest_FailInvalidData)
     EXPECT_EQ(OC_STATUS_BAD_REQUEST, data->code);
     oc::TestDevice::Terminate();
     OC_DBG("POST payload: %s", oc::RepPool::GetJson(data->payload).data());
-    auto *invoked = static_cast<bool *>(data->user_data);
-    *invoked = true;
+    *static_cast<bool *>(data->user_data) = true;
   };
 
   bool invoked = false;

@@ -18,6 +18,7 @@
 
 #include "oc_log.h"
 #include "port/oc_log_internal.h"
+#include "util/oc_compiler.h"
 
 #include <cstdarg>
 #include <cstdio>
@@ -47,6 +48,12 @@ TEST_F(TestLog, LogToStdout)
   EXPECT_EQ(OC_LOG_LEVEL_DEBUG, oc_log_get_level());
   OC_DBG("debug");
 }
+
+static void expectWarningOrError(oc_log_level_t log_level,
+                                 oc_log_component_t component, const char *file,
+                                 int line, const char *func_name,
+                                 const char *format, ...)
+  OC_PRINTF_FORMAT(6, 7);
 
 static void
 expectWarningOrError(oc_log_level_t log_level, oc_log_component_t component,

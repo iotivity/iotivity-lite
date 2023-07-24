@@ -276,8 +276,7 @@ TEST_F(TestSdiWithServer, PostRequest)
     oc::TestDevice::Terminate();
     OC_DBG("POST payload: %s", oc::RepPool::GetJson(data->payload).data());
     // TODO: fill response in SDI
-    auto *invoked = static_cast<bool *>(data->user_data);
-    *invoked = true;
+    *static_cast<bool *>(data->user_data) = true;
   };
 
   bool invoked = false;

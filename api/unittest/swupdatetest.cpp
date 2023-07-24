@@ -778,8 +778,7 @@ postRequest(const std::function<void()> &payloadFn)
     EXPECT_EQ(OC_STATUS_CHANGED, data->code);
     oc::TestDevice::Terminate();
     OC_DBG("POST payload: %s", oc::RepPool::GetJson(data->payload).data());
-    auto *invoked = static_cast<bool *>(data->user_data);
-    *invoked = true;
+    *static_cast<bool *>(data->user_data) = true;
   };
 
   bool invoked = false;
@@ -918,8 +917,7 @@ postRequestWithFailure(const std::function<void()> &payloadFn)
     EXPECT_EQ(ErrorCode, data->code);
     oc::TestDevice::Terminate();
     OC_DBG("POST payload: %s", oc::RepPool::GetJson(data->payload).data());
-    auto *invoked = static_cast<bool *>(data->user_data);
-    *invoked = true;
+    *static_cast<bool *>(data->user_data) = true;
   };
 
   bool invoked = false;

@@ -300,7 +300,7 @@ TEST_F(TestCSRWithDevice, Resource)
 
   auto csr_handler = [](oc_client_response_t *data) {
     oc::TestDevice::Terminate();
-    EXPECT_EQ(OC_STATUS_OK, data->code);
+    ASSERT_EQ(OC_STATUS_OK, data->code);
     *static_cast<bool *>(data->user_data) = true;
   };
 

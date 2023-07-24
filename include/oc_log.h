@@ -75,7 +75,8 @@ extern "C" {
 #endif /* !OC_SNPRINTF */
 
 #define OC_IPADDR_BUFF_SIZE                                                    \
-  64 // max size : scheme://[ipv6%scope]:port = 63 bytes
+  (64) // max size : scheme://[ipv6%scope]:port = 63 bytes
+
 #define OC_SNPRINT_ENDPOINT_ADDR(str, size, endpoint, addr_memb)               \
   do {                                                                         \
     const char *scheme = "coap";                                               \

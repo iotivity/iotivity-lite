@@ -95,6 +95,12 @@
 #include <stdio.h>
 #include <string.h>
 
+/* Interval in notifies in which NON notifies are changed to CON notifies to
+ * check client. */
+enum {
+  COAP_OBSERVE_REFRESH_INTERVAL = 5,
+};
+
 #ifndef OC_MAX_OBSERVE_SIZE
 #define OC_MAX_OBSERVE_SIZE OC_MAX_APP_DATA_SIZE
 #endif

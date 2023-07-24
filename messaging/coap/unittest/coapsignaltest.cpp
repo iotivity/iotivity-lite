@@ -29,11 +29,12 @@
 
 #if defined(OC_TCP) && defined(OC_IPV4)
 
-static const size_t device = 0;
+static constexpr size_t kDeviceID = 0;
 
 static void
 signal_event_loop(void)
 {
+  // no-op
 }
 
 static int
@@ -46,7 +47,7 @@ app_init(void)
 }
 
 class TestCoapSignal : public testing::Test {
-protected:
+public:
   void SetUp() override
   {
     static oc_handler_t handler = { /*.init =*/app_init,
@@ -55,7 +56,7 @@ protected:
                                     /*.requests_entry =*/nullptr };
 
     oc_main_init(&handler);
-    oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
+    oc_endpoint_t *ep = oc_connectivity_get_endpoints(kDeviceID);
     while (ep) {
       if ((ep->flags & TCP) && !(ep->flags & SECURED) && (ep->flags & IPV4)) {
         break;
@@ -73,13 +74,15 @@ protected:
 
 TEST_F(TestCoapSignal, coap_send_csm_message_P)
 {
-  int ret = coap_send_csm_message(&_target_ep, (uint32_t)OC_PDU_SIZE, 1);
+  int ret =
+    coap_send_csm_message(&_target_ep, static_cast<uint32_t>(OC_PDU_SIZE), 1);
   EXPECT_EQ(1, ret);
 }
 
 TEST_F(TestCoapSignal, coap_send_csm_message_N)
 {
-  int ret = coap_send_csm_message(nullptr, (uint32_t)OC_PDU_SIZE, 0);
+  int ret =
+    coap_send_csm_message(nullptr, static_cast<uint32_t>(OC_PDU_SIZE), 0);
   EXPECT_NE(1, ret);
 }
 
