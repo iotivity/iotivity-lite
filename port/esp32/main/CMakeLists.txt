@@ -30,7 +30,6 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/client/oc_client_cb.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_base64.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_blockwise.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_buffer.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_client_api.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_client_role.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_con_resource.c
@@ -45,6 +44,8 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_link.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_log.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_main.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_message.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_message_buffer.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_network_events.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_query.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_rep.c
@@ -67,6 +68,7 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/transactions.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../port/common/oc_ip.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../port/common/posix/oc_allocator.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_buffer.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_etimer.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_list.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_memb.c

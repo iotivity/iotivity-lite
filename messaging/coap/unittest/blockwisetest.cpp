@@ -20,12 +20,13 @@
 
 #ifdef OC_BLOCK_WISE
 
-#include "api/oc_blockwise_internal.h"
-#include "api/oc_buffer_internal.h"
 #include "api/client/oc_client_cb_internal.h"
+#include "api/oc_blockwise_internal.h"
 #include "api/oc_client_api_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_events_internal.h"
+#include "api/oc_message_buffer_internal.h"
+#include "api/oc_message_internal.h"
 #include "messaging/coap/coap_options.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/transactions.h"

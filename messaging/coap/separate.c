@@ -51,7 +51,7 @@
 
 #ifdef OC_SERVER
 
-#include "api/oc_buffer_internal.h"
+#include "api/oc_message_internal.h"
 #include "messaging/coap/coap_internal.h"
 #include "messaging/coap/coap_log.h"
 #include "messaging/coap/separate.h"

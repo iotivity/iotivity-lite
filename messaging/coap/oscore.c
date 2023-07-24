@@ -19,7 +19,7 @@
 #ifdef OC_SECURITY
 #ifdef OC_OSCORE
 
-#include "api/oc_buffer_internal.h"
+#include "api/oc_message_internal.h"
 #include "oscore.h"
 #include "coap.h"
 #include "coap_log.h"

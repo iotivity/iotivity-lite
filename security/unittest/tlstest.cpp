@@ -18,9 +18,9 @@
 
 #ifdef OC_SECURITY
 
-#include "api/oc_buffer_internal.h"
 #include "api/oc_core_res_internal.h"
 #include "api/oc_events_internal.h"
+#include "api/oc_message_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_runtime_internal.h"
 #include "messaging/coap/coap_signal.h"

@@ -16,9 +16,11 @@
  *
  ****************************************************************************/
 
-#include "api/oc_buffer_internal.h"
+#include "api/oc_core_res_internal.h"
 #include "api/oc_main_internal.h"
+#include "api/oc_message_internal.h"
 #include "api/oc_ri_internal.h"
+#include "api/oc_server_api_internal.h"
 #include "messaging/coap/coap_options.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
@@ -26,8 +28,6 @@
 #include "messaging/coap/separate.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
-#include "oc_core_res_internal.h"
-#include "oc_server_api_internal.h"
 #include "port/oc_log_internal.h"
 #include "util/oc_features.h"
 #include "util/oc_macros_internal.h"

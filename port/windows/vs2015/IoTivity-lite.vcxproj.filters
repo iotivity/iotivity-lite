@@ -113,9 +113,6 @@
     <ClCompile Include="..\..\..\api\oc_blockwise.c">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\api\oc_buffer.c">
-      <Filter>Core</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\api\oc_client_api.c">
       <Filter>Core</Filter>
     </ClCompile>
@@ -156,6 +153,12 @@
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\util\oc_memb.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_message.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_message_buffer.c">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\util\oc_mmem.c">
@@ -538,6 +541,9 @@
     <ClInclude Include="..\..\..\include\oc_buffer.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\util\oc_buffer_internal.h">
+      <Filter>Core</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\include\oc_buffer_settings.h">
       <Filter>Headers</Filter>
     </ClInclude>
@@ -774,6 +780,12 @@
     </ClInclude>
     <ClInclude Include="..\mutex.h">
       <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_message_buffer_internal.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_message_internal.h">
+      <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\api\oc_resource_factory_internal.h">
       <Filter>Core</Filter>

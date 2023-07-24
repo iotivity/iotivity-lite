@@ -47,13 +47,13 @@
  * This file is part of the Contiki operating system.
  */
 
-#include "api/oc_buffer_internal.h"
 #include "coap.h"
 #include "coap_internal.h"
 #include "coap_log.h"
 #include "coap_options.h"
 #include "oc_ri.h"
 #include "transactions.h"
+#include "port/oc_connectivity.h"
 #include "util/oc_macros_internal.h"
 
 #ifdef OC_OSCORE

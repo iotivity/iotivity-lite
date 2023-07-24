@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#include "api/oc_buffer_internal.h"
 #include "api/oc_helpers_internal.h"
+#include "api/oc_message_internal.h"
 #include "coap_log.h"
 #include "coap_signal.h"
 #include "coap.h"

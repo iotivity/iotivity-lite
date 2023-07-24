@@ -51,9 +51,9 @@
 
 #ifdef OC_SERVER
 
-#include "api/oc_buffer_internal.h"
 #include "api/oc_endpoint_internal.h"
 #include "api/oc_helpers_internal.h"
+#include "api/oc_message_internal.h"
 #include "api/oc_query_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_server_api_internal.h"

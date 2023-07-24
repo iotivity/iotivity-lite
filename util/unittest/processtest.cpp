@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#include "api/oc_buffer_internal.h"
 #include "api/oc_events_internal.h"
+#include "api/oc_message_buffer_internal.h"
 #include "port/oc_log_internal.h"
 #include "tests/gtest/Device.h"
 #include "util/oc_process.h"

@@ -18,14 +18,17 @@
  *
  ****************************************************************************/
 
+#include "api/oc_ri_internal.h"
 #include "oc_api.h"
 #include "oc_clock_util.h"
 #include "oc_core_res.h"
 #include "oc_log.h"
 #include "oc_obt.h"
 #include "oc_python.h"
+#include "oc_python_internal.h"
 #include "port/oc_clock.h"
 #include "util/oc_atomic.h"
+#include "util/oc_buffer_internal.h"
 #include "util/oc_macros_internal.h"
 #include "util/oc_secure_string_internal.h"
 
@@ -1885,6 +1888,131 @@ factory_presets_cb(size_t device, void *data)
 #endif /* OC_SECURITY && OC_PKI */
 }
 
+static bool
+encode_resource_types(char *buffer, size_t buffer_size, oc_string_array_t types)
+{
+  oc_write_buffer_t wb = {
+    .buffer = buffer,
+    .buffer_size = buffer_size,
+    .total = 0,
+  };
+  size_t array_size = oc_string_array_get_allocated_size(types);
+  for (size_t i = 0; i < array_size; i++) {
+    const char *t = oc_string_array_get_item(types, i);
+    if (oc_buffer_write(&wb, "\"%s\"", t) < 0) {
+      return false;
+    }
+    if ((i < array_size - 1) && (oc_buffer_write(&wb, ",") < 0)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+static bool
+encode_resource_interface(oc_write_buffer_t *wb, const char *iface, bool comma)
+{
+  if (comma && oc_buffer_write(wb, ",") < 0) {
+    return false;
+  }
+  return oc_buffer_write(wb, "\"%s\"", iface) >= 0;
+}
+
+static bool
+encode_resource_interfaces(char *buffer, size_t buffer_size,
+                           oc_interface_mask_t iface_mask)
+{
+  oc_write_buffer_t wb = {
+    .buffer = buffer,
+    .buffer_size = buffer_size,
+    .total = 0,
+  };
+
+  bool comma = false;
+  if ((iface_mask & OC_IF_BASELINE) == OC_IF_BASELINE) {
+    if (!encode_resource_interface(&wb, OC_IF_BASELINE_STR, comma)) {
+      return false;
+    }
+    comma = true;
+  }
+
+  if ((iface_mask & OC_IF_RW) == OC_IF_RW) {
+    if (!encode_resource_interface(&wb, OC_IF_RW_STR, comma)) {
+      return false;
+    }
+    comma = true;
+  }
+
+  if ((iface_mask & OC_IF_R) == OC_IF_R) {
+    if (!encode_resource_interface(&wb, OC_IF_R_STR, comma)) {
+      return false;
+    }
+    comma = true;
+  }
+
+  if ((iface_mask & OC_IF_S) == OC_IF_S) {
+    if (!encode_resource_interface(&wb, OC_IF_S_STR, comma)) {
+      return false;
+    }
+    comma = true;
+  }
+
+  if ((iface_mask & OC_IF_A) == OC_IF_A) {
+    if (!encode_resource_interface(&wb, OC_IF_A_STR, comma)) {
+      return false;
+    }
+    comma = true;
+  }
+
+  if ((iface_mask & OC_IF_CREATE) == OC_IF_CREATE) {
+    if (!encode_resource_interface(&wb, OC_IF_CREATE_STR, comma)) {
+      return false;
+    }
+    comma = true;
+  }
+
+  if ((iface_mask & OC_IF_LL) == OC_IF_LL) {
+    if (!encode_resource_interface(&wb, OC_IF_LL_STR, comma)) {
+      return false;
+    }
+    comma = true;
+  }
+
+  if ((iface_mask & OC_IF_B) == OC_IF_B &&
+      !encode_resource_interface(&wb, OC_IF_B_STR, comma)) {
+    return false;
+  }
+  return true;
+}
+
+bool
+encode_resource_discovery_payload(char *buffer, size_t buffer_size,
+                                  const char *uri, const char *types,
+                                  oc_interface_mask_t iface_mask)
+{
+  oc_write_buffer_t wb = {
+    .buffer = buffer,
+    .buffer_size = buffer_size,
+    .total = 0,
+  };
+  if (oc_buffer_write(&wb, "{\"uri\":\"%s\",", uri) < 0) {
+    return false;
+  }
+  if (oc_buffer_write(&wb, "\"types\":[%s],", types) < 0) {
+    return false;
+  }
+
+  char strinterfaces[200] = " ";
+  if (!encode_resource_interfaces(strinterfaces, OC_ARRAY_SIZE(strinterfaces),
+                                  iface_mask)) {
+    return false;
+  }
+  if (oc_buffer_write(&wb, "\"if\":[%s]", strinterfaces) < 0) {
+    return false;
+  }
+  return oc_buffer_write(&wb, "}") > 0;
+}
+
 static oc_discovery_flags_t
 resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
                    oc_interface_mask_t iface_mask,
@@ -1892,9 +2020,7 @@ resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
                    bool more, void *user_data)
 {
   (void)user_data;
-  (void)iface_mask;
   (void)bm;
-  (void)types;
   (void)endpoint;
 
   if (uri == NULL) {
@@ -1903,80 +2029,18 @@ resource_discovery(const char *anchor, const char *uri, oc_string_array_t types,
     return OC_STOP_DISCOVERY;
   }
 
-  char json[1024] = "";
-  strcat(json, "{\"uri\" : \"");
-  strcat(json, uri);
-  strcat(json, "\",");
-
   char strtypes[200] = " ";
-  strcat(json, "\"types\": [");
-  int array_size = (int)oc_string_array_get_allocated_size(types);
-  for (int i = 0; i < array_size; i++) {
-    const char *t = oc_string_array_get_item(types, i);
-    strcat(strtypes, "\"");
-    strcat(strtypes, t);
-    strcat(strtypes, "\"");
-    if (i < array_size - 1) {
-      strcat(strtypes, ",");
-    }
+  if (!encode_resource_types(strtypes, OC_ARRAY_SIZE(strtypes), types)) {
+    return false;
   }
-  strcat(json, strtypes);
-  strcat(json, "],");
 
-  strcat(json, "\"if\": [");
-  bool comma = false;
-
-  char strinterfaces[200] = " ";
-  // OC_PRINTF ("  %d", if)
-  if ((iface_mask & OC_IF_BASELINE) == OC_IF_BASELINE) {
-    strcat(strinterfaces, "\"oic.r.baseline\"");
-    comma = true;
+  char json[1024] = "";
+  if (!encode_resource_discovery_payload(json, OC_ARRAY_SIZE(json), uri,
+                                         strtypes, iface_mask)) {
+    OC_PRINTF("[C]\nERROR discovering resources: could not encode payload\n");
+    cb_result = false;
+    return OC_STOP_DISCOVERY;
   }
-  if ((iface_mask & OC_IF_RW) == OC_IF_RW) {
-    if (comma) {
-      strcat(strinterfaces, ",");
-    }
-    strcat(strinterfaces, "\"oic.r.rw\"");
-    comma = true;
-  }
-  if ((iface_mask & OC_IF_R) == OC_IF_R) {
-    if (comma)
-      strcat(strinterfaces, ",");
-    strcat(strinterfaces, "\"oic.r.r\"");
-    comma = true;
-  }
-  if ((iface_mask & OC_IF_S) == OC_IF_S) {
-    if (comma)
-      strcat(strinterfaces, ",");
-    strcat(strinterfaces, "\"oic.r.s\"");
-    comma = true;
-  }
-  if ((iface_mask & OC_IF_A) == OC_IF_A) {
-    if (comma)
-      strcat(strinterfaces, ",");
-    strcat(strinterfaces, "\"oic.r.a\"");
-    comma = true;
-  }
-  if ((iface_mask & OC_IF_CREATE) == OC_IF_CREATE) {
-    if (comma)
-      strcat(strinterfaces, ",");
-    strcat(strinterfaces, "\"oic.r.create\"");
-    comma = true;
-  }
-  if ((iface_mask & OC_IF_LL) == OC_IF_LL) {
-    if (comma)
-      strcat(strinterfaces, ",");
-    strcat(strinterfaces, "\"oic.r.ll\"");
-    comma = true;
-  }
-  if ((iface_mask & OC_IF_B) == OC_IF_B) {
-    if (comma)
-      strcat(strinterfaces, ",");
-    strcat(strinterfaces, "\"oic.r.b\"");
-  }
-  strcat(json, strinterfaces);
-  strcat(json, "]");
-  strcat(json, "}");
 
   // OC_PRINTF("[C]anchor %s, uri : %s\n", anchor, uri);
   inform_resource_python(anchor, uri, strtypes, json);
@@ -2028,6 +2092,10 @@ py_get_obt_uuid(void)
   oc_uuid_to_str(oc_core_get_device_id(0), buffer, OC_ARRAY_SIZE(buffer));
 
   char *uuid = malloc(sizeof(char) * OC_UUID_LEN);
+  if (uuid == NULL) {
+    OC_PRINTF("ERROR: unable to allocate memory\n");
+    return NULL;
+  }
   strncpy(uuid, buffer, OC_UUID_LEN);
   return uuid;
 }
