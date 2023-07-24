@@ -47,9 +47,9 @@
  * This file is part of the Contiki operating system.
  */
 
-#include "api/oc_buffer_internal.h"
 #include "api/oc_endpoint_internal.h"
 #include "api/oc_main_internal.h"
+#include "api/oc_message_internal.h"
 #include "coap_log.h"
 #include "observe.h"
 #include "oc_buffer.h"

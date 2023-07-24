@@ -18,11 +18,8 @@
 
 #ifdef OC_SECURITY
 
-#include "oc_pstat_internal.h"
-#include "api/oc_buffer_internal.h"
 #include "api/oc_main_internal.h"
-#include "api/oc_ri_internal.h"
-#include "api/oc_server_api_internal.h"
+#include "api/oc_message_buffer_internal.h"
 #include "messaging/coap/coap_internal.h"
 #include "messaging/coap/observe.h"
 #include "oc_acl_internal.h"
@@ -32,6 +29,7 @@
 #include "oc_cred_internal.h"
 #include "oc_doxm_internal.h"
 #include "oc_keypair_internal.h"
+#include "oc_pstat_internal.h"
 #include "oc_roles_internal.h"
 #include "oc_sdi_internal.h"
 #include "oc_sp_internal.h"

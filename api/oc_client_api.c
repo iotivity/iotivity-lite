@@ -20,10 +20,10 @@
 
 #ifdef OC_CLIENT
 
-#include "api/oc_buffer_internal.h"
 #include "api/oc_client_api_internal.h"
 #include "api/oc_discovery_internal.h"
 #include "api/oc_helpers_internal.h"
+#include "oc_message_internal.h"
 #include "api/client/oc_client_cb_internal.h"
 #include "messaging/coap/coap.h"
 #include "messaging/coap/coap_options.h"

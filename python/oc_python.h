@@ -26,6 +26,10 @@
 
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /**
  * callback prototypes to inform python layer that the onboarded/unonboarded
  * list has changed
@@ -360,5 +364,9 @@ void change_light(int value);
 
 OC_API
 int python_main(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* OC_PYTHON_H */

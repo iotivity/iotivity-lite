@@ -19,9 +19,9 @@
 #ifdef OC_SECURITY
 
 #include "oc_tls_internal.h"
-#include "api/oc_buffer_internal.h"
 #include "api/oc_endpoint_internal.h"
 #include "api/oc_events_internal.h"
+#include "api/oc_message_internal.h"
 #include "api/oc_network_events_internal.h"
 #include "api/oc_session_events_internal.h"
 #include "messaging/coap/engine.h"
@@ -131,7 +131,7 @@ static mbedtls_ctr_drbg_context g_oc_ctr_drbg_ctx;
 static mbedtls_ssl_cookie_ctx g_cookie_ctx;
 static oc_random_pin_t g_random_pin;
 #define PIN_LEN (8)
-static unsigned char g_pin[PIN_LEN];
+static unsigned char g_pin[PIN_LEN] = { 0 };
 #define DTLS_INACTIVITY_TIMEOUT_TICKS                                          \
   (OC_DTLS_INACTIVITY_TIMEOUT * OC_CLOCK_SECOND)
 

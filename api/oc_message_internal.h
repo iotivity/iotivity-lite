@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright 2022 Daniel Adam, All Rights Reserved.
+ * Copyright (c) 2023 plgd.dev s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -16,27 +16,16 @@
  *
  ****************************************************************************/
 
-#ifndef OC_BUFFER_INTERNAL_H
-#define OC_BUFFER_INTERNAL_H
+#ifndef OC_MESSAGE_INTERNAL_H
+#define OC_MESSAGE_INTERNAL_H
 
-#include "api/oc_tcp_internal.h"
 #include "port/oc_connectivity.h"
-#include "util/oc_features.h"
+
 #include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/**
- * @brief Start the message buffer handler process
- */
-void oc_message_buffer_handler_start(void);
-
-/**
- * @brief Stop the message buffer handler process
- */
-void oc_message_buffer_handler_stop(void);
 
 /**
  * @brief Allocate incoming message of given size.
@@ -78,26 +67,8 @@ oc_message_t *oc_message_allocate_outgoing_with_size(size_t size);
  */
 size_t oc_message_buffer_size(void);
 
-#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
-/**
- * @brief finish connecting tcp session
- *
- * @param event on tcp connect event
- */
-void oc_tcp_connect_session(oc_tcp_on_connect_event_t *event);
-#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
-
-#ifdef OC_SECURITY
-/**
- * @brief close all tls session for reset the specific device
- *
- * @param device the device index
- */
-void oc_close_all_tls_sessions_for_device_reset(size_t device);
-#endif /* OC_SECURITY */
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* OC_BUFFER_INTERNAL_H */
+#endif /* OC_MESSAGE_INTERNAL_H */

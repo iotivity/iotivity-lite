@@ -16,7 +16,8 @@
  *
  ****************************************************************************/
 
-#include "api/oc_buffer_internal.h"
+#include "api/oc_message_internal.h"
+#include "api/oc_message_buffer_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_runtime_internal.h"
 #include "oc_buffer.h"

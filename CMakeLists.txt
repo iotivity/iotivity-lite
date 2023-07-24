@@ -1031,6 +1031,11 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         )
     endif()
 
+    if(OC_SECURITY_ENABLED AND OC_DYNAMIC_ALLOCATION_ENABLED)
+        file(GLOB PYTHONLIBTEST_SRC python/oc_python.c python/unittest/*.cpp)
+        oc_package_add_test(TARGET pythonlibtest SOURCES ${PYTHONLIBTEST_SRC})
+    endif()
+
     if(UNIX AND NOT OC_TSAN_ENABLED)
         # install https://github.com/wolfcw/libfaketime for this test suit to run
         find_library(FAKETIME_LIBRARY

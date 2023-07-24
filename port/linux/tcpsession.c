@@ -18,8 +18,8 @@
 
 #define __USE_GNU
 
-#include "api/oc_buffer_internal.h"
 #include "api/oc_endpoint_internal.h"
+#include "api/oc_message_internal.h"
 #include "api/oc_network_events_internal.h"
 #include "api/oc_session_events_internal.h"
 #include "api/oc_tcp_internal.h"

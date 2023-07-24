@@ -88,14 +88,6 @@ struct DiscoveryLinkData
 
 using DiscoveryLinkDataMap = std::unordered_map<std::string, DiscoveryLinkData>;
 
-struct DiscoveryBaselineData
-{
-  oc::BaselineData baseline;
-  std::string sduuid;
-  std::string sdname;
-  DiscoveryLinkDataMap links;
-};
-
 struct DiscoveryBatchItem
 {
   std::string deviceUUID;
@@ -501,6 +493,29 @@ verifyLinks(const DiscoveryLinkDataMap &links)
 #endif /* OC_SERVER */
 }
 
+TEST_F(TestDiscoveryWithServer, GetRequestWithSecurityDomain)
+{
+  oc_uuid_t uuid;
+  oc_gen_uuid(&uuid);
+
+#ifdef OC_SECURITY
+  oc_sec_sdi_t *sdi = oc_sec_sdi_get(kDeviceID);
+  ASSERT_NE(nullptr, sdi);
+  memcpy(&sdi->uuid.id, uuid.id, sizeof(uuid.id));
+#endif /* OC_SECURITY */
+
+  std::array<char, OC_UUID_LEN> uuid_str{};
+  oc_uuid_to_str(&uuid, &uuid_str[0], uuid_str.size());
+  std::string query = OCF_RES_QUERY_SDUUID "=" + std::string(uuid_str.data());
+
+  getRequestWithDomainQuery<OC_STATUS_OK>(query);
+
+#ifdef OC_SECURITY
+  // restore defaults
+  oc_sec_sdi_clear(sdi);
+#endif /* OC_SECURITY */
+}
+
 static DiscoveryLinkData
 parseLink(const oc_rep_t *link)
 {
@@ -591,105 +606,6 @@ parseLinks(const oc_rep_t *rep)
   return links;
 }
 
-static DiscoveryBaselineData
-parseBaselinePayload(const oc_rep_t *payload)
-{
-  const oc_rep_t *rep = payload->value.object;
-  DiscoveryBaselineData data{};
-  if (auto bl_opt = oc::ParseBaselineData(rep)) {
-    data.baseline = *bl_opt;
-  }
-
-  char *str;
-  size_t str_len;
-  // sduuid: string
-  if (oc_rep_get_string(rep, "sduuid", &str, &str_len)) {
-    data.sduuid = std::string(str, str_len);
-  }
-
-  // sdname: string
-  if (oc_rep_get_string(rep, "sdname", &str, &str_len)) {
-    data.sdname = std::string(str, str_len);
-  }
-
-  // links
-  if (oc_rep_t *obj = nullptr; oc_rep_get_object_array(rep, "links", &obj)) {
-    data.links = parseLinks(obj);
-  }
-  return data;
-}
-
-static DiscoveryBatchData
-parseBatchPayload(const oc_rep_t *payload)
-{
-  auto extractUUIDAndURI =
-    [](std::string_view href) -> std::pair<std::string, std::string> {
-    // skip past "ocf:// prefix"
-    std::string_view input = href.substr(6);
-    size_t uriStart = input.find('/');
-
-    if (uriStart == std::string_view::npos) {
-      return std::make_pair("", "");
-    }
-    // Extract the UUID and the URI as separate substrings
-    std::string_view uuid = input.substr(0, uriStart - 1);
-    std::string_view uri = input.substr(uriStart);
-    return std::make_pair(std::string(uuid), std::string(uri));
-  };
-
-  DiscoveryBatchData data{};
-  for (const oc_rep_t *rep = payload; rep != nullptr; rep = rep->next) {
-    const oc_rep_t *obj = rep->value.object;
-    DiscoveryBatchItem bi{};
-    char *str;
-    size_t str_len;
-    // href: string
-    if (oc_rep_get_string(obj, "href", &str, &str_len)) {
-      std::string_view href(str, str_len);
-      auto [uuid, uri] = extractUUIDAndURI(href);
-      bi.deviceUUID = uuid;
-      bi.href = uri;
-    }
-
-#ifdef OC_HAS_FEATURE_ETAG
-    // etag: byte string
-    if (oc_rep_get_byte_string(obj, "etag", &str, &str_len)) {
-      bi.etag.resize(str_len);
-      std::copy(&str[0], &str[str_len], std::begin(bi.etag));
-    }
-#endif /* OC_HAS_FEATURE_ETAG */
-
-    if (!bi.href.empty()) {
-      data[bi.href] = bi;
-    }
-  }
-
-  return data;
-}
-
-TEST_F(TestDiscoveryWithServer, GetRequestWithSecurityDomain)
-{
-  oc_uuid_t uuid;
-  oc_gen_uuid(&uuid);
-
-#ifdef OC_SECURITY
-  oc_sec_sdi_t *sdi = oc_sec_sdi_get(kDeviceID);
-  ASSERT_NE(nullptr, sdi);
-  memcpy(&sdi->uuid.id, uuid.id, sizeof(uuid.id));
-#endif /* OC_SECURITY */
-
-  std::array<char, OC_UUID_LEN> uuid_str{};
-  oc_uuid_to_str(&uuid, &uuid_str[0], uuid_str.size());
-  std::string query = OCF_RES_QUERY_SDUUID "=" + std::string(uuid_str.data());
-
-  getRequestWithDomainQuery<OC_STATUS_OK>(query);
-
-#ifdef OC_SECURITY
-  // restore defaults
-  oc_sec_sdi_clear(sdi);
-#endif /* OC_SECURITY */
-}
-
 // default interface - LL
 // payload contains array of discoverable resources
 // [
@@ -740,6 +656,42 @@ TEST_F(TestDiscoveryWithServer, GetRequest)
   ASSERT_FALSE(links.empty());
 
   verifyLinks(links);
+}
+
+struct DiscoveryBaselineData
+{
+  oc::BaselineData baseline;
+  std::string sduuid;
+  std::string sdname;
+  DiscoveryLinkDataMap links;
+};
+
+static DiscoveryBaselineData
+parseBaselinePayload(const oc_rep_t *payload)
+{
+  const oc_rep_t *rep = payload->value.object;
+  DiscoveryBaselineData data{};
+  if (auto bl_opt = oc::ParseBaselineData(rep)) {
+    data.baseline = *bl_opt;
+  }
+
+  char *str;
+  size_t str_len;
+  // sduuid: string
+  if (oc_rep_get_string(rep, "sduuid", &str, &str_len)) {
+    data.sduuid = std::string(str, str_len);
+  }
+
+  // sdname: string
+  if (oc_rep_get_string(rep, "sdname", &str, &str_len)) {
+    data.sdname = std::string(str, str_len);
+  }
+
+  // links
+  if (oc_rep_t *obj = nullptr; oc_rep_get_object_array(rep, "links", &obj)) {
+    data.links = parseLinks(obj);
+  }
+  return data;
 }
 
 // baseline interface:
@@ -867,6 +819,54 @@ verifyBatchPayload(const DiscoveryBatchData &dbd, const oc_endpoint_t *endpoint)
 {
   auto br = getBatchResources(endpoint);
   verifyBatchPayload(dbd, br.resources);
+}
+
+static DiscoveryBatchData
+parseBatchPayload(const oc_rep_t *payload)
+{
+  auto extractUUIDAndURI =
+    [](std::string_view href) -> std::pair<std::string, std::string> {
+    // skip past "ocf:// prefix"
+    std::string_view input = href.substr(6);
+    size_t uriStart = input.find('/');
+
+    if (uriStart == std::string_view::npos) {
+      return std::make_pair("", "");
+    }
+    // Extract the UUID and the URI as separate substrings
+    std::string_view uuid = input.substr(0, uriStart - 1);
+    std::string_view uri = input.substr(uriStart);
+    return std::make_pair(std::string(uuid), std::string(uri));
+  };
+
+  DiscoveryBatchData data{};
+  for (const oc_rep_t *rep = payload; rep != nullptr; rep = rep->next) {
+    const oc_rep_t *obj = rep->value.object;
+    DiscoveryBatchItem bi{};
+    char *str;
+    size_t str_len;
+    // href: string
+    if (oc_rep_get_string(obj, "href", &str, &str_len)) {
+      std::string_view href(str, str_len);
+      auto [uuid, uri] = extractUUIDAndURI(href);
+      bi.deviceUUID = uuid;
+      bi.href = uri;
+    }
+
+#ifdef OC_HAS_FEATURE_ETAG
+    // etag: byte string
+    if (oc_rep_get_byte_string(obj, "etag", &str, &str_len)) {
+      bi.etag.resize(str_len);
+      std::copy(&str[0], &str[str_len], std::begin(bi.etag));
+    }
+#endif /* OC_HAS_FEATURE_ETAG */
+
+    if (!bi.href.empty()) {
+      data[bi.href] = bi;
+    }
+  }
+
+  return data;
 }
 
 // batch interface

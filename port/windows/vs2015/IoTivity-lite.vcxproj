@@ -220,6 +220,8 @@
     <ClInclude Include="..\..\..\api\oc_events_internal.h" />
     <ClInclude Include="..\..\..\api\oc_introspection_internal.h" />
     <ClInclude Include="..\..\..\api\oc_main_internal.h" />
+    <ClInclude Include="..\..\..\api\oc_message_buffer_internal.h" />
+    <ClInclude Include="..\..\..\api\oc_message_internal.h" />
     <ClInclude Include="..\..\..\api\oc_mnt_internal.h" />
     <ClInclude Include="..\..\..\api\oc_resource_factory_internal.h" />
     <ClInclude Include="..\..\..\api\oc_session_events_internal.h" />
@@ -285,11 +287,19 @@
     <ClInclude Include="..\..\..\security\oc_store.h" />
     <ClInclude Include="..\..\..\security\oc_svr_internal.h" />
     <ClInclude Include="..\..\..\security\oc_tls_internal.h" />
+    <ClInclude Include="..\..\..\util\oc_atomic.h" />
+    <ClInclude Include="..\..\..\util\oc_buffer_internal.h" />
+    <ClInclude Include="..\..\..\util\oc_compiler.h" />
     <ClInclude Include="..\..\..\util\oc_etimer_internal.h" />
+    <ClInclude Include="..\..\..\util\oc_features.h" />
     <ClInclude Include="..\..\..\util\oc_list.h" />
+    <ClInclude Include="..\..\..\util\oc_macros_internal.h" />
+    <ClInclude Include="..\..\..\util\oc_mem_trace_internal.h" />
     <ClInclude Include="..\..\..\util\oc_memb.h" />
     <ClInclude Include="..\..\..\util\oc_mmem.h" />
     <ClInclude Include="..\..\..\util\oc_process.h" />
+    <ClInclude Include="..\..\..\util\oc_process_internal.h" />
+    <ClInclude Include="..\..\..\util\oc_secure_string_internal.h" />
     <ClInclude Include="..\..\..\util\oc_timer_internal.h" />
     <ClInclude Include="..\..\..\util\pt\lc-addrlabels.h" />
     <ClInclude Include="..\..\..\util\pt\lc-switch.h" />
@@ -327,7 +337,6 @@
     <ClCompile Include="..\..\..\api\cloud\rd_client.c" />
     <ClCompile Include="..\..\..\api\oc_base64.c" />
     <ClCompile Include="..\..\..\api\oc_blockwise.c" />
-    <ClCompile Include="..\..\..\api\oc_buffer.c" />
     <ClCompile Include="..\..\..\api\oc_client_api.c" />
     <ClCompile Include="..\..\..\api\oc_clock.c" />
     <ClCompile Include="..\..\..\api\oc_collection.c" />
@@ -341,6 +350,8 @@
     <ClCompile Include="..\..\..\api\oc_introspection.c" />
     <ClCompile Include="..\..\..\api\oc_log.c" />
     <ClCompile Include="..\..\..\api\oc_main.c" />
+    <ClCompile Include="..\..\..\api\oc_message.c" />
+    <ClCompile Include="..\..\..\api\oc_message_buffer.c" />
     <ClCompile Include="..\..\..\api\oc_mnt.c" />
     <ClCompile Include="..\..\..\api\oc_network_events.c" />
     <ClCompile Include="..\..\..\api\oc_query.c" />
@@ -456,6 +467,7 @@
     <ClCompile Include="..\..\..\security\oc_store.c" />
     <ClCompile Include="..\..\..\security\oc_svr.c" />
     <ClCompile Include="..\..\..\security\oc_tls.c" />
+    <ClCompile Include="..\..\..\util\oc_buffer.c" />
     <ClCompile Include="..\..\..\util\oc_etimer.c" />
     <ClCompile Include="..\..\..\util\oc_list.c" />
     <ClCompile Include="..\..\..\util\oc_memb.c" />

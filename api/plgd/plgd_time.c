@@ -21,7 +21,6 @@
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 
 #include "plgd_time_internal.h"
-#include "api/oc_buffer_internal.h"
 #include "api/oc_core_res_internal.h"
 #include "api/oc_rep_internal.h"
 #include "api/oc_resource_internal.h"

@@ -20,6 +20,7 @@
 #include "oc_base64.h"
 #include "oc_rep.h"
 #include "port/oc_log_internal.h"
+#include "util/oc_buffer_internal.h"
 #include "util/oc_compiler.h"
 #include <inttypes.h>
 #include <stdarg.h>
@@ -27,40 +28,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
-
-typedef struct
-{
-  char *buffer;       // the character buffer being updated
-  size_t buffer_size; // the size of the character buffer being updated.
-  size_t total;       // running total of characters printed to buf
-} write_buffer_t;
-
-static long write_to_buffer(write_buffer_t *wb, const char *fmt, ...)
-  OC_PRINTF_FORMAT(2, 3);
-
-static long
-write_to_buffer(write_buffer_t *wb, const char *fmt, ...)
-{
-  va_list args;
-  va_start(args, fmt);
-  int num_char_printed = vsnprintf(wb->buffer, wb->buffer_size, fmt, args);
-  va_end(args);
-  if (num_char_printed < 0) {
-    return -1;
-  }
-  wb->total += num_char_printed;
-  if (wb->buffer == NULL) {
-    return (long)wb->total;
-  }
-  if ((size_t)num_char_printed < wb->buffer_size) {
-    wb->buffer += num_char_printed;
-    wb->buffer_size -= num_char_printed;
-  } else {
-    wb->buffer += wb->buffer_size;
-    wb->buffer_size = 0;
-  }
-  return (long)wb->total;
-}
 
 /*
  * This macro assumes that four variables are already avalible to be changed.
@@ -103,13 +70,13 @@ write_to_buffer(write_buffer_t *wb, const char *fmt, ...)
 static size_t
 oc_rep_to_json_tab(char *buf, size_t buf_size, int tab_depth)
 {
-  write_buffer_t b = {
+  oc_write_buffer_t b = {
     .buffer = buf,
     .buffer_size = buf_size,
     .total = 0,
   };
   for (int i = 0; i < tab_depth; i++) {
-    if (write_to_buffer(&b, "%s", OC_PRETTY_PRINT_TAB_CHARACTER) < 0) {
+    if (oc_buffer_write(&b, "%s", OC_PRETTY_PRINT_TAB_CHARACTER) < 0) {
       return (size_t)-1;
     }
   }

@@ -16,9 +16,10 @@
  *
  ****************************************************************************/
 
-#include "api/oc_buffer_internal.h"
 #include "api/oc_endpoint_internal.h"
 #include "api/oc_events_internal.h"
+#include "api/oc_message_buffer_internal.h"
+#include "api/oc_message_internal.h"
 #include "api/oc_network_events_internal.h"
 #include "messaging/coap/coap.h"
 #include "oc_buffer.h"
