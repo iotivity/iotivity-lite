@@ -50,6 +50,8 @@
 #include <stdexcept>
 #include <vector>
 
+static constexpr size_t kDeviceID = 0;
+
 class TestTlsCertificates : public testing::Test {
 public:
   void SetUp() override
@@ -66,18 +68,16 @@ public:
     cfg.spec_version = "ocf.1.0.0";
     cfg.data_model_version = "ocf.res.1.0.0";
     oc_device_info_t *info = oc_core_add_new_device(cfg);
-    EXPECT_NE(nullptr, info);
+    ASSERT_NE(nullptr, info);
     oc_sec_svr_create();
 
-    EXPECT_EQ(1, oc_core_get_num_devices());
-    device_ = oc_core_get_num_devices() - 1;
-    EXPECT_GE(device_, 0);
+    ASSERT_EQ(1, oc_core_get_num_devices());
 
-    ASSERT_TRUE(mfgcert_.Add(device_));
-    ASSERT_TRUE(subca1_.Add(device_, mfgcert_.CredentialID()));
-    ASSERT_TRUE(idcert_.Add(device_));
-    ASSERT_TRUE(rootca1_.Add(device_));
-    ASSERT_TRUE(rootca2_.Add(device_));
+    ASSERT_TRUE(mfgcert_.Add(kDeviceID));
+    ASSERT_TRUE(subca1_.Add(kDeviceID, mfgcert_.CredentialID()));
+    ASSERT_TRUE(idcert_.Add(kDeviceID));
+    ASSERT_TRUE(rootca1_.Add(kDeviceID));
+    ASSERT_TRUE(rootca2_.Add(kDeviceID));
   }
 
   void TearDown() override
@@ -85,7 +85,7 @@ public:
 #ifdef OC_HAS_FEATURE_PUSH
     oc_push_free();
 #endif /* OC_HAS_FEATURE_PUSH */
-    oc_connectivity_shutdown(device_);
+    oc_connectivity_shutdown(kDeviceID);
     oc_sec_svr_free();
     oc_tls_shutdown();
     oc_core_shutdown();
@@ -94,7 +94,6 @@ public:
     oc_network_event_handler_mutex_destroy();
   }
 
-  int device_{ -1 };
   oc::pki::IdentityCertificate mfgcert_{ "pki_certs/ee.pem",
                                          "pki_certs/key.pem", true };
   oc::pki::IdentityCertificate idcert_{ "pki_certs/certification_tests_ee.pem",
@@ -125,38 +124,38 @@ oc_sec_cred_count(size_t device)
 TEST_F(TestTlsCertificates, ClearCertificates)
 {
   // 4 = 2 root certificates + 1 mfg certs + 1 identity certificate
-  EXPECT_EQ(4, oc_sec_cred_count(device_));
+  ASSERT_EQ(4, oc_sec_cred_count(kDeviceID));
 
   oc_sec_cred_clear(
-    device_, [](const oc_sec_cred_t *, void *) { return false; }, nullptr);
-  EXPECT_EQ(4, oc_sec_cred_count(device_));
+    kDeviceID, [](const oc_sec_cred_t *, void *) { return false; }, nullptr);
+  EXPECT_EQ(4, oc_sec_cred_count(kDeviceID));
 
   EXPECT_NE(nullptr,
-            oc_sec_get_cred_by_credid(mfgcert_.CredentialID(), device_));
+            oc_sec_get_cred_by_credid(mfgcert_.CredentialID(), kDeviceID));
   oc_sec_cred_clear(
-    device_,
+    kDeviceID,
     [](const oc_sec_cred_t *cred, void *data) {
       const auto *cert = static_cast<oc::pki::IdentityCertificate *>(data);
       return cred->credid == cert->CredentialID();
     },
     &mfgcert_);
-  EXPECT_EQ(3, oc_sec_cred_count(device_));
+  EXPECT_EQ(3, oc_sec_cred_count(kDeviceID));
   EXPECT_EQ(nullptr,
-            oc_sec_get_cred_by_credid(mfgcert_.CredentialID(), device_));
+            oc_sec_get_cred_by_credid(mfgcert_.CredentialID(), kDeviceID));
 
   EXPECT_NE(nullptr,
-            oc_sec_get_cred_by_credid(idcert_.CredentialID(), device_));
+            oc_sec_get_cred_by_credid(idcert_.CredentialID(), kDeviceID));
   auto removeMfgCert = [](const oc_sec_cred_t *cred, void *) {
     return cred->credtype == OC_CREDTYPE_CERT &&
            cred->credusage == OC_CREDUSAGE_MFG_CERT;
   };
-  oc_sec_cred_clear(device_, removeMfgCert, nullptr);
-  EXPECT_EQ(3, oc_sec_cred_count(device_));
+  oc_sec_cred_clear(kDeviceID, removeMfgCert, nullptr);
+  EXPECT_EQ(3, oc_sec_cred_count(kDeviceID));
   EXPECT_EQ(nullptr,
-            oc_sec_get_cred_by_credid(mfgcert_.CredentialID(), device_));
+            oc_sec_get_cred_by_credid(mfgcert_.CredentialID(), kDeviceID));
 
-  oc_sec_cred_clear(device_, nullptr, nullptr);
-  EXPECT_EQ(0, oc_sec_cred_count(device_));
+  oc_sec_cred_clear(kDeviceID, nullptr, nullptr);
+  EXPECT_EQ(0, oc_sec_cred_count(kDeviceID));
 }
 
 #ifdef OC_TEST
@@ -164,18 +163,18 @@ TEST_F(TestTlsCertificates, ClearCertificates)
 TEST_F(TestTlsCertificates, RemoveIdentityCertificates)
 {
   EXPECT_TRUE(oc_tls_validate_identity_certs_consistency());
-  EXPECT_TRUE(oc_sec_remove_cred_by_credid(mfgcert_.CredentialID(), device_));
+  EXPECT_TRUE(oc_sec_remove_cred_by_credid(mfgcert_.CredentialID(), kDeviceID));
   EXPECT_TRUE(oc_tls_validate_identity_certs_consistency());
-  EXPECT_TRUE(oc_sec_remove_cred_by_credid(idcert_.CredentialID(), device_));
+  EXPECT_TRUE(oc_sec_remove_cred_by_credid(idcert_.CredentialID(), kDeviceID));
   EXPECT_TRUE(oc_tls_validate_identity_certs_consistency());
 }
 
 TEST_F(TestTlsCertificates, RemoveTrustAnchors)
 {
   EXPECT_TRUE(oc_tls_validate_trust_anchors_consistency());
-  EXPECT_TRUE(oc_sec_remove_cred_by_credid(rootca1_.CredentialID(), device_));
+  EXPECT_TRUE(oc_sec_remove_cred_by_credid(rootca1_.CredentialID(), kDeviceID));
   EXPECT_TRUE(oc_tls_validate_trust_anchors_consistency());
-  EXPECT_TRUE(oc_sec_remove_cred_by_credid(rootca2_.CredentialID(), device_));
+  EXPECT_TRUE(oc_sec_remove_cred_by_credid(rootca2_.CredentialID(), kDeviceID));
   EXPECT_TRUE(oc_tls_validate_trust_anchors_consistency());
 }
 
@@ -203,36 +202,36 @@ test_oc_tls_load_cert_chain(bool exp, size_t device, bool owned)
 
 TEST_F(TestTlsCertificates, LoadClientCertificateToMbedtls)
 {
-  EXPECT_EQ(4, oc_sec_cred_count(device_));
-  test_oc_tls_load_cert_chain_selected(0, device_, mfgcert_.CredentialID(),
+  ASSERT_EQ(4, oc_sec_cred_count(kDeviceID));
+  test_oc_tls_load_cert_chain_selected(0, kDeviceID, mfgcert_.CredentialID(),
                                        oc_tls_load_mfg_cert_chain);
-  test_oc_tls_load_cert_chain_selected(0, device_, -1,
+  test_oc_tls_load_cert_chain_selected(0, kDeviceID, -1,
                                        oc_tls_load_mfg_cert_chain);
-  test_oc_tls_load_cert_chain_selected(-1, device_, -2,
+  test_oc_tls_load_cert_chain_selected(-1, kDeviceID, -2,
                                        oc_tls_load_mfg_cert_chain);
 
-  test_oc_tls_load_cert_chain_selected(0, device_, idcert_.CredentialID(),
+  test_oc_tls_load_cert_chain_selected(0, kDeviceID, idcert_.CredentialID(),
                                        oc_tls_load_identity_cert_chain);
-  test_oc_tls_load_cert_chain_selected(0, device_, -1,
+  test_oc_tls_load_cert_chain_selected(0, kDeviceID, -1,
                                        oc_tls_load_identity_cert_chain);
-  test_oc_tls_load_cert_chain_selected(-1, device_, -2,
+  test_oc_tls_load_cert_chain_selected(-1, kDeviceID, -2,
                                        oc_tls_load_identity_cert_chain);
 
   oc_tls_select_mfg_cert_chain(-2);
   oc_tls_select_identity_cert_chain(-1);
-  test_oc_tls_load_cert_chain(true, device_, true);
+  test_oc_tls_load_cert_chain(true, kDeviceID, true);
   oc_tls_select_identity_cert_chain(idcert_.CredentialID());
-  test_oc_tls_load_cert_chain(true, device_, true);
+  test_oc_tls_load_cert_chain(true, kDeviceID, true);
 
   oc_tls_select_identity_cert_chain(-2);
   oc_tls_select_mfg_cert_chain(-1);
-  test_oc_tls_load_cert_chain(true, device_, true);
+  test_oc_tls_load_cert_chain(true, kDeviceID, true);
   oc_tls_select_mfg_cert_chain(mfgcert_.CredentialID());
-  test_oc_tls_load_cert_chain(true, device_, true);
+  test_oc_tls_load_cert_chain(true, kDeviceID, true);
 
   oc_tls_select_identity_cert_chain(-2);
   oc_tls_select_mfg_cert_chain(-2);
-  test_oc_tls_load_cert_chain(false, device_, true);
+  test_oc_tls_load_cert_chain(false, kDeviceID, true);
 }
 
 TEST_F(TestTlsCertificates, VerifyCredCerts)
@@ -248,13 +247,13 @@ TEST_F(TestTlsCertificates, VerifyCredCerts)
 
   // valid - rootca1_ valid_from: 30.11.2018, valid_to: 27.11.2028
   oc_sec_cred_t *cred =
-    oc_sec_get_cred_by_credid(rootca1_.CredentialID(), device_);
+    oc_sec_get_cred_by_credid(rootca1_.CredentialID(), kDeviceID);
   EXPECT_NE(nullptr, cred);
   EXPECT_EQ(
     0, oc_cred_verify_certificate_chain(cred, verify_cert_validity, nullptr));
 
   // expired - mfgcert_ valid_from: 14.4.2020, valid_to: 14.5.2020
-  cred = oc_sec_get_cred_by_credid(mfgcert_.CredentialID(), device_);
+  cred = oc_sec_get_cred_by_credid(mfgcert_.CredentialID(), kDeviceID);
   EXPECT_NE(nullptr, cred);
   EXPECT_EQ(
     1, oc_cred_verify_certificate_chain(cred, verify_cert_validity, nullptr));

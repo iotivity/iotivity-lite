@@ -157,6 +157,7 @@
 #endif /* OC_INTROSPECTION && OC_IDD_API */
 
 #include <signal.h>
+#include <stdlib.h>
 
 #ifndef DOXYGEN
 // Force doxygen to document static inline

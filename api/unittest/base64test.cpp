@@ -54,6 +54,20 @@ toString(From *arr, size_t arrSize)
   return str;
 }
 
+TEST(B64Test, RFC4648_EncodeFail)
+{
+  std::vector<std::string> inputs = {
+    "foo",
+    "foobar",
+  };
+
+  std::for_each(inputs.begin(), inputs.end(), [](const std::string &str) {
+    auto toEncode = fromString<uint8_t>(str);
+    EXPECT_EQ(-1,
+              oc_base64_encode(toEncode.data(), toEncode.size(), nullptr, 0));
+  });
+}
+
 /*
  * Expected input and output comes from section 10 of RFC4648
  */

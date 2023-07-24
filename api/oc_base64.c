@@ -29,16 +29,13 @@ oc_base64_encode(const uint8_t *input, size_t input_len, uint8_t *output_buffer,
   /* The Base64 alphabet. This table provides a mapping from 6-bit binary
    * values to Base64 characters.
    */
-  uint8_t alphabet[65] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                           'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                           'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-                           'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                           'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-                           'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-                           '8', '9', '+', '/', '=' };
-  uint8_t val = 0;
-  size_t i;
-  int j = 0;
+  const uint8_t alphabet[65] = {
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/', '=',
+  };
 
   /* Calculate the length of the Base64 encoded output.
    * Every sequence of 3 bytes (with padding, if necessary)
@@ -50,13 +47,17 @@ oc_base64_encode(const uint8_t *input, size_t input_len, uint8_t *output_buffer,
   }
 
   /* If the output buffer provided was not large enough, return an error. */
-  if (output_buffer_len < output_len)
+  if (output_buffer_len < output_len) {
     return -1;
+  }
 
   /* handle the case that an empty input is provided */
   if (input_len == 0) {
     output_buffer[0] = '\0';
   }
+  size_t i;
+  int j = 0;
+  uint8_t val = 0;
   /* Process every byte of input by keeping state across 3 byte blocks
    * to capture 4 6-bit binary blocks that each map to a Base64 character.
    */
@@ -70,7 +71,7 @@ oc_base64_encode(const uint8_t *input, size_t input_len, uint8_t *output_buffer,
     if (i % 3 == 0) {
       val = (input[i] >> 2);
       output_buffer[j++] = alphabet[val];
-      val = input[i] << 4;
+      val = (uint8_t)(input[i] << 4);
       val &= 0x30;
     }
     /* This is the second byte of a 3 byte block of input. Combine
@@ -83,7 +84,7 @@ oc_base64_encode(const uint8_t *input, size_t input_len, uint8_t *output_buffer,
     else if (i % 3 == 1) {
       val |= (input[i] >> 4);
       output_buffer[j++] = alphabet[val];
-      val = input[i] << 2;
+      val = (uint8_t)(input[i] << 2);
       val &= 0x3D;
     }
     /* This is the last byte of a 3 byte block of input. Combine
@@ -164,29 +165,30 @@ oc_base64_decode(uint8_t *str, size_t len)
     /* Return an error if we encounter a character that is outside
      * of the Base64 alphabet.
      */
-    else
+    else {
       return -1;
+    }
 
     /* Decode all 4 byte blocks to 3 bytes of binary output by
      * laying out their 6-bit blocks into a sequence of 3 bytes.
      */
     if (i % 4 == 0) {
       /* 1st 6 bits of output byte 1 */
-      val_c = val_s << 2;
+      val_c = (uint8_t)(val_s << 2);
       val_c &= 0xFD;
     } else if (i % 4 == 1) {
       /* Last 2 bits of output byte 1 */
       val_c |= (val_s >> 4);
       str[j++] = val_c;
       /* 1st 4 bits of output byte 2 */
-      val_c = val_s << 4;
+      val_c = (uint8_t)(val_s << 4);
       val_c &= 0xF0;
     } else if (i % 4 == 2) {
       /* Last 4 bits of output byte 2 */
       val_c |= (val_s >> 2);
       str[j++] = val_c;
       /* 1st 2 bits of output byte 3 */
-      val_c = val_s << 6;
+      val_c = (uint8_t)(val_s << 6);
       val_c &= 0xD0;
     } else {
       /* Last 6 bits of output byte 3 */

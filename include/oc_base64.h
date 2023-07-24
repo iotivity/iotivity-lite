@@ -21,6 +21,7 @@
 #ifndef OC_BASE64_H
 #define OC_BASE64_H
 
+#include "util/oc_compiler.h"
 #include <stddef.h>
 #include <stdint.h>
 

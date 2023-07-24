@@ -389,8 +389,7 @@ public:
 
     oc_set_con_res_announced(false);
 
-    int initResult = oc_main_init(&s_handler);
-    if (initResult < 0) {
+    if (oc_main_init(&s_handler) < 0) {
       errorMessage += "Initialization of main server failed";
       s_isServerStarted = false;
       return false;
@@ -517,8 +516,8 @@ ApiResource ApiHelper::s_TestResource{};
 
 class ResourceDiscovered {
 private:
-  std::set<std::string> requiredURI_;
-  std::set<std::string> deviceURI_;
+  std::set<std::string, std::less<>> requiredURI_;
+  std::set<std::string, std::less<>> deviceURI_;
 
   void addRequired(const std::string &uri) { requiredURI_.insert(uri); }
 
@@ -558,8 +557,8 @@ public:
 
 class DevicesDiscovered {
 private:
-  std::set<std::string> requiredDevices_;
-  std::set<std::string> devices_;
+  std::set<std::string, std::less<>> requiredDevices_;
+  std::set<std::string, std::less<>> devices_;
 
 public:
   bool isDone() const
@@ -925,7 +924,8 @@ TEST_F(TestObt, DiscoverUnownedResources)
   for (const auto &device : devices) {
     OC_PRINTF("Discovered unowned device: %s\n", device.c_str());
   }
-  std::set<std::string> deviceUUIDs(devices.begin(), devices.end());
+  std::set<std::string, std::less<>> deviceUUIDs(devices.begin(),
+                                                 devices.end());
   if (ApiHelper::s_LightResource.enabled) {
     EXPECT_EQ(1, deviceUUIDs.count(ApiHelper::s_LightResource.uuid));
     deviceUUIDs.erase(ApiHelper::s_LightResource.uuid);

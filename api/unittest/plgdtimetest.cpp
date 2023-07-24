@@ -487,13 +487,13 @@ TEST_F(TestPlgdTimeWithServer, PostRequestFail)
   ASSERT_TRUE(epOpt.has_value());
   auto ep = std::move(*epOpt);
 
-  bool invoked = false;
   auto post_handler = [](oc_client_response_t *data) {
     oc::TestDevice::Terminate();
     ASSERT_LT(OC_STATUS_NOT_MODIFIED, data->code);
     *static_cast<bool *>(data->user_data) = true;
   };
 
+  bool invoked = false;
   ASSERT_TRUE(oc_init_post(PLGD_TIME_URI, &ep, nullptr, post_handler, HIGH_QOS,
                            &invoked));
   oc_rep_start_root_object();
