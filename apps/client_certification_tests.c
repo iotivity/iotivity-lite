@@ -603,7 +603,8 @@ read_pem(const char *file_path, char *buffer, size_t *buffer_len)
     fclose(fp);
     return -1;
   }
-  if (fread(buffer, 1, pem_len, fp) < (size_t)pem_len) {
+  size_t to_read = (size_t)pem_len;
+  if (fread(buffer, 1, to_read, fp) < (size_t)pem_len) {
     OC_PRINTF("ERROR: unable to read PEM\n");
     fclose(fp);
     return -1;

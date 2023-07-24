@@ -506,7 +506,9 @@ oc_add_collection_v1(oc_resource_t *collection)
 void
 oc_add_collection(oc_resource_t *collection)
 {
-  oc_add_collection_v1(collection);
+  if (!oc_add_collection_v1(collection)) {
+    OC_ERR("failed to add collection");
+  }
 }
 
 oc_resource_t *
