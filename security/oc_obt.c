@@ -45,6 +45,7 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #include "security/oc_sdi_internal.h"
 #include "security/oc_tls_internal.h"
 #include "util/oc_macros_internal.h"
+#include "util/oc_secure_string_internal.h"
 
 #include <assert.h>
 #include <stdlib.h>
@@ -651,7 +652,7 @@ obt_check_owned(oc_client_response_t *data)
   device->ctx = data->user_data;
   if (!oc_do_get("/oic/res", device->endpoint, "rt=oic.r.doxm", &get_endpoints,
                  HIGH_QOS, device)) {
-    OC_ERR("Could not send GET request to retrieve endpoints");
+    OC_ERR("Could not send GET request to /oic/res");
   }
 }
 
@@ -860,19 +861,25 @@ switch_dos(oc_device_t *device, oc_dostype_t dos, oc_obt_status_cb_t cb,
   d->cb.cb = cb;
   d->cb.data = data;
 
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &pstat_POST_dos1_to_dos2,
-                   HIGH_QOS, d)) {
-    oc_rep_start_root_object();
-    oc_rep_set_object(root, dos);
-    oc_rep_set_int(dos, s, dos);
-    oc_rep_close_object(root, dos);
-    oc_rep_end_root_object();
-    if (oc_do_post()) {
-      oc_list_add(oc_switch_dos_ctx_l, d);
-      return d;
-    }
+  if (!oc_init_post("/oic/sec/pstat", ep, NULL, &pstat_POST_dos1_to_dos2,
+                    HIGH_QOS, d)) {
+    OC_ERR("Could not init POST request to /oic/sec/pstat");
+    goto err_switch_dos;
+  }
+  oc_rep_start_root_object();
+  oc_rep_set_object(root, dos);
+  oc_rep_set_int(dos, s, dos);
+  oc_rep_close_object(root, dos);
+  oc_rep_end_root_object();
+  if (!oc_do_post()) {
+    OC_ERR("Could not do POST request to /oic/sec/pstat");
+    goto err_switch_dos;
   }
 
+  oc_list_add(oc_switch_dos_ctx_l, d);
+  return d;
+
+err_switch_dos:
   oc_memb_free(&oc_switch_dos_ctx_m, d);
   return NULL;
 }
@@ -1046,7 +1053,7 @@ device1oscore_cred(oc_client_response_t *data)
   oc_oscoreprov_ctx_t *p = (oc_oscoreprov_ctx_t *)data->user_data;
 
   if (data->code >= OC_STATUS_BAD_REQUEST) {
-    goto error;
+    goto err_device1oscore_cred;
   }
   char d1uuid[OC_UUID_LEN];
   oc_uuid_to_str(&p->device1->uuid, d1uuid, OC_UUID_LEN);
@@ -1054,7 +1061,8 @@ device1oscore_cred(oc_client_response_t *data)
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device2->endpoint);
   if (!oc_init_post("/oic/sec/cred", ep, NULL, &device2oscore_cred, HIGH_QOS,
                     p)) {
-    goto error;
+    OC_ERR("Could not init POST request to /oic/sec/cred");
+    goto err_device1oscore_cred;
   }
 
   oc_rep_start_root_object();
@@ -1091,12 +1099,13 @@ device1oscore_cred(oc_client_response_t *data)
   oc_rep_end_root_object();
 
   if (!oc_do_post()) {
-    goto error;
+    OC_ERR("Could not do POST request to /oic/sec/cred");
+    goto err_device1oscore_cred;
   }
 
   return;
 
-error:
+err_device1oscore_cred:
   free_oscoreprov_ctx(p, -1);
 }
 
@@ -1111,7 +1120,7 @@ device2oscore_RFPRO(int status, void *data)
   p->switch_dos = NULL;
 
   if (status < 0) {
-    goto error;
+    goto err_device2oscore_RFPRO;
   }
 
   gen_oscore_ctxid(p->sendid, false);
@@ -1123,7 +1132,8 @@ device2oscore_RFPRO(int status, void *data)
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
   if (!oc_init_post("/oic/sec/cred", ep, NULL, &device1oscore_cred, HIGH_QOS,
                     p)) {
-    goto error;
+    OC_ERR("Could not init POST request to /oic/sec/cred");
+    goto err_device2oscore_RFPRO;
   }
 
   oc_rep_start_root_object();
@@ -1160,12 +1170,13 @@ device2oscore_RFPRO(int status, void *data)
   oc_rep_end_root_object();
 
   if (!oc_do_post()) {
-    goto error;
+    OC_ERR("Could not do POST request to /oic/sec/cred");
+    goto err_device2oscore_RFPRO;
   }
 
   return;
 
-error:
+err_device2oscore_RFPRO:
   free_oscoreprov_state(p, -1);
 }
 
@@ -1298,7 +1309,7 @@ deviceoscoregroup_RFPRO(int status, void *data)
   p->switch_dos = NULL;
 
   if (status < 0) {
-    goto error;
+    goto err_deviceoscoregroup_RFPRO;
   }
 
   char groupsub[OC_UUID_LEN];
@@ -1306,7 +1317,8 @@ deviceoscoregroup_RFPRO(int status, void *data)
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device->endpoint);
   if (!oc_init_post("/oic/sec/cred", ep, NULL, &deviceoscoregroup_cred,
                     HIGH_QOS, p)) {
-    goto error;
+    OC_ERR("Could not init POST request to /oic/sec/cred");
+    goto err_deviceoscoregroup_RFPRO;
   }
   oc_rep_start_root_object();
   oc_rep_set_array(root, creds);
@@ -1341,12 +1353,13 @@ deviceoscoregroup_RFPRO(int status, void *data)
   oc_rep_end_root_object();
 
   if (!oc_do_post()) {
-    goto error;
+    OC_ERR("Could not do POST request to /oic/sec/cred");
+    goto err_deviceoscoregroup_RFPRO;
   }
 
   return;
 
-error:
+err_deviceoscoregroup_RFPRO:
   free_oscoregroupprov_state(p, -1);
 }
 
@@ -1499,16 +1512,19 @@ device2_cred(oc_client_response_t *data)
   }
 
   oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data->user_data;
-
   if (data->code >= OC_STATUS_BAD_REQUEST) {
-    free_credprov_ctx(p, -1);
-    return;
+    goto err_device2_cred;
   }
 
   p->switch_dos = switch_dos(p->device1, OC_DOS_RFNOP, device1_RFNOP, p);
   if (!p->switch_dos) {
-    free_credprov_ctx(p, -1);
+    goto err_device2_cred;
   }
+
+  return;
+
+err_device2_cred:
+  free_credprov_ctx(p, -1);
 }
 
 static void
@@ -1521,8 +1537,7 @@ device1_cred(oc_client_response_t *data)
   oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data->user_data;
 
   if (data->code >= OC_STATUS_BAD_REQUEST) {
-    free_credprov_ctx(p, -1);
-    return;
+    goto err_device1_cred;
   }
 
   char d1uuid[OC_UUID_LEN];
@@ -1530,28 +1545,34 @@ device1_cred(oc_client_response_t *data)
 
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device2->endpoint);
 
-  if (oc_init_post("/oic/sec/cred", ep, NULL, &device2_cred, HIGH_QOS, p)) {
-    oc_rep_start_root_object();
-    oc_rep_set_array(root, creds);
-    oc_rep_object_array_start_item(creds);
+  if (!oc_init_post("/oic/sec/cred", ep, NULL, &device2_cred, HIGH_QOS, p)) {
+    OC_ERR("Could not init POST request to /oic/sec/cred");
+    goto err_device1_cred;
+  }
+  oc_rep_start_root_object();
+  oc_rep_set_array(root, creds);
+  oc_rep_object_array_start_item(creds);
 
-    oc_rep_set_int(creds, credtype, 1);
-    oc_rep_set_text_string(creds, subjectuuid, d1uuid);
+  oc_rep_set_int(creds, credtype, 1);
+  oc_rep_set_text_string(creds, subjectuuid, d1uuid);
 
-    oc_rep_set_object(creds, privatedata);
-    oc_rep_set_byte_string(privatedata, data, p->key, OC_ARRAY_SIZE(p->key));
-    oc_rep_set_text_string_v1(privatedata, encoding, OC_ENCODING_RAW_STR,
-                              OC_CHAR_ARRAY_LEN(OC_ENCODING_RAW_STR));
-    oc_rep_close_object(creds, privatedata);
+  oc_rep_set_object(creds, privatedata);
+  oc_rep_set_byte_string(privatedata, data, p->key, OC_ARRAY_SIZE(p->key));
+  oc_rep_set_text_string_v1(privatedata, encoding, OC_ENCODING_RAW_STR,
+                            OC_CHAR_ARRAY_LEN(OC_ENCODING_RAW_STR));
+  oc_rep_close_object(creds, privatedata);
 
-    oc_rep_object_array_end_item(creds);
-    oc_rep_close_array(root, creds);
-    oc_rep_end_root_object();
-    if (oc_do_post()) {
-      return;
-    }
+  oc_rep_object_array_end_item(creds);
+  oc_rep_close_array(root, creds);
+  oc_rep_end_root_object();
+  if (!oc_do_post()) {
+    OC_ERR("Could not do POST request to /oic/sec/cred");
+    goto err_device1_cred;
   }
 
+  return;
+
+err_device1_cred:
   free_credprov_ctx(p, -1);
 }
 
@@ -1565,37 +1586,46 @@ device2_RFPRO(int status, void *data)
   oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data;
   p->switch_dos = NULL;
 
-  if (status >= 0) {
-    oc_random_buffer(p->key, OC_ARRAY_SIZE(p->key));
+  if (status < 0) {
+    OC_DBG("Could not switch device2 to RFPRO");
+    goto err_device2_RFPRO;
+  }
+  oc_random_buffer(p->key, OC_ARRAY_SIZE(p->key));
 
-    char d2uuid[OC_UUID_LEN];
-    oc_uuid_to_str(&p->device2->uuid, d2uuid, OC_UUID_LEN);
+  char d2uuid[OC_UUID_LEN];
+  oc_uuid_to_str(&p->device2->uuid, d2uuid, OC_UUID_LEN);
 
-    const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
 
-    if (oc_init_post("/oic/sec/cred", ep, NULL, &device1_cred, HIGH_QOS, p)) {
-      oc_rep_start_root_object();
-      oc_rep_set_array(root, creds);
-      oc_rep_object_array_start_item(creds);
+  if (!oc_init_post("/oic/sec/cred", ep, NULL, &device1_cred, HIGH_QOS, p)) {
+    OC_ERR("Could not init POST request to /oic/sec/cred");
+    goto err_device2_RFPRO;
+  }
+  oc_rep_start_root_object();
+  oc_rep_set_array(root, creds);
+  oc_rep_object_array_start_item(creds);
 
-      oc_rep_set_int(creds, credtype, 1);
-      oc_rep_set_text_string(creds, subjectuuid, d2uuid);
+  oc_rep_set_int(creds, credtype, 1);
+  oc_rep_set_text_string_v1(creds, subjectuuid, d2uuid,
+                            oc_strnlen(d2uuid, OC_UUID_LEN));
 
-      oc_rep_set_object(creds, privatedata);
-      oc_rep_set_byte_string(privatedata, data, p->key, OC_ARRAY_SIZE(p->key));
-      oc_rep_set_text_string_v1(privatedata, encoding, OC_ENCODING_RAW_STR,
-                                OC_CHAR_ARRAY_LEN(OC_ENCODING_RAW_STR));
-      oc_rep_close_object(creds, privatedata);
+  oc_rep_set_object(creds, privatedata);
+  oc_rep_set_byte_string(privatedata, data, p->key, OC_ARRAY_SIZE(p->key));
+  oc_rep_set_text_string_v1(privatedata, encoding, OC_ENCODING_RAW_STR,
+                            OC_CHAR_ARRAY_LEN(OC_ENCODING_RAW_STR));
+  oc_rep_close_object(creds, privatedata);
 
-      oc_rep_object_array_end_item(creds);
-      oc_rep_close_array(root, creds);
-      oc_rep_end_root_object();
-      if (oc_do_post()) {
-        return;
-      }
-    }
+  oc_rep_object_array_end_item(creds);
+  oc_rep_close_array(root, creds);
+  oc_rep_end_root_object();
+  if (!oc_do_post()) {
+    OC_ERR("Could not do POST request to /oic/sec/cred");
+    goto err_device2_RFPRO;
   }
 
+  return;
+
+err_device2_RFPRO:
   free_credprov_state(p, -1);
 }
 
@@ -1770,36 +1800,41 @@ device_cred(oc_client_response_t *data)
   /**  6) post acl2 with auth-crypt RW ACE for /oic/sec/roles
    */
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
-  if (oc_init_post("/oic/sec/acl2", ep, NULL, &device_authcrypt_roles, HIGH_QOS,
-                   p)) {
-    oc_rep_start_root_object();
-
-    oc_rep_set_array(root, aclist2);
-    oc_rep_object_array_start_item(aclist2);
-
-    oc_rep_set_object(aclist2, subject);
-    oc_rep_set_text_string_v1(subject, conntype, "auth-crypt",
-                              OC_CHAR_ARRAY_LEN("auth-crypt"));
-    oc_rep_close_object(aclist2, subject);
-
-    oc_rep_set_array(aclist2, resources);
-    oc_rep_object_array_start_item(resources);
-    oc_rep_set_text_string_v1(resources, href, OCF_SEC_ROLES_URI,
-                              OC_CHAR_ARRAY_LEN(OCF_SEC_ROLES_URI));
-    oc_rep_object_array_end_item(resources);
-    oc_rep_close_array(aclist2, resources);
-
-    oc_rep_set_uint(aclist2, permission, OC_PERM_RETRIEVE | OC_PERM_UPDATE);
-
-    oc_rep_object_array_end_item(aclist2);
-    oc_rep_close_array(root, aclist2);
-
-    oc_rep_end_root_object();
-
-    if (oc_do_post()) {
-      return;
-    }
+  if (!oc_init_post("/oic/sec/acl2", ep, NULL, &device_authcrypt_roles,
+                    HIGH_QOS, p)) {
+    OC_ERR("Could not init POST request to /oic/sec/acl2");
+    goto err_device_cred;
   }
+  oc_rep_start_root_object();
+
+  oc_rep_set_array(root, aclist2);
+  oc_rep_object_array_start_item(aclist2);
+
+  oc_rep_set_object(aclist2, subject);
+  oc_rep_set_text_string_v1(subject, conntype, "auth-crypt",
+                            OC_CHAR_ARRAY_LEN("auth-crypt"));
+  oc_rep_close_object(aclist2, subject);
+
+  oc_rep_set_array(aclist2, resources);
+  oc_rep_object_array_start_item(resources);
+  oc_rep_set_text_string_v1(resources, href, OCF_SEC_ROLES_URI,
+                            OC_CHAR_ARRAY_LEN(OCF_SEC_ROLES_URI));
+  oc_rep_object_array_end_item(resources);
+  oc_rep_close_array(aclist2, resources);
+
+  oc_rep_set_uint(aclist2, permission, OC_PERM_RETRIEVE | OC_PERM_UPDATE);
+
+  oc_rep_object_array_end_item(aclist2);
+  oc_rep_close_array(root, aclist2);
+
+  oc_rep_end_root_object();
+
+  if (!oc_do_post()) {
+    OC_ERR("Could not do POST request to /oic/sec/acl2");
+    goto err_device_cred;
+  }
+
+  return;
 
 err_device_cred:
   free_credprov_ctx(p, -1);
@@ -1922,6 +1957,7 @@ device_CSR(oc_client_response_t *data)
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
 
   if (!oc_init_post("/oic/sec/cred", ep, NULL, &device_cred, HIGH_QOS, p)) {
+    OC_ERR("Could not init POST request to /oic/sec/cred");
     goto err_device_CSR;
   }
   oc_rep_start_root_object();
@@ -1947,9 +1983,12 @@ device_CSR(oc_client_response_t *data)
   oc_rep_object_array_end_item(creds);
   oc_rep_close_array(root, creds);
   oc_rep_end_root_object();
-  if (oc_do_post()) {
-    return;
+  if (!oc_do_post()) {
+    OC_ERR("Could not do POST request to /oic/sec/cred");
+    goto err_device_CSR;
   }
+
+  return;
 
 err_device_CSR:
   free_credprov_state(p, -1);
@@ -1971,9 +2010,12 @@ device_root(oc_client_response_t *data)
   /**  4) get csr
    */
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
-  if (oc_do_get(OCF_SEC_CSR_URI, ep, NULL, &device_CSR, HIGH_QOS, p)) {
-    return;
+  if (!oc_do_get(OCF_SEC_CSR_URI, ep, NULL, &device_CSR, HIGH_QOS, p)) {
+    OC_ERR("Could not issue GET request to /oic/sec/csr");
+    goto err_device_root;
   }
+
+  return;
 
 err_device_root:
   free_credprov_ctx(p, -1);
@@ -1989,44 +2031,49 @@ device_RFPRO(int status, void *data)
   oc_credprov_ctx_t *p = (oc_credprov_ctx_t *)data;
 
   p->switch_dos = NULL;
-  if (status >= 0) {
-    const oc_sec_cred_t *root =
-      oc_sec_get_cred_by_credid(g_root_cert_credid, 0);
-    if (!root) {
-      goto err_device_RFPRO;
-    }
-
-    /**  3) post cred with trustca
-     */
-    const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
-    if (oc_init_post("/oic/sec/cred", ep, NULL, &device_root, HIGH_QOS, p)) {
-      oc_rep_start_root_object();
-      oc_rep_set_array(root, creds);
-      oc_rep_object_array_start_item(creds);
-
-      oc_rep_set_int(creds, credtype, OC_CREDTYPE_CERT);
-      oc_rep_set_text_string_v1(creds, subjectuuid, "*",
-                                OC_CHAR_ARRAY_LEN("*"));
-
-      oc_rep_set_object(creds, publicdata);
-      oc_rep_set_text_string_v1(publicdata, data,
-                                oc_string(root->publicdata.data),
-                                oc_string_len(root->publicdata.data));
-      oc_rep_set_text_string_v1(publicdata, encoding, OC_ENCODING_PEM_STR,
-                                OC_CHAR_ARRAY_LEN(OC_ENCODING_PEM_STR));
-      oc_rep_close_object(creds, publicdata);
-
-      oc_rep_set_text_string_v1(creds, credusage, OC_CREDUSAGE_TRUSTCA_STR,
-                                OC_CHAR_ARRAY_LEN(OC_CREDUSAGE_TRUSTCA_STR));
-
-      oc_rep_object_array_end_item(creds);
-      oc_rep_close_array(root, creds);
-      oc_rep_end_root_object();
-      if (oc_do_post()) {
-        return;
-      }
-    }
+  if (status < 0) {
+    OC_DBG("Could not switch device to RFPRO");
+    goto err_device_RFPRO;
   }
+  const oc_sec_cred_t *root = oc_sec_get_cred_by_credid(g_root_cert_credid, 0);
+  if (!root) {
+    OC_ERR("Could not get root cert");
+    goto err_device_RFPRO;
+  }
+
+  /**  3) post cred with trustca
+   */
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
+  if (!oc_init_post("/oic/sec/cred", ep, NULL, &device_root, HIGH_QOS, p)) {
+    OC_ERR("Could not init POST request to /oic/sec/cred");
+    goto err_device_RFPRO;
+  }
+  oc_rep_start_root_object();
+  oc_rep_set_array(root, creds);
+  oc_rep_object_array_start_item(creds);
+
+  oc_rep_set_int(creds, credtype, OC_CREDTYPE_CERT);
+  oc_rep_set_text_string_v1(creds, subjectuuid, "*", OC_CHAR_ARRAY_LEN("*"));
+
+  oc_rep_set_object(creds, publicdata);
+  oc_rep_set_text_string_v1(publicdata, data, oc_string(root->publicdata.data),
+                            oc_string_len(root->publicdata.data));
+  oc_rep_set_text_string_v1(publicdata, encoding, OC_ENCODING_PEM_STR,
+                            OC_CHAR_ARRAY_LEN(OC_ENCODING_PEM_STR));
+  oc_rep_close_object(creds, publicdata);
+
+  oc_rep_set_text_string_v1(creds, credusage, OC_CREDUSAGE_TRUSTCA_STR,
+                            OC_CHAR_ARRAY_LEN(OC_CREDUSAGE_TRUSTCA_STR));
+
+  oc_rep_object_array_end_item(creds);
+  oc_rep_close_array(root, creds);
+  oc_rep_end_root_object();
+  if (!oc_do_post()) {
+    OC_ERR("Could not do POST request to /oic/sec/cred");
+    goto err_device_RFPRO;
+  }
+
+  return;
 
 err_device_RFPRO:
   free_credprov_state(p, -1);
@@ -2105,6 +2152,7 @@ oc_obt_provision_role_certificate(oc_role_t *roles, const oc_uuid_t *uuid,
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (!oc_do_get("/oic/sec/doxm", ep, NULL, &supports_cert_creds, HIGH_QOS,
                  p)) {
+    OC_ERR("Could not issue GET request to /oic/sec/doxm");
     oc_memb_free(&oc_credprov_ctx_m, p);
     return -1;
   }
@@ -2152,9 +2200,11 @@ oc_obt_provision_identity_certificate(const oc_uuid_t *uuid,
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (!oc_do_get("/oic/sec/doxm", ep, NULL, &supports_cert_creds, HIGH_QOS,
                  p)) {
+    OC_ERR("Could not issue GET request to /oic/sec/doxm");
     oc_memb_free(&oc_credprov_ctx_m, p);
     return -1;
   }
+
   oc_list_add(oc_credprov_ctx_l, p);
   return 0;
 }
@@ -2206,42 +2256,47 @@ trustanchor_device_RFPRO(int status, void *response_data)
   }
 
   oc_trustanchor_ctx_t *p = (oc_trustanchor_ctx_t *)response_data;
-  if (status >= 0) {
-    const oc_sec_cred_t *root =
-      oc_sec_get_cred_by_credid(g_root_cert_credid, 0);
-    if (!root) {
-      goto err_trustanchor_device_RFPRO;
-    }
-
-    /**  3) post cred with trustca
-     */
-    const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
-    if (oc_init_post("/oic/sec/cred", ep, NULL, &trustanchor_device_RFNOP,
-                     HIGH_QOS, p)) {
-      oc_rep_start_root_object();
-      oc_rep_set_array(root, creds);
-      oc_rep_object_array_start_item(creds);
-
-      oc_rep_set_int(creds, credtype, OC_CREDTYPE_CERT);
-      oc_rep_set_text_string(creds, subjectuuid, p->trustanchor_subject);
-
-      oc_rep_set_object(creds, publicdata);
-      oc_rep_set_text_string(publicdata, data, p->trustanchor);
-      oc_rep_set_text_string_v1(publicdata, encoding, OC_ENCODING_PEM_STR,
-                                OC_CHAR_ARRAY_LEN(OC_ENCODING_PEM_STR));
-      oc_rep_close_object(creds, publicdata);
-
-      oc_rep_set_text_string_v1(creds, credusage, OC_CREDUSAGE_TRUSTCA_STR,
-                                OC_CHAR_ARRAY_LEN(OC_CREDUSAGE_TRUSTCA_STR));
-
-      oc_rep_object_array_end_item(creds);
-      oc_rep_close_array(root, creds);
-      oc_rep_end_root_object();
-      if (oc_do_post()) {
-        return;
-      }
-    }
+  if (status < 0) {
+    goto err_trustanchor_device_RFPRO;
   }
+  const oc_sec_cred_t *root = oc_sec_get_cred_by_credid(g_root_cert_credid, 0);
+  if (!root) {
+    goto err_trustanchor_device_RFPRO;
+  }
+
+  /**  3) post cred with trustca
+   */
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
+  if (!oc_init_post("/oic/sec/cred", ep, NULL, &trustanchor_device_RFNOP,
+                    HIGH_QOS, p)) {
+    OC_ERR("Could not init POST request to /oic/sec/cred");
+    goto err_trustanchor_device_RFPRO;
+  }
+  oc_rep_start_root_object();
+  oc_rep_set_array(root, creds);
+  oc_rep_object_array_start_item(creds);
+
+  oc_rep_set_int(creds, credtype, OC_CREDTYPE_CERT);
+  oc_rep_set_text_string(creds, subjectuuid, p->trustanchor_subject);
+
+  oc_rep_set_object(creds, publicdata);
+  oc_rep_set_text_string(publicdata, data, p->trustanchor);
+  oc_rep_set_text_string_v1(publicdata, encoding, OC_ENCODING_PEM_STR,
+                            OC_CHAR_ARRAY_LEN(OC_ENCODING_PEM_STR));
+  oc_rep_close_object(creds, publicdata);
+
+  oc_rep_set_text_string_v1(creds, credusage, OC_CREDUSAGE_TRUSTCA_STR,
+                            OC_CHAR_ARRAY_LEN(OC_CREDUSAGE_TRUSTCA_STR));
+
+  oc_rep_object_array_end_item(creds);
+  oc_rep_close_array(root, creds);
+  oc_rep_end_root_object();
+  if (!oc_do_post()) {
+    OC_ERR("Could not do POST request to /oic/sec/cred");
+    goto err_trustanchor_device_RFPRO;
+  }
+
+  return;
 
 err_trustanchor_device_RFPRO:
   free_trustanchor_state(p, -1);
@@ -2319,6 +2374,7 @@ oc_obt_provision_trust_anchor(const char *certificate, size_t certificate_size,
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (!oc_do_get("/oic/sec/doxm", ep, NULL, &trustanchor_supports_cert_creds,
                  HIGH_QOS, p)) {
+    OC_ERR("Could not issue GET request to /oic/sec/doxm");
     oc_memb_free(&oc_installtrust_ctx_m, p);
     return -1;
   }
@@ -2568,92 +2624,96 @@ provision_ace(int status, void *data)
   r->switch_dos = NULL;
 
   if (status < 0) {
-    free_acl2prov_ctx(r, -1);
-    return;
+    goto err_provision_ace;
   }
   const oc_device_t *device = r->device;
   oc_sec_ace_t *ace = r->ace;
 
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/acl2", ep, NULL, &acl2_response, HIGH_QOS, r)) {
-    oc_rep_start_root_object();
-
-    oc_rep_set_array(root, aclist2);
-    oc_rep_object_array_start_item(aclist2);
-
-    oc_rep_set_object(aclist2, subject);
-    switch (ace->subject_type) {
-    case OC_SUBJECT_UUID: {
-      char uuid[OC_UUID_LEN];
-      oc_uuid_to_str(&ace->subject.uuid, uuid, OC_UUID_LEN);
-      oc_rep_set_text_string(subject, uuid, uuid);
-    } break;
-    case OC_SUBJECT_CONN: {
-      switch (ace->subject.conn) {
-      case OC_CONN_AUTH_CRYPT:
-        oc_rep_set_text_string_v1(subject, conntype, "auth-crypt",
-                                  OC_CHAR_ARRAY_LEN("auth-crypt"));
-        break;
-      case OC_CONN_ANON_CLEAR:
-        oc_rep_set_text_string_v1(subject, conntype, "anon-clear",
-                                  OC_CHAR_ARRAY_LEN("anon-clear"));
-        break;
-      }
-    } break;
-    case OC_SUBJECT_ROLE: {
-      oc_rep_set_text_string_v1(subject, role,
-                                oc_string(ace->subject.role.role),
-                                oc_string_len(ace->subject.role.role));
-      if (oc_string_len(ace->subject.role.authority) > 0) {
-        oc_rep_set_text_string_v1(subject, authority,
-                                  oc_string(ace->subject.role.authority),
-                                  oc_string_len(ace->subject.role.authority));
-      }
-    } break;
-    default:
-      break;
-    }
-    oc_rep_close_object(aclist2, subject);
-
-    oc_ace_res_t *res = (oc_ace_res_t *)oc_list_head(ace->resources);
-    oc_rep_set_array(aclist2, resources);
-    while (res != NULL) {
-      oc_rep_object_array_start_item(resources);
-      if (oc_string_len(res->href) > 0) {
-        oc_rep_set_text_string_v1(resources, href, oc_string(res->href),
-                                  oc_string_len(res->href));
-      } else {
-        switch (res->wildcard) {
-        case OC_ACE_WC_ALL_SECURED:
-          oc_rep_set_text_string_v1(resources, wc, "+", OC_CHAR_ARRAY_LEN("+"));
-          break;
-        case OC_ACE_WC_ALL_PUBLIC:
-          oc_rep_set_text_string_v1(resources, wc, "-", OC_CHAR_ARRAY_LEN("-"));
-          break;
-        case OC_ACE_WC_ALL:
-          oc_rep_set_text_string_v1(resources, wc, "*", OC_CHAR_ARRAY_LEN("*"));
-          break;
-        default:
-          break;
-        }
-      }
-      oc_rep_object_array_end_item(resources);
-      res = res->next;
-    }
-    oc_rep_close_array(aclist2, resources);
-
-    oc_rep_set_uint(aclist2, permission, ace->permission);
-
-    oc_rep_object_array_end_item(aclist2);
-    oc_rep_close_array(root, aclist2);
-
-    oc_rep_end_root_object();
-
-    if (oc_do_post()) {
-      return;
-    }
+  if (!oc_init_post("/oic/sec/acl2", ep, NULL, &acl2_response, HIGH_QOS, r)) {
+    OC_ERR("Could not init POST request to /oic/sec/acl2");
+    goto err_provision_ace;
   }
 
+  oc_rep_start_root_object();
+  oc_rep_set_array(root, aclist2);
+  oc_rep_object_array_start_item(aclist2);
+
+  oc_rep_set_object(aclist2, subject);
+  switch (ace->subject_type) {
+  case OC_SUBJECT_UUID: {
+    char uuid[OC_UUID_LEN];
+    oc_uuid_to_str(&ace->subject.uuid, uuid, OC_UUID_LEN);
+    oc_rep_set_text_string_v1(subject, uuid, uuid, OC_UUID_LEN);
+  } break;
+  case OC_SUBJECT_CONN: {
+    switch (ace->subject.conn) {
+    case OC_CONN_AUTH_CRYPT:
+      oc_rep_set_text_string_v1(subject, conntype, "auth-crypt",
+                                OC_CHAR_ARRAY_LEN("auth-crypt"));
+      break;
+    case OC_CONN_ANON_CLEAR:
+      oc_rep_set_text_string_v1(subject, conntype, "anon-clear",
+                                OC_CHAR_ARRAY_LEN("anon-clear"));
+      break;
+    }
+  } break;
+  case OC_SUBJECT_ROLE: {
+    oc_rep_set_text_string_v1(subject, role, oc_string(ace->subject.role.role),
+                              oc_string_len(ace->subject.role.role));
+    if (oc_string_len(ace->subject.role.authority) > 0) {
+      oc_rep_set_text_string_v1(subject, authority,
+                                oc_string(ace->subject.role.authority),
+                                oc_string_len(ace->subject.role.authority));
+    }
+  } break;
+  default:
+    break;
+  }
+  oc_rep_close_object(aclist2, subject);
+
+  oc_ace_res_t *res = (oc_ace_res_t *)oc_list_head(ace->resources);
+  oc_rep_set_array(aclist2, resources);
+  while (res != NULL) {
+    oc_rep_object_array_start_item(resources);
+    if (oc_string_len(res->href) > 0) {
+      oc_rep_set_text_string_v1(resources, href, oc_string(res->href),
+                                oc_string_len(res->href));
+    } else {
+      switch (res->wildcard) {
+      case OC_ACE_WC_ALL_SECURED:
+        oc_rep_set_text_string_v1(resources, wc, "+", OC_CHAR_ARRAY_LEN("+"));
+        break;
+      case OC_ACE_WC_ALL_PUBLIC:
+        oc_rep_set_text_string_v1(resources, wc, "-", OC_CHAR_ARRAY_LEN("-"));
+        break;
+      case OC_ACE_WC_ALL:
+        oc_rep_set_text_string_v1(resources, wc, "*", OC_CHAR_ARRAY_LEN("*"));
+        break;
+      default:
+        break;
+      }
+    }
+    oc_rep_object_array_end_item(resources);
+    res = res->next;
+  }
+  oc_rep_close_array(aclist2, resources);
+
+  oc_rep_set_uint(aclist2, permission, ace->permission);
+
+  oc_rep_object_array_end_item(aclist2);
+  oc_rep_close_array(root, aclist2);
+
+  oc_rep_end_root_object();
+
+  if (!oc_do_post()) {
+    OC_ERR("Could not do POST request to /oic/sec/acl2");
+    goto err_provision_ace;
+  }
+
+  return;
+
+err_provision_ace:
   free_acl2prov_ctx(r, -1);
 }
 
@@ -2932,12 +2992,13 @@ oc_obt_retrieve_creds(const oc_uuid_t *uuid, oc_obt_creds_cb_t cb, void *data)
 
   oc_tls_select_psk_ciphersuite();
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_do_get("/oic/sec/cred", ep, NULL, &cred_rsrc, HIGH_QOS, r)) {
-    oc_list_add(oc_credret_ctx_l, r);
-    return 0;
+  if (!oc_do_get("/oic/sec/cred", ep, NULL, &cred_rsrc, HIGH_QOS, r)) {
+    OC_ERR("could not issue GET request to /oic/sec/cred");
+    oc_memb_free(&oc_credret_ctx_m, r);
+    return -1;
   }
 
-  oc_memb_free(&oc_credret_ctx_m, r);
+  oc_list_add(oc_credret_ctx_l, r);
   return 0;
 }
 
@@ -3013,15 +3074,21 @@ creddel_RFPRO(int status, void *data)
   oc_creddel_ctx_t *p = (oc_creddel_ctx_t *)data;
 
   p->switch_dos = NULL;
-  if (status >= 0) {
-    char query[64];
-    snprintf(query, 64, "credid=%d", p->credid);
-    const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device->endpoint);
-    if (oc_do_delete("/oic/sec/cred", ep, query, &cred_del, HIGH_QOS, p)) {
-      return;
-    }
+  if (status < 0) {
+    OC_DBG("oc_obt: could not switch to RFPRO");
+    goto err_creddel_RFPRO;
+  }
+  char query[64];
+  snprintf(query, 64, "credid=%d", p->credid);
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device->endpoint);
+  if (!oc_do_delete("/oic/sec/cred", ep, query, &cred_del, HIGH_QOS, p)) {
+    OC_ERR("could not issue DELETE request to /oic/sec/cred");
+    goto err_creddel_RFPRO;
   }
 
+  return;
+
+err_creddel_RFPRO:
   free_creddel_ctx(p, -1);
 }
 
@@ -3258,13 +3325,13 @@ oc_obt_retrieve_acl(const oc_uuid_t *uuid, oc_obt_acl_cb_t cb, void *data)
 
   oc_tls_select_psk_ciphersuite();
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_do_get("/oic/sec/acl2", ep, NULL, &acl2_rsrc, HIGH_QOS, r)) {
-    oc_list_add(oc_aclret_ctx_l, r);
-    return 0;
+  if (!oc_do_get("/oic/sec/acl2", ep, NULL, &acl2_rsrc, HIGH_QOS, r)) {
+    OC_ERR("could not issue GET request to /oic/sec/acl2");
+    oc_memb_free(&oc_aclret_ctx_m, r);
+    return -1;
   }
 
-  oc_memb_free(&oc_aclret_ctx_m, r);
-
+  oc_list_add(oc_aclret_ctx_l, r);
   return 0;
 }
 
@@ -3338,17 +3405,22 @@ acedel_RFPRO(int status, void *data)
   }
 
   oc_acedel_ctx_t *p = (oc_acedel_ctx_t *)data;
-
   p->switch_dos = NULL;
-  if (status >= 0) {
-    char query[64];
-    snprintf(query, 64, "aceid=%d", p->aceid);
-    const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device->endpoint);
-    if (oc_do_delete("/oic/sec/acl2", ep, query, &ace_del, HIGH_QOS, p)) {
-      return;
-    }
+  if (status < 0) {
+    OC_DBG("oc_obt: could not switch to RFPRO");
+    goto err_acedel_RFPRO;
+  }
+  char query[64];
+  snprintf(query, 64, "aceid=%d", p->aceid);
+  const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device->endpoint);
+  if (!oc_do_delete("/oic/sec/acl2", ep, query, &ace_del, HIGH_QOS, p)) {
+    OC_ERR("could not issue DELETE request to /oic/sec/acl2");
+    goto err_acedel_RFPRO;
   }
 
+  return;
+
+err_acedel_RFPRO:
   free_acedel_ctx(p, -1);
 }
 
@@ -3431,24 +3503,22 @@ oc_obt_update_cloud_conf_device(const oc_uuid_t *uuid, const char *url,
   OC_DBG("apn %s", apn);
   OC_DBG("cis %s", cis);
   OC_DBG("sid %s", sid);
-  if (oc_init_post(url, ep, NULL, cb, LOW_QOS, user_data)) {
-    oc_rep_start_root_object();
-    oc_rep_set_text_string(root, at, at);
-    oc_rep_set_text_string(root, apn, apn);
-    oc_rep_set_text_string(root, cis, cis);
-    oc_rep_set_text_string(root, sid, sid);
-    oc_rep_end_root_object();
-    if (oc_do_post())
-      OC_DBG("Sent POST request");
-    else {
-      OC_ERR("Could not send POST request");
-      return -1;
-    }
-  } else {
+  if (!oc_init_post(url, ep, NULL, cb, LOW_QOS, user_data)) {
     OC_ERR("Could not init POST request");
     return -1;
   }
+  oc_rep_start_root_object();
+  oc_rep_set_text_string(root, at, at);
+  oc_rep_set_text_string(root, apn, apn);
+  oc_rep_set_text_string(root, cis, cis);
+  oc_rep_set_text_string(root, sid, sid);
+  oc_rep_end_root_object();
+  if (!oc_do_post()) {
+    OC_ERR("Could not send POST request");
+    return -1;
+  }
 
+  OC_DBG("Sent POST request");
   return 0;
 }
 
@@ -3458,7 +3528,6 @@ oc_obt_retrieve_cloud_conf_device(const oc_uuid_t *uuid, const char *url,
 {
   // TODO get the URL from the device
   // char url[200] = "/CoapCloudConfResURI";
-  int err = 0;
 
   // oc_device_t* device = oc_obt_get_cached_device_handle(uuid);
   const oc_device_t *device = oc_obt_get_owned_device_handle(uuid);
@@ -3477,11 +3546,12 @@ oc_obt_retrieve_cloud_conf_device(const oc_uuid_t *uuid, const char *url,
     return -1;
   }
 
-  if (oc_do_get(url, ep, NULL, cb, LOW_QOS, user_data)) {
-    err = -1;
+  if (!oc_do_get(url, ep, NULL, cb, LOW_QOS, user_data)) {
+    OC_ERR("Could not send GET request");
+    return -1;
   }
 
-  return err;
+  return 0;
 }
 
 int
@@ -3499,8 +3569,9 @@ oc_obt_retrieve_d2dserverlist(const oc_uuid_t *uuid, oc_response_handler_t cb,
 
   oc_tls_select_psk_ciphersuite();
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_do_get("/d2dserverlist", ep, NULL, cb, LOW_QOS, data)) {
-    return 0;
+  if (!oc_do_get("/d2dserverlist", ep, NULL, cb, LOW_QOS, data)) {
+    OC_ERR("Could not send GET request to /d2dserverlist");
+    return -1;
   }
 
   return 0;
@@ -3527,25 +3598,21 @@ oc_obt_post_d2dserverlist(const oc_uuid_t *uuid, const char *query,
     return -1;
   }
 
-  if (oc_init_post(url, ep, query, cb, LOW_QOS, user_data)) {
-    if (oc_do_post())
-      OC_DBG("Sent POST request %s?%s", url, query);
-    else {
-      OC_ERR("Could not send POST request");
-      return -1;
-    }
-  } else {
+  if (!oc_init_post(url, ep, query, cb, LOW_QOS, user_data)) {
     OC_ERR("Could not init POST request");
     return -1;
   }
+  if (!oc_do_post()) {
+    OC_ERR("Could not send POST request");
+    return -1;
+  }
 
+  OC_DBG("Sent POST request %s?%s", url, query);
   return 0;
 }
 
-/* General GET, POST and DELETE */
-int
-oc_obt_general_get(const oc_uuid_t *uuid, const char *url,
-                   oc_response_handler_t cb, void *data)
+static const oc_endpoint_t *
+obt_get_endpoint(const oc_uuid_t *uuid)
 {
   const oc_device_t *device;
   if (!oc_obt_is_owned_device(uuid)) {
@@ -3553,26 +3620,35 @@ oc_obt_general_get(const oc_uuid_t *uuid, const char *url,
   } else {
     device = oc_obt_get_owned_device_handle(uuid);
   }
-  if (!device) {
-    return -1;
+  if (device == NULL) {
+    return NULL;
   }
 
   char di[OC_UUID_LEN];
   oc_uuid_to_str(&(device->uuid), di, OC_ARRAY_SIZE(di));
   OC_DBG("[C] Target uuid = %s", di);
 
-  oc_tls_select_psk_ciphersuite();
-
-  const oc_endpoint_t *ep;
   if (!oc_obt_is_owned_device(uuid)) {
-    ep = oc_obt_get_unsecure_endpoint(device->endpoint);
-  } else {
-    ep = oc_obt_get_secure_endpoint(device->endpoint);
+    return oc_obt_get_unsecure_endpoint(device->endpoint);
   }
-  if (oc_do_get(url, ep, NULL, cb, HIGH_QOS, data)) {
-    return 0;
-  }
+  return oc_obt_get_secure_endpoint(device->endpoint);
+}
 
+/* General GET, POST and DELETE */
+int
+oc_obt_general_get(const oc_uuid_t *uuid, const char *url,
+                   oc_response_handler_t cb, void *data)
+{
+  const oc_endpoint_t *ep = obt_get_endpoint(uuid);
+  if (ep == NULL) {
+    OC_ERR("Could not find ep from device");
+    return -1;
+  }
+  oc_tls_select_psk_ciphersuite();
+  if (!oc_do_get(url, ep, NULL, cb, HIGH_QOS, data)) {
+    OC_ERR("Could not send GET request");
+    return -1;
+  }
   return 0;
 }
 
@@ -3598,67 +3674,64 @@ oc_obt_general_post(const oc_uuid_t *uuid, const char *query, const char *url,
     return -1;
   }
 
-  if (oc_init_post(url, ep, query, cb, HIGH_QOS, user_data)) {
-    oc_rep_start_root_object();
-    for (int i = 0; i < array_size; i++) {
-      if (strstr(payload_types[i], "bool") != NULL) {
-        long payload_int = strtol(payload_values[i], NULL, 10);
-        bool payload_bool = (payload_int != 0 ? true : false);
-
-        oc_rep_encode_text_string(&root_map, payload_properties[i],
-                                  strlen(payload_properties[i]));
-        oc_rep_encode_boolean(&root_map, payload_bool);
-
-      } else if (strstr(payload_types[i], "int") != NULL) {
-        long payload_int = strtol(payload_values[i], NULL, 10);
-
-        oc_rep_encode_text_string(&root_map, payload_properties[i],
-                                  strlen(payload_properties[i]));
-        oc_rep_encode_int(&root_map, payload_int);
-      } else if (strstr(payload_types[i], "float") != NULL) {
-        double payload_double = strtod(payload_values[i], NULL);
-
-        oc_rep_encode_text_string(&root_map, payload_properties[i],
-                                  strlen(payload_properties[i]));
-        oc_rep_encode_double(&root_map, payload_double);
-      } else if (strstr(payload_types[i], "str") != NULL) {
-        oc_rep_encode_text_string(&root_map, payload_properties[i],
-                                  strlen(payload_properties[i]));
-        if ((const char *)payload_values[i] != NULL) {
-          oc_rep_encode_text_string(&root_map, payload_values[i],
-                                    strlen(payload_values[i]));
-        } else {
-          oc_rep_encode_text_string(&root_map, "", 0);
-        }
-      } else if (strstr(payload_types[i], "bytes") != NULL) {
-        size_t byte_string_len = (strlen(payload_values[i]) + 1) / 2;
-        unsigned char payload_byte_string[10240];
-
-        const char *pos = payload_values[i];
-        for (size_t j = 0; j < byte_string_len; j++) {
-          sscanf(pos, "%2hhx", &payload_byte_string[j]);
-          pos += 2;
-        }
-
-        oc_rep_encode_text_string(&root_map, payload_properties[i],
-                                  strlen(payload_properties[i]));
-        oc_rep_encode_byte_string(&root_map, payload_byte_string,
-                                  byte_string_len);
-      }
-    }
-    oc_rep_end_root_object();
-
-    if (oc_do_post())
-      OC_DBG("\n\n\nSent POST request %s?%s\n\n", url, query);
-    else {
-      OC_ERR("Could not send POST request");
-      return -1;
-    }
-  } else {
+  if (!oc_init_post(url, ep, query, cb, HIGH_QOS, user_data)) {
     OC_ERR("Could not init POST request");
     return -1;
   }
+  oc_rep_start_root_object();
+  for (int i = 0; i < array_size; i++) {
+    if (strstr(payload_types[i], "bool") != NULL) {
+      long payload_int = strtol(payload_values[i], NULL, 10);
+      bool payload_bool = (payload_int != 0 ? true : false);
 
+      oc_rep_encode_text_string(&root_map, payload_properties[i],
+                                strlen(payload_properties[i]));
+      oc_rep_encode_boolean(&root_map, payload_bool);
+
+    } else if (strstr(payload_types[i], "int") != NULL) {
+      long payload_int = strtol(payload_values[i], NULL, 10);
+
+      oc_rep_encode_text_string(&root_map, payload_properties[i],
+                                strlen(payload_properties[i]));
+      oc_rep_encode_int(&root_map, payload_int);
+    } else if (strstr(payload_types[i], "float") != NULL) {
+      double payload_double = strtod(payload_values[i], NULL);
+
+      oc_rep_encode_text_string(&root_map, payload_properties[i],
+                                strlen(payload_properties[i]));
+      oc_rep_encode_double(&root_map, payload_double);
+    } else if (strstr(payload_types[i], "str") != NULL) {
+      oc_rep_encode_text_string(&root_map, payload_properties[i],
+                                strlen(payload_properties[i]));
+      if ((const char *)payload_values[i] != NULL) {
+        oc_rep_encode_text_string(&root_map, payload_values[i],
+                                  strlen(payload_values[i]));
+      } else {
+        oc_rep_encode_text_string(&root_map, "", 0);
+      }
+    } else if (strstr(payload_types[i], "bytes") != NULL) {
+      size_t byte_string_len = (strlen(payload_values[i]) + 1) / 2;
+      unsigned char payload_byte_string[10240];
+
+      const char *pos = payload_values[i];
+      for (size_t j = 0; j < byte_string_len; j++) {
+        sscanf(pos, "%2hhx", &payload_byte_string[j]);
+        pos += 2;
+      }
+
+      oc_rep_encode_text_string(&root_map, payload_properties[i],
+                                strlen(payload_properties[i]));
+      oc_rep_encode_byte_string(&root_map, payload_byte_string,
+                                byte_string_len);
+    }
+  }
+  oc_rep_end_root_object();
+
+  if (!oc_do_post()) {
+    OC_ERR("Could not send POST request");
+    return -1;
+  }
+  OC_DBG("\n\n\nSent POST request %s?%s\n\n", url, query);
   return 0;
 }
 
@@ -3666,32 +3739,16 @@ int
 oc_obt_general_delete(const oc_uuid_t *uuid, const char *query, const char *url,
                       oc_response_handler_t cb, void *data)
 {
-  const oc_device_t *device;
-  if (!oc_obt_is_owned_device(uuid)) {
-    device = oc_obt_get_cached_device_handle(uuid);
-  } else {
-    device = oc_obt_get_owned_device_handle(uuid);
-  }
-  if (!device) {
+  const oc_endpoint_t *ep = obt_get_endpoint(uuid);
+  if (ep == NULL) {
+    OC_ERR("Could not find ep from device");
     return -1;
   }
-
-  char di[OC_UUID_LEN];
-  oc_uuid_to_str(&(device->uuid), di, OC_ARRAY_SIZE(di));
-  OC_DBG("[C] Target uuid = %s", di);
-
   oc_tls_select_psk_ciphersuite();
-
-  const oc_endpoint_t *ep;
-  if (!oc_obt_is_owned_device(uuid)) {
-    ep = oc_obt_get_unsecure_endpoint(device->endpoint);
-  } else {
-    ep = oc_obt_get_secure_endpoint(device->endpoint);
+  if (!oc_do_delete(url, ep, query, cb, HIGH_QOS, data)) {
+    OC_ERR("Could not send DELETE request");
+    return -1;
   }
-  if (oc_do_delete(url, ep, query, cb, HIGH_QOS, data)) {
-    return 0;
-  }
-
   return 0;
 }
 
