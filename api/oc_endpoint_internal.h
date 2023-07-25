@@ -43,6 +43,16 @@ extern "C" {
 
 #define OC_SCHEME_OCF "ocf://"
 
+typedef enum {
+  OC_IPV6_ADDR_SCOPE_LOCAL = 0x01,
+  OC_IPV6_ADDR_SCOPE_LINK_LOCAL = 0x02,
+  OC_IPV6_ADDR_SCOPE_REALM_LOCAL = 0x03,
+  OC_IPV6_ADDR_SCOPE_ADMIN_LOCAL = 0x04,
+  OC_IPV6_ADDR_SCOPE_SITE_LOCAL = 0x05,
+  OC_IPV6_ADDR_SCOPE_ORGANIZATION_LOCAL = 0x08,
+  OC_IPV6_ADDR_SCOPE_GLOBAL = 0x0e,
+} oc_ipv6_addr_scope_t;
+
 /**
  * @brief Write the scheme string (including NUL terminator) for given transport
  * flags to buffer
@@ -76,6 +86,22 @@ int oc_endpoint_host(const oc_endpoint_t *endpoint, char *buffer,
 
 /** @brief Get port of the endpoint */
 int oc_endpoint_port(const oc_endpoint_t *endpoint) OC_NONNULL();
+
+/** @brief Check for multicast endpoint
+ *
+ * @param endpoint endpoint to check
+ * @return true if endpoint is non-NULL and has the MULTICAST flag set
+ * @return false otherwise
+ */
+bool oc_endpoint_is_multicast(const oc_endpoint_t *endpoint);
+
+/** @brief Check for unicast endpoint
+ *
+ * @param endpoint endpoint to check
+ * @return true if endpoint is non-NULL and does not have the MULTICAST flag set
+ * @return false otherwise
+ */
+bool oc_endpoint_is_unicast(const oc_endpoint_t *endpoint);
 
 typedef struct oc_string64_s
 {

@@ -16,6 +16,7 @@
  *
  ***************************************************************************/
 
+#include "api/oc_endpoint_internal.h"
 #include "api/oc_event_callback_internal.h"
 #include "api/oc_events_internal.h"
 #include "api/oc_message_buffer_internal.h"
@@ -1283,7 +1284,7 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
   if (uri_query_len) {
     // Check if the request is a multicast request and if the device id in
     // query matches the device id
-    if (request_obj.origin && (request_obj.origin->flags & MULTICAST) &&
+    if (oc_endpoint_is_multicast(endpoint) &&
         !oc_ri_filter_request_by_device_id(endpoint->device, uri_query,
                                            uri_query_len)) {
       coap_set_global_status_code(CLEAR_TRANSACTION);
@@ -1640,8 +1641,7 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
   }
 #endif /* OC_SERVER */
 
-  if (request_obj.origin != NULL &&
-      (request_obj.origin->flags & MULTICAST) != 0 &&
+  if (oc_endpoint_is_multicast(request_obj.origin) &&
       response_buffer.code >= oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
     response_buffer.code = CLEAR_TRANSACTION;
   }

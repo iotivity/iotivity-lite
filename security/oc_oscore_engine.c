@@ -167,7 +167,7 @@ oscore_parse_message(oc_message_t *message)
   }
 
   const oc_sec_cred_t *c = (oc_sec_cred_t *)oscore_ctx->cred;
-  if (!(message->endpoint.flags & MULTICAST) &&
+  if ((message->endpoint.flags & MULTICAST) == 0 &&
       c->credtype != OC_CREDTYPE_OSCORE) {
     OC_ERR("***unicast message protected using group OSCORE context; "
            "silently ignore***");

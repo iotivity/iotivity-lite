@@ -72,6 +72,24 @@ const int g_latency{ oc_core_get_latency() };
 const long g_max_app_data_size{ oc_get_max_app_data_size() };
 #endif /* OC_DYNAMIC_ALLOCATION && !OC_APP_DATA_BUFFER_SIZE */
 
+class TestDiscovery : public testing::Test {};
+
+TEST_F(TestDiscovery, IsDiscoveryURI_F)
+{
+  EXPECT_FALSE(oc_is_discovery_resource_uri(OC_STRING_VIEW_NULL));
+  EXPECT_FALSE(oc_is_discovery_resource_uri(OC_STRING_VIEW("")));
+}
+
+TEST_F(TestDiscovery, IsDiscoveryURI_P)
+{
+  std::string uri = OCF_RES_URI;
+  EXPECT_TRUE(
+    oc_is_discovery_resource_uri(oc_string_view(uri.c_str(), uri.length())));
+  uri = uri.substr(1, uri.length() - 1);
+  EXPECT_TRUE(
+    oc_is_discovery_resource_uri(oc_string_view(uri.c_str(), uri.length())));
+}
+
 struct DiscoveryLinkData
 {
   std::string rel;

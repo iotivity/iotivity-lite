@@ -246,8 +246,8 @@ oc_core_get_num_devices(void)
   return OC_ATOMIC_LOAD32(g_device_count);
 }
 
-static bool
-device_is_valid(size_t device)
+bool
+oc_core_device_is_valid(size_t device)
 {
   return device < OC_ATOMIC_LOAD32(g_device_count);
 }
@@ -473,7 +473,7 @@ core_get_resource_memory_by_index(int type, size_t device)
   if (type < OCF_CON) {
     return &g_core_resources[type];
   }
-  if (!device_is_valid(device)) {
+  if (!oc_core_device_is_valid(device)) {
     return NULL;
   }
   return &g_core_resources[OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * device +
@@ -533,7 +533,7 @@ oc_core_populate_resource(int core_resource, size_t device_index,
 oc_uuid_t *
 oc_core_get_device_id(size_t device)
 {
-  if (!device_is_valid(device)) {
+  if (!oc_core_device_is_valid(device)) {
     return NULL;
   }
   return &g_oc_device_info[device].di;
@@ -542,7 +542,7 @@ oc_core_get_device_id(size_t device)
 oc_device_info_t *
 oc_core_get_device_info(size_t device)
 {
-  if (!device_is_valid(device)) {
+  if (!oc_core_device_is_valid(device)) {
     return NULL;
   }
   return &g_oc_device_info[device];
@@ -555,7 +555,7 @@ oc_core_is_SVR(const oc_resource_t *resource, size_t device)
   if (resource == NULL) {
     return false;
   }
-  if (!device_is_valid(device)) {
+  if (!oc_core_device_is_valid(device)) {
     return false;
   }
 
@@ -593,7 +593,7 @@ oc_core_is_vertical_resource(const oc_resource_t *resource, size_t device)
     return true;
   }
 
-  if (!device_is_valid(device)) {
+  if (!oc_core_device_is_valid(device)) {
     return false;
   }
 
@@ -620,7 +620,7 @@ oc_core_is_DCR(const oc_resource_t *resource, size_t device)
     return true;
   }
 
-  if (!device_is_valid(device)) {
+  if (!oc_core_device_is_valid(device)) {
     return false;
   }
 
@@ -665,16 +665,14 @@ core_is_resource_uri(const char *uri, size_t uri_len, const char *r_uri,
 int
 oc_core_get_resource_type_by_uri(const char *uri, size_t uri_len)
 {
-  if (core_is_resource_uri(uri, uri_len, OCF_PLATFORM_URI,
-                           OC_CHAR_ARRAY_LEN(OCF_PLATFORM_URI))) {
+  if (oc_is_platform_resource_uri(oc_string_view(uri, uri_len))) {
     return OCF_P;
   }
   if (core_is_resource_uri(uri, uri_len, OCF_D_URI,
                            OC_CHAR_ARRAY_LEN(OCF_D_URI))) {
     return OCF_D;
   }
-  if (core_is_resource_uri(uri, uri_len, OCF_RES_URI,
-                           OC_CHAR_ARRAY_LEN(OCF_RES_URI))) {
+  if (oc_is_discovery_resource_uri(oc_string_view(uri, uri_len))) {
     return OCF_RES;
   }
   if (oc_get_con_res_announced() &&
@@ -721,8 +719,7 @@ oc_core_get_resource_type_by_uri(const char *uri, size_t uri_len)
                            OC_CHAR_ARRAY_LEN("/oic/sec/pstat"))) {
     return OCF_SEC_PSTAT;
   }
-  if (core_is_resource_uri(uri, uri_len, "/oic/sec/doxm",
-                           OC_CHAR_ARRAY_LEN("/oic/sec/doxm"))) {
+  if (oc_sec_is_doxm_resource_uri(oc_string_view(uri, uri_len))) {
     return OCF_SEC_DOXM;
   }
   if (core_is_resource_uri(uri, uri_len, "/oic/sec/acl2",
@@ -775,7 +772,7 @@ oc_core_get_resource_by_uri_v1(const char *uri, size_t uri_len, size_t device)
   if (type < OCF_CON) {
     return &g_core_resources[type];
   }
-  if (!device_is_valid(device)) {
+  if (!oc_core_device_is_valid(device)) {
     return NULL;
   }
   size_t res = OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * device + type;

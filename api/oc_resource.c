@@ -44,6 +44,19 @@ oc_resource_supports_interface(const oc_resource_t *resource,
   return (resource->interfaces & iface) == iface;
 }
 
+bool
+oc_resource_match_uri(oc_string_view_t canonicalURI, oc_string_view_t uri)
+{
+  assert(canonicalURI.data != NULL);
+  const char *p_uri = canonicalURI.data;
+  size_t p_urilen = canonicalURI.length;
+  if (uri.length > 0 && uri.data[0] != '/') {
+    ++p_uri;
+    --p_urilen;
+  }
+  return uri.length == p_urilen && memcmp(uri.data, p_uri, p_urilen) == 0;
+}
+
 void
 oc_resources_iterate_platform(oc_resource_iterate_fn_t fn, void *data)
 {

@@ -16,6 +16,7 @@
  *
  ****************************************************************************/
 
+#include "api/oc_endpoint_internal.h"
 #include "api/oc_network_events_internal.h"
 #include "ip.h"
 #include "ipadapter.h"
@@ -1140,7 +1141,8 @@ send_ipv6_discovery_request(oc_message_t *message,
   message->endpoint.interface_index = mif;
 
 #define IN6_IS_ADDR_MC_REALM_LOCAL(addr)                                       \
-  IN6_IS_ADDR_MULTICAST(addr) && ((((const uint8_t *)(addr))[1] & 0x0f) == 0x03)
+  IN6_IS_ADDR_MULTICAST(addr) &&                                               \
+    ((((const uint8_t *)(addr))[1] & 0x0f) == OC_IPV6_ADDR_SCOPE_REALM_LOCAL)
 
   if (IN6_IS_ADDR_MC_LINKLOCAL(message->endpoint.addr.ipv6.address)) {
     message->endpoint.addr.ipv6.scope = mif;

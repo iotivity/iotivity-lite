@@ -74,6 +74,18 @@ oc_endpoint_set_di(oc_endpoint_t *endpoint, const oc_uuid_t *di)
   memcpy(endpoint->di.id, di->id, sizeof(di->id));
 }
 
+bool
+oc_endpoint_is_unicast(const oc_endpoint_t *endpoint)
+{
+  return endpoint != NULL && (endpoint->flags & MULTICAST) == 0;
+}
+
+bool
+oc_endpoint_is_multicast(const oc_endpoint_t *endpoint)
+{
+  return endpoint != NULL && (endpoint->flags & MULTICAST) != 0;
+}
+
 static oc_string_view_t
 endpoint_flags_to_scheme(unsigned flags)
 {

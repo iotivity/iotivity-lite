@@ -565,6 +565,19 @@ oc_client_cbs_init(void)
 }
 
 void
+oc_client_cbs_shutdown_multicasts(void)
+{
+  oc_client_cb_t *cb = (oc_client_cb_t *)oc_list_head(g_client_cbs);
+  while (cb != NULL) {
+    oc_client_cb_t *next = cb->next;
+    if (cb->multicast) {
+      oc_client_cb_free(cb);
+    }
+    cb = next;
+  }
+}
+
+void
 oc_client_cbs_shutdown(void)
 {
   client_cb_free_all();

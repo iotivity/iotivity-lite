@@ -23,6 +23,7 @@
 #include "api/client/oc_client_cb_internal.h"
 #include "api/oc_client_api_internal.h"
 #include "api/oc_discovery_internal.h"
+#include "api/oc_endpoint_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_rep_encode_internal.h"
 #include "messaging/coap/coap_internal.h"
@@ -734,20 +735,16 @@ bool
 oc_do_realm_local_ipv6_multicast(const char *uri, const char *query,
                                  oc_response_handler_t handler, void *user_data)
 {
-  if (multi_scope_ipv6_multicast(NULL, 0x03, uri, query, handler, user_data)) {
-    return true;
-  }
-  return false;
+  return multi_scope_ipv6_multicast(NULL, OC_IPV6_ADDR_SCOPE_REALM_LOCAL, uri,
+                                    query, handler, user_data);
 }
 
 bool
 oc_do_site_local_ipv6_multicast(const char *uri, const char *query,
                                 oc_response_handler_t handler, void *user_data)
 {
-  if (multi_scope_ipv6_multicast(NULL, 0x05, uri, query, handler, user_data)) {
-    return true;
-  }
-  return false;
+  return multi_scope_ipv6_multicast(NULL, OC_IPV6_ADDR_SCOPE_SITE_LOCAL, uri,
+                                    query, handler, user_data);
 }
 
 bool
@@ -759,7 +756,8 @@ oc_do_ip_multicast(const char *uri, const char *query,
   cb4 = oc_do_ipv4_multicast(uri, query, handler, user_data);
 #endif /* OC_IPV4 */
 
-  return multi_scope_ipv6_multicast(cb4, 0x02, uri, query, handler, user_data);
+  return multi_scope_ipv6_multicast(cb4, OC_IPV6_ADDR_SCOPE_LINK_LOCAL, uri,
+                                    query, handler, user_data);
 }
 
 static bool
@@ -811,7 +809,8 @@ oc_do_site_local_ipv6_discovery_all(oc_discovery_all_handler_t handler,
     .discovery = NULL,
     .discovery_all = handler,
   };
-  return multi_scope_ipv6_discovery(NULL, 0x05, NULL, handlers, user_data);
+  return multi_scope_ipv6_discovery(NULL, OC_IPV6_ADDR_SCOPE_SITE_LOCAL, NULL,
+                                    handlers, user_data);
 }
 
 bool
@@ -828,8 +827,9 @@ oc_do_site_local_ipv6_discovery(const char *rt, oc_discovery_handler_t handler,
   if (rt && strlen(rt) > 0) {
     oc_concat_strings(&uri_query, "rt=", rt);
   }
-  bool status = multi_scope_ipv6_discovery(NULL, 0x05, oc_string(uri_query),
-                                           handlers, user_data);
+  bool status =
+    multi_scope_ipv6_discovery(NULL, OC_IPV6_ADDR_SCOPE_SITE_LOCAL,
+                               oc_string(uri_query), handlers, user_data);
   oc_free_string(&uri_query);
 
   return status;
@@ -844,7 +844,8 @@ oc_do_realm_local_ipv6_discovery_all(oc_discovery_all_handler_t handler,
     .discovery = NULL,
     .discovery_all = handler,
   };
-  return multi_scope_ipv6_discovery(NULL, 0x03, NULL, handlers, user_data);
+  return multi_scope_ipv6_discovery(NULL, OC_IPV6_ADDR_SCOPE_REALM_LOCAL, NULL,
+                                    handlers, user_data);
 }
 
 bool
@@ -861,8 +862,9 @@ oc_do_realm_local_ipv6_discovery(const char *rt, oc_discovery_handler_t handler,
   if (rt && strlen(rt) > 0) {
     oc_concat_strings(&uri_query, "rt=", rt);
   }
-  bool status = multi_scope_ipv6_discovery(NULL, 0x03, oc_string(uri_query),
-                                           handlers, user_data);
+  bool status =
+    multi_scope_ipv6_discovery(NULL, OC_IPV6_ADDR_SCOPE_REALM_LOCAL,
+                               oc_string(uri_query), handlers, user_data);
   oc_free_string(&uri_query);
 
   return status;
@@ -886,8 +888,9 @@ oc_do_ip_discovery(const char *rt, oc_discovery_handler_t handler,
 #ifdef OC_IPV4
   cb4 = oc_do_ipv4_discovery(oc_string(uri_query), handlers, user_data);
 #endif
-  bool status = multi_scope_ipv6_discovery(cb4, 0x02, oc_string(uri_query),
-                                           handlers, user_data);
+  bool status =
+    multi_scope_ipv6_discovery(cb4, OC_IPV6_ADDR_SCOPE_LINK_LOCAL,
+                               oc_string(uri_query), handlers, user_data);
   oc_free_string(&uri_query);
 
   return status;
@@ -905,7 +908,8 @@ oc_do_ip_discovery_all(oc_discovery_all_handler_t handler, void *user_data)
 #ifdef OC_IPV4
   cb4 = oc_do_ipv4_discovery(NULL, handlers, user_data);
 #endif
-  return multi_scope_ipv6_discovery(cb4, 0x02, NULL, handlers, user_data);
+  return multi_scope_ipv6_discovery(cb4, OC_IPV6_ADDR_SCOPE_LINK_LOCAL, NULL,
+                                    handlers, user_data);
 }
 
 bool

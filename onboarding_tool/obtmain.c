@@ -16,6 +16,7 @@
  *
  ****************************************************************************/
 
+#include "api/oc_endpoint_internal.h"
 #include "oc_api.h"
 #include "oc_clock_util.h"
 #include "oc_core_res.h"
@@ -351,11 +352,11 @@ static void
 discover_owned_devices(uint8_t scope)
 {
   otb_mutex_lock(app_sync_lock);
-  if (scope == 0x02) {
+  if (scope == OC_IPV6_ADDR_SCOPE_LINK_LOCAL) {
     oc_obt_discover_owned_devices(owned_device_cb, NULL);
-  } else if (scope == 0x03) {
+  } else if (scope == OC_IPV6_ADDR_SCOPE_REALM_LOCAL) {
     oc_obt_discover_owned_devices_realm_local_ipv6(owned_device_cb, NULL);
-  } else if (scope == 0x05) {
+  } else if (scope == OC_IPV6_ADDR_SCOPE_SITE_LOCAL) {
     oc_obt_discover_owned_devices_site_local_ipv6(owned_device_cb, NULL);
   }
   otb_mutex_unlock(app_sync_lock);
@@ -366,11 +367,11 @@ static void
 discover_unowned_devices(uint8_t scope)
 {
   otb_mutex_lock(app_sync_lock);
-  if (scope == 0x02) {
+  if (scope == OC_IPV6_ADDR_SCOPE_LINK_LOCAL) {
     oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
-  } else if (scope == 0x03) {
+  } else if (scope == OC_IPV6_ADDR_SCOPE_REALM_LOCAL) {
     oc_obt_discover_unowned_devices_realm_local_ipv6(unowned_device_cb, NULL);
-  } else if (scope == 0x05) {
+  } else if (scope == OC_IPV6_ADDR_SCOPE_SITE_LOCAL) {
     oc_obt_discover_unowned_devices_site_local_ipv6(unowned_device_cb, NULL);
   }
   otb_mutex_unlock(app_sync_lock);
@@ -2306,22 +2307,22 @@ main(void)
       continue;
       break;
     case 1:
-      discover_unowned_devices(0x02);
+      discover_unowned_devices(OC_IPV6_ADDR_SCOPE_LINK_LOCAL);
       break;
     case 2:
-      discover_unowned_devices(0x03);
+      discover_unowned_devices(OC_IPV6_ADDR_SCOPE_REALM_LOCAL);
       break;
     case 3:
-      discover_unowned_devices(0x05);
+      discover_unowned_devices(OC_IPV6_ADDR_SCOPE_SITE_LOCAL);
       break;
     case 4:
-      discover_owned_devices(0x02);
+      discover_owned_devices(OC_IPV6_ADDR_SCOPE_LINK_LOCAL);
       break;
     case 5:
-      discover_owned_devices(0x03);
+      discover_owned_devices(OC_IPV6_ADDR_SCOPE_REALM_LOCAL);
       break;
     case 6:
-      discover_owned_devices(0x05);
+      discover_owned_devices(OC_IPV6_ADDR_SCOPE_SITE_LOCAL);
       break;
     case 7:
       discover_resources();

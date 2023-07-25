@@ -103,6 +103,9 @@ void oc_client_cbs_init(void);
 /** @brief Deinitialize client callbacks. */
 void oc_client_cbs_shutdown(void);
 
+/** @brief Initialize multicast client callbacks. */
+void oc_client_cbs_shutdown_multicasts(void);
+
 /**
  * @brief Removes the client callback. This is silent remove client without
  * triggering of 'cb.handler'.

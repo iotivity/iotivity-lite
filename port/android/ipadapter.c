@@ -22,6 +22,7 @@
 #if !defined(__ANDROID_API__) || __ANDROID_API__ == 10000
 #error __ANDROID_API__ not defined
 #endif
+#include "api/oc_endpoint_internal.h"
 #include "api/oc_network_events_internal.h"
 #include "ipcontext.h"
 #include "oc_buffer.h"
@@ -1136,7 +1137,8 @@ oc_send_discovery_request(oc_message_t *message)
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
 
 #define IN6_IS_ADDR_MC_REALM_LOCAL(addr)                                       \
-  IN6_IS_ADDR_MULTICAST(addr) && ((((const uint8_t *)(addr))[1] & 0x0f) == 0x03)
+  IN6_IS_ADDR_MULTICAST(addr) &&                                               \
+    ((((const uint8_t *)(addr))[1] & 0x0f) == OC_IPV6_ADDR_SCOPE_REALM_LOCAL)
 
   for (struct ifaddrs *interface = ifs; interface != NULL;
        interface = interface->ifa_next) {

@@ -46,7 +46,7 @@ oc_platform_info_t *oc_platform_init(const char *mfg_name,
 void oc_platform_deinit(void);
 
 /** @brief Check if the URI matches the platform resource URI (with or without
- * the leading slash)
+ *  the leading slash)
  */
 bool oc_is_platform_resource_uri(oc_string_view_t uri);
 

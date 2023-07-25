@@ -19,6 +19,7 @@
 #ifndef OC_DISCOVERY_INTERNAL_H
 #define OC_DISCOVERY_INTERNAL_H
 
+#include "api/oc_helpers_internal.h"
 #include "oc_client_state.h"
 #include "oc_config.h"
 #include "oc_endpoint.h"
@@ -56,6 +57,11 @@ extern "C" {
  * @param device the device to which the resource belongs
  */
 void oc_create_discovery_resource(size_t device);
+
+/** @brief Check if the URI matches the discovery resource URI (with or without
+ *  the leading slash)
+ */
+bool oc_is_discovery_resource_uri(oc_string_view_t uri);
 
 /**
  * @brief handle the discovery payload (e.g. parse the oic/res response and do
