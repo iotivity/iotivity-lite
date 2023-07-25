@@ -43,67 +43,24 @@ struct list
   struct list *next;
 };
 
-/*---------------------------------------------------------------------------*/
-/**
- * Initialize a list.
- *
- * This function initalizes a list. The list will be empty after this
- * function has been called.
- *
- * \param list The list to be initialized.
- */
 void
 oc_list_init(oc_list_t list)
 {
   *list = NULL;
 }
-/*---------------------------------------------------------------------------*/
-/**
- * Get a pointer to the first element of a list.
- *
- * This function returns a pointer to the first element of the
- * list. The element will \b not be removed from the list.
- *
- * \param list The list.
- * \return A pointer to the first element on the list.
- *
- * \sa oc_list_tail()
- */
+
 void *
 oc_list_head(oc_list_t list)
 {
   return *list;
 }
-/*---------------------------------------------------------------------------*/
-/**
- * Duplicate a list.
- *
- * This function duplicates a list by copying the list reference, but
- * not the elements.
- *
- * \note This function does \b not copy the elements of the list, but
- * merely duplicates the pointer to the first element of the list.
- *
- * \param dest The destination list.
- * \param src The source list.
- */
+
 void
 oc_list_copy(oc_list_t dest, oc_list_t src)
 {
   *dest = *src;
 }
-/*---------------------------------------------------------------------------*/
-/**
- * Get the tail of a list.
- *
- * This function returns a pointer to the elements following the first
- * element of a list. No elements are removed by this function.
- *
- * \param list The list
- * \return A pointer to the element after the first element on the list.
- *
- * \sa oc_list_head()
- */
+
 void *
 oc_list_tail(oc_list_t list)
 {
@@ -117,18 +74,7 @@ oc_list_tail(oc_list_t list)
 
   return l;
 }
-/*---------------------------------------------------------------------------*/
-/**
- * Add an item at the end of a list.
- *
- * This function adds an item to the end of the list.
- *
- * \param list The list.
- * \param item A pointer to the item to be added.
- *
- * \sa oc_list_push()
- *
- */
+
 void
 oc_list_add(oc_list_t list, void *item)
 {
@@ -141,29 +87,26 @@ oc_list_add(oc_list_t list, void *item)
     l->next = (struct list *)item;
   }
 }
-/*---------------------------------------------------------------------------*/
-/**
- * Add an item to the start of the list.
- */
+
 void
 oc_list_push(oc_list_t list, void *item)
 {
-  /* Make sure not to add the same element twice */
-  oc_list_remove(list, item);
-
   ((struct list *)item)->next = (struct list *)*list;
   *list = item;
 }
-/*---------------------------------------------------------------------------*/
-/**
- * Remove the last object on the list.
- *
- * This function removes the last object on the list and returns it.
- *
- * \param list The list
- * \return The removed object
- *
- */
+
+void
+oc_list_insert(oc_list_t list, void *previtem, void *newitem)
+{
+  if (previtem == NULL) {
+    oc_list_push(list, newitem);
+    return;
+  }
+
+  ((struct list *)newitem)->next = ((struct list *)previtem)->next;
+  ((struct list *)previtem)->next = (struct list *)newitem;
+}
+
 void *
 oc_list_chop(oc_list_t list)
 {
@@ -184,63 +127,25 @@ oc_list_chop(oc_list_t list)
   l->next = NULL;
   return r;
 }
-/*---------------------------------------------------------------------------*/
-/**
- * Remove the first object on a list.
- *
- * This function removes the first object on the list and returns a
- * pointer to it.
- *
- * \param list The list.
- * \return Pointer to the removed element of list.
- */
-/*---------------------------------------------------------------------------*/
+
 void *
 oc_list_pop(oc_list_t list)
 {
   struct list *l = (struct list *)*list;
   if (*list != NULL) {
     *list = ((struct list *)*list)->next;
+    l->next = NULL;
   }
 
   return l;
 }
-/*---------------------------------------------------------------------------*/
-/**
- * Remove a specific element from a list.
- *
- * This function removes a specified element from the list.
- *
- * \param list The list.
- * \param item The item that is to be removed from the list.
- *
- */
-/*---------------------------------------------------------------------------*/
+
 void
 oc_list_remove(oc_list_t list, const void *item)
 {
-  struct list **l;
-
-  for (l = (struct list **)list; *l != NULL; l = &(*l)->next) {
-    if (*l == item) {
-      *l = (*l)->next;
-      return;
-    }
-  }
+  oc_list_remove2(list, item);
 }
-/*---------------------------------------------------------------------------*/
-/**
- * Remove a specific element from a list and return a pointer to the removed
- * item.
- *
- * This function removes a specified element from the list.
- *
- * \param list The list.
- * \param item The item that is to be removed from the list.
- * \return Pointer to the removed element of list.
- *
- */
-/*---------------------------------------------------------------------------*/
+
 void *
 oc_list_remove2(oc_list_t list, const void *item)
 {
@@ -252,20 +157,9 @@ oc_list_remove2(oc_list_t list, const void *item)
       return l2;
     }
   }
-
   return NULL;
 }
 
-/*---------------------------------------------------------------------------*/
-/**
- * Get the length of a list.
- *
- * This function counts the number of elements on a specified list.
- *
- * \param list The list.
- * \return The length of the list.
- */
-/*---------------------------------------------------------------------------*/
 int
 oc_list_length(oc_list_t list)
 {
@@ -276,47 +170,20 @@ oc_list_length(oc_list_t list)
 
   return n;
 }
-/*---------------------------------------------------------------------------*/
-/**
- * \brief      Insert an item after a specified item on the list
- * \param list The list
- * \param previtem The item after which the new item should be inserted
- * \param newitem  The new item that is to be inserted
- * \author     Adam Dunkels
- *
- *             This function inserts an item right after a specified
- *             item on the list. This function is useful when using
- *             the list module to ordered lists.
- *
- *             If previtem is NULL, the new item is placed at the
- *             start of the list.
- *
- */
-void
-oc_list_insert(oc_list_t list, void *previtem, void *newitem)
-{
-  if (previtem == NULL) {
-    oc_list_push(list, newitem);
-  } else {
 
-    ((struct list *)newitem)->next = ((struct list *)previtem)->next;
-    ((struct list *)previtem)->next = (struct list *)newitem;
+bool
+oc_list_has_item(oc_list_t list, const void *item)
+{
+  for (struct list *l = (struct list *)*list; l != NULL; l = l->next) {
+    if (l == item) {
+      return true;
+    }
   }
+  return false;
 }
-/*---------------------------------------------------------------------------*/
-/**
- * \brief      Get the next item following this item
- * \param item A list item
- * \returns    A next item on the list
- *
- *             This function takes a list item and returns the next
- *             item on the list, or NULL if there are no more items on
- *             the list. This function is used when iterating through
- *             lists.
- */
+
 void *
 oc_list_item_next(void *item)
 {
   return item == NULL ? NULL : ((struct list *)item)->next;
 }
-/*---------------------------------------------------------------------------*/
