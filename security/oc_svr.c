@@ -47,9 +47,7 @@ oc_sec_svr_create(void)
   oc_sec_sdi_init();
 
   for (size_t i = 0; i < oc_core_get_num_devices(); i++) {
-    oc_core_populate_resource(
-      OCF_SEC_DOXM, i, "/oic/sec/doxm", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-      OC_DISCOVERABLE, get_doxm, 0, post_doxm, 0, 1, "oic.r.doxm");
+    oc_sec_doxm_create_resource(i);
     oc_core_populate_resource(OCF_SEC_PSTAT, i, "/oic/sec/pstat",
                               OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
                               OC_DISCOVERABLE | OC_OBSERVABLE, get_pstat, 0,

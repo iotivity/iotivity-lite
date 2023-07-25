@@ -19,6 +19,7 @@
 
 #include "api/oc_core_res_internal.h"
 #include "api/oc_platform_internal.h"
+#include "api/oc_resource_internal.h"
 #include "api/oc_ri_internal.h"
 #include "oc_api.h"
 #include "oc_build_info.h"
@@ -48,7 +49,8 @@ platform_encode(const oc_resource_t *resource, oc_interface_mask_t iface)
 
   char pi[OC_UUID_LEN] = { 0 };
   int pi_len = oc_uuid_to_str_v1(&g_platform.info.pi, pi, OC_UUID_LEN);
-  oc_rep_set_text_string_v1(root, pi, pi, pi_len);
+  assert(pi_len >= 0);
+  oc_rep_set_text_string_v1(root, pi, pi, (size_t)pi_len);
   oc_rep_set_text_string_v1(root, mnmn, oc_string(g_platform.info.mfg_name),
                             oc_string_len(g_platform.info.mfg_name));
   oc_rep_set_int(root, x.org.iotivity.version, IOTIVITY_LITE_VERSION);
@@ -76,13 +78,7 @@ platform_resource_get(oc_request_t *request, oc_interface_mask_t iface,
 bool
 oc_is_platform_resource_uri(oc_string_view_t uri)
 {
-  const char *p_uri = OCF_PLATFORM_URI;
-  size_t p_urilen = OC_CHAR_ARRAY_LEN(OCF_PLATFORM_URI);
-  if (uri.length > 0 && uri.data[0] != '/') {
-    ++p_uri;
-    --p_urilen;
-  }
-  return uri.length == p_urilen && memcmp(uri.data, p_uri, p_urilen) == 0;
+  return oc_resource_match_uri(OC_STRING_VIEW(OCF_PLATFORM_URI), uri);
 }
 
 static void

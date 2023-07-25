@@ -19,6 +19,7 @@
 #ifndef _GNU_SOURCE
 #define _GNU_SOURCE
 #endif
+#include "api/oc_endpoint_internal.h"
 #include "api/oc_network_events_internal.h"
 #include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
@@ -1061,8 +1062,8 @@ oc_send_discovery_request(oc_message_t *message)
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
 
 #define IN6_IS_ADDR_MC_REALM_LOCAL(ip6)                                        \
-  ip6_addr_ismulticast(ip6) &&                                                 \
-    ((((const uint8_t *)(ip6->addr))[1] & 0x0f) == 0x03)
+  ip6_addr_ismulticast(ip6) && ((((const uint8_t *)(ip6->addr))[1] & 0x0f) ==  \
+                                OC_IPV6_ADDR_SCOPE_REALM_LOCAL)
 
   for (esp_netif_t *esp_netif = esp_netif_next(NULL); esp_netif;
        esp_netif = esp_netif_next(esp_netif)) {

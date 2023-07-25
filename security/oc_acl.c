@@ -408,8 +408,7 @@ oc_sec_check_acl_on_get(const oc_resource_t *resource, bool is_otm)
  * define is FOR DEVELOPMENT USE ONLY.
  */
 #ifdef OC_DOXM_UUID_FILTER
-  if (uri.length == 13 && method == OC_GET &&
-      memcmp(uri.data, "/oic/sec/doxm", 13) == 0) {
+  if (method == OC_GET && oc_sec_is_doxm_resource_uri(uri)) {
     OC_DBG("oc_sec_check_acl: R access granted to /doxm");
     return true;
   }
@@ -430,7 +429,7 @@ oc_sec_check_acl_by_uuid(const oc_uuid_t *uuid, size_t device,
   }
   const oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   if (memcmp(uuid->id, doxm->rowneruuid.id, sizeof(uuid->id)) == 0 &&
-      uri_len == 13 && memcmp(uri, "/oic/sec/doxm", 13) == 0) {
+      oc_sec_is_doxm_resource_uri(oc_string_view(uri, uri_len))) {
     OC_DBG("oc_acl: peer's UUID matches doxm's rowneruuid");
     return true;
   }
@@ -523,8 +522,7 @@ oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
     /* Anonymous Retrieve and Updates requests to “/oic/sec/doxm” shall be
        granted.
     */
-    if (oc_string_len(resource->uri) == 13 &&
-        memcmp(oc_string(resource->uri), "/oic/sec/doxm", 13) == 0) {
+    if (oc_sec_is_doxm_resource_uri(oc_string_view2(&resource->uri))) {
       OC_DBG("oc_sec_check_acl: RW access granted to /doxm  prior to DOC");
       return true;
     }
@@ -960,7 +958,7 @@ oc_sec_get_ace_by_aceid(int aceid, size_t device)
 }
 
 static oc_sec_ace_t *
-oc_acl_remove_ace_from_device(oc_sec_ace_t *ace, size_t device)
+oc_acl_remove_ace_from_device(const oc_sec_ace_t *ace, size_t device)
 {
   return oc_list_remove2(g_aclist[device].subjects, ace);
 }
@@ -968,8 +966,8 @@ oc_acl_remove_ace_from_device(oc_sec_ace_t *ace, size_t device)
 static oc_sec_ace_t *
 oc_acl_remove_ace_from_device_by_aceid(int aceid, size_t device)
 {
-  oc_sec_ace_t *ace = oc_sec_get_ace_by_aceid(aceid, device);
-  if (ace) {
+  const oc_sec_ace_t *ace = oc_sec_get_ace_by_aceid(aceid, device);
+  if (ace != NULL) {
     return oc_acl_remove_ace_from_device(ace, device);
   }
   return false;

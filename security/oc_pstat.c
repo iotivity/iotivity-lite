@@ -18,6 +18,7 @@
 
 #ifdef OC_SECURITY
 
+#include "api/oc_core_res_internal.h"
 #include "api/oc_main_internal.h"
 #include "api/oc_message_buffer_internal.h"
 #include "messaging/coap/coap_internal.h"
@@ -428,6 +429,11 @@ pstat_state_error:
 oc_sec_pstat_t *
 oc_sec_get_pstat(size_t device)
 {
+  assert(oc_core_device_is_valid(device));
+#ifdef OC_DYNAMIC_ALLOCATION
+  assert(g_pstat != NULL);
+#endif /* OC_DYNAMIC_ALLOCATION */
+
   return &g_pstat[device];
 }
 

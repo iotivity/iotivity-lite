@@ -416,8 +416,7 @@ send_response(oc_request_t *request, oc_content_format_t content_format,
 
   if (code == OC_STATUS_NOT_MODIFIED && is_empty) {
     response_length = 0;
-  } else if (request->origin != NULL &&
-             (request->origin->flags & MULTICAST) == 0) {
+  } else if (oc_endpoint_is_unicast(request->origin)) {
     code = OC_STATUS_BAD_REQUEST;
     response_length = 0;
   } else {
@@ -1287,6 +1286,12 @@ oc_create_discovery_resource(size_t device)
                             properties, discovery_resource_get,
                             /*put*/ NULL, /*post*/ NULL,
                             /*delete*/ NULL, 1, OCF_RES_RT);
+}
+
+bool
+oc_is_discovery_resource_uri(oc_string_view_t uri)
+{
+  return oc_resource_match_uri(OC_STRING_VIEW(OCF_RES_URI), uri);
 }
 
 #ifdef OC_CLIENT

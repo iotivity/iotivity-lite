@@ -65,8 +65,7 @@ static int
 store_encode_doxm(size_t device, void *data)
 {
   (void)data;
-  oc_sec_encode_doxm(device, /*iface_mask*/ 0, true);
-  return 0;
+  return oc_sec_encode_doxm(device, /*iface_mask*/ 0, true);
 }
 
 void

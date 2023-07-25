@@ -58,14 +58,26 @@ typedef struct
 
 #define OC_PSTAT_RESET_DELAY_MS (2000)
 
+/** @brief Allocate and initialize global variables */
 void oc_sec_pstat_init(void);
+
+/** @brief Deallocate global variables */
 void oc_sec_pstat_free(void);
+
+/**
+ * @brief Get pstat resource representation for given device
+ *
+ * @note Only valid after oc_sec_pstat_init has been called
+ *
+ * @see oc_sec_pstat_init
+ */
+oc_sec_pstat_t *oc_sec_get_pstat(size_t device) OC_RETURNS_NONNULL;
+
 bool oc_sec_is_operational(size_t device);
 bool oc_sec_decode_pstat(const oc_rep_t *rep, bool from_storage, size_t device);
 void oc_sec_encode_pstat(size_t device, oc_interface_mask_t iface_mask,
                          bool to_storage);
 
-oc_sec_pstat_t *oc_sec_get_pstat(size_t device);
 void oc_sec_pstat_default(size_t device);
 void oc_sec_pstat_copy(oc_sec_pstat_t *dst, const oc_sec_pstat_t *src);
 

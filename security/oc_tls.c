@@ -18,7 +18,6 @@
 
 #ifdef OC_SECURITY
 
-#include "oc_tls_internal.h"
 #include "api/oc_endpoint_internal.h"
 #include "api/oc_events_internal.h"
 #include "api/oc_message_internal.h"
@@ -44,6 +43,7 @@
 #include "security/oc_pstat_internal.h"
 #include "security/oc_roles_internal.h"
 #include "security/oc_security_internal.h"
+#include "security/oc_tls_internal.h"
 #include "util/oc_features.h"
 #include "util/oc_macros_internal.h"
 
@@ -129,7 +129,7 @@ OC_LIST(g_tls_peers);
 static mbedtls_entropy_context g_entropy_ctx;
 static mbedtls_ctr_drbg_context g_oc_ctr_drbg_ctx;
 static mbedtls_ssl_cookie_ctx g_cookie_ctx;
-static oc_random_pin_t g_random_pin;
+static oc_random_pin_t g_random_pin = { NULL, NULL };
 #define PIN_LEN (8)
 static unsigned char g_pin[PIN_LEN] = { 0 };
 #define DTLS_INACTIVITY_TIMEOUT_TICKS                                          \
@@ -609,10 +609,7 @@ bool
 oc_tls_is_pin_otm_supported(size_t device)
 {
   (void)device;
-  if (g_random_pin.cb) {
-    return true;
-  }
-  return false;
+  return g_random_pin.cb != NULL;
 }
 
 #ifdef OC_PKI

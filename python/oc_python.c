@@ -18,6 +18,7 @@
  *
  ****************************************************************************/
 
+#include "api/oc_endpoint_internal.h"
 #include "api/oc_ri_internal.h"
 #include "oc_api.h"
 #include "oc_clock_util.h"
@@ -33,6 +34,7 @@
 #include "util/oc_secure_string_internal.h"
 
 #ifdef OC_SECURITY
+#include "security/oc_doxm_internal.h"
 #include "security/oc_obt_internal.h"
 #endif /* OC_SECURITY */
 
@@ -505,11 +507,11 @@ discover_owned_devices(int scope)
 {
   // OC_PRINTF("[C]discover_owned_devices: scope %d\n", scope);
   otb_mutex_lock(app_sync_lock);
-  if (scope == 0x02) {
+  if (scope == OC_IPV6_ADDR_SCOPE_LINK_LOCAL) {
     oc_obt_discover_owned_devices(owned_device_cb, NULL);
-  } else if (scope == 0x03) {
+  } else if (scope == OC_IPV6_ADDR_SCOPE_REALM_LOCAL) {
     oc_obt_discover_owned_devices_realm_local_ipv6(owned_device_cb, NULL);
-  } else if (scope == 0x05) {
+  } else if (scope == OC_IPV6_ADDR_SCOPE_SITE_LOCAL) {
     oc_obt_discover_owned_devices_site_local_ipv6(owned_device_cb, NULL);
   }
   otb_mutex_unlock(app_sync_lock);
@@ -521,11 +523,11 @@ discover_unowned_devices(int scope)
 {
   // OC_PRINTF("[C]discover_unowned_devices: scope %d\n", scope);
   otb_mutex_lock(app_sync_lock);
-  if (scope == 0x02) {
+  if (scope == OC_IPV6_ADDR_SCOPE_LINK_LOCAL) {
     oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
-  } else if (scope == 0x03) {
+  } else if (scope == OC_IPV6_ADDR_SCOPE_REALM_LOCAL) {
     oc_obt_discover_unowned_devices_realm_local_ipv6(unowned_device_cb, NULL);
-  } else if (scope == 0x05) {
+  } else if (scope == OC_IPV6_ADDR_SCOPE_SITE_LOCAL) {
     oc_obt_discover_unowned_devices_site_local_ipv6(unowned_device_cb, NULL);
   }
   otb_mutex_unlock(app_sync_lock);
@@ -537,11 +539,11 @@ py_discover_unowned_devices(int scope)
 {
   // OC_PRINTF("[C]discover_unowned_devices: scope %d\n", scope);
   otb_mutex_lock(app_sync_lock);
-  if (scope == 0x02) {
+  if (scope == OC_IPV6_ADDR_SCOPE_LINK_LOCAL) {
     oc_obt_discover_unowned_devices(unowned_device_cb, NULL);
-  } else if (scope == 0x03) {
+  } else if (scope == OC_IPV6_ADDR_SCOPE_REALM_LOCAL) {
     oc_obt_discover_unowned_devices_realm_local_ipv6(unowned_device_cb, NULL);
-  } else if (scope == 0x05) {
+  } else if (scope == OC_IPV6_ADDR_SCOPE_SITE_LOCAL) {
     oc_obt_discover_unowned_devices_site_local_ipv6(unowned_device_cb, NULL);
   }
   otb_mutex_unlock(app_sync_lock);
@@ -2399,22 +2401,26 @@ doxm_discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
   return OC_STOP_DISCOVERY;
 }
 
+#ifdef OC_SECURITY
+
 void
 discover_doxm(void)
 {
   otb_mutex_lock(app_sync_lock);
-  if (!oc_do_ip_discovery("oic.r.doxm", &doxm_discovery_cb, NULL)) {
+  if (!oc_do_ip_discovery(OCF_SEC_DOXM_RT, &doxm_discovery_cb, NULL)) {
     OC_PRINTF("Failed to discover DOXM\n");
   }
   otb_mutex_unlock(app_sync_lock);
 
 #if 0
   OC_PRINTF("[C] Discover Doxm %s\n",uuid);
-  if (oc_do_get("/oic/sec/doxm", ep, NULL, &doxm_discovery_cb, HIGH_QOS, NULL)) { 
+  if (oc_do_get(OCF_SEC_DOXM_URI, ep, NULL, &doxm_discovery_cb, HIGH_QOS, NULL)) {
     OC_PRINTF("[C] doxm return\n");
   }
 #endif
 }
+
+#endif /* OC_SECURITY */
 
 void
 discover_resource(const char *rt, const char *uuid)

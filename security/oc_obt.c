@@ -18,7 +18,9 @@
  ****************************************************************************/
 
 #include "oc_config.h"
+
 #ifdef OC_SECURITY
+
 #ifndef OC_DYNAMIC_ALLOCATION
 #error "ERROR: Please rebuild with OC_DYNAMIC_ALLOCATION"
 #endif /* !OC_DYNAMIC_ALLOCATION */
@@ -28,6 +30,7 @@
 check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #endif
 
+#include "api/oc_endpoint_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_rep_internal.h"
 #include "oc_certs.h"
@@ -39,6 +42,7 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #include "security/oc_certs_internal.h"
 #include "security/oc_cred_internal.h"
 #include "security/oc_csr_internal.h"
+#include "security/oc_doxm_internal.h"
 #include "security/oc_keypair_internal.h"
 #include "security/oc_obt_internal.h"
 #include "security/oc_roles_internal.h"
@@ -669,29 +673,35 @@ discover_unowned_devices(uint8_t scope, oc_obt_discovery_cb_t cb, void *data)
   c->cb = cb;
   c->data = data;
 
-  if (scope == 0x02) {
-    if (oc_do_ip_multicast("/oic/sec/doxm", "owned=FALSE", &obt_check_owned,
-                           c)) {
-      oc_list_add(oc_discovery_cbs, c);
-      oc_set_delayed_callback(c, free_discovery_cb, DISCOVERY_CB_PERIOD);
-      return 0;
+  if (scope == OC_IPV6_ADDR_SCOPE_LINK_LOCAL) {
+    if (!oc_do_ip_multicast(OCF_SEC_DOXM_URI, "owned=FALSE", &obt_check_owned,
+                            c)) {
+      goto discover_unowned_devices_err;
     }
-  } else if (scope == 0x03) {
-    if (oc_do_realm_local_ipv6_multicast("/oic/sec/doxm", "owned=FALSE",
+    oc_list_add(oc_discovery_cbs, c);
+    oc_set_delayed_callback(c, free_discovery_cb, DISCOVERY_CB_PERIOD);
+    return 0;
+  }
+  if (scope == OC_IPV6_ADDR_SCOPE_REALM_LOCAL) {
+    if (!oc_do_realm_local_ipv6_multicast(OCF_SEC_DOXM_URI, "owned=FALSE",
+                                          &obt_check_owned, c)) {
+      goto discover_unowned_devices_err;
+    }
+    oc_list_add(oc_discovery_cbs, c);
+    oc_set_delayed_callback(c, free_discovery_cb, DISCOVERY_CB_PERIOD);
+    return 0;
+  }
+  if (scope == OC_IPV6_ADDR_SCOPE_SITE_LOCAL) {
+    if (!oc_do_site_local_ipv6_multicast(OCF_SEC_DOXM_URI, "owned=FALSE",
                                          &obt_check_owned, c)) {
-      oc_list_add(oc_discovery_cbs, c);
-      oc_set_delayed_callback(c, free_discovery_cb, DISCOVERY_CB_PERIOD);
-      return 0;
+      goto discover_unowned_devices_err;
     }
-  } else if (scope == 0x05) {
-    if (oc_do_site_local_ipv6_multicast("/oic/sec/doxm", "owned=FALSE",
-                                        &obt_check_owned, c)) {
-      oc_list_add(oc_discovery_cbs, c);
-      oc_set_delayed_callback(c, free_discovery_cb, DISCOVERY_CB_PERIOD);
-      return 0;
-    }
+    oc_list_add(oc_discovery_cbs, c);
+    oc_set_delayed_callback(c, free_discovery_cb, DISCOVERY_CB_PERIOD);
+    return 0;
   }
 
+discover_unowned_devices_err:
   oc_memb_free(&oc_discovery_s, c);
   return -1;
 }
@@ -700,20 +710,20 @@ int
 oc_obt_discover_unowned_devices_realm_local_ipv6(oc_obt_discovery_cb_t cb,
                                                  void *data)
 {
-  return discover_unowned_devices(0x03, cb, data);
+  return discover_unowned_devices(OC_IPV6_ADDR_SCOPE_REALM_LOCAL, cb, data);
 }
 
 int
 oc_obt_discover_unowned_devices_site_local_ipv6(oc_obt_discovery_cb_t cb,
                                                 void *data)
 {
-  return discover_unowned_devices(0x05, cb, data);
+  return discover_unowned_devices(OC_IPV6_ADDR_SCOPE_SITE_LOCAL, cb, data);
 }
 
 int
 oc_obt_discover_unowned_devices(oc_obt_discovery_cb_t cb, void *data)
 {
-  return discover_unowned_devices(0x02, cb, data);
+  return discover_unowned_devices(OC_IPV6_ADDR_SCOPE_LINK_LOCAL, cb, data);
 }
 
 /* Owned device disvoery */
@@ -727,20 +737,20 @@ discover_owned_devices(uint8_t scope, oc_obt_discovery_cb_t cb, void *data)
   c->cb = cb;
   c->data = data;
 
-  if (scope == 0x02) {
+  if (scope == OC_IPV6_ADDR_SCOPE_LINK_LOCAL) {
     if (oc_do_ip_multicast("/oic/res", "rt=oic.r.doxm", &get_endpoints, c)) {
       oc_list_add(oc_discovery_cbs, c);
       oc_set_delayed_callback(c, free_discovery_cb, DISCOVERY_CB_PERIOD);
       return 0;
     }
-  } else if (scope == 0x03) {
+  } else if (scope == OC_IPV6_ADDR_SCOPE_REALM_LOCAL) {
     if (oc_do_realm_local_ipv6_multicast("/oic/res", "rt=oic.r.doxm",
                                          &get_endpoints, c)) {
       oc_list_add(oc_discovery_cbs, c);
       oc_set_delayed_callback(c, free_discovery_cb, DISCOVERY_CB_PERIOD);
       return 0;
     }
-  } else if (scope == 0x05) {
+  } else if (scope == OC_IPV6_ADDR_SCOPE_SITE_LOCAL) {
     if (oc_do_site_local_ipv6_multicast("/oic/res", "rt=oic.r.doxm",
                                         &get_endpoints, c)) {
       oc_list_add(oc_discovery_cbs, c);
@@ -757,20 +767,20 @@ int
 oc_obt_discover_owned_devices_realm_local_ipv6(oc_obt_discovery_cb_t cb,
                                                void *data)
 {
-  return discover_owned_devices(0x03, cb, data);
+  return discover_owned_devices(OC_IPV6_ADDR_SCOPE_REALM_LOCAL, cb, data);
 }
 
 int
 oc_obt_discover_owned_devices_site_local_ipv6(oc_obt_discovery_cb_t cb,
                                               void *data)
 {
-  return discover_owned_devices(0x05, cb, data);
+  return discover_owned_devices(OC_IPV6_ADDR_SCOPE_SITE_LOCAL, cb, data);
 }
 
 int
 oc_obt_discover_owned_devices(oc_obt_discovery_cb_t cb, void *data)
 {
-  return discover_owned_devices(0x02, cb, data);
+  return discover_owned_devices(OC_IPV6_ADDR_SCOPE_LINK_LOCAL, cb, data);
 }
 /* End of device discovery */
 
@@ -2152,9 +2162,9 @@ oc_obt_provision_role_certificate(oc_role_t *roles, const oc_uuid_t *uuid,
   /**  1) get doxm
    */
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (!oc_do_get("/oic/sec/doxm", ep, NULL, &supports_cert_creds, HIGH_QOS,
+  if (!oc_do_get(OCF_SEC_DOXM_URI, ep, NULL, &supports_cert_creds, HIGH_QOS,
                  p)) {
-    OC_ERR("Could not issue GET request to /oic/sec/doxm");
+    OC_ERR("Could not issue GET request to %s", OCF_SEC_DOXM_URI);
     oc_memb_free(&oc_credprov_ctx_m, p);
     return -1;
   }
@@ -2200,9 +2210,9 @@ oc_obt_provision_identity_certificate(const oc_uuid_t *uuid,
   /**  1) get doxm
    */
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (!oc_do_get("/oic/sec/doxm", ep, NULL, &supports_cert_creds, HIGH_QOS,
+  if (!oc_do_get(OCF_SEC_DOXM_URI, ep, NULL, &supports_cert_creds, HIGH_QOS,
                  p)) {
-    OC_ERR("Could not issue GET request to /oic/sec/doxm");
+    OC_ERR("Could not issue GET request to %s", OCF_SEC_DOXM_URI);
     oc_memb_free(&oc_credprov_ctx_m, p);
     return -1;
   }
@@ -2374,9 +2384,9 @@ oc_obt_provision_trust_anchor(const char *certificate, size_t certificate_size,
   /**  1) check if certificates is supported
    */
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (!oc_do_get("/oic/sec/doxm", ep, NULL, &trustanchor_supports_cert_creds,
+  if (!oc_do_get(OCF_SEC_DOXM_URI, ep, NULL, &trustanchor_supports_cert_creds,
                  HIGH_QOS, p)) {
-    OC_ERR("Could not issue GET request to /oic/sec/doxm");
+    OC_ERR("Could not issue GET request to %s", OCF_SEC_DOXM_URI);
     oc_memb_free(&oc_installtrust_ctx_m, p);
     return -1;
   }

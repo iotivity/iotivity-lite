@@ -120,26 +120,6 @@ TEST_F(TestPlatform, IsPlatformURI_F)
 {
   EXPECT_FALSE(oc_is_platform_resource_uri(OC_STRING_VIEW_NULL));
   EXPECT_FALSE(oc_is_platform_resource_uri(OC_STRING_VIEW("")));
-
-  // missing the last character
-  std::string uri = OCF_PLATFORM_URI;
-  uri = uri.substr(0, uri.length() - 1);
-  EXPECT_FALSE(
-    oc_is_platform_resource_uri(oc_string_view(uri.c_str(), uri.length())));
-
-  // one additional character
-  uri = OCF_PLATFORM_URI;
-  uri += "a";
-  EXPECT_FALSE(
-    oc_is_platform_resource_uri(oc_string_view(uri.c_str(), uri.length())));
-
-  // same length, but different string
-  uri = std::string(std::string(OCF_PLATFORM_URI).length() - 1, 'a');
-  EXPECT_FALSE(
-    oc_is_platform_resource_uri(oc_string_view(uri.c_str(), uri.length())));
-  uri = std::string(std::string(OCF_PLATFORM_URI).length(), 'a');
-  EXPECT_FALSE(
-    oc_is_platform_resource_uri(oc_string_view(uri.c_str(), uri.length())));
 }
 
 TEST_F(TestPlatform, IsPlatformURI_P)
@@ -147,7 +127,6 @@ TEST_F(TestPlatform, IsPlatformURI_P)
   std::string uri = OCF_PLATFORM_URI;
   EXPECT_TRUE(
     oc_is_platform_resource_uri(oc_string_view(uri.c_str(), uri.length())));
-
   uri = uri.substr(1, uri.length() - 1);
   EXPECT_TRUE(
     oc_is_platform_resource_uri(oc_string_view(uri.c_str(), uri.length())));

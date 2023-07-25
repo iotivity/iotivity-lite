@@ -19,6 +19,7 @@
 #ifndef OC_RESOURCE_INTERNAL_H
 #define OC_RESOURCE_INTERNAL_H
 
+#include "api/oc_helpers_internal.h"
 #include "oc_ri.h"
 #include "util/oc_compiler.h"
 #include <stdbool.h>
@@ -36,6 +37,16 @@ extern "C" {
  * @return false resource is uninitialized
  */
 bool oc_resource_is_initialized(const oc_resource_t *resource) OC_NONNULL();
+
+/**
+ * @brief Check if given URI matches the cannonical URI of given resource.
+ *
+ * @param canonicalURI canonical URI (with leading '/') to match against
+ * @param uri URI to match
+ * @return true resource matches given URI
+ * @return false resource does not match given URI
+ */
+bool oc_resource_match_uri(oc_string_view_t canonicalURI, oc_string_view_t uri);
 
 /**
  * @brief Check if resource supports given interface.

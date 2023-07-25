@@ -131,6 +131,45 @@ TEST_F(TestResource, SupportsInterface)
   EXPECT_FALSE(oc_resource_supports_interface(&res, OC_IF_RW));
 }
 
+TEST_F(TestResource, MatchURI_F)
+{
+  auto resourceURI = OC_STRING_VIEW("/test");
+  EXPECT_FALSE(oc_resource_match_uri(resourceURI, OC_STRING_VIEW_NULL));
+  EXPECT_FALSE(oc_resource_match_uri(resourceURI, OC_STRING_VIEW("")));
+
+  // missing the last character
+  std::string uri = resourceURI.data;
+  uri = uri.substr(0, uri.length() - 1);
+  EXPECT_FALSE(oc_resource_match_uri(
+    resourceURI, oc_string_view(uri.c_str(), uri.length())));
+
+  // one additional character
+  uri = resourceURI.data;
+  uri += "a";
+  EXPECT_FALSE(oc_resource_match_uri(
+    resourceURI, oc_string_view(uri.c_str(), uri.length())));
+
+  // same length, but different string
+  uri = std::string(std::string(resourceURI.data).length() - 1, 'a');
+  EXPECT_FALSE(oc_resource_match_uri(
+    resourceURI, oc_string_view(uri.c_str(), uri.length())));
+  uri = std::string(std::string(resourceURI.data).length(), 'a');
+  EXPECT_FALSE(oc_resource_match_uri(
+    resourceURI, oc_string_view(uri.c_str(), uri.length())));
+}
+
+TEST_F(TestResource, MatchURI_P)
+{
+  auto resourceURI = OC_STRING_VIEW("/test");
+  std::string uri = resourceURI.data;
+  EXPECT_TRUE(oc_resource_match_uri(resourceURI,
+                                    oc_string_view(uri.c_str(), uri.length())));
+
+  uri = uri.substr(1, uri.length() - 1);
+  EXPECT_TRUE(oc_resource_match_uri(resourceURI,
+                                    oc_string_view(uri.c_str(), uri.length())));
+}
+
 struct DynamicResourceData
 {
   int power;
