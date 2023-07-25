@@ -57,6 +57,10 @@
 #ifndef OC_LIST_H
 #define OC_LIST_H
 
+#include "oc_export.h"
+#include "util/oc_compiler.h"
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -82,7 +86,9 @@ extern "C" {
   static void *OC_LIST_CONCAT(name, _list) = NULL;                             \
   static oc_list_t name = &OC_LIST_CONCAT(name, _list)
 
-/** Non-static version of OC_LIST */
+/**
+ * Declare a linked list with a local scope.
+ */
 #define OC_LIST_LOCAL(name)                                                    \
   void *OC_LIST_CONCAT(name, _list) = NULL;                                    \
   oc_list_t name = &OC_LIST_CONCAT(name, _list)
@@ -128,28 +134,195 @@ extern "C" {
 
 /**
  * The linked list type.
- *
  */
 typedef void **oc_list_t;
 
-void oc_list_init(oc_list_t list);
-void *oc_list_head(oc_list_t list);
-void *oc_list_tail(oc_list_t list);
-void *oc_list_pop(oc_list_t list);
-void oc_list_push(oc_list_t list, void *item);
+/**
+ * Initialize a list.
+ *
+ * This function initalizes a list. The list will be empty after this function
+ * has been called.
+ *
+ * \param list The list to be initialized.
+ *
+ * \sa OC_LIST()
+ * \sa OC_LIST_LOCAL()
+ * \sa OC_LIST_STRUCT()
+ */
+OC_API
+void oc_list_init(oc_list_t list) OC_NONNULL();
 
-void *oc_list_chop(oc_list_t list);
+/**
+ * Get a pointer to the first element of a list.
+ *
+ * This function returns a pointer to the first element of the
+ * list. The element will \b not be removed from the list.
+ *
+ * \param list The list.
+ * \return A pointer to the first element on the list.
+ *
+ * \sa oc_list_tail()
+ */
+OC_API
+void *oc_list_head(oc_list_t list) OC_NONNULL();
 
-void oc_list_add(oc_list_t list, void *item);
-void oc_list_remove(oc_list_t list, const void *item);
-void *oc_list_remove2(oc_list_t list, const void *item);
+/**
+ * Get the tail of a list.
+ *
+ * This function returns a pointer to the elements following the first
+ * element of a list. No elements are removed by this function.
+ *
+ * \param list The list
+ * \return A pointer to the element after the first element on the list.
+ *
+ * \sa oc_list_head()
+ */
+OC_API
+void *oc_list_tail(oc_list_t list) OC_NONNULL();
 
-int oc_list_length(oc_list_t list);
+/**
+ * Remove the first object on a list.
+ *
+ * This function removes the first object on the list and returns a
+ * pointer to it.
+ *
+ * \param list The list.
+ * \return Pointer to the removed element of list.
+ */
+OC_API
+void *oc_list_pop(oc_list_t list) OC_NONNULL();
 
-void oc_list_copy(oc_list_t dest, oc_list_t src);
+/**
+ * Remove the last object on the list.
+ *
+ * This function removes the last object on the list and returns it.
+ *
+ * \param list The list
+ * \return The removed object
+ */
+OC_API
+void *oc_list_chop(oc_list_t list) OC_NONNULL();
 
-void oc_list_insert(oc_list_t list, void *previtem, void *newitem);
+/**
+ * Add an item to the start of the list.
+ *
+ * \param list The list.
+ * \param item A pointer to the item to be added.
+ *
+ * \sa oc_list_add()
+ * \sa oc_list_insert()
+ */
+OC_API
+void oc_list_push(oc_list_t list, void *item) OC_NONNULL();
 
+/**
+ * Add an item at the end of a list.
+ *
+ * This function adds an item to the end of the list.
+ *
+ * \param list The list.
+ * \param item A pointer to the item to be added.
+ *
+ * \sa oc_list_push()
+ * \sa oc_list_insert()
+ */
+OC_API
+void oc_list_add(oc_list_t list, void *item) OC_NONNULL();
+
+/**
+ * \brief      Insert an item after a specified item on the list
+ * \param list The list
+ * \param previtem The item after which the new item should be inserted
+ * \param newitem  The new item that is to be inserted
+ * \author     Adam Dunkels
+ *
+ *             This function inserts an item right after a specified
+ *             item on the list. This function is useful when using
+ *             the list module to ordered lists.
+ *
+ *             If previtem is NULL, the new item is placed at the
+ *             start of the list.
+ *
+ * \sa oc_list_add()
+ * \sa oc_list_push()
+ */
+OC_API
+void oc_list_insert(oc_list_t list, void *previtem, void *newitem)
+  OC_NONNULL(1, 3);
+
+/**
+ * Remove a specific element from a list.
+ *
+ * This function removes a specified element from the list.
+ *
+ * \param list The list.
+ * \param item The item that is to be removed from the list.
+ */
+OC_API
+void oc_list_remove(oc_list_t list, const void *item) OC_NONNULL(1);
+
+/**
+ * Remove a specific element from a list and return a pointer to the removed
+ * item.
+ *
+ * This function removes a specified element from the list.
+ *
+ * \param list The list.
+ * \param item The item that is to be removed from the list.
+ * \return Pointer to the removed element of list.
+ */
+OC_API
+void *oc_list_remove2(oc_list_t list, const void *item) OC_NONNULL(1);
+
+/**
+ * Get the length of a list.
+ *
+ * This function counts the number of elements on a specified list.
+ *
+ * \param list The list.
+ * \return The length of the list.
+ */
+OC_API
+int oc_list_length(oc_list_t list) OC_NONNULL();
+
+/**
+ * Check if a list contains a specific item.
+ *
+ * \param list The list.
+ * \param item The item to check for.
+ *
+ * \return True if the list contains the item
+ * \return False if the list does not contain the item
+ */
+OC_API
+bool oc_list_has_item(oc_list_t list, const void *item) OC_NONNULL();
+
+/**
+ * Duplicate a list.
+ *
+ * This function duplicates a list by copying the list reference, but
+ * not the elements.
+ *
+ * \note This function does \b not copy the elements of the list, but
+ * merely duplicates the pointer to the first element of the list.
+ *
+ * \param dest The destination list.
+ * \param src The source list.
+ */
+OC_API
+void oc_list_copy(oc_list_t dest, oc_list_t src) OC_NONNULL();
+
+/**
+ * \brief      Get the next item following this item
+ * \param item A list item
+ * \returns    A next item on the list
+ *
+ *             This function takes a list item and returns the next
+ *             item on the list, or NULL if there are no more items on
+ *             the list. This function is used when iterating through
+ *             lists.
+ */
+OC_API
 void *oc_list_item_next(void *item);
 
 #ifdef __cplusplus

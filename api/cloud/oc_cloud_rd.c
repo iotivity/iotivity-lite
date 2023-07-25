@@ -90,16 +90,16 @@ rd_link_find_by_href(oc_link_t *head, const char *href, size_t href_size)
 }
 
 static oc_link_t *
-rd_link_remove(oc_link_t **head, oc_link_t *l)
+rd_link_remove(oc_link_t **head, const oc_link_t *l)
 {
-  if (l) {
-    if (l == *head) {
-      return rd_link_pop(head);
-    }
-    oc_list_remove((oc_list_t)*head, l);
-    l->next = NULL;
+  if (*head == NULL || l == NULL) {
+    return NULL;
   }
-  return l;
+
+  if (l == *head) {
+    return rd_link_pop(head);
+  }
+  return oc_list_remove2((oc_list_t)*head, l);
 }
 
 static oc_link_t *
