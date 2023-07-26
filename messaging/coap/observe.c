@@ -53,6 +53,7 @@
 
 #include "api/oc_buffer_internal.h"
 #include "api/oc_helpers_internal.h"
+#include "api/oc_query_internal.h"
 #include "api/oc_server_api_internal.h"
 #include "messaging/coap/coap_options.h"
 #include "messaging/coap/observe.h"
@@ -188,32 +189,6 @@ coap_get_observers(void)
   return g_observers_list;
 }
 
-static oc_string_view_t
-get_iface_query(oc_interface_mask_t iface_mask)
-{
-  switch (iface_mask) {
-  case OC_IF_BASELINE:
-    return OC_STRING_VIEW("if=oic.if.baseline");
-  case OC_IF_LL:
-    return OC_STRING_VIEW("if=oic.if.ll");
-  case OC_IF_B:
-    return OC_STRING_VIEW("if=oic.if.b");
-  case OC_IF_R:
-    return OC_STRING_VIEW("if=oic.if.r");
-  case OC_IF_RW:
-    return OC_STRING_VIEW("if=oic.if.rw");
-  case OC_IF_A:
-    return OC_STRING_VIEW("if=oic.if.a");
-  case OC_IF_S:
-    return OC_STRING_VIEW("if=oic.if.s");
-  case OC_IF_CREATE:
-    return OC_STRING_VIEW("if=oic.if.create");
-  default:
-    break;
-  }
-  return oc_string_view_null();
-}
-
 static void
 coap_remove_observer(coap_observer_t *o)
 {
@@ -221,7 +196,7 @@ coap_remove_observer(coap_observer_t *o)
          o->token[0], o->token[1]);
 
 #ifdef OC_BLOCK_WISE
-  oc_string_view_t query = get_iface_query(o->iface_mask);
+  oc_string_view_t query = oc_query_encode_interface(o->iface_mask);
   oc_blockwise_state_t *response_state = oc_blockwise_find_response_buffer(
     oc_string(o->resource->uri) + 1, oc_string_len(o->resource->uri) - 1,
     &o->endpoint, OC_GET, query.data, query.length, OC_BLOCKWISE_SERVER);
@@ -592,7 +567,7 @@ coap_prepare_notification_blockwise(coap_packet_t *notification,
 {
   assert(oc_string_len(obs->resource->uri) > 0);
   notification->type = COAP_TYPE_CON;
-  oc_string_view_t query = get_iface_query(obs->iface_mask);
+  oc_string_view_t query = oc_query_encode_interface(obs->iface_mask);
   oc_blockwise_state_t *response_state = oc_blockwise_find_response_buffer(
     oc_string(obs->resource->uri) + 1, oc_string_len(obs->resource->uri) - 1,
     &obs->endpoint, OC_GET, query.data, query.length, OC_BLOCKWISE_SERVER);
@@ -779,7 +754,7 @@ coap_notify_collection(oc_collection_t *collection,
   uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
   if (!buffer) {
 #if OC_WRN_IS_ENABLED
-    oc_string_view_t iface = get_iface_query(iface_mask);
+    oc_string_view_t iface = oc_query_encode_interface(iface_mask);
     OC_WRN("coap_notify_collection(%s): out of memory allocating buffer",
            iface.data != NULL ? iface.data : "NULL");
 #endif /* OC_WRN_IS_ENABLED */
@@ -810,7 +785,7 @@ coap_notify_collection(oc_collection_t *collection,
   int err = 0;
   if (!oc_handle_collection_request(OC_GET, &request, iface_mask, NULL)) {
 #if OC_WRN_IS_ENABLED
-    oc_string_view_t iface = get_iface_query(iface_mask);
+    oc_string_view_t iface = oc_query_encode_interface(iface_mask);
     OC_WRN("coap_notify_collection(%s): failed to handle collection request",
            iface.data != NULL ? iface.data : "NULL");
 #endif /* OC_WRN_IS_ENABLED */
@@ -1202,7 +1177,7 @@ process_batch_observers(void *data)
     }
     coap_observer_t *obs = batch_obs->obs;
 #ifdef OC_BLOCK_WISE
-    oc_string_view_t query = get_iface_query(obs->iface_mask);
+    oc_string_view_t query = oc_query_encode_interface(obs->iface_mask);
     const oc_blockwise_state_t *response_state =
       oc_blockwise_find_response_buffer(oc_string(obs->resource->uri) + 1,
                                         oc_string_len(obs->resource->uri) - 1,

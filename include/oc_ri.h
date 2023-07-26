@@ -635,8 +635,8 @@ bool oc_ri_on_delete_resource_remove_callback(oc_ri_delete_resource_cb_t cb)
  *
  * @param query the input query
  * @param query_len the query length
- * @param[out] key the key
- * @param[out] key_len the length of the key
+ * @param[out] key the key (cannot be NULL)
+ * @param[out] key_len the length of the key (cannot be NULL)
  * @param[out] value the value belonging to the key
  * @param[out] value_len the length of the value
  * @param n the position to query
@@ -646,42 +646,46 @@ bool oc_ri_on_delete_resource_remove_callback(oc_ri_delete_resource_cb_t cb)
 int oc_ri_get_query_nth_key_value(const char *query, size_t query_len,
                                   const char **key, size_t *key_len,
                                   const char **value, size_t *value_len,
-                                  size_t n);
+                                  size_t n) OC_NONNULL(3, 4);
 
 /**
  * @brief retrieve the value of the query parameter "key"
  *
  * @param query the input query
  * @param query_len the query lenght
- * @param key the wanted key
+ * @param key the wanted key (cannot be NULL)
  * @param value the returned value
  * @return int the lenght of the value
  */
 int oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
-                          const char **value);
+                          const char **value) OC_NONNULL(3);
 
 /**
  * @brief checks if key exist in query
  *
  * @param[in] query the query to inspect
  * @param[in] query_len the lenght of the query
- * @param[in] key the key to be checked if exist, key is null terminated
+ * @param[in] key the key to be checked if exist, key is null terminated (cannot
+ * be NULL)
  * @return int -1 = not exists
  */
-int oc_ri_query_exists(const char *query, size_t query_len, const char *key);
+int oc_ri_query_exists(const char *query, size_t query_len, const char *key)
+  OC_NONNULL(3);
 
 /**
  * @brief check if the nth key exists
  *
  * @param query the query to inspect
  * @param query_len the lenght of the query
- * @param key the key to be checked if exist, key is not null terminated
- * @param key_len the key length
+ * @param key the key to be checked if exist, key is not null terminated (cannot
+ * be NULL)
+ * @param key_len the key length (cannot be NULL)
  * @param n index of the key
  * @return int -1 = not exists
  */
 int oc_ri_query_nth_key_exists(const char *query, size_t query_len,
-                               const char **key, size_t *key_len, size_t n);
+                               const char **key, size_t *key_len, size_t n)
+  OC_NONNULL(3, 4);
 
 #ifdef __cplusplus
 }

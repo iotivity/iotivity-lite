@@ -167,6 +167,9 @@
     <ClCompile Include="..\..\..\util\oc_process.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_query.c">
+      <Filter>Core</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\api\oc_rep.c">
       <Filter>Core</Filter>
     </ClCompile>

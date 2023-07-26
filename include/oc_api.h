@@ -1421,7 +1421,7 @@ bool oc_iterate_query_get_values(const oc_request_t *request, const char *key,
  *       string since there may be additional query parameters.
  *
  * @param[in] request the oc_request_t that contains the query parameters
- * @param[in] key the key being searched for
+ * @param[in] key the key being searched for (cannot be NULL)
  * @param[out] value pointer to the value string assigned to the key
  *
  * @return
@@ -1430,20 +1430,21 @@ bool oc_iterate_query_get_values(const oc_request_t *request, const char *key,
  */
 OC_API
 int oc_get_query_value(const oc_request_t *request, const char *key,
-                       const char **value);
+                       const char **value) OC_NONNULL(2);
 
 /**
  * Checks if a query parameter 'key' exist in the URL query parameter
  *
  * @param[in] request the oc_request_t that contains the query parameters
- * @param[in] key the key being searched for
+ * @param[in] key the key being searched for (cannot be NULL)
  *
  * @return
  *   - 1 exist
  *   - -1 does not exist
  */
 OC_API
-int oc_query_value_exists(const oc_request_t *request, const char *key);
+int oc_query_value_exists(const oc_request_t *request, const char *key)
+  OC_NONNULL(2);
 
 /**
  * Called after the response to a GET, PUT, POST or DELETE call has been
