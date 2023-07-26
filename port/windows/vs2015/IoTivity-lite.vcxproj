@@ -340,6 +340,7 @@
     <ClCompile Include="..\..\..\api\oc_main.c" />
     <ClCompile Include="..\..\..\api\oc_mnt.c" />
     <ClCompile Include="..\..\..\api\oc_network_events.c" />
+    <ClCompile Include="..\..\..\api\oc_query.c" />
     <ClCompile Include="..\..\..\api\oc_rep.c" />
     <ClCompile Include="..\..\..\api\oc_resource_factory.c" />
     <ClCompile Include="..\..\..\api\oc_ri.c" />

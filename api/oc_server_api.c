@@ -53,7 +53,6 @@
 #include <stdlib.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-static size_t g_query_iterator;
 static oc_send_response_cb_t g_oc_send_response_cb;
 
 int
@@ -88,25 +87,6 @@ oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb,
     return -1;
   }
   return 0;
-}
-
-int
-oc_get_query_value(const oc_request_t *request, const char *key,
-                   const char **value)
-{
-  if (!request) {
-    return -1;
-  }
-  return oc_ri_get_query_value(request->query, request->query_len, key, value);
-}
-
-int
-oc_query_value_exists(const oc_request_t *request, const char *key)
-{
-  if (!request) {
-    return -1;
-  }
-  return oc_ri_query_exists(request->query, request->query_len, key);
 }
 
 static int
@@ -383,45 +363,6 @@ void
 oc_process_baseline_interface(const oc_resource_t *resource)
 {
   oc_process_baseline_interface_with_filter(resource, NULL, NULL);
-}
-
-void
-oc_init_query_iterator(void)
-{
-  g_query_iterator = 0;
-}
-
-int
-oc_iterate_query(const oc_request_t *request, const char **key, size_t *key_len,
-                 const char **value, size_t *value_len)
-{
-  ++g_query_iterator;
-  return oc_ri_get_query_nth_key_value(request->query, request->query_len, key,
-                                       key_len, value, value_len,
-                                       g_query_iterator);
-}
-
-bool
-oc_iterate_query_get_values(const oc_request_t *request, const char *key,
-                            const char **value, int *value_len)
-{
-  size_t key_len = strlen(key);
-  int pos = 0;
-  do {
-    const char *k = NULL;
-    size_t k_len = 0;
-    const char *v = NULL;
-    size_t v_len = 0;
-    pos = oc_iterate_query(request, &k, &k_len, &v, &v_len);
-    if (pos != -1 && key_len == k_len && memcmp(key, k, k_len) == 0) {
-      *value = v;
-      *value_len = (int)v_len;
-      goto more_or_done;
-    }
-  } while (pos != -1);
-
-more_or_done:
-  return pos != -1 && (size_t)pos < request->query_len;
 }
 
 #ifdef OC_SERVER
