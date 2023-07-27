@@ -28,7 +28,6 @@
 #include "oc_api.h"
 #include "oc_buffer.h"
 #include "oc_core_res.h"
-#include "oc_discovery.h"
 #include "oc_events_internal.h"
 #include "oc_network_events_internal.h"
 #include "oc_uuid.h"
@@ -815,7 +814,7 @@ ri_get_ocf_version_from_header(const coap_packet_t *request)
   uint16_t accept = 0;
   if (coap_options_get_accept(request, &accept) == 1) {
     if (accept == APPLICATION_CBOR) {
-      return = OIC_VER_1_1_0;
+      return OIC_VER_1_1_0;
     }
   }
 #else  /* !OC_SPEC_VER_OIC */

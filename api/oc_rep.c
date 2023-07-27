@@ -642,7 +642,6 @@ oc_rep_get_value(const oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
         (strncmp(key, oc_string(rep_value->name),
                  oc_string_len(rep_value->name)) == 0) &&
         (rep_value->type == type)) {
-      OC_DBG("Found the value with %s", key);
       switch (rep_value->type) {
       case OC_REP_NIL:
         **(bool **)value = true;

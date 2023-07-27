@@ -22,7 +22,7 @@
 #include "oc_core_res.h"
 #include "oc_core_res_internal.h"
 #include "oc_csr.h"
-#include "oc_discovery.h"
+#include "oc_discovery_internal.h"
 #include "oc_endpoint.h"
 #include "oc_introspection_internal.h"
 #include "oc_rep.h"
@@ -351,10 +351,10 @@ oc_core_add_new_device(oc_add_new_device_t cfg)
     oc_create_con_resource(device_count);
   }
 
-  oc_create_discovery_resource(OCF_RES, device_count);
+  oc_create_discovery_resource(device_count);
 
 #ifdef OC_WKCORE
-  oc_create_discovery_resource(WELLKNOWNCORE, device_count);
+  oc_create_wkcore_resource(device_count);
 #endif /* OC_WKCORE */
 
 #ifdef OC_INTROSPECTION
@@ -706,8 +706,8 @@ oc_core_get_resource_type_by_uri(const char *uri, size_t uri_len)
                            OC_CHAR_ARRAY_LEN("/oic/p"))) {
     return OCF_D;
   }
-  if (core_is_resource_uri(uri, uri_len, "/oic/res",
-                           OC_CHAR_ARRAY_LEN("/oic/res"))) {
+  if (core_is_resource_uri(uri, uri_len, OCF_RES_URI,
+                           OC_CHAR_ARRAY_LEN(OCF_RES_URI))) {
     return OCF_RES;
   }
   if (oc_get_con_res_announced() &&

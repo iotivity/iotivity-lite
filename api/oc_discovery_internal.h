@@ -20,8 +20,10 @@
 #define OC_DISCOVERY_INTERNAL_H
 
 #include "oc_client_state.h"
+#include "oc_config.h"
 #include "oc_endpoint.h"
 #include "oc_ri.h"
+#include "util/oc_features.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -29,6 +31,42 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define OCF_RES_URI "/oic/res"
+#define OCF_RES_RT "oic.wk.res"
+#define OCF_RES_DEFAULT_IF (OC_IF_LL)
+
+enum {
+  OCF_RES_IF_MASK = OC_IF_BASELINE | OC_IF_LL
+#ifdef OC_RES_BATCH_SUPPORT
+                    | OC_IF_B
+#endif /* OC_RES_BATCH_SUPPORT */
+  ,
+  OCF_RES_PROPERTIES_MASK = OC_DISCOVERABLE
+#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
+                            | OC_OBSERVABLE
+#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
+  ,
+};
+
+#define OCF_RES_QUERY_SDUUID "sduuid"
+
+/** The bitmask property should indicate only (discoverable, observable and
+ * pushable) flags, see OCF Core Specification 7.8.2.5.3
+ */
+#ifdef OC_HAS_FEATURE_PUSH
+#define OCF_RES_POLICY_PROPERTIES                                              \
+  (OC_DISCOVERABLE | OC_OBSERVABLE | OC_PUSHABLE)
+#else
+#define OCF_RES_POLICY_PROPERTIES (OC_DISCOVERABLE | OC_OBSERVABLE)
+#endif /* OC_HAS_FEATURE_PUSH */
+
+/**
+ * @brief Create /oic/res resource
+ *
+ * @param device the device to which the resource belongs
+ */
+void oc_create_discovery_resource(size_t device);
 
 /**
  * @brief handle the discovery payload (e.g. parse the oic/res response and do
@@ -62,6 +100,12 @@ bool oc_filter_out_ep_for_resource(const oc_endpoint_t *ep,
                                    const oc_resource_t *resource,
                                    const oc_endpoint_t *request_origin,
                                    size_t device_index, bool owned_for_SVRs);
+
+#ifdef OC_WKCORE
+
+void oc_create_wkcore_resource(size_t device);
+
+#endif /* OC_WKCORE */
 
 #ifdef __cplusplus
 }

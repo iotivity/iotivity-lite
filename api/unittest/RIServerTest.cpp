@@ -398,20 +398,9 @@ public:
     };
 
     std::vector<oc::DynamicResourceToAdd> dynResources = {
-      {
-        "Dynamic Resource 1",
-        "/dyn1",
-        {
-          "oic.d.dynamic",
-          "oic.d.test",
-        },
-        {
-          OC_IF_BASELINE,
-          OC_IF_RW,
-        },
-        handlers,
-        true,
-      },
+      oc::makeDynamicResourceToAdd("Dynamic Resource 1", "/dyn1",
+                                   { "oic.d.dynamic", "oic.d.test" },
+                                   { OC_IF_BASELINE, OC_IF_RW }, handlers),
     };
     for (const auto &dr : dynResources) {
       oc_resource_t *res = oc::TestDevice::AddDynamicResource(dr, kDeviceID);
