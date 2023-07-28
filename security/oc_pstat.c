@@ -80,6 +80,23 @@ oc_sec_pstat_init(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
+/*
+ * modifiedbyme <2023/7/25> add func : oc_sec_add_new_pstat(){}
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+void
+oc_sec_add_new_pstat(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  g_pstat =
+    (oc_sec_pstat_t *)realloc(g_pstat, (oc_core_get_num_devices()+1) * sizeof(oc_sec_pstat_t));
+  if (!g_pstat) {
+    oc_abort("Insufficient memory");
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 static bool
 nil_uuid(const oc_uuid_t *uuid)
 {

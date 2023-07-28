@@ -63,6 +63,19 @@ void oc_set_drop_commands(size_t device, bool drop);
  */
 bool oc_drop_command(size_t device);
 
+/*
+ * modifiedbyme <2023/7/16> add func proto : `oc_resize_drop_command()`
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+/**
+ * @brief Realloc memory for g_drop_commands, It is necessary when the Bridge
+ *        manages Devices dynamically
+ *
+ * @param[in] device_count number of Devices
+ */
+void oc_resize_drop_command(size_t device_count);
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 #ifdef __cplusplus
 }
 #endif

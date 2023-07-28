@@ -28,6 +28,19 @@ extern "C" {
  */
 void oc_sec_svr_create(void);
 
+/*
+ * modifiedbyme <2023/7/28> add func proto : oc_sec_svr_add()
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+/**
+ * @brief add SVR for the Device which is added dynamically.
+ *        new Device should be added to `g_oc_device_info[]`
+ *        before calling this function.
+ */
+void oc_sec_svr_add(void);
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
+
 /**
  * @brief Deinitialize secure vertical resources;
  */

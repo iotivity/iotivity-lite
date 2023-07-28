@@ -308,6 +308,13 @@ typedef void (*oc_payload_callback_t)(void);
 
 #endif /* OC_HAS_FEATURE_PUSH */
 
+/*
+ * modifiedbyme <2023/7/16> define func ptr type : oc_remove_resource_cb_t
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+typedef void (*oc_remove_resource_cb_t)(oc_resource_t *rsc);
+#endif
+
 /**
  * @brief properties callback structure
  *
@@ -365,6 +372,14 @@ struct oc_resource_s
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
   oc_ace_permissions_t
     anon_permission_in_rfotm; ///< permissions for anonymous connection in RFOTM
+#endif
+
+/*
+ * modifiedbyme <2023/7/16> add func pointer var : `oc_resource_s.remove_resource_data()`
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+  oc_remove_resource_cb_t
+    resource_data_remover; ///< callback to be called when the Device including this Resource is removed
 #endif
 };
 
@@ -626,8 +641,23 @@ bool oc_ri_on_delete_resource_add_callback(oc_ri_delete_resource_cb_t cb)
 OC_API
 bool oc_ri_on_delete_resource_remove_callback(oc_ri_delete_resource_cb_t cb)
   OC_NONNULL();
-
 #endif /* OC_SERVER */
+
+/*
+ * modifiedbyme <2023/7/17> add func proto : oc_ri_delete_app_resources_per_device()
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+/**
+ * @brief remove the resource mapped to specific Device
+ *        from the list of application resources
+ *
+ * @param index index of `g_oc_device_info[]`
+ * @return true success
+ * @return false failure
+ */
+OC_API
+void oc_ri_delete_app_resources_per_device(size_t index);
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 /**
  * @brief retrieve the query value at the nth position

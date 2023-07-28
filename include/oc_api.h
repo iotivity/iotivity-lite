@@ -1467,6 +1467,24 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
                                      oc_method_t method,
                                      oc_request_callback_t callback,
                                      void *user_data);
+
+/*
+ * modifiedbyme <2023/7/17> add func proto : oc_resource_set_date_remover()
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+/**
+ * @brief set callback funcion to be called when this application Resource is deleted
+ *        this callback function usually frees data structures for Properties of the
+ *        application Resource.
+ *
+ * @param[in] resource the Resource the callback will be registered to
+ * @param[in] callback callback function itself
+ */
+OC_API
+void oc_resource_set_date_remover(oc_resource_t *resource, oc_remove_resource_cb_t callback);
+#endif
+
+
 #ifdef OC_OSCORE
 /**
  * @brief sets the support of the secure multicast feature

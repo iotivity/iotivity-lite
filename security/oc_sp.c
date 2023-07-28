@@ -74,6 +74,25 @@ oc_sec_sp_init(void)
   }
 }
 
+
+/*
+ * modifiedbyme <2023/7/25> add func : oc_sec_add_new_sp(){}
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+void
+oc_sec_add_new_sp(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  g_sp =
+    (oc_sec_sp_t *)realloc(g_sp, oc_core_get_num_devices() * sizeof(oc_sec_sp_t));
+  if (!g_sp) {
+    oc_abort("Insufficient memory");
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
+
 void
 oc_sec_sp_free(void)
 {

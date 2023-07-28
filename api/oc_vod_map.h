@@ -1,18 +1,19 @@
 /*
-// Copyright (c) 2020 Intel Corporation
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-//      http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-*/
+ * Copyright (c) 2020 Intel Corporation
+ * Copyright (c) 2023 ETRI
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this fi le except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include "oc_rep.h"
 #include "oc_bridge.h"
@@ -36,28 +37,33 @@ extern "C" {
 }
 */
 
-typedef struct oc_vod_list_t
+typedef struct oc_vod_mapping_list_s
 {
   OC_LIST_STRUCT(vods);
-  size_t next_index;
-} oc_vod_list_t;
+  size_t next_index; // index of g_oc_device_info[]
+} oc_vod_mapping_list_t;
 
 /*
- * open vod_map file from creds directory and populate
- * oc_vod_list_t
+ * open vod_map file from creds directory and populate `oc_vod_list_t`
  * initilize this from the add_bridge
  */
-void oc_vod_map_init();
+/**
+ * @brief
+ * - initialize VOD list : g_vod_list.vods
+ * - initialize next_index with `g_device_count`
+ * - load existing g_vod_list from disk
+ */
+void oc_vod_map_init(void);
 
 /*
  * release all of the memory
  */
-void oc_vod_map_free();
+void oc_vod_map_free(void);
 
 /*
  * Reset the vod map as if no VODs had been discovered.
  */
-void oc_vod_map_reset();
+void oc_vod_map_reset(void);
 /*
  * returns index of the vod or 0 if not found
  */

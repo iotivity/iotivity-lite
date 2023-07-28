@@ -55,6 +55,27 @@ oc_sec_sdi_init(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
+
+
+/*
+ * modifiedbyme <2023/7/25> add func : oc_sec_add_new_sdi(){}
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+void
+oc_sec_add_new_sdi(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  g_sdi =
+    (oc_sec_sdi_t *)realloc(g_sdi, oc_core_get_num_devices() * sizeof(oc_sec_sdi_t));
+  if (!g_sdi) {
+    oc_abort("Insufficient memory");
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
+
+
 void
 oc_sec_sdi_free(void)
 {

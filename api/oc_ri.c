@@ -560,6 +560,27 @@ oc_ri_delete_all_app_resources(void)
 }
 #endif /* OC_SERVER */
 
+/*
+ * modifiedbyme <2023/7/17> add new func : oc_ri_delete_app_resources_per_device(){}
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+void
+oc_ri_delete_app_resources_per_device(size_t index)
+{
+  oc_resource_t *res = oc_ri_get_app_resources();
+
+  while (res) {
+    if (res->device == index) {
+      if (res->resource_data_remover) {
+        res->resource_data_remover(res);
+      }
+      oc_ri_delete_resource(res);
+    }
+    res = oc_ri_get_app_resources();
+  }
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 void
 oc_ri_init(void)
 {

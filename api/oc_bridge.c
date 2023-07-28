@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020 Intel Corporation
+ * Copyright (c) 2023 ETRI
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,37 +14,43 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "util/oc_features.h"
+
+#ifdef OC_HAS_FEATURE_BRIDGE
 
 #include "oc_bridge.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_core_res_internal.h"
 #include "oc_vod_map.h"
-#include "port/oc_log.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_assert.h"
 
 #ifdef OC_SECURITY
-#include "security/oc_store.h"
+#include "oc_store.h"
 #endif // OC_SECURITY
 
 /*
- * internal struct that holds the values that build the oic.r.vodlist
+ * internal struct that holds the values that build the `oic.r.vodlist`
  * properties.
  */
-typedef struct oc_vods_t
+typedef struct oc_vods_s
 {
-  struct oc_vods_t *next;
+  struct oc_vods_s *next;
   oc_string_t name;
   oc_uuid_t di;
   oc_string_t econame;
 } oc_vods_t;
 
-OC_LIST(oc_vods_list_t);
-static oc_resource_t *bridge_res;
+/*
+ * todo4me <2023/7/24> rename global variable name (add `g_` prefixs)
+ */
+OC_LIST(g_vods);
+static oc_resource_t *g_vodlist_res;
 
 #define OC_PRINT_VODSLIST                                                      \
   OC_DBG("\"vods\": [");                                                       \
-  oc_vods_t *print_vod_item = (oc_vods_t *)oc_list_head(oc_vods_list_t);       \
+  oc_vods_t *print_vod_item = (oc_vods_t *)oc_list_head(g_vods);       \
   while (print_vod_item) {                                                     \
     OC_DBG("  {");                                                             \
     OC_DBG("    \"n\": \"%s\"", oc_string(print_vod_item->name));              \
@@ -72,27 +79,33 @@ oc_bridge_is_virtual_device(size_t device_index)
   return false;
 }
 
-void
+static void
 add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
                                 const char *econame)
 {
   oc_vods_t *vod = (oc_vods_t *)malloc(sizeof(oc_vods_t));
   oc_new_string(&vod->name, name, strlen(name));
-  oc_uuid_copy(&vod->di, di);
+//  oc_uuid_copy(&vod->di, di);
+  memcpy(&vod->di, di, sizeof(oc_uuid_t));
   oc_new_string(&vod->econame, econame, strlen(econame));
-  oc_list_add(oc_vods_list_t, vod);
+
+  oc_list_add(g_vods, vod);
+
   OC_DBG("oc_bridge: adding %s [%s] from oic.r.vodslist", name, econame);
   OC_PRINT_VODSLIST;
 }
 
-void
+/*
+ * remove VOD from `oic.r.vodlist` Resource
+ */
+static void
 remove_virtual_device_from_vods_list(const oc_uuid_t *di)
 {
-  oc_vods_t *vod_item = (oc_vods_t *)oc_list_head(oc_vods_list_t);
+  oc_vods_t *vod_item = (oc_vods_t *)oc_list_head(g_vods);
   while (vod_item) {
     if (memcmp(&vod_item->di, di, 16) == 0) {
-      oc_list_remove(oc_vods_list_t, vod_item);
-      OC_DBG("oc_bridge: removing %s [%s] from oic.r.vodslist",
+      oc_list_remove(g_vods, vod_item);
+      OC_DBG("oc_bridge: removing %s [%s] from oic.r.vodlist",
              oc_string(vod_item->name), oc_string(vod_item->econame));
       oc_free_string(&vod_item->name);
       oc_free_string(&vod_item->econame);
@@ -117,7 +130,7 @@ get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
   case OC_IF_R:
     oc_rep_set_array(root, vods);
     char di_str[OC_UUID_LEN];
-    oc_vods_t *vod_item = (oc_vods_t *)oc_list_head(oc_vods_list_t);
+    oc_vods_t *vod_item = (oc_vods_t *)oc_list_head(g_vods);
     while (vod_item) {
       oc_rep_object_array_begin_item(vods);
       oc_rep_set_text_string(vods, n, oc_string(vod_item->name));
@@ -144,13 +157,13 @@ get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
  * 2. Updating the oic.r.vodslist when ownership status of the virtual devices
  *    is change
  */
-void
+static void
 doxm_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
                    bool owned, void *user_data)
 {
   (void)user_data;
   /* Bridge Device */
-  if (bridge_res->device == device_index) {
+  if (g_vodlist_res->device == device_index) {
     if (owned) {
       /*
        *walk all devices
@@ -164,7 +177,10 @@ doxm_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
         }
         if (!oc_is_owned_device(device)) {
           if (oc_bridge_is_virtual_device(device)) {
-            if (oc_connectivity_init(device) < 0) {
+            oc_connectivity_ports_t ports;
+            memset(&ports, 0, sizeof(ports));
+
+            if (oc_connectivity_init(device, ports) < 0) {
               oc_abort("error initializing connectivity for device");
             }
             OC_DBG("oc_bridge: init connectivity for virtual device %zd",
@@ -216,8 +232,8 @@ doxm_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
       remove_virtual_device_from_vods_list(device_uuid);
     }
     /* notify any observers that the vodslist has been updated */
-    if (oc_is_owned_device(bridge_res->device)) {
-      oc_notify_observers(bridge_res);
+    if (oc_is_owned_device(g_vodlist_res->device)) {
+      oc_notify_observers(g_vodlist_res);
     }
   }
 }
@@ -236,17 +252,23 @@ oc_bridge_add_bridge_device(const char *name, const char *spec_version,
 
   size_t bridge_device_index = oc_core_get_num_devices() - 1;
 
-  bridge_res = oc_new_resource(name, "/bridge/vodlist", 1, bridge_device_index);
-  oc_resource_bind_resource_type(bridge_res, "oic.r.vodlist");
-  oc_resource_bind_resource_interface(bridge_res, OC_IF_R);
-  oc_resource_set_default_interface(bridge_res, OC_IF_R);
-  oc_resource_set_discoverable(bridge_res, true);
-  // TODO do we need to make the oic.r.vodlist periodic observable?
-  oc_resource_set_periodic_observable(bridge_res, 30);
-  oc_resource_set_request_handler(bridge_res, OC_GET, get_bridge, NULL);
-  if (!oc_add_resource(bridge_res)) {
+  g_vodlist_res = oc_new_resource(name, "/bridge/vodlist", 1, bridge_device_index);
+  oc_resource_bind_resource_type(g_vodlist_res, "oic.r.vodlist");
+  oc_resource_bind_resource_interface(g_vodlist_res, OC_IF_R);
+  oc_resource_set_default_interface(g_vodlist_res, OC_IF_R);
+  oc_resource_set_discoverable(g_vodlist_res, true);
+  // TODO4me <2023/7/24> do we need to make the oic.r.vodlist periodic observable?
+  oc_resource_set_periodic_observable(g_vodlist_res, 30);
+  oc_resource_set_request_handler(g_vodlist_res, OC_GET, get_bridge, NULL);
+  if (!oc_add_resource(g_vodlist_res)) {
     return -1;
   }
+
+  /*
+   * - initialize VOD list : g_vod_list.vods
+   * - initialize next_index with `g_device_count`
+   * - load existing g_vod_list from disk
+   */
   oc_vod_map_init();
 
 #ifdef OC_SECURITY
@@ -263,12 +285,27 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
                              const char *data_model_version,
                              oc_add_device_cb_t add_device_cb, void *data)
 {
+  /*
+   * vd_index : index of `g_oc_device_info[]` which has new VOD..
+   */
   size_t vd_index =
     oc_vod_map_add_id(virtual_device_id, virtual_device_id_size, econame);
 
-  oc_device_info_t *device = oc_core_add_new_device_at_index(
-    uri, rt, name, spec_version, data_model_version, vd_index, add_device_cb,
-    data);
+  oc_add_new_device_t cfg = {
+      .uri = uri,
+      .rt = rt,
+      .name = name,
+      .spec_version = spec_version,
+      .data_model_version = data_model_version,
+      .add_device_cb = add_device_cb,
+      .add_device_cb_data = data,
+  };
+
+  oc_device_info_t *device = oc_core_add_new_device_at_index(cfg, vd_index);
+//  oc_device_info_t *device = oc_core_add_new_device_at_index(
+//    uri, rt, name, spec_version, data_model_version, vd_index, add_device_cb,
+//    data);
+
   if (!device) {
     return 0;
   }
@@ -293,14 +330,18 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
    * when the ownership of the bridge device changes.
    */
 #ifdef OC_SECURITY
-  if (oc_is_owned_device(bridge_res->device) || oc_is_owned_device(vd_index)) {
-    if (oc_connectivity_init(vd_index) < 0) {
+  if (oc_is_owned_device(g_vodlist_res->device) || oc_is_owned_device(vd_index)) {
+    oc_connectivity_ports_t ports;
+    memset(&ports, 0, sizeof(ports));
+    if (oc_connectivity_init(vd_index, ports) < 0) {
       oc_abort("error initializing connectivity for device");
     }
     OC_DBG("oc_bridge: init connectivity for virtual device %zd", vd_index);
   }
 #else
-  if (oc_connectivity_init(vd_index) < 0) {
+  oc_connectivity_ports_t ports;
+  memset(&ports, 0, sizeof(ports));
+  if (oc_connectivity_init(vd_index, ports) < 0) {
     oc_abort("error initializing connectivity for device");
   }
 #endif /* OC_SECURITY */
@@ -311,7 +352,7 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
   if (oc_is_owned_device(vd_index)) {
     add_virtual_device_to_vods_list(name, oc_core_get_device_id(vd_index),
                                     econame);
-    oc_notify_observers(bridge_res);
+    oc_notify_observers(g_vodlist_res);
   }
 #endif // OC_SECURITY
   return vd_index;
@@ -355,3 +396,5 @@ oc_bridge_get_virtual_device_info(size_t virtual_device_index)
 {
   return oc_vod_map_get_virtual_device(virtual_device_index);
 }
+
+#endif /* OC_HAS_FEATURE_BRIDGE */

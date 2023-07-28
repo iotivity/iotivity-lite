@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/secure_mcast_client.dir/secure_mcast_client.c.o -o secure_mcast_client  ../libiotivity-lite-client-static.a -lm ../deps/tinycbor/libtinycbor.a ../deps/mbedtls/library/libmbedtls.a ../deps/mbedtls/library/libmbedx509.a ../deps/mbedtls/library/libmbedcrypto.a 

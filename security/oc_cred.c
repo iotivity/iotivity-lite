@@ -100,6 +100,23 @@ oc_sec_cred_init(void)
   }
 }
 
+/*
+ * modifiedbyme <2023/7/25> add func : oc_sec_add_new_cred(){}
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+void
+oc_sec_add_new_creds(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  devices =
+    (oc_sec_creds_t *)realloc(devices, (oc_core_get_num_devices()+1) * sizeof(oc_sec_creds_t));
+  if (!devices) {
+    oc_abort("Insufficient memory");
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 oc_sec_cred_t *
 oc_sec_get_cred_by_credid(int credid, size_t device)
 {

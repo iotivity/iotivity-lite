@@ -49,6 +49,18 @@ typedef struct
 } oc_sec_doxm_t;
 
 void oc_sec_doxm_init(void);
+
+/*
+ * modifiedbyme <2023/7/25> add func proto : void oc_sec_add_new_doxm()
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+/**
+ * @brief increase existing memory for all doxms for all Devices
+ * by the size of `oc_sec_doxm_t`
+ */
+void oc_sec_add_new_doxm(void);
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 void oc_sec_doxm_free(void);
 bool oc_sec_decode_doxm(const oc_rep_t *rep, bool from_storage, bool doc,
                         size_t device);

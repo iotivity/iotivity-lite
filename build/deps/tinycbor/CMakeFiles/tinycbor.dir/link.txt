@@ -1,0 +1,2 @@
+/usr/bin/ar qc libtinycbor.a CMakeFiles/tinycbor.dir/src/cborencoder_close_container_checked.c.o CMakeFiles/tinycbor.dir/src/cborencoder_float.c.o CMakeFiles/tinycbor.dir/src/cborencoder.c.o CMakeFiles/tinycbor.dir/src/cborerrorstrings.c.o CMakeFiles/tinycbor.dir/src/cborparser.c.o CMakeFiles/tinycbor.dir/src/cborparser_float.c.o CMakeFiles/tinycbor.dir/src/cborpretty.c.o
+/usr/bin/ranlib libtinycbor.a

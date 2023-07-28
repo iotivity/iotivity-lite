@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/simpleserver_pki.dir/simpleserver_pki.c.o -o simpleserver_pki  ../libiotivity-lite-server-static.a -lm ../deps/tinycbor/libtinycbor.a ../deps/mbedtls/library/libmbedtls.a ../deps/mbedtls/library/libmbedx509.a ../deps/mbedtls/library/libmbedcrypto.a 

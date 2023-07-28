@@ -36,6 +36,18 @@ extern "C" {
 #define OC_ACE_WC_ALL_PUBLIC_STR "-"
 
 void oc_sec_acl_init(void);
+
+/*
+ * modifiedbyme <2023/7/25> add func proto : oc_sec_add_new_acl()
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+/**
+ * @brief increase existing memory for acl for all Devices
+ * by the size of `oc_sec_acl_t`
+ */
+void oc_sec_add_new_acl(void);
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 void oc_sec_acl_free(void);
 void oc_sec_acl_default(size_t device);
 bool oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,

@@ -64,6 +64,18 @@ int oc_sec_add_new_cred(
 
 void oc_sec_cred_default(size_t device);
 void oc_sec_cred_init(void);
+
+/*
+ * modifiedbyme <2023/7/25> add func proto : oc_sec_add_new_cred(){}
+ */
+/**
+ * @brief increase existing memory for cred for all Devices
+ * by the size of `oc_sec_creds_t`
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+void oc_sec_add_new_creds(void);
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 void oc_sec_cred_free(void);
 void oc_sec_encode_cred(size_t device, oc_interface_mask_t iface_mask,
                         bool to_storage);

@@ -62,6 +62,32 @@ oc_platform_info_t *oc_core_init_platform(const char *mfg_name,
  */
 oc_device_info_t *oc_core_add_new_device(oc_add_new_device_t cfg);
 
+/*
+ * modifiedbyme <2023/7/16> add func proto : `oc_core_add_new_device_at_index()`
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+/**
+ * @brief Add new device to the position designeted by `index` of Device array (g_oc_device_info[])
+ *
+ * @param cfg device configuration
+ * @param index index of `g_oc_device_info[]`
+ * @return oc_device_info_t* the device information
+ */
+oc_device_info_t *oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index);
+
+/*
+ * modifiedbyme <2023/7/16> add func proto : `oc_core_remove_device_at_index()`
+ */
+/**
+ * @brief Remove existing device at "index" position
+ *
+ * @param index
+ * @return true success
+ * @return false failure
+ */
+bool oc_core_remove_device_at_index(size_t index);
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 /**
  * @brief encode the interfaces with the cbor (payload) encoder
  *

@@ -49,6 +49,14 @@ typedef struct
  */
 void oc_sec_sdi_init(void);
 
+/*
+ * modifiedbyme <2023/7/25> add func proto : oc_sec_add_new_sdi()
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+void oc_sec_add_new_sdi(void);
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
+
 /**
  * @brief Deallocate all sdi resource data.
  */

@@ -89,6 +89,14 @@ typedef struct oc_sec_ael_t
 } oc_sec_ael_t;
 
 void oc_sec_ael_init(void);
+
+/*
+ * modifiedbyme <2023/7/25> add func proto : oc_sec_add_new_ael()
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+void oc_sec_add_new_ael(void);
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 void oc_sec_ael_free(void);
 
 void oc_sec_ael_default(size_t device);

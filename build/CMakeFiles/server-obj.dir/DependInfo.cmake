@@ -1,0 +1,95 @@
+
+# Consider dependencies only in project.
+set(CMAKE_DEPENDS_IN_PROJECT_ONLY OFF)
+
+# The set of languages for which implicit dependencies are needed:
+set(CMAKE_DEPENDS_LANGUAGES
+  )
+
+# The set of dependency files which are needed:
+set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_base64.c" "CMakeFiles/server-obj.dir/api/oc_base64.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_base64.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_blockwise.c" "CMakeFiles/server-obj.dir/api/oc_blockwise.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_blockwise.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_bridge.c" "CMakeFiles/server-obj.dir/api/oc_bridge.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_bridge.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_buffer.c" "CMakeFiles/server-obj.dir/api/oc_buffer.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_buffer.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_client_api.c" "CMakeFiles/server-obj.dir/api/oc_client_api.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_client_api.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_client_role.c" "CMakeFiles/server-obj.dir/api/oc_client_role.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_client_role.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_clock.c" "CMakeFiles/server-obj.dir/api/oc_clock.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_clock.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_collection.c" "CMakeFiles/server-obj.dir/api/oc_collection.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_collection.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_core_res.c" "CMakeFiles/server-obj.dir/api/oc_core_res.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_core_res.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_discovery.c" "CMakeFiles/server-obj.dir/api/oc_discovery.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_discovery.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_endpoint.c" "CMakeFiles/server-obj.dir/api/oc_endpoint.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_endpoint.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_enums.c" "CMakeFiles/server-obj.dir/api/oc_enums.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_enums.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_event_callback.c" "CMakeFiles/server-obj.dir/api/oc_event_callback.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_event_callback.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_events.c" "CMakeFiles/server-obj.dir/api/oc_events.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_events.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_helpers.c" "CMakeFiles/server-obj.dir/api/oc_helpers.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_helpers.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_introspection.c" "CMakeFiles/server-obj.dir/api/oc_introspection.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_introspection.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_log.c" "CMakeFiles/server-obj.dir/api/oc_log.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_log.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_main.c" "CMakeFiles/server-obj.dir/api/oc_main.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_main.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_mnt.c" "CMakeFiles/server-obj.dir/api/oc_mnt.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_mnt.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_network_events.c" "CMakeFiles/server-obj.dir/api/oc_network_events.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_network_events.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_push.c" "CMakeFiles/server-obj.dir/api/oc_push.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_push.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_rep.c" "CMakeFiles/server-obj.dir/api/oc_rep.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_rep.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_rep_encode.c" "CMakeFiles/server-obj.dir/api/oc_rep_encode.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_rep_encode.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_rep_to_json.c" "CMakeFiles/server-obj.dir/api/oc_rep_to_json.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_rep_to_json.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_resource.c" "CMakeFiles/server-obj.dir/api/oc_resource.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_resource.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_resource_factory.c" "CMakeFiles/server-obj.dir/api/oc_resource_factory.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_resource_factory.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_ri.c" "CMakeFiles/server-obj.dir/api/oc_ri.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_ri.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_ri_server.c" "CMakeFiles/server-obj.dir/api/oc_ri_server.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_ri_server.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_server_api.c" "CMakeFiles/server-obj.dir/api/oc_server_api.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_server_api.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_session_events.c" "CMakeFiles/server-obj.dir/api/oc_session_events.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_session_events.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_storage.c" "CMakeFiles/server-obj.dir/api/oc_storage.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_storage.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_swupdate.c" "CMakeFiles/server-obj.dir/api/oc_swupdate.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_swupdate.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_tcp.c" "CMakeFiles/server-obj.dir/api/oc_tcp.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_tcp.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_udp.c" "CMakeFiles/server-obj.dir/api/oc_udp.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_udp.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_uuid.c" "CMakeFiles/server-obj.dir/api/oc_uuid.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_uuid.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/api/oc_vod_map.c" "CMakeFiles/server-obj.dir/api/oc_vod_map.c.o" "gcc" "CMakeFiles/server-obj.dir/api/oc_vod_map.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/messaging/coap/coap.c" "CMakeFiles/server-obj.dir/messaging/coap/coap.c.o" "gcc" "CMakeFiles/server-obj.dir/messaging/coap/coap.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/messaging/coap/coap_signal.c" "CMakeFiles/server-obj.dir/messaging/coap/coap_signal.c.o" "gcc" "CMakeFiles/server-obj.dir/messaging/coap/coap_signal.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/messaging/coap/engine.c" "CMakeFiles/server-obj.dir/messaging/coap/engine.c.o" "gcc" "CMakeFiles/server-obj.dir/messaging/coap/engine.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/messaging/coap/observe.c" "CMakeFiles/server-obj.dir/messaging/coap/observe.c.o" "gcc" "CMakeFiles/server-obj.dir/messaging/coap/observe.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/messaging/coap/oscore.c" "CMakeFiles/server-obj.dir/messaging/coap/oscore.c.o" "gcc" "CMakeFiles/server-obj.dir/messaging/coap/oscore.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/messaging/coap/separate.c" "CMakeFiles/server-obj.dir/messaging/coap/separate.c.o" "gcc" "CMakeFiles/server-obj.dir/messaging/coap/separate.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/messaging/coap/transactions.c" "CMakeFiles/server-obj.dir/messaging/coap/transactions.c.o" "gcc" "CMakeFiles/server-obj.dir/messaging/coap/transactions.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/port/linux/abort.c" "CMakeFiles/server-obj.dir/port/linux/abort.c.o" "gcc" "CMakeFiles/server-obj.dir/port/linux/abort.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/port/linux/clock.c" "CMakeFiles/server-obj.dir/port/linux/clock.c.o" "gcc" "CMakeFiles/server-obj.dir/port/linux/clock.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/port/linux/dns.c" "CMakeFiles/server-obj.dir/port/linux/dns.c.o" "gcc" "CMakeFiles/server-obj.dir/port/linux/dns.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/port/linux/ipadapter.c" "CMakeFiles/server-obj.dir/port/linux/ipadapter.c.o" "gcc" "CMakeFiles/server-obj.dir/port/linux/ipadapter.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/port/linux/ipcontext.c" "CMakeFiles/server-obj.dir/port/linux/ipcontext.c.o" "gcc" "CMakeFiles/server-obj.dir/port/linux/ipcontext.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/port/linux/netsocket.c" "CMakeFiles/server-obj.dir/port/linux/netsocket.c.o" "gcc" "CMakeFiles/server-obj.dir/port/linux/netsocket.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/port/linux/random.c" "CMakeFiles/server-obj.dir/port/linux/random.c.o" "gcc" "CMakeFiles/server-obj.dir/port/linux/random.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/port/linux/socklistener.c" "CMakeFiles/server-obj.dir/port/linux/socklistener.c.o" "gcc" "CMakeFiles/server-obj.dir/port/linux/socklistener.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/port/linux/storage.c" "CMakeFiles/server-obj.dir/port/linux/storage.c.o" "gcc" "CMakeFiles/server-obj.dir/port/linux/storage.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/port/linux/tcpadapter.c" "CMakeFiles/server-obj.dir/port/linux/tcpadapter.c.o" "gcc" "CMakeFiles/server-obj.dir/port/linux/tcpadapter.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/port/linux/tcpcontext.c" "CMakeFiles/server-obj.dir/port/linux/tcpcontext.c.o" "gcc" "CMakeFiles/server-obj.dir/port/linux/tcpcontext.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/port/linux/tcpsession.c" "CMakeFiles/server-obj.dir/port/linux/tcpsession.c.o" "gcc" "CMakeFiles/server-obj.dir/port/linux/tcpsession.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_acl.c" "CMakeFiles/server-obj.dir/security/oc_acl.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_acl.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_ael.c" "CMakeFiles/server-obj.dir/security/oc_ael.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_ael.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_audit.c" "CMakeFiles/server-obj.dir/security/oc_audit.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_audit.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_certs.c" "CMakeFiles/server-obj.dir/security/oc_certs.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_certs.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_certs_validate.c" "CMakeFiles/server-obj.dir/security/oc_certs_validate.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_certs_validate.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_cred.c" "CMakeFiles/server-obj.dir/security/oc_cred.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_cred.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_csr.c" "CMakeFiles/server-obj.dir/security/oc_csr.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_csr.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_doxm.c" "CMakeFiles/server-obj.dir/security/oc_doxm.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_doxm.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_entropy.c" "CMakeFiles/server-obj.dir/security/oc_entropy.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_entropy.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_keypair.c" "CMakeFiles/server-obj.dir/security/oc_keypair.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_keypair.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_oscore_context.c" "CMakeFiles/server-obj.dir/security/oc_oscore_context.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_oscore_context.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_oscore_crypto.c" "CMakeFiles/server-obj.dir/security/oc_oscore_crypto.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_oscore_crypto.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_oscore_engine.c" "CMakeFiles/server-obj.dir/security/oc_oscore_engine.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_oscore_engine.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_pki.c" "CMakeFiles/server-obj.dir/security/oc_pki.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_pki.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_pstat.c" "CMakeFiles/server-obj.dir/security/oc_pstat.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_pstat.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_roles.c" "CMakeFiles/server-obj.dir/security/oc_roles.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_roles.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_sdi.c" "CMakeFiles/server-obj.dir/security/oc_sdi.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_sdi.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_security.c" "CMakeFiles/server-obj.dir/security/oc_security.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_security.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_sp.c" "CMakeFiles/server-obj.dir/security/oc_sp.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_sp.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_store.c" "CMakeFiles/server-obj.dir/security/oc_store.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_store.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_svr.c" "CMakeFiles/server-obj.dir/security/oc_svr.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_svr.c.o.d"
+  "/home/jclee/Development/Matter/WS_Matter/iotivity-lite/security/oc_tls.c" "CMakeFiles/server-obj.dir/security/oc_tls.c.o" "gcc" "CMakeFiles/server-obj.dir/security/oc_tls.c.o.d"
+  )
+
+# Targets to which this target links.
+set(CMAKE_TARGET_LINKED_INFO_FILES
+  )
+
+# Fortran module output directory.
+set(CMAKE_Fortran_TARGET_MODULE_DIR "")

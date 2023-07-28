@@ -74,6 +74,23 @@ oc_sec_acl_init(void)
   }
 }
 
+/*
+ * modifiedbyme <2023/7/25> add func : oc_sec_add_new_acl(){}
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+void
+oc_sec_add_new_acl(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  g_aclist =
+    (oc_sec_acl_t *)realloc(g_aclist, (oc_core_get_num_devices()+1) * sizeof(oc_sec_acl_t));
+  if (!g_aclist) {
+    oc_abort("Insufficient memory");
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 oc_sec_acl_t *
 oc_sec_get_acl(size_t device)
 {

@@ -1,0 +1,124 @@
+Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_WMISSING_PROTOTYPES failed with the following output:
+Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_a22dc/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_a22dc.dir/build.make CMakeFiles/cmTC_a22dc.dir/build
+gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_a22dc.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WMISSING_PROTOTYPES  -fPIE   -Wmissing-prototypes -o CMakeFiles/cmTC_a22dc.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+cc1plus: warning: command-line option '-Wmissing-prototypes' is valid for C/ObjC but not for C++
+Linking CXX executable cmTC_a22dc
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a22dc.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_a22dc.dir/src.cxx.o -o cmTC_a22dc 
+gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_WSTRICT_PROTOTYPES failed with the following output:
+Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_8a64c/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_8a64c.dir/build.make CMakeFiles/cmTC_8a64c.dir/build
+gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_8a64c.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WSTRICT_PROTOTYPES  -fPIE   -Wstrict-prototypes -o CMakeFiles/cmTC_8a64c.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+cc1plus: warning: command-line option '-Wstrict-prototypes' is valid for C/ObjC but not for C++
+Linking CXX executable cmTC_8a64c
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8a64c.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_8a64c.dir/src.cxx.o -o cmTC_8a64c 
+gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
+Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_WDOCUMENTATION failed with the following output:
+Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_5956a/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_5956a.dir/build.make CMakeFiles/cmTC_5956a.dir/build
+gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_5956a.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_WDOCUMENTATION  -fPIE   -Wdocumentation -o CMakeFiles/cmTC_5956a.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+cc: error: unrecognized command-line option '-Wdocumentation'
+gmake[1]: *** [CMakeFiles/cmTC_5956a.dir/build.make:78: CMakeFiles/cmTC_5956a.dir/src.c.o] Error 1
+gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_5956a/fast] Error 2
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_WDOCUMENTATION failed with the following output:
+Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_30b96/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_30b96.dir/build.make CMakeFiles/cmTC_30b96.dir/build
+gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_30b96.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WDOCUMENTATION  -fPIE   -Wdocumentation -o CMakeFiles/cmTC_30b96.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+c++: error: unrecognized command-line option '-Wdocumentation'
+gmake[1]: *** [CMakeFiles/cmTC_30b96.dir/build.make:78: CMakeFiles/cmTC_30b96.dir/src.cxx.o] Error 1
+gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_30b96/fast] Error 2
+
+
+Source file was:
+int main() { return 0; }
+Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_WNO_ERROR_DOCUMENTATION failed with the following output:
+Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_031c8/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_031c8.dir/build.make CMakeFiles/cmTC_031c8.dir/build
+gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_031c8.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_WNO_ERROR_DOCUMENTATION  -fPIE   -Wno-error=documentation -o CMakeFiles/cmTC_031c8.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+cc1: error: '-Wno-error=documentation': no option '-Wdocumentation'
+gmake[1]: *** [CMakeFiles/cmTC_031c8.dir/build.make:78: CMakeFiles/cmTC_031c8.dir/src.c.o] Error 1
+gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_031c8/fast] Error 2
+
+
+Source file was:
+int main(void) { return 0; }
+Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_WNO_ERROR_DOCUMENTATION failed with the following output:
+Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_3f85d/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_3f85d.dir/build.make CMakeFiles/cmTC_3f85d.dir/build
+gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_3f85d.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WNO_ERROR_DOCUMENTATION  -fPIE   -Wno-error=documentation -o CMakeFiles/cmTC_3f85d.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+cc1plus: error: '-Wno-error=documentation': no option '-Wdocumentation'
+gmake[1]: *** [CMakeFiles/cmTC_3f85d.dir/build.make:78: CMakeFiles/cmTC_3f85d.dir/src.cxx.o] Error 1
+gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_3f85d/fast] Error 2
+
+
+Source file was:
+int main() { return 0; }
+Determining if the funopen exist failed with the following output:
+Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_bf398/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_bf398.dir/build.make CMakeFiles/cmTC_bf398.dir/build
+gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_bf398.dir/CheckSymbolExists.c.o
+/usr/bin/cc -D_GNU_SOURCE  -fPIE -o CMakeFiles/cmTC_bf398.dir/CheckSymbolExists.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c: In function ‘main’:
+/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: error: ‘funopen’ undeclared (first use in this function); did you mean ‘fdopen’?
+    8 |   return ((int*)(&funopen))[argc];
+      |                   ^~~~~~~
+      |                   fdopen
+/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:8:19: note: each undeclared identifier is reported only once for each function it appears in
+gmake[1]: *** [CMakeFiles/cmTC_bf398.dir/build.make:78: CMakeFiles/cmTC_bf398.dir/CheckSymbolExists.c.o] Error 1
+gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+gmake: *** [Makefile:127: cmTC_bf398/fast] Error 2
+
+
+File /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <stdio.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef funopen
+  return ((int*)(&funopen))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}

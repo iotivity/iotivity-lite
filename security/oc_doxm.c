@@ -156,6 +156,23 @@ oc_sec_doxm_init(void)
   oc_set_select_oxms_cb(NULL, NULL);
 }
 
+/*
+ * modifiedbyme <2023/7/25> add func : void oc_sec_add_new_doxm(){}
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+void
+oc_sec_add_new_doxm(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  g_doxm =
+    (oc_sec_doxm_t *)realloc(g_doxm, (oc_core_get_num_devices()+1) * sizeof(oc_sec_doxm_t));
+  if (!g_doxm) {
+    oc_abort("Insufficient memory");
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 static void
 evaluate_supported_oxms(size_t device)
 {

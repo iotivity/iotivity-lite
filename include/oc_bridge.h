@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2020 Intel Corporation
+ * Copyright (c) 2023 ETRI
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +37,7 @@ typedef struct oc_virtual_device_t
   uint8_t *v_id;
   size_t v_id_size;
   oc_string_t econame;
-  size_t index;
+  size_t index; // index of g_oc_device_info[]
 } oc_virtual_device_t;
 
 /**
@@ -61,6 +62,7 @@ typedef struct oc_virtual_device_t
  *   `0` on success
  *   `-1` on failure
  */
+OC_API
 int oc_bridge_add_bridge_device(const char *name, const char *spec_version,
                                 const char *data_model_version,
                                 oc_add_device_cb_t add_device_cb, void *data);
@@ -115,6 +117,7 @@ int oc_bridge_add_bridge_device(const char *name, const char *spec_version,
  *
  * @see init
  */
+OC_API
 size_t oc_bridge_add_virtual_device(
   const uint8_t *virtual_device_id, size_t virtual_device_id_size,
   const char *econame, const char *uri, const char *rt, const char *name,
@@ -139,6 +142,7 @@ size_t oc_bridge_add_virtual_device(
  *   - `0` on succes
  *   - `-1` on failure
  */
+OC_API
 int oc_bridge_remove_virtual_device(size_t device_index);
 
 /**
@@ -155,7 +159,9 @@ int oc_bridge_remove_virtual_device(size_t device_index);
  *   - `0` on success
  *   - `-1` on failure
  */
+OC_API
 int oc_bridge_delete_virtual_device(size_t device_index);
+
 /**
  * Get the logical device index for the virtual device
  *
@@ -170,6 +176,7 @@ int oc_bridge_delete_virtual_device(size_t device_index);
  *   - `0` on failure since a bridge device is required to add virtual devices
  *         a zero index cannot be assigned to a virtual device.
  */
+OC_API
 size_t oc_bridge_get_virtual_device_index(const uint8_t *virtual_device_id,
                                           size_t virtual_device_id_size,
                                           const char *econame);
@@ -184,6 +191,7 @@ size_t oc_bridge_get_virtual_device_index(const uint8_t *virtual_device_id,
  *    - a pointer to the oc_virtual_device_t upon success
  *    - NULL if no virtual device was found using the provided index
  */
+OC_API
 oc_virtual_device_t *oc_bridge_get_virtual_device_info(
   size_t virtual_device_index);
 #ifdef __cplusplus

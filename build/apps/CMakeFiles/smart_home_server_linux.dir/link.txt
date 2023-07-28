@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/smart_home_server_linux.dir/smart_home_server_linux.c.o -o smart_home_server_linux  ../libiotivity-lite-server-static.a -lm ../deps/tinycbor/libtinycbor.a ../deps/mbedtls/library/libmbedtls.a ../deps/mbedtls/library/libmbedx509.a ../deps/mbedtls/library/libmbedcrypto.a 

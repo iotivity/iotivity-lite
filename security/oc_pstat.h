@@ -52,6 +52,18 @@ typedef struct
 } oc_sec_pstat_t;
 
 void oc_sec_pstat_init(void);
+
+/*
+ * modifiedbyme <2023/7/25> add func proto : oc_sec_add_new_pstat()
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+/**
+ * @brief increase existing memory for pstat for all Devices
+ * by the size of `oc_sec_pstat_t`
+ */
+void oc_sec_add_new_pstat(void);
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 void oc_sec_pstat_free(void);
 bool oc_sec_is_operational(size_t device);
 bool oc_sec_decode_pstat(const oc_rep_t *rep, bool from_storage, size_t device);

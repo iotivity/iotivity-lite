@@ -1,0 +1,1 @@
+/usr/bin/cc CMakeFiles/introspectionclient.dir/introspectionclient.c.o -o introspectionclient  ../libiotivity-lite-client-static.a -lm ../deps/tinycbor/libtinycbor.a ../deps/mbedtls/library/libmbedtls.a ../deps/mbedtls/library/libmbedx509.a ../deps/mbedtls/library/libmbedcrypto.a 
