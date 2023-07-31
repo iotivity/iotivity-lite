@@ -106,3 +106,6 @@ service/resource-directory/client/unittest/obj
 
 # eclipse
 .settings
+
+# cmake build folder
+build

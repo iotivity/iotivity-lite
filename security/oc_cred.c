@@ -101,15 +101,15 @@ oc_sec_cred_init(void)
 }
 
 /*
- * modifiedbyme <2023/7/25> add func : oc_sec_add_new_cred(){}
+ * modifiedbyme <2023/7/25> add func : oc_sec_cred_new_device(){}
  */
 #ifdef OC_HAS_FEATURE_BRIDGE
 void
-oc_sec_add_new_creds(void)
+oc_sec_cred_new_device(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   devices =
-    (oc_sec_creds_t *)realloc(devices, (oc_core_get_num_devices()+1) * sizeof(oc_sec_creds_t));
+    (oc_sec_creds_t *)realloc(devices, oc_core_get_num_devices() * sizeof(oc_sec_creds_t));
   if (!devices) {
     oc_abort("Insufficient memory");
   }

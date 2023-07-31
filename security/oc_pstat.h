@@ -54,14 +54,14 @@ typedef struct
 void oc_sec_pstat_init(void);
 
 /*
- * modifiedbyme <2023/7/25> add func proto : oc_sec_add_new_pstat()
+ * modifiedbyme <2023/7/25> add func proto : oc_sec_pstat_new_device()
  */
 #ifdef OC_HAS_FEATURE_BRIDGE
 /**
  * @brief increase existing memory for pstat for all Devices
  * by the size of `oc_sec_pstat_t`
  */
-void oc_sec_add_new_pstat(void);
+void oc_sec_pstat_new_device(void);
 #endif /* OC_HAS_FEATURE_BRIDGE */
 
 void oc_sec_pstat_free(void);

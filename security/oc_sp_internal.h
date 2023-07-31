@@ -52,10 +52,10 @@ typedef struct
 void oc_sec_sp_init(void);
 
 /*
- * modifiedbyme <2023/7/25> add func proto : oc_sec_add_new_sp()
+ * modifiedbyme <2023/7/25> add func proto : oc_sec_sp_new_device()
  */
 #ifdef OC_HAS_FEATURE_BRIDGE
-void oc_sec_add_new_sp(void);
+void oc_sec_sp_new_device(void);
 #endif /* OC_HAS_FEATURE_BRIDGE */
 
 

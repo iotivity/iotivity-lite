@@ -28,10 +28,10 @@ The CXX compiler identification is GNU, found in "/home/jclee/Development/Matter
 Detecting C compiler ABI info compiled with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_f070e/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_f070e.dir/build.make CMakeFiles/cmTC_f070e.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_59e35/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_59e35.dir/build.make CMakeFiles/cmTC_59e35.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o
-/usr/bin/cc   -v -o CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake-3.22/Modules/CMakeCCompilerABI.c
+Building C object CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o
+/usr/bin/cc   -v -o CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake-3.22/Modules/CMakeCCompilerABI.c
 Using built-in specs.
 COLLECT_GCC=/usr/bin/cc
 OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa
@@ -41,8 +41,8 @@ Configured with: ../src/configure -v --with-pkgversion='Ubuntu 11.3.0-1ubuntu1~2
 Thread model: posix
 Supported LTO compression algorithms: zlib zstd
 gcc version 11.3.0 (Ubuntu 11.3.0-1ubuntu1~22.04.1) 
-COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_f070e.dir/'
- /usr/lib/gcc/x86_64-linux-gnu/11/cc1 -quiet -v -imultiarch x86_64-linux-gnu /usr/share/cmake-3.22/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_f070e.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -fasynchronous-unwind-tables -fstack-protector-strong -Wformat -Wformat-security -fstack-clash-protection -fcf-protection -o /tmp/ccluAZpB.s
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_59e35.dir/'
+ /usr/lib/gcc/x86_64-linux-gnu/11/cc1 -quiet -v -imultiarch x86_64-linux-gnu /usr/share/cmake-3.22/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_59e35.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -fasynchronous-unwind-tables -fstack-protector-strong -Wformat -Wformat-security -fstack-clash-protection -fcf-protection -o /tmp/ccGhNIAV.s
 GNU C17 (Ubuntu 11.3.0-1ubuntu1~22.04.1) version 11.3.0 (x86_64-linux-gnu)
 	compiled by GNU C version 11.3.0, GMP version 6.2.1, MPFR version 4.1.0, MPC version 1.2.1, isl version isl-0.24-GMP
 
@@ -62,15 +62,15 @@ GNU C17 (Ubuntu 11.3.0-1ubuntu1~22.04.1) version 11.3.0 (x86_64-linux-gnu)
 
 GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
 Compiler executable checksum: e13e2dc98bfa673227c4000e476a9388
-COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_f070e.dir/'
- as -v --64 -o CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o /tmp/ccluAZpB.s
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_59e35.dir/'
+ as -v --64 -o CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o /tmp/ccGhNIAV.s
 GNU assembler version 2.38 (x86_64-linux-gnu) using BFD version (GNU Binutils for Ubuntu) 2.38
 COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/
 LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../:/lib/:/usr/lib/
-COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.'
-Linking C executable cmTC_f070e
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f070e.dir/link.txt --verbose=1
-/usr/bin/cc  -v CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o -o cmTC_f070e 
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.'
+Linking C executable cmTC_59e35
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_59e35.dir/link.txt --verbose=1
+/usr/bin/cc  -v CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o -o cmTC_59e35 
 Using built-in specs.
 COLLECT_GCC=/usr/bin/cc
 COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper
@@ -83,9 +83,9 @@ Supported LTO compression algorithms: zlib zstd
 gcc version 11.3.0 (Ubuntu 11.3.0-1ubuntu1~22.04.1) 
 COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/
 LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../:/lib/:/usr/lib/
-COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_f070e' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_f070e.'
- /usr/lib/gcc/x86_64-linux-gnu/11/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/11/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper -plugin-opt=-fresolution=/tmp/ccfW27xt.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_f070e /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/11/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/11 -L/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/11/../../.. CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/11/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crtn.o
-COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_f070e' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_f070e.'
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_59e35' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_59e35.'
+ /usr/lib/gcc/x86_64-linux-gnu/11/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/11/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper -plugin-opt=-fresolution=/tmp/ccfEqg2Q.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_59e35 /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/11/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/11 -L/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/11/../../.. CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/11/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crtn.o
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_59e35' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_59e35.'
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -109,10 +109,10 @@ Parsed C implicit link information from above output:
   link line regex: [^( *|.*[/\])(ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
   ignore line: [Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp]
   ignore line: []
-  ignore line: [Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_f070e/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_f070e.dir/build.make CMakeFiles/cmTC_f070e.dir/build]
+  ignore line: [Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_59e35/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_59e35.dir/build.make CMakeFiles/cmTC_59e35.dir/build]
   ignore line: [gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp']
-  ignore line: [Building C object CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o]
-  ignore line: [/usr/bin/cc   -v -o CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake-3.22/Modules/CMakeCCompilerABI.c]
+  ignore line: [Building C object CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o]
+  ignore line: [/usr/bin/cc   -v -o CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o -c /usr/share/cmake-3.22/Modules/CMakeCCompilerABI.c]
   ignore line: [Using built-in specs.]
   ignore line: [COLLECT_GCC=/usr/bin/cc]
   ignore line: [OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa]
@@ -122,8 +122,8 @@ Parsed C implicit link information from above output:
   ignore line: [Thread model: posix]
   ignore line: [Supported LTO compression algorithms: zlib zstd]
   ignore line: [gcc version 11.3.0 (Ubuntu 11.3.0-1ubuntu1~22.04.1) ]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_f070e.dir/']
-  ignore line: [ /usr/lib/gcc/x86_64-linux-gnu/11/cc1 -quiet -v -imultiarch x86_64-linux-gnu /usr/share/cmake-3.22/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_f070e.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -fasynchronous-unwind-tables -fstack-protector-strong -Wformat -Wformat-security -fstack-clash-protection -fcf-protection -o /tmp/ccluAZpB.s]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_59e35.dir/']
+  ignore line: [ /usr/lib/gcc/x86_64-linux-gnu/11/cc1 -quiet -v -imultiarch x86_64-linux-gnu /usr/share/cmake-3.22/Modules/CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles/cmTC_59e35.dir/ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -fasynchronous-unwind-tables -fstack-protector-strong -Wformat -Wformat-security -fstack-clash-protection -fcf-protection -o /tmp/ccGhNIAV.s]
   ignore line: [GNU C17 (Ubuntu 11.3.0-1ubuntu1~22.04.1) version 11.3.0 (x86_64-linux-gnu)]
   ignore line: [	compiled by GNU C version 11.3.0  GMP version 6.2.1  MPFR version 4.1.0  MPC version 1.2.1  isl version isl-0.24-GMP]
   ignore line: []
@@ -143,15 +143,15 @@ Parsed C implicit link information from above output:
   ignore line: []
   ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
   ignore line: [Compiler executable checksum: e13e2dc98bfa673227c4000e476a9388]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_f070e.dir/']
-  ignore line: [ as -v --64 -o CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o /tmp/ccluAZpB.s]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_59e35.dir/']
+  ignore line: [ as -v --64 -o CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o /tmp/ccGhNIAV.s]
   ignore line: [GNU assembler version 2.38 (x86_64-linux-gnu) using BFD version (GNU Binutils for Ubuntu) 2.38]
   ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/]
   ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../:/lib/:/usr/lib/]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.']
-  ignore line: [Linking C executable cmTC_f070e]
-  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f070e.dir/link.txt --verbose=1]
-  ignore line: [/usr/bin/cc  -v CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o -o cmTC_f070e ]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.']
+  ignore line: [Linking C executable cmTC_59e35]
+  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_59e35.dir/link.txt --verbose=1]
+  ignore line: [/usr/bin/cc  -v CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o -o cmTC_59e35 ]
   ignore line: [Using built-in specs.]
   ignore line: [COLLECT_GCC=/usr/bin/cc]
   ignore line: [COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper]
@@ -164,13 +164,13 @@ Parsed C implicit link information from above output:
   ignore line: [gcc version 11.3.0 (Ubuntu 11.3.0-1ubuntu1~22.04.1) ]
   ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/]
   ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../:/lib/:/usr/lib/]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_f070e' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_f070e.']
-  link line: [ /usr/lib/gcc/x86_64-linux-gnu/11/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/11/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper -plugin-opt=-fresolution=/tmp/ccfW27xt.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_f070e /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/11/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/11 -L/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/11/../../.. CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/11/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crtn.o]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_59e35' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_59e35.']
+  link line: [ /usr/lib/gcc/x86_64-linux-gnu/11/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/11/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper -plugin-opt=-fresolution=/tmp/ccfEqg2Q.res -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lgcc_s --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_59e35 /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/11/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/11 -L/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/11/../../.. CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o -lgcc --push-state --as-needed -lgcc_s --pop-state -lc -lgcc --push-state --as-needed -lgcc_s --pop-state /usr/lib/gcc/x86_64-linux-gnu/11/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crtn.o]
     arg [/usr/lib/gcc/x86_64-linux-gnu/11/collect2] ==> ignore
     arg [-plugin] ==> ignore
     arg [/usr/lib/gcc/x86_64-linux-gnu/11/liblto_plugin.so] ==> ignore
     arg [-plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper] ==> ignore
-    arg [-plugin-opt=-fresolution=/tmp/ccfW27xt.res] ==> ignore
+    arg [-plugin-opt=-fresolution=/tmp/ccfEqg2Q.res] ==> ignore
     arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
     arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
     arg [-plugin-opt=-pass-through=-lc] ==> ignore
@@ -188,7 +188,7 @@ Parsed C implicit link information from above output:
     arg [-znow] ==> ignore
     arg [-zrelro] ==> ignore
     arg [-o] ==> ignore
-    arg [cmTC_f070e] ==> ignore
+    arg [cmTC_59e35] ==> ignore
     arg [/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/Scrt1.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/Scrt1.o]
     arg [/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crti.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crti.o]
     arg [/usr/lib/gcc/x86_64-linux-gnu/11/crtbeginS.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/11/crtbeginS.o]
@@ -200,7 +200,7 @@ Parsed C implicit link information from above output:
     arg [-L/usr/lib/x86_64-linux-gnu] ==> dir [/usr/lib/x86_64-linux-gnu]
     arg [-L/usr/lib/../lib] ==> dir [/usr/lib/../lib]
     arg [-L/usr/lib/gcc/x86_64-linux-gnu/11/../../..] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/11/../../..]
-    arg [CMakeFiles/cmTC_f070e.dir/CMakeCCompilerABI.c.o] ==> ignore
+    arg [CMakeFiles/cmTC_59e35.dir/CMakeCCompilerABI.c.o] ==> ignore
     arg [-lgcc] ==> lib [gcc]
     arg [--push-state] ==> ignore
     arg [--as-needed] ==> ignore
@@ -234,10 +234,10 @@ Parsed C implicit link information from above output:
 Detecting CXX compiler ABI info compiled with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_80a25/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_80a25.dir/build.make CMakeFiles/cmTC_80a25.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_8d6ab/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_8d6ab.dir/build.make CMakeFiles/cmTC_8d6ab.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o
-/usr/bin/c++   -v -o CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp
+Building CXX object CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o
+/usr/bin/c++   -v -o CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp
 Using built-in specs.
 COLLECT_GCC=/usr/bin/c++
 OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa
@@ -247,8 +247,8 @@ Configured with: ../src/configure -v --with-pkgversion='Ubuntu 11.3.0-1ubuntu1~2
 Thread model: posix
 Supported LTO compression algorithms: zlib zstd
 gcc version 11.3.0 (Ubuntu 11.3.0-1ubuntu1~22.04.1) 
-COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_80a25.dir/'
- /usr/lib/gcc/x86_64-linux-gnu/11/cc1plus -quiet -v -imultiarch x86_64-linux-gnu -D_GNU_SOURCE /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_80a25.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -fasynchronous-unwind-tables -fstack-protector-strong -Wformat -Wformat-security -fstack-clash-protection -fcf-protection -o /tmp/ccYbMkGe.s
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_8d6ab.dir/'
+ /usr/lib/gcc/x86_64-linux-gnu/11/cc1plus -quiet -v -imultiarch x86_64-linux-gnu -D_GNU_SOURCE /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_8d6ab.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -fasynchronous-unwind-tables -fstack-protector-strong -Wformat -Wformat-security -fstack-clash-protection -fcf-protection -o /tmp/ccMZsNmt.s
 GNU C++17 (Ubuntu 11.3.0-1ubuntu1~22.04.1) version 11.3.0 (x86_64-linux-gnu)
 	compiled by GNU C version 11.3.0, GMP version 6.2.1, MPFR version 4.1.0, MPC version 1.2.1, isl version isl-0.24-GMP
 
@@ -272,15 +272,15 @@ GNU C++17 (Ubuntu 11.3.0-1ubuntu1~22.04.1) version 11.3.0 (x86_64-linux-gnu)
 
 GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
 Compiler executable checksum: 2b9b53ff7f3a6952e2fe60119c16be53
-COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_80a25.dir/'
- as -v --64 -o CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccYbMkGe.s
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_8d6ab.dir/'
+ as -v --64 -o CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccMZsNmt.s
 GNU assembler version 2.38 (x86_64-linux-gnu) using BFD version (GNU Binutils for Ubuntu) 2.38
 COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/
 LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../:/lib/:/usr/lib/
-COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.'
-Linking CXX executable cmTC_80a25
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_80a25.dir/link.txt --verbose=1
-/usr/bin/c++  -v CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_80a25 
+COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.'
+Linking CXX executable cmTC_8d6ab
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8d6ab.dir/link.txt --verbose=1
+/usr/bin/c++  -v CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_8d6ab 
 Using built-in specs.
 COLLECT_GCC=/usr/bin/c++
 COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper
@@ -293,9 +293,9 @@ Supported LTO compression algorithms: zlib zstd
 gcc version 11.3.0 (Ubuntu 11.3.0-1ubuntu1~22.04.1) 
 COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/
 LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../:/lib/:/usr/lib/
-COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_80a25' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_80a25.'
- /usr/lib/gcc/x86_64-linux-gnu/11/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/11/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper -plugin-opt=-fresolution=/tmp/cca8j99O.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_80a25 /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/11/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/11 -L/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/11/../../.. CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-linux-gnu/11/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crtn.o
-COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_80a25' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_80a25.'
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_8d6ab' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_8d6ab.'
+ /usr/lib/gcc/x86_64-linux-gnu/11/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/11/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper -plugin-opt=-fresolution=/tmp/cctjDycm.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_8d6ab /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/11/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/11 -L/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/11/../../.. CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-linux-gnu/11/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crtn.o
+COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_8d6ab' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_8d6ab.'
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -325,10 +325,10 @@ Parsed CXX implicit link information from above output:
   link line regex: [^( *|.*[/\])(ld|CMAKE_LINK_STARTFILE-NOTFOUND|([^/\]+-)?ld|collect2)[^/\]*( |$)]
   ignore line: [Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp]
   ignore line: []
-  ignore line: [Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_80a25/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_80a25.dir/build.make CMakeFiles/cmTC_80a25.dir/build]
+  ignore line: [Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_8d6ab/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_8d6ab.dir/build.make CMakeFiles/cmTC_8d6ab.dir/build]
   ignore line: [gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp']
-  ignore line: [Building CXX object CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o]
-  ignore line: [/usr/bin/c++   -v -o CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp]
+  ignore line: [Building CXX object CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o]
+  ignore line: [/usr/bin/c++   -v -o CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o -c /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp]
   ignore line: [Using built-in specs.]
   ignore line: [COLLECT_GCC=/usr/bin/c++]
   ignore line: [OFFLOAD_TARGET_NAMES=nvptx-none:amdgcn-amdhsa]
@@ -338,8 +338,8 @@ Parsed CXX implicit link information from above output:
   ignore line: [Thread model: posix]
   ignore line: [Supported LTO compression algorithms: zlib zstd]
   ignore line: [gcc version 11.3.0 (Ubuntu 11.3.0-1ubuntu1~22.04.1) ]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_80a25.dir/']
-  ignore line: [ /usr/lib/gcc/x86_64-linux-gnu/11/cc1plus -quiet -v -imultiarch x86_64-linux-gnu -D_GNU_SOURCE /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_80a25.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -fasynchronous-unwind-tables -fstack-protector-strong -Wformat -Wformat-security -fstack-clash-protection -fcf-protection -o /tmp/ccYbMkGe.s]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_8d6ab.dir/']
+  ignore line: [ /usr/lib/gcc/x86_64-linux-gnu/11/cc1plus -quiet -v -imultiarch x86_64-linux-gnu -D_GNU_SOURCE /usr/share/cmake-3.22/Modules/CMakeCXXCompilerABI.cpp -quiet -dumpdir CMakeFiles/cmTC_8d6ab.dir/ -dumpbase CMakeCXXCompilerABI.cpp.cpp -dumpbase-ext .cpp -mtune=generic -march=x86-64 -version -fasynchronous-unwind-tables -fstack-protector-strong -Wformat -Wformat-security -fstack-clash-protection -fcf-protection -o /tmp/ccMZsNmt.s]
   ignore line: [GNU C++17 (Ubuntu 11.3.0-1ubuntu1~22.04.1) version 11.3.0 (x86_64-linux-gnu)]
   ignore line: [	compiled by GNU C version 11.3.0  GMP version 6.2.1  MPFR version 4.1.0  MPC version 1.2.1  isl version isl-0.24-GMP]
   ignore line: []
@@ -363,15 +363,15 @@ Parsed CXX implicit link information from above output:
   ignore line: []
   ignore line: [GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072]
   ignore line: [Compiler executable checksum: 2b9b53ff7f3a6952e2fe60119c16be53]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_80a25.dir/']
-  ignore line: [ as -v --64 -o CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccYbMkGe.s]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_8d6ab.dir/']
+  ignore line: [ as -v --64 -o CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o /tmp/ccMZsNmt.s]
   ignore line: [GNU assembler version 2.38 (x86_64-linux-gnu) using BFD version (GNU Binutils for Ubuntu) 2.38]
   ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/]
   ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../:/lib/:/usr/lib/]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.']
-  ignore line: [Linking CXX executable cmTC_80a25]
-  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_80a25.dir/link.txt --verbose=1]
-  ignore line: [/usr/bin/c++  -v CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_80a25 ]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o' '-c' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.']
+  ignore line: [Linking CXX executable cmTC_8d6ab]
+  ignore line: [/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8d6ab.dir/link.txt --verbose=1]
+  ignore line: [/usr/bin/c++  -v CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o -o cmTC_8d6ab ]
   ignore line: [Using built-in specs.]
   ignore line: [COLLECT_GCC=/usr/bin/c++]
   ignore line: [COLLECT_LTO_WRAPPER=/usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper]
@@ -384,13 +384,13 @@ Parsed CXX implicit link information from above output:
   ignore line: [gcc version 11.3.0 (Ubuntu 11.3.0-1ubuntu1~22.04.1) ]
   ignore line: [COMPILER_PATH=/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/]
   ignore line: [LIBRARY_PATH=/usr/lib/gcc/x86_64-linux-gnu/11/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib/:/lib/x86_64-linux-gnu/:/lib/../lib/:/usr/lib/x86_64-linux-gnu/:/usr/lib/../lib/:/usr/lib/gcc/x86_64-linux-gnu/11/../../../:/lib/:/usr/lib/]
-  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_80a25' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_80a25.']
-  link line: [ /usr/lib/gcc/x86_64-linux-gnu/11/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/11/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper -plugin-opt=-fresolution=/tmp/cca8j99O.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_80a25 /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/11/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/11 -L/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/11/../../.. CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-linux-gnu/11/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crtn.o]
+  ignore line: [COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_8d6ab' '-shared-libgcc' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_8d6ab.']
+  link line: [ /usr/lib/gcc/x86_64-linux-gnu/11/collect2 -plugin /usr/lib/gcc/x86_64-linux-gnu/11/liblto_plugin.so -plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper -plugin-opt=-fresolution=/tmp/cctjDycm.res -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lc -plugin-opt=-pass-through=-lgcc_s -plugin-opt=-pass-through=-lgcc --build-id --eh-frame-hdr -m elf_x86_64 --hash-style=gnu --as-needed -dynamic-linker /lib64/ld-linux-x86-64.so.2 -pie -z now -z relro -o cmTC_8d6ab /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/Scrt1.o /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crti.o /usr/lib/gcc/x86_64-linux-gnu/11/crtbeginS.o -L/usr/lib/gcc/x86_64-linux-gnu/11 -L/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu -L/usr/lib/gcc/x86_64-linux-gnu/11/../../../../lib -L/lib/x86_64-linux-gnu -L/lib/../lib -L/usr/lib/x86_64-linux-gnu -L/usr/lib/../lib -L/usr/lib/gcc/x86_64-linux-gnu/11/../../.. CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o -lstdc++ -lm -lgcc_s -lgcc -lc -lgcc_s -lgcc /usr/lib/gcc/x86_64-linux-gnu/11/crtendS.o /usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crtn.o]
     arg [/usr/lib/gcc/x86_64-linux-gnu/11/collect2] ==> ignore
     arg [-plugin] ==> ignore
     arg [/usr/lib/gcc/x86_64-linux-gnu/11/liblto_plugin.so] ==> ignore
     arg [-plugin-opt=/usr/lib/gcc/x86_64-linux-gnu/11/lto-wrapper] ==> ignore
-    arg [-plugin-opt=-fresolution=/tmp/cca8j99O.res] ==> ignore
+    arg [-plugin-opt=-fresolution=/tmp/cctjDycm.res] ==> ignore
     arg [-plugin-opt=-pass-through=-lgcc_s] ==> ignore
     arg [-plugin-opt=-pass-through=-lgcc] ==> ignore
     arg [-plugin-opt=-pass-through=-lc] ==> ignore
@@ -408,7 +408,7 @@ Parsed CXX implicit link information from above output:
     arg [-znow] ==> ignore
     arg [-zrelro] ==> ignore
     arg [-o] ==> ignore
-    arg [cmTC_80a25] ==> ignore
+    arg [cmTC_8d6ab] ==> ignore
     arg [/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/Scrt1.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/Scrt1.o]
     arg [/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crti.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/11/../../../x86_64-linux-gnu/crti.o]
     arg [/usr/lib/gcc/x86_64-linux-gnu/11/crtbeginS.o] ==> obj [/usr/lib/gcc/x86_64-linux-gnu/11/crtbeginS.o]
@@ -420,7 +420,7 @@ Parsed CXX implicit link information from above output:
     arg [-L/usr/lib/x86_64-linux-gnu] ==> dir [/usr/lib/x86_64-linux-gnu]
     arg [-L/usr/lib/../lib] ==> dir [/usr/lib/../lib]
     arg [-L/usr/lib/gcc/x86_64-linux-gnu/11/../../..] ==> dir [/usr/lib/gcc/x86_64-linux-gnu/11/../../..]
-    arg [CMakeFiles/cmTC_80a25.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
+    arg [CMakeFiles/cmTC_8d6ab.dir/CMakeCXXCompilerABI.cpp.o] ==> ignore
     arg [-lstdc++] ==> lib [stdc++]
     arg [-lm] ==> lib [m]
     arg [-lgcc_s] ==> lib [gcc_s]
@@ -450,13 +450,13 @@ Parsed CXX implicit link information from above output:
 Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_WALL succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_ff19b/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_ff19b.dir/build.make CMakeFiles/cmTC_ff19b.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_3839e/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_3839e.dir/build.make CMakeFiles/cmTC_3839e.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_ff19b.dir/src.c.o
-/usr/bin/cc -DC_COMPILER_SUPPORTS_WALL  -fPIE   -Wall -o CMakeFiles/cmTC_ff19b.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_ff19b
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_ff19b.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_ff19b.dir/src.c.o -o cmTC_ff19b 
+Building C object CMakeFiles/cmTC_3839e.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_WALL  -fPIE   -Wall -o CMakeFiles/cmTC_3839e.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_3839e
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3839e.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_3839e.dir/src.c.o -o cmTC_3839e 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -465,13 +465,13 @@ int main(void) { return 0; }
 Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_WEXTRA succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_15816/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_15816.dir/build.make CMakeFiles/cmTC_15816.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_3e9a0/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_3e9a0.dir/build.make CMakeFiles/cmTC_3e9a0.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_15816.dir/src.c.o
-/usr/bin/cc -DC_COMPILER_SUPPORTS_WEXTRA  -fPIE   -Wextra -o CMakeFiles/cmTC_15816.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_15816
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_15816.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_15816.dir/src.c.o -o cmTC_15816 
+Building C object CMakeFiles/cmTC_3e9a0.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_WEXTRA  -fPIE   -Wextra -o CMakeFiles/cmTC_3e9a0.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_3e9a0
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3e9a0.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_3e9a0.dir/src.c.o -o cmTC_3e9a0 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -480,13 +480,13 @@ int main(void) { return 0; }
 Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_PEDANTIC succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_59856/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_59856.dir/build.make CMakeFiles/cmTC_59856.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_92e74/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_92e74.dir/build.make CMakeFiles/cmTC_92e74.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_59856.dir/src.c.o
-/usr/bin/cc -DC_COMPILER_SUPPORTS_PEDANTIC  -fPIE   -pedantic -o CMakeFiles/cmTC_59856.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_59856
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_59856.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_59856.dir/src.c.o -o cmTC_59856 
+Building C object CMakeFiles/cmTC_92e74.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_PEDANTIC  -fPIE   -pedantic -o CMakeFiles/cmTC_92e74.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_92e74
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_92e74.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_92e74.dir/src.c.o -o cmTC_92e74 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -495,13 +495,13 @@ int main(void) { return 0; }
 Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_WWRITE_STRINGS succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_44077/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_44077.dir/build.make CMakeFiles/cmTC_44077.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_bc44b/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_bc44b.dir/build.make CMakeFiles/cmTC_bc44b.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_44077.dir/src.c.o
-/usr/bin/cc -DC_COMPILER_SUPPORTS_WWRITE_STRINGS  -fPIE   -Wwrite-strings -o CMakeFiles/cmTC_44077.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_44077
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_44077.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_44077.dir/src.c.o -o cmTC_44077 
+Building C object CMakeFiles/cmTC_bc44b.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_WWRITE_STRINGS  -fPIE   -Wwrite-strings -o CMakeFiles/cmTC_bc44b.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_bc44b
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_bc44b.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_bc44b.dir/src.c.o -o cmTC_bc44b 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -510,13 +510,13 @@ int main(void) { return 0; }
 Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_WUNUSED succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_c1720/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_c1720.dir/build.make CMakeFiles/cmTC_c1720.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_c9c35/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_c9c35.dir/build.make CMakeFiles/cmTC_c9c35.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_c1720.dir/src.c.o
-/usr/bin/cc -DC_COMPILER_SUPPORTS_WUNUSED  -fPIE   -Wunused -o CMakeFiles/cmTC_c1720.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_c1720
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c1720.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_c1720.dir/src.c.o -o cmTC_c1720 
+Building C object CMakeFiles/cmTC_c9c35.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_WUNUSED  -fPIE   -Wunused -o CMakeFiles/cmTC_c9c35.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_c9c35
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c9c35.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_c9c35.dir/src.c.o -o cmTC_c9c35 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -525,13 +525,13 @@ int main(void) { return 0; }
 Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_WUNREACHABLE_CODE succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_d209d/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_d209d.dir/build.make CMakeFiles/cmTC_d209d.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_45459/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_45459.dir/build.make CMakeFiles/cmTC_45459.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_d209d.dir/src.c.o
-/usr/bin/cc -DC_COMPILER_SUPPORTS_WUNREACHABLE_CODE  -fPIE   -Wunreachable-code -o CMakeFiles/cmTC_d209d.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_d209d
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d209d.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_d209d.dir/src.c.o -o cmTC_d209d 
+Building C object CMakeFiles/cmTC_45459.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_WUNREACHABLE_CODE  -fPIE   -Wunreachable-code -o CMakeFiles/cmTC_45459.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_45459
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_45459.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_45459.dir/src.c.o -o cmTC_45459 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -540,13 +540,13 @@ int main(void) { return 0; }
 Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_WCAST_ALIGN succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_02c04/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_02c04.dir/build.make CMakeFiles/cmTC_02c04.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_18035/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_18035.dir/build.make CMakeFiles/cmTC_18035.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_02c04.dir/src.c.o
-/usr/bin/cc -DC_COMPILER_SUPPORTS_WCAST_ALIGN  -fPIE   -Wcast-align -o CMakeFiles/cmTC_02c04.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_02c04
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_02c04.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_02c04.dir/src.c.o -o cmTC_02c04 
+Building C object CMakeFiles/cmTC_18035.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_WCAST_ALIGN  -fPIE   -Wcast-align -o CMakeFiles/cmTC_18035.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_18035
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_18035.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_18035.dir/src.c.o -o cmTC_18035 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -555,13 +555,13 @@ int main(void) { return 0; }
 Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_WPOINTER_ARITH succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_3028c/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_3028c.dir/build.make CMakeFiles/cmTC_3028c.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_623e0/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_623e0.dir/build.make CMakeFiles/cmTC_623e0.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_3028c.dir/src.c.o
-/usr/bin/cc -DC_COMPILER_SUPPORTS_WPOINTER_ARITH  -fPIE   -Wpointer-arith -o CMakeFiles/cmTC_3028c.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_3028c
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3028c.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_3028c.dir/src.c.o -o cmTC_3028c 
+Building C object CMakeFiles/cmTC_623e0.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_WPOINTER_ARITH  -fPIE   -Wpointer-arith -o CMakeFiles/cmTC_623e0.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_623e0
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_623e0.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_623e0.dir/src.c.o -o cmTC_623e0 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -570,13 +570,13 @@ int main(void) { return 0; }
 Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_WMISSING_PROTOTYPES succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_9dcb2/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_9dcb2.dir/build.make CMakeFiles/cmTC_9dcb2.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_be759/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_be759.dir/build.make CMakeFiles/cmTC_be759.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_9dcb2.dir/src.c.o
-/usr/bin/cc -DC_COMPILER_SUPPORTS_WMISSING_PROTOTYPES  -fPIE   -Wmissing-prototypes -o CMakeFiles/cmTC_9dcb2.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_9dcb2
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_9dcb2.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_9dcb2.dir/src.c.o -o cmTC_9dcb2 
+Building C object CMakeFiles/cmTC_be759.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_WMISSING_PROTOTYPES  -fPIE   -Wmissing-prototypes -o CMakeFiles/cmTC_be759.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_be759
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_be759.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_be759.dir/src.c.o -o cmTC_be759 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -585,13 +585,13 @@ int main(void) { return 0; }
 Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_WMISSING_DECLARATIONS succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_20d63/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_20d63.dir/build.make CMakeFiles/cmTC_20d63.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_2861e/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_2861e.dir/build.make CMakeFiles/cmTC_2861e.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_20d63.dir/src.c.o
-/usr/bin/cc -DC_COMPILER_SUPPORTS_WMISSING_DECLARATIONS  -fPIE   -Wmissing-declarations -o CMakeFiles/cmTC_20d63.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_20d63
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_20d63.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_20d63.dir/src.c.o -o cmTC_20d63 
+Building C object CMakeFiles/cmTC_2861e.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_WMISSING_DECLARATIONS  -fPIE   -Wmissing-declarations -o CMakeFiles/cmTC_2861e.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_2861e
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2861e.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_2861e.dir/src.c.o -o cmTC_2861e 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -600,13 +600,13 @@ int main(void) { return 0; }
 Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_WSTRICT_PROTOTYPES succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_90b14/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_90b14.dir/build.make CMakeFiles/cmTC_90b14.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_e47fd/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_e47fd.dir/build.make CMakeFiles/cmTC_e47fd.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_90b14.dir/src.c.o
-/usr/bin/cc -DC_COMPILER_SUPPORTS_WSTRICT_PROTOTYPES  -fPIE   -Wstrict-prototypes -o CMakeFiles/cmTC_90b14.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_90b14
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_90b14.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_90b14.dir/src.c.o -o cmTC_90b14 
+Building C object CMakeFiles/cmTC_e47fd.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_WSTRICT_PROTOTYPES  -fPIE   -Wstrict-prototypes -o CMakeFiles/cmTC_e47fd.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_e47fd
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e47fd.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_e47fd.dir/src.c.o -o cmTC_e47fd 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -615,13 +615,13 @@ int main(void) { return 0; }
 Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_FNO_COMMON succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_9c6b6/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_9c6b6.dir/build.make CMakeFiles/cmTC_9c6b6.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_b15a4/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_b15a4.dir/build.make CMakeFiles/cmTC_b15a4.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_9c6b6.dir/src.c.o
-/usr/bin/cc -DC_COMPILER_SUPPORTS_FNO_COMMON  -fPIE   -fno-common -o CMakeFiles/cmTC_9c6b6.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_9c6b6
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_9c6b6.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_9c6b6.dir/src.c.o -o cmTC_9c6b6 
+Building C object CMakeFiles/cmTC_b15a4.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_FNO_COMMON  -fPIE   -fno-common -o CMakeFiles/cmTC_b15a4.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_b15a4
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b15a4.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_b15a4.dir/src.c.o -o cmTC_b15a4 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -630,13 +630,13 @@ int main(void) { return 0; }
 Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_WALL succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_03cc6/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_03cc6.dir/build.make CMakeFiles/cmTC_03cc6.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_e8515/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_e8515.dir/build.make CMakeFiles/cmTC_e8515.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_03cc6.dir/src.cxx.o
-/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WALL  -fPIE   -Wall -o CMakeFiles/cmTC_03cc6.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
-Linking CXX executable cmTC_03cc6
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_03cc6.dir/link.txt --verbose=1
-/usr/bin/c++ CMakeFiles/cmTC_03cc6.dir/src.cxx.o -o cmTC_03cc6 
+Building CXX object CMakeFiles/cmTC_e8515.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WALL  -fPIE   -Wall -o CMakeFiles/cmTC_e8515.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_e8515
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e8515.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_e8515.dir/src.cxx.o -o cmTC_e8515 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -645,13 +645,13 @@ int main() { return 0; }
 Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_WEXTRA succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_43c2a/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_43c2a.dir/build.make CMakeFiles/cmTC_43c2a.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_40ddc/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_40ddc.dir/build.make CMakeFiles/cmTC_40ddc.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_43c2a.dir/src.cxx.o
-/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WEXTRA  -fPIE   -Wextra -o CMakeFiles/cmTC_43c2a.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
-Linking CXX executable cmTC_43c2a
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_43c2a.dir/link.txt --verbose=1
-/usr/bin/c++ CMakeFiles/cmTC_43c2a.dir/src.cxx.o -o cmTC_43c2a 
+Building CXX object CMakeFiles/cmTC_40ddc.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WEXTRA  -fPIE   -Wextra -o CMakeFiles/cmTC_40ddc.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_40ddc
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_40ddc.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_40ddc.dir/src.cxx.o -o cmTC_40ddc 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -660,13 +660,13 @@ int main() { return 0; }
 Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_PEDANTIC succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_905af/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_905af.dir/build.make CMakeFiles/cmTC_905af.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_63722/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_63722.dir/build.make CMakeFiles/cmTC_63722.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_905af.dir/src.cxx.o
-/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_PEDANTIC  -fPIE   -pedantic -o CMakeFiles/cmTC_905af.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
-Linking CXX executable cmTC_905af
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_905af.dir/link.txt --verbose=1
-/usr/bin/c++ CMakeFiles/cmTC_905af.dir/src.cxx.o -o cmTC_905af 
+Building CXX object CMakeFiles/cmTC_63722.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_PEDANTIC  -fPIE   -pedantic -o CMakeFiles/cmTC_63722.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_63722
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_63722.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_63722.dir/src.cxx.o -o cmTC_63722 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -675,13 +675,13 @@ int main() { return 0; }
 Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_WWRITE_STRINGS succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_f1eb2/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_f1eb2.dir/build.make CMakeFiles/cmTC_f1eb2.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_41777/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_41777.dir/build.make CMakeFiles/cmTC_41777.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_f1eb2.dir/src.cxx.o
-/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WWRITE_STRINGS  -fPIE   -Wwrite-strings -o CMakeFiles/cmTC_f1eb2.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
-Linking CXX executable cmTC_f1eb2
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f1eb2.dir/link.txt --verbose=1
-/usr/bin/c++ CMakeFiles/cmTC_f1eb2.dir/src.cxx.o -o cmTC_f1eb2 
+Building CXX object CMakeFiles/cmTC_41777.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WWRITE_STRINGS  -fPIE   -Wwrite-strings -o CMakeFiles/cmTC_41777.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_41777
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_41777.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_41777.dir/src.cxx.o -o cmTC_41777 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -690,13 +690,13 @@ int main() { return 0; }
 Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_WUNUSED succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_1b1a2/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_1b1a2.dir/build.make CMakeFiles/cmTC_1b1a2.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_9c1e0/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_9c1e0.dir/build.make CMakeFiles/cmTC_9c1e0.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_1b1a2.dir/src.cxx.o
-/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WUNUSED  -fPIE   -Wunused -o CMakeFiles/cmTC_1b1a2.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
-Linking CXX executable cmTC_1b1a2
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_1b1a2.dir/link.txt --verbose=1
-/usr/bin/c++ CMakeFiles/cmTC_1b1a2.dir/src.cxx.o -o cmTC_1b1a2 
+Building CXX object CMakeFiles/cmTC_9c1e0.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WUNUSED  -fPIE   -Wunused -o CMakeFiles/cmTC_9c1e0.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_9c1e0
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_9c1e0.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_9c1e0.dir/src.cxx.o -o cmTC_9c1e0 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -705,13 +705,13 @@ int main() { return 0; }
 Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_WUNREACHABLE_CODE succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_d0dac/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_d0dac.dir/build.make CMakeFiles/cmTC_d0dac.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_198c1/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_198c1.dir/build.make CMakeFiles/cmTC_198c1.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_d0dac.dir/src.cxx.o
-/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WUNREACHABLE_CODE  -fPIE   -Wunreachable-code -o CMakeFiles/cmTC_d0dac.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
-Linking CXX executable cmTC_d0dac
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d0dac.dir/link.txt --verbose=1
-/usr/bin/c++ CMakeFiles/cmTC_d0dac.dir/src.cxx.o -o cmTC_d0dac 
+Building CXX object CMakeFiles/cmTC_198c1.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WUNREACHABLE_CODE  -fPIE   -Wunreachable-code -o CMakeFiles/cmTC_198c1.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_198c1
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_198c1.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_198c1.dir/src.cxx.o -o cmTC_198c1 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -720,13 +720,13 @@ int main() { return 0; }
 Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_WCAST_ALIGN succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_e0586/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_e0586.dir/build.make CMakeFiles/cmTC_e0586.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_5daa8/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_5daa8.dir/build.make CMakeFiles/cmTC_5daa8.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_e0586.dir/src.cxx.o
-/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WCAST_ALIGN  -fPIE   -Wcast-align -o CMakeFiles/cmTC_e0586.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
-Linking CXX executable cmTC_e0586
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e0586.dir/link.txt --verbose=1
-/usr/bin/c++ CMakeFiles/cmTC_e0586.dir/src.cxx.o -o cmTC_e0586 
+Building CXX object CMakeFiles/cmTC_5daa8.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WCAST_ALIGN  -fPIE   -Wcast-align -o CMakeFiles/cmTC_5daa8.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_5daa8
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5daa8.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_5daa8.dir/src.cxx.o -o cmTC_5daa8 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -735,13 +735,13 @@ int main() { return 0; }
 Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_WPOINTER_ARITH succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_42e9e/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_42e9e.dir/build.make CMakeFiles/cmTC_42e9e.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_1a39e/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_1a39e.dir/build.make CMakeFiles/cmTC_1a39e.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_42e9e.dir/src.cxx.o
-/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WPOINTER_ARITH  -fPIE   -Wpointer-arith -o CMakeFiles/cmTC_42e9e.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
-Linking CXX executable cmTC_42e9e
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_42e9e.dir/link.txt --verbose=1
-/usr/bin/c++ CMakeFiles/cmTC_42e9e.dir/src.cxx.o -o cmTC_42e9e 
+Building CXX object CMakeFiles/cmTC_1a39e.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WPOINTER_ARITH  -fPIE   -Wpointer-arith -o CMakeFiles/cmTC_1a39e.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_1a39e
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_1a39e.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_1a39e.dir/src.cxx.o -o cmTC_1a39e 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -750,13 +750,13 @@ int main() { return 0; }
 Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_WMISSING_DECLARATIONS succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_d6bbd/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_d6bbd.dir/build.make CMakeFiles/cmTC_d6bbd.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_262c7/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_262c7.dir/build.make CMakeFiles/cmTC_262c7.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_d6bbd.dir/src.cxx.o
-/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WMISSING_DECLARATIONS  -fPIE   -Wmissing-declarations -o CMakeFiles/cmTC_d6bbd.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
-Linking CXX executable cmTC_d6bbd
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d6bbd.dir/link.txt --verbose=1
-/usr/bin/c++ CMakeFiles/cmTC_d6bbd.dir/src.cxx.o -o cmTC_d6bbd 
+Building CXX object CMakeFiles/cmTC_262c7.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WMISSING_DECLARATIONS  -fPIE   -Wmissing-declarations -o CMakeFiles/cmTC_262c7.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_262c7
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_262c7.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_262c7.dir/src.cxx.o -o cmTC_262c7 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -765,13 +765,13 @@ int main() { return 0; }
 Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_FNO_COMMON succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_f89e7/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_f89e7.dir/build.make CMakeFiles/cmTC_f89e7.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_1111e/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_1111e.dir/build.make CMakeFiles/cmTC_1111e.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_f89e7.dir/src.cxx.o
-/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_FNO_COMMON  -fPIE   -fno-common -o CMakeFiles/cmTC_f89e7.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
-Linking CXX executable cmTC_f89e7
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f89e7.dir/link.txt --verbose=1
-/usr/bin/c++ CMakeFiles/cmTC_f89e7.dir/src.cxx.o -o cmTC_f89e7 
+Building CXX object CMakeFiles/cmTC_1111e.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_FNO_COMMON  -fPIE   -fno-common -o CMakeFiles/cmTC_1111e.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_1111e
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_1111e.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_1111e.dir/src.cxx.o -o cmTC_1111e 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -780,13 +780,13 @@ int main() { return 0; }
 Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_WUSELESS_CAST succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_3c4d3/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_3c4d3.dir/build.make CMakeFiles/cmTC_3c4d3.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_c15f9/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_c15f9.dir/build.make CMakeFiles/cmTC_c15f9.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_3c4d3.dir/src.cxx.o
-/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WUSELESS_CAST  -fPIE   -Wuseless-cast -o CMakeFiles/cmTC_3c4d3.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
-Linking CXX executable cmTC_3c4d3
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_3c4d3.dir/link.txt --verbose=1
-/usr/bin/c++ CMakeFiles/cmTC_3c4d3.dir/src.cxx.o -o cmTC_3c4d3 
+Building CXX object CMakeFiles/cmTC_c15f9.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WUSELESS_CAST  -fPIE   -Wuseless-cast -o CMakeFiles/cmTC_c15f9.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_c15f9
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_c15f9.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_c15f9.dir/src.cxx.o -o cmTC_c15f9 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -795,28 +795,43 @@ int main() { return 0; }
 Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_WNO_ERROR_USELESS_CAST succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_da5c2/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_da5c2.dir/build.make CMakeFiles/cmTC_da5c2.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_29ced/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_29ced.dir/build.make CMakeFiles/cmTC_29ced.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_da5c2.dir/src.cxx.o
-/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WNO_ERROR_USELESS_CAST  -fPIE   -Wno-error=useless-cast -o CMakeFiles/cmTC_da5c2.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
-Linking CXX executable cmTC_da5c2
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_da5c2.dir/link.txt --verbose=1
-/usr/bin/c++ CMakeFiles/cmTC_da5c2.dir/src.cxx.o -o cmTC_da5c2 
+Building CXX object CMakeFiles/cmTC_29ced.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WNO_ERROR_USELESS_CAST  -fPIE   -Wno-error=useless-cast -o CMakeFiles/cmTC_29ced.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_29ced
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_29ced.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_29ced.dir/src.cxx.o -o cmTC_29ced 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
 Source file was:
 int main() { return 0; }
+Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_G succeeded with the following output:
+Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_da76e/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_da76e.dir/build.make CMakeFiles/cmTC_da76e.dir/build
+gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_da76e.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_G  -fPIE   -g -o CMakeFiles/cmTC_da76e.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_da76e
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_da76e.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_da76e.dir/src.c.o -o cmTC_da76e 
+gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main(void) { return 0; }
 Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_WNO_ERROR_CAST_ALIGN succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_176e0/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_176e0.dir/build.make CMakeFiles/cmTC_176e0.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_b0507/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_b0507.dir/build.make CMakeFiles/cmTC_b0507.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_176e0.dir/src.c.o
-/usr/bin/cc -DC_COMPILER_SUPPORTS_WNO_ERROR_CAST_ALIGN  -fPIE   -Wno-error=cast-align -o CMakeFiles/cmTC_176e0.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_176e0
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_176e0.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_176e0.dir/src.c.o -o cmTC_176e0 
+Building C object CMakeFiles/cmTC_b0507.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_WNO_ERROR_CAST_ALIGN  -fPIE   -Wno-error=cast-align -o CMakeFiles/cmTC_b0507.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_b0507
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b0507.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_b0507.dir/src.c.o -o cmTC_b0507 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -825,28 +840,43 @@ int main(void) { return 0; }
 Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_WNO_ERROR_DEPRECATED_DECLARATIONS succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_b7eba/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_b7eba.dir/build.make CMakeFiles/cmTC_b7eba.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_2b1e0/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_2b1e0.dir/build.make CMakeFiles/cmTC_2b1e0.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_b7eba.dir/src.c.o
-/usr/bin/cc -DC_COMPILER_SUPPORTS_WNO_ERROR_DEPRECATED_DECLARATIONS  -fPIE   -Wno-error=deprecated-declarations -o CMakeFiles/cmTC_b7eba.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_b7eba
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_b7eba.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_b7eba.dir/src.c.o -o cmTC_b7eba 
+Building C object CMakeFiles/cmTC_2b1e0.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_WNO_ERROR_DEPRECATED_DECLARATIONS  -fPIE   -Wno-error=deprecated-declarations -o CMakeFiles/cmTC_2b1e0.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_2b1e0
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2b1e0.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_2b1e0.dir/src.c.o -o cmTC_2b1e0 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
 Source file was:
 int main(void) { return 0; }
+Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_G succeeded with the following output:
+Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
+
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_5b541/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_5b541.dir/build.make CMakeFiles/cmTC_5b541.dir/build
+gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+Building CXX object CMakeFiles/cmTC_5b541.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_G  -fPIE   -g -o CMakeFiles/cmTC_5b541.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_5b541
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_5b541.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_5b541.dir/src.cxx.o -o cmTC_5b541 
+gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
+
+
+Source file was:
+int main() { return 0; }
 Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_WNO_ERROR_CAST_ALIGN succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_1d934/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_1d934.dir/build.make CMakeFiles/cmTC_1d934.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_51a34/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_51a34.dir/build.make CMakeFiles/cmTC_51a34.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_1d934.dir/src.cxx.o
-/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WNO_ERROR_CAST_ALIGN  -fPIE   -Wno-error=cast-align -o CMakeFiles/cmTC_1d934.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
-Linking CXX executable cmTC_1d934
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_1d934.dir/link.txt --verbose=1
-/usr/bin/c++ CMakeFiles/cmTC_1d934.dir/src.cxx.o -o cmTC_1d934 
+Building CXX object CMakeFiles/cmTC_51a34.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WNO_ERROR_CAST_ALIGN  -fPIE   -Wno-error=cast-align -o CMakeFiles/cmTC_51a34.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_51a34
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_51a34.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_51a34.dir/src.cxx.o -o cmTC_51a34 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -855,13 +885,13 @@ int main() { return 0; }
 Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_WNO_ERROR_DEPRECATED_DECLARATIONS succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_87f2e/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_87f2e.dir/build.make CMakeFiles/cmTC_87f2e.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_e6826/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_e6826.dir/build.make CMakeFiles/cmTC_e6826.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_87f2e.dir/src.cxx.o
-/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WNO_ERROR_DEPRECATED_DECLARATIONS  -fPIE   -Wno-error=deprecated-declarations -o CMakeFiles/cmTC_87f2e.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
-Linking CXX executable cmTC_87f2e
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_87f2e.dir/link.txt --verbose=1
-/usr/bin/c++ CMakeFiles/cmTC_87f2e.dir/src.cxx.o -o cmTC_87f2e 
+Building CXX object CMakeFiles/cmTC_e6826.dir/src.cxx.o
+/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_WNO_ERROR_DEPRECATED_DECLARATIONS  -fPIE   -Wno-error=deprecated-declarations -o CMakeFiles/cmTC_e6826.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
+Linking CXX executable cmTC_e6826
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e6826.dir/link.txt --verbose=1
+/usr/bin/c++ CMakeFiles/cmTC_e6826.dir/src.cxx.o -o cmTC_e6826 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -870,10 +900,10 @@ int main() { return 0; }
 Determining if the function ceil exists in the m passed with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_26522/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_26522.dir/build.make CMakeFiles/cmTC_26522.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_4f033/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_4f033.dir/build.make CMakeFiles/cmTC_4f033.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_26522.dir/CheckFunctionExists.c.o
-/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=ceil -fPIE -o CMakeFiles/cmTC_26522.dir/CheckFunctionExists.c.o -c /usr/share/cmake-3.22/Modules/CheckFunctionExists.c
+Building C object CMakeFiles/cmTC_4f033.dir/CheckFunctionExists.c.o
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=ceil -fPIE -o CMakeFiles/cmTC_4f033.dir/CheckFunctionExists.c.o -c /usr/share/cmake-3.22/Modules/CheckFunctionExists.c
 <command-line>: warning: conflicting types for built-in function ‘ceil’; expected ‘double(double)’ [-Wbuiltin-declaration-mismatch]
 /usr/share/cmake-3.22/Modules/CheckFunctionExists.c:7:3: note: in expansion of macro ‘CHECK_FUNCTION_EXISTS’
     7 |   CHECK_FUNCTION_EXISTS(void);
@@ -881,9 +911,9 @@ Building C object CMakeFiles/cmTC_26522.dir/CheckFunctionExists.c.o
 /usr/share/cmake-3.22/Modules/CheckFunctionExists.c:1:1: note: ‘ceil’ is declared in header ‘<math.h>’
   +++ |+#include <math.h>
     1 | #ifdef CHECK_FUNCTION_EXISTS
-Linking C executable cmTC_26522
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_26522.dir/link.txt --verbose=1
-/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=ceil CMakeFiles/cmTC_26522.dir/CheckFunctionExists.c.o -o cmTC_26522  -lm 
+Linking C executable cmTC_4f033
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4f033.dir/link.txt --verbose=1
+/usr/bin/cc  -DCHECK_FUNCTION_EXISTS=ceil CMakeFiles/cmTC_4f033.dir/CheckFunctionExists.c.o -o cmTC_4f033  -lm 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -891,13 +921,13 @@ gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-l
 Determining if the include file pthread.h exists passed with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_d31cf/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_d31cf.dir/build.make CMakeFiles/cmTC_d31cf.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_0b98c/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_0b98c.dir/build.make CMakeFiles/cmTC_0b98c.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_d31cf.dir/CheckIncludeFile.c.o
-/usr/bin/cc   -fPIE -o CMakeFiles/cmTC_d31cf.dir/CheckIncludeFile.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/CheckIncludeFile.c
-Linking C executable cmTC_d31cf
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_d31cf.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_d31cf.dir/CheckIncludeFile.c.o -o cmTC_d31cf 
+Building C object CMakeFiles/cmTC_0b98c.dir/CheckIncludeFile.c.o
+/usr/bin/cc   -fPIE -o CMakeFiles/cmTC_0b98c.dir/CheckIncludeFile.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/CheckIncludeFile.c
+Linking C executable cmTC_0b98c
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0b98c.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_0b98c.dir/CheckIncludeFile.c.o -o cmTC_0b98c 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -905,13 +935,13 @@ gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-l
 Performing C SOURCE FILE Test CMAKE_HAVE_LIBC_PTHREAD succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_8cfe6/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_8cfe6.dir/build.make CMakeFiles/cmTC_8cfe6.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_6c1c7/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_6c1c7.dir/build.make CMakeFiles/cmTC_6c1c7.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_8cfe6.dir/src.c.o
-/usr/bin/cc -DCMAKE_HAVE_LIBC_PTHREAD  -fPIE -o CMakeFiles/cmTC_8cfe6.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_8cfe6
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_8cfe6.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_8cfe6.dir/src.c.o -o cmTC_8cfe6 
+Building C object CMakeFiles/cmTC_6c1c7.dir/src.c.o
+/usr/bin/cc -DCMAKE_HAVE_LIBC_PTHREAD  -fPIE -o CMakeFiles/cmTC_6c1c7.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_6c1c7
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_6c1c7.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_6c1c7.dir/src.c.o -o cmTC_6c1c7 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -939,13 +969,13 @@ int main(void)
 Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_WFORMAT_SIGNEDNESS succeeded with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_7402d/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_7402d.dir/build.make CMakeFiles/cmTC_7402d.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_0d9e4/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_0d9e4.dir/build.make CMakeFiles/cmTC_0d9e4.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_7402d.dir/src.c.o
-/usr/bin/cc -DC_COMPILER_SUPPORTS_WFORMAT_SIGNEDNESS  -Wall -Wextra -Wwrite-strings -Wformat=2 -Wno-format-nonliteral -Wvla -Wlogical-op -Wshadow  -fPIE   -Wformat-signedness -o CMakeFiles/cmTC_7402d.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_7402d
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_7402d.dir/link.txt --verbose=1
-/usr/bin/cc  -Wall -Wextra -Wwrite-strings -Wformat=2 -Wno-format-nonliteral -Wvla -Wlogical-op -Wshadow  CMakeFiles/cmTC_7402d.dir/src.c.o -o cmTC_7402d 
+Building C object CMakeFiles/cmTC_0d9e4.dir/src.c.o
+/usr/bin/cc -DC_COMPILER_SUPPORTS_WFORMAT_SIGNEDNESS  -Wall -Wextra -Wwrite-strings -Wformat=2 -Wno-format-nonliteral -Wvla -Wlogical-op -Wshadow  -fPIE   -Wformat-signedness -o CMakeFiles/cmTC_0d9e4.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
+Linking C executable cmTC_0d9e4
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_0d9e4.dir/link.txt --verbose=1
+/usr/bin/cc  -Wall -Wextra -Wwrite-strings -Wformat=2 -Wno-format-nonliteral -Wvla -Wlogical-op -Wshadow  CMakeFiles/cmTC_0d9e4.dir/src.c.o -o cmTC_0d9e4 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -954,13 +984,13 @@ int main(void) { return 0; }
 Determining if the open_memstream exist passed with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_e683d/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_e683d.dir/build.make CMakeFiles/cmTC_e683d.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_4a028/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_4a028.dir/build.make CMakeFiles/cmTC_4a028.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_e683d.dir/CheckSymbolExists.c.o
-/usr/bin/cc -D_GNU_SOURCE  -fPIE -o CMakeFiles/cmTC_e683d.dir/CheckSymbolExists.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
-Linking C executable cmTC_e683d
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_e683d.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_e683d.dir/CheckSymbolExists.c.o -o cmTC_e683d 
+Building C object CMakeFiles/cmTC_4a028.dir/CheckSymbolExists.c.o
+/usr/bin/cc -D_GNU_SOURCE  -fPIE -o CMakeFiles/cmTC_4a028.dir/CheckSymbolExists.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_4a028
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_4a028.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_4a028.dir/CheckSymbolExists.c.o -o cmTC_4a028 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -981,13 +1011,13 @@ int main(int argc, char** argv)
 Determining if the fopencookie exist passed with the following output:
 Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
 
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_dbe11/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_dbe11.dir/build.make CMakeFiles/cmTC_dbe11.dir/build
+Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_2957b/fast && /usr/bin/gmake  -f CMakeFiles/cmTC_2957b.dir/build.make CMakeFiles/cmTC_2957b.dir/build
 gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_dbe11.dir/CheckSymbolExists.c.o
-/usr/bin/cc -D_GNU_SOURCE  -fPIE -o CMakeFiles/cmTC_dbe11.dir/CheckSymbolExists.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
-Linking C executable cmTC_dbe11
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_dbe11.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_dbe11.dir/CheckSymbolExists.c.o -o cmTC_dbe11 
+Building C object CMakeFiles/cmTC_2957b.dir/CheckSymbolExists.c.o
+/usr/bin/cc -D_GNU_SOURCE  -fPIE -o CMakeFiles/cmTC_2957b.dir/CheckSymbolExists.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_2957b
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_2957b.dir/link.txt --verbose=1
+/usr/bin/cc CMakeFiles/cmTC_2957b.dir/CheckSymbolExists.c.o -o cmTC_2957b 
 gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
 
 
@@ -1005,37 +1035,3 @@ int main(int argc, char** argv)
   return 0;
 #endif
 }
-Performing C SOURCE FILE Test C_COMPILER_SUPPORTS_G succeeded with the following output:
-Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
-
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_f7156/fast && gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-/usr/bin/gmake  -f CMakeFiles/cmTC_f7156.dir/build.make CMakeFiles/cmTC_f7156.dir/build
-gmake[2]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building C object CMakeFiles/cmTC_f7156.dir/src.c.o
-/usr/bin/cc -DC_COMPILER_SUPPORTS_G  -fPIE   -g -o CMakeFiles/cmTC_f7156.dir/src.c.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.c
-Linking C executable cmTC_f7156
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_f7156.dir/link.txt --verbose=1
-/usr/bin/cc CMakeFiles/cmTC_f7156.dir/src.c.o -o cmTC_f7156 
-gmake[2]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-
-
-Source file was:
-int main(void) { return 0; }
-Performing C++ SOURCE FILE Test CXX_COMPILER_SUPPORTS_G succeeded with the following output:
-Change Dir: /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp
-
-Run Build Command(s):/usr/bin/gmake -f Makefile cmTC_a7571/fast && gmake[1]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-/usr/bin/gmake  -f CMakeFiles/cmTC_a7571.dir/build.make CMakeFiles/cmTC_a7571.dir/build
-gmake[2]: Entering directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-Building CXX object CMakeFiles/cmTC_a7571.dir/src.cxx.o
-/usr/bin/c++ -DCXX_COMPILER_SUPPORTS_G  -fPIE   -g -o CMakeFiles/cmTC_a7571.dir/src.cxx.o -c /home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp/src.cxx
-Linking CXX executable cmTC_a7571
-/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_a7571.dir/link.txt --verbose=1
-/usr/bin/c++ CMakeFiles/cmTC_a7571.dir/src.cxx.o -o cmTC_a7571 
-gmake[2]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-gmake[1]: Leaving directory '/home/jclee/Development/Matter/WS_Matter/iotivity-lite/build/CMakeFiles/CMakeTmp'
-
-
-Source file was:
-int main() { return 0; }

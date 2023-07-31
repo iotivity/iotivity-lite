@@ -22,5 +22,5 @@ Description: Iotivity lite client library
 Version: 2.2.5
 Requires: tinycbor
 Libs.private: -lm -pthread
-Cflags: -I${includedir}/iotivity-lite -DOC_CLIENT -DOC_BRIDGE -DOC_DYNAMIC_ALLOCATION -DOC_SECURITY -DOC_PKI -DOC_INTROSPECTION -DOC_IDD_API -DOC_OSCORE -D__OC_PLATFORM 
+Cflags: -I${includedir}/iotivity-lite -DOC_CLIENT -DOC_DYNAMIC_ALLOCATION -DOC_SECURITY -DOC_PKI -DOC_INTROSPECTION -DOC_IDD_API -DOC_OSCORE -D__OC_PLATFORM 
 Libs: -L${libdir} -liotivity-lite-client

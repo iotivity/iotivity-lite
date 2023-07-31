@@ -109,7 +109,7 @@ CMAKE_EXE_LINKER_FLAGS_RELEASE:STRING=
 CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 
 //Enable/Disable output of compile commands during generation.
-CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=OFF
+CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=
 
 //User executables (bin)
 CMAKE_INSTALL_BINDIR:PATH=bin
@@ -249,10 +249,10 @@ CMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 
 //If set, runtime paths are not added when installing shared libraries,
 // but are added when building.
-CMAKE_SKIP_INSTALL_RPATH:BOOL=OFF
+CMAKE_SKIP_INSTALL_RPATH:BOOL=NO
 
 //If set, runtime paths are not added when using shared libraries.
-CMAKE_SKIP_RPATH:BOOL=OFF
+CMAKE_SKIP_RPATH:BOOL=NO
 
 //Flags used by the linker during the creation of static libraries
 // during all build types.
@@ -281,7 +281,7 @@ CMAKE_STRIP:FILEPATH=/usr/bin/strip
 // .SILENT directive, and all commands will be echoed to the console
 // during the make.  This is useful for debugging only. With Visual
 // Studio IDE projects all commands are done without /nologo.
-CMAKE_VERBOSE_MAKEFILE:BOOL=OFF
+CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
 //Build TinyCBOR programs.
 ENABLE_EXECUTABLES:BOOL=OFF
@@ -320,7 +320,7 @@ OC_APP_DATA_BUFFER_SIZE:STRING=
 OC_ASAN_ENABLED:BOOL=OFF
 
 //Enable Bridge Support.
-OC_BRIDGE_ENABLED:BOOL=ON
+OC_BRIDGE_ENABLED:BOOL=OFF
 
 //Enable clang-tidy analysis during compilation.
 OC_CLANG_TIDY_ENABLED:BOOL=OFF
@@ -341,7 +341,7 @@ OC_COMPILER_IS_GCC:BOOL=1
 OC_COVERAGE_ENABLED:BOOL=OFF
 
 //Enable debug messages.
-OC_DEBUG_ENABLED:BOOL=ON
+OC_DEBUG_ENABLED:BOOL=OFF
 
 //Enable observation over oic/res resource.
 OC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED:BOOL=OFF

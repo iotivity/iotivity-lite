@@ -128,15 +128,15 @@ oc_sec_ael_init(void)
 }
 
 /*
- * modifiedbyme <2023/7/25> add func : oc_sec_add_new_ael(){}
+ * modifiedbyme <2023/7/25> add func : oc_sec_ael_new_device(){}
  */
 #ifdef OC_HAS_FEATURE_BRIDGE
 void
-oc_sec_add_new_ael(void)
+oc_sec_ael_new_device(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   ael =
-    (oc_sec_ael_t *)realloc(ael, (oc_core_get_num_devices()+1) * sizeof(oc_sec_ael_t));
+    (oc_sec_ael_t *)realloc(ael, oc_core_get_num_devices() * sizeof(oc_sec_ael_t));
   if (!ael) {
     oc_abort("Insufficient memory");
   }

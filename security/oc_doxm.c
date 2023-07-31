@@ -157,15 +157,15 @@ oc_sec_doxm_init(void)
 }
 
 /*
- * modifiedbyme <2023/7/25> add func : void oc_sec_add_new_doxm(){}
+ * modifiedbyme <2023/7/25> add func : void oc_sec_doxm_new_device(){}
  */
 #ifdef OC_HAS_FEATURE_BRIDGE
 void
-oc_sec_add_new_doxm(void)
+oc_sec_doxm_new_device(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   g_doxm =
-    (oc_sec_doxm_t *)realloc(g_doxm, (oc_core_get_num_devices()+1) * sizeof(oc_sec_doxm_t));
+    (oc_sec_doxm_t *)realloc(g_doxm, oc_core_get_num_devices() * sizeof(oc_sec_doxm_t));
   if (!g_doxm) {
     oc_abort("Insufficient memory");
   }

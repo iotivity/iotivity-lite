@@ -19,6 +19,8 @@
 #ifndef OC_SVR_INTERNAL_H
 #define OC_SVR_INTERNAL_H
 
+#include "util/oc_features.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -29,7 +31,7 @@ extern "C" {
 void oc_sec_svr_create(void);
 
 /*
- * modifiedbyme <2023/7/28> add func proto : oc_sec_svr_add()
+ * modifiedbyme <2023/7/28> add func proto : oc_sec_svr_create_new_device()
  */
 #ifdef OC_HAS_FEATURE_BRIDGE
 /**
@@ -37,7 +39,7 @@ void oc_sec_svr_create(void);
  *        new Device should be added to `g_oc_device_info[]`
  *        before calling this function.
  */
-void oc_sec_svr_add(void);
+void oc_sec_svr_create_new_device(void);
 #endif /* OC_HAS_FEATURE_BRIDGE */
 
 

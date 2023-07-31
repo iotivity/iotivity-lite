@@ -91,10 +91,10 @@ typedef struct oc_sec_ael_t
 void oc_sec_ael_init(void);
 
 /*
- * modifiedbyme <2023/7/25> add func proto : oc_sec_add_new_ael()
+ * modifiedbyme <2023/7/25> add func proto : oc_sec_ael_new_device()
  */
 #ifdef OC_HAS_FEATURE_BRIDGE
-void oc_sec_add_new_ael(void);
+void oc_sec_ael_new_device(void);
 #endif /* OC_HAS_FEATURE_BRIDGE */
 
 void oc_sec_ael_free(void);
