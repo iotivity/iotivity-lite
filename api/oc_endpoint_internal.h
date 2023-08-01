@@ -38,6 +38,8 @@ extern "C" {
 #define OC_SCHEME_COAP_TCP "coap+tcp://"
 #define OC_SCHEME_COAPS_TCP "coaps+tcp://"
 
+#define OC_SCHEME_OCF "ocf://"
+
 /** @brief Get scheme string for transport flags */
 const char *oc_endpoint_flags_to_scheme(unsigned flags) OC_RETURNS_NONNULL;
 

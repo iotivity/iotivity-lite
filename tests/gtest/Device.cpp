@@ -342,6 +342,8 @@ TestDevice::AddDynamicResource(const DynamicResourceToAdd &dr, size_t device)
   }
 #endif /* OC_SECURITY */
 
+  oc_resource_set_discoverable(res, dr.isDiscoverable);
+
   if (!oc_add_resource(res)) {
     oc_delete_resource(res);
     return nullptr;

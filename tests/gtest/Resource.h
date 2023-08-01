@@ -22,6 +22,7 @@
 #include "util/oc_features.h"
 
 #include <cstddef>
+#include <functional>
 #include <optional>
 #include <string>
 #include <vector>
@@ -38,6 +39,13 @@ struct BaselineData
   std::string tag_pos_desc;
   std::string tag_func_desc;
 };
+
+/** @brief Iterate all resources in the Iotivity stack */
+void IterateAllResources(const std::function<void(oc_resource_t *)> &fn);
+
+/** @brief Iterate all resources in in given device */
+void IterateDeviceResources(size_t device, bool includePlatformResources,
+                            const std::function<void(oc_resource_t *)> &fn);
 
 std::optional<BaselineData> ParseBaselineData(const oc_rep_t *rep);
 

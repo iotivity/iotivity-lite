@@ -60,6 +60,7 @@ set(OC_INOUT_BUFFER_SIZE "" CACHE STRING "Custom static buffer size for network 
 set(OC_INOUT_BUFFER_POOL "" CACHE STRING "Custom static pool size of network messages.")
 set(OC_APP_DATA_BUFFER_SIZE "" CACHE STRING "Custom static buffer size for application messages.")
 set(OC_APP_DATA_BUFFER_POOL "" CACHE STRING "Custom static size of application messages.")
+set(OC_VERSION_1_1_0_ENABLED OFF CACHE BOOL "Enable OCF version 1.1")
 set(OC_ETAG_ENABLED OFF CACHE BOOL "Enable Entity Tag (ETag) support.")
 set(PLGD_DEV_TIME_ENABLED OFF CACHE BOOL "Enable plgd time feature.")
 
@@ -398,6 +399,10 @@ if (NOT("${OC_APP_DATA_BUFFER_POOL}" STREQUAL ""))
     endif()
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_APP_DATA_BUFFER_POOL=(${OC_APP_DATA_BUFFER_POOL})")
     list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_APP_DATA_BUFFER_POOL=(${OC_APP_DATA_BUFFER_POOL})")
+endif()
+
+if(OC_VERSION_1_1_0_ENABLED)
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_SPEC_VER_OIC")
 endif()
 
 if(OC_ETAG_ENABLED)

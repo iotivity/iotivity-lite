@@ -21,9 +21,83 @@
 #include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
+#include "oc_ri.h"
 #include "util/oc_features.h"
 
+#ifdef OC_COLLECTIONS
+#include "api/oc_collection_internal.h"
+#endif /* OC_COLLECTIONS */
+
 namespace oc {
+
+void
+IterateAllResources(const std::function<void(oc_resource_t *)> &fn)
+{
+  // platform resources
+  for (int type = 0; type < OCF_CON; ++type) {
+    fn(oc_core_get_resource_by_index(type, 0));
+  }
+
+  for (size_t i = 0; i < oc_core_get_num_devices(); ++i) {
+    // core resources
+    for (int type = OCF_CON; type <= OCF_D; ++type) {
+      fn(oc_core_get_resource_by_index(type, i));
+    }
+  }
+
+#ifdef OC_SERVER
+  // app resources
+  for (oc_resource_t *app_res = oc_ri_get_app_resources(); app_res != nullptr;
+       app_res = app_res->next) {
+    fn(app_res);
+  }
+
+#ifdef OC_COLLECTIONS
+  // collections
+  for (oc_collection_t *col = oc_collection_get_all(); col != nullptr;
+       col = (oc_collection_t *)col->res.next) {
+    fn(&col->res);
+  }
+#endif /* OC_COLLECTIONS */
+#endif /* OC_SERVER */
+}
+
+void
+IterateDeviceResources(size_t device, bool includePlatformResources,
+                       const std::function<void(oc_resource_t *)> &fn)
+{
+  if (includePlatformResources) {
+    // platform resources
+    for (int type = 0; type < OCF_CON; ++type) {
+      fn(oc_core_get_resource_by_index(type, 0));
+    }
+  }
+
+  // core resources
+  for (int type = OCF_CON; type <= OCF_D; ++type) {
+    fn(oc_core_get_resource_by_index(type, device));
+  }
+
+#ifdef OC_SERVER
+  // app resources
+  for (oc_resource_t *app_res = oc_ri_get_app_resources(); app_res != nullptr;
+       app_res = app_res->next) {
+    if (app_res->device == device) {
+      fn(app_res);
+    }
+  }
+
+#ifdef OC_COLLECTIONS
+  // collections
+  for (oc_collection_t *col = oc_collection_get_all(); col != nullptr;
+       col = (oc_collection_t *)col->res.next) {
+    if (col->res.device == device) {
+      fn(&col->res);
+    }
+  }
+#endif /* OC_COLLECTIONS */
+#endif /* OC_SERVER */
+}
 
 std::optional<BaselineData>
 ParseBaselineData(const oc_rep_t *rep)

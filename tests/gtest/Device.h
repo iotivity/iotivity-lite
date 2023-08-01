@@ -115,7 +115,19 @@ struct DynamicResourceToAdd
   const std::vector<oc_interface_mask_t> ifaces;
   DynamicResourceHandler handlers;
   bool isPublic;
+  bool isDiscoverable;
 };
+
+inline DynamicResourceToAdd
+makeDynamicResourceToAdd(const std::string &name, const std::string &uri,
+                         const std::vector<std::string> &rts,
+                         const std::vector<oc_interface_mask_t> &ifaces,
+                         const DynamicResourceHandler &handlers,
+                         bool isPublic = true, bool isDiscoverable = true)
+{
+  return { name, uri, rts, ifaces, handlers, isPublic, isDiscoverable };
+}
+
 #endif /* OC_SERVER */
 
 class TestDevice {

@@ -30,6 +30,7 @@
 #include "port/oc_log_internal.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
+#include "tests/gtest/Resource.h"
 #include "tests/gtest/Storage.h"
 
 #ifdef OC_COLLECTIONS
@@ -102,12 +103,12 @@ public:
 #endif // OC_STORAGE
   }
 
+#ifdef OC_DYNAMIC_ALLOCATION
   static void onRequest(oc_request_t *request, oc_interface_mask_t, void *)
   {
     oc_send_response(request, OC_STATUS_OK);
   }
 
-#ifdef OC_DYNAMIC_ALLOCATION
   static oc_resource_t *addDynamicResource(
     const std::string &name, const std::string &uri,
     const std::vector<std::string> &rts,
@@ -128,12 +129,8 @@ TestETagWithServer::addDynamicResource(
   oc::DynamicResourceHandler handlers{};
   handlers.onGet = onRequest;
   handlers.onPost = onRequest;
-
-  oc::DynamicResourceToAdd dynResource = {
-    name, uri, rts, ifaces, handlers, true,
-  };
-
-  return oc::TestDevice::AddDynamicResource(dynResource, device);
+  return oc::TestDevice::AddDynamicResource(
+    oc::makeDynamicResourceToAdd(name, uri, rts, ifaces, handlers), device);
 }
 
 void
@@ -150,41 +147,10 @@ TestETagWithServer::addDynamicResources()
 }
 #endif // OC_DYNAMIC_ALLOCATION
 
-template<typename Func>
-static void
-iterateAllResources(const Func &fn)
-{
-  // platform resources
-  for (int type = 0; type < OCF_CON; ++type) {
-    fn(oc_core_get_resource_by_index(type, 0));
-  }
-
-  for (size_t i = 0; i < oc_core_get_num_devices(); ++i) {
-    // core resources
-    for (int type = OCF_CON; type <= OCF_D; ++type) {
-      fn(oc_core_get_resource_by_index(type, i));
-    }
-  }
-
-  // app resources
-  for (oc_resource_t *app_res = oc_ri_get_app_resources(); app_res != nullptr;
-       app_res = app_res->next) {
-    fn(app_res);
-  }
-
-#ifdef OC_COLLECTIONS
-  // collections
-  for (oc_collection_t *col = oc_collection_get_all(); col != nullptr;
-       col = (oc_collection_t *)col->res.next) {
-    fn(&col->res);
-  }
-#endif /* OC_COLLECTIONS */
-}
-
 // check that all resources have initialized etags
 TEST_F(TestETagWithServer, ETagsInitialized)
 {
-  iterateAllResources([](const oc_resource_t *resource) {
+  oc::IterateAllResources([](const oc_resource_t *resource) {
     EXPECT_NE(0, oc_resource_get_etag(resource));
   });
 }
@@ -224,7 +190,7 @@ TEST_F(TestETagWithServer, NewResources)
 static void
 setAllETags(uint64_t etag)
 {
-  iterateAllResources(
+  oc::IterateAllResources(
     [etag](oc_resource_t *resource) { oc_resource_set_etag(resource, etag); });
 }
 
@@ -277,7 +243,7 @@ TEST_F(TestETagWithServer, DumpAndLoad)
   EXPECT_TRUE(oc_etag_load_and_clear());
 
   // check if all etags are set to 1337
-  iterateAllResources([&dynamicResources](const oc_resource_t *resource) {
+  oc::IterateAllResources([&dynamicResources](const oc_resource_t *resource) {
     if (std::find(std::begin(dynamicResources), std::end(dynamicResources),
                   resource) != std::end(dynamicResources)) {
       EXPECT_NE(0, oc_resource_get_etag(resource));
@@ -307,7 +273,7 @@ TEST_F(TestETagWithServer, SkipDumpOfEmptyETags)
   // all etags should be reinitialized by oc_etag_load_from_storage
   uint64_t max_etag = oc_etag_global();
   EXPECT_TRUE(oc_etag_load_from_storage(false));
-  iterateAllResources([&max_etag](const oc_resource_t *resource) {
+  oc::IterateAllResources([&max_etag](const oc_resource_t *resource) {
     EXPECT_LT(max_etag, oc_resource_get_etag(resource));
   });
 }
@@ -361,7 +327,7 @@ TEST_F(TestETagWithServer, IgnoreInvalidStorageData)
                                     store_encode_single_string, nullptr));
   EXPECT_TRUE(oc_etag_load_from_storage(true));
   // no etag should be changed
-  iterateAllResources([kETag](const oc_resource_t *resource) {
+  oc::IterateAllResources([kETag](const oc_resource_t *resource) {
     EXPECT_EQ(kETag, oc_resource_get_etag(resource));
   });
 
@@ -386,7 +352,7 @@ TEST_F(TestETagWithServer, IgnoreInvalidStorageData)
                                     store_encode_invalid_type, nullptr));
   EXPECT_TRUE(oc_etag_load_from_storage(true));
   // no etag should be changed
-  iterateAllResources([kETag](const oc_resource_t *resource) {
+  oc::IterateAllResources([kETag](const oc_resource_t *resource) {
     EXPECT_EQ(kETag, oc_resource_get_etag(resource));
   });
 
@@ -401,7 +367,7 @@ TEST_F(TestETagWithServer, IgnoreInvalidStorageData)
                                     store_encode_invalid_value, nullptr));
   EXPECT_TRUE(oc_etag_load_from_storage(true));
   // no etag should be changed
-  iterateAllResources([kETag](const oc_resource_t *resource) {
+  oc::IterateAllResources([kETag](const oc_resource_t *resource) {
     EXPECT_EQ(kETag, oc_resource_get_etag(resource));
   });
 }
@@ -447,7 +413,7 @@ TEST_F(TestETagWithServer, ClearStorage)
   ASSERT_TRUE(oc_etag_clear_storage());
   EXPECT_FALSE(oc_etag_load_from_storage(false));
 
-  iterateAllResources([](const oc_resource_t *resource) {
+  oc::IterateAllResources([](const oc_resource_t *resource) {
     // nor 0 nor 1337
     EXPECT_NE(0, oc_resource_get_etag(resource));
     EXPECT_NE(1337, oc_resource_get_etag(resource));

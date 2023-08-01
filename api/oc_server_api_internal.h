@@ -19,12 +19,12 @@
 #ifndef OC_SERVER_API_INTERNAL_H
 #define OC_SERVER_API_INTERNAL_H
 
+#include "oc_endpoint_internal.h"
 #include "oc_ri.h"
+#include "oc_uuid.h"
 #include "util/oc_compiler.h"
 
 #ifdef OC_RES_BATCH_SUPPORT
-#include "oc_endpoint.h"
-#include "oc_uuid.h"
 #include <cbor.h>
 #endif /* OC_RES_BATCH_SUPPORT */
 
@@ -61,7 +61,7 @@ void oc_notify_resource_changed_delayed_ms(oc_resource_t *resource,
  * https://openconnectivity.org/specs/OCF_Core_Specification_v2.2.5.pdf
  * section 6.2.2:
  */
-#define OC_MAX_OCF_URI_SIZE (OC_UUID_LEN + 6 + 256)
+#define OC_MAX_OCF_URI_SIZE ((sizeof(OC_SCHEME_OCF) - 1) + OC_UUID_LEN + 256)
 
 void oc_discovery_create_batch_for_resource(CborEncoder *links_array,
                                             oc_resource_t *resource,

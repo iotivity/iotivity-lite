@@ -22,6 +22,7 @@
 
 #include "api/oc_buffer_internal.h"
 #include "api/oc_client_api_internal.h"
+#include "api/oc_discovery_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/client/oc_client_cb_internal.h"
 #include "messaging/coap/coap.h"
@@ -628,8 +629,8 @@ oc_do_ipv4_discovery(const char *query, oc_client_handler_t handler,
 {
   oc_make_ipv4_endpoint(mcast4, IPV4 | DISCOVERY, 5683, 0xe0, 0x00, 0x01, 0xbb);
 
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb("/oic/res", &mcast4, OC_GET, query,
-                                             handler, LOW_QOS, user_data);
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb(
+    OCF_RES_URI, &mcast4, OC_GET, query, handler, LOW_QOS, user_data);
 
   if (cb == NULL) {
     return NULL;
@@ -768,7 +769,7 @@ dispatch_ip_discovery(const oc_client_cb_t *cb4, const char *query,
     return false;
   }
 
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb("/oic/res", endpoint, OC_GET,
+  oc_client_cb_t *cb = oc_ri_alloc_client_cb(OCF_RES_URI, endpoint, OC_GET,
                                              query, handler, qos, user_data);
 
   if (cb == NULL) {

@@ -205,34 +205,12 @@ public:
     handlers.onGet = oc::TestDevice::DummyHandler;
 
     std::vector<oc::DynamicResourceToAdd> dynResources = {
-      {
-        "Dynamic Device 1",
-        "/dyn1",
-        {
-          "oic.d.dynamic",
-          "oic.d.test",
-        },
-        {
-          OC_IF_BASELINE,
-          OC_IF_R,
-        },
-        handlers,
-        false,
-      },
-      {
-        "Dynamic Device 2",
-        "/dyn2",
-        {
-          "oic.d.dynamic",
-          "oic.d.test",
-        },
-        {
-          OC_IF_BASELINE,
-          OC_IF_RW,
-        },
-        handlers,
-        false,
-      },
+      oc::makeDynamicResourceToAdd(
+        "Dynamic Device 1", "/dyn1", { "oic.d.dynamic", "oic.d.test" },
+        { OC_IF_BASELINE, OC_IF_R }, handlers, false),
+      oc::makeDynamicResourceToAdd(
+        "Dynamic Device 2", "/dyn2", { "oic.d.dynamic", "oic.d.test" },
+        { OC_IF_BASELINE, OC_IF_RW }, handlers, false),
     };
     size_t device = 0;
     for (const auto &dr : dynResources) {
