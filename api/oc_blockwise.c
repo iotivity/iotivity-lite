@@ -52,60 +52,62 @@ oc_blockwise_init_buffer(struct oc_memb *pool, const char *href,
                          oc_method_t method, oc_blockwise_role_t role,
                          uint32_t buffer_size)
 {
-  if (href_len == 0)
+  if (href_len == 0) {
     return NULL;
+  }
 
   oc_blockwise_state_t *buffer = (oc_blockwise_state_t *)oc_memb_alloc(pool);
-  if (buffer) {
+  if (buffer == NULL) {
+    OC_WRN("block-wise buffers exhausted");
+    return NULL;
+  }
+
 #ifdef OC_DYNAMIC_ALLOCATION
 #ifdef OC_APP_DATA_BUFFER_POOL
-    oc_app_data_buffer_t *app_buffer =
-      (oc_app_data_buffer_t *)oc_memb_alloc(&oc_app_data_s);
-    if (app_buffer) {
-      buffer->block = app_buffer;
-      buffer->buffer = app_buffer->buffer;
-      buffer->buffer_size = OC_APP_DATA_BUFFER_SIZE;
-    }
+  oc_app_data_buffer_t *app_buffer =
+    (oc_app_data_buffer_t *)oc_memb_alloc(&oc_app_data_s);
+  if (app_buffer) {
+    buffer->block = app_buffer;
+    buffer->buffer = app_buffer->buffer;
+    buffer->buffer_size = OC_APP_DATA_BUFFER_SIZE;
+  }
 #endif /* OC_APP_DATA_BUFFER_POOL */
-    if (!buffer->buffer) {
-      buffer->buffer = (uint8_t *)malloc(buffer_size);
-      buffer->buffer_size = buffer_size;
-      OC_DBG("block-wise buffer allocated with size %" PRIu32, buffer_size);
-    }
-    if (!buffer->buffer) {
-      oc_memb_free(pool, buffer);
-      return NULL;
-    }
+  if (!buffer->buffer) {
+    buffer->buffer = (uint8_t *)malloc(buffer_size);
+    buffer->buffer_size = buffer_size;
+    OC_DBG("block-wise buffer allocated with size %" PRIu32, buffer_size);
+  }
+  if (buffer->buffer == NULL) {
+    OC_ERR("cannot allocate block-wise buffer");
+    oc_memb_free(pool, buffer);
+    return NULL;
+  }
 #else  /* OC_DYNAMIC_ALLOCATION */
-    (void)buffer_size;
+  (void)buffer_size;
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-    buffer->next_block_offset = 0;
-    buffer->payload_size = 0;
-    buffer->ref_count = 1;
-    buffer->method = method;
-    buffer->role = role;
-    memcpy(&buffer->endpoint, endpoint, sizeof(oc_endpoint_t));
-    buffer->endpoint.next = NULL;
-    oc_new_string(&buffer->href, href, href_len);
-    buffer->next = NULL;
-    buffer->finish_cb = NULL;
+  buffer->next_block_offset = 0;
+  buffer->payload_size = 0;
+  buffer->ref_count = 1;
+  buffer->method = method;
+  buffer->role = role;
+  memcpy(&buffer->endpoint, endpoint, sizeof(oc_endpoint_t));
+  buffer->endpoint.next = NULL;
+  oc_new_string(&buffer->href, href, href_len);
+  buffer->next = NULL;
+  buffer->finish_cb = NULL;
 #ifdef OC_CLIENT
-    buffer->mid = 0;
-    buffer->client_cb = NULL;
+  buffer->mid = 0;
+  buffer->client_cb = NULL;
 #endif /* OC_CLIENT */
-    return buffer;
-  }
-  OC_WRN("block-wise buffers exhausted");
-  return NULL;
+  return buffer;
 }
 
 static void
 oc_blockwise_free_buffer(oc_list_t list, struct oc_memb *pool,
                          oc_blockwise_state_t *buffer)
 {
-
-  if (!buffer) {
+  if (buffer == NULL) {
     return;
   }
 
@@ -170,11 +172,13 @@ oc_blockwise_alloc_request_buffer(const char *href, size_t href_len,
     (oc_blockwise_request_state_t *)oc_blockwise_init_buffer(
       &oc_blockwise_request_states_s, href, href_len, endpoint, method, role,
       buffer_size);
-  if (buffer) {
-    oc_ri_add_timed_event_callback_seconds(buffer, oc_blockwise_request_timeout,
-                                           OC_EXCHANGE_LIFETIME);
-    oc_list_add(oc_blockwise_requests, buffer);
+  if (buffer == NULL) {
+    OC_ERR("cannot allocate block-wise request buffer");
+    return NULL;
   }
+  oc_ri_add_timed_event_callback_seconds(buffer, oc_blockwise_request_timeout,
+                                         OC_EXCHANGE_LIFETIME);
+  oc_list_add(oc_blockwise_requests, buffer);
   return (oc_blockwise_state_t *)buffer;
 }
 
@@ -188,15 +192,17 @@ oc_blockwise_alloc_response_buffer(const char *href, size_t href_len,
     (oc_blockwise_response_state_t *)oc_blockwise_init_buffer(
       &oc_blockwise_response_states_s, href, href_len, endpoint, method, role,
       buffer_size);
-  if (buffer) {
-    oc_random_buffer(buffer->etag, sizeof(buffer->etag));
-#ifdef OC_CLIENT
-    buffer->observe_seq = OC_COAP_OPTION_OBSERVE_NOT_SET;
-#endif /* OC_CLIENT */
-    oc_ri_add_timed_event_callback_seconds(
-      buffer, oc_blockwise_response_timeout, OC_EXCHANGE_LIFETIME);
-    oc_list_add(oc_blockwise_responses, buffer);
+  if (buffer == NULL) {
+    OC_ERR("cannot allocate block-wise response buffer");
+    return NULL;
   }
+  oc_random_buffer(buffer->etag, sizeof(buffer->etag));
+#ifdef OC_CLIENT
+  buffer->observe_seq = OC_COAP_OPTION_OBSERVE_NOT_SET;
+#endif /* OC_CLIENT */
+  oc_ri_add_timed_event_callback_seconds(buffer, oc_blockwise_response_timeout,
+                                         OC_EXCHANGE_LIFETIME);
+  oc_list_add(oc_blockwise_responses, buffer);
   return (oc_blockwise_state_t *)buffer;
 }
 

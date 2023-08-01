@@ -210,10 +210,10 @@ bool
 coap_options_get_size1(const coap_packet_t *packet, uint32_t *size)
 {
   if (!IS_OPTION(packet, COAP_OPTION_SIZE1)) {
-    return 0;
+    return false;
   }
   *size = packet->size1;
-  return 1;
+  return true;
 }
 
 void
