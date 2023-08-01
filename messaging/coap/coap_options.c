@@ -71,7 +71,6 @@ void
 coap_options_set_content_format(coap_packet_t *packet,
                                 oc_content_format_t format)
 {
-  assert(format >= 0);
   assert(format <= UINT16_MAX);
   packet->content_format = (uint16_t)format;
   SET_OPTION(packet, COAP_OPTION_CONTENT_FORMAT);

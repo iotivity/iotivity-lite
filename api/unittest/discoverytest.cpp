@@ -279,9 +279,6 @@ class TestDiscoveryWithServer : public ::testing::Test {
 public:
   static void SetUpTestCase()
   {
-    // TODO: rm
-    oc_log_set_level(OC_LOG_LEVEL_DEBUG);
-
 #if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_APP_DATA_BUFFER_SIZE)
     oc_set_max_app_data_size(16384);
 #endif /* OC_DYNAMIC_ALLOCATION && !OC_APP_DATA_BUFFER_SIZE */
@@ -309,9 +306,6 @@ public:
 #if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_APP_DATA_BUFFER_SIZE)
     oc_set_max_app_data_size(g_max_app_data_size);
 #endif /* OC_DYNAMIC_ALLOCATION && !OC_APP_DATA_BUFFER_SIZE */
-
-    // TODO: rm
-    oc_log_set_level(OC_LOG_LEVEL_INFO);
   }
 
   static void verifyLinks(const DiscoveryLinkDataMap &links);

@@ -968,7 +968,7 @@ coap_notify_observers_internal(oc_resource_t *resource,
       response_buffer.buffer = buffer;
       response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
       response.response_buffer = &response_buffer;
-      if (resource != NULL && endpoint != NULL) {
+      if (endpoint != NULL) {
         OC_DBG("coap_notify_observers_internal: Issue GET request to resource "
                "%s\n\n",
                oc_string(resource->uri));
@@ -1030,8 +1030,7 @@ coap_notify_observers_internal(oc_resource_t *resource,
       free(buffer);
     }
 #endif /* OC_DYNAMIC_ALLOCATION */
-  }    // num_observers > 0
-  else {
+  } else {
     OC_WRN("coap_notify_observers_internal: no observers");
   }
 

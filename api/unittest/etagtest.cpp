@@ -273,7 +273,7 @@ TEST_F(TestETagWithServer, SkipDumpOfEmptyETags)
   // all etags should be reinitialized by oc_etag_load_from_storage
   uint64_t max_etag = oc_etag_global();
   EXPECT_TRUE(oc_etag_load_from_storage(false));
-  iterateAllResources([&max_etag](const oc_resource_t *resource) {
+  oc::IterateAllResources([&max_etag](const oc_resource_t *resource) {
     EXPECT_LT(max_etag, oc_resource_get_etag(resource));
   });
 }
@@ -327,7 +327,7 @@ TEST_F(TestETagWithServer, IgnoreInvalidStorageData)
                                     store_encode_single_string, nullptr));
   EXPECT_TRUE(oc_etag_load_from_storage(true));
   // no etag should be changed
-  iterateAllResources([kETag](const oc_resource_t *resource) {
+  oc::IterateAllResources([kETag](const oc_resource_t *resource) {
     EXPECT_EQ(kETag, oc_resource_get_etag(resource));
   });
 
@@ -352,7 +352,7 @@ TEST_F(TestETagWithServer, IgnoreInvalidStorageData)
                                     store_encode_invalid_type, nullptr));
   EXPECT_TRUE(oc_etag_load_from_storage(true));
   // no etag should be changed
-  iterateAllResources([kETag](const oc_resource_t *resource) {
+  oc::IterateAllResources([kETag](const oc_resource_t *resource) {
     EXPECT_EQ(kETag, oc_resource_get_etag(resource));
   });
 
@@ -367,7 +367,7 @@ TEST_F(TestETagWithServer, IgnoreInvalidStorageData)
                                     store_encode_invalid_value, nullptr));
   EXPECT_TRUE(oc_etag_load_from_storage(true));
   // no etag should be changed
-  iterateAllResources([kETag](const oc_resource_t *resource) {
+  oc::IterateAllResources([kETag](const oc_resource_t *resource) {
     EXPECT_EQ(kETag, oc_resource_get_etag(resource));
   });
 }

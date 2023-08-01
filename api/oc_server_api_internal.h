@@ -34,14 +34,6 @@
 extern "C" {
 #endif
 
-/**
- * The OCF URI is specified in the following form:
- * ocf://<authority>/<path>?<query>
- * https://openconnectivity.org/specs/OCF_Core_Specification_v2.2.5.pdf
- * section 6.2.2:
- */
-#define OC_MAX_OCF_URI_SIZE ((sizeof(OC_SCHEME_OCF) - 1) + OC_UUID_LEN + 256)
-
 /// Remove callback (if it exists) and schedule it again
 void oc_reset_delayed_callback(void *cb_data, oc_trigger_t callback,
                                uint16_t seconds) OC_NONNULL(2);
@@ -62,6 +54,14 @@ void oc_notify_resource_changed_delayed_ms(oc_resource_t *resource,
                                            uint64_t milliseconds) OC_NONNULL();
 
 #ifdef OC_RES_BATCH_SUPPORT
+
+/**
+ * The OCF URI is specified in the following form:
+ * ocf://<authority>/<path>?<query>
+ * https://openconnectivity.org/specs/OCF_Core_Specification_v2.2.5.pdf
+ * section 6.2.2:
+ */
+#define OC_MAX_OCF_URI_SIZE ((sizeof(OC_SCHEME_OCF) - 1) + OC_UUID_LEN + 256)
 
 void oc_discovery_create_batch_for_resource(CborEncoder *links_array,
                                             oc_resource_t *resource,
