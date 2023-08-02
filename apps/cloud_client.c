@@ -383,7 +383,7 @@ ocf_event_thread(LPVOID lpParam)
   if (ctx) {
     oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
     if (cis) {
-      oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+      oc_cloud_provision_conf_resource_v1(ctx, cis, auth_code, sid, apn, NULL);
     }
   }
   oc_clock_time_t next_event_mt;
@@ -430,7 +430,7 @@ ocf_event_thread(void *data)
   if (ctx) {
     oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
     if (cis) {
-      oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+      oc_cloud_provision_conf_resource_v1(ctx, cis, auth_code, sid, apn, NULL);
     }
   }
   oc_clock_time_t next_event_mt;

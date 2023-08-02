@@ -429,7 +429,7 @@ int jni_cloud_provision_conf_resource(oc_cloud_context_t *ctx,
                                       const char *authProvider)
 {
 #ifdef OC_CLOUD
-  return oc_cloud_provision_conf_resource(ctx, server, accessToken, serverId, authProvider);
+  return oc_cloud_provision_conf_resource_v1(ctx, server, accessToken, serverId, authProvider, NULL);
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
   (void)ctx;
@@ -437,6 +437,31 @@ int jni_cloud_provision_conf_resource(oc_cloud_context_t *ctx,
   (void)accessToken;
   (void)serverId;
   (void)authProvider;
+  return -1;
+#endif /* !OC_CLOUD */
+}
+%}
+
+%ignore oc_cloud_provision_conf_resource_v1;
+%rename(provisionConfResource) jni_cloud_provision_conf_resource_v1;
+%inline %{
+int jni_cloud_provision_conf_resource_v1(oc_cloud_context_t *ctx,
+                                      const char *server,
+                                      const char *accessToken,
+                                      const char *serverId,
+                                      const char *authProvider,
+                                      const char *redirectUri)
+{
+#ifdef OC_CLOUD
+  return oc_cloud_provision_conf_resource_v1(ctx, server, accessToken, serverId, authProvider, redirectUri);
+#else /* OC_CLOUD*/
+  OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  (void)server;
+  (void)accessToken;
+  (void)serverId;
+  (void)authProvider;
+  (void)redirectUri;
   return -1;
 #endif /* !OC_CLOUD */
 }

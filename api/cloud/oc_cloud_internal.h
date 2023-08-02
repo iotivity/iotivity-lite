@@ -50,6 +50,8 @@ typedef struct cloud_conf_update_t
   size_t ci_server_len;
   const char *sid; /**< OCF Cloud Identity as defined in OCF CNC 2.0 Spec. */
   size_t sid_len;
+  const char *redirect_uri; /**< Redirect URI for the auth code flow. */
+  size_t redirect_uri_len;
 } cloud_conf_update_t;
 
 typedef struct cloud_api_param_t

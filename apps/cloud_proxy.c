@@ -1931,8 +1931,8 @@ main(int argc, char *argv[])
       if (argc == 6) {
         int retval;
         /* configure the */
-        retval =
-          oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+        retval = oc_cloud_provision_conf_resource_v1(ctx, cis, auth_code, sid,
+                                                     apn, NULL);
         OC_PRINTF("   config status  %d\n", retval);
 
         OC_PRINTF("Conf Cloud Manager\n");

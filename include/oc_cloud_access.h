@@ -56,7 +56,27 @@ typedef struct oc_cloud_access_conf_t
 OC_API
 bool oc_cloud_access_register(oc_cloud_access_conf_t conf,
                               const char *auth_provider, const char *auth_code,
-                              const char *uid, const char *access_token);
+                              const char *uid, const char *access_token)
+  OC_DEPRECATED("replaced by oc_cloud_access_register_v1 in v2.2.5.7");
+
+/**
+ * @brief Send request to register device to cloud.
+ *
+ * @param conf cloud access configuration
+ * @param auth_provider authorization provider
+ * @param auth_code authorization code
+ * @param uid user id
+ * @param access_token access token
+ * @param redirect_uri redirect uri
+ * @return true on success
+ *         false otherwise
+ */
+OC_API
+bool oc_cloud_access_register_v1(oc_cloud_access_conf_t conf,
+                                 const char *auth_provider,
+                                 const char *auth_code, const char *uid,
+                                 const char *access_token,
+                                 const char *redirect_uri);
 
 /**
  * @brief Send request to deregister device from cloud.

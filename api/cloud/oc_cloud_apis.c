@@ -122,9 +122,10 @@ cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
     .user_data = p,
     .timeout = timeout,
   };
-  if (oc_cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
-                               oc_string(ctx->store.uid),
-                               oc_string(ctx->store.access_token))) {
+  if (oc_cloud_access_register_v1(conf, oc_string(ctx->store.auth_provider),
+                                  NULL, oc_string(ctx->store.uid),
+                                  oc_string(ctx->store.access_token),
+                                  oc_string(ctx->store.redirect_uri))) {
     ctx->store.cps = OC_CPS_REGISTERING;
     return 0;
   }

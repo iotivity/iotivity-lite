@@ -35,6 +35,7 @@
 #define OC_RSRVD_AUTHPROVIDER "apn"
 #define OC_RSRVD_CISERVER "cis"
 #define OC_RSRVD_SERVERID "sid"
+#define OC_RSRVD_REDIRECTURI "redirecturi"
 #define OC_RSRVD_LAST_ERROR_CODE "clec"
 
 static const char *
@@ -91,6 +92,11 @@ cloud_response(oc_cloud_context_t *ctx)
     OC_DBG("Creating Cloud Response: cps set to %s", cps);
   }
 
+  if (oc_string_len(ctx->store.redirect_uri) > 0) {
+    oc_rep_set_text_string(root, redirecturi,
+                           oc_string(ctx->store.redirect_uri));
+  }
+
   oc_rep_end_root_object();
 }
 
@@ -136,6 +142,14 @@ cloud_update_from_request(oc_cloud_context_t *ctx, const oc_request_t *request)
                                    &ci_server, &data.ci_server_len);
   if (has_cis) {
     data.ci_server = ci_server;
+  }
+
+  char *redirect_uri = NULL;
+  bool has_redirect_uri =
+    oc_rep_get_string(request->request_payload, OC_RSRVD_REDIRECTURI,
+                      &redirect_uri, &data.redirect_uri_len);
+  if (has_redirect_uri) {
+    data.redirect_uri = redirect_uri;
   }
 
   // OCF 2.0 spec version added sid property.

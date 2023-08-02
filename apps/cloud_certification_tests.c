@@ -338,7 +338,7 @@ cloud_register(void)
     pthread_mutex_unlock(&app_sync_lock);
     return;
   }
-  oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+  oc_cloud_provision_conf_resource_v1(ctx, cis, auth_code, sid, apn, NULL);
   int ret = oc_cloud_register(ctx, cloud_register_cb, NULL);
   pthread_mutex_unlock(&app_sync_lock);
   if (ret < 0) {

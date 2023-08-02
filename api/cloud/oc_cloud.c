@@ -151,6 +151,10 @@ cloud_set_cloudconf(oc_cloud_context_t *ctx, const cloud_conf_update_t *data)
   if (data->sid && data->sid_len) {
     oc_set_string(&ctx->store.sid, data->sid, data->sid_len);
   }
+  if (data->redirect_uri && data->redirect_uri_len) {
+    oc_set_string(&ctx->store.redirect_uri, data->redirect_uri,
+                  data->redirect_uri_len);
+  }
 }
 
 int
@@ -158,6 +162,17 @@ oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx, const char *server,
                                  const char *access_token,
                                  const char *server_id,
                                  const char *auth_provider)
+{
+  return oc_cloud_provision_conf_resource_v1(ctx, server, access_token,
+                                             server_id, auth_provider, NULL);
+}
+
+int
+oc_cloud_provision_conf_resource_v1(oc_cloud_context_t *ctx, const char *server,
+                                    const char *access_token,
+                                    const char *server_id,
+                                    const char *auth_provider,
+                                    const char *redirect_uri)
 {
   assert(ctx != NULL);
   if (!server || !access_token || !server_id) {
@@ -180,6 +195,8 @@ oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx, const char *server,
     .sid_len = strlen(server_id),
     .auth_provider = auth_provider,
     .auth_provider_len = auth_provider != NULL ? strlen(auth_provider) : 0,
+    .redirect_uri = redirect_uri,
+    .redirect_uri_len = redirect_uri != NULL ? strlen(redirect_uri) : 0
   };
   cloud_set_cloudconf(ctx, &data);
   cloud_rd_reset_context(ctx);

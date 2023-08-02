@@ -41,6 +41,7 @@
 #define UID ("uid")
 #define CPS (OC_CPS_READYTOREGISTER)
 #define CLOUD_STORAGE ("storage_cloud")
+#define REDIRECT_URI ("redirect_uri")
 
 #define DEFAULT_CLOUD_CIS ("coaps+tcp://127.0.0.1")
 #define DEFAULT_CLOUD_SID ("00000000-0000-0000-0000-000000000000")
@@ -57,6 +58,7 @@ public:
     EXPECT_EQ(nullptr, oc_string(store->access_token));
     EXPECT_EQ(nullptr, oc_string(store->refresh_token));
     EXPECT_STREQ(DEFAULT_CLOUD_SID, oc_string(store->sid));
+    EXPECT_EQ(nullptr, oc_string(store->redirect_uri));
     EXPECT_EQ(0, store->expires_in);
     EXPECT_EQ(0, store->status);
     EXPECT_EQ(0, store->cps);
@@ -72,6 +74,7 @@ public:
     EXPECT_STREQ(oc_string(s1->access_token), oc_string(s2->access_token));
     EXPECT_STREQ(oc_string(s1->refresh_token), oc_string(s2->refresh_token));
     EXPECT_STREQ(oc_string(s1->sid), oc_string(s2->sid));
+    EXPECT_STREQ(oc_string(s1->redirect_uri), oc_string(s2->redirect_uri));
     EXPECT_EQ(s1->expires_in, s2->expires_in);
     EXPECT_EQ(s1->device, s2->device);
     EXPECT_EQ(s1->cps, s2->cps);
@@ -87,6 +90,7 @@ public:
     oc_free_string(&store->access_token);
     oc_free_string(&store->refresh_token);
     oc_free_string(&store->sid);
+    oc_free_string(&store->redirect_uri);
   }
 
   static void SetUpTestCase()
@@ -118,6 +122,7 @@ public:
     oc_new_string(&m_store.access_token, ACCESS_TOKEN, strlen(ACCESS_TOKEN));
     oc_new_string(&m_store.refresh_token, REFRESH_TOKEN, strlen(REFRESH_TOKEN));
     oc_new_string(&m_store.sid, SID, strlen(SID));
+    oc_new_string(&m_store.redirect_uri, REDIRECT_URI, strlen(REDIRECT_URI));
     m_store.expires_in = EXPIRES_IN;
     m_store.device = DEVICE;
     m_store.cps = CPS;

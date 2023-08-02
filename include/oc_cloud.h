@@ -68,6 +68,8 @@ typedef struct oc_cloud_store_t
   uint8_t status;
   oc_cps_t cps;
   size_t device;
+  oc_string_t
+    redirect_uri; /**< Redirect URI for authorization code flow(optional) */
 } oc_cloud_store_t;
 
 typedef enum {
@@ -323,7 +325,29 @@ int oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx,
                                      const char *server,
                                      const char *access_token,
                                      const char *server_id,
-                                     const char *auth_provider);
+                                     const char *auth_provider)
+  OC_DEPRECATED("replaced by oc_cloud_provision_conf_resource_v1 in v2.2.5.7");
+
+/**
+ * @brief Configure cloud properties.
+ *
+ * @param ctx Cloud context to update (cannot be be NULL)
+ * @param server Cloud server URL
+ * @param access_token Access token from an Authorisation Provider
+ * @param server_id Cloud server ID
+ * @param auth_provider Name of the Authorization Provider which provided the
+ * access token
+ * @param redirect_uri Redirect URI for the auth code flow
+ * @return 0 on success
+ * @return -1 on failure
+ *
+ * @note Cloud manager will be restarted if is was started previously
+ */
+OC_API
+int oc_cloud_provision_conf_resource_v1(
+  oc_cloud_context_t *ctx, const char *server, const char *access_token,
+  const char *server_id, const char *auth_provider, const char *redirect_uri);
+
 /**
  * @brief Set identity certificate chain to establish TLS connection.
  *

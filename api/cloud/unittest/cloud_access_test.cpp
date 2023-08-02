@@ -77,8 +77,8 @@ TEST_F(TestCloudAccess, cloud_access_register_p)
     /*.user_data = */ nullptr,
     /*.timeout=*/0,
   };
-  bool ret = oc_cloud_access_register(conf, "auth_provider", "auth_code", "uid",
-                                      "access_token");
+  bool ret = oc_cloud_access_register_v1(conf, "auth_provider", "auth_code",
+                                         "uid", "access_token", "redirect_uri");
 
   // Then
   EXPECT_TRUE(ret);
@@ -95,7 +95,8 @@ TEST_F(TestCloudAccess, cloud_access_register_f)
     /*.user_data = */ nullptr,
     /*.timeout=*/0,
   };
-  bool ret = oc_cloud_access_register(conf, nullptr, nullptr, nullptr, nullptr);
+  bool ret = oc_cloud_access_register_v1(conf, nullptr, nullptr, nullptr,
+                                         nullptr, nullptr);
 
   // Then
   EXPECT_FALSE(ret);

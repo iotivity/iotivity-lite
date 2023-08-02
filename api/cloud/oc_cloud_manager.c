@@ -431,9 +431,10 @@ cloud_manager_register_async(void *data)
     goto retry;
   }
   conf.endpoint = ctx->cloud_ep;
-  if (!oc_cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
-                                oc_string(ctx->store.uid),
-                                oc_string(ctx->store.access_token))) {
+  if (!oc_cloud_access_register_v1(conf, oc_string(ctx->store.auth_provider),
+                                   NULL, oc_string(ctx->store.uid),
+                                   oc_string(ctx->store.access_token),
+                                   oc_string(ctx->store.redirect_uri))) {
     OC_ERR("failed to sent register request to cloud");
     goto retry;
   }

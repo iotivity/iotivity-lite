@@ -88,11 +88,20 @@ cloud_tls_add_peer(const oc_endpoint_t *endpoint, int selected_identity_cred_id)
 
 #endif /* OC_SECURITY */
 
-/* Internal APIs for accessing the OCF Cloud */
 bool
 oc_cloud_access_register(oc_cloud_access_conf_t conf, const char *auth_provider,
                          const char *auth_code, const char *uid,
                          const char *access_token)
+{
+  return oc_cloud_access_register_v1(conf, auth_provider, auth_code, uid,
+                                     access_token, NULL);
+}
+/* Internal APIs for accessing the OCF Cloud */
+bool
+oc_cloud_access_register_v1(oc_cloud_access_conf_t conf,
+                            const char *auth_provider, const char *auth_code,
+                            const char *uid, const char *access_token,
+                            const char *redirect_uri)
 {
   if (conf.endpoint == NULL || conf.handler == NULL ||
       ((auth_provider == NULL || auth_code == NULL) && access_token == NULL)) {
@@ -137,6 +146,9 @@ oc_cloud_access_register(oc_cloud_access_conf_t conf, const char *auth_provider,
     oc_rep_set_text_string(root, accesstoken, access_token);
   }
   oc_rep_set_text_string(root, devicetype, "device");
+  if (redirect_uri != NULL) {
+    oc_rep_set_text_string(root, redirecturi, redirect_uri);
+  }
   oc_rep_end_root_object();
 
   if (conf.timeout > 0) {

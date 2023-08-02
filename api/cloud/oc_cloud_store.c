@@ -49,6 +49,7 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_CLOUD is defined.
 #define CLOUD_EXPIRES_IN expires_in
 #define CLOUD_STATUS status
 #define CLOUD_CPS cps
+#define CLOUD_REDIRECT_URI redirect_uri
 
 #define CLOUD_STR(s) #s
 #define CLOUD_XSTR(s) CLOUD_STR(s)
@@ -109,6 +110,8 @@ encode_cloud_with_map(CborEncoder *object_map, const oc_cloud_store_t *store)
                       oc_string(store->access_token));
   rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_REFRESH_TOKEN),
                       oc_string(store->refresh_token));
+  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_REDIRECT_URI),
+                      oc_string(store->redirect_uri));
   rep_set_int(object_map, CLOUD_XSTR(CLOUD_STATUS), store->status);
   rep_set_int(object_map, CLOUD_XSTR(CLOUD_CPS), store->cps);
   rep_set_int(object_map, CLOUD_XSTR(CLOUD_EXPIRES_IN), store->expires_in);
@@ -222,6 +225,12 @@ cloud_store_parse_string_property(const oc_rep_t *rep, oc_cloud_store_t *store)
   if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_REFRESH_TOKEN),
                          CLOUD_XSTRLEN(CLOUD_REFRESH_TOKEN))) {
     oc_set_string(&store->refresh_token, oc_string(rep->value.string),
+                  oc_string_len(rep->value.string));
+    return true;
+  }
+  if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_REDIRECT_URI),
+                         CLOUD_XSTRLEN(CLOUD_REDIRECT_URI))) {
+    oc_set_string(&store->redirect_uri, oc_string(rep->value.string),
                   oc_string_len(rep->value.string));
     return true;
   }
@@ -340,6 +349,7 @@ cloud_store_deinitialize(oc_cloud_store_t *store)
   oc_set_string(&store->access_token, NULL, 0);
   oc_set_string(&store->refresh_token, NULL, 0);
   oc_set_string(&store->sid, NULL, 0);
+  oc_set_string(&store->redirect_uri, NULL, 0);
   store->status = 0;
   store->expires_in = 0;
   store->cps = OC_CPS_UNINITIALIZED;

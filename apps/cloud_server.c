@@ -227,6 +227,7 @@ static const char *device_name = "CloudServer";
 
 static const char *manufacturer = "ocfcloud.com";
 static oc_connectivity_ports_t g_ports;
+static const char *redirect_uri;
 
 #ifdef OC_SECURITY
 static const char *cis;
@@ -1047,6 +1048,7 @@ simulate_tpm_pk_free_key(size_t device, const unsigned char *key, size_t keylen)
 #define OPT_CLOUD_CIS "cloud-endpoint"
 #define OPT_CLOUD_APN "cloud-auth-provider-name"
 #define OPT_CLOUD_SID "cloud-id"
+#define OPT_CLOUD_REDIRECT_URI "cloud-redirect-uri"
 #define OPT_LOG_LEVEL "log-level"
 #define OPT_SIMULATE_TPM "simulate-tpm"
 #define OPT_LISTEN_UDP_PORT4 "udp-port4"
@@ -1085,6 +1087,7 @@ printhelp(const char *exec_path)
   OC_PRINTF("  -i | --%-26s cloud id\n", OPT_CLOUD_SID);
   OC_PRINTF("  -p | --%-26s cloud authorization provider name\n",
             OPT_CLOUD_APN);
+  OC_PRINTF("  -c | --%-26s cloud redirect uri\n", OPT_CLOUD_REDIRECT_URI);
   OC_PRINTF("  -r | --%-26s number of resources\n", OPT_NUM_RESOURCES);
 #if defined(OC_SECURITY) && defined(OC_PKI)
   OC_PRINTF("  -d | --%-26s disable time verification during TLS handshake\n",
@@ -1199,6 +1202,7 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
     { OPT_CLOUD_CIS, required_argument, NULL, 'e' },
     { OPT_CLOUD_SID, required_argument, NULL, 'i' },
     { OPT_CLOUD_APN, required_argument, NULL, 'p' },
+    { OPT_CLOUD_REDIRECT_URI, required_argument, NULL, 'c' },
     { OPT_NUM_RESOURCES, required_argument, NULL, 'r' },
     { OPT_LOG_LEVEL, required_argument, NULL, 'l' },
 #if defined(OC_SECURITY) && defined(OC_PKI)
@@ -1228,9 +1232,8 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
 
   while (true) {
     int option_index = 0;
-    int opt = getopt_long(argc, argv,
-                          "hdmn:a:e:i:p:r:l:st:4:5:u:v:6:7:w:x:", long_options,
-                          &option_index);
+    int opt = getopt_long(argc, argv, "hdmn:a:e:i:p:c:r:l:st:4:5:u:v:6:7:w:x:",
+                          long_options, &option_index);
     if (opt == -1) {
       break;
     }
@@ -1267,6 +1270,9 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
       break;
     case 'p':
       apn = optarg;
+      break;
+    case 'c':
+      redirect_uri = optarg;
       break;
     case 'r': {
       char *eptr = NULL;
@@ -1518,8 +1524,10 @@ main(int argc, char *argv[])
   OC_PRINTF("Using parameters: device_name: %s, auth_code: %s, cis: %s, "
             "sid: %s, "
             "apn: %s, "
+            "redirect_uri: %s,"
             "num_resources: %d, ",
-            device_name, auth_code, cis, sid, apn, num_resources);
+            device_name, auth_code, cis, sid, apn,
+            redirect_uri ? redirect_uri : "(null)", num_resources);
 #if defined(OC_SECURITY) && defined(OC_PKI)
   OC_PRINTF("disable_tls_time_verification: %s, ",
             parsed_options.disable_tls_verify_time ? "true" : "false");
@@ -1624,7 +1632,8 @@ main(int argc, char *argv[])
   if (ctx) {
     oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
     if (cis) {
-      oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+      oc_cloud_provision_conf_resource_v1(ctx, cis, auth_code, sid, apn,
+                                          redirect_uri);
     }
   }
   display_device_uuid();
