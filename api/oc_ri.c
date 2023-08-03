@@ -25,6 +25,7 @@
 #include "messaging/coap/constants.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
+#include "messaging/coap/transactions.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
 #include "oc_core_res.h"
@@ -51,6 +52,8 @@
 #ifdef OC_SERVER
 #include "api/oc_ri_server_internal.h"
 #include "api/oc_server_api_internal.h"
+#include "messaging/coap/observe.h"
+#include "messaging/coap/separate.h"
 #ifdef OC_COLLECTIONS
 #include "api/oc_collection_internal.h"
 #include "api/oc_link_internal.h"

@@ -1354,7 +1354,7 @@ notify_discovery_observers(oc_resource_t *resource)
   } //! buffer
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-  OC_DBG("notify_discovery_observers: Issue GET request to resource %s\n\n",
+  OC_DBG("notify_discovery_observers: Issue GET request to resource %s",
          oc_string(resource->uri));
   oc_response_t response = { 0 };
   oc_response_buffer_t response_buffer = { 0 };

@@ -99,7 +99,7 @@ TEST_F(TestCoapSignal, coap_send_pong_message_P)
   coap_packet_t packet = {};
   coap_tcp_init_message(&packet, PING_7_02);
   coap_set_token(&packet, token.data(), token.size());
-  coap_signal_set_custody(&packet, 1);
+  ASSERT_TRUE(coap_signal_set_custody(&packet, 1));
 
   int ret = coap_send_pong_message(target_ep, &packet);
   EXPECT_EQ(1, ret);
@@ -170,12 +170,10 @@ TEST_F(TestCoapSignal, SignalGetMaxMsgSizeTest_P)
   coap_packet_t packet{};
   uint32_t answer = 1152;
   coap_tcp_init_message(&packet, CSM_7_01);
-  coap_signal_set_max_msg_size(&packet, answer);
+  ASSERT_TRUE(coap_signal_set_max_msg_size(&packet, answer));
 
   uint32_t size = 0;
-  int status = coap_signal_get_max_msg_size(&packet, &size);
-
-  ASSERT_NE(0, status);
+  ASSERT_TRUE(coap_signal_get_max_msg_size(&packet, &size));
   ASSERT_EQ(answer, size);
 }
 
@@ -190,9 +188,7 @@ TEST_F(TestCoapSignal, SignalGetMaxMsgSizeTest_N)
 {
   coap_packet_t packet{};
   uint32_t size = 0;
-  int isFailure = coap_signal_get_max_msg_size(&packet, &size);
-
-  ASSERT_EQ(isFailure, 0);
+  ASSERT_FALSE(coap_signal_get_max_msg_size(&packet, &size));
 }
 
 /*
@@ -208,12 +204,10 @@ TEST_F(TestCoapSignal, SignalSetMaxMsgSizeTest_P)
   coap_tcp_init_message(&packet, CSM_7_01);
 
   uint32_t size = 1152;
-  int status = coap_signal_set_max_msg_size(&packet, size);
-
-  ASSERT_NE(0, status);
+  ASSERT_TRUE(coap_signal_set_max_msg_size(&packet, size));
 
   uint32_t actual = 0;
-  coap_signal_get_max_msg_size(&packet, &actual);
+  ASSERT_TRUE(coap_signal_get_max_msg_size(&packet, &actual));
   ASSERT_EQ(size, actual);
 }
 
@@ -228,9 +222,7 @@ TEST_F(TestCoapSignal, SignalSetMaxMsgSizeTest_N)
 {
   coap_packet_t packet{};
   uint32_t size = 1152;
-  int isFailure = coap_signal_set_max_msg_size(&packet, size);
-
-  ASSERT_EQ(isFailure, 0);
+  ASSERT_FALSE(coap_signal_set_max_msg_size(&packet, size));
 }
 
 /*
@@ -248,9 +240,7 @@ TEST_F(TestCoapSignal, SignalGetBertTest_P)
   coap_signal_set_blockwise_transfer(&packet, blockwise_transfer);
 
   uint8_t flag = 0;
-  int status = coap_signal_get_blockwise_transfer(&packet, &flag);
-
-  ASSERT_NE(0, status);
+  ASSERT_TRUE(coap_signal_get_blockwise_transfer(&packet, &flag));
   ASSERT_EQ(blockwise_transfer, flag);
 }
 
@@ -265,9 +255,7 @@ TEST_F(TestCoapSignal, SignalGetBertTest_N)
 {
   coap_packet_t packet{};
   uint8_t flag = 0;
-  int isFailure = coap_signal_get_blockwise_transfer(&packet, &flag);
-
-  ASSERT_EQ(isFailure, 0);
+  ASSERT_FALSE(coap_signal_get_blockwise_transfer(&packet, &flag));
 }
 
 /*
@@ -283,9 +271,7 @@ TEST_F(TestCoapSignal, SignalSetBertTest_P)
   coap_tcp_init_message(&packet, CSM_7_01);
 
   uint8_t blockwise_transfer = 1;
-  int status = coap_signal_set_blockwise_transfer(&packet, blockwise_transfer);
-
-  ASSERT_NE(0, status);
+  ASSERT_TRUE(coap_signal_set_blockwise_transfer(&packet, blockwise_transfer));
 
   uint8_t actual = 0;
   coap_signal_get_blockwise_transfer(&packet, &actual);
@@ -303,10 +289,7 @@ TEST_F(TestCoapSignal, SignalSetBertTest_N)
 {
   coap_packet_t packet{};
   uint8_t blockwise_transfer = 1;
-  int isFailure =
-    coap_signal_set_blockwise_transfer(&packet, blockwise_transfer);
-
-  ASSERT_EQ(isFailure, 0);
+  ASSERT_FALSE(coap_signal_set_blockwise_transfer(&packet, blockwise_transfer));
 }
 
 /*
@@ -321,12 +304,10 @@ TEST_F(TestCoapSignal, SignalGetCustodyTest_P)
   coap_packet_t packet{};
   uint8_t custody = 1;
   coap_tcp_init_message(&packet, PING_7_02);
-  coap_signal_set_custody(&packet, custody);
+  ASSERT_TRUE(coap_signal_set_custody(&packet, custody));
 
   uint8_t flag = 0;
-  int status = coap_signal_get_custody(&packet, &flag);
-
-  ASSERT_NE(0, status);
+  ASSERT_TRUE(coap_signal_get_custody(&packet, &flag));
   ASSERT_EQ(custody, flag);
 }
 
@@ -341,9 +322,7 @@ TEST_F(TestCoapSignal, SignalGetCustodyTest_N)
 {
   coap_packet_t packet{};
   uint8_t flag = 0;
-  int isFailure = coap_signal_get_custody(&packet, &flag);
-
-  ASSERT_EQ(isFailure, 0);
+  ASSERT_FALSE(coap_signal_get_custody(&packet, &flag));
 }
 
 /*
@@ -359,12 +338,10 @@ TEST_F(TestCoapSignal, SignalSetCustodyTest_P)
   coap_tcp_init_message(&packet, PING_7_02);
 
   uint8_t custody = 1;
-  int status = coap_signal_set_custody(&packet, custody);
-
-  ASSERT_NE(0, status);
+  ASSERT_TRUE(coap_signal_set_custody(&packet, custody));
 
   uint8_t actual = 0;
-  coap_signal_get_custody(&packet, &actual);
+  ASSERT_TRUE(coap_signal_get_custody(&packet, &actual));
   ASSERT_EQ(custody, actual);
 }
 
@@ -379,9 +356,7 @@ TEST_F(TestCoapSignal, SignalSetCustodyTest_N)
 {
   coap_packet_t packet{};
   uint8_t custody = 1;
-  int isFailure = coap_signal_set_custody(&packet, custody);
-
-  ASSERT_EQ(isFailure, 0);
+  ASSERT_FALSE(coap_signal_set_custody(&packet, custody));
 }
 
 /*
@@ -470,12 +445,10 @@ TEST_F(TestCoapSignal, SignalGetHoldOffTest_P)
   coap_packet_t packet{};
   coap_tcp_init_message(&packet, RELEASE_7_04);
   uint32_t time_seconds = 10;
-  coap_signal_set_hold_off(&packet, time_seconds);
+  ASSERT_TRUE(coap_signal_set_hold_off(&packet, time_seconds));
 
   uint32_t actual = 0;
-  int status = coap_signal_get_hold_off(&packet, &actual);
-
-  ASSERT_NE(0, status);
+  ASSERT_TRUE(coap_signal_get_hold_off(&packet, &actual));
   ASSERT_EQ(time_seconds, actual);
 }
 
@@ -490,9 +463,7 @@ TEST_F(TestCoapSignal, SignalGetHoldOffTest_N)
 {
   coap_packet_t packet{};
   uint32_t time_seconds;
-  size_t isFailure = coap_signal_get_hold_off(&packet, &time_seconds);
-
-  ASSERT_EQ(isFailure, 0);
+  ASSERT_FALSE(coap_signal_get_hold_off(&packet, &time_seconds));
 }
 
 /*
@@ -508,12 +479,10 @@ TEST_F(TestCoapSignal, SignalSetHoldOffTest_P)
   coap_tcp_init_message(&packet, RELEASE_7_04);
 
   uint32_t time_seconds = 10;
-  int status = coap_signal_set_hold_off(&packet, time_seconds);
-
-  ASSERT_NE(0, status);
+  ASSERT_TRUE(coap_signal_set_hold_off(&packet, time_seconds));
 
   uint32_t actual = 0;
-  coap_signal_get_hold_off(&packet, &actual);
+  ASSERT_TRUE(coap_signal_get_hold_off(&packet, &actual));
   ASSERT_EQ(time_seconds, actual);
 }
 
@@ -529,9 +498,7 @@ TEST_F(TestCoapSignal, SignalSetHoldOffTest_N)
   coap_packet_t packet{};
 
   uint32_t time_seconds = 10;
-  size_t isFailure = coap_signal_set_hold_off(&packet, time_seconds);
-
-  ASSERT_EQ(isFailure, 0);
+  ASSERT_FALSE(coap_signal_set_hold_off(&packet, time_seconds));
 }
 
 /*
@@ -546,12 +513,10 @@ TEST_F(TestCoapSignal, SignalGetBadCsmTest_P)
   coap_packet_t packet{};
   coap_tcp_init_message(&packet, ABORT_7_05);
   uint16_t opt = 10;
-  coap_signal_set_bad_csm(&packet, opt);
+  ASSERT_TRUE(coap_signal_set_bad_csm(&packet, opt));
 
   uint16_t actual = 0;
-  int status = coap_signal_get_bad_csm(&packet, &actual);
-
-  ASSERT_NE(0, status);
+  ASSERT_TRUE(coap_signal_get_bad_csm(&packet, &actual));
   ASSERT_EQ(opt, actual);
 }
 
@@ -566,9 +531,7 @@ TEST_F(TestCoapSignal, SignalGetBadCsmTest_N)
 {
   coap_packet_t packet{};
   uint16_t opt;
-  size_t isFailure = coap_signal_get_bad_csm(&packet, &opt);
-
-  ASSERT_EQ(isFailure, 0);
+  ASSERT_FALSE(coap_signal_get_bad_csm(&packet, &opt));
 }
 
 /*
@@ -584,12 +547,10 @@ TEST_F(TestCoapSignal, SignalSetBadCsmTest_P)
   coap_tcp_init_message(&packet, ABORT_7_05);
 
   uint16_t opt = 10;
-  int status = coap_signal_set_bad_csm(&packet, opt);
-
-  ASSERT_NE(0, status);
+  ASSERT_TRUE(coap_signal_set_bad_csm(&packet, opt));
 
   uint16_t actual = 0;
-  coap_signal_get_bad_csm(&packet, &actual);
+  ASSERT_TRUE(coap_signal_get_bad_csm(&packet, &actual));
   ASSERT_EQ(opt, actual);
 }
 
@@ -604,9 +565,7 @@ TEST_F(TestCoapSignal, SignalSetBadCsmTest_N)
 {
   coap_packet_t packet{};
   uint16_t opt = 10;
-  size_t isFailure = coap_signal_set_bad_csm(&packet, opt);
-
-  ASSERT_EQ(isFailure, 0);
+  ASSERT_FALSE(coap_signal_set_bad_csm(&packet, opt));
 }
 
 TEST_F(TestCoapSignal, SignalSerializeParseTest_CSM)
@@ -681,7 +640,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_RELEASE)
   std::string addr = "coap+tcp://127.0.0.1:5683";
   coap_signal_set_alt_addr(&packet, addr.c_str(), addr.length() + 1);
   uint32_t hold_off = 10;
-  coap_signal_set_hold_off(&packet, hold_off);
+  ASSERT_TRUE(coap_signal_set_hold_off(&packet, hold_off));
 
   std::vector<uint8_t> buffer;
   buffer.reserve(OC_PDU_SIZE);

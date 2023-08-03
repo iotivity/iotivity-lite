@@ -50,10 +50,9 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
-#include "coap.h"
-#include "observe.h"
-#include "separate.h"
-#include "transactions.h"
+#include "port/oc_connectivity.h"
+#include "util/oc_compiler.h"
+#include "util/oc_process.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -63,8 +62,9 @@ extern "C" {
 OC_PROCESS_NAME(g_coap_engine);
 
 void coap_init_engine(void);
-/*---------------------------------------------------------------------------*/
-int coap_receive(oc_message_t *message);
+
+int coap_process_inbound_message(oc_message_t *message) OC_NONNULL();
+
 bool oc_coap_check_if_duplicate(uint16_t mid, uint32_t device);
 
 #ifdef __cplusplus
