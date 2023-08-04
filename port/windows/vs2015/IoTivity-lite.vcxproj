@@ -215,6 +215,7 @@
     <ClInclude Include="..\..\..\api\c-timestamp\timestamp.h" />
     <ClInclude Include="..\..\..\api\cloud\oc_cloud_internal.h" />
     <ClInclude Include="..\..\..\api\cloud\rd_client.h" />
+    <ClInclude Include="..\..\..\api\oc_blockwise_internal.h" />
     <ClInclude Include="..\..\..\api\oc_etag_internal.h" />
     <ClInclude Include="..\..\..\api\oc_events_internal.h" />
     <ClInclude Include="..\..\..\api\oc_introspection_internal.h" />
@@ -231,7 +232,6 @@
     <ClInclude Include="..\..\..\include\oc_acl.h" />
     <ClInclude Include="..\..\..\include\oc_api.h" />
     <ClInclude Include="..\..\..\include\oc_base64.h" />
-    <ClInclude Include="..\..\..\include\oc_blockwise.h" />
     <ClInclude Include="..\..\..\include\oc_buffer.h" />
     <ClInclude Include="..\..\..\include\oc_buffer_settings.h" />
     <ClInclude Include="..\..\..\include\oc_client_state.h" />

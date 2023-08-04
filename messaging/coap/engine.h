@@ -50,9 +50,17 @@
 #ifndef ENGINE_H
 #define ENGINE_H
 
+#include "coap.h"
 #include "port/oc_connectivity.h"
+#include "transactions.h"
 #include "util/oc_compiler.h"
 #include "util/oc_process.h"
+
+#ifdef OC_BLOCK_WISE
+#include "api/oc_blockwise_internal.h"
+#endif /* OC_BLOCK_WISE */
+
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -61,9 +69,60 @@ extern "C" {
 
 OC_PROCESS_NAME(g_coap_engine);
 
-void coap_init_engine(void);
+enum {
+  COAP_SUCCESS = 0,
+  COAP_SKIP_DUPLICATE_MESSAGE,
+  COAP_SEND_EMPTY_MESSAGE,
+  COAP_INVOKE_HANDLER,
+};
 
 int coap_process_inbound_message(oc_message_t *message) OC_NONNULL();
+
+typedef struct
+{
+  uint32_t num;
+  uint32_t offset;
+  uint16_t size;
+  uint8_t more;
+  bool enabled;
+} coap_block_options_t;
+
+coap_block_options_t coap_packet_get_block_options(const coap_packet_t *message,
+                                                   bool block2);
+
+typedef struct coap_make_response_ctx_t
+{
+  const coap_packet_t *request;
+  coap_packet_t *response;
+#ifdef OC_BLOCK_WISE
+  oc_blockwise_state_t **request_state;
+  oc_blockwise_state_t **response_state;
+  uint16_t block2_size;
+#else  /* !OC_BLOCK_WISE */
+  uint8_t *buffer;
+#endif /* OC_BLOCK_WISE */
+} coap_make_response_ctx_t;
+
+/** @brief Callback function to create a response to the coap request */
+typedef bool (*coap_make_response_fn_t)(coap_make_response_ctx_t *,
+                                        oc_endpoint_t *, void *);
+
+typedef struct
+{
+  const coap_packet_t *request;
+  coap_packet_t *response;
+  coap_transaction_t *transaction;
+  coap_block_options_t block1;
+  coap_block_options_t block2;
+#ifdef OC_BLOCK_WISE
+  oc_blockwise_state_t *request_buffer;
+  oc_blockwise_state_t *response_buffer;
+#endif /* OC_BLOCK_WISE */
+} coap_receive_ctx_t;
+
+int coap_receive(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint,
+                 coap_make_response_fn_t response_fn, void *response_fn_data)
+  OC_NONNULL(1, 2, 3);
 
 bool oc_coap_check_if_duplicate(uint16_t mid, uint32_t device);
 

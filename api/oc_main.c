@@ -422,8 +422,9 @@ oc_main_poll(void)
 void
 oc_main_shutdown(void)
 {
-  if (g_initialized == false)
+  if (g_initialized == false) {
     return;
+  }
 
   g_initialized = false;
 
@@ -501,5 +502,10 @@ oc_set_drop_commands(size_t device, bool drop)
 bool
 oc_drop_command(size_t device)
 {
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (g_drop_commands == NULL) {
+    return false;
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
   return g_drop_commands[device];
 }
