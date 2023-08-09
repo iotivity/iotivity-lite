@@ -59,7 +59,6 @@
 #include "messaging/coap/observe.h"
 #include "messaging/coap/separate.h"
 #include "oc_api.h"
-#include "oc_blockwise.h"
 #include "oc_buffer.h"
 #include "oc_coap.h"
 #include "oc_core_res.h"
@@ -74,6 +73,7 @@
 #endif /* OC_SECURITY */
 
 #ifdef OC_BLOCK_WISE
+#include "api/oc_blockwise_internal.h"
 #endif /* OC_BLOCK_WISE */
 
 #ifdef OC_COLLECTIONS
@@ -133,7 +133,7 @@ cmp_batch_by_resource(const batch_observer_t *o, const void *ctx)
   return o->resource == (const oc_resource_t *)ctx;
 }
 
-static oc_event_callback_retval_t process_batch_observers(void *data);
+static oc_event_callback_retval_t process_batch_observers_async(void *data);
 
 static void
 free_batch_observer(batch_observer_t *batch_obs)
@@ -332,7 +332,7 @@ coap_free_all_observers(void)
     obs = next;
   }
 #if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-  oc_remove_delayed_callback(NULL, &process_batch_observers);
+  oc_remove_delayed_callback(NULL, &process_batch_observers_async);
 #endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
 }
 
@@ -613,12 +613,17 @@ coap_prepare_notification_blockwise(coap_packet_t *notification,
 
 #endif /* OC_BLOCK_WISE */
 
+#ifdef OC_BLOCK_WISE
 static int
-send_notification(coap_observer_t *obs, oc_response_t *response,
-                  oc_string_t uri, bool ignore_is_revert,
-                  oc_blockwise_finish_cb_t *finish_cb)
+send_notification_internal(coap_observer_t *obs, oc_response_t *response,
+                           oc_string_t uri, bool ignore_is_revert,
+                           oc_blockwise_finish_cb_t *finish_cb)
+#else  /* !OC_BLOCK_WISE */
+static int
+send_notification_internal(coap_observer_t *obs, oc_response_t *response,
+                           oc_string_t uri, bool ignore_is_revert)
+#endif /* OC_BLOCK_WISE */
 {
-  (void)finish_cb;
   OC_DBG("send_notification: send notification for resource %s",
          oc_string(uri));
   if (response == NULL || obs == NULL) {
@@ -703,7 +708,7 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
   transaction = coap_new_transaction(coap_get_mid(), obs->token, obs->token_len,
                                      &obs->endpoint);
   if (transaction == NULL) {
-    return 0;
+    return -1;
   }
 
   obs->last_mid = transaction->mid;
@@ -715,7 +720,18 @@ send_notification(coap_observer_t *obs, oc_response_t *response,
   } else {
     coap_clear_transaction(transaction);
   }
-  return 0;
+  return 1;
+}
+
+static int
+send_notification(coap_observer_t *obs, oc_response_t *response,
+                  oc_string_t uri, bool ignore_is_revert)
+{
+#ifdef OC_BLOCK_WISE
+  return send_notification_internal(obs, response, uri, ignore_is_revert, NULL);
+#else  /* !OC_BLOCK_WISE */
+  return send_notification_internal(obs, response, uri, ignore_is_revert);
+#endif /* OC_BLOCK_WISE */
 }
 
 #ifdef OC_COLLECTIONS
@@ -738,7 +754,7 @@ coap_notify_collection_observers(const oc_collection_t *collection,
         continue;
       }
     }
-    if (send_notification(obs, &response, collection->res.uri, true, NULL)) {
+    if (send_notification(obs, &response, collection->res.uri, true) < 0) {
       break;
     }
   }
@@ -1017,7 +1033,7 @@ coap_notify_observers_internal(oc_resource_t *resource,
           goto leave_notify_observers;
         }
       }
-      if (send_notification(obs, &response, resource->uri, false, NULL)) {
+      if (send_notification(obs, &response, resource->uri, false) < 0) {
         break;
       }
     } // iterate over observers
@@ -1081,7 +1097,7 @@ notify_resource_defaults_observer(oc_resource_t *resource,
     if (!fill_response(resource, &obs->endpoint, iface_mask, &response)) {
       goto leave_notify_observers;
     }
-    if (send_notification(obs, &response, resource->uri, true, NULL)) {
+    if (send_notification(obs, &response, resource->uri, true) < 0) {
       break;
     }
   }
@@ -1098,8 +1114,8 @@ leave_notify_observers:;
 static void
 dispatch_process_batch_observers(void)
 {
-  oc_remove_delayed_callback(NULL, &process_batch_observers);
-  oc_set_delayed_callback(NULL, &process_batch_observers, 0);
+  oc_remove_delayed_callback(NULL, &process_batch_observers_async);
+  oc_set_delayed_callback(NULL, &process_batch_observers_async, 0);
   _oc_signal_event_loop();
 }
 
@@ -1139,14 +1155,24 @@ create_batch_for_batch_observer(CborEncoder *links, batch_observer_t *batch_obs,
   create_batch_for_removed_resource(links, batch_obs);
 }
 
-static oc_event_callback_retval_t
-process_batch_observers(void *data)
+static int
+notify_batch_observer(coap_observer_t *obs, oc_response_t *response)
 {
-  (void)data;
+#ifdef OC_BLOCK_WISE
+  return send_notification_internal(obs, response, obs->resource->uri, true,
+                                    dispatch_process_batch_observers);
+#else  /* !OC_BLOCK_WISE */
+  return send_notification_internal(obs, response, obs->resource->uri, true);
+#endif /* OC_BLOCK_WISE */
+}
+
+static void
+process_batch_observers(void)
+{
   batch_observer_t *batch_obs =
     (batch_observer_t *)oc_list_head(g_batch_observers_list);
   if (batch_obs == NULL) {
-    return OC_EVENT_DONE;
+    return;
   }
 #ifndef OC_DYNAMIC_ALLOCATION
   uint8_t buffer[OC_MIN_OBSERVE_SIZE];
@@ -1154,13 +1180,13 @@ process_batch_observers(void *data)
   uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
   if (buffer == NULL) {
     OC_WRN("process_batch_observers: out of memory allocating buffer");
-    return OC_EVENT_DONE;
+    return;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_response_buffer_t response_buffer;
   memset(&response_buffer, 0, sizeof(response_buffer));
-  OC_DBG("process_batch_observers: Issue GET request to "
-         "discovery resource for %s resource\n\n",
+  OC_DBG("process_batch_observers: Issue GET request to discovery resource for "
+         "%s resource\n\n",
          batch_observer_get_resource_uri(batch_obs));
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
@@ -1223,8 +1249,7 @@ process_batch_observers(void *data)
         response_buffer.code = oc_status_code(OC_STATUS_OK);
         oc_response_t response = { 0 };
         response.response_buffer = &response_buffer;
-        if (send_notification(obs, &response, obs->resource->uri, true,
-                              dispatch_process_batch_observers)) {
+        if (notify_batch_observer(obs, &response) < 0) {
           goto leave_notify_observers;
         }
       }
@@ -1243,6 +1268,13 @@ leave_notify_observers:
     free(buffer);
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+static oc_event_callback_retval_t
+process_batch_observers_async(void *data)
+{
+  (void)data;
+  process_batch_observers();
   return OC_EVENT_DONE;
 }
 
@@ -1354,7 +1386,7 @@ notify_discovery_observers(oc_resource_t *resource)
   } //! buffer
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-  OC_DBG("notify_discovery_observers: Issue GET request to resource %s\n\n",
+  OC_DBG("notify_discovery_observers: Issue GET request to resource %s",
          oc_string(resource->uri));
   oc_response_t response = { 0 };
   oc_response_buffer_t response_buffer = { 0 };
@@ -1375,7 +1407,7 @@ notify_discovery_observers(oc_resource_t *resource)
     if (!fill_response(resource, &obs->endpoint, obs->iface_mask, &response)) {
       continue;
     }
-    if (send_notification(obs, &response, resource->uri, false, NULL)) {
+    if (send_notification(obs, &response, resource->uri, false) < 0) {
       break;
     }
   }

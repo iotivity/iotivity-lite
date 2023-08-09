@@ -22,6 +22,7 @@
 #include "oc_config.h"
 #include "oc_events_internal.h"
 #include "oc_signal_event_loop.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "util/oc_features.h"
 #include "util/oc_macros_internal.h"
@@ -34,6 +35,7 @@
 #include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
 
+#include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
 #ifdef OC_DYNAMIC_ALLOCATION

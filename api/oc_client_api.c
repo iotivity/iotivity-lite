@@ -73,7 +73,7 @@ dispatch_coap_request(void)
     g_request_buffer->payload_size = (uint32_t)payload_size;
     uint32_t block_size;
 #ifdef OC_TCP
-    if (!(g_dispatch.transaction->message->endpoint.flags & TCP) &&
+    if ((g_dispatch.transaction->message->endpoint.flags & TCP) == 0 &&
         payload_size > OC_BLOCK_SIZE) {
 #else  /* OC_TCP */
     if ((long)payload_size > OC_BLOCK_SIZE) {
@@ -380,6 +380,7 @@ oc_do_request(oc_method_t method, const char *uri,
               coap_configure_request_fn_t configure_request,
               void *configure_request_data)
 {
+  assert(uri != NULL);
   assert(handler != NULL);
   oc_client_handler_t client_handler = {
     .response = handler,
@@ -445,13 +446,16 @@ oc_do_get_with_timeout(const char *uri, const oc_endpoint_t *endpoint,
                        qos, user_data, NULL, NULL);
 }
 
-// preparation step for sending coap request using async methods (POST or PUT)
-static bool
+bool
 oc_init_async_request(oc_method_t method, const char *uri,
                       const oc_endpoint_t *endpoint, const char *query,
                       oc_response_handler_t handler, oc_qos_t qos,
-                      void *user_data)
+                      void *user_data,
+                      coap_configure_request_fn_t configure_request,
+                      void *configure_request_data)
 {
+  assert(uri != NULL);
+  assert(handler != NULL);
   oc_client_handler_t client_handler = {
     .response = handler,
     .discovery = NULL,
@@ -464,7 +468,7 @@ oc_init_async_request(oc_method_t method, const char *uri,
     return false;
   }
 
-  if (!prepare_coap_request(cb, NULL, NULL)) {
+  if (!prepare_coap_request(cb, configure_request, configure_request_data)) {
     oc_client_cb_free(cb);
     return false;
   }
@@ -497,7 +501,7 @@ oc_init_put(const char *uri, const oc_endpoint_t *endpoint, const char *query,
             oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   return oc_init_async_request(OC_PUT, uri, endpoint, query, handler, qos,
-                               user_data);
+                               user_data, NULL, NULL);
 }
 
 bool
@@ -505,7 +509,7 @@ oc_init_post(const char *uri, const oc_endpoint_t *endpoint, const char *query,
              oc_response_handler_t handler, oc_qos_t qos, void *user_data)
 {
   return oc_init_async_request(OC_POST, uri, endpoint, query, handler, qos,
-                               user_data);
+                               user_data, NULL, NULL);
 }
 
 bool

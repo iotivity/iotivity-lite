@@ -26,6 +26,10 @@
 #include "oc_ri.h"
 #include "util/oc_compiler.h"
 
+#ifdef OC_BLOCK_WISE
+#include "api/oc_blockwise_internal.h"
+#endif /* OC_BLOCK_WISE */
+
 #include <stdbool.h>
 
 #ifdef __cplusplus

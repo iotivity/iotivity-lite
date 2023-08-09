@@ -323,11 +323,17 @@ ri_get_ocf_version(oc_content_format_t cf)
   return OCF_VER_1_0_0;
 }
 
+#ifdef OC_BLOCK_WISE
 static oc_client_response_t
 ri_prepare_client_response(const coap_packet_t *packet,
                            oc_blockwise_state_t **response_state,
                            oc_client_cb_t *cb, oc_endpoint_t *endpoint,
                            oc_content_format_t cf)
+#else  /* !OC_BLOCK_WISE */
+static oc_client_response_t
+ri_prepare_client_response(const coap_packet_t *packet, oc_client_cb_t *cb,
+                           oc_endpoint_t *endpoint, oc_content_format_t cf)
+#endif /* OC_BLOCK_WISE */
 {
   oc_client_response_t client_response;
   memset(&client_response, 0, sizeof(oc_client_response_t));
@@ -351,7 +357,6 @@ ri_prepare_client_response(const coap_packet_t *packet,
     }
   }
 #else  /* !OC_BLOCK_WISE */
-  (void)response_state;
   coap_options_get_observe(packet, &client_response.observe_option);
 #endif /* OC_BLOCK_WISE */
 
@@ -406,7 +411,7 @@ oc_client_cb_invoke(const coap_packet_t *response, oc_client_cb_t *cb,
     ri_prepare_client_response(response, response_state, cb, endpoint, cf);
 #else  /* !OC_BLOCK_WISE */
   oc_client_response_t client_response =
-    ri_prepare_client_response(response, NULL, cb, endpoint, cf);
+    ri_prepare_client_response(response, cb, endpoint, cf);
 #endif /* OC_BLOCK_WISE */
 
 #if defined(OC_OSCORE) && defined(OC_SECURITY)

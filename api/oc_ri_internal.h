@@ -19,8 +19,7 @@
 #ifndef OC_RI_INTERNAL_H
 #define OC_RI_INTERNAL_H
 
-#include "messaging/coap/coap.h"
-#include "oc_blockwise.h"
+#include "messaging/coap/engine.h"
 #include "oc_config.h"
 #include "oc_endpoint.h"
 #include "oc_ri.h"
@@ -90,22 +89,10 @@ void oc_ri_free_resource_properties(oc_resource_t *resource) OC_NONNULL();
 bool oc_ri_URI_is_in_use(size_t device, const char *uri, size_t uri_len)
   OC_NONNULL();
 
-typedef struct oc_ri_invoke_coap_entity_handler_ctx_t
-{
-#ifdef OC_BLOCK_WISE
-  oc_blockwise_state_t **request_state;
-  oc_blockwise_state_t **response_state;
-  uint16_t block2_size;
-#else  /* !OC_BLOCK_WISE */
-  uint8_t *buffer;
-#endif /* OC_BLOCK_WISE */
-} oc_ri_invoke_coap_entity_handler_ctx_t;
-
 /** @brief Handle a coap request. */
-bool oc_ri_invoke_coap_entity_handler(
-  const coap_packet_t *request, coap_packet_t *response,
-  oc_endpoint_t *endpoint, oc_ri_invoke_coap_entity_handler_ctx_t ctx)
-  OC_NONNULL();
+bool oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
+                                      oc_endpoint_t *endpoint, void *user_data)
+  OC_NONNULL(1, 2);
 
 #ifdef OC_TCP
 oc_event_callback_retval_t oc_remove_ping_handler_async(void *data);

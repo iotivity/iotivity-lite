@@ -57,7 +57,7 @@
 #include <string.h>
 
 #ifdef OC_BLOCK_WISE
-#include "oc_blockwise.h"
+#include "api/oc_blockwise_internal.h"
 #endif /* OC_BLOCK_WISE */
 
 #ifdef OC_CLIENT
@@ -125,73 +125,71 @@ coap_send_transaction(coap_transaction_t *t)
   OC_DBG("Sending transaction(len: %zd) %u: %p", t->message->length, t->mid,
          (void *)t);
   OC_LOGbytes(t->message->data, t->message->length);
-  bool confirmable = false;
 
-  confirmable =
+  bool confirmable =
     (COAP_TYPE_CON == ((COAP_HEADER_TYPE_MASK & t->message->data[0]) >>
-                       COAP_HEADER_TYPE_POSITION))
-      ? true
-      : false;
+                       COAP_HEADER_TYPE_POSITION));
 
 #ifdef OC_TCP
-  if (!(t->message->endpoint.flags & TCP) && confirmable) {
-#else  /* OC_TCP */
-  if (confirmable) {
+  confirmable = confirmable && (t->message->endpoint.flags & TCP) == 0;
 #endif /* !OC_TCP */
-    if (t->retrans_counter < COAP_MAX_RETRANSMIT) {
-      /* not timed out yet */
-      OC_DBG("Keeping transaction %u: %p", t->mid, (void *)t);
 
-      if (t->retrans_counter == 0) {
-        t->retrans_timer.timer.interval =
-          COAP_RESPONSE_TIMEOUT_TICKS +
-          (oc_random_value() %
-           (oc_clock_time_t)COAP_RESPONSE_TIMEOUT_BACKOFF_MASK);
-        OC_DBG("Initial interval %d", (int)t->retrans_timer.timer.interval);
-      } else {
-        t->retrans_timer.timer.interval <<= 1; /* double */
-        OC_DBG("Doubled %d", (int)t->retrans_timer.timer.interval);
-      }
-
-      OC_PROCESS_CONTEXT_BEGIN(transaction_handler_process)
-      oc_etimer_restart(&t->retrans_timer); /* interval updated above */
-      OC_PROCESS_CONTEXT_END(transaction_handler_process)
-
-      oc_message_add_ref(t->message);
-
-      coap_send_message(t->message);
-
-      t = NULL;
-    } else {
-      /* timed out */
-      OC_WRN("Timeout");
-#ifdef OC_SERVER
-      /* remove observers */
-      coap_remove_observers_by_client(&t->message->endpoint);
-#endif /* OC_SERVER */
-
-#ifdef OC_CLIENT
-      oc_ri_free_client_cbs_by_mid_v1(t->mid, OC_TRANSACTION_TIMEOUT);
-#endif /* OC_CLIENT */
-
-#ifdef OC_BLOCK_WISE
-      oc_blockwise_scrub_buffers(false);
-#endif /* OC_BLOCK_WISE */
-#ifdef OC_SECURITY
-      if (t->message->endpoint.flags & SECURED) {
-        oc_tls_close_connection(&t->message->endpoint);
-      } else
-#endif /* OC_SECURITY */
-      {
-        coap_clear_transaction(t);
-      }
-    }
-  } else {
+  if (!confirmable) {
     oc_message_add_ref(t->message);
 
     coap_send_message(t->message);
 
     coap_clear_transaction(t);
+    return;
+  }
+
+  if (t->retrans_counter < COAP_MAX_RETRANSMIT) {
+    /* not timed out yet */
+    OC_DBG("Keeping transaction %u: %p", t->mid, (void *)t);
+
+    if (t->retrans_counter == 0) {
+      t->retrans_timer.timer.interval =
+        COAP_RESPONSE_TIMEOUT_TICKS +
+        (oc_random_value() %
+         (oc_clock_time_t)COAP_RESPONSE_TIMEOUT_BACKOFF_MASK);
+      OC_DBG("Initial interval %d", (int)t->retrans_timer.timer.interval);
+    } else {
+      t->retrans_timer.timer.interval <<= 1; /* double */
+      OC_DBG("Doubled %d", (int)t->retrans_timer.timer.interval);
+    }
+
+    OC_PROCESS_CONTEXT_BEGIN(transaction_handler_process)
+    oc_etimer_restart(&t->retrans_timer); /* interval updated above */
+    OC_PROCESS_CONTEXT_END(transaction_handler_process)
+
+    oc_message_add_ref(t->message);
+
+    coap_send_message(t->message);
+
+    t = NULL;
+  } else {
+    /* timed out */
+    OC_WRN("Timeout");
+#ifdef OC_SERVER
+    /* remove observers */
+    coap_remove_observers_by_client(&t->message->endpoint);
+#endif /* OC_SERVER */
+
+#ifdef OC_CLIENT
+    oc_ri_free_client_cbs_by_mid_v1(t->mid, OC_TRANSACTION_TIMEOUT);
+#endif /* OC_CLIENT */
+
+#ifdef OC_BLOCK_WISE
+    oc_blockwise_free_all_buffers(false);
+#endif /* OC_BLOCK_WISE */
+#ifdef OC_SECURITY
+    if (t->message->endpoint.flags & SECURED) {
+      oc_tls_close_connection(&t->message->endpoint);
+    } else
+#endif /* OC_SECURITY */
+    {
+      coap_clear_transaction(t);
+    }
   }
 }
 /*---------------------------------------------------------------------------*/

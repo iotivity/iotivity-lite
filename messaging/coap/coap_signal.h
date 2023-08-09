@@ -20,6 +20,8 @@
 #define COAP_SIGNAL_H
 
 #include "oc_endpoint.h"
+#include "messaging/coap/coap.h"
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,30 +54,34 @@ int coap_send_csm_message(const oc_endpoint_t *endpoint,
 int coap_send_ping_message(const oc_endpoint_t *endpoint,
                            uint8_t custody_option, const uint8_t *token,
                            uint8_t token_len);
-int coap_send_pong_message(const oc_endpoint_t *endpoint, void *packet);
+int coap_send_pong_message(const oc_endpoint_t *endpoint,
+                           const coap_packet_t *packet);
 int coap_send_release_message(const oc_endpoint_t *endpoint,
                               const char *alt_addr, size_t alt_addr_len,
                               uint32_t hold_off);
 int coap_send_abort_message(const oc_endpoint_t *endpoint, uint16_t opt,
                             const char *diagnostic, size_t diagnostic_len);
-int coap_check_signal_message(void *packet);
-int handle_coap_signal_message(void *packet, const oc_endpoint_t *endpoint);
+bool coap_check_signal_message(const coap_packet_t *packet);
+int handle_coap_signal_message(const coap_packet_t *packet,
+                               const oc_endpoint_t *endpoint);
 
-int coap_signal_get_max_msg_size(void *packet, uint32_t *size);
-int coap_signal_set_max_msg_size(void *packet, uint32_t size);
-int coap_signal_get_blockwise_transfer(void *packet,
-                                       uint8_t *blockwise_transfer);
-int coap_signal_set_blockwise_transfer(void *packet,
-                                       uint8_t blockwise_transfer);
-int coap_signal_get_custody(void *packet, uint8_t *custody);
-int coap_signal_set_custody(void *packet, uint8_t custody);
-size_t coap_signal_get_alt_addr(void *packet, const char **addr);
-size_t coap_signal_set_alt_addr(void *packet, const char *addr,
+bool coap_signal_get_max_msg_size(const coap_packet_t *packet, uint32_t *size);
+bool coap_signal_set_max_msg_size(coap_packet_t *packet, uint32_t size);
+bool coap_signal_get_blockwise_transfer(const coap_packet_t *packet,
+                                        uint8_t *blockwise_transfer);
+bool coap_signal_set_blockwise_transfer(coap_packet_t *packet,
+                                        uint8_t blockwise_transfer);
+bool coap_signal_get_custody(const coap_packet_t *packet, uint8_t *custody);
+bool coap_signal_set_custody(coap_packet_t *packet, uint8_t custody);
+size_t coap_signal_get_alt_addr(const coap_packet_t *packet, const char **addr);
+size_t coap_signal_set_alt_addr(coap_packet_t *packet, const char *addr,
                                 size_t addr_len);
-int coap_signal_get_hold_off(void *packet, uint32_t *time_seconds);
-int coap_signal_set_hold_off(void *packet, uint32_t time_seconds);
-int coap_signal_get_bad_csm(void *packet, uint16_t *opt);
-int coap_signal_set_bad_csm(void *packet, uint16_t opt);
+bool coap_signal_get_hold_off(const coap_packet_t *packet,
+                              uint32_t *time_seconds);
+bool coap_signal_set_hold_off(coap_packet_t *packet, uint32_t time_seconds);
+bool coap_signal_get_bad_csm(const coap_packet_t *packet, uint16_t *opt);
+bool coap_signal_set_bad_csm(coap_packet_t *packet, uint16_t opt);
+
 #endif /* OC_TCP */
 
 #ifdef __cplusplus

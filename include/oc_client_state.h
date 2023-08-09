@@ -31,10 +31,6 @@
 #include "messaging/coap/oscore_constants.h"
 #endif /* OC_OSCORE */
 
-#ifdef OC_BLOCK_WISE
-#include "oc_blockwise.h"
-#endif /* OC_BLOCK_WISE */
-
 #include <stdbool.h>
 
 #ifdef __cplusplus

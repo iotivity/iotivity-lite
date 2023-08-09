@@ -25,6 +25,7 @@
 #include "messaging/coap/constants.h"
 #include "messaging/coap/engine.h"
 #include "messaging/coap/oc_coap.h"
+#include "messaging/coap/transactions.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
 #include "oc_core_res.h"
@@ -41,7 +42,7 @@
 #include "util/oc_process_internal.h"
 
 #ifdef OC_BLOCK_WISE
-#include "oc_blockwise.h"
+#include "api/oc_blockwise_internal.h"
 #endif /* OC_BLOCK_WISE */
 
 #ifdef OC_CLIENT
@@ -51,6 +52,8 @@
 #ifdef OC_SERVER
 #include "api/oc_ri_server_internal.h"
 #include "api/oc_server_api_internal.h"
+#include "messaging/coap/observe.h"
+#include "messaging/coap/separate.h"
 #ifdef OC_COLLECTIONS
 #include "api/oc_collection_internal.h"
 #include "api/oc_link_internal.h"
@@ -1107,17 +1110,16 @@ ri_invoke_coap_entity_set_response(coap_packet_t *response,
 }
 
 bool
-oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
-                                 coap_packet_t *response,
-                                 oc_endpoint_t *endpoint,
-                                 oc_ri_invoke_coap_entity_handler_ctx_t ctx)
+oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
+                                 oc_endpoint_t *endpoint, void *user_data)
 {
-  endpoint->version = ri_get_ocf_version_from_header(request);
+  (void)user_data;
+  endpoint->version = ri_get_ocf_version_from_header(ctx->request);
 
   /* This function is a server-side entry point solely for requests.
    *  Hence, "code" contains the CoAP method code.
    */
-  oc_method_t method = request->code;
+  oc_method_t method = ctx->request->code;
 
   /* Initialize request/response objects to be sent up to the app layer. */
   /* Postpone allocating response_state right after calling
@@ -1144,19 +1146,19 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
 
   /* Obtain request uri from the CoAP request. */
   const char *uri_path = NULL;
-  size_t uri_path_len = coap_options_get_uri_path(request, &uri_path);
+  size_t uri_path_len = coap_options_get_uri_path(ctx->request, &uri_path);
 
   /* Obtain query string from CoAP request. */
   const char *uri_query = NULL;
-  size_t uri_query_len = coap_options_get_uri_query(request, &uri_query);
+  size_t uri_query_len = coap_options_get_uri_query(ctx->request, &uri_query);
 
   /* Read the Content-Format CoAP option in the request */
   oc_content_format_t cf = 0;
-  coap_options_get_content_format(request, &cf);
+  coap_options_get_content_format(ctx->request, &cf);
 
   /* Read the accept CoAP option in the request */
   uint16_t accept = 0;
-  coap_options_get_accept(request, &accept);
+  coap_options_get_accept(ctx->request, &accept);
 
   /* Initialize OCF interface selector. */
   oc_interface_mask_t iface_query = 0;
@@ -1167,7 +1169,7 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
         !oc_ri_filter_request_by_device_id(endpoint->device, uri_query,
                                            uri_query_len)) {
       coap_set_global_status_code(CLEAR_TRANSACTION);
-      coap_set_status_code(response, OC_IGNORE);
+      coap_set_status_code(ctx->response, OC_IGNORE);
       return false;
     }
 
@@ -1186,12 +1188,12 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
   const uint8_t *payload = NULL;
   size_t payload_len = 0;
 #ifdef OC_BLOCK_WISE
-  if (*ctx.request_state) {
-    payload = (*ctx.request_state)->buffer;
-    payload_len = (*ctx.request_state)->payload_size;
+  if (*ctx->request_state) {
+    payload = (*ctx->request_state)->buffer;
+    payload_len = (*ctx->request_state)->payload_size;
   }
 #else  /* OC_BLOCK_WISE */
-  payload_len = coap_get_payload(request, &payload);
+  payload_len = coap_get_payload(ctx->request, &payload);
 #endif /* !OC_BLOCK_WISE */
   request_obj._payload = payload;
   request_obj._payload_len = payload_len;
@@ -1313,7 +1315,7 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
      */
     uint64_t etag = 0;
     const uint8_t *etag_buf = NULL;
-    size_t etag_buf_len = coap_options_get_etag(request, &etag_buf);
+    size_t etag_buf_len = coap_options_get_etag(ctx->request, &etag_buf);
     if (etag_buf_len == sizeof(etag)) {
       memcpy(&etag, etag_buf, etag_buf_len);
       not_modified =
@@ -1332,46 +1334,46 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
   bool enable_realloc_rep = false;
 #endif /* OC_DYNAMIC_ALLOCATION */
   if (cur_resource && !bad_request && authorized && !not_modified) {
-    if (*ctx.response_state == NULL) {
+    if (*ctx->response_state == NULL) {
       OC_DBG("creating new block-wise response state");
-      *ctx.response_state = oc_blockwise_alloc_response_buffer(
+      *ctx->response_state = oc_blockwise_alloc_response_buffer(
         uri_path, uri_path_len, endpoint, method, OC_BLOCKWISE_SERVER,
         (uint32_t)OC_MIN_APP_DATA_SIZE);
-      if (*ctx.response_state == NULL) {
+      if (*ctx->response_state == NULL) {
         OC_ERR("failure to alloc response state");
         bad_request = true;
       } else {
 #ifdef OC_DYNAMIC_ALLOCATION
 #ifdef OC_APP_DATA_BUFFER_POOL
-        if (!(*ctx.response_state)->block)
+        if (!(*ctx->response_state)->block)
 #endif /* OC_APP_DATA_BUFFER_POOL */
         {
           response_state_allocated = true;
         }
 #endif /* OC_DYNAMIC_ALLOCATION */
         if (uri_query_len > 0) {
-          oc_new_string(&(*ctx.response_state)->uri_query, uri_query,
+          oc_new_string(&(*ctx->response_state)->uri_query, uri_query,
                         uri_query_len);
         }
-        response_buffer.buffer = (*ctx.response_state)->buffer;
+        response_buffer.buffer = (*ctx->response_state)->buffer;
 #ifdef OC_DYNAMIC_ALLOCATION
-        response_buffer.buffer_size = (*ctx.response_state)->buffer_size;
+        response_buffer.buffer_size = (*ctx->response_state)->buffer_size;
 #else  /* !OC_DYNAMIC_ALLOCATION */
-        response_buffer.buffer_size = sizeof((*ctx.response_state)->buffer);
+        response_buffer.buffer_size = sizeof((*ctx->response_state)->buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
       }
     } else {
       OC_DBG("using existing block-wise response state");
-      response_buffer.buffer = (*ctx.response_state)->buffer;
+      response_buffer.buffer = (*ctx->response_state)->buffer;
 #ifdef OC_DYNAMIC_ALLOCATION
-      response_buffer.buffer_size = (*ctx.response_state)->buffer_size;
+      response_buffer.buffer_size = (*ctx->response_state)->buffer_size;
 #else  /* !OC_DYNAMIC_ALLOCATION */
-      response_buffer.buffer_size = sizeof((*ctx.response_state)->buffer);
+      response_buffer.buffer_size = sizeof((*ctx->response_state)->buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
     }
   }
 #else  /* OC_BLOCK_WISE */
-  response_buffer.buffer = ctx.buffer;
+  response_buffer.buffer = ctx->buffer;
   response_buffer.buffer_size = OC_BLOCK_SIZE;
 #endif /* !OC_BLOCK_WISE */
 
@@ -1411,14 +1413,14 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
   }
 
 #ifdef OC_BLOCK_WISE
-  oc_blockwise_free_request_buffer(*ctx.request_state);
-  *ctx.request_state = NULL;
+  oc_blockwise_free_request_buffer(*ctx->request_state);
+  *ctx->request_state = NULL;
 #ifdef OC_DYNAMIC_ALLOCATION
   // for realloc we need reassign memory again.
   if (enable_realloc_rep) {
     response_buffer.buffer = oc_rep_shrink_encoder_buf(response_buffer.buffer);
-    if ((*ctx.response_state) != NULL) {
-      (*ctx.response_state)->buffer = response_buffer.buffer;
+    if ((*ctx->response_state) != NULL) {
+      (*ctx->response_state)->buffer = response_buffer.buffer;
     }
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -1480,12 +1482,12 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
 #ifdef OC_SERVER
   int32_t observe = OC_COAP_OPTION_OBSERVE_NOT_SET;
 #ifdef OC_BLOCK_WISE
-  uint16_t block2_size = ctx.block2_size;
+  uint16_t block2_size = ctx->block2_size;
 #else  /* !OC_BLOCK_WISE */
   uint16_t block2_size = 0;
 #endif /* OC_BLOCK_WISE */
   if (success && response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
-    observe = ri_handle_observation(request, response, cur_resource,
+    observe = ri_handle_observation(ctx->request, ctx->response, cur_resource,
                                     resource_is_collection, block2_size,
                                     endpoint, iface_query);
   }
@@ -1499,10 +1501,10 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
   ri_invoke_coap_entity_set_response_ctx_t resp_ctx = {
     .response_obj = &response_obj,
 #ifdef OC_BLOCK_WISE
-    .response_state = ctx.response_state,
+    .response_state = ctx->response_state,
 #endif /* OC_BLOCK_WISE */
 #ifdef OC_SERVER
-    .request = request,
+    .request = ctx->request,
     .endpoint = endpoint,
     .method = method,
     .iface_mask = iface_mask,
@@ -1514,7 +1516,7 @@ oc_ri_invoke_coap_entity_handler(const coap_packet_t *request,
 #endif /* OC_COLLECTIONS */
 #endif /* OC_SERVER */
   };
-  ri_invoke_coap_entity_set_response(response, resp_ctx);
+  ri_invoke_coap_entity_set_response(ctx->response, resp_ctx);
   return success;
 }
 
@@ -1530,7 +1532,7 @@ oc_ri_shutdown(void)
   oc_client_cbs_shutdown();
 #endif /* OC_CLIENT */
 #ifdef OC_BLOCK_WISE
-  oc_blockwise_scrub_buffers(true);
+  oc_blockwise_free_all_buffers(true);
 #endif /* OC_BLOCK_WISE */
 
   while (oc_main_poll_v1() != 0) {

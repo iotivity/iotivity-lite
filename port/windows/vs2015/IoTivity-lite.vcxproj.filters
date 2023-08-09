@@ -490,6 +490,9 @@
     <ClInclude Include="..\..\..\deps\tinycbor\src\cborjson.h">
       <Filter>tinyCBOR</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\api\oc_blockwise_internal.h">
+      <Filter>Core</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\messaging\coap\conf.h">
       <Filter>Core</Filter>
     </ClInclude>
@@ -521,9 +524,6 @@
       <Filter>Port</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_base64.h">
-      <Filter>Headers</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\include\oc_blockwise.h">
       <Filter>Headers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_buffer.h">

@@ -16,14 +16,9 @@
  *
  ****************************************************************************/
 
-#include "oc_api.h"
 #include "oc_resource_internal.h"
+#include "oc_ri.h"
 #include "oc_helpers.h"
-#include "port/oc_log_internal.h"
-
-#ifdef OC_HAS_FEATURE_ETAG
-#include "api/oc_etag_internal.h"
-#endif /* OC_HAS_FEATURE_ETAG */
 
 #include <assert.h>
 
