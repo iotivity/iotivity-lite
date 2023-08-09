@@ -40,6 +40,14 @@ void oc_sec_svr_create(void);
  *        before calling this function.
  */
 void oc_sec_svr_create_new_device(void);
+
+/**
+ * @brief update SVR with stored values,
+ *        if there is no store data, initialize with default value.
+ *
+ * @param[in] device_index index of Device stored in `g_oc_device_info[]`
+ */
+void oc_sec_svr_init_new_device(size_t device_index);
 #endif /* OC_HAS_FEATURE_BRIDGE */
 
 

@@ -29,6 +29,7 @@
 									<listOptionValue builtIn="false" value="OC_HAS_FEATURE_PUSH=1"/>
 									<listOptionValue builtIn="false" value="OC_HAS_FEATURE_BRIDGE=1"/>
 									<listOptionValue builtIn="false" value="OC_COLLECTIONS=1"/>
+									<listOptionValue builtIn="false" value="OC_DYNAMIC_ALLOCATION=1"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.gnu.cpp.compiler.input.1082757842" superClass="cdt.managedbuild.tool.gnu.cpp.compiler.input"/>
 							</tool>

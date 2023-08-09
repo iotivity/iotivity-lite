@@ -42,9 +42,6 @@ typedef struct oc_vods_s
   oc_string_t econame;
 } oc_vods_t;
 
-/*
- * todo4me <2023/7/24> rename global variable name (add `g_` prefixs)
- */
 OC_LIST(g_vods);
 static oc_resource_t *g_vodlist_res;
 
@@ -91,7 +88,7 @@ add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
 
   oc_list_add(g_vods, vod);
 
-  OC_DBG("oc_bridge: adding %s [%s] from oic.r.vodslist", name, econame);
+  OC_DBG("oc_bridge: adding %s [%s] from oic.r.vodlist", name, econame);
   OC_PRINT_VODSLIST;
 }
 
@@ -265,9 +262,9 @@ oc_bridge_add_bridge_device(const char *name, const char *spec_version,
   }
 
   /*
-   * - initialize VOD list : g_vod_list.vods
-   * - initialize next_index with `g_device_count`
-   * - load existing g_vod_list from disk
+   * - initialize VOD mapping list : `g_vod_mapping_list.vods`
+   * - initialize `g_vod_mapping_list.next_index` with `g_device_count`
+   * - load existing `g_vod_mapping_list` from disk
    */
   oc_vod_map_init();
 
@@ -286,7 +283,12 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
                              oc_add_device_cb_t add_device_cb, void *data)
 {
   /*
-   * vd_index : index of `g_oc_device_info[]` which has new VOD..
+   * add new VOD (identified by vod_id) to the proper position of
+   * `oc_vod_mapping_list_t.vods` list, and update
+   * `g_vod_mapping_list.next_index`
+   *
+   * vd_index : index of `g_oc_device_info[]` which new Device for the VOD
+   * will be stored.
    */
   size_t vd_index =
     oc_vod_map_add_id(virtual_device_id, virtual_device_id_size, econame);
@@ -301,10 +303,10 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
       .add_device_cb_data = data,
   };
 
+  /*
+   * add corresponding new Device (`oc_device_info_t`) to `g_oc_device_info[vd_index]`
+   */
   oc_device_info_t *device = oc_core_add_new_device_at_index(cfg, vd_index);
-//  oc_device_info_t *device = oc_core_add_new_device_at_index(
-//    uri, rt, name, spec_version, data_model_version, vd_index, add_device_cb,
-//    data);
 
   if (!device) {
     return 0;
@@ -372,6 +374,10 @@ oc_bridge_remove_virtual_device(size_t device_index)
 int
 oc_bridge_delete_virtual_device(size_t device_index)
 {
+  /* 1. remove this from oic.r.vodlist:vods */
+  oc_bridge_remove_virtual_device(device_index);
+
+  /* 2. destroy Device and remove from VOD mapping list */
   if (oc_bridge_is_virtual_device(device_index)) {
     oc_uuid_t nil_uuid = { { 0 } };
     oc_set_immutable_device_identifier(device_index, &nil_uuid);

@@ -507,7 +507,7 @@ oc_drop_command(size_t device)
 void
 oc_resize_drop_command(size_t device_count)
 {
-  g_drop_commands = (bool *)realloc(g_drop_commands, (device_count+1) * sizeof(bool));
+  g_drop_commands = (bool *)realloc(g_drop_commands, (device_count) * sizeof(bool));
 
   if (g_drop_commands == NULL) {
     oc_abort("Insufficient memory");

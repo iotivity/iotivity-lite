@@ -80,7 +80,7 @@ oc_sec_svr_create(void)
 
 
 /*
- * modifiedbyme <2023/7/28> add func : oc_sec_svr_init_new_devicee(){}
+ * modifiedbyme <2023/7/28> add func : oc_sec_svr_create_new_devicee(){}
  */
 #ifdef OC_HAS_FEATURE_BRIDGE
 void
@@ -125,6 +125,36 @@ oc_sec_svr_create_new_device(void)
 #endif /* OC_PKI */
 
 }
+
+
+/*
+ * modifiedbyme <2023/8/8> add func : oc_sec_svr_init_new_devicee(){}
+ */
+void
+oc_sec_svr_init_new_device(size_t device_index)
+{
+//  oc_sec_svr_create_new_device();
+  oc_sec_load_unique_ids(device_index);
+  OC_DBG("oc_main_init(): loading pstat(%zu)", device_index);
+  oc_sec_load_pstat(device_index);
+  OC_DBG("oc_main_init(): loading doxm(%zu)", device_index);
+  oc_sec_load_doxm(device_index);
+  OC_DBG("oc_main_init(): loading cred(%zu)", device_index);
+  oc_sec_load_cred(device_index);
+  OC_DBG("oc_main_init(): loading acl(%zu)", device_index);
+  oc_sec_load_acl(device_index);
+  OC_DBG("oc_main_init(): loading sp(%zu)", device_index);
+  oc_sec_load_sp(device_index);
+  OC_DBG("oc_main_init(): loading ael(%zu)", device_index);
+  oc_sec_load_ael(device_index);
+#ifdef OC_PKI
+  OC_DBG("oc_main_init(): loading ECDSA keypair(%zu)", device_index);
+  oc_sec_load_ecdsa_keypair(device_index);
+#endif /* OC_PKI */
+  OC_DBG("oc_main_init(): loading sdi(%zu)", device_index);
+  oc_sec_load_sdi(device_index);
+}
+
 #endif /* OC_HAS_FEATURE_BRIDGE */
 
 

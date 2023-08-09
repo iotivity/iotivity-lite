@@ -37,7 +37,8 @@ typedef struct oc_virtual_device_t
   uint8_t *v_id;
   size_t v_id_size;
   oc_string_t econame;
-  size_t index; // index of g_oc_device_info[]
+  size_t index; // index of `g_oc_device_info[]` where
+                // the corresponding Device is stored.
 } oc_virtual_device_t;
 
 /**
@@ -114,6 +115,8 @@ int oc_bridge_add_bridge_device(const char *name, const char *spec_version,
  * @note device index is cast from size_t to int and may lose information.
  *       The `oc_bridge_add_virtual_device()` function can be used to get
  *       the non-cast device index.
+ * @note The function `oc_bridge_add_bridge_device()` must be called before this
+ *       function.
  *
  * @see init
  */

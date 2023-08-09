@@ -566,7 +566,9 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
       return NULL;
     }
 
+    /* store new `oc_device_info_t` entry to existing memory slot */
     core_update_existing_device_data(index, cfg);
+    device_count = index;
   } else if (index == device_count) {
     /*
      * if `index` is same as the next normal index of Device,
@@ -589,12 +591,13 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
           exchanged);
     }
 
+    /* extend memory allocated to `g_oc_device_info` to add new Device
+     * and add new `oc_device_info_t` entry */
     core_update_device_data(device_count, cfg);
 
     /* realloc memory for g_drop_commands for dynamic Device management */
-    oc_resize_drop_command(device_count);
+    oc_resize_drop_command(device_count+1);
   }
-
 
   /* Construct device resource */
   int properties = OC_DISCOVERABLE;
@@ -602,10 +605,13 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
   properties |= OC_OBSERVABLE;
 #endif /* OC_CLOUD */
   if (strlen(cfg.rt) == 8 && strncmp(cfg.rt, "oic.wk.d", 8) == 0) {
+    /* `rt` of this Device == oic.wk.d */
     oc_core_populate_resource(OCF_D, device_count, cfg.uri,
                               OC_IF_R | OC_IF_BASELINE, OC_IF_R, properties,
                               oc_core_device_handler, 0, 0, 0, 1, cfg.rt);
   } else {
+    /* `rt` of this Device != "oic.wk.d"
+     * so add "oic.wk.d" */
     oc_core_populate_resource(
       OCF_D, device_count, cfg.uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R,
       properties, oc_core_device_handler, 0, 0, 0, 2, cfg.rt, "oic.wk.d");
@@ -643,9 +649,19 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
   oc_create_pushreceiver_resource(device_count);
 #endif /* OC_HAS_FEATURE_PUSH */
 
-  if (oc_connectivity_init(device_count, cfg.ports) < 0) {
-    oc_abort("error initializing connectivity for device");
+#ifdef OC_SECURITY
+  if (g_device_count == (device_count+1)) {
+    /* realloc memory and populate SVR Resources
+     * only if new Device is attached to the end of `g_oc_device_info[]` */
+    oc_sec_svr_create_new_device();
   }
+
+  oc_sec_svr_init_new_device(device_count);
+#endif
+
+//  if (oc_connectivity_init(device_count, cfg.ports) < 0) {
+//    oc_abort("error initializing connectivity for device");
+//  }
 
   oc_set_drop_commands(device_count, false);
   core_set_device_removed(device_count, false);
@@ -679,11 +695,14 @@ oc_core_remove_device_at_index(size_t index)
   }
 
 #ifdef OC_SECURITY
+  /*
+   * fixme4me <2023/8/9> remove other SVRs...
+   */
   oc_reset_device(index);
-//  oc_sec_clear_acl(index);
-  oc_sec_acl_clear(index, NULL, NULL);
-//  oc_sec_clear_creds(index);
+  oc_sec_sdi_clear(oc_sec_sdi_get(index));
+  oc_sec_ael_reset(index);
   oc_sec_cred_clear(index, NULL, NULL);
+  oc_sec_acl_clear(index, NULL, NULL);
 #endif /* OC_SECURITY */
 
   /*
