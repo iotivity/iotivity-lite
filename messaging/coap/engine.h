@@ -51,6 +51,7 @@
 #define ENGINE_H
 
 #include "coap.h"
+#include "oc_config.h"
 #include "port/oc_connectivity.h"
 #include "transactions.h"
 #include "util/oc_compiler.h"
@@ -69,14 +70,22 @@ extern "C" {
 
 OC_PROCESS_NAME(g_coap_engine);
 
-enum {
-  COAP_SUCCESS = 0,
-  COAP_SKIP_DUPLICATE_MESSAGE,
-  COAP_SEND_EMPTY_MESSAGE,
-  COAP_INVOKE_HANDLER,
-};
+typedef enum {
+  COAP_RECEIVE_SUCCESS = 0,
+  COAP_RECEIVE_SKIP_DUPLICATE_MESSAGE = 1,
+  COAP_RECEIVE_SEND_RESET_MESSAGE = 2,
+  COAP_RECEIVE_INVOKE_HANDLER = 3,
 
-int coap_process_inbound_message(oc_message_t *message) OC_NONNULL();
+  COAP_RECEIVE_ERROR = -1, // general error
+} coap_receive_status_t;
+
+/**
+ * @brief Process an inbound coap message.
+ *
+ * @param message message to process
+ * @return coap_status_t
+ */
+coap_status_t coap_process_inbound_message(oc_message_t *message) OC_NONNULL();
 
 typedef struct
 {
@@ -112,19 +121,44 @@ typedef struct
   const coap_packet_t *request;
   coap_packet_t *response;
   coap_transaction_t *transaction;
+#ifdef OC_BLOCK_WISE
   coap_block_options_t block1;
   coap_block_options_t block2;
-#ifdef OC_BLOCK_WISE
   oc_blockwise_state_t *request_buffer;
   oc_blockwise_state_t *response_buffer;
 #endif /* OC_BLOCK_WISE */
 } coap_receive_ctx_t;
 
-int coap_receive(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint,
-                 coap_make_response_fn_t response_fn, void *response_fn_data)
-  OC_NONNULL(1, 2, 3);
+/**
+ * @brief Handle a coap request and construct a coap response.
+ *
+ * @param ctx context for the coap request/response (cannot be NULL)
+ * @param endpoint endpoint from which the coap request was received and to
+ * which the coap response will be sent (cannot be NULL)
+ * @param response_fn function to create a response to the coap request (cannot
+ * be NULL)
+ * @param response_fn_data custom user data to pass to \p response_fn
+ *
+ * @return coap_receive_status_t
+ */
+coap_receive_status_t coap_receive(coap_receive_ctx_t *ctx,
+                                   oc_endpoint_t *endpoint,
+                                   coap_make_response_fn_t response_fn,
+                                   void *response_fn_data) OC_NONNULL(1, 2, 3);
 
+#ifdef OC_REQUEST_HISTORY
+
+/**
+ * @brief Check request history array if already contains the given (message id,
+ * device id) pair.
+ *
+ * @param mid message id to check
+ * @param device device id to check
+ * @return true message is a duplicate
+ */
 bool oc_coap_check_if_duplicate(uint16_t mid, uint32_t device);
+
+#endif /* OC_REQUEST_HISTORY */
 
 #ifdef __cplusplus
 }
