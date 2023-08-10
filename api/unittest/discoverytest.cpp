@@ -18,6 +18,7 @@
 
 #include "api/oc_discovery_internal.h"
 #include "api/oc_ri_internal.h"
+#include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_uuid.h"
@@ -35,10 +36,14 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
+#include <cstring>
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
 #include <unordered_map>
+
+using namespace std::chrono_literals;
 
 namespace {
 constexpr size_t kDeviceID{ 0 };
@@ -218,7 +223,7 @@ parseBaselinePayload(const oc_rep_t *payload)
   }
 
   // links
-  if (oc_rep_t * obj; oc_rep_get_object_array(rep, "links", &obj)) {
+  if (oc_rep_t *obj = nullptr; oc_rep_get_object_array(rep, "links", &obj)) {
     data.links = parseLinks(obj);
   }
   return data;
@@ -228,6 +233,9 @@ struct DiscoveryBatchItem
 {
   std::string deviceUUID;
   std::string href;
+#ifdef OC_HAS_FEATURE_ETAG
+  std::vector<uint8_t> etag;
+#endif /* OC_HAS_FEATURE_ETAG */
 };
 
 using DiscoveryBatchData = std::unordered_map<std::string, DiscoveryBatchItem>;
@@ -253,15 +261,27 @@ parseBatchPayload(const oc_rep_t *payload)
   DiscoveryBatchData data{};
   for (const oc_rep_t *rep = payload; rep != nullptr; rep = rep->next) {
     const oc_rep_t *obj = rep->value.object;
+    DiscoveryBatchItem bi{};
     char *str;
     size_t str_len;
     // href: string
     if (oc_rep_get_string(obj, "href", &str, &str_len)) {
       std::string_view href(str, str_len);
       auto [uuid, uri] = extractUUIDAndURI(href);
-      if (!uri.empty()) {
-        data[uri] = { uuid, uri };
-      }
+      bi.deviceUUID = uuid;
+      bi.href = uri;
+    }
+
+#ifdef OC_HAS_FEATURE_ETAG
+    // etag: byte string
+    if (oc_rep_get_byte_string(obj, "etag", &str, &str_len)) {
+      bi.etag.resize(str_len);
+      std::copy(&str[0], &str[str_len], std::begin(bi.etag));
+    }
+#endif /* OC_HAS_FEATURE_ETAG */
+
+    if (!bi.href.empty()) {
+      data[bi.href] = bi;
     }
   }
 
@@ -329,6 +349,55 @@ public:
 
   static std::unordered_map<std::string, DynamicResourceData> dynamicResources;
 #endif // OC_DYNAMIC_ALLOCATION
+
+#ifdef OC_HAS_FEATURE_ETAG
+  static void assertETag(oc_coap_etag_t etag1, uint64_t etag2)
+  {
+    ASSERT_EQ(sizeof(etag2), etag1.length);
+    std::array<uint8_t, sizeof(etag2)> etag2_buf{};
+    memcpy(&etag2_buf[0], &etag2, etag2_buf.size());
+    ASSERT_EQ(0, memcmp(&etag1.value[0], &etag2_buf[0], etag1.length));
+  }
+
+  static void assertResourceETag(oc_coap_etag_t etag,
+                                 const oc_resource_t *resource)
+  {
+    ASSERT_NE(nullptr, resource);
+    assertETag(etag, resource->etag);
+  }
+
+  static void assertDiscoveryETag(oc_coap_etag_t etag,
+                                  const oc_endpoint_t *endpoint, size_t device,
+                                  bool is_batch = false)
+  {
+    if (is_batch) {
+      assertETag(etag, oc_discovery_get_batch_etag(endpoint, device));
+    } else {
+      const oc_resource_t *discovery =
+        oc_core_get_resource_by_index(OCF_RES, device);
+      assertResourceETag(etag, discovery);
+    }
+  }
+
+  static void assertBatchETag(oc_coap_etag_t etag, size_t device,
+                              const DiscoveryBatchData &bd)
+  {
+    const oc_resource_t *discovery =
+      oc_core_get_resource_by_index(OCF_RES, device);
+    ASSERT_NE(nullptr, discovery);
+    uint64_t max_etag = discovery->etag;
+    for (const auto &[_, value] : bd) {
+      ASSERT_EQ(sizeof(uint64_t), value.etag.size());
+      uint64_t etag_value = 0;
+      memcpy(&etag_value, value.etag.data(), value.etag.size());
+      if (etag_value > max_etag) {
+        max_etag = etag_value;
+      }
+    }
+    assertETag(etag, max_etag);
+  }
+
+#endif /* OC_HAS_FEATURE_ETAG */
 };
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -507,17 +576,18 @@ getRequestWithDomainQuery(const std::string &query)
   ASSERT_NE(nullptr, ep);
 
   auto get_handler = [](oc_client_response_t *data) {
-    EXPECT_EQ(CODE, data->code);
     oc::TestDevice::Terminate();
+    EXPECT_EQ(CODE, data->code);
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
     *static_cast<bool *>(data->user_data) = true;
   };
 
   bool invoked = false;
-  uint16_t timeout_s = 2;
-  EXPECT_TRUE(oc_do_get_with_timeout(OCF_RES_URI, ep, query.c_str(), timeout_s,
-                                     get_handler, HIGH_QOS, &invoked));
-  oc::TestDevice::PoolEvents(timeout_s + 1);
+  auto timeout = 1s;
+  EXPECT_TRUE(oc_do_get_with_timeout(OCF_RES_URI, ep, query.c_str(),
+                                     timeout.count(), get_handler, HIGH_QOS,
+                                     &invoked));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   EXPECT_TRUE(invoked);
 }
 
@@ -631,17 +701,21 @@ TEST_F(TestDiscoveryWithServer, GetRequest)
   ASSERT_NE(nullptr, ep);
 
   auto get_handler = [](oc_client_response_t *data) {
-    EXPECT_EQ(OC_STATUS_OK, data->code);
     oc::TestDevice::Terminate();
+    ASSERT_EQ(OC_STATUS_OK, data->code);
+#ifdef OC_HAS_FEATURE_ETAG
+    assertDiscoveryETag(data->etag, data->endpoint, data->endpoint->device);
+#endif /* OC_HAS_FEATURE_ETAG */
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
     auto *links = static_cast<DiscoveryLinkDataMap *>(data->user_data);
     *links = parseLinks(data->payload);
   };
 
   DiscoveryLinkDataMap links{};
-  EXPECT_TRUE(
-    oc_do_get(OCF_RES_URI, ep, nullptr, get_handler, HIGH_QOS, &links));
-  oc::TestDevice::PoolEvents(3);
+  auto timeout = 1s;
+  EXPECT_TRUE(oc_do_get_with_timeout(OCF_RES_URI, ep, nullptr, timeout.count(),
+                                     get_handler, HIGH_QOS, &links));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   ASSERT_FALSE(links.empty());
 
   verifyLinks(links);
@@ -679,17 +753,22 @@ TEST_F(TestDiscoveryWithServer, GetRequestBaseline)
 #endif /* OC_SECURITY */
 
   auto get_handler = [](oc_client_response_t *data) {
-    EXPECT_EQ(OC_STATUS_OK, data->code);
     oc::TestDevice::Terminate();
+    ASSERT_EQ(OC_STATUS_OK, data->code);
+#ifdef OC_HAS_FEATURE_ETAG
+    assertDiscoveryETag(data->etag, data->endpoint, data->endpoint->device);
+#endif /* OC_HAS_FEATURE_ETAG */
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
     auto *baseline = static_cast<DiscoveryBaselineData *>(data->user_data);
     *baseline = parseBaselinePayload(data->payload);
   };
 
   DiscoveryBaselineData baseline{};
-  EXPECT_TRUE(oc_do_get(OCF_RES_URI, ep, "if=" OC_IF_BASELINE_STR, get_handler,
-                        HIGH_QOS, &baseline));
-  oc::TestDevice::PoolEvents(3);
+  auto timeout = 1s;
+  EXPECT_TRUE(oc_do_get_with_timeout(OCF_RES_URI, ep, "if=" OC_IF_BASELINE_STR,
+                                     timeout.count(), get_handler, HIGH_QOS,
+                                     &baseline));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   EXPECT_FALSE(baseline.links.empty());
 
 #ifdef OC_SECURITY
@@ -725,22 +804,30 @@ TEST_F(TestDiscoveryWithServer, GetRequestBatch)
   ASSERT_NE(nullptr, ep);
 
   auto get_handler = [](oc_client_response_t *data) {
-#ifdef OC_SECURITY
-    // need secure endpoint to get batch response if OC_SECURITY is enabled
-    EXPECT_EQ(OC_STATUS_BAD_REQUEST, data->code);
-#else  /* !OC_SECURITY */
-    EXPECT_EQ(OC_STATUS_OK, data->code);
-#endif /* OC_SECURITY */
     oc::TestDevice::Terminate();
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
     auto *batch = static_cast<DiscoveryBatchData *>(data->user_data);
     *batch = parseBatchPayload(data->payload);
+#ifdef OC_SECURITY
+    // need secure endpoint to get batch response if OC_SECURITY is enabled
+    ASSERT_EQ(OC_STATUS_BAD_REQUEST, data->code);
+#else /* !OC_SECURITY */
+    ASSERT_EQ(OC_STATUS_OK, data->code);
+#ifdef OC_HAS_FEATURE_ETAG
+    assertDiscoveryETag(data->etag, data->endpoint, data->endpoint->device,
+                        true);
+    // the response etag should be the highest etag contained the payload
+    assertBatchETag(data->etag, data->endpoint->device, *batch);
+#endif /* OC_HAS_FEATURE_ETAG */
+#endif /* OC_SECURITY */
   };
 
   DiscoveryBatchData data{};
-  EXPECT_TRUE(oc_do_get(OCF_RES_URI, ep, "if=" OC_IF_B_STR, get_handler,
-                        HIGH_QOS, &data));
-  oc::TestDevice::PoolEvents(3);
+  auto timeout = 1s;
+  EXPECT_TRUE(oc_do_get_with_timeout(OCF_RES_URI, ep, "if=" OC_IF_B_STR,
+                                     timeout.count(), get_handler, HIGH_QOS,
+                                     &data));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
 
 #ifdef OC_SECURITY
   EXPECT_TRUE(data.empty());
@@ -750,7 +837,14 @@ TEST_F(TestDiscoveryWithServer, GetRequestBatch)
   auto verifyDiscoverable = [&data](const oc_resource_t *resource) {
     ASSERT_NE(nullptr, resource);
     ASSERT_NE(0, resource->properties & OC_DISCOVERABLE);
-    EXPECT_NE(std::end(data), data.find(std::string(oc_string(resource->uri))));
+    const auto &it = data.find(std::string(oc_string(resource->uri)));
+    ASSERT_NE(std::end(data), it);
+#ifdef OC_HAS_FEATURE_ETAG
+    oc_coap_etag_t etag{};
+    std::copy(it->second.etag.begin(), it->second.etag.end(), etag.value);
+    etag.length = static_cast<uint8_t>(it->second.etag.size());
+    assertResourceETag(etag, resource);
+#endif /* OC_HAS_FEATURE_ETAG */
   };
 
   auto verifyUndiscoverable = [&data](const oc_resource_t *resource) {

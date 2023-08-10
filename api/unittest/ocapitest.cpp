@@ -33,6 +33,7 @@
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 
 #include <algorithm>
+#include <chrono>
 #include <cstdlib>
 #include <gtest/gtest.h>
 #include <set>
@@ -706,14 +707,16 @@ TEST_F(TestServerClient, DiscoverDeviceIDWithResources)
 
 #if !defined(OC_SECURITY) || defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM)
 
+using namespace std::chrono_literals;
+
 #ifdef _WIN32
 // windows implementation or github testing machine seems to be slower,
 // resulting in failures, so we use longer timeouts
-static constexpr uint16_t kTimeout = 4;
-static constexpr uint16_t kShortTimeout = 2;
+static constexpr auto kTimeout = 4s;
+static constexpr auto kShortTimeout = 2s;
 #else  /* !_WIN32 */
-static constexpr uint16_t kTimeout = 2;
-static constexpr uint16_t kShortTimeout = 1;
+static constexpr auto kTimeout = 2s;
+static constexpr auto kShortTimeout = 1s;
 #endif /* _WIN32 */
 
 static void
@@ -740,21 +743,23 @@ TEST_F(TestServerClient, GetWithTimeout)
   };
 
   int expected = ApiHelper::s_TestResource.onGet.response;
-  doGet(ApiHelper::s_TestResource, onGetDevice, kTimeout);
-  ApiHelper::poolEvents(kTimeout * 2);
+  doGet(ApiHelper::s_TestResource, onGetDevice, kTimeout.count());
+  ApiHelper::poolEventsMs(std::chrono::milliseconds(kTimeout).count() + 200);
   EXPECT_EQ(expected, code);
 
   ApiHelper::s_TestResource.onGet.response = -1; // disable sending of response
   expected = OC_REQUEST_TIMEOUT;
-  doGet(ApiHelper::s_TestResource, onGetDevice, kShortTimeout);
-  ApiHelper::poolEvents(kShortTimeout * 2);
+  doGet(ApiHelper::s_TestResource, onGetDevice, kShortTimeout.count());
+  ApiHelper::poolEventsMs(std::chrono::milliseconds(kShortTimeout).count() +
+                          200);
   EXPECT_EQ(expected, code);
 
   // test clean-up
   code = OC_STATUS_OK;
-  doGet(ApiHelper::s_TestResource, failResponse, kShortTimeout);
+  doGet(ApiHelper::s_TestResource, failResponse, kShortTimeout.count());
   ApiHelper::getAndRemoveClientCb(ApiHelper::s_TestResource, OC_GET);
-  ApiHelper::poolEvents(kShortTimeout * 2); // wait for timeout
+  ApiHelper::poolEventsMs(std::chrono::milliseconds(kShortTimeout).count() +
+                          200);
   EXPECT_EQ(OC_STATUS_OK, code);
 }
 
@@ -776,20 +781,22 @@ TEST_F(TestServerClient, DeleteWithTimeout)
   };
 
   int expected = ApiHelper::s_TestResource.onDelete.response;
-  doDelete(ApiHelper::s_TestResource, onDeleteDevice, kTimeout);
-  ApiHelper::poolEvents(kTimeout * 2);
+  doDelete(ApiHelper::s_TestResource, onDeleteDevice, kTimeout.count());
+  ApiHelper::poolEventsMs(std::chrono::milliseconds(kTimeout).count() + 200);
   EXPECT_EQ(expected, code);
 
   ApiHelper::s_SwitchResource.onDelete.response = -1; // disable response
-  doDelete(ApiHelper::s_SwitchResource, onDeleteDevice, kShortTimeout);
-  ApiHelper::poolEvents(kShortTimeout * 2);
+  doDelete(ApiHelper::s_SwitchResource, onDeleteDevice, kShortTimeout.count());
+  ApiHelper::poolEventsMs(std::chrono::milliseconds(kShortTimeout).count() +
+                          200);
   EXPECT_EQ(OC_REQUEST_TIMEOUT, code);
 
   // test clean-up
   code = OC_STATUS_OK;
-  doDelete(ApiHelper::s_TestResource, failResponse, kShortTimeout);
+  doDelete(ApiHelper::s_TestResource, failResponse, kShortTimeout.count());
   ApiHelper::getAndRemoveClientCb(ApiHelper::s_TestResource, OC_DELETE);
-  ApiHelper::poolEvents(kShortTimeout * 2); // wait for timeout
+  ApiHelper::poolEventsMs(std::chrono::milliseconds(kShortTimeout).count() +
+                          200);
   EXPECT_EQ(OC_STATUS_OK, code);
 }
 
@@ -811,20 +818,22 @@ TEST_F(TestServerClient, PostWithTimeout)
   };
 
   int expected = ApiHelper::s_TestResource.onPost.response;
-  doPost(ApiHelper::s_TestResource, onPostDevice, kTimeout);
-  ApiHelper::poolEvents(kTimeout * 2);
+  doPost(ApiHelper::s_TestResource, onPostDevice, kTimeout.count());
+  ApiHelper::poolEventsMs(std::chrono::milliseconds(kTimeout).count() + 200);
   EXPECT_EQ(expected, code);
 
   ApiHelper::s_TestResource.onPost.response = -1; // disable response
-  doPost(ApiHelper::s_TestResource, onPostDevice, kShortTimeout);
-  ApiHelper::poolEvents(kShortTimeout * 2);
+  doPost(ApiHelper::s_TestResource, onPostDevice, kShortTimeout.count());
+  ApiHelper::poolEventsMs(std::chrono::milliseconds(kShortTimeout).count() +
+                          200);
   EXPECT_EQ(OC_REQUEST_TIMEOUT, code);
 
   // test clean-up
   code = OC_STATUS_OK;
-  doPost(ApiHelper::s_TestResource, failResponse, kShortTimeout);
+  doPost(ApiHelper::s_TestResource, failResponse, kShortTimeout.count());
   ApiHelper::getAndRemoveClientCb(ApiHelper::s_TestResource, OC_POST);
-  ApiHelper::poolEvents(kShortTimeout * 2); // wait for timeout
+  ApiHelper::poolEventsMs(std::chrono::milliseconds(kShortTimeout).count() +
+                          200);
   EXPECT_EQ(OC_STATUS_OK, code);
 }
 
@@ -846,20 +855,22 @@ TEST_F(TestServerClient, PutWithTimeout)
   };
 
   int expected = ApiHelper::s_TestResource.onPut.response;
-  doPut(ApiHelper::s_TestResource, onPutDevice, kTimeout);
-  ApiHelper::poolEvents(kTimeout * 2);
+  doPut(ApiHelper::s_TestResource, onPutDevice, kTimeout.count());
+  ApiHelper::poolEventsMs(std::chrono::milliseconds(kTimeout).count() + 200);
   EXPECT_EQ(expected, code);
 
   ApiHelper::s_TestResource.onPut.response = -1; // disable response
-  doPut(ApiHelper::s_TestResource, onPutDevice, kShortTimeout);
-  ApiHelper::poolEvents(kShortTimeout * 2);
+  doPut(ApiHelper::s_TestResource, onPutDevice, kShortTimeout.count());
+  ApiHelper::poolEventsMs(std::chrono::milliseconds(kShortTimeout).count() +
+                          200);
   EXPECT_EQ(OC_REQUEST_TIMEOUT, code);
 
   // test clean-up
   code = OC_STATUS_OK;
-  doPut(ApiHelper::s_TestResource, failResponse, kShortTimeout);
+  doPut(ApiHelper::s_TestResource, failResponse, kShortTimeout.count());
   ApiHelper::getAndRemoveClientCb(ApiHelper::s_TestResource, OC_PUT);
-  ApiHelper::poolEvents(kShortTimeout * 2); // wait for timeout
+  ApiHelper::poolEventsMs(std::chrono::milliseconds(kShortTimeout).count() +
+                          200);
   EXPECT_EQ(OC_STATUS_OK, code);
 }
 

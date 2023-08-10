@@ -38,8 +38,11 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <gtest/gtest.h>
 #include <string>
+
+using namespace std::chrono_literals;
 
 static constexpr size_t kDeviceID{ 0 };
 
@@ -449,8 +452,8 @@ TEST_F(TestRolesWithServer, GetRequest)
   ASSERT_NE(nullptr, ep);
 
   auto get_handler = [](oc_client_response_t *data) {
-    EXPECT_EQ(OC_STATUS_OK, data->code);
     oc::TestDevice::Terminate();
+    EXPECT_EQ(OC_STATUS_OK, data->code);
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
     *static_cast<bool *>(data->user_data) = true;
   };
@@ -459,13 +462,12 @@ TEST_F(TestRolesWithServer, GetRequest)
   // have a peer, connecting device to itself seems to break the TLS handshake
 
   bool invoked = false;
-  uint16_t timeout_s = 5;
-  EXPECT_TRUE(oc_do_get_with_timeout(OCF_SEC_ROLES_URI, ep,
-                                     "if=" OC_IF_BASELINE_STR, timeout_s,
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_get_with_timeout(OCF_SEC_ROLES_URI, ep,
+                                     "if=" OC_IF_BASELINE_STR, timeout.count(),
                                      get_handler, HIGH_QOS, &invoked));
-  oc::TestDevice::PoolEvents(timeout_s);
-
-  ASSERT_TRUE(invoked);
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  EXPECT_TRUE(invoked);
 }
 
 TEST_F(TestRolesWithServer, PostRequest)
@@ -484,18 +486,18 @@ TEST_F(TestRolesWithServer, DeleteRequest)
   ASSERT_NE(nullptr, ep);
 
   auto delete_handler = [](oc_client_response_t *data) {
-    EXPECT_EQ(OC_STATUS_DELETED, data->code);
     oc::TestDevice::Terminate();
+    EXPECT_EQ(OC_STATUS_DELETED, data->code);
     *static_cast<bool *>(data->user_data) = true;
   };
 
   bool invoked = false;
-  uint16_t timeout_s = 5;
-  EXPECT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, ep, nullptr,
-                                        timeout_s, delete_handler, HIGH_QOS,
-                                        &invoked));
-  oc::TestDevice::PoolEvents(timeout_s);
-  ASSERT_TRUE(invoked);
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, ep, nullptr,
+                                        timeout.count(), delete_handler,
+                                        HIGH_QOS, &invoked));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  EXPECT_TRUE(invoked);
 
   // TODO add roles and verify that they are all deleted
 }
@@ -507,49 +509,49 @@ TEST_F(TestRolesWithServer, DeleteRequest_FailInvalidCredid)
   ASSERT_NE(nullptr, ep);
 
   auto delete_handler = [](oc_client_response_t *data) {
-    EXPECT_EQ(OC_STATUS_NOT_FOUND, data->code);
     oc::TestDevice::Terminate();
+    EXPECT_EQ(OC_STATUS_NOT_FOUND, data->code);
     *static_cast<bool *>(data->user_data) = true;
   };
 
   // invalid format
   std::string query = "credid=abc";
   bool invoked = false;
-  uint16_t timeout_s = 5;
-  EXPECT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, ep, query.c_str(),
-                                        timeout_s, delete_handler, HIGH_QOS,
-                                        &invoked));
-  oc::TestDevice::PoolEvents(timeout_s);
-  ASSERT_TRUE(invoked);
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, ep, query.c_str(),
+                                        timeout.count(), delete_handler,
+                                        HIGH_QOS, &invoked));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  EXPECT_TRUE(invoked);
 
   // negative
   invoked = false;
   query = "credid=-1";
-  EXPECT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, ep, query.c_str(),
-                                        timeout_s, delete_handler, HIGH_QOS,
-                                        &invoked));
-  oc::TestDevice::PoolEvents(timeout_s);
-  ASSERT_TRUE(invoked);
+  ASSERT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, ep, query.c_str(),
+                                        timeout.count(), delete_handler,
+                                        HIGH_QOS, &invoked));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  EXPECT_TRUE(invoked);
 
   // too big
   invoked = false;
   query = "credid=" +
           std::to_string(
             static_cast<int64_t>(std::numeric_limits<int32_t>::max()) + 1);
-  EXPECT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, ep, query.c_str(),
-                                        timeout_s, delete_handler, HIGH_QOS,
-                                        &invoked));
-  oc::TestDevice::PoolEvents(timeout_s);
-  ASSERT_TRUE(invoked);
+  ASSERT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, ep, query.c_str(),
+                                        timeout.count(), delete_handler,
+                                        HIGH_QOS, &invoked));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  EXPECT_TRUE(invoked);
 
   // not found
   invoked = false;
   query = "credid=42";
-  EXPECT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, ep, query.c_str(),
-                                        timeout_s, delete_handler, HIGH_QOS,
-                                        &invoked));
-  oc::TestDevice::PoolEvents(timeout_s);
-  ASSERT_TRUE(invoked);
+  ASSERT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, ep, query.c_str(),
+                                        timeout.count(), delete_handler,
+                                        HIGH_QOS, &invoked));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  EXPECT_TRUE(invoked);
 }
 
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */

@@ -24,19 +24,28 @@
 #include "api/oc_event_callback_internal.h"
 #include "api/oc_link_internal.h"
 #include "api/oc_ri_internal.h"
+#include "messaging/coap/oc_coap.h"
 #include "oc_collection.h"
 #include "port/oc_random.h"
 #include "tests/gtest/Collection.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
 #include "tests/gtest/Resource.h"
+#include "util/oc_features.h"
+
+#ifdef OC_HAS_FEATURE_ETAG
+#include "oc_etag.h"
+#endif /* OC_HAS_FEATURE_ETAG */
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <gtest/gtest.h>
 #include <memory>
 #include <string>
 #include <vector>
+
+using namespace std::chrono_literals;
 
 constexpr size_t kDeviceID = 0;
 
@@ -346,12 +355,312 @@ TEST_F(TestCollections, GetLinkByURI)
 
 #endif // OC_COLLECTIONS_IF_CREATE
 
+namespace {
+
+constexpr std::string_view switchRT = "test.r.switch";
+constexpr auto switchIF =
+  static_cast<oc_interface_mask_t>(OC_IF_BASELINE | OC_IF_R);
+constexpr std::string_view colRT = "test.r.col";
+
+constexpr std::string_view col1Name = "Switch collection";
+constexpr std::string_view col1URI = "/switches";
+
+constexpr std::string_view switch1Name{ "test switch" };
+constexpr std::string_view switch1URI{ "/switches/1" };
+constexpr std::array<double, 3> switch1Pos = { 0.34, 0.5, 0.8 };
+
+constexpr std::string_view col2Name = "Inner collection";
+constexpr std::string_view col2URI = "/switches/inner";
+
+constexpr std::string_view switch2Name{ "inner switch" };
+constexpr std::string_view switch2URI{ "/switches/inner/1" };
+
+struct SwitchData
+{
+  bool state = false;
+};
+
+struct CollectionData
+{
+  std::string label = {};
+  int power = 0;
+};
+
+} // namespace
+
 class TestCollectionsWithServer : public testing::Test {
 public:
-  static void SetUpTestCase() { ASSERT_TRUE(oc::TestDevice::StartServer()); }
+  static void SetUpTestCase()
+  {
+    oc_log_set_level(OC_LOG_LEVEL_DEBUG);
 
-  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
+    ASSERT_TRUE(oc::TestDevice::StartServer());
+  }
+
+  static void TearDownTestCase()
+  {
+    oc::TestDevice::StopServer();
+
+    oc_log_set_level(OC_LOG_LEVEL_INFO);
+  }
+
+  void SetUp() override
+  {
+    switch1Data = SwitchData{ true };
+    switch2Data = SwitchData{ false };
+
+    col1Data = { "label 1", 42 };
+    col2Data = { "label 2", 1337 };
+  }
+
+  void TearDown() override
+  {
+    for (auto *resource : resources) {
+      oc_delete_resource(resource);
+    }
+    resources.clear();
+    oc_collections_free_all();
+  }
+
+  static oc_resource_t *makeSwitch(std::string_view name, std::string_view uri,
+                                   size_t device,
+                                   oc_request_callback_t callback,
+                                   SwitchData *switchData);
+  static oc_resource_t *makeSwitch(std::string_view name, std::string_view uri,
+                                   size_t device, SwitchData *switchData);
+
+  static oc::oc_collection_unique_ptr makeSwitchCollection(
+    std::string_view name, std::string_view uri, std::string_view rt,
+    size_t device, CollectionData *colData);
+
+  static void makeTestResources();
+
+#ifdef OC_HAS_FEATURE_ETAG
+  static void assertETag(oc_coap_etag_t etag1, uint64_t etag2);
+  static void assertResourceETag(oc_coap_etag_t etag,
+                                 const oc_resource_t *resource);
+  static void assertCollectionETag(oc_coap_etag_t etag, std::string_view uri,
+                                   size_t device, bool is_batch = false);
+#if 0
+  static void assertBatchETag(oc_coap_etag_t etag, std::string_view uri,
+                              size_t device,
+                              const oc::Collection::BatchData &bd);
+#endif
+#endif // OC_HAS_FEATURE_ETAG
+
+  static std::vector<oc_resource_t *> resources;
+  static SwitchData switch1Data;
+  static SwitchData switch2Data;
+  static CollectionData col1Data;
+  static CollectionData col2Data;
 };
+
+std::vector<oc_resource_t *> TestCollectionsWithServer::resources{};
+SwitchData TestCollectionsWithServer::switch1Data{};
+SwitchData TestCollectionsWithServer::switch2Data{};
+CollectionData TestCollectionsWithServer::col1Data{};
+CollectionData TestCollectionsWithServer::col2Data{};
+
+void
+TestCollectionsWithServer::makeTestResources()
+{
+  auto col1 = makeSwitchCollection(col1Name.data(), col1URI.data(),
+                                   colRT.data(), kDeviceID, &col1Data);
+  ASSERT_NE(nullptr, col1);
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+  ASSERT_TRUE(oc::SetAccessInRFOTM(&col1->res, true, OC_PERM_RETRIEVE));
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  ASSERT_TRUE(oc_add_collection_v1(&col1->res));
+
+  auto *bswitch1 = makeSwitch(switch1Name, switch1URI, kDeviceID, &switch1Data);
+  ASSERT_NE(nullptr, bswitch1);
+  oc_resource_tag_func_desc(bswitch1, OC_ENUM_SMART);
+  oc_resource_tag_pos_rel(bswitch1, switch1Pos[0], switch1Pos[1],
+                          switch1Pos[2]);
+  oc_resource_tag_pos_desc(bswitch1, OC_POS_TOP);
+  ASSERT_TRUE(oc_add_resource(bswitch1));
+  resources.push_back(bswitch1);
+
+  oc_link_t *link1 = oc_new_link(bswitch1);
+  ASSERT_NE(link1, nullptr);
+  EXPECT_TRUE(oc_link_add_link_param(link1, "tag", "test"));
+  EXPECT_TRUE(oc_link_add_link_param(link1, "hidden", "true"));
+  oc_collection_add_link(&col1->res, link1);
+
+  auto col2 = makeSwitchCollection(col2Name.data(), col2URI.data(),
+                                   colRT.data(), kDeviceID, &col2Data);
+  ASSERT_NE(nullptr, col2);
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+  ASSERT_TRUE(oc::SetAccessInRFOTM(&col2->res, true, OC_PERM_RETRIEVE));
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  ASSERT_TRUE(oc_add_collection_v1(&col2->res));
+
+  auto *bswitch2 = makeSwitch(switch2Name, switch2URI, kDeviceID, &switch2Data);
+  ASSERT_NE(nullptr, bswitch2);
+  ASSERT_TRUE(oc_add_resource(bswitch2));
+  resources.push_back(bswitch2);
+
+  oc_link_t *link2 = oc_new_link(bswitch2);
+  ASSERT_NE(link2, nullptr);
+  oc_collection_add_link(&col2->res, link2);
+
+  // link col2 to col1
+  oc_link_t *link3 = oc_new_link(&col2->res);
+  ASSERT_NE(link3, nullptr);
+  oc_collection_add_link(&col1->res, link3);
+
+  col2.release();
+  col1.release();
+}
+
+oc::oc_collection_unique_ptr
+TestCollectionsWithServer::makeSwitchCollection(std::string_view name,
+                                                std::string_view uri,
+                                                std::string_view rt,
+                                                size_t device,
+                                                CollectionData *colData)
+{
+  auto setProps = [](const oc_resource_t *, const oc_rep_t *rep, void *data) {
+    auto *cData = static_cast<CollectionData *>(data);
+    while (rep != nullptr) {
+      switch (rep->type) {
+      case OC_REP_STRING:
+        cData->label = oc_string(rep->value.string);
+        break;
+      case OC_REP_INT:
+        cData->power = static_cast<int>(rep->value.integer);
+        break;
+      default:
+        break;
+      }
+      rep = rep->next;
+    }
+    return true;
+  };
+
+  auto getProps = [](const oc_resource_t *, oc_interface_mask_t, void *data) {
+    const auto *cData = static_cast<CollectionData *>(data);
+    oc_rep_set_text_string_v1(root, label, cData->label.c_str(),
+                              cData->label.length());
+    oc_rep_set_int(root, power, cData->power);
+  };
+
+  auto col = oc::NewCollection(name.data(), uri.data(), device, rt.data());
+  if (!col) {
+    return oc::oc_collection_unique_ptr(nullptr, nullptr);
+  }
+
+  oc_collection_add_supported_rt(&col->res, switchRT.data());
+  oc_collection_add_mandatory_rt(&col->res, switchRT.data());
+  oc_resource_set_properties_cbs(&col->res, getProps, colData, setProps,
+                                 colData);
+  return col;
+}
+
+oc_resource_t *
+TestCollectionsWithServer::makeSwitch(std::string_view name,
+                                      std::string_view uri, size_t device,
+                                      oc_request_callback_t callback,
+                                      SwitchData *switchData)
+{
+  oc_resource_t *bswitch = oc_new_resource(name.data(), uri.data(), 1, device);
+  if (bswitch == nullptr) {
+    return nullptr;
+  }
+
+  oc_resource_bind_resource_type(bswitch, switchRT.data());
+  oc_resource_bind_resource_interface(bswitch, switchIF);
+  oc_resource_set_default_interface(bswitch, OC_IF_R);
+  oc_resource_set_discoverable(bswitch, true);
+  oc_resource_set_observable(bswitch, true);
+  oc_resource_set_request_handler(bswitch, OC_GET, callback, switchData);
+  return bswitch;
+}
+
+oc_resource_t *
+TestCollectionsWithServer::makeSwitch(std::string_view name,
+                                      std::string_view uri, size_t device,
+                                      SwitchData *switchData)
+{
+  auto getSwitch = [](oc_request_t *request, oc_interface_mask_t iface_mask,
+                      void *user_data) {
+    const auto *data = static_cast<SwitchData *>(user_data);
+    oc_rep_start_root_object();
+    switch (iface_mask) {
+    case OC_IF_BASELINE:
+      oc_process_baseline_interface(request->resource);
+      [[fallthrough]];
+    case OC_IF_R:
+      oc_rep_set_boolean(root, state, data->state);
+      break;
+    default:
+      break;
+    }
+    oc_rep_end_root_object();
+
+    oc_send_response(request, OC_STATUS_OK);
+  };
+
+  return makeSwitch(name, uri, device, getSwitch, switchData);
+}
+
+#ifdef OC_HAS_FEATURE_ETAG
+
+void
+TestCollectionsWithServer::assertETag(oc_coap_etag_t etag1, uint64_t etag2)
+{
+  ASSERT_EQ(sizeof(etag2), etag1.length);
+  std::array<uint8_t, sizeof(etag2)> etag2_buf;
+  memcpy(&etag2_buf[0], &etag2, etag2_buf.size());
+  ASSERT_EQ(0, memcmp(etag1.value, &etag2_buf, etag1.length));
+}
+
+void
+TestCollectionsWithServer::assertResourceETag(oc_coap_etag_t etag,
+                                              const oc_resource_t *resource)
+{
+  ASSERT_NE(nullptr, resource);
+  assertETag(etag, resource->etag);
+}
+
+void
+TestCollectionsWithServer::assertCollectionETag(oc_coap_etag_t etag,
+                                                std::string_view uri,
+                                                size_t device, bool is_batch)
+{
+  const auto *col = oc_get_collection_by_uri(uri.data(), uri.length(), device);
+  ASSERT_NE(nullptr, col);
+  if (is_batch) {
+    assertETag(etag, oc_collection_get_batch_etag(col));
+  } else {
+    assertResourceETag(etag, &col->res);
+  }
+}
+
+#if 0
+
+void
+TestCollectionsWithServer::assertBatchETag(oc_coap_etag_t etag, std::string_view uri,
+                                           size_t device,
+                                           const oc::Collection::BatchData &bd)
+{
+  const auto *col = oc_get_collection_by_uri(uri.data(), uri.length(), device);
+  ASSERT_NE(nullptr, col);
+  uint64_t max_etag = col->res.etag;
+  for (const auto &[_, value] : bd) {
+    ASSERT_EQ(sizeof(uint64_t), value.etag.size());
+    uint64_t etag_value = 0;
+    memcpy(&etag_value, value.etag.data(), value.etag.size());
+    if (etag_value > max_etag) {
+      max_etag = etag_value;
+    }
+  }
+  assertETag(etag, max_etag);
+}
+
+#endif
+
+#endif // OC_HAS_FEATURE_ETAG
 
 TEST_F(TestCollectionsWithServer, New)
 {
@@ -460,161 +769,156 @@ TEST_F(TestCollectionsWithServer, GetByURI)
             oc_get_collection_by_uri(uri.c_str(), uri.length(), badDeviceID));
 }
 
+#ifdef OC_HAS_FEATURE_ETAG
+
+#if 0
+
+TEST_F(TestCollectionsWithServer, GetBatchETag)
+{
+  auto col = makeSwitchCollection(col1Name.data(), col1URI.data(), colRT.data(),
+                                  kDeviceID, &col1Data);
+  ASSERT_NE(nullptr, col);
+  ASSERT_TRUE(oc_add_collection_v1(&col->res));
+
+  // no links -> batch etag should be equal to the collection's etag
+  EXPECT_EQ(col->res.etag, oc_collection_get_batch_etag(col.get()));
+
+  // add links -> batch etag should be equal to the last changed resource's etag
+  for (int i = 0; i < 2; ++i) {
+    std::string uri = std::string(col1URI) + "/" + std::to_string(i);
+    oc_resource_t *bswitch = makeSwitch(
+      "switch", uri, kDeviceID,
+      [](oc_request_t *, oc_interface_mask_t, void *) {
+        // no-op
+      }, nullptr);
+    ASSERT_NE(nullptr, bswitch);
+    ASSERT_TRUE(oc_add_resource(bswitch));
+    resources.push_back(bswitch);
+
+    oc_link_t *link = oc_new_link(bswitch);
+    ASSERT_NE(link, nullptr);
+    oc_collection_add_link(&col->res, link);
+  }
+  auto *bswitch = resources.back();
+  oc_notify_resource_changed(bswitch);
+  EXPECT_EQ(bswitch->etag, oc_collection_get_batch_etag(col.get()));
+}
+
+#endif
+
+TEST_F(TestCollectionsWithServer, GetETagAfterLinkAddOrRemove)
+{
+  auto col = makeSwitchCollection(col1Name.data(), col1URI.data(), colRT.data(),
+                                  kDeviceID, &col1Data);
+  ASSERT_NE(nullptr, col);
+  ASSERT_TRUE(oc_add_collection_v1(&col->res));
+  uint64_t etag1 = col->res.etag;
+
+  // create dynamic resource
+  std::string uri = std::string(col1URI) + "/1";
+  oc_resource_t *bswitch = makeSwitch(
+    "switch", uri, kDeviceID,
+    [](oc_request_t *, oc_interface_mask_t, void *) {
+      // no-op
+    },
+    nullptr);
+  ASSERT_NE(nullptr, bswitch);
+  ASSERT_TRUE(oc_add_resource(bswitch));
+  resources.push_back(bswitch);
+  // creating a resource shouldn't change etag
+  EXPECT_EQ(etag1, col->res.etag);
+
+  // adding a link should change etag
+  oc_link_t *link = oc_new_link(bswitch);
+  ASSERT_NE(link, nullptr);
+  oc_collection_add_link(&col->res, link);
+  uint64_t etag2 = col->res.etag;
+  EXPECT_NE(etag1, etag2);
+
+  // removing a link should change etag
+  oc_collection_remove_link(&col->res, link);
+  oc_delete_link(link);
+  uint64_t etag3 = col->res.etag;
+  EXPECT_NE(etag2, etag3);
+}
+
+#endif // OC_HAS_FEATURE_ETAG
+
 #if !defined(OC_SECURITY) || defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM)
 
 TEST_F(TestCollectionsWithServer, GetRequest_Baseline)
 {
-  struct switchData
-  {
-    bool state = false;
-  };
+  makeTestResources();
 
-  auto getSwitch = [](oc_request_t *request, oc_interface_mask_t iface_mask,
-                      void *user_data) {
-    const auto *data = static_cast<switchData *>(user_data);
-    oc_rep_start_root_object();
-    switch (iface_mask) {
-    case OC_IF_BASELINE:
-      oc_process_baseline_interface(request->resource);
-      [[fallthrough]];
-    case OC_IF_RW:
-      oc_rep_set_boolean(root, state, data->state);
-      break;
-    default:
-      break;
-    }
-    oc_rep_end_root_object();
-
-    oc_send_response(request, OC_STATUS_OK);
-  };
-
-  constexpr const char *switchName = "test switch";
-  constexpr const char *switchURI = "/switch";
-  constexpr const char *switchRT = "test.r.switch";
-  constexpr auto switchIF =
-    static_cast<oc_interface_mask_t>(OC_IF_BASELINE | OC_IF_R);
-  static constexpr std::array<double, 3> switchPos = { 0.34, 0.5, 0.8 };
-
-  oc_resource_t *bswitch = oc_new_resource(switchName, switchURI, 1, kDeviceID);
-  oc_resource_bind_resource_type(bswitch, switchRT);
-  oc_resource_bind_resource_interface(bswitch, switchIF);
-  oc_resource_set_default_interface(bswitch, OC_IF_R);
-  oc_resource_set_discoverable(bswitch, true);
-  oc_resource_set_observable(bswitch, true);
-  oc_resource_set_request_handler(bswitch, OC_GET, getSwitch, nullptr);
-  oc_resource_tag_func_desc(bswitch, OC_ENUM_SMART);
-  oc_resource_tag_pos_rel(bswitch, switchPos[0], switchPos[1], switchPos[2]);
-  oc_resource_tag_pos_desc(bswitch, OC_POS_TOP);
-  oc_add_resource(bswitch);
-
-  constexpr const char *colName = "test collection";
-  constexpr const char *colURI = "/col";
-  constexpr const char *colRT = "test.r.col";
-
-  struct collectionData
-  {
-    std::string label = {};
-    int power = 0;
-  };
-  collectionData colData{
-    "label",
-    42,
-  };
-
-  auto setProps = [](const oc_resource_t *, const oc_rep_t *rep, void *data) {
-    auto *cData = static_cast<collectionData *>(data);
-    while (rep != nullptr) {
-      switch (rep->type) {
-      case OC_REP_STRING:
-        cData->label = oc_string(rep->value.string);
-        break;
-      case OC_REP_INT:
-        cData->power = static_cast<int>(rep->value.integer);
-        break;
-      default:
-        break;
-      }
-      rep = rep->next;
-    }
-    return true;
-  };
-
-  auto getProps = [](const oc_resource_t *, oc_interface_mask_t, void *data) {
-    const auto *cData = static_cast<collectionData *>(data);
-    oc_rep_set_text_string_v1(root, label, cData->label.c_str(),
-                              cData->label.length());
-    oc_rep_set_int(root, power, cData->power);
-  };
-
-  auto col = oc::NewCollection(colName, colURI, kDeviceID, colRT);
-  ASSERT_NE(nullptr, col);
-  oc_collection_add(col.get());
-#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
-  ASSERT_TRUE(oc::SetAccessInRFOTM(&col->res, true, OC_PERM_RETRIEVE));
-#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
-
-  oc_collection_add_supported_rt(&col->res, switchRT);
-  oc_collection_add_mandatory_rt(&col->res, switchRT);
-  oc_resource_set_properties_cbs(&col->res, getProps, &colData, setProps,
-                                 &colData);
-
-  oc_link_t *link = oc_new_link(bswitch);
-  ASSERT_NE(link, nullptr);
-  EXPECT_TRUE(oc_link_add_link_param(link, "tag", "test"));
-  EXPECT_TRUE(oc_link_add_link_param(link, "hidden", "true"));
-  oc_collection_add_link(&col->res, link);
+  auto col1 =
+    oc_get_collection_by_uri(col1URI.data(), col1URI.length(), kDeviceID);
+  ASSERT_NE(nullptr, col1);
 
   // get insecure connection to the testing device
   const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto get_handler = [](oc_client_response_t *data) {
-    EXPECT_EQ(OC_STATUS_OK, data->code);
     oc::TestDevice::Terminate();
+    ASSERT_EQ(OC_STATUS_OK, data->code);
+#ifdef OC_HAS_FEATURE_ETAG
+    assertCollectionETag(data->etag, col1URI, data->endpoint->device);
+#endif /* OC_HAS_FEATURE_ETAG */
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
     auto cData = oc::Collection::ParsePayload(data->payload);
     ASSERT_TRUE(cData.has_value());
-
-    EXPECT_STREQ(colName, cData->baseline->name.c_str());
-    ASSERT_EQ(1, cData->baseline->rts.size());
-    EXPECT_STREQ(colRT, cData->baseline->rts[0].c_str());
-    ASSERT_EQ(3, cData->baseline->ifs.size());
-
-    ASSERT_EQ(1, cData->rts.size());
-    EXPECT_STREQ(switchRT, cData->rts[0].c_str());
-    ASSERT_EQ(1, cData->rts_m.size());
-    EXPECT_STREQ(switchRT, cData->rts_m[0].c_str());
-
-    ASSERT_EQ(1, cData->links.size());
-    const oc::LinkData &ld = cData->links[0];
-    EXPECT_STREQ(switchURI, ld.href.c_str());
-    ASSERT_EQ(1, ld.rts.size());
-    EXPECT_STREQ(switchRT, ld.rts[0].c_str());
-    ASSERT_EQ(1, ld.rels.size());
-    EXPECT_STREQ("hosts", ld.rels[0].c_str());
-    EXPECT_NE(0, ld.ins);
-    ASSERT_EQ(2, ld.ifs.size());
-    EXPECT_NE(ld.ifs.end(),
-              std::find(ld.ifs.begin(), ld.ifs.end(), OC_IF_BASELINE));
-    EXPECT_NE(ld.ifs.end(), std::find(ld.ifs.begin(), ld.ifs.end(), OC_IF_R));
-    ASSERT_EQ(2, ld.params.size());
-    EXPECT_STREQ("tag", ld.params[0].key.c_str());
-    EXPECT_STREQ("test", ld.params[0].value.c_str());
-    EXPECT_STREQ("hidden", ld.params[1].key.c_str());
-    EXPECT_STREQ("true", ld.params[1].value.c_str());
-    EXPECT_EQ(OC_DISCOVERABLE | OC_OBSERVABLE, ld.bm);
-    EXPECT_FALSE(ld.tag_pos_desc.empty());
-    EXPECT_FALSE(ld.tag_func_desc.empty());
-    EXPECT_EQ(3, ld.tag_pos_rel.size());
-    EXPECT_EQ(switchPos[0], ld.tag_pos_rel[0]);
-    EXPECT_EQ(switchPos[1], ld.tag_pos_rel[1]);
-    EXPECT_EQ(switchPos[2], ld.tag_pos_rel[2]);
-    EXPECT_FALSE(ld.eps.empty());
+    *static_cast<oc::Collection::Data *>(data->user_data) =
+      std::move(cData.value());
   };
 
-  EXPECT_TRUE(oc_do_get("/col", ep, "if=" OC_IF_BASELINE_STR, get_handler,
-                        HIGH_QOS, nullptr));
-  oc::TestDevice::PoolEvents(5);
+  oc::Collection::Data data{};
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_get_with_timeout(oc_string(col1->res.uri), ep,
+                                     "if=" OC_IF_BASELINE_STR, timeout.count(),
+                                     get_handler, HIGH_QOS, &data));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+
+  EXPECT_STREQ(col1Name.data(), data.baseline->name.c_str());
+  ASSERT_EQ(1, data.baseline->rts.size());
+  EXPECT_STREQ(colRT.data(), data.baseline->rts[0].c_str());
+  ASSERT_EQ(3, data.baseline->ifs.size());
+
+  ASSERT_EQ(1, data.rts.size());
+  EXPECT_STREQ(switchRT.data(), data.rts[0].c_str());
+  ASSERT_EQ(1, data.rts_m.size());
+  EXPECT_STREQ(switchRT.data(), data.rts_m[0].c_str());
+
+  ASSERT_EQ(2, data.links.size());
+
+  const oc::LinkData &switchLink = data.links[switch1URI.data()];
+  EXPECT_STREQ(switch1URI.data(), switchLink.href.c_str());
+  ASSERT_EQ(1, switchLink.rts.size());
+  EXPECT_STREQ(switchRT.data(), switchLink.rts[0].c_str());
+  ASSERT_EQ(1, switchLink.rels.size());
+  EXPECT_STREQ("hosts", switchLink.rels[0].c_str());
+  EXPECT_NE(0, switchLink.ins);
+  ASSERT_EQ(2, switchLink.ifs.size());
+  EXPECT_NE(
+    switchLink.ifs.end(),
+    std::find(switchLink.ifs.begin(), switchLink.ifs.end(), OC_IF_BASELINE));
+  EXPECT_NE(switchLink.ifs.end(),
+            std::find(switchLink.ifs.begin(), switchLink.ifs.end(), OC_IF_R));
+  ASSERT_EQ(2, switchLink.params.size());
+  EXPECT_STREQ("tag", switchLink.params[0].key.c_str());
+  EXPECT_STREQ("test", switchLink.params[0].value.c_str());
+  EXPECT_STREQ("hidden", switchLink.params[1].key.c_str());
+  EXPECT_STREQ("true", switchLink.params[1].value.c_str());
+  EXPECT_EQ(OC_DISCOVERABLE | OC_OBSERVABLE, switchLink.bm);
+  EXPECT_FALSE(switchLink.tag_pos_desc.empty());
+  EXPECT_FALSE(switchLink.tag_func_desc.empty());
+  EXPECT_EQ(3, switchLink.tag_pos_rel.size());
+  EXPECT_EQ(switch1Pos[0], switchLink.tag_pos_rel[0]);
+  EXPECT_EQ(switch1Pos[1], switchLink.tag_pos_rel[1]);
+  EXPECT_EQ(switch1Pos[2], switchLink.tag_pos_rel[2]);
+  EXPECT_FALSE(switchLink.eps.empty());
+
+  const oc::LinkData &colLink = data.links[col2URI.data()];
+  EXPECT_STREQ(col2URI.data(), colLink.href.c_str());
 }
 
 TEST_F(TestCollectionsWithServer, GetRequest_LinkedList)
@@ -628,11 +932,54 @@ TEST_F(TestCollectionsWithServer, GetRequest_LinkedList)
 
 TEST_F(TestCollectionsWithServer, GetRequest_Batch)
 {
-  /* TODO:
-    EXPECT_TRUE(
-      oc_do_get("/col", ep, "if=" OC_IF_B_STR, get_handler, HIGH_QOS,
-      nullptr));
-  */
+  makeTestResources();
+
+  auto col1 =
+    oc_get_collection_by_uri(col1URI.data(), col1URI.length(), kDeviceID);
+  ASSERT_NE(nullptr, col1);
+
+  // get insecure connection to the testing device
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
+  ASSERT_NE(nullptr, ep);
+
+  struct batchData
+  {
+    oc_status_t code;
+    oc::Collection::BatchData data;
+  };
+
+  auto get_handler = [](oc_client_response_t *data) {
+    oc::TestDevice::Terminate();
+    OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
+    auto *bd = static_cast<batchData *>(data->user_data);
+    bd->code = data->code;
+#ifndef OC_SECURITY
+    bd->data = oc::Collection::ParseBatchPayload(data->payload);
+#ifdef OC_HAS_FEATURE_ETAG
+#if 0
+    assertCollectionETag(data->etag, col1URI, data->endpoint->device, true);
+    // the response etag should be the highest etag contained the payload
+    assertBatchETag(data->etag, col1URI, data->endpoint->device, bd->data);
+#endif
+#endif /* OC_HAS_FEATURE_ETAG */
+#endif /* !OC_SECURITY */
+  };
+
+  auto timeout = 1s;
+  batchData bd{};
+  ASSERT_TRUE(oc_do_get_with_timeout(oc_string(col1->res.uri), ep,
+                                     "if=" OC_IF_B_STR, timeout.count(),
+                                     get_handler, HIGH_QOS, &bd));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+
+#ifdef OC_SECURITY
+  // need secure endpoint to get batch response if OC_SECURITY is enabled
+  ASSERT_EQ(OC_STATUS_BAD_REQUEST, bd.code);
+  ASSERT_EQ(0, bd.data.size());
+#else  /* !OC_SECURITY */
+  ASSERT_EQ(OC_STATUS_OK, bd.code);
+  ASSERT_EQ(2, bd.data.size());
+#endif /* OC_SECURITY */
 }
 
 #endif // !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM

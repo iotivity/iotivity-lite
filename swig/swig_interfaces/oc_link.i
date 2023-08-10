@@ -4,7 +4,7 @@
 %include "stdint.i";
 %include "iotivity.swg";
 
-%include "oc_ri.i"
+%import "oc_ri.i"
 
 %{
 #include "api/oc_link_internal.h"

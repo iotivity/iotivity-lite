@@ -20,9 +20,10 @@
 
 #ifdef OC_MNT
 
-#include "oc_mnt_internal.h"
+#include "api/oc_core_res_internal.h"
+#include "api/oc_mnt_internal.h"
+#include "api/oc_ri_internal.h"
 #include "oc_core_res.h"
-#include "oc_core_res_internal.h"
 #include "oc_ri.h"
 #include "port/oc_log_internal.h"
 #include "util/oc_compiler.h"

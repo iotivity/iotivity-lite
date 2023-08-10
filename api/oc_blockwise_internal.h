@@ -24,8 +24,10 @@
 
 #ifdef OC_BLOCK_WISE
 
+#include "messaging/coap/oc_coap.h"
 #include "oc_helpers.h"
 #include "oc_endpoint.h"
+#include "oc_etag.h"
 #include "oc_ri.h"
 #include "port/oc_connectivity.h"
 #include "util/oc_compiler.h"
@@ -85,7 +87,7 @@ typedef struct oc_blockwise_request_state_s
 typedef struct oc_blockwise_response_state_s
 {
   oc_blockwise_state_t base;
-  uint8_t etag[COAP_ETAG_LEN];
+  oc_coap_etag_t etag;
 
 #ifdef OC_CLIENT
   int32_t observe_seq;
@@ -109,7 +111,7 @@ oc_blockwise_state_t *oc_blockwise_alloc_request_buffer(
   OC_NONNULL(3);
 
 /**
- * @brief allocate the response buffer
+ * @brief allocate a response buffer
  *
  * @param href the href
  * @param href_len the href length
@@ -117,12 +119,13 @@ oc_blockwise_state_t *oc_blockwise_alloc_request_buffer(
  * @param method method
  * @param role the role (client or server)
  * @param buffer_size the buffer size for allocation
+ * @param generate_etag generate ETag
  * @return oc_blockwise_state_t*
  */
 oc_blockwise_state_t *oc_blockwise_alloc_response_buffer(
   const char *href, size_t href_len, const oc_endpoint_t *endpoint,
-  oc_method_t method, oc_blockwise_role_t role, uint32_t buffer_size)
-  OC_NONNULL(3);
+  oc_method_t method, oc_blockwise_role_t role, uint32_t buffer_size,
+  bool generate_etag) OC_NONNULL(3);
 
 /**
  * @brief free the request buffer

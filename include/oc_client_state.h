@@ -26,10 +26,15 @@
 #include "oc_endpoint.h"
 #include "oc_ri.h"
 #include "util/oc_compiler.h"
+#include "util/oc_features.h"
 
 #ifdef OC_OSCORE
 #include "messaging/coap/oscore_constants.h"
 #endif /* OC_OSCORE */
+
+#ifdef OC_HAS_FEATURE_ETAG
+#include "messaging/coap/oc_coap.h"
+#endif /* OC_HAS_FEATURE_ETAG */
 
 #include <stdbool.h>
 
@@ -61,6 +66,9 @@ typedef struct
   oc_content_format_t content_format; ///< content format of the payload
   oc_status_t code;                   ///< status of the response
   int observe_option;                 ///< observe indication
+#ifdef OC_HAS_FEATURE_ETAG
+  oc_coap_etag_t etag; ///< ETag of the response
+#endif                 /* OC_HAS_FEATURE_ETAG */
 } oc_client_response_t;
 
 /**

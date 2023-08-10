@@ -161,28 +161,6 @@ typedef enum {
 } oc_content_format_t;
 
 /**
- * @brief seperate response type
- *
- */
-typedef struct oc_separate_response_s oc_separate_response_t;
-
-/**
- * @brief reponse buffer type
- *
- */
-typedef struct oc_response_buffer_s oc_response_buffer_t;
-
-/**
- * @brief response type
- *
- */
-typedef struct oc_response_t
-{
-  oc_separate_response_t *separate_response; ///< seperate response
-  oc_response_buffer_t *response_buffer;     ///< response buffer
-} oc_response_t;
-
-/**
  * @brief interface masks
  *
  */
@@ -219,9 +197,9 @@ typedef enum {
 #ifdef OC_MNT
   OCF_MNT,
 #endif /* OC_MNT */
-#ifdef OC_CLOUD
+#if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
   OCF_COAPCLOUDCONF,
-#endif /* OC_CLOUD */
+#endif /* OC_CLIENT &&  OC_SERVER && OC_CLOUD */
 #ifdef OC_SOFTWARE_UPDATE
   OCF_SW_UPDATE,
 #endif /* OC_SOFTWARE_UPDATE */
@@ -250,8 +228,17 @@ typedef enum {
 typedef struct oc_resource_s oc_resource_t;
 
 /**
+ * @brief seperate response type
+ */
+typedef struct oc_separate_response_s oc_separate_response_t;
+
+/**
+ * @brief response type
+ */
+typedef struct oc_response_s oc_response_t;
+
+/**
  * @brief request information structure
- *
  */
 typedef struct oc_request_t
 {
@@ -267,6 +254,12 @@ typedef struct oc_request_t
   oc_content_format_t accept; ///< accept header
   oc_response_t *response;    ///< pointer to the response
   oc_method_t method;         ///< method of the request
+#ifdef OC_HAS_FEATURE_ETAG
+  // TODO: add support for multiple ETags
+  // create an iterator for ETags
+  const uint8_t *etag;
+  uint8_t etag_len;
+#endif /* OC_HAS_FEATURE_ETAG */
 } oc_request_t;
 
 /**
@@ -319,12 +312,6 @@ typedef struct oc_properties_cb_t
   } cb;
   void *user_data;
 } oc_properties_cb_t;
-
-typedef struct oc_resource_defaults_data_t
-{
-  oc_resource_t *resource;
-  oc_interface_mask_t iface_mask;
-} oc_resource_defaults_data_t;
 
 /**
  * @brief resource structure

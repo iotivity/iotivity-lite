@@ -20,6 +20,7 @@
 
 #include "api/oc_core_res_internal.h"
 #include "api/oc_rep_internal.h"
+#include "api/oc_ri_internal.h"
 #include "oc_sp.h"
 #include "oc_sp_internal.h"
 #include "oc_api.h"

@@ -23,6 +23,7 @@
 #include "api/oc_client_api_internal.h"
 #include "api/oc_etag_internal.h"
 #include "api/oc_resource_internal.h"
+#include "api/oc_ri_internal.h"
 #include "messaging/coap/coap_options.h"
 #include "oc_api.h"
 #include "oc_config.h"
@@ -44,22 +45,31 @@
 
 #include <algorithm>
 #include <array>
+#include <chrono>
 #include <filesystem>
 #include <functional>
 #include <gtest/gtest.h>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 static constexpr size_t kDeviceID1{ 0 };
 
 #ifdef OC_DYNAMIC_ALLOCATION
 static constexpr size_t kDeviceID2{ 1 };
+
+static constexpr std::string_view kDynamicResourceURI1{ "/dyn1" };
+static constexpr std::string_view kDynamicResourceURI2{ "/dyn2" };
 #endif // OC_DYNAMIC_ALLOCATION
+
+using namespace std::chrono_literals;
 
 class TestETagWithServer : public ::testing::Test {
 public:
   static void SetUpTestCase()
   {
+    oc_log_set_level(OC_LOG_LEVEL_DEBUG);
+
 #ifdef OC_STORAGE
     ASSERT_EQ(0, oc::TestStorage.Config());
 #endif // OC_STORAGE
@@ -94,6 +104,8 @@ public:
 #ifdef OC_STORAGE
     ASSERT_EQ(0, oc::TestStorage.Clear());
 #endif // OC_STORAGE
+
+    oc_log_set_level(OC_LOG_LEVEL_INFO);
   }
 
   void TearDown() override
@@ -130,20 +142,21 @@ TestETagWithServer::addDynamicResource(
   handlers.onGet = onRequest;
   handlers.onPost = onRequest;
   return oc::TestDevice::AddDynamicResource(
-    oc::makeDynamicResourceToAdd(name, uri, rts, ifaces, handlers), device);
+    oc::makeDynamicResourceToAdd(name, uri, rts, ifaces, handlers, true),
+    device);
 }
 
 void
 TestETagWithServer::addDynamicResources()
 {
-  ASSERT_NE(nullptr,
-            addDynamicResource("Dynamic Resource 1", "/dyn1",
-                               { "oic.d.dynamic", "oic.d.test" },
-                               { OC_IF_BASELINE, OC_IF_R }, kDeviceID1));
-  ASSERT_NE(nullptr,
-            addDynamicResource("Dynamic Resource 2", "/dyn2",
-                               { "oic.d.dynamic", "oic.d.test" },
-                               { OC_IF_BASELINE, OC_IF_RW }, kDeviceID2));
+  ASSERT_NE(nullptr, addDynamicResource(
+                       "Dynamic Resource 1", std::string(kDynamicResourceURI1),
+                       { "oic.d.dynamic", "oic.d.test" },
+                       { OC_IF_BASELINE, OC_IF_R }, kDeviceID1));
+  ASSERT_NE(nullptr, addDynamicResource(
+                       "Dynamic Resource 2", std::string(kDynamicResourceURI2),
+                       { "oic.d.dynamic", "oic.d.test" },
+                       { OC_IF_BASELINE, OC_IF_RW }, kDeviceID2));
 }
 #endif // OC_DYNAMIC_ALLOCATION
 
@@ -226,14 +239,14 @@ TEST_F(TestETagWithServer, DumpAndLoad)
   // store etags to the storage
   EXPECT_TRUE(oc_etag_dump());
 
-  std::vector<oc_resource_t *> dynamicResources{};
+  std::vector<oc_resource_t *> dynResources{};
 #ifdef OC_DYNAMIC_ALLOCATION
   // new resource without etag set, will get etag set by oc_etag_get
   auto *dyn = addDynamicResource("Dynamic Resource 3", "/dyn3",
                                  { "oic.d.dynamic", "oic.d.test" },
                                  { OC_IF_BASELINE, OC_IF_R }, kDeviceID1);
   ASSERT_NE(nullptr, dyn);
-  dynamicResources.push_back(dyn);
+  dynResources.push_back(dyn);
 #endif // OC_DYNAMIC_ALLOCATION
 
   // clear all etags
@@ -243,9 +256,9 @@ TEST_F(TestETagWithServer, DumpAndLoad)
   EXPECT_TRUE(oc_etag_load_and_clear());
 
   // check if all etags are set to 1337
-  oc::IterateAllResources([&dynamicResources](const oc_resource_t *resource) {
-    if (std::find(std::begin(dynamicResources), std::end(dynamicResources),
-                  resource) != std::end(dynamicResources)) {
+  oc::IterateAllResources([&dynResources](const oc_resource_t *resource) {
+    if (std::find(std::begin(dynResources), std::end(dynResources), resource) !=
+        std::end(dynResources)) {
       EXPECT_NE(0, oc_resource_get_etag(resource));
       return;
     }
@@ -257,7 +270,7 @@ TEST_F(TestETagWithServer, DumpAndLoad)
 
   // clean-up
 #ifdef OC_DYNAMIC_ALLOCATION
-  for (auto *dr : dynamicResources) {
+  for (auto *dr : dynResources) {
     ASSERT_TRUE(oc::TestDevice::ClearDynamicResource(dr, true));
   }
 #endif // OC_DYNAMIC_ALLOCATION
@@ -266,7 +279,7 @@ TEST_F(TestETagWithServer, DumpAndLoad)
 TEST_F(TestETagWithServer, SkipDumpOfEmptyETags)
 {
   // set all etags to 0
-  setAllETags(OC_ETAG_UNINITALIZED);
+  setAllETags(OC_ETAG_UNINITIALIZED);
   // no etags should be stored
   ASSERT_TRUE(oc_etag_dump());
 
@@ -443,9 +456,9 @@ template<oc_status_t CODE>
 static void
 getHandlerCheckCode(oc_client_response_t *data)
 {
+  oc::TestDevice::Terminate();
   EXPECT_EQ(CODE, data->code);
   *static_cast<bool *>(data->user_data) = true;
-  oc::TestDevice::Terminate();
   OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
 }
 
@@ -461,11 +474,12 @@ TEST_F(TestETagWithServer, GetResourceWithETag)
 
   // send get request to the /oic/d resource
   bool invoked = false;
+  auto timeout = 1s;
   ASSERT_TRUE(oc_do_request(OC_GET, oc_string(res->uri), ep, nullptr,
-                            /*timeout_seconds*/ 5,
-                            getHandlerCheckCode<OC_STATUS_OK>, LOW_QOS,
-                            &invoked, nullptr, nullptr));
-  oc::TestDevice::PoolEvents(5);
+                            timeout.count(), getHandlerCheckCode<OC_STATUS_OK>,
+                            LOW_QOS, &invoked, nullptr, nullptr));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  EXPECT_TRUE(invoked);
 
   invoked = false;
   using etag_t = std::array<uint8_t, COAP_ETAG_LEN>;
@@ -477,10 +491,133 @@ TEST_F(TestETagWithServer, GetResourceWithETag)
   etag_t etag{};
   memcpy(etag.data(), &res->etag, sizeof(res->etag));
   ASSERT_TRUE(oc_do_request(OC_GET, oc_string(res->uri), ep, nullptr,
-                            /*timeout_seconds*/ 5,
+                            timeout.count(),
                             getHandlerCheckCode<OC_STATUS_NOT_MODIFIED>,
                             LOW_QOS, &invoked, configure_req, &etag));
-  oc::TestDevice::PoolEvents(5);
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  EXPECT_TRUE(invoked);
 }
+
+#ifdef OC_DYNAMIC_ALLOCATION
+
+#if !defined(OC_SECURITY) || defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM)
+
+// resource with a support for batch interface but it doesn't set ETag in the
+// request handler, so there should be no ETag in the response
+TEST_F(TestETagWithServer, GetResourceWithETagAndCustomBatchHandlerNoETag)
+{
+  // create a resource with support for batch interface
+  auto *dyn = addDynamicResource(
+    "Dynamic Resource 3", "/dyn3", { "oic.d.dynamic", "oic.d.test" },
+    { OC_IF_BASELINE, OC_IF_R, OC_IF_B }, kDeviceID1);
+
+  // in the handler oc_set_send_response_etag() should be called to set ETag
+  // if etag is not set then no ETag will be sent in the response
+
+  // get insecure connection to the testing device
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID1, 0, SECURED);
+  ASSERT_NE(nullptr, ep);
+
+  auto getHandler = [](oc_client_response_t *data) {
+    oc::TestDevice::Terminate();
+    EXPECT_EQ(OC_STATUS_OK, data->code);
+    EXPECT_EQ(0, data->etag.length);
+    *static_cast<bool *>(data->user_data) = true;
+    OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
+  };
+
+  bool invoked = false;
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_request(OC_GET, oc_string(dyn->uri), ep, "if=" OC_IF_B_STR,
+                            timeout.count(), getHandler, LOW_QOS, &invoked,
+                            nullptr, nullptr));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  EXPECT_TRUE(invoked);
+
+  // clean-up
+  ASSERT_TRUE(oc::TestDevice::ClearDynamicResource(dyn, true));
+}
+
+// resource with a support for batch interface and uses
+// oc_set_send_response_etag to set ETag in the request handler
+TEST_F(TestETagWithServer, GetResourceWithETagAndCustomBatchHandler)
+{
+  static std::array<uint8_t, 1> etag = { 42 };
+
+  oc::DynamicResourceHandler handlers{};
+  handlers.onGet = [](oc_request_t *request, oc_interface_mask_t iface,
+                      void *) {
+    if (iface == OC_IF_B) {
+      ASSERT_EQ(0,
+                oc_set_send_response_etag(request, etag.data(), etag.size()));
+      if (request->etag_len == 1 && request->etag[0] == etag[0]) {
+        oc_send_response(request, OC_STATUS_NOT_MODIFIED);
+        return;
+      }
+      oc_rep_begin_root_object();
+      oc_rep_set_boolean(root, empty, false);
+      oc_rep_end_root_object();
+      oc_send_response(request, OC_STATUS_OK);
+      return;
+    }
+    oc_send_response(request, OC_STATUS_BAD_REQUEST);
+  };
+  auto *dyn = oc::TestDevice::AddDynamicResource(
+    oc::makeDynamicResourceToAdd("Dynamic Resource 3", "/dyn3",
+                                 { "oic.d.dynamic", "oic.d.test" },
+                                 {
+                                   OC_IF_BASELINE,
+                                   OC_IF_R,
+                                   OC_IF_B,
+                                 },
+                                 handlers),
+    kDeviceID1);
+
+  // get insecure connection to the testing device
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID1, 0, SECURED);
+  ASSERT_NE(nullptr, ep);
+
+  auto getHandler = [](oc_client_response_t *data) {
+    oc::TestDevice::Terminate();
+    ASSERT_EQ(OC_STATUS_OK, data->code);
+    ASSERT_EQ(etag.size(), data->etag.length);
+    EXPECT_EQ(0, memcmp(etag.data(), data->etag.value, etag.size()));
+    *static_cast<bool *>(data->user_data) = true;
+    OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
+  };
+
+  bool invoked = false;
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_request(OC_GET, oc_string(dyn->uri), ep, "if=" OC_IF_B_STR,
+                            timeout.count(), getHandler, LOW_QOS, &invoked,
+                            nullptr, nullptr));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  EXPECT_TRUE(invoked);
+
+  auto getHandlerWithETag = [](oc_client_response_t *data) {
+    oc::TestDevice::Terminate();
+    ASSERT_EQ(OC_STATUS_NOT_MODIFIED, data->code);
+    ASSERT_EQ(etag.size(), data->etag.length);
+    EXPECT_EQ(0, memcmp(etag.data(), data->etag.value, etag.size()));
+    *static_cast<bool *>(data->user_data) = true;
+    OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
+  };
+  invoked = false;
+  auto configure_req = [](coap_packet_t *req, void *) {
+    coap_options_set_etag(req, etag.data(), static_cast<uint8_t>(etag.size()));
+  };
+  ASSERT_TRUE(oc_do_request(OC_GET, oc_string(dyn->uri), ep, "if=" OC_IF_B_STR,
+                            timeout.count(), getHandlerWithETag, LOW_QOS,
+                            &invoked, configure_req, nullptr));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  EXPECT_TRUE(invoked);
+
+  // clean-up
+  ASSERT_TRUE(oc::TestDevice::ClearDynamicResource(dyn, true));
+}
+
+#endif // !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+
+#endif // OC_DYNAMIC_ALLOCATION
 
 #endif // OC_HAS_FEATURE_ETAG

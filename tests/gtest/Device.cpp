@@ -189,16 +189,22 @@ Device::Terminate()
 }
 
 void
-Device::PoolEvents(uint64_t seconds)
+Device::PoolEvents(uint64_t seconds, bool addDelay)
 {
-  PoolEventsMs(seconds * 1000);
+  PoolEventsMs(seconds * 1000, addDelay);
 }
 
 void
-Device::PoolEventsMs(uint64_t mseconds)
+Device::PoolEventsMs(uint64_t mseconds, bool addDelay)
 {
   OC_ATOMIC_STORE8(terminate_, 0);
-  oc_set_delayed_callback_ms_v1(this, Device::QuitEvent, mseconds);
+
+  uint64_t interval = mseconds;
+  if (addDelay) {
+    // Add a delay to allow the server to process the request
+    interval += 200;
+  }
+  oc_set_delayed_callback_ms_v1(this, Device::QuitEvent, interval);
 
   while (OC_ATOMIC_LOAD8(terminate_) == 0) {
     Lock();

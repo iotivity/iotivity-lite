@@ -101,6 +101,40 @@ bool oc_filter_out_ep_for_resource(const oc_endpoint_t *ep,
                                    const oc_endpoint_t *request_origin,
                                    size_t device_index, bool owned_for_SVRs);
 
+#ifdef OC_RES_BATCH_SUPPORT
+
+/**
+ * @brief Check if resource should be included in the batch response.
+ *
+ * @param resource resource to check
+ * @param endpoint endpoint (to check access to the resource)
+ * @param skipDiscoveryResource true if the resource is /oic/res resource should
+ * be skipped
+ */
+bool oc_discovery_resource_is_in_batch_response(const oc_resource_t *resource,
+                                                const oc_endpoint_t *endpoint,
+                                                bool skipDiscoveryResource)
+  OC_NONNULL();
+
+#ifdef OC_HAS_FEATURE_ETAG
+
+/**
+ * @brief Get the batch etag for /oic/res resource.
+ *
+ * For oic.if.b interface, the etag is highest etag of all discoverable and
+ * accessible resources.
+ *
+ * @param endpoint endpoint accessing the resources (use in secure builds to
+ * check ACL access)
+ * @param device device index of the resources
+ */
+uint64_t oc_discovery_get_batch_etag(const oc_endpoint_t *endpoint,
+                                     size_t device) OC_NONNULL();
+
+#endif /* OC_HAS_FEATURE_ETAG */
+
+#endif /* OC_RES_BATCH_SUPPORT */
+
 #ifdef OC_WKCORE
 
 void oc_create_wkcore_resource(size_t device);

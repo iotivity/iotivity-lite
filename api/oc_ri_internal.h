@@ -19,10 +19,12 @@
 #ifndef OC_RI_INTERNAL_H
 #define OC_RI_INTERNAL_H
 
+#include "messaging/coap/oc_coap.h"
 #include "messaging/coap/engine.h"
 #include "oc_config.h"
 #include "oc_endpoint.h"
 #include "oc_ri.h"
+#include "util/oc_features.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -58,6 +60,24 @@ extern "C" {
 #define OC_BASELINE_PROP_TAG_POS_REL "tag-pos-rel"
 #define OC_BASELINE_PROP_TAG_POS_DESC "tag-pos-desc"
 #define OC_BASELINE_PROP_FUNC_DESC "tag-func-desc"
+
+typedef struct oc_response_buffer_s
+{
+  uint8_t *buffer;
+  size_t buffer_size;
+  size_t response_length;
+  int code;
+  oc_content_format_t content_format;
+#ifdef OC_HAS_FEATURE_ETAG
+  oc_coap_etag_t etag;
+#endif /* OC_HAS_FEATURE_ETAG */
+} oc_response_buffer_t;
+
+struct oc_response_s
+{
+  oc_separate_response_t *separate_response; ///< seperate response
+  oc_response_buffer_t *response_buffer;     ///< response buffer
+};
 
 /**
  * @brief initialize the resource implementation handler

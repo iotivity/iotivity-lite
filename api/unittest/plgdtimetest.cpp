@@ -51,6 +51,7 @@
 #endif /* OC_HAS_FEATURE_PUSH */
 
 #include <array>
+#include <chrono>
 #include <filesystem>
 #include <gtest/gtest.h>
 
@@ -62,6 +63,8 @@
 #endif /* OC_SECURITY */
 
 static const std::string testStorage{ "storage_test" };
+
+using namespace std::chrono_literals;
 
 class TestPlgdTime : public testing::Test {
 public:
@@ -241,6 +244,8 @@ struct PlgdTime
   int status;
 };
 
+static constexpr size_t kDeviceID{ 0 };
+
 class TestPlgdTimeWithServer : public testing::Test {
 public:
   static void SetUpTestCase()
@@ -250,7 +255,7 @@ public:
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
     ASSERT_TRUE(
-      oc::SetAccessInRFOTM(PLGD_TIME, /*device*/ 0, true,
+      oc::SetAccessInRFOTM(PLGD_TIME, kDeviceID, true,
                            OC_PERM_RETRIEVE | OC_PERM_UPDATE | OC_PERM_DELETE));
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
@@ -401,13 +406,12 @@ TEST_F(TestPlgdTimeWithServer, GetResource)
 TEST_F(TestPlgdTimeWithServer, GetRequest)
 {
   // get insecure connection to the testing device
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto get_handler = [](oc_client_response_t *data) {
-    EXPECT_EQ(OC_STATUS_OK, data->code);
     oc::TestDevice::Terminate();
+    ASSERT_EQ(OC_STATUS_OK, data->code);
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
     auto *pt = static_cast<PlgdTime *>(data->user_data);
     *pt = decodePayload(data->payload);
@@ -415,9 +419,11 @@ TEST_F(TestPlgdTimeWithServer, GetRequest)
 
   plgd_time_set_status(PLGD_TIME_STATUS_SYNCING);
   PlgdTime pt{};
-  EXPECT_TRUE(oc_do_get(PLGD_TIME_URI, ep, "if=" OC_IF_BASELINE_STR,
-                        get_handler, HIGH_QOS, &pt));
-  oc::TestDevice::PoolEvents(5);
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_get_with_timeout(PLGD_TIME_URI, ep,
+                                     "if=" OC_IF_BASELINE_STR, timeout.count(),
+                                     get_handler, HIGH_QOS, &pt));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
 
   EXPECT_NE(0, pt.time);
 #ifndef OC_SECURITY
@@ -433,13 +439,12 @@ TEST_F(TestPlgdTimeWithServer, GetRequest)
 
 TEST_F(TestPlgdTimeWithServer, GetRequestEmpty)
 {
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto get_handler = [](oc_client_response_t *data) {
-    EXPECT_EQ(OC_STATUS_OK, data->code);
     oc::TestDevice::Terminate();
+    ASSERT_EQ(OC_STATUS_OK, data->code);
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
     auto *pt = static_cast<PlgdTime *>(data->user_data);
     *pt = decodePayload(data->payload);
@@ -447,9 +452,11 @@ TEST_F(TestPlgdTimeWithServer, GetRequestEmpty)
 
   plgd_time_set_time(0);
   PlgdTime pt{};
-  EXPECT_TRUE(oc_do_get(PLGD_TIME_URI, ep, "if=" OC_IF_BASELINE_STR,
-                        get_handler, HIGH_QOS, &pt));
-  oc::TestDevice::PoolEvents(5);
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_get_with_timeout(PLGD_TIME_URI, ep,
+                                     "if=" OC_IF_BASELINE_STR, timeout.count(),
+                                     get_handler, HIGH_QOS, &pt));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
 
   EXPECT_EQ(0, pt.time);
   EXPECT_EQ(0, pt.lst);
@@ -474,14 +481,13 @@ encodeSystemClock(oc_clock_time_t lst)
 
 TEST_F(TestPlgdTimeWithServer, PostRequestFail)
 {
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   bool invoked = false;
   auto post_handler = [](oc_client_response_t *data) {
-    EXPECT_LT(OC_STATUS_NOT_MODIFIED, data->code);
     oc::TestDevice::Terminate();
+    ASSERT_LT(OC_STATUS_NOT_MODIFIED, data->code);
     auto *invoked = static_cast<bool *>(data->user_data);
     *invoked = true;
   };
@@ -491,8 +497,9 @@ TEST_F(TestPlgdTimeWithServer, PostRequestFail)
   oc_rep_start_root_object();
   oc_rep_set_text_string(root, lastSyncedTime, "bad format");
   oc_rep_end_root_object();
-  EXPECT_TRUE(oc_do_post());
-  oc::TestDevice::PoolEvents(5);
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_post_with_timeout(timeout.count()));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   EXPECT_TRUE(invoked);
 
   invoked = false;
@@ -501,20 +508,19 @@ TEST_F(TestPlgdTimeWithServer, PostRequestFail)
   oc_rep_start_root_object();
   oc_rep_set_int(root, lastSyncedTime, 1337);
   oc_rep_end_root_object();
-  EXPECT_TRUE(oc_do_post());
-  oc::TestDevice::PoolEvents(5);
+  ASSERT_TRUE(oc_do_post_with_timeout(timeout.count()));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   EXPECT_TRUE(invoked);
 }
 
 TEST_F(TestPlgdTimeWithServer, PostRequest)
 {
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto post_handler = [](oc_client_response_t *data) {
-    EXPECT_EQ(OC_STATUS_CHANGED, data->code);
     oc::TestDevice::Terminate();
+    ASSERT_EQ(OC_STATUS_CHANGED, data->code);
     OC_DBG("POST payload: %s", oc::RepPool::GetJson(data->payload).data());
     auto *pt = static_cast<PlgdTime *>(data->user_data);
     *pt = decodePayload(data->payload);
@@ -527,8 +533,9 @@ TEST_F(TestPlgdTimeWithServer, PostRequest)
   constexpr oc_clock_time_t kOneDay = 60 * 60 * 24 * OC_CLOCK_SECOND;
   oc_clock_time_t yesterday = oc_clock_time() - kOneDay;
   encodeSystemClock(yesterday);
-  EXPECT_TRUE(oc_do_post());
-  oc::TestDevice::PoolEvents(5);
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_post_with_timeout(timeout.count()));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
 
   EXPECT_EQ(PLGD_TIME_STATUS_IN_SYNC, plgd_time_status());
 
@@ -548,8 +555,7 @@ TEST_F(TestPlgdTimeWithServer, PostRequest)
 
 TEST_F(TestPlgdTimeWithServer, PutRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
 
   auto encode_payload = []() { encodeSystemClock(oc_clock_time()); };
@@ -558,8 +564,7 @@ TEST_F(TestPlgdTimeWithServer, PutRequest_FailMethodNotSupported)
 
 TEST_F(TestPlgdTimeWithServer, DeleteRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
+  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
   ASSERT_NE(nullptr, ep);
   oc::testNotSupportedMethod(OC_DELETE, ep, PLGD_TIME_URI);
 }
@@ -571,7 +576,7 @@ TEST_F(TestPlgdTimeWithServer, DeleteRequest_FailMethodNotSupported)
 TEST_F(TestPlgdTimeWithServer, FetchTimeFail)
 {
 #ifdef OC_SECURITY
-  if (!prepareSecureDevice(/*device*/ 0, false)) {
+  if (!prepareSecureDevice(kDeviceID, false)) {
     OC_WRN("Test skipped");
     return;
   }
@@ -590,25 +595,25 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeFail)
   oc_endpoint_t ep = oc::endpoint::FromString(ep_str);
 
   auto fetch_handler = [](oc_status_t code, oc_clock_time_t, void *data) {
-    OC_DBG("fetch time handler timeout");
-    EXPECT_TRUE(code == OC_CONNECTION_CLOSED || code == OC_REQUEST_TIMEOUT);
-    *(static_cast<bool *>(data)) = true;
     oc::TestDevice::Terminate();
+    OC_DBG("fetch time handler timeout");
+    ASSERT_TRUE(code == OC_CONNECTION_CLOSED || code == OC_REQUEST_TIMEOUT);
+    *(static_cast<bool *>(data)) = true;
   };
 
   bool invoked = false;
   unsigned fetch_flags = 0;
+  auto timeout = 1s;
   ASSERT_TRUE(plgd_time_fetch(
     plgd_time_fetch_config(&ep, PLGD_TIME_URI, fetch_handler, &invoked,
-                           /*timeout*/ 5, /*selected_identity_credid*/ -1,
+                           timeout.count(), /*selected_identity_credid*/ -1,
                            /*disable_time_verification*/ true),
     &fetch_flags));
-
-  oc::TestDevice::PoolEvents(5);
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   EXPECT_TRUE(invoked);
 
 #ifdef OC_SECURITY
-  resetSecureDevice(/*device*/ 0);
+  resetSecureDevice(kDeviceID);
 #endif /* OC_SECURITY */
 }
 
@@ -664,7 +669,7 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeConnectInsecureConnection)
   unsigned exclude_flags = 0;
 #ifdef OC_TCP
 #if defined(OC_SECURITY) && defined(OC_PKI)
-  if (!prepareSecureDevice(/*device*/ 0)) {
+  if (!prepareSecureDevice(kDeviceID)) {
     OC_WRN("Test skipped");
     return;
   }
@@ -676,7 +681,7 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeConnectInsecureConnection)
   exclude_flags = SECURED;
 #endif /* OC_TCP */
   const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, include_flags, exclude_flags);
+    oc::TestDevice::GetEndpoint(kDeviceID, include_flags, exclude_flags);
   ASSERT_NE(nullptr, ep);
 
 #if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
@@ -689,22 +694,21 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeConnectInsecureConnection)
 #endif /* OC_TCP && OC_SESSION_EVENTS */
 
   auto fetch_handler = [](oc_status_t code, oc_clock_time_t time, void *data) {
+    oc::TestDevice::Terminate();
     OC_DBG("fetch time handler");
     EXPECT_EQ(OC_STATUS_OK, code);
-    auto *t = static_cast<oc_clock_time_t *>(data);
-    *t = time;
-    oc::TestDevice::Terminate();
+    *static_cast<oc_clock_time_t *>(data) = time;
   };
 
   oc_clock_time_t time = 0;
   unsigned fetch_flags = 0;
+  auto timeout = 5s;
   ASSERT_TRUE(plgd_time_fetch(
     plgd_time_fetch_config(ep, PLGD_TIME_URI, fetch_handler, &time,
-                           /*timeout*/ 5, /*selected_identity_credid*/ -1,
+                           timeout.count(), /*selected_identity_credid*/ -1,
                            /*disable_time_verification*/ true),
     &fetch_flags));
-
-  oc::TestDevice::PoolEvents(5);
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   EXPECT_NE(0, time);
 
 #if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
@@ -717,7 +721,7 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeConnectInsecureConnection)
 #endif /* OC_TCP && OC_SESSION_EVENTS */
 
 #ifdef OC_SECURITY
-  resetSecureDevice(/*device*/ 0);
+  resetSecureDevice(kDeviceID);
 #endif /* OC_SECURITY */
 }
 
@@ -731,7 +735,7 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeAlreadyConnectedInsecure)
 TEST_F(TestPlgdTimeWithServer, FetchTimeConnectSkipVerification)
 {
 #ifdef OC_SECURITY
-  if (!prepareSecureDevice(/*device*/ 0)) {
+  if (!prepareSecureDevice(kDeviceID)) {
     OC_WRN("Test skipped");
     return;
   }
@@ -746,7 +750,7 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeConnectSkipVerification)
   exclude_flags = SECURED;
 #endif /* OC_TCP */
   const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, include_flags, exclude_flags);
+    oc::TestDevice::GetEndpoint(kDeviceID, include_flags, exclude_flags);
   ASSERT_NE(nullptr, ep);
 
 #if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
@@ -766,23 +770,22 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeConnectSkipVerification)
   };
 
   auto fetch_handler = [](oc_status_t code, oc_clock_time_t time, void *data) {
+    oc::TestDevice::Terminate();
     OC_DBG("fetch time handler");
     EXPECT_EQ(OC_STATUS_OK, code);
-    auto *t = static_cast<oc_clock_time_t *>(data);
-    *t = time;
-    oc::TestDevice::Terminate();
+    *static_cast<oc_clock_time_t *>(data) = time;
   };
 
   oc_clock_time_t time = 0;
   unsigned fetch_flags = 0;
+  auto timeout = 5s;
   ASSERT_TRUE(
     plgd_time_fetch(plgd_time_fetch_config_with_custom_verification(
-                      ep, PLGD_TIME_URI, fetch_handler, &time,
-                      /*timeout*/ 5,
+                      ep, PLGD_TIME_URI, fetch_handler, &time, timeout.count(),
                       /*selected_identity_credid*/ -1, verify_connection, {}),
                     &fetch_flags));
 
-  oc::TestDevice::PoolEvents(5);
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   EXPECT_NE(0, time);
 
 #if defined(OC_TCP) && defined(OC_SESSION_EVENTS)
@@ -794,7 +797,7 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeConnectSkipVerification)
   }
 #endif /* OC_TCP && OC_SESSION_EVENTS */
 
-  resetSecureDevice(/*device*/ 0);
+  resetSecureDevice(kDeviceID);
 }
 
 TEST_F(TestPlgdTimeWithServer, FetchTimeAlreadyConnectedSecure)
