@@ -32,7 +32,7 @@ extern "C" {
 #endif
 
 /// ETag value that indicates that the ETag is not set.
-#define OC_ETAG_UNINITALIZED (0)
+#define OC_ETAG_UNINITIALIZED (0)
 
 /** Get the global ETag value without modifying it. */
 uint64_t oc_etag_global(void);

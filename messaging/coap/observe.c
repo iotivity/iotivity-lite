@@ -54,6 +54,7 @@
 #include "api/oc_buffer_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_query_internal.h"
+#include "api/oc_ri_internal.h"
 #include "api/oc_server_api_internal.h"
 #include "messaging/coap/coap_options.h"
 #include "messaging/coap/observe.h"
@@ -582,7 +583,7 @@ coap_prepare_notification_blockwise(coap_packet_t *notification,
   response_state = oc_blockwise_alloc_response_buffer(
     oc_string(obs->resource->uri) + 1, oc_string_len(obs->resource->uri) - 1,
     &obs->endpoint, OC_GET, OC_BLOCKWISE_SERVER,
-    (uint32_t)response->response_buffer->response_length);
+    (uint32_t)response->response_buffer->response_length, false);
   if (response_state == NULL) {
     OC_ERR("cannot allocate response buffer");
     return -1;
@@ -606,7 +607,10 @@ coap_prepare_notification_blockwise(coap_packet_t *notification,
     coap_options_set_size2(notification, response_state->payload_size);
     const oc_blockwise_response_state_t *bwt_res_state =
       (oc_blockwise_response_state_t *)response_state;
-    coap_options_set_etag(notification, bwt_res_state->etag, COAP_ETAG_LEN);
+    if (bwt_res_state->etag.length > 0) {
+      coap_options_set_etag(notification, bwt_res_state->etag.value,
+                            bwt_res_state->etag.length);
+    }
   }
   return 1;
 }

@@ -19,7 +19,8 @@
 #ifndef OC_COAP_H
 #define OC_COAP_H
 
-#include "oc_ri.h"
+#include "messaging/coap/constants.h"
+#include "oc_config.h"
 #include "util/oc_list.h"
 #include <stddef.h>
 #include <stdint.h>
@@ -40,14 +41,11 @@ struct oc_separate_response_s
   size_t len;
 };
 
-struct oc_response_buffer_s
+typedef struct oc_coap_etag_s
 {
-  uint8_t *buffer;
-  size_t buffer_size;
-  size_t response_length;
-  int code;
-  oc_content_format_t content_format;
-};
+  uint8_t value[COAP_ETAG_LEN];
+  uint8_t length;
+} oc_coap_etag_t;
 
 #ifdef __cplusplus
 }

@@ -22,12 +22,13 @@
 #include "oc_rep.h"
 #include "tests/gtest/Link.h"
 #include "tests/gtest/Resource.h"
+#include "util/oc_features.h"
 
-#include <map>
 #include <memory>
 #include <optional>
 #include <stdint.h>
 #include <string>
+#include <unordered_map>
 
 #ifdef OC_COLLECTIONS
 
@@ -36,18 +37,29 @@ namespace oc {
 using oc_collection_unique_ptr =
   std::unique_ptr<oc_collection_t, decltype(&oc_collection_free)>;
 
-struct CollectionData
-{
-  std::optional<BaselineData> baseline;
-  std::vector<std::string> rts;
-  std::vector<std::string> rts_m;
-  std::vector<LinkData> links;
-  std::map<std::string, const oc_rep_t *> properties;
-};
-
 class Collection {
 public:
-  static std::optional<CollectionData> ParsePayload(const oc_rep_t *rep);
+  struct Data
+  {
+    std::optional<BaselineData> baseline;
+    std::vector<std::string> rts;
+    std::vector<std::string> rts_m;
+    std::unordered_map<std::string, LinkData> links;
+    std::unordered_map<std::string, const oc_rep_t *> properties;
+  };
+
+  struct BatchItem
+  {
+    std::string href;
+#ifdef OC_HAS_FEATURE_ETAG
+    std::vector<uint8_t> etag;
+#endif /* OC_HAS_FEATURE_ETAG */
+  };
+
+  using BatchData = std::unordered_map<std::string, BatchItem>;
+
+  static std::optional<Data> ParsePayload(const oc_rep_t *rep);
+  static BatchData ParseBatchPayload(const oc_rep_t *rep);
 };
 
 template<typename... Ts>

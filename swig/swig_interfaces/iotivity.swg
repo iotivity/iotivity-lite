@@ -13,6 +13,9 @@
 #include "port/oc_log_internal.h"
 %}
 
+#if defined(OC_ETAG) && defined(OC_SERVER)
+#define OC_HAS_FEATURE_ETAG
+#endif /* OC_ETAG && OC_SERVER */
 
 /*********************************************************************
  * change enums being used as bitmaps to integers for Java enums do

@@ -28,7 +28,11 @@
 #include "oc_helpers.h"
 #include "oc_ri.h"
 #include "util/oc_compiler.h"
+#include "util/oc_features.h"
 #include "util/oc_list.h"
+
+#include <stdbool.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -95,6 +99,22 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
 void oc_collections_free_rt_factories(void);
 
 #endif /* OC_COLLECTIONS_IF_CREATE */
+
+#ifdef OC_HAS_FEATURE_ETAG
+
+/**
+ * @brief Get batch etag for a collection.
+ *
+ * Batch etag is calculated as the maximum of the collection's etag and the
+ * etags of all resources linked to the collection.
+ *
+ * @param collection collection to get batch etag for (cannot be NULL)
+ * @return uint64_t batch etag
+ */
+uint64_t oc_collection_get_batch_etag(const oc_collection_t *collection)
+  OC_NONNULL();
+
+#endif /* OC_HAS_FEATURE_ETAG */
 
 #ifdef __cplusplus
 }

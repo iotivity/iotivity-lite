@@ -4,6 +4,24 @@
 %javaconst(1);
 %include "iotivity.swg"
 
+%{
+#include "util/oc_macros_internal.h"
+
+CLANG_IGNORE_WARNING_START
+CLANG_IGNORE_WARNING("-Wunused-function")
+GCC_IGNORE_WARNING_START
+GCC_IGNORE_WARNING("-Wunused-function")
+%}
+%include "arrays_java.i";
+%{
+GCC_IGNORE_WARNING_END
+CLANG_IGNORE_WARNING_END
+%}
+
+%import "oc_endpoint.i"
+%import "oc_etag.i"
+%import "oc_rep.i"
+
 %pragma(java) jniclasscode=%{
   static {
     try {
@@ -16,18 +34,75 @@
 %}
 
 %{
+#include "api/oc_ri_internal.h"
 #include "messaging/coap/oc_coap.h"
 #include "messaging/coap/constants.h"
 #include "oc_ri.h"
+#include "util/oc_features.h"
 %}
+
+/***************************************************************
+  messaging/coap/oc_coap.h and messaging/coap/constants.h
+***************************************************************/
+%rename(OCETag) oc_coap_etag_s;
+%ignore oc_coap_etag_s::length;
+
+/*
+ * Currently no known use case that the end user will access this buffer
+ * of this must be exposed then work must be done to convert buffer to a java byte[]
+ */
+%rename(OCSeparateResponse) oc_separate_response_s;
+%ignore oc_separate_response_s::buffer;
+%ignore oc_separate_response_s::OC_LIST_STRUCT(requests);
+%include "messaging/coap/oc_coap.h"
+
+%rename (OCCoapStatus) coap_status_t;
+%include "messaging/coap/constants.h"
+
+/***************************************************************
+  structs from oc_ri_internal.h
+***************************************************************/
+
+%rename(OCResponseBuffer) oc_response_buffer_s;
+/*
+ * Currently there is no known use case where the end user will access this buffer,
+ * if this must be exposed then work must be done to convert buffer and buffer_size to a java byte[]
+ */
+%ignore oc_response_buffer_s::buffer;
+%ignore oc_response_buffer_s::buffer_size;
+%rename (responseLength) oc_response_buffer_s::response_length;
+%rename(etagLen) oc_response_buffer_s::etag_len;
+
+typedef struct oc_response_buffer_s
+{
+  uint8_t *buffer;
+  size_t buffer_size;
+  size_t response_length;
+  int code;
+  oc_content_format_t content_format;
+#ifdef OC_HAS_FEATURE_ETAG
+  oc_coap_etag_t etag;
+#endif /* OC_HAS_FEATURE_ETAG */
+} oc_response_buffer_t;
+
+%rename(OCResponse) oc_response_s;
+%rename (separateResponse) oc_response_s::separate_response;
+%rename (responseBuffer) oc_response_s::response_buffer;
+
+struct oc_response_s
+{
+  oc_separate_response_t *separate_response; ///< seperate response
+  oc_response_buffer_t *response_buffer;     ///< response buffer
+};
+
+/***************************************************************
+  oc_ri.h
+***************************************************************/
 
 %rename (OCMethod) oc_method_t;
 %ignore oc_resource_properties_t;
 %rename (OCStatus) oc_status_t;
 %rename (OCContentFormat) oc_content_format_t;
-%rename(OCResponse) oc_response_t;
-%rename (separateResponse) oc_response_t::separate_response;
-%rename (responseBuffer) oc_response_t::response_buffer;
 %ignore oc_interface_mask_t;
 %ignore oc_core_resource_t;
 %rename (OCRequest) oc_request_t;
@@ -93,46 +168,6 @@
 %ignore oc_ri_get_query_nth_key_value;
 %ignore oc_ri_get_query_value;
 %ignore oc_ri_get_interface_mask;
-
-/***************************************************************
-structs from oc_coap
-***************************************************************/
-/*
- * Currently no known use case that the end user will access this buffer
- * of this must be exposed then work must be done to convert buffer to a java byte[]
- */
-%ignore buffer;
-%ignore OC_LIST_STRUCT(requests);
-%rename(OCSeparateResponse) oc_separate_response_s;
-struct oc_separate_response_s
-{
-  OC_LIST_STRUCT(requests);
-  int active;
-#ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *buffer;
-#else  /* OC_DYNAMIC_ALLOCATION */
-  uint8_t buffer[OC_MAX_APP_DATA_SIZE];
-#endif /* !OC_DYNAMIC_ALLOCATION */
-};
-
-%rename(OCResponseBuffer) oc_response_buffer_s;
-/*
- * Currently no known use case that the end user will access this buffer
- * of this must be exposed then work must be done to convert buffer and buffer_size to a java byte[]
- */
-%ignore oc_response_buffer_s::buffer;
-%ignore oc_response_buffer_s::buffer_size;
-%rename (responseLength) oc_response_buffer_s::response_length;
-typedef struct oc_response_buffer_s
-{
-  uint8_t *buffer;
-  size_t buffer_size;
-  size_t response_length;
-  int code;
-} oc_response_buffer_t;
-
-%rename (OCCoapStatus) coap_status_t;
-%include "messaging/coap/constants.h"
 
 #define OC_API
 #define OC_NONNULL(...)

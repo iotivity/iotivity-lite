@@ -31,6 +31,7 @@
 #include <pthread.h>
 #endif /* _WIN32 */
 
+#include <chrono>
 #include <cstdint>
 #include <string>
 #include <unordered_map>
@@ -68,8 +69,8 @@ public:
   ~Device();
 
   void SignalEventLoop();
-  void PoolEvents(uint64_t seconds);
-  void PoolEventsMs(uint64_t mseconds);
+  void PoolEvents(uint64_t seconds, bool addDelay = false);
+  void PoolEventsMs(uint64_t mseconds, bool addDelay = false);
   void Terminate();
 
 private:
@@ -144,8 +145,19 @@ public:
     // no-op
   }
   static void SignalEventLoop() { device.SignalEventLoop(); }
-  static void PoolEvents(uint64_t seconds) { device.PoolEvents(seconds); }
-  static void PoolEventsMs(uint64_t mseconds) { device.PoolEventsMs(mseconds); }
+  static void PoolEvents(uint64_t seconds, bool addDelay = false)
+  {
+    device.PoolEvents(seconds, addDelay);
+  }
+  static void PoolEventsMs(uint64_t mseconds, bool addDelay = false)
+  {
+    device.PoolEventsMs(mseconds, addDelay);
+  }
+  static void PoolEventsMsV1(std::chrono::milliseconds interval,
+                             bool addDelay = false)
+  {
+    device.PoolEventsMs(interval.count(), addDelay);
+  }
 
   static void SetServerDevices(std::vector<DeviceToAdd> devices);
   static void ResetServerDevices();

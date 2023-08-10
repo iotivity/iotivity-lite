@@ -26,11 +26,11 @@
 %inline %{
 void jni_resource_update_etag(oc_resource_t *resource) {
   OC_DBG("JNI: %s\n", __func__);
-#ifdef OC_FEATURE_HAS_ETAG
+#ifdef OC_HAS_FEATURE_ETAG
   oc_resource_update_etag(resource);
-#else /* !OC_FEATURE_HAS_ETAG */
+#else /* !OC_HAS_FEATURE_ETAG */
   (void)resource;
-#endif /* OC_FEATURE_HAS_ETAG */
+#endif /* OC_HAS_FEATURE_ETAG */
 }
 %}
 
@@ -39,9 +39,9 @@ void jni_resource_update_etag(oc_resource_t *resource) {
 %inline %{
 void jni_etag_dump(void) {
   OC_DBG("JNI: %s\n", __func__);
-#if defined(OC_FEATURE_HAS_ETAG) && defined(OC_STORAGE)
+#if defined(OC_HAS_FEATURE_ETAG) && defined(OC_STORAGE)
   oc_etag_dump();
-#endif /* OC_FEATURE_HAS_ETAG && OC_STORAGE */
+#endif /* OC_HAS_FEATURE_ETAG && OC_STORAGE */
 }
 %}
 
@@ -50,9 +50,9 @@ void jni_etag_dump(void) {
 %inline %{
 void jni_etag_load_and_clear(void) {
   OC_DBG("JNI: %s\n", __func__);
-#if defined(OC_FEATURE_HAS_ETAG) && defined(OC_STORAGE)
+#if defined(OC_HAS_FEATURE_ETAG) && defined(OC_STORAGE)
   oc_etag_load_and_clear();
-#endif /* OC_FEATURE_HAS_ETAG && OC_STORAGE */
+#endif /* OC_HAS_FEATURE_ETAG && OC_STORAGE */
 }
 %}
 

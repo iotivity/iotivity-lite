@@ -49,6 +49,7 @@
 #endif /* OC_SECURITY */
 
 #include <assert.h>
+#include <errno.h>
 #ifdef OC_DYNAMIC_ALLOCATION
 #include <stdlib.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -101,6 +102,25 @@ oc_set_send_response_callback(oc_send_response_cb_t cb)
 {
   g_oc_send_response_cb = cb;
 }
+
+#ifdef OC_HAS_FEATURE_ETAG
+
+int
+oc_set_send_response_etag(oc_request_t *request, const uint8_t *etag,
+                          uint8_t etag_len)
+{
+  assert(etag != NULL);
+  if (request->method != OC_GET || etag_len > COAP_ETAG_LEN) {
+    OC_ERR("invalid input parameters");
+    return -EINVAL;
+  }
+  memcpy(&request->response->response_buffer->etag.value[0], &etag[0],
+         etag_len);
+  request->response->response_buffer->etag.length = etag_len;
+  return 0;
+}
+
+#endif /* OC_HAS_FEATURE_ETAG */
 
 static void
 oc_trigger_send_response_callback(oc_request_t *request,
@@ -372,9 +392,10 @@ oc_get_request_payload_raw(const oc_request_t *request, const uint8_t **payload,
                            size_t *size, oc_content_format_t *content_format)
 {
   if (!request || !payload || !size || !content_format) {
+    OC_ERR("invalid input parameters");
     return false;
   }
-  if (request->_payload && request->_payload_len > 0) {
+  if (request->_payload != NULL && request->_payload_len > 0) {
     *content_format = request->content_format;
     *payload = request->_payload;
     *size = request->_payload_len;
@@ -573,29 +594,31 @@ oc_resource_set_periodic_observable(oc_resource_t *resource, uint16_t seconds)
   resource->observe_period_seconds = seconds;
 }
 
+static oc_request_handler_t *
+resource_get_request_handler(oc_resource_t *resource, oc_method_t method)
+{
+  if (method == OC_GET) {
+    return &resource->get_handler;
+  }
+  if (method == OC_POST) {
+    return &resource->post_handler;
+  }
+  if (method == OC_PUT) {
+    return &resource->put_handler;
+  }
+  if (method == OC_DELETE) {
+    return &resource->delete_handler;
+  }
+  return NULL;
+}
+
 void
 oc_resource_set_request_handler(oc_resource_t *resource, oc_method_t method,
                                 oc_request_callback_t callback, void *user_data)
 {
-  oc_request_handler_t *handler = NULL;
-  switch (method) {
-  case OC_GET:
-    handler = &resource->get_handler;
-    break;
-  case OC_POST:
-    handler = &resource->post_handler;
-    break;
-  case OC_PUT:
-    handler = &resource->put_handler;
-    break;
-  case OC_DELETE:
-    handler = &resource->delete_handler;
-    break;
-  default:
-    break;
-  }
-
-  if (handler) {
+  oc_request_handler_t *handler =
+    resource_get_request_handler(resource, method);
+  if (handler != NULL) {
     handler->cb = callback;
     handler->user_data = user_data;
   }
@@ -697,7 +720,7 @@ handle_separate_response_request(coap_separate_t *request,
     response_state = oc_blockwise_alloc_response_buffer(
       oc_string(request->uri), oc_string_len(request->uri), &request->endpoint,
       request->method, OC_BLOCKWISE_SERVER,
-      (uint32_t)response_buffer->response_length);
+      (uint32_t)response_buffer->response_length, false);
     if (response_state == NULL) {
       return;
     }
@@ -713,9 +736,12 @@ handle_separate_response_request(coap_separate_t *request,
       coap_set_payload(&response, payload, payload_size);
       coap_options_set_block2(&response, 0, 1, request->block2_size, 0);
       coap_options_set_size2(&response, response_state->payload_size);
-      oc_blockwise_response_state_t *bwt_res_state =
+      const oc_blockwise_response_state_t *bwt_res_state =
         (oc_blockwise_response_state_t *)response_state;
-      coap_options_set_etag(&response, bwt_res_state->etag, COAP_ETAG_LEN);
+      if (bwt_res_state->etag.length > 0) {
+        coap_options_set_etag(&response, bwt_res_state->etag.value,
+                              bwt_res_state->etag.length);
+      }
     }
     handle_separate_response_transaction(t, &response,
                                          (uint8_t)response_buffer->code);

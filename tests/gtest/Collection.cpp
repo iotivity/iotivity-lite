@@ -26,10 +26,10 @@
 
 namespace oc {
 
-std::optional<CollectionData>
+std::optional<Collection::Data>
 Collection::ParsePayload(const oc_rep_t *rep)
 {
-  CollectionData data{};
+  Collection::Data data{};
   auto baseline = oc::ParseBaselineData(rep);
   if (baseline) {
     data.baseline = *baseline;
@@ -61,7 +61,7 @@ Collection::ParsePayload(const oc_rep_t *rep)
              link = link->next) {
           auto linkData = Link::ParsePayload(link->value.object);
           if (linkData) {
-            data.links.push_back(*linkData);
+            data.links[linkData->href] = *linkData;
           }
         }
         continue;
@@ -75,6 +75,36 @@ Collection::ParsePayload(const oc_rep_t *rep)
       data.links.empty() && data.properties.empty()) {
     return std::nullopt;
   }
+  return data;
+}
+
+Collection::BatchData
+Collection::ParseBatchPayload(const oc_rep_t *rep)
+{
+  Collection::BatchData data{};
+  for (; rep != nullptr; rep = rep->next) {
+    const oc_rep_t *obj = rep->value.object;
+    Collection::BatchItem bi{};
+    char *str;
+    size_t str_len;
+    // href: string
+    if (oc_rep_get_string(obj, "href", &str, &str_len)) {
+      bi.href = std::string(str, str_len);
+    }
+
+#ifdef OC_HAS_FEATURE_ETAG
+    // etag: byte string
+    if (oc_rep_get_byte_string(obj, "etag", &str, &str_len)) {
+      bi.etag.resize(str_len);
+      std::copy(&str[0], &str[str_len], std::begin(bi.etag));
+    }
+#endif /* OC_HAS_FEATURE_ETAG */
+
+    if (!bi.href.empty()) {
+      data[bi.href] = bi;
+    }
+  }
+
   return data;
 }
 

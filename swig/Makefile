@@ -55,7 +55,7 @@ OC_JAVA_DIR = oc_java/
 SWIG_INTERFACES_DIR = swig_interfaces/
 
 # SWIG
-SWIG_CFLAG = 
+SWIG_CFLAG = -DOC_CLIENT -DOC_SERVER
 HEADER_FILE = -I../ -I../include -I../port -I../util/ -I../deps/tinycbor/src/ -I../security -I../cloud
 
 WARNING_FLAGS=-Wall -Wextra -Werror -Wno-error=deprecated-declarations -pedantic

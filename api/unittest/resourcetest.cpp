@@ -118,6 +118,7 @@ public:
     oc_set_send_response_callback(nullptr);
     m_send_response_cb_invoked = false;
   }
+
   static void SendResponseCallback(oc_request_t *request,
                                    oc_status_t response_code)
   {

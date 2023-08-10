@@ -360,6 +360,16 @@ ri_prepare_client_response(const coap_packet_t *packet, oc_client_cb_t *cb,
   coap_options_get_observe(packet, &client_response.observe_option);
 #endif /* OC_BLOCK_WISE */
 
+#ifdef OC_HAS_FEATURE_ETAG
+  const uint8_t *etag;
+  uint8_t etag_len = coap_options_get_etag(packet, &etag);
+  assert(etag_len <= sizeof(client_response.etag.value));
+  if (etag_len > 0) {
+    memcpy(client_response.etag.value, etag, etag_len);
+    client_response.etag.length = etag_len;
+  }
+#endif /* OC_HAS_FEATURE_ETAG */
+
   return client_response;
 }
 

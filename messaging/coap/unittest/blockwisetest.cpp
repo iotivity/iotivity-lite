@@ -40,8 +40,11 @@
 #include "util/oc_process_internal.h"
 
 #include <array>
+#include <chrono>
 #include <gtest/gtest.h>
 #include <string>
+
+using namespace std::chrono_literals;
 
 static constexpr size_t kBlockSize = 16;
 
@@ -99,7 +102,7 @@ public:
                                                method, role, buffer_size);
     }
     return oc_blockwise_alloc_response_buffer(href.data(), href.length(), &ep,
-                                              method, role, buffer_size);
+                                              method, role, buffer_size, false);
   }
 };
 
@@ -135,7 +138,7 @@ TEST_F(TestMessagingBlockwise, AllocBlockwiseResponse_F)
   std::string_view ep_str = "coap://[ff02::152]";
   oc_endpoint_t ep = oc::endpoint::FromString(std::string(ep_str));
   ASSERT_EQ(nullptr, oc_blockwise_alloc_response_buffer(
-                       nullptr, 0, &ep, OC_GET, OC_BLOCKWISE_CLIENT, 8));
+                       nullptr, 0, &ep, OC_GET, OC_BLOCKWISE_CLIENT, 8, false));
 
 #ifndef OC_DYNAMIC_ALLOCATION
   for (size_t i = 0; i < OC_MAX_NUM_CONCURRENT_REQUESTS; ++i) {
@@ -801,12 +804,11 @@ TEST_F(TestMessagingBlockwiseWithServer, GetLargeResource)
   };
 
   bool invoked = false;
-  uint16_t timeout_s = 3;
-  ASSERT_TRUE(oc_do_request(OC_GET, kResourceURI.data(), ep, nullptr, timeout_s,
-                            get_handler, LOW_QOS, &invoked, configure_packet,
-                            nullptr));
-  oc::TestDevice::PoolEventsMs(timeout_s * 1000 + 100);
-
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_request(OC_GET, kResourceURI.data(), ep, nullptr,
+                            timeout.count(), get_handler, LOW_QOS, &invoked,
+                            configure_packet, nullptr));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   EXPECT_TRUE(invoked);
 }
 
@@ -818,8 +820,8 @@ TEST_F(TestMessagingBlockwiseWithServer, PostLargeResource)
 
   bool invoked = false;
   auto post_handler = [](oc_client_response_t *data) {
-    EXPECT_EQ(OC_STATUS_CHANGED, data->code);
     oc::TestDevice::Terminate();
+    EXPECT_EQ(OC_STATUS_CHANGED, data->code);
     *static_cast<bool *>(data->user_data) = true;
   };
 
@@ -835,9 +837,10 @@ TEST_F(TestMessagingBlockwiseWithServer, PostLargeResource)
                             resourceData.data.length());
   oc_rep_end_root_object();
   ASSERT_EQ(0, g_err);
-  uint16_t timeout_s = 3;
-  ASSERT_TRUE(oc_do_post_with_timeout(timeout_s));
-  oc::TestDevice::PoolEvents(timeout_s);
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_post_with_timeout(timeout.count()));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  EXPECT_TRUE(invoked);
 }
 
 #endif /* !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */

@@ -16,15 +16,16 @@
  *
  ****************************************************************************/
 
+#include "api/oc_core_res_internal.h"
+#include "api/oc_discovery_internal.h"
+#include "api/oc_resource_internal.h"
+#include "api/oc_ri_internal.h"
+#include "api/oc_server_api_internal.h"
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
-#include "oc_core_res_internal.h"
-#include "oc_discovery_internal.h"
 #include "oc_endpoint.h"
 #include "oc_enums.h"
-#include "oc_resource_internal.h"
-#include "oc_server_api_internal.h"
 #include "port/oc_log_internal.h"
 #include "util/oc_features.h"
 #include "util/oc_macros_internal.h"
@@ -34,19 +35,22 @@
 #include "oc_client_state.h"
 #endif /* OC_CLIENT */
 
-#if defined(OC_SECURITY) && defined(OC_RES_BATCH_SUPPORT)
+#ifdef OC_SECURITY
+#include "security/oc_pstat.h"
+#include "security/oc_sdi_internal.h"
+#include "security/oc_tls_internal.h"
+#ifdef OC_RES_BATCH_SUPPORT
 #include "security/oc_acl_internal.h"
-#endif /* OC_SECURITY && OC_RES_BATCH_SUPPORT*/
+#endif /* OC_RES_BATCH_SUPPORT*/
+#endif /* OC_SECURITY */
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "api/oc_collection_internal.h"
 #endif /* OC_COLLECTIONS  && OC_SERVER */
 
-#ifdef OC_SECURITY
-#include "security/oc_pstat.h"
-#include "security/oc_sdi_internal.h"
-#include "security/oc_tls_internal.h"
-#endif
+#ifdef OC_HAS_FEATURE_ETAG
+#include "api/oc_etag_internal.h"
+#endif /* OC_HAS_FEATURE_ETAG */
 
 #ifdef WIN32
 #include <windows.h>
@@ -162,9 +166,15 @@ discovery_encode_endpoints(const oc_resource_t *resource,
   if ((resource->properties & OC_SECURE_MCAST) != 0) {
     oc_rep_object_array_start_item(eps);
 #ifdef OC_IPV4
-    oc_rep_set_text_string(eps, ep, "coap://224.0.1.187:5683");
+#define OC_IPV4_MCAST_ENDPOINT "coap://224.0.1.187:5683"
+    oc_rep_set_text_string_v1(eps, ep, OC_IPV4_MCAST_ENDPOINT,
+                              OC_CHAR_ARRAY_LEN(OC_IPV4_MCAST_ENDPOINT));
+#undef OC_IPV4_MCAST_ENDPOINT
 #endif /* OC_IPV4 */
-    oc_rep_set_text_string(eps, ep, "coap://[ff02::158]:5683");
+#define OC_IPV6_MCAST_ENDPOINT "coap://[ff02::158]:5683"
+    oc_rep_set_text_string_v1(eps, ep, OC_IPV6_MCAST_ENDPOINT,
+                              OC_CHAR_ARRAY_LEN(OC_IPV6_MCAST_ENDPOINT));
+#undef OC_IPV6_MCAST_ENDPOINT
     oc_rep_object_array_end_item(eps);
   }
 #endif /* OC_OSCORE */
@@ -393,7 +403,7 @@ process_device_resources(CborEncoder *links, const oc_request_t *request)
   // uuid
   oc_uuid_to_str(oc_core_get_device_id(device_index),
                  anchor + OC_CHAR_ARRAY_LEN(OC_SCHEME_OCF), OC_UUID_LEN);
-  size_t anchor_len = oc_strnlen(anchor, sizeof(anchor));
+  size_t anchor_len = oc_strnlen(anchor, OC_ARRAY_SIZE(anchor));
 
   int matches =
     process_device_core_resources(request, anchor, anchor_len, links);
@@ -459,7 +469,8 @@ process_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
   oc_rep_start_object(links, res);
 
   // uri
-  oc_rep_set_text_string(res, href, oc_string(resource->uri));
+  oc_rep_set_text_string_v1(res, href, oc_string(resource->uri),
+                            oc_string_len(resource->uri));
 
   // rt
   oc_rep_set_array(res, rt);
@@ -551,10 +562,11 @@ process_oic_1_1_device_object(CborEncoder *device, oc_request_t *request,
 {
   int matches = 0;
   char uuid[OC_UUID_LEN];
-  oc_uuid_to_str(oc_core_get_device_id(device_num), uuid, OC_UUID_LEN);
+  oc_uuid_to_str(oc_core_get_device_id(device_num), uuid, OC_ARRAY_SIZE(uuid));
 
   oc_rep_start_object(device, links);
-  oc_rep_set_text_string(links, di, uuid);
+  oc_rep_set_text_string_v1(links, di, uuid,
+                            oc_strnlen(uuid, OC_ARRAY_SIZE(uuid)));
 
   if (baseline) {
     oc_resource_t *ocf_res = oc_core_get_resource_by_index(OCF_RES, device_num);
@@ -691,19 +703,51 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
 #endif /* OC_SPEC_VER_OIC */
 
 #ifdef OC_RES_BATCH_SUPPORT
+
+bool
+oc_discovery_resource_is_in_batch_response(const oc_resource_t *resource,
+                                           const oc_endpoint_t *endpoint,
+                                           bool skipDiscoveryResource)
+{
+  // ignore non-discoverable resources
+  if ((resource->properties & OC_DISCOVERABLE) == 0) {
+    return false;
+  }
+
+  // ignore discovery resources: /oic/res (if skipDiscoveryResource is true) and
+  // /.well-known/core (always)
+  if (skipDiscoveryResource &&
+      resource == oc_core_get_resource_by_index(OCF_RES, resource->device)) {
+    return false;
+  }
+#ifdef OC_WKCORE
+  if (resource ==
+      oc_core_get_resource_by_index(WELLKNOWNCORE, resource->device)) {
+    return false;
+  }
+#endif /* OC_WKCORE */
+
+#ifdef OC_SECURITY
+  // ignore SVRs
+  if (oc_core_is_SVR(resource, resource->device) ||
+      // and inaccessible resources
+      !oc_sec_check_acl(OC_GET, resource, endpoint)) {
+    return false;
+  }
+#else  /* !OC_SECURITY */
+  (void)endpoint;
+#endif /* OC_SECURITY */
+  return true;
+}
+
 static void
 process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
                        const oc_endpoint_t *endpoint)
 {
-  if (resource == NULL || (resource->properties & OC_DISCOVERABLE) == 0) {
+  if (resource == NULL ||
+      !oc_discovery_resource_is_in_batch_response(resource, endpoint, true)) {
     return;
   }
-
-#ifdef OC_SECURITY
-  if (!oc_sec_check_acl(OC_GET, resource, endpoint)) {
-    return;
-  }
-#endif /* OC_SECURITY */
   oc_request_t rest_request = { 0 };
   oc_response_t response = { 0 };
   oc_response_buffer_t response_buffer;
@@ -724,9 +768,13 @@ process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
   memcpy(buffer, oc_string(resource->uri), oc_string_len(resource->uri));
   buffer[oc_string_len(resource->uri)] = '\0';
 
-  oc_rep_set_text_string(links_obj, href, href);
-  // TODO: add etag prop here
-  oc_rep_set_key(oc_rep_object(links_obj), "rep");
+  oc_rep_set_text_string_v1(links_obj, href, href,
+                            oc_strnlen(href, OC_ARRAY_SIZE(href)));
+#ifdef OC_HAS_FEATURE_ETAG
+  oc_rep_set_byte_string(links_obj, etag, (uint8_t *)&resource->etag,
+                         sizeof(resource->etag));
+#endif /* OC_HAS_FEATURE_ETAG */
+  oc_rep_set_key_v1(oc_rep_object(links_obj), "rep", OC_CHAR_ARRAY_LEN("rep"));
   memcpy(oc_rep_get_encoder(), oc_rep_object(links_obj), sizeof(CborEncoder));
 
   int size_before = oc_rep_get_encoded_payload_size();
@@ -765,70 +813,65 @@ oc_discovery_create_batch_for_resource(CborEncoder *links,
   process_batch_response(links, resource, endpoint);
 }
 
+typedef struct
+{
+  CborEncoder *links_array;
+  const oc_endpoint_t *endpoint;
+} iterate_batch_response_data_t;
+
+static bool
+discovery_iterate_batch_response(oc_resource_t *resource, void *data)
+{
+  iterate_batch_response_data_t *brd = (iterate_batch_response_data_t *)data;
+  process_batch_response(brd->links_array, resource, brd->endpoint);
+  return true;
+}
+
 static void
 process_batch_request(CborEncoder *links_array, const oc_endpoint_t *endpoint,
-                      size_t device_index)
+                      size_t device)
 {
-  process_batch_response(links_array, oc_core_get_resource_by_index(OCF_P, 0),
-                         endpoint);
-#ifdef OC_HAS_FEATURE_PLGD_TIME
-  process_batch_response(links_array,
-                         oc_core_get_resource_by_index(PLGD_TIME, 0), endpoint);
-#endif /* OC_HAS_FEATURE_PLGD_TIME */
-
-  process_batch_response(
-    links_array, oc_core_get_resource_by_index(OCF_D, device_index), endpoint);
-
-#ifdef OC_INTROSPECTION
-  process_batch_response(
-    links_array,
-    oc_core_get_resource_by_index(OCF_INTROSPECTION_WK, device_index),
-    endpoint);
-#endif /* OC_INTROSPECTION */
-
-  if (oc_get_con_res_announced()) {
-    process_batch_response(links_array,
-                           oc_core_get_resource_by_index(OCF_CON, device_index),
-                           endpoint);
-  }
-
-#ifdef OC_MNT
-  process_batch_response(links_array,
-                         oc_core_get_resource_by_index(OCF_MNT, device_index),
-                         endpoint);
-#endif /* OC_MNT */
-
-#ifdef OC_SOFTWARE_UPDATE
-  process_batch_response(
-    links_array, oc_core_get_resource_by_index(OCF_SW_UPDATE, device_index),
-    endpoint);
-#endif /* OC_SOFTWARE_UPDATE */
-
-#if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
-  process_batch_response(
-    links_array, oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, device_index),
-    endpoint);
-#endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
-
-#ifdef OC_SERVER
-  oc_resource_t *resource = oc_ri_get_app_resources();
-  for (; resource; resource = resource->next) {
-    if (resource->device != device_index)
-      continue;
-    process_batch_response(links_array, resource, endpoint);
-  }
-
-#if defined(OC_COLLECTIONS)
-  oc_resource_t *collection = (oc_resource_t *)oc_collection_get_all();
-  for (; collection; collection = collection->next) {
-    if (collection->device != device_index)
-      continue;
-
-    process_batch_response(links_array, collection, endpoint);
-  }
-#endif /* OC_COLLECTIONS */
-#endif /* OC_SERVER */
+  iterate_batch_response_data_t brd = { .links_array = links_array,
+                                        .endpoint = endpoint };
+  oc_resources_iterate(device, true, discovery_iterate_batch_response, &brd);
 }
+
+#ifdef OC_HAS_FEATURE_ETAG
+
+typedef struct
+{
+  const oc_endpoint_t *endpoint;
+  uint64_t etag;
+} iterate_get_etag_data_t;
+
+static bool
+discovery_iterate_get_batch_etag(oc_resource_t *resource, void *data)
+{
+  iterate_get_etag_data_t *ged = (iterate_get_etag_data_t *)data;
+  if (!oc_discovery_resource_is_in_batch_response(resource, ged->endpoint,
+                                                  false)) {
+    return true;
+  }
+
+  if (resource->etag > ged->etag) {
+    ged->etag = resource->etag;
+  }
+  return true;
+}
+
+uint64_t
+oc_discovery_get_batch_etag(const oc_endpoint_t *endpoint, size_t device)
+{
+  iterate_get_etag_data_t ged = {
+    .endpoint = endpoint,
+    .etag = OC_ETAG_UNINITIALIZED,
+  };
+  oc_resources_iterate(device, true, discovery_iterate_get_batch_etag, &ged);
+  return ged.etag;
+}
+
+#endif /* OC_HAS_FEATURE_ETAG */
+
 #endif /* OC_RES_BATCH_SUPPORT */
 
 #ifdef OC_SECURITY
@@ -917,8 +960,10 @@ discovery_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
     if (!s->priv) {
       char uuid[OC_UUID_LEN];
       oc_uuid_to_str(&s->uuid, uuid, OC_UUID_LEN);
-      oc_rep_set_text_string(root, sduuid, uuid);
-      oc_rep_set_text_string(root, sdname, oc_string(s->name));
+      oc_rep_set_text_string_v1(root, sduuid, uuid,
+                                oc_strnlen(uuid, OC_ARRAY_SIZE(uuid)));
+      oc_rep_set_text_string_v1(root, sdname, oc_string(s->name),
+                                oc_string_len(s->name));
     }
 #endif
     oc_rep_set_array(root, links);

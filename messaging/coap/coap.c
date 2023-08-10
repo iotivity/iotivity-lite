@@ -693,14 +693,18 @@ coap_oscore_parse_inner_option(coap_packet_t *packet,
     packet->content_format = (uint16_t)content_format;
     return COAP_NO_ERROR;
   }
-  case COAP_OPTION_ETAG:
+  case COAP_OPTION_ETAG: {
     packet->etag_len = (uint8_t)MIN(COAP_ETAG_LEN, option_length);
     memcpy(packet->etag, option, packet->etag_len);
-    OC_DBG("  ETag %u [0x%02X%02X%02X%02X%02X%02X%02X%02X]", packet->etag_len,
-           packet->etag[0], packet->etag[1], packet->etag[2], packet->etag[3],
-           packet->etag[4], packet->etag[5], packet->etag[6],
-           packet->etag[7]); /*FIXME always prints 8 bytes */
+#if OC_DBG_IS_ENABLED
+    char buf[32];
+    size_t buf_size = OC_ARRAY_SIZE(buf);
+    oc_conv_byte_array_to_hex_string(packet->etag, packet->etag_len, buf,
+                                     &buf_size);
+    OC_DBG("  ETag %u [0x%s]", packet->etag_len, buf);
+#endif /* OC_DBG_IS_ENABLED */
     return COAP_NO_ERROR;
+  }
   case COAP_OPTION_ACCEPT: {
     int64_t accept = coap_parse_int_option(option, option_length);
     OC_DBG("  Accept [%" PRId64 "]", accept);

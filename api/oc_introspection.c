@@ -20,16 +20,17 @@
 
 #ifdef OC_INTROSPECTION
 
+#include "api/oc_core_res_internal.h"
+#include "api/oc_introspection_internal.h"
+#include "api/oc_ri_internal.h"
+#include "api/oc_server_api_internal.h"
 #include "api/oc_storage_internal.h"
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
 #include "oc_config.h"
 #include "oc_core_res.h"
-#include "oc_core_res_internal.h"
 #include "oc_endpoint.h"
 #include "oc_introspection.h"
-#include "oc_introspection_internal.h"
-#include "oc_server_api_internal.h"
 #include "port/oc_log_internal.h"
 #include "util/oc_macros_internal.h"
 

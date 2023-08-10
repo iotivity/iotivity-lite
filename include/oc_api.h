@@ -1518,6 +1518,25 @@ typedef void (*oc_send_response_cb_t)(oc_request_t *request,
 OC_API
 void oc_set_send_response_callback(oc_send_response_cb_t cb);
 
+#ifdef OC_HAS_FEATURE_ETAG
+
+/**
+ * @brief Set the ETag for the response to a OC_GET request.
+ *
+ * @param request the request being responded to (cannot be NULL)
+ * @param etag ETag value (cannot be NULL)
+ * @param etag_len length of the ETag value
+ *
+ * @return 0 if successful,
+ * @return -EINVAL if the request method is not OC_GET or the etag_len is
+ * longer than COAP_ETAG_LEN
+ */
+OC_API
+int oc_set_send_response_etag(oc_request_t *request, const uint8_t *etag,
+                              uint8_t etag_len) OC_NONNULL();
+
+#endif /* OC_HAS_FEATURE_ETAG */
+
 /**
  * @brief retrieve the payload from the request, no processing
  *

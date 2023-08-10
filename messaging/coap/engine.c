@@ -288,7 +288,6 @@ static coap_receive_status_t
 coap_receive_blockwise_block1(coap_receive_ctx_t *ctx, const char *href,
                               size_t href_len, const oc_endpoint_t *endpoint)
 {
-  // block2 is expected to be used with POST/PUT
   assert(ctx->request->code == COAP_POST || ctx->request->code == COAP_PUT);
   OC_DBG("processing block1 option");
   const uint8_t *incoming_block;
@@ -370,13 +369,15 @@ static coap_receive_status_t
 coap_receive_blockwise_block2(coap_receive_ctx_t *ctx, const char *href,
                               size_t href_len, const oc_endpoint_t *endpoint)
 {
-  // block2 is expected to be used with GET/FETCH and should contain no payload
-  assert(ctx->request->code == COAP_GET);
   OC_DBG("processing block2 option");
   const uint8_t *incoming_block;
   uint32_t incoming_block_len = coap_get_payload(ctx->request, &incoming_block);
-  assert(incoming_block_len == 0);
-  (void)incoming_block_len;
+  // block2 in request is expected to be used with GET/FETCH and should contain
+  // no payload
+  if (incoming_block_len > 0) {
+    OC_ERR("invalid GET/FETCH request containing payload");
+    return COAP_RECEIVE_ERROR;
+  }
 
   ctx->response_buffer = oc_blockwise_find_response_buffer(
     href, href_len, endpoint, ctx->request->code, ctx->request->uri_query,
@@ -422,19 +423,24 @@ coap_receive_blockwise_block2(coap_receive_ctx_t *ctx, const char *href,
                             ctx->block2.size, 0);
     const oc_blockwise_response_state_t *response_state =
       (oc_blockwise_response_state_t *)ctx->response_buffer;
-    coap_options_set_etag(ctx->response, response_state->etag, COAP_ETAG_LEN);
+    if (response_state->etag.length > 0) {
+      coap_options_set_etag(ctx->response, response_state->etag.value,
+                            response_state->etag.length);
+    }
     ctx->response_buffer->ref_count = more;
     return COAP_RECEIVE_SUCCESS;
   }
 
-  OC_DBG("requesting block-wise transfer; creating new block-wise response "
-         "buffer");
   if (ctx->block2.num != 0) {
     OC_ERR("initiating block-wise transfer with request for block_num > 0");
     return COAP_RECEIVE_ERROR;
   }
+
 #if 0
-  if (incoming_block_len == 0) {
+  OC_DBG(
+    "requesting block-wise transfer; creating new block-wise response buffer");
+  if (incoming_block_len == 0)
+  {
     return COAP_RECEIVE_INVOKE_HANDLER;
   }
   ctx->request_buffer = oc_blockwise_find_request_buffer(
@@ -472,11 +478,19 @@ coap_receive_method_payload(coap_receive_ctx_t *ctx, const char *href,
   assert(ctx->request->code >= COAP_GET && ctx->request->code <= COAP_DELETE);
 
   // block1 and block2 options are expected to be used with UDP protocol
-  if (ctx->block1.enabled) {
+  if (ctx->block1.enabled &&
+      // block1 is expected only for POST/PUT requests
+      (ctx->request->code == COAP_POST || ctx->request->code == COAP_PUT)) {
     return coap_receive_blockwise_block1(ctx, href, href_len, endpoint);
   }
-  if (ctx->block2.enabled) {
+  if (ctx->block2.enabled &&
+      // block2 is expected only for GET/FETCH requests
+      ctx->request->code == COAP_GET) {
     return coap_receive_blockwise_block2(ctx, href, href_len, endpoint);
+  }
+  if (ctx->block1.enabled || ctx->block2.enabled) {
+    OC_ERR("unexpected block1 and block2 options");
+    return COAP_RECEIVE_ERROR;
   }
 
   OC_DBG("no block options; processing regular request");
@@ -554,7 +568,7 @@ coap_send_response(coap_receive_ctx_t *ctx)
   }
 
   if (ctx->transaction == NULL) {
-    OC_ERR("cannot send response: transaction is NULL");
+    OC_DBG("skip sending of response: transaction is NULL");
     return;
   }
 
@@ -653,6 +667,8 @@ coap_receive_set_response_by_handler(coap_receive_ctx_t *ctx,
   if (payload != NULL) {
     coap_set_payload(ctx->response, payload, payload_size);
   }
+
+  bool set_etag = true;
   if (ctx->block2.enabled ||
       ctx->response_buffer->payload_size > ctx->block2.size) {
     coap_options_set_block2(
@@ -660,11 +676,19 @@ coap_receive_set_response_by_handler(coap_receive_ctx_t *ctx,
       (ctx->response_buffer->payload_size > ctx->block2.size) ? 1 : 0,
       ctx->block2.size, 0);
     coap_options_set_size2(ctx->response, ctx->response_buffer->payload_size);
+  } else {
+#ifndef OC_HAS_FEATURE_ETAG
+    set_etag = false;
+#endif /* !OC_HAS_FEATURE_ETAG */
+    ctx->response_buffer->ref_count = 0;
+  }
+  if (set_etag) {
     const oc_blockwise_response_state_t *response_state =
       (oc_blockwise_response_state_t *)ctx->response_buffer;
-    coap_options_set_etag(ctx->response, response_state->etag, COAP_ETAG_LEN);
-  } else {
-    ctx->response_buffer->ref_count = 0;
+    if (response_state->etag.length > 0) {
+      coap_options_set_etag(ctx->response, response_state->etag.value,
+                            response_state->etag.length);
+    }
   }
 #endif /* OC_BLOCK_WISE */
   return ctx->response->code;
@@ -873,7 +897,7 @@ coap_receive_request_with_code(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint)
       uint32_t buffer_size = (uint32_t)OC_MAX_APP_DATA_SIZE;
       ctx->response_buffer = oc_blockwise_alloc_response_buffer(
         oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
-        endpoint, client_cb->method, OC_BLOCKWISE_CLIENT, buffer_size);
+        endpoint, client_cb->method, OC_BLOCKWISE_CLIENT, buffer_size, false);
       if (ctx->response_buffer != NULL) {
         OC_DBG("created new response buffer for uri %s",
                oc_string(ctx->response_buffer->href));
@@ -1021,13 +1045,22 @@ coap_process_inbound_message(oc_message_t *msg)
   /* extract block options */
   coap_block_options_t block1 = coap_packet_get_block_options(&message, false);
   coap_block_options_t block2 = coap_packet_get_block_options(&message, true);
-#ifndef OC_BLOCK_WISE
+#ifdef OC_BLOCK_WISE
+#ifdef OC_TCP
+  if ((msg->endpoint.flags & TCP) != 0 && (block1.enabled || block2.enabled)) {
+    OC_ERR(
+      "block options received but block-wise transfer not supported over TCP");
+    ret = COAP_RECEIVE_ERROR;
+    goto receive_result;
+  }
+#endif /* OC_TCP */
+#else  /* !OC_BLOCK_WISE */
   if (block1.enabled || block2.enabled) {
     OC_ERR("block options received but block-wise transfer not supported");
     ret = COAP_RECEIVE_ERROR;
     goto receive_result;
   }
-#endif /* !OC_BLOCK_WISE */
+#endif /* OC_BLOCK_WISE */
 
   ctx = (coap_receive_ctx_t){
     .request = &message,
@@ -1044,9 +1077,9 @@ coap_process_inbound_message(oc_message_t *msg)
   ret =
     coap_receive(&ctx, &msg->endpoint, oc_ri_invoke_coap_entity_handler, NULL);
 
-#ifndef OC_BLOCK_WISE
+#if !defined(OC_BLOCK_WISE) || defined(OC_TCP)
 receive_result:
-#endif /* !OC_BLOCK_WISE */
+#endif /* !OC_BLOCK_WISE || OC_TCP */
   if (ret < 0 || ret == COAP_RECEIVE_SEND_RESET_MESSAGE) {
 #ifdef OC_BLOCK_WISE
     if (ctx.request_buffer != NULL) {

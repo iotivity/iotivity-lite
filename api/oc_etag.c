@@ -59,7 +59,7 @@ oc_etag_global(void)
 uint64_t
 oc_etag_set_global(uint64_t etag)
 {
-  if (etag == OC_ETAG_UNINITALIZED) {
+  if (etag == OC_ETAG_UNINITIALIZED) {
     etag = 1;
   }
   if (etag < g_etag) {
@@ -96,74 +96,17 @@ oc_etag_clear_storage(void)
   return success;
 }
 
-typedef int (*etag_process_resource_fn_t)(oc_resource_t *resource, void *data);
-
 static bool
-etag_iterate_resources(size_t device, etag_process_resource_fn_t process_fn,
-                       void *data)
-{
-  bool success = true;
-  if (device == 0) {
-    // platform resources
-    for (int type = 0; type < OCF_CON; ++type) {
-      oc_resource_t *platform_res = oc_core_get_resource_by_index(type, 0);
-      if (process_fn(platform_res, data) != 0) {
-        OC_ERR("failed to process platform resource(%s)",
-               oc_string(platform_res->uri));
-        success = false;
-      }
-    }
-  }
-
-  // core resources
-  for (int type = OCF_CON; type <= OCF_D; ++type) {
-    oc_resource_t *core_res = oc_core_get_resource_by_index(type, device);
-    if (process_fn(core_res, data) != 0) {
-      OC_ERR("failed to process core resource(%s)", oc_string(core_res->uri));
-      success = false;
-    }
-  }
-
-  // app resources
-  for (oc_resource_t *app_res = oc_ri_get_app_resources(); app_res != NULL;
-       app_res = app_res->next) {
-    if (app_res->device != device) {
-      continue;
-    }
-    if (process_fn(app_res, data) != 0) {
-      OC_ERR("failed to process dynamic resource(%s)", oc_string(app_res->uri));
-      success = false;
-    }
-  }
-
-#ifdef OC_COLLECTIONS
-  // collections
-  for (oc_collection_t *col = oc_collection_get_all(); col != NULL;
-       col = (oc_collection_t *)col->res.next) {
-    if (col->res.device != device) {
-      continue;
-    }
-    if (process_fn(&col->res, data) != 0) {
-      OC_ERR("failed to process collection(%s)", oc_string(col->res.uri));
-      success = false;
-    }
-  }
-#endif /* OC_COLLECTIONS */
-
-  return success;
-}
-
-static int
 etag_iterate_encode_resource(oc_resource_t *resource, void *data)
 {
   (void)data;
   OC_DBG("encoding resource [%zu:]%s", resource->device,
          oc_string(resource->uri));
   uint64_t etag = oc_resource_get_etag(resource);
-  if (etag == OC_ETAG_UNINITALIZED) {
+  if (etag == OC_ETAG_UNINITIALIZED) {
     OC_DBG("skipping uninitialized etag for resource %s",
            oc_string(resource->uri));
-    return 0;
+    return true;
   }
   CborError err =
     oc_rep_encode_text_string(oc_rep_object(root), oc_string(resource->uri),
@@ -177,13 +120,13 @@ etag_iterate_encode_resource(oc_resource_t *resource, void *data)
   err |= oc_rep_encode_uint(&etag_map, etag);
   err |= oc_rep_encoder_close_container(oc_rep_object(root), &etag_map);
 
-#if OC_ERR_IS_ENABLED
   if (err != CborNoError) {
     OC_ERR("failed to encode device(%zu) resource %s", resource->device,
            oc_string(resource->uri));
+    g_err |= err;
+    return false;
   }
-#endif /* OC_ERR_IS_ENABLED */
-  return err;
+  return true;
 }
 
 static int
@@ -191,11 +134,10 @@ etag_store_encode(size_t device, void *data)
 {
   (void)data;
   oc_rep_start_root_object();
-  if (!etag_iterate_resources(device, etag_iterate_encode_resource, NULL)) {
-    return -1;
-  }
+  // we store platform resources only for device 0
+  oc_resources_iterate(device, device == 0, etag_iterate_encode_resource, NULL);
   oc_rep_end_root_object();
-  return 0;
+  return oc_rep_get_cbor_errno();
 }
 
 bool
@@ -228,36 +170,36 @@ typedef struct etag_update_from_rep_data_t
   uint64_t *etag;
 } etag_update_from_rep_data_t;
 
-static int
+static bool
 etag_iterate_update_resources_by_rep(oc_resource_t *resource, void *data)
 {
   etag_update_from_rep_data_t *rep_data = (etag_update_from_rep_data_t *)data;
   oc_rep_t *res_rep;
   if (!oc_rep_get_object(rep_data->rep, oc_string(resource->uri), &res_rep)) {
     OC_DBG("no representation for resource %s", oc_string(resource->uri));
-    return 0;
+    return true;
   }
 
   int64_t etag = 0;
   if (!oc_rep_get_int(res_rep, "etag", &etag) || etag < 0 ||
-      etag == OC_ETAG_UNINITALIZED) {
+      etag == OC_ETAG_UNINITIALIZED) {
     OC_DBG("ignoring invalid etag for resource %s", oc_string(resource->uri));
-    return 0;
+    return true;
   }
 
   oc_resource_set_etag(resource, (uint64_t)etag);
   if ((uint64_t)etag > *rep_data->etag) {
     *rep_data->etag = (uint64_t)etag;
   }
-  return 0;
+  return true;
 }
 
-static int
+static bool
 etag_iterate_clear_etag(oc_resource_t *resource, void *data)
 {
   (void)data;
-  oc_resource_set_etag(resource, OC_ETAG_UNINITALIZED);
-  return 0;
+  oc_resource_set_etag(resource, OC_ETAG_UNINITIALIZED);
+  return true;
 }
 
 static int
@@ -267,23 +209,19 @@ etag_store_decode_etags(const oc_rep_t *rep, size_t device, void *data)
   // rep
   uint64_t *etag = (uint64_t *)data;
   etag_update_from_rep_data_t rep_data = { rep, etag };
-  bool ret = etag_iterate_resources(
-    device, etag_iterate_update_resources_by_rep, &rep_data);
-  // return value should always be true because etag_iterate_resources always
-  // returns 0
-  assert(ret);
-  (void)ret;
+  oc_resources_iterate(device, device == 0,
+                       etag_iterate_update_resources_by_rep, &rep_data);
   return 0;
 }
 
-static int
+static bool
 etag_iterate_update_empty_etag(oc_resource_t *resource, void *data)
 {
   (void)data;
-  if (oc_resource_get_etag(resource) == OC_ETAG_UNINITALIZED) {
+  if (oc_resource_get_etag(resource) == OC_ETAG_UNINITIALIZED) {
     oc_resource_set_etag(resource, oc_etag_get());
   }
-  return 0;
+  return true;
 }
 
 bool
@@ -295,10 +233,7 @@ oc_etag_load_from_storage(bool from_storage_only)
   for (size_t i = 0; i < oc_core_get_num_devices(); ++i) {
     if (!from_storage_only) {
       // clear all etags
-      // return value not checked - etag_iterate_clear_etag always returns 0
-      bool ret = etag_iterate_resources(i, etag_iterate_clear_etag, NULL);
-      assert(ret);
-      (void)ret;
+      oc_resources_iterate(i, i == 0, etag_iterate_clear_etag, NULL);
     }
 
     // load etags from storage
@@ -316,12 +251,7 @@ oc_etag_load_from_storage(bool from_storage_only)
   if (!from_storage_only) {
     // update empty etags
     for (size_t i = 0; i < oc_core_get_num_devices(); ++i) {
-      // return value not checked - etag_iterate_update_empty_etag always
-      // returns 0
-      bool ret =
-        etag_iterate_resources(i, etag_iterate_update_empty_etag, NULL);
-      assert(ret);
-      (void)ret;
+      oc_resources_iterate(i, i == 0, etag_iterate_update_empty_etag, NULL);
     }
   }
   return success;

@@ -37,6 +37,31 @@ extern "C" {
  */
 bool oc_resource_is_initialized(const oc_resource_t *resource) OC_NONNULL();
 
+/**
+ * @brief Callback invoked for each resource iterated by oc_resources_iterate.
+ *
+ * @param resource resource to process
+ * @param data custom user data provided to oc_resources_iterate
+ * @return true to continue iteration
+ * @return false to stop iteration
+ */
+typedef bool (*oc_resource_iterate_fn_t)(oc_resource_t *resource, void *data);
+
+/**
+ * @brief Iterate over all resources of given device and invoke given callback.
+ *
+ * @param device device to iterate
+ * @param includePlatform true to include platform resources
+ * @param fn callback invoked for each resource (cannot be NULL)
+ * @param data custom user data passed to \p fn
+ *
+ * @note if \p fn returns false then iteration is stopped immediately and the
+ * remaining resources are not iterated
+ */
+void oc_resources_iterate(size_t device, bool includePlatform,
+                          oc_resource_iterate_fn_t fn, void *data)
+  OC_NONNULL(3);
+
 #ifdef __cplusplus
 }
 #endif

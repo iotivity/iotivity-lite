@@ -40,12 +40,17 @@
 #include "security/oc_acl_internal.h"
 #endif /* OC_SECURITY */
 
+#ifdef OC_HAS_FEATURE_ETAG
+#include "api/oc_etag_internal.h"
+#endif /* OC_HAS_FEATURE_ETAG */
+
 #include <assert.h>
 
 OC_MEMB(g_collections_s, oc_collection_t, OC_MAX_NUM_COLLECTIONS);
 OC_LIST(g_collections);
 /* Allocator for oc_rtt_t */
 OC_MEMB(g_rtt_s, oc_rt_t, OC_COLLECTION_SUPPORTED_RTS_COUNT_MAX);
+
 #ifdef OC_COLLECTIONS_IF_CREATE
 /* Allocator for resource factories */
 OC_MEMB(g_rts_s, oc_rt_factory_t, 1);
@@ -66,6 +71,34 @@ oc_collection_alloc(void)
   OC_LIST_STRUCT_INIT(collection, mandatory_rts);
   OC_LIST_STRUCT_INIT(collection, links);
   return collection;
+}
+
+static oc_event_callback_retval_t
+collection_notify_batch_async(void *data)
+{
+  if (coap_notify_collection_batch((oc_collection_t *)data) != 0) {
+    OC_WRN("failed to send batch notification to collection observers");
+  }
+  return OC_EVENT_DONE;
+}
+
+static oc_event_callback_retval_t
+collection_notify_baseline_async(void *data)
+{
+  if (coap_notify_collection_baseline((oc_collection_t *)data) != 0) {
+    OC_WRN("failed to send baseline notification to collection observers");
+  }
+  return OC_EVENT_DONE;
+}
+
+static oc_event_callback_retval_t
+collection_notify_links_list_async(void *data)
+{
+  if (coap_notify_collection_links_list(data) != 0) {
+    OC_WRN("failed to send linked list notification to collection observers");
+  }
+  oc_reset_delayed_callback(data, collection_notify_baseline_async, 0);
+  return OC_EVENT_DONE;
 }
 
 static void
@@ -93,6 +126,10 @@ collection_free(oc_collection_t *collection, bool notify)
     oc_notify_resource_removed(&collection->res);
   }
 
+  oc_remove_delayed_callback(collection, collection_notify_batch_async);
+  oc_remove_delayed_callback(collection, collection_notify_baseline_async);
+  oc_remove_delayed_callback(collection, collection_notify_links_list_async);
+
   oc_ri_free_resource_properties(&collection->res);
   collection_free_resource_types(collection->supported_rts);
   collection_free_resource_types(collection->mandatory_rts);
@@ -119,32 +156,16 @@ oc_collections_free_all(void)
   }
 }
 
-static oc_event_callback_retval_t
-batch_notify_collection(void *data)
+static void
+collection_notify_resource_changed(oc_collection_t *collection)
 {
-  if (coap_notify_collection_batch((oc_collection_t *)data) != 0) {
-    OC_WRN("failed to send batch notification to collection observers");
-  }
-  return OC_EVENT_DONE;
-}
-
-static oc_event_callback_retval_t
-baseline_notify_collection(void *data)
-{
-  if (coap_notify_collection_baseline((oc_collection_t *)data) != 0) {
-    OC_WRN("failed to send baseline notification to collection observers");
-  }
-  return OC_EVENT_DONE;
-}
-
-static oc_event_callback_retval_t
-links_list_notify_collection(void *data)
-{
-  if (coap_notify_collection_links_list(data) != 0) {
-    OC_WRN("failed to send linked list notification to collection observers");
-  }
-  oc_set_delayed_callback(data, baseline_notify_collection, 0);
-  return OC_EVENT_DONE;
+  oc_reset_delayed_callback(collection, collection_notify_links_list_async, 0);
+#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
+  coap_notify_discovery_batch_observers(&collection->res);
+#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
+#ifdef OC_HAS_FEATURE_ETAG
+  oc_resource_update_etag(&collection->res);
+#endif /* OC_HAS_FEATURE_ETAG */
 }
 
 void
@@ -152,13 +173,13 @@ oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
 {
   assert(collection != NULL);
   assert(link != NULL);
-  oc_collection_t *c = (oc_collection_t *)collection;
 
   if (link->resource == NULL || link->resource->uri.size <= 1) {
     OC_ERR("cannot add link to collection, invalid link");
     return;
   }
   oc_string_view_t link_uri = oc_string_view2(&link->resource->uri);
+  oc_collection_t *col = (oc_collection_t *)collection;
 
   // Find position to insert to keep the list sorted by primarily by href
   // length and secondarily by href value.
@@ -166,7 +187,7 @@ oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
   // to find a unique index for a new link.
   // Example of list sorted in this order:
   // ["/lights", "/switch", "/lights/1", "/lights/2", "/lights/10"]
-  oc_link_t *next = oc_list_head(c->links);
+  oc_link_t *next = oc_list_head(col->links);
   oc_link_t *prev = NULL;
   while (next != NULL) {
     if ((next->resource != NULL) && (oc_string_len(next->resource->uri) > 0)) {
@@ -183,14 +204,11 @@ oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
     prev = next;
     next = next->next;
   }
-  oc_list_insert(c->links, prev, link);
+  oc_list_insert(col->links, prev, link);
   if (link->resource == collection) {
     oc_string_array_add_item(link->rel, "self");
   }
-  oc_set_delayed_callback(collection, links_list_notify_collection, 0);
-#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-  coap_notify_discovery_batch_observers(collection);
-#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
+  collection_notify_resource_changed(col);
 }
 
 void
@@ -199,12 +217,9 @@ oc_collection_remove_link(oc_resource_t *collection, const oc_link_t *link)
   if (collection == NULL || link == NULL) {
     return;
   }
-  oc_collection_t *c = (oc_collection_t *)collection;
-  oc_list_remove(c->links, link);
-  oc_set_delayed_callback(collection, links_list_notify_collection, 0);
-#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-  coap_notify_discovery_batch_observers(collection);
-#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
+  oc_collection_t *col = (oc_collection_t *)collection;
+  oc_list_remove(col->links, link);
+  collection_notify_resource_changed(col);
 }
 
 oc_link_t *
@@ -313,6 +328,7 @@ collection_is_known_rt(oc_list_t list, oc_string_view_t rtv)
 }
 
 #ifdef OC_COLLECTIONS_IF_CREATE
+
 static oc_rt_factory_t *
 collection_get_rtfactory(oc_string_view_t rtv)
 {
@@ -1143,12 +1159,35 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
       coap_notify_collection_observers(
         collection, request->response->response_buffer, iface_mask);
     } else if (iface_mask == OC_IF_B) {
-      oc_set_delayed_callback(collection, batch_notify_collection, 0);
+      oc_reset_delayed_callback(collection, collection_notify_batch_async, 0);
     }
   }
 
   return true;
 }
+
+#ifdef OC_HAS_FEATURE_ETAG
+
+uint64_t
+oc_collection_get_batch_etag(const oc_collection_t *collection)
+{
+  // TODO: finish this
+#if 0
+  uint64_t etag = collection->res.etag;
+  // TODO: check oc_handle_collection_batch_request, some links may be skipped
+  for (const oc_link_t *link = (oc_link_t *)oc_list_head(collection->links);
+       link; link = link->next) {
+    if (link->resource->etag > etag) {
+      etag = link->resource->etag;
+    }
+  }
+  return etag;
+#endif
+  (void)collection;
+  return OC_ETAG_UNINITIALIZED;
+}
+
+#endif /* OC_HAS_FEATURE_ETAG */
 
 oc_collection_t *
 oc_collection_get_all(void)

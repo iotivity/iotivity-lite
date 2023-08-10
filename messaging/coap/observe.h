@@ -50,6 +50,7 @@
 #ifndef OBSERVE_H
 #define OBSERVE_H
 
+#include "api/oc_ri_internal.h"
 #include "coap.h"
 #include "oc_endpoint.h"
 #include "oc_ri.h"
