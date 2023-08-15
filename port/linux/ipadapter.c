@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#define _GNU_SOURCE
 #include "api/oc_network_events_internal.h"
+#include "ip.h"
 #include "ipadapter.h"
 #include "ipcontext.h"
 #include "netsocket.h"
@@ -254,7 +254,7 @@ get_data_size(int sock)
       if (errno == EINTR) {
         continue;
       }
-      return -1;
+      return -errno;
     }
   } while ((size_t)response_len == guess);
   return response_len;
@@ -270,7 +270,7 @@ get_data(int sock, uint8_t *buffer, size_t buffer_size)
       if (errno == EINTR) {
         continue;
       }
-      return -1;
+      return -errno;
     }
     break;
   } while (true);
@@ -327,12 +327,14 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, int port,
   while (!done) {
     ssize_t response_len = get_data_size(nl_sock);
     if (response_len < 0) {
+      OC_ERR("failed to get data size (error %d)", (int)-response_len);
       close(nl_sock);
       return false;
     }
     uint8_t buffer[response_len];
     response_len = get_data(nl_sock, buffer, sizeof(buffer));
     if (response_len < 0) {
+      OC_ERR("failed to get data (error %d)", (int)-response_len);
       close(nl_sock);
       return false;
     }
@@ -546,13 +548,15 @@ process_interface_change_event(void)
 {
   ssize_t response_len = get_data_size(g_ifchange_sock);
   if (response_len < 0) {
-    OC_ERR("reading payload size from netlink interface");
+    OC_ERR("failed reading payload size from netlink interface (error %d)",
+           (int)-response_len);
     return -1;
   }
   uint8_t buffer[response_len];
   response_len = get_data(g_ifchange_sock, buffer, sizeof(buffer));
   if (response_len < 0) {
-    OC_ERR("reading payload from netlink interface");
+    OC_ERR("failed reading payload from netlink interface (error %d)",
+           (int)-response_len);
     return -1;
   }
 
@@ -653,103 +657,6 @@ process_interface_change_event(void)
   return success ? 0 : -1;
 }
 
-static int
-recv_msg(int sock, uint8_t *recv_buf, long recv_buf_size,
-         oc_endpoint_t *endpoint, bool multicast)
-{
-  struct sockaddr_storage client;
-  struct iovec iovec[1];
-  struct msghdr msg;
-  char msg_control[CMSG_LEN(sizeof(struct sockaddr_storage))];
-
-  iovec[0].iov_base = recv_buf;
-  iovec[0].iov_len = (size_t)recv_buf_size;
-
-  msg.msg_name = &client;
-  msg.msg_namelen = sizeof(client);
-
-  msg.msg_iov = iovec;
-  msg.msg_iovlen = 1;
-
-  msg.msg_control = msg_control;
-  msg.msg_controllen = sizeof(msg_control);
-
-  msg.msg_flags = 0;
-
-  ssize_t ret;
-  do {
-    ret = recvmsg(sock, &msg, 0);
-  } while (ret < 0 && errno == EINTR);
-
-  if (ret < 0 || (msg.msg_flags & MSG_TRUNC) || (msg.msg_flags & MSG_CTRUNC)) {
-    OC_ERR("recvmsg returned with an error: %d", errno);
-    return -1;
-  }
-
-  struct cmsghdr *cmsg;
-  for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != 0; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-    if (cmsg->cmsg_level == IPPROTO_IPV6 && cmsg->cmsg_type == IPV6_PKTINFO) {
-      if (msg.msg_namelen != sizeof(struct sockaddr_in6)) {
-        OC_ERR("anciliary data contains invalid source address");
-        return -1;
-      }
-      /* Set source address of packet in endpoint structure */
-      const struct sockaddr_in6 *c6 = (struct sockaddr_in6 *)&client;
-      memcpy(endpoint->addr.ipv6.address, c6->sin6_addr.s6_addr,
-             sizeof(c6->sin6_addr.s6_addr));
-      endpoint->addr.ipv6.scope = c6->sin6_scope_id;
-      endpoint->addr.ipv6.port = ntohs(c6->sin6_port);
-
-      /* Set receiving network interface index */
-      CLANG_IGNORE_WARNING_START
-      CLANG_IGNORE_WARNING("-Wcast-align")
-      const struct in6_pktinfo *pktinfo =
-        (const struct in6_pktinfo *)CMSG_DATA(cmsg);
-      CLANG_IGNORE_WARNING_END
-      endpoint->interface_index = pktinfo->ipi6_ifindex;
-
-      /* For a unicast receiving socket, extract the destination address
-       * of the UDP packet into the endpoint's addr_local attribute.
-       * This would be used to set the source address of a response that
-       * results from this message.
-       */
-      if (!multicast) {
-        memcpy(endpoint->addr_local.ipv6.address, pktinfo->ipi6_addr.s6_addr,
-               16);
-      } else {
-        memset(endpoint->addr_local.ipv6.address, 0, 16);
-      }
-      break;
-    }
-#ifdef OC_IPV4
-    if (cmsg->cmsg_level == SOL_IP && cmsg->cmsg_type == IP_PKTINFO) {
-      if (msg.msg_namelen != sizeof(struct sockaddr_in)) {
-        OC_ERR("anciliary data contains invalid source address");
-        return -1;
-      }
-      CLANG_IGNORE_WARNING_START
-      CLANG_IGNORE_WARNING("-Wcast-align")
-      const struct in_pktinfo *pktinfo = (struct in_pktinfo *)CMSG_DATA(cmsg);
-      CLANG_IGNORE_WARNING_END
-      const struct sockaddr_in *c4 = (struct sockaddr_in *)&client;
-      memcpy(endpoint->addr.ipv4.address, &c4->sin_addr.s_addr,
-             sizeof(c4->sin_addr.s_addr));
-      endpoint->addr.ipv4.port = ntohs(c4->sin_port);
-      endpoint->interface_index = (unsigned)pktinfo->ipi_ifindex;
-      if (!multicast) {
-        memcpy(endpoint->addr_local.ipv4.address, &pktinfo->ipi_addr.s_addr, 4);
-      } else {
-        memset(endpoint->addr_local.ipv4.address, 0, 4);
-      }
-      break;
-    }
-#endif /* OC_IPV4 */
-  }
-
-  assert(ret <= INT_MAX);
-  return (int)ret;
-}
-
 static void
 udp_add_socks_to_rfd_set(ip_context_t *dev)
 {
@@ -790,8 +697,8 @@ oc_udp_receive_message(const ip_context_t *dev, fd_set *fds,
   if (oc_sock_listener_fd_isset(&dev->server, fds)) {
     OC_DBG("udp receive server.sock(fd=%d)", dev->server.sock);
     FD_CLR(dev->server.sock, fds);
-    int count = recv_msg(dev->server.sock, message->data, OC_PDU_SIZE,
-                         &message->endpoint, false);
+    int count = oc_ip_recv_msg(dev->server.sock, message->data, OC_PDU_SIZE,
+                               &message->endpoint, false);
     if (count < 0) {
       return ADAPTER_STATUS_ERROR;
     }
@@ -803,8 +710,8 @@ oc_udp_receive_message(const ip_context_t *dev, fd_set *fds,
   if ((dev->mcast_sock >= 0) && FD_ISSET(dev->mcast_sock, fds)) {
     OC_DBG("udp receive mcast_sock(fd=%d)", dev->mcast_sock);
     FD_CLR(dev->mcast_sock, fds);
-    int count = recv_msg(dev->mcast_sock, message->data, OC_PDU_SIZE,
-                         &message->endpoint, true);
+    int count = oc_ip_recv_msg(dev->mcast_sock, message->data, OC_PDU_SIZE,
+                               &message->endpoint, true);
     if (count < 0) {
       return ADAPTER_STATUS_ERROR;
     }
@@ -817,8 +724,8 @@ oc_udp_receive_message(const ip_context_t *dev, fd_set *fds,
   if (oc_sock_listener_fd_isset(&dev->server4, fds)) {
     OC_DBG("udp receive server4.sock(fd=%d)", dev->server4.sock);
     FD_CLR(dev->server4.sock, fds);
-    int count = recv_msg(dev->server4.sock, message->data, OC_PDU_SIZE,
-                         &message->endpoint, false);
+    int count = oc_ip_recv_msg(dev->server4.sock, message->data, OC_PDU_SIZE,
+                               &message->endpoint, false);
     if (count < 0) {
       return ADAPTER_STATUS_ERROR;
     }
@@ -830,8 +737,8 @@ oc_udp_receive_message(const ip_context_t *dev, fd_set *fds,
   if ((dev->mcast4_sock >= 0) && FD_ISSET(dev->mcast4_sock, fds)) {
     OC_DBG("udp receive mcast4_sock(fd=%d)", dev->mcast4_sock);
     FD_CLR(dev->mcast4_sock, fds);
-    int count = recv_msg(dev->mcast4_sock, message->data, OC_PDU_SIZE,
-                         &message->endpoint, true);
+    int count = oc_ip_recv_msg(dev->mcast4_sock, message->data, OC_PDU_SIZE,
+                               &message->endpoint, true);
     if (count < 0) {
       return ADAPTER_STATUS_ERROR;
     }
@@ -845,8 +752,8 @@ oc_udp_receive_message(const ip_context_t *dev, fd_set *fds,
   if (oc_sock_listener_fd_isset(&dev->secure, fds)) {
     OC_DBG("udp receive secure.sock(fd=%d)", dev->secure.sock);
     FD_CLR(dev->secure.sock, fds);
-    int count = recv_msg(dev->secure.sock, message->data, OC_PDU_SIZE,
-                         &message->endpoint, false);
+    int count = oc_ip_recv_msg(dev->secure.sock, message->data, OC_PDU_SIZE,
+                               &message->endpoint, false);
     if (count < 0) {
       return ADAPTER_STATUS_ERROR;
     }
@@ -859,8 +766,8 @@ oc_udp_receive_message(const ip_context_t *dev, fd_set *fds,
   if (oc_sock_listener_fd_isset(&dev->secure4, fds)) {
     OC_DBG("udp receive secure4.sock(fd=%d)", dev->secure4.sock);
     FD_CLR(dev->secure4.sock, fds);
-    int count = recv_msg(dev->secure4.sock, message->data, OC_PDU_SIZE,
-                         &message->endpoint, false);
+    int count = oc_ip_recv_msg(dev->secure4.sock, message->data, OC_PDU_SIZE,
+                               &message->endpoint, false);
     if (count < 0) {
       return ADAPTER_STATUS_ERROR;
     }
@@ -1083,101 +990,6 @@ network_event_thread(void *data)
   return NULL;
 }
 
-static ssize_t
-send_msg(int sock, struct sockaddr_storage *receiver,
-         const oc_message_t *message)
-{
-  if (sock == -1) {
-    OC_ERR("socket is disabled");
-    return -1;
-  }
-  char msg_control[CMSG_LEN(sizeof(struct sockaddr_storage))];
-  struct iovec iovec[1];
-  struct msghdr msg;
-
-  memset(&msg, 0, sizeof(struct msghdr));
-  msg.msg_name = (void *)receiver;
-  msg.msg_namelen = sizeof(struct sockaddr_storage);
-
-  msg.msg_iov = iovec;
-  msg.msg_iovlen = 1;
-
-  if (message->endpoint.flags & IPV6) {
-    struct cmsghdr *cmsg;
-    struct in6_pktinfo *pktinfo;
-
-    msg.msg_control = msg_control;
-    msg.msg_controllen = CMSG_SPACE(sizeof(struct in6_pktinfo));
-    memset(msg.msg_control, 0, msg.msg_controllen);
-
-    cmsg = CMSG_FIRSTHDR(&msg);
-    cmsg->cmsg_level = IPPROTO_IPV6;
-    cmsg->cmsg_type = IPV6_PKTINFO;
-    cmsg->cmsg_len = CMSG_LEN(sizeof(struct in6_pktinfo));
-
-    CLANG_IGNORE_WARNING_START
-    CLANG_IGNORE_WARNING("-Wcast-align")
-    pktinfo = (struct in6_pktinfo *)CMSG_DATA(cmsg);
-    CLANG_IGNORE_WARNING_END
-    memset(pktinfo, 0, sizeof(struct in6_pktinfo));
-
-    /* Get the outgoing interface index from message->endpoint */
-    pktinfo->ipi6_ifindex = message->endpoint.interface_index;
-    /* Set the source address of this message using the address
-     * from the endpoint's addr_local attribute.
-     */
-    memcpy(&pktinfo->ipi6_addr, message->endpoint.addr_local.ipv6.address, 16);
-  }
-#ifdef OC_IPV4
-  else if (message->endpoint.flags & IPV4) {
-    struct cmsghdr *cmsg;
-    struct in_pktinfo *pktinfo;
-
-    msg.msg_control = msg_control;
-    msg.msg_controllen = CMSG_SPACE(sizeof(struct in_pktinfo));
-    memset(msg.msg_control, 0, msg.msg_controllen);
-
-    cmsg = CMSG_FIRSTHDR(&msg);
-    cmsg->cmsg_level = SOL_IP;
-    cmsg->cmsg_type = IP_PKTINFO;
-    cmsg->cmsg_len = CMSG_LEN(sizeof(struct in_pktinfo));
-
-    CLANG_IGNORE_WARNING_START
-    CLANG_IGNORE_WARNING("-Wcast-align")
-    pktinfo = (struct in_pktinfo *)CMSG_DATA(cmsg);
-    CLANG_IGNORE_WARNING_END
-    memset(pktinfo, 0, sizeof(struct in_pktinfo));
-
-    pktinfo->ipi_ifindex = (int)message->endpoint.interface_index;
-    memcpy(&pktinfo->ipi_spec_dst, message->endpoint.addr_local.ipv4.address,
-           4);
-  }
-#else  /* !OC_IPV4 */
-  else {
-    OC_ERR("invalid endpoint");
-    return -1;
-  }
-#endif /* OC_IPV4 */
-
-  size_t bytes_sent = 0;
-  while (bytes_sent < message->length) {
-    iovec[0].iov_base = (void *)(message->data + bytes_sent);
-    iovec[0].iov_len = message->length - bytes_sent;
-    ssize_t x = sendmsg(sock, &msg, 0);
-    if (x < 0) {
-      OC_WRN("sendto() returned errno %d", (int)errno);
-      break;
-    }
-    bytes_sent += x;
-  }
-  OC_DBG("Sent %zu bytes", bytes_sent);
-
-  if (bytes_sent == 0) {
-    return -1;
-  }
-  return (ssize_t)bytes_sent;
-}
-
 bool
 oc_get_socket_address(const oc_endpoint_t *endpoint,
                       struct sockaddr_storage *addr)
@@ -1261,7 +1073,7 @@ oc_send_buffer_internal(oc_message_t *message, bool create, bool queue)
   }
 #endif /* OC_IPV4 */
 
-  return (int)send_msg(send_sock, &receiver, message);
+  return (int)oc_ip_send_msg(send_sock, &receiver, message);
 }
 
 int

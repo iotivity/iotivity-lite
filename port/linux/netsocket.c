@@ -18,7 +18,6 @@
  ****************************************************************************/
 
 #include "netsocket.h"
-
 #include "port/oc_log_internal.h"
 #include "util/oc_macros_internal.h"
 
