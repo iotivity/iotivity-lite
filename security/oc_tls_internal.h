@@ -224,8 +224,39 @@ bool oc_tls_uses_psk_cred(const oc_tls_peer_t *peer);
 
 /* Public APIs for selecting certificate credentials */
 void oc_tls_select_cert_ciphersuite(void);
+
+/**
+ * This function establishes an interface with the aim of selecting manufacturer
+ * credentials within the client role, which are consequently applied during the
+ * TLS handshake procedure.
+ *
+ * Internally employed by the stack, these interface methods serve to pinpoint
+ * the suitable manufacturer certificate credentials for a specific peer.It's
+ * crucial to note that these methods are not designed to be thread-safe.
+ *
+ * @param credid The designated credential ID: opt for -1 to allow the selection
+ * from any credential, or choose a value less than -1 to deactivate credential
+ * selection entirely.
+ */
 void oc_tls_select_mfg_cert_chain(int credid);
+
+/**
+ * This function defines an interface aimed at the task of choosing identity
+ * credentials within the client role, which are subsequently applied during
+ * the TLS handshake procedure.
+ *
+ * These interface methods are utilized internally by the stack to determine
+ * the suitable identity certificate credentials for a given peer. It's crucial
+ * to note that these methods are not designed to be thread-safe.
+ *
+ * @param credid The chosen credential ID; use -1 to allow selection from any
+ * credential, and use a value less than -1 to deactivate credential selection.
+ *
+ * @note If the intention is to enforce the use of the manufacturer's
+ * certificate rather than the identity certificate, simply set credid to -2.
+ */
 void oc_tls_select_identity_cert_chain(int credid);
+
 void oc_tls_select_psk_ciphersuite(void);
 void oc_tls_select_anon_ciphersuite(void);
 void oc_tls_select_cloud_ciphersuite(void);
@@ -325,6 +356,41 @@ mbedtls_x509_crt *oc_tls_get_trust_anchor_for_cred(const oc_sec_cred_t *cred);
  */
 mbedtls_x509_crt *oc_tls_get_trust_anchors(void);
 
+/**
+ * @brief Check global lists of credentials and trust anchors that they
+ * contain the same items.
+ *
+ * @return true if the lists of trust anchors are consistent with each
+ * other
+ * @return false otherwise
+ */
+int oc_tls_load_mfg_cert_chain(mbedtls_ssl_config *conf, size_t device,
+                               int credid);
+
+/**
+ * @brief Check global lists of credentials and trust anchors that they
+ * contain the same items.
+ *
+ * @return true if the lists of trust anchors are consistent with each
+ * other
+ * @return false otherwise
+ */
+int oc_tls_load_identity_cert_chain(mbedtls_ssl_config *conf, size_t device,
+                                    int credid);
+
+/**
+ * @brief Set up trust anchor and certificate chain for device to mbedtls ssl
+ * config.
+ *
+ * @param conf mbedtls ssl config
+ * @param device device index
+ * @param owned true if device is owned
+ * @return true success
+ * @return false failure
+ */
+bool oc_tls_load_cert_chain(mbedtls_ssl_config *conf, size_t device,
+                            bool owned);
+
 #ifdef OC_TEST
 /**
  * @brief Check global lists of credentials and identity certificates that they
@@ -345,6 +411,7 @@ bool oc_tls_validate_identity_certs_consistency(void);
  * @return false otherwise
  */
 bool oc_tls_validate_trust_anchors_consistency(void);
+
 #endif /* OC_TEST */
 
 #endif /* OC_PKI */
