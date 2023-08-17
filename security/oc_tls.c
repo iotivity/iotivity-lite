@@ -64,17 +64,56 @@
 #include <mbedtls/ssl.h>
 #include <mbedtls/ssl_cookie.h>
 #include <mbedtls/timing.h>
-/// TODO update mbedtls_config.h to use LOG_LEVEL instead of OC_DEBUG
-#if defined(OC_DEBUG)
-#include <mbedtls/debug.h>
-#include <mbedtls/error.h>
-#include <mbedtls/platform.h>
-#endif /* OC_DEBUG */
 
 #include <stdarg.h>
 #include <stdint.h>
 #include <string.h>
 #include <inttypes.h>
+
+/// TODO update mbedtls_config.h to use LOG_LEVEL instead of OC_DEBUG
+#if defined(OC_DEBUG)
+#include <mbedtls/debug.h>
+#include <mbedtls/error.h>
+#include <mbedtls/platform.h>
+#elif OC_DBG_IS_ENABLED || OC_ERR_IS_ENABLED || OC_WRN_IS_ENABLED
+static void
+mbedtls_strerror(int ret, char *buf, size_t buflen)
+{
+  snprintf(buf, buflen, "MBEDTLS_ERR(%d)", ret);
+}
+#endif /* OC_DBG_IS_ENABLED || OC_ERR_IS_ENABLED || OC_WRN_IS_ENABLED */
+
+#define OC_TLS_SELECTED_ANY_CRED_ID (-1)
+
+#if OC_DBG_IS_ENABLED || OC_ERR_IS_ENABLED
+#if OC_ERR_IS_ENABLED
+#define MBEDTLS_ERR(mbedtls_func_name, mbedtls_err)                            \
+  do {                                                                         \
+    char buf_mbedtls_strerror[128];                                            \
+    mbedtls_strerror(mbedtls_err, buf_mbedtls_strerror,                        \
+                     OC_ARRAY_SIZE(buf_mbedtls_strerror));                     \
+    OC_ERR("oc_tls: %s ends with error: %s", mbedtls_func_name,                \
+           buf_mbedtls_strerror);                                              \
+  } while (0)
+#else /* OC_ERR_IS_ENABLED */
+#define MBEDTLS_ERR(mbedtls_func_name, mbedtls_err)
+#endif /* !OC_ERR_IS_ENABLED */
+
+#define TLS_LOG_MBEDTLS_ERROR(mbedtls_func_name, mbedtls_err)                  \
+  do {                                                                         \
+    if (mbedtls_err == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {                    \
+      OC_DBG("oc_tls: %s Close-Notify received", mbedtls_func_name);           \
+      break;                                                                   \
+    }                                                                          \
+    if (mbedtls_err == MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {                     \
+      OC_DBG("oc_tls: %s Client wants to reconnect", mbedtls_func_name);       \
+      break;                                                                   \
+    }                                                                          \
+    MBEDTLS_ERR(mbedtls_func_name, mbedtls_err);                               \
+  } while (0)
+#else /* !OC_DBG_IS_ENABLED && !OC_ERR_IS_ENABLED */
+#define TLS_LOG_MBEDTLS_ERROR(mbedtls_func_name, mbedtls_err)
+#endif /* !OC_DBG_IS_ENABLED && !OC_ERR_IS_ENABLED */
 
 typedef struct oc_random_pin_t
 {
@@ -193,8 +232,8 @@ OC_LIST(g_identity_certs);
 
 static const int *g_ciphers = NULL;
 #ifdef OC_PKI
-static int g_selected_mfg_cred = -1;
-static int g_selected_id_cred = -1;
+static int g_selected_mfg_cred = OC_TLS_SELECTED_ANY_CRED_ID;
+static int g_selected_id_cred = OC_TLS_SELECTED_ANY_CRED_ID;
 #ifdef OC_CLOUD
 static const int default_priority[12] = {
 #else  /* OC_CLOUD */
@@ -653,6 +692,7 @@ check_retry_timers(void)
               mbedtls_ssl_set_client_transport_id(
                 &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
                 sizeof(peer->endpoint.addr)) != 0) {
+            TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_set_client_transport_id", ret);
             oc_tls_free_peer(peer, false);
             peer = next;
             continue;
@@ -660,11 +700,7 @@ check_retry_timers(void)
         }
         if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
             ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
-#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
-          char buf[256]; // NOLINT(readability-magic-numbers)
-          mbedtls_strerror(ret, buf, sizeof(buf));
-          OC_ERR("oc_tls: mbedtls_error: %s", buf);
-#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
+          TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_handshake", ret);
           oc_tls_free_peer(peer, false);
         }
       }
@@ -1342,21 +1378,51 @@ oc_tls_configure_end_entity_cert_chain(mbedtls_ssl_config *conf, size_t device,
   oc_x509_crt_t *cert = (oc_x509_crt_t *)oc_list_head(g_identity_certs);
   while (cert != NULL) {
     if (cert->device == device && cert->cred->credusage == credusage &&
-        (credid == -1 || cert->cred->credid == credid)) {
+        (credid == OC_TLS_SELECTED_ANY_CRED_ID ||
+         cert->cred->credid == credid)) {
       break;
     }
     cert = cert->next;
   }
-
-  if (!cert || mbedtls_ssl_conf_own_cert(conf, &cert->cert, &cert->pk) != 0) {
-    OC_WRN("error configuring identity cert");
+  if (!cert) {
+#if OC_WRN_IS_ENABLED
+    char credid_str[16];
+    memset(credid_str, 0, sizeof(credid_str));
+    if (credid == OC_TLS_SELECTED_ANY_CRED_ID) {
+      strncpy(credid_str, "any", sizeof(credid_str));
+    } else {
+      snprintf(credid_str, sizeof(credid_str), "%d", credid);
+    }
+    OC_WRN(
+      "cannot set client %s certificate(selected %s): certificate not found",
+      credusage == OC_CREDUSAGE_MFG_CERT ? "manufacturer" : "identity",
+      credid_str);
+#endif /* OC_WRN_IS_ENABLED */
+    return -1;
+  }
+  int err = mbedtls_ssl_conf_own_cert(conf, &cert->cert, &cert->pk);
+  if (err != 0) {
+#if OC_WRN_IS_ENABLED
+    char credid_str[16];
+    memset(credid_str, 0, sizeof(credid_str));
+    if (credid == OC_TLS_SELECTED_ANY_CRED_ID) {
+      strncpy(credid_str, "any", sizeof(credid_str));
+    } else {
+      snprintf(credid_str, sizeof(credid_str), "%d", credid);
+    }
+    char buf[128];
+    mbedtls_strerror(err, buf, sizeof(buf));
+    OC_WRN("cannot set client %s certificate(selected %s): %s",
+           credusage == OC_CREDUSAGE_MFG_CERT ? "manufacturer" : "identity",
+           credid_str, buf);
+#endif /* OC_WRN_IS_ENABLED */
     return -1;
   }
 
   return 0;
 }
 
-static int
+int
 oc_tls_load_mfg_cert_chain(mbedtls_ssl_config *conf, size_t device, int credid)
 {
   OC_DBG("loading manufacturer cert chain");
@@ -1364,10 +1430,15 @@ oc_tls_load_mfg_cert_chain(mbedtls_ssl_config *conf, size_t device, int credid)
                                                 OC_CREDUSAGE_MFG_CERT, credid);
 }
 
-static int
+int
 oc_tls_load_identity_cert_chain(mbedtls_ssl_config *conf, size_t device,
                                 int credid)
 {
+  if (credid < OC_TLS_SELECTED_ANY_CRED_ID) {
+    // could be set when the application wants to use manufacturer certificate
+    // instead of identity certificate
+    return -1;
+  }
   OC_DBG("loading identity cert chain");
   return oc_tls_configure_end_entity_cert_chain(
     conf, device, OC_CREDUSAGE_IDENTITY_CERT, credid);
@@ -1504,6 +1575,18 @@ get_identity_cert_for_session(const mbedtls_ssl_config *conf)
   }
   return NULL;
 }
+
+bool
+oc_tls_load_cert_chain(mbedtls_ssl_config *conf, size_t device, bool owned)
+{
+  /* Decide between configuring the identity cert chain vs manufacturer cert
+   * chain for this device based on device ownership status.
+   */
+  return (owned && oc_tls_load_identity_cert_chain(conf, device,
+                                                   g_selected_id_cred) == 0) ||
+         (oc_tls_load_mfg_cert_chain(conf, device, g_selected_mfg_cred) == 0);
+}
+
 #endif /* OC_PKI */
 
 static void
@@ -1514,20 +1597,14 @@ oc_tls_set_ciphersuites(mbedtls_ssl_config *conf, const oc_endpoint_t *endpoint)
 #ifdef OC_CLIENT
   bool loaded_chain = false;
 #endif /* OC_CLIENT */
-  size_t device = endpoint->device;
-  const oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
-  /* Decide between configuring the identity cert chain vs manufacturer cert
-   * chain for this device based on device ownership status.
-   */
-  if ((doxm->owned && oc_tls_load_identity_cert_chain(
-                        conf, device, g_selected_id_cred) == 0) ||
-      (oc_tls_load_mfg_cert_chain(conf, device, g_selected_mfg_cred) == 0)) {
+  const oc_sec_doxm_t *doxm = oc_sec_get_doxm(endpoint->device);
+  if (oc_tls_load_cert_chain(conf, endpoint->device, doxm->owned)) {
 #ifdef OC_CLIENT
     loaded_chain = true;
 #endif /* OC_CLIENT */
   }
-  g_selected_mfg_cred = -1;
-  g_selected_id_cred = -1;
+  g_selected_mfg_cred = OC_TLS_SELECTED_ANY_CRED_ID;
+  g_selected_id_cred = OC_TLS_SELECTED_ANY_CRED_ID;
 #endif /* OC_PKI */
   const oc_sec_pstat_t *ps = oc_sec_get_pstat(endpoint->device);
   if (conf->endpoint == MBEDTLS_SSL_IS_SERVER && ps->s == OC_DOS_RFOTM) {
@@ -2403,11 +2480,10 @@ oc_tls_send_message_internal(oc_message_t *message)
     }
     if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
         ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
-#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
-      char buf[256]; // NOLINT(readability-magic-numbers)
-      mbedtls_strerror(ret, buf, OC_ARRAY_SIZE(buf));
-      OC_ERR("oc_tls: mbedtls_error: %s", buf);
-#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
+      TLS_LOG_MBEDTLS_ERROR((peer->endpoint.flags & TCP) != 0
+                              ? "ssl_write_tcp"
+                              : "mbedtls_ssl_write",
+                            ret);
       oc_tls_free_peer(peer, false);
     } else {
       length = message->length;
@@ -2457,11 +2533,10 @@ write_application_data(oc_tls_peer_t *peer)
     oc_message_unref(message);
     if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
         ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
-#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
-      char buf[256]; // NOLINT(readability-magic-numbers)
-      mbedtls_strerror(ret, buf, OC_ARRAY_SIZE(buf));
-      OC_ERR("oc_tls: mbedtls_error: %s", buf);
-#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
+      TLS_LOG_MBEDTLS_ERROR((peer->endpoint.flags & TCP) != 0
+                              ? "ssl_write_tcp"
+                              : "mbedtls_ssl_write",
+                            ret);
       oc_tls_free_peer(peer, false);
       break;
     }
@@ -2475,11 +2550,7 @@ oc_tls_handshake(oc_tls_peer_t *peer)
   int ret = mbedtls_ssl_handshake(&peer->ssl_ctx);
   if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
       ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
-#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
-    char buf[256]; // NOLINT(readability-magic-numbers)
-    mbedtls_strerror(ret, buf, OC_ARRAY_SIZE(buf));
-    OC_ERR("oc_tls: mbedtls_error: %s", buf);
-#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
+    TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_handshake", ret);
     oc_tls_free_peer(peer, false);
     return;
   }
@@ -2504,6 +2575,7 @@ oc_tls_on_tcp_connect(const oc_endpoint_t *endpoint, int state, void *data)
     oc_tls_handshake(peer);
     return;
   }
+  OC_ERR("oc_tls_on_tcp_connect: ends with error state: %d", state);
   oc_tls_free_peer(peer, false);
 }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
@@ -2569,7 +2641,9 @@ oc_tls_init_connection(oc_message_t *message)
       oc_message_unref(message);
       return;
     }
-
+    OC_ERR(
+      "oc_tls_init_connection: oc_tcp_connect returns unexpected state: %d",
+      state);
     oc_tls_free_peer(peer, false);
     oc_message_unref(message);
     return;
@@ -2632,25 +2706,6 @@ assert_all_roles_internal(oc_client_response_t *data)
   (COAP_TCP_DEFAULT_HEADER_LEN + COAP_TCP_MAX_EXTENDED_LENGTH_LEN)
 
 static void
-tls_read_application_data_tcp_error(int err)
-{
-  if (err == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
-    OC_DBG("oc_tls_tcp: Close-Notify received");
-    return;
-  }
-  if (err == MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {
-    OC_DBG("oc_tls_tcp: Client wants to reconnect");
-    return;
-  }
-
-#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
-  char buf[256]; // NOLINT(readability-magic-numbers)
-  mbedtls_strerror(err, buf, OC_ARRAY_SIZE(buf));
-  OC_ERR("oc_tls_tcp: mbedtls_error: %s", buf);
-#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
-}
-
-static void
 tls_read_application_data_tcp(oc_tls_peer_t *peer)
 {
   if (peer->processed_recv_message == NULL) {
@@ -2691,8 +2746,6 @@ tls_read_application_data_tcp(oc_tls_peer_t *peer)
           OC_DBG("oc_tls_tcp: Received WantRead/WantWrite");
           return;
         }
-        tls_read_application_data_tcp_error(ret);
-
         oc_message_unref(peer->processed_recv_message);
         peer->processed_recv_message = NULL;
         if (peer->role == MBEDTLS_SSL_IS_SERVER &&
@@ -2700,6 +2753,7 @@ tls_read_application_data_tcp(oc_tls_peer_t *peer)
           mbedtls_ssl_close_notify(&peer->ssl_ctx);
           mbedtls_ssl_close_notify(&peer->ssl_ctx);
         }
+        TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_read", ret);
         oc_tls_free_peer(peer, false);
         return;
       }
@@ -2726,25 +2780,6 @@ tls_read_application_data_tcp(oc_tls_peer_t *peer)
 #endif /* OC_TCP */
 
 static void
-tls_read_application_data_error(int err)
-{
-  if (err == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {
-    OC_DBG("oc_tls: Close-Notify received");
-    return;
-  }
-  if (err == MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {
-    OC_DBG("oc_tls: Client wants to reconnect");
-    return;
-  }
-
-#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
-  char buf[256];
-  mbedtls_strerror(err, buf, OC_ARRAY_SIZE(buf));
-  OC_ERR("oc_tls: mbedtls_error: %s", buf);
-#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
-}
-
-static void
 tls_handshake_step(oc_tls_peer_t *peer)
 {
   do {
@@ -2756,7 +2791,7 @@ tls_handshake_step(oc_tls_peer_t *peer)
           mbedtls_ssl_set_client_transport_id(
             &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
             sizeof(peer->endpoint.addr)) != 0) {
-        OC_ERR("oc_tls: mbedtls_ssl_set_client_transport_id failed");
+        TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_set_client_transport_id", ret);
         oc_tls_free_peer(peer, false);
         return;
       }
@@ -2767,11 +2802,7 @@ tls_handshake_step(oc_tls_peer_t *peer)
           ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
         break;
       }
-#if defined(OC_DEBUG) && OC_ERR_IS_ENABLED
-      char buf[256]; // NOLINT(readability-magic-numbers)
-      mbedtls_strerror(ret, buf, OC_ARRAY_SIZE(buf));
-      OC_ERR("oc_tls: mbedtls_error: %s", buf);
-#endif /* OC_DEBUG && OC_ERR_IS_ENABLED */
+      TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_handshake_step", ret);
       oc_tls_free_peer(peer, false);
       return;
     }
@@ -2821,7 +2852,7 @@ tls_read_application_data_udp(oc_tls_peer_t *peer)
       OC_DBG("oc_tls: Received WantRead/WantWrite");
       return;
     }
-    tls_read_application_data_error(ret);
+    TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_read", ret);
     if (peer->role == MBEDTLS_SSL_IS_SERVER &&
         (peer->endpoint.flags & TCP) == 0) {
       mbedtls_ssl_close_notify(&peer->ssl_ctx);

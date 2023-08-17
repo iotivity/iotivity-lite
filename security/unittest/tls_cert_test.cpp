@@ -43,6 +43,7 @@
 #include <array>
 #include <cstdio>
 #include <ctime>
+#include <functional>
 #include <gtest/gtest.h>
 #include <string>
 #include <stdexcept>
@@ -71,9 +72,9 @@ public:
     device_ = oc_core_get_num_devices() - 1;
     EXPECT_GE(device_, 0);
 
-    ASSERT_TRUE(idcert1_.Add(device_));
-    ASSERT_TRUE(subca1_.Add(device_, idcert1_.CredentialID()));
-    ASSERT_TRUE(idcert2_.Add(device_));
+    ASSERT_TRUE(mfgcert_.Add(device_));
+    ASSERT_TRUE(subca1_.Add(device_, mfgcert_.CredentialID()));
+    ASSERT_TRUE(idcert_.Add(device_));
     ASSERT_TRUE(rootca1_.Add(device_));
     ASSERT_TRUE(rootca2_.Add(device_));
   }
@@ -93,12 +94,11 @@ public:
   }
 
   int device_{ -1 };
-  oc::pki::IdentityCertificate idcert1_{ "pki_certs/ee.pem",
+  oc::pki::IdentityCertificate mfgcert_{ "pki_certs/ee.pem",
                                          "pki_certs/key.pem", true };
-  oc::pki::IdentityCertificate idcert2_{
-    "pki_certs/certification_tests_ee.pem",
-    "pki_certs/certification_tests_key.pem", true
-  };
+  oc::pki::IdentityCertificate idcert_{ "pki_certs/certification_tests_ee.pem",
+                                        "pki_certs/certification_tests_key.pem",
+                                        false };
   oc::pki::IntermediateCertificate subca1_{ "pki_certs/subca1.pem" };
   oc::pki::TrustAnchor rootca1_{ "pki_certs/rootca1.pem", true };
   oc::pki::TrustAnchor rootca2_{ "pki_certs/rootca2.pem", true };
@@ -123,7 +123,7 @@ oc_sec_cred_count(size_t device)
 
 TEST_F(TestTlsCertificates, ClearCertificates)
 {
-  // 4 = 2 root certificates + 2 mfg certs
+  // 4 = 2 root certificates + 1 mfg certs + 1 identity certificate
   EXPECT_EQ(4, oc_sec_cred_count(device_));
 
   oc_sec_cred_clear(
@@ -131,28 +131,28 @@ TEST_F(TestTlsCertificates, ClearCertificates)
   EXPECT_EQ(4, oc_sec_cred_count(device_));
 
   EXPECT_NE(nullptr,
-            oc_sec_get_cred_by_credid(idcert1_.CredentialID(), device_));
+            oc_sec_get_cred_by_credid(mfgcert_.CredentialID(), device_));
   oc_sec_cred_clear(
     device_,
     [](const oc_sec_cred_t *cred, void *data) {
       const auto *cert = static_cast<oc::pki::IdentityCertificate *>(data);
       return cred->credid == cert->CredentialID();
     },
-    &idcert1_);
+    &mfgcert_);
   EXPECT_EQ(3, oc_sec_cred_count(device_));
   EXPECT_EQ(nullptr,
-            oc_sec_get_cred_by_credid(idcert1_.CredentialID(), device_));
+            oc_sec_get_cred_by_credid(mfgcert_.CredentialID(), device_));
 
   EXPECT_NE(nullptr,
-            oc_sec_get_cred_by_credid(idcert2_.CredentialID(), device_));
+            oc_sec_get_cred_by_credid(idcert_.CredentialID(), device_));
   auto removeMfgCert = [](const oc_sec_cred_t *cred, void *) {
     return cred->credtype == OC_CREDTYPE_CERT &&
            cred->credusage == OC_CREDUSAGE_MFG_CERT;
   };
   oc_sec_cred_clear(device_, removeMfgCert, nullptr);
-  EXPECT_EQ(2, oc_sec_cred_count(device_));
+  EXPECT_EQ(3, oc_sec_cred_count(device_));
   EXPECT_EQ(nullptr,
-            oc_sec_get_cred_by_credid(idcert2_.CredentialID(), device_));
+            oc_sec_get_cred_by_credid(mfgcert_.CredentialID(), device_));
 
   oc_sec_cred_clear(device_, nullptr, nullptr);
   EXPECT_EQ(0, oc_sec_cred_count(device_));
@@ -163,9 +163,9 @@ TEST_F(TestTlsCertificates, ClearCertificates)
 TEST_F(TestTlsCertificates, RemoveIdentityCertificates)
 {
   EXPECT_TRUE(oc_tls_validate_identity_certs_consistency());
-  EXPECT_TRUE(oc_sec_remove_cred_by_credid(idcert1_.CredentialID(), device_));
+  EXPECT_TRUE(oc_sec_remove_cred_by_credid(mfgcert_.CredentialID(), device_));
   EXPECT_TRUE(oc_tls_validate_identity_certs_consistency());
-  EXPECT_TRUE(oc_sec_remove_cred_by_credid(idcert2_.CredentialID(), device_));
+  EXPECT_TRUE(oc_sec_remove_cred_by_credid(idcert_.CredentialID(), device_));
   EXPECT_TRUE(oc_tls_validate_identity_certs_consistency());
 }
 
@@ -179,6 +179,60 @@ TEST_F(TestTlsCertificates, RemoveTrustAnchors)
 }
 
 #endif /* OC_TEST */
+
+template<typename Fn>
+static void
+test_oc_tls_load_cert_chain_selected(int exp, size_t device, int credid,
+                                     const Fn &fn)
+{
+  mbedtls_ssl_config conf = {};
+  mbedtls_ssl_config_init(&conf);
+  EXPECT_EQ(exp, fn(&conf, device, credid));
+  mbedtls_ssl_config_free(&conf);
+}
+
+static void
+test_oc_tls_load_cert_chain(bool exp, size_t device, bool owned)
+{
+  mbedtls_ssl_config conf = {};
+  mbedtls_ssl_config_init(&conf);
+  EXPECT_EQ(exp, oc_tls_load_cert_chain(&conf, device, owned));
+  mbedtls_ssl_config_free(&conf);
+}
+
+TEST_F(TestTlsCertificates, LoadClientCertificateToMbedtls)
+{
+  EXPECT_EQ(4, oc_sec_cred_count(device_));
+  test_oc_tls_load_cert_chain_selected(0, device_, mfgcert_.CredentialID(),
+                                       oc_tls_load_mfg_cert_chain);
+  test_oc_tls_load_cert_chain_selected(0, device_, -1,
+                                       oc_tls_load_mfg_cert_chain);
+  test_oc_tls_load_cert_chain_selected(-1, device_, -2,
+                                       oc_tls_load_mfg_cert_chain);
+
+  test_oc_tls_load_cert_chain_selected(0, device_, idcert_.CredentialID(),
+                                       oc_tls_load_identity_cert_chain);
+  test_oc_tls_load_cert_chain_selected(0, device_, -1,
+                                       oc_tls_load_identity_cert_chain);
+  test_oc_tls_load_cert_chain_selected(-1, device_, -2,
+                                       oc_tls_load_identity_cert_chain);
+
+  oc_tls_select_mfg_cert_chain(-2);
+  oc_tls_select_identity_cert_chain(-1);
+  test_oc_tls_load_cert_chain(true, device_, true);
+  oc_tls_select_identity_cert_chain(idcert_.CredentialID());
+  test_oc_tls_load_cert_chain(true, device_, true);
+
+  oc_tls_select_identity_cert_chain(-2);
+  oc_tls_select_mfg_cert_chain(-1);
+  test_oc_tls_load_cert_chain(true, device_, true);
+  oc_tls_select_mfg_cert_chain(mfgcert_.CredentialID());
+  test_oc_tls_load_cert_chain(true, device_, true);
+
+  oc_tls_select_identity_cert_chain(-2);
+  oc_tls_select_mfg_cert_chain(-2);
+  test_oc_tls_load_cert_chain(false, device_, true);
+}
 
 TEST_F(TestTlsCertificates, VerifyCredCerts)
 {
@@ -198,8 +252,8 @@ TEST_F(TestTlsCertificates, VerifyCredCerts)
   EXPECT_EQ(
     0, oc_cred_verify_certificate_chain(cred, verify_cert_validity, nullptr));
 
-  // expired - idcert1_ valid_from: 14.4.2020, valid_to: 14.5.2020
-  cred = oc_sec_get_cred_by_credid(idcert1_.CredentialID(), device_);
+  // expired - mfgcert_ valid_from: 14.4.2020, valid_to: 14.5.2020
+  cred = oc_sec_get_cred_by_credid(mfgcert_.CredentialID(), device_);
   EXPECT_NE(nullptr, cred);
   EXPECT_EQ(
     1, oc_cred_verify_certificate_chain(cred, verify_cert_validity, nullptr));

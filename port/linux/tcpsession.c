@@ -529,7 +529,7 @@ try_connect_nonblocking(int sockfd, const struct sockaddr *r, socklen_t r_len)
 
   int n = connect(sockfd, r, r_len);
   if (n < 0 && errno != EINPROGRESS) {
-    OC_DBG("connect to socked(%d) failed with error: %d", sockfd, (int)errno);
+    OC_ERR("connect to socked(%d) failed with error: %d", sockfd, (int)errno);
     return -1;
   }
   return n == 0 ? OC_TCP_SOCKET_STATE_CONNECTED
