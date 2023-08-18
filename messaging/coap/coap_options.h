@@ -68,12 +68,10 @@ extern "C" {
     | No. | C | U | N | R | Name           | Format | Length | Default  |
     +-----+---+---+---+---+----------------+--------+--------+----------+
     |   1 | x |   |   | x | If-Match       | opaque | 0-8    | (none)   |
-    |   3 | x | x | - |   | Uri-Host       | string | 1-255  | (see     |
-    |     |   |   |   |   |                |        |        | below)   |
+    |   3 | x | x | - |   | Uri-Host       | string | 1-255  |          |
     |   4 |   |   |   | x | ETag           | opaque | 1-8    | (none)   |
     |   5 | x |   |   |   | If-None-Match  | empty  | 0      | (none)   |
-    |   7 | x | x | - |   | Uri-Port       | uint   | 0-2    | (see     |
-    |     |   |   |   |   |                |        |        | below)   |
+    |   7 | x | x | - |   | Uri-Port       | uint   | 0-2    |          |
     |   8 |   |   |   | x | Location-Path  | string | 0-255  | (none)   |
     |  11 | x | x | - | x | Uri-Path       | string | 0-255  | (none)   |
     |  12 |   |   |   |   | Content-Format | uint   | 0-2    | (none)   |

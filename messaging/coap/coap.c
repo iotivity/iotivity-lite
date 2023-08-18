@@ -51,6 +51,7 @@
 
 #include "coap.h"
 #include "coap_internal.h"
+#include "coap_options_iterator.h"
 #include "coap_options.h"
 #include "oc_ri.h"
 #include "transactions.h"
@@ -994,25 +995,30 @@ coap_oscore_parse_options(coap_packet_t *packet, const uint8_t *data,
   /* parse options */
   memset(packet->options, 0, sizeof(packet->options));
 
-  unsigned int option_number = 0;
-  unsigned int option_delta = 0;
-  size_t option_length = 0;
   coap_status_t last_error = COAP_NO_ERROR;
 
-  while (current_option < data + data_len) {
-    /* payload marker 0xFF, currently only checking for 0xF* because rest is
-     * reserved */
-    if ((current_option[0] & 0xF0) == 0xF0) {
-      ++current_option;
-      packet->payload = current_option;
-      packet->payload_len = (uint32_t)(data_len - (packet->payload - data));
+  coap_options_iterator_t it =
+    coap_options_iterator_init(current_option, data + data_len);
+  do {
+    coap_option_iterator_result_t res = coap_options_iterator_next(&it);
+    if (res == COAP_OPTION_ITERATOR_NO_MORE_OPTIONS) {
+      break;
+    }
+    if (res == COAP_OPTION_ITERATOR_ERROR) {
+      return BAD_REQUEST_4_00;
+    }
+
+    coap_option_data_t *option = coap_options_iterator_get_option(&it);
+    if (option->payload) {
+      packet->payload = option->value;
+      packet->payload_len = (uint32_t)option->length;
 
       if (packet->transport_type == COAP_TRANSPORT_UDP &&
           packet->payload_len > (uint32_t)OC_MAX_APP_DATA_SIZE) {
         packet->payload_len = (uint32_t)OC_MAX_APP_DATA_SIZE;
-        /* null-terminate payload */
       }
       if (!validate) {
+        /* null-terminate payload */
         packet->payload[packet->payload_len] =
           '\0'; // TODO: this writes after the payload, if the message was
                 // shrank so the allocation matches the message length this
@@ -1023,46 +1029,13 @@ coap_oscore_parse_options(coap_packet_t *packet, const uint8_t *data,
       break;
     }
 
-    option_delta = current_option[0] >> 4;
-    option_length = current_option[0] & 0x0F;
-    ++current_option;
-
-    if (option_delta == 13) {
-      option_delta += current_option[0];
-      ++current_option;
-    } else if (option_delta == 14) {
-      option_delta += 255;
-      option_delta += current_option[0] << 8;
-      ++current_option;
-      option_delta += current_option[0];
-      ++current_option;
+    if (option->number <= COAP_OPTION_SIZE1) {
+      SET_OPTION(packet, option->number);
     }
 
-    if (option_length == 13) {
-      option_length += current_option[0];
-      ++current_option;
-    } else if (option_length == 14) {
-      option_length += 255;
-      option_length += current_option[0] << 8;
-      ++current_option;
-      option_length += current_option[0];
-      ++current_option;
-    }
-
-    option_number += option_delta;
-
-    if (option_number <= COAP_OPTION_SIZE1) {
-      OC_DBG("OPTION %u (delta %u, len %zu):", option_number, option_delta,
-             option_length);
-      SET_OPTION(packet, option_number);
-    }
-    if (current_option + option_length > data + data_len) {
-      OC_WRN("Invalid option - option length exceeds packet length");
-      return BAD_REQUEST_4_00;
-    }
     coap_status_t s =
-      coap_oscore_parse_option(packet, current_option, inner, outer, oscore,
-                               validate, option_number, option_length);
+      coap_oscore_parse_option(packet, option->value, inner, outer, oscore,
+                               validate, option->number, option->length);
     if (s != COAP_NO_ERROR) {
       if (!validate) {
         return s;
@@ -1074,10 +1047,9 @@ coap_oscore_parse_options(coap_packet_t *packet, const uint8_t *data,
         last_error = s;
       }
     }
-    current_option += option_length;
-  } /* for */
-  OC_DBG("-Done parsing-------");
+  } while (true);
 
+  OC_DBG("-Done parsing-------");
   return last_error;
 }
 /*---------------------------------------------------------------------------*/
