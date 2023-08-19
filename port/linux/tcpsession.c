@@ -527,13 +527,21 @@ try_connect_nonblocking(int sockfd, const struct sockaddr *r, socklen_t r_len)
     return -1;
   }
 
-  int n = connect(sockfd, r, r_len);
-  if (n < 0 && errno != EINPROGRESS) {
-    OC_ERR("connect to socked(%d) failed with error: %d", sockfd, (int)errno);
-    return -1;
+  while (true) {
+    int n = connect(sockfd, r, r_len);
+    if (n == 0) {
+      return OC_TCP_SOCKET_STATE_CONNECTED;
+    } else if (n < 0) {
+      if (errno == EINPROGRESS || errno == EALREADY) {
+        return OC_TCP_SOCKET_STATE_CONNECTING;
+      }
+      if (errno == EINTR || errno == EAGAIN) {
+        continue;
+      }
+      OC_ERR("connect to socked(%d) failed with error: %d", sockfd, (int)errno);
+      return -1;
+    }
   }
-  return n == 0 ? OC_TCP_SOCKET_STATE_CONNECTED
-                : OC_TCP_SOCKET_STATE_CONNECTING;
 }
 
 typedef struct
