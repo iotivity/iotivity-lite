@@ -444,37 +444,17 @@ if(OC_COVERAGE_ENABLED)
 endif()
 
 if(UNIX)
-    # include(CheckSourceCompiles)
-    # set(_REQUIRED_DEFINITIONS ${CMAKE_REQUIRED_DEFINITIONS})
-    # set(_REQUIRED_FLAGS ${CMAKE_REQUIRED_FLAGS})
-    # set(CMAKE_REQUIRED_DEFINITIONS "${_REQUIRED_DEFINITIONS} HAVE_GLIBC_STRERROR_R ${PRIVATE_COMPILE_DEFINITIONS} ${PUBLIC_COMPILE_DEFINITIONS}")
-    # set(CMAKE_REQUIRED_FLAGS ${_REQUIRED_FLAGS} ${PRIVATE_COMPILE_OPTIONS})
-    # check_c_source_compiles(        
-    #     "#include <${PROJECT_SOURCE_DIR}/tools/cmake/strerrorTest.c>"        
-    #     HAVE_GLIBC_STRERROR_R)
-    # set(CMAKE_REQUIRED_DEFINITIONS "${_REQUIRED_DEFINITIONS} HAVE_POSIX_STRERROR_R ${PRIVATE_COMPILE_DEFINITIONS} ${PUBLIC_COMPILE_DEFINITIONS}")
-    #     check_c_source_compiles(        
-    #     "#include <${PROJECT_SOURCE_DIR}/tools/cmake/strerrorTest.c>"        
-    #     HAVE_POSIX_STRERROR_R)
-    # set(CMAKE_REQUIRED_DEFINITIONS "${_REQUIRED_DEFINITIONS}")
-    # set(CMAKE_REQUIRED_FLAGS ${_REQUIRED_FLAGS})
-
     try_compile(HAVE_GLIBC_STRERROR_R
         ${PROJECT_BINARY_DIR}/compileCheck
         ${PROJECT_SOURCE_DIR}/tools/cmake/strerrorTest.c
         COMPILE_DEFINITIONS "-DHAVE_GLIBC_STRERROR_R"
-        OUTPUT_VARIABLE result
     )
-    message(STATUS "HAVE_GLIBC_STRERROR_R: ${HAVE_GLIBC_STRERROR_R}")
-    message(STATUS "result: ${result}")
     try_compile(HAVE_POSIX_STRERROR_R
         ${PROJECT_BINARY_DIR}/compileCheck
         ${PROJECT_SOURCE_DIR}/tools/cmake/strerrorTest.c
         COMPILE_DEFINITIONS "-DHAVE_POSIX_STRERROR_R"
-        OUTPUT_VARIABLE result
     )
-    message(STATUS "HAVE_POSIX_STRERROR_R: ${HAVE_POSIX_STRERROR_R}")
-    message(STATUS "result: ${result}")
+    message(FATAL_ERROR "HAVE_GLIBC_STRERROR_R: ${HAVE_GLIBC_STRERROR_R}; HAVE_POSIX_STRERROR_R: ${HAVE_POSIX_STRERROR_R}")
 endif()
 
 # ####### Gather source files ########
