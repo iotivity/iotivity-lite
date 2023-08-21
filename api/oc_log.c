@@ -83,6 +83,10 @@ oc_log_component_name(oc_log_component_t component)
   switch (component) {
   case OC_LOG_COMPONENT_DEFAULT:
     return "default";
+#ifdef OC_CLOUD
+  case OC_LOG_COMPONENT_CLOUD:
+    return "cloud";
+#endif /* OC_CLOUD */
   }
   return "";
 }

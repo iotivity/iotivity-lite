@@ -20,13 +20,13 @@
 #include "api/oc_link_internal.h"
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
+#include "oc_cloud_log_internal.h"
 #include "oc_collection.h"
 #include "rd_client_internal.h"
+
 #ifdef OC_SECURITY
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY */
-
-#include "port/oc_log_internal.h"
 
 #define ONE_HOUR 3600
 #define OC_RSRVD_LINKS "links"
@@ -112,7 +112,7 @@ static void
 publish_resources_handler(oc_client_response_t *data)
 {
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
-  OC_DBG("[CRD] publish resources handler(%d)", data->code);
+  OC_CLOUD_DBG("publish resources handler(%d)", data->code);
 
   if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
     return;
@@ -212,7 +212,7 @@ publish_published_resources(void *data)
 static void
 delete_resources_handler(oc_client_response_t *data)
 {
-  OC_DBG("[CRD] delete resources handler(%d)", data->code);
+  OC_CLOUD_DBG("delete resources handler(%d)", data->code);
   (void)data;
 }
 
@@ -226,7 +226,7 @@ delete_resources(oc_cloud_context_t *ctx)
   }
 #endif /* OC_SECURITY */
   if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
-    OC_DBG("cannot unpublish resource links when not logged in");
+    OC_CLOUD_DBG("cannot unpublish resource links when not logged in");
     return;
   }
 
@@ -236,7 +236,7 @@ delete_resources(oc_cloud_context_t *ctx)
 
   if (!rd_delete(ctx->cloud_ep, ctx->rd_delete_resources, ctx->device,
                  delete_resources_handler, LOW_QOS, ctx)) {
-    OC_ERR("cannot send unpublish resource links request");
+    OC_CLOUD_ERR("cannot send unpublish resource links request");
     return;
   }
   rd_link_free(&ctx->rd_delete_resources);

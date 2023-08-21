@@ -29,10 +29,10 @@
 #include "oc_cloud_context_internal.h"
 #include "oc_cloud_deregister_internal.h"
 #include "oc_cloud_internal.h"
+#include "oc_cloud_log_internal.h"
 #include "oc_cloud_store_internal.h"
 #include "oc_core_res.h"
 #include "port/oc_connectivity.h"
-#include "port/oc_log_internal.h"
 #include "rd_client_internal.h"
 
 #ifdef OC_SECURITY
@@ -93,7 +93,7 @@ cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
 
   cloud_api_param_t *p = alloc_api_param();
   if (p == NULL) {
-    OC_ERR("cannot allocate cloud parameters");
+    OC_CLOUD_ERR("cannot allocate cloud parameters");
     return -1;
   }
   p->ctx = ctx;
@@ -102,12 +102,12 @@ cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
   p->timeout = timeout;
 
   if (ctx->store.status != OC_CLOUD_INITIALIZED) {
-    OC_ERR("invalid cloud status(%d)", (int)ctx->store.status);
+    OC_CLOUD_ERR("invalid cloud status(%d)", (int)ctx->store.status);
     free_api_param(p);
     return -1;
   }
 
-  OC_DBG("try register device %zu", ctx->device);
+  OC_CLOUD_DBG("try register device %zu", ctx->device);
   if (oc_string(ctx->store.ci_server) == NULL ||
       conv_cloud_endpoint(ctx) != 0) {
     cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
@@ -155,7 +155,7 @@ cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
 
   cloud_api_param_t *p = alloc_api_param();
   if (p == NULL) {
-    OC_ERR("cannot allocate cloud parameters");
+    OC_CLOUD_ERR("cannot allocate cloud parameters");
     return -1;
   }
   p->ctx = ctx;
@@ -164,12 +164,12 @@ cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
   p->timeout = timeout;
 
   if ((ctx->store.status & OC_CLOUD_REGISTERED) == 0) {
-    OC_ERR("invalid cloud status(%d)", (int)ctx->store.status);
+    OC_CLOUD_ERR("invalid cloud status(%d)", (int)ctx->store.status);
     free_api_param(p);
     return -1;
   }
 
-  OC_DBG("try login device %zu", ctx->device);
+  OC_CLOUD_DBG("try login device %zu", ctx->device);
   oc_cloud_access_conf_t conf = {
     .device = ctx->device,
     .selected_identity_cred_id = ctx->selected_identity_cred_id,
@@ -243,12 +243,12 @@ cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
              uint16_t timeout)
 {
   if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
-    OC_ERR("invalid cloud status(%d)", (int)ctx->store.status);
+    OC_CLOUD_ERR("invalid cloud status(%d)", (int)ctx->store.status);
     return -1;
   }
   cloud_api_param_t *p = alloc_api_param();
   if (p == NULL) {
-    OC_ERR("cannot allocate cloud parameters");
+    OC_CLOUD_ERR("cannot allocate cloud parameters");
     return -1;
   }
   p->ctx = ctx;
@@ -256,7 +256,7 @@ cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
   p->data = data;
   p->timeout = timeout;
 
-  OC_DBG("try logout device %zu", ctx->device);
+  OC_CLOUD_DBG("try logout device %zu", ctx->device);
   oc_cloud_access_conf_t conf = {
     .device = ctx->device,
     .selected_identity_cred_id = ctx->selected_identity_cred_id,
@@ -307,7 +307,7 @@ cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
 
   cloud_api_param_t *p = alloc_api_param();
   if (p == NULL) {
-    OC_ERR("cannot allocate cloud parameters");
+    OC_CLOUD_ERR("cannot allocate cloud parameters");
     return -1;
   }
   p->ctx = ctx;
@@ -315,7 +315,7 @@ cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
   p->data = data;
   p->timeout = timeout;
 
-  OC_DBG("try refresh token for device %zu", ctx->device);
+  OC_CLOUD_DBG("try refresh token for device %zu", ctx->device);
   oc_cloud_access_conf_t conf = {
     .device = ctx->device,
     .selected_identity_cred_id = ctx->selected_identity_cred_id,

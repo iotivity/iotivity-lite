@@ -28,10 +28,9 @@
 #include "oc_cloud_access.h"
 #include "oc_cloud_access_internal.h"
 #include "oc_cloud_context_internal.h"
+#include "oc_cloud_log_internal.h"
 #include "oc_cloud_manager_internal.h"
 #include "oc_cloud_store_internal.h"
-
-#include "port/oc_log_internal.h"
 
 #ifdef OC_SECURITY
 
@@ -41,7 +40,7 @@ cloud_deregister_on_reset_handler(oc_cloud_context_t *ctx,
 {
   (void)status;
   (void)data;
-  OC_DBG("[Cloud] cloud_deregister_on_reset_handler device=%zu", ctx->device);
+  OC_CLOUD_DBG("cloud_deregister_on_reset_handler device=%zu", ctx->device);
   cloud_context_clear(ctx);
 }
 
@@ -59,8 +58,8 @@ cloud_deregister_on_reset_async_handler(oc_cloud_context_t *ctx,
 {
   (void)status;
   (void)data;
-  OC_DBG("[Cloud] cloud_deregister_on_reset_async_handler device=%zu",
-         ctx->device);
+  OC_CLOUD_DBG("cloud_deregister_on_reset_async_handler device=%zu",
+               ctx->device);
   // this call might be invoked because of timeout (delayed call of
   // oc_client_cb_remove_with_notify_timeout_async when the request is
   // fired), however cloud_context_clear among other things closes the connected
@@ -75,7 +74,7 @@ static int
 cloud_deregister_on_reset_sync(oc_cloud_context_t *ctx, bool sync,
                                uint16_t timeout)
 {
-  OC_DBG("[Cloud] cloud deregister on reset");
+  OC_CLOUD_DBG("cloud deregister on reset");
   oc_cloud_cb_t handler = sync ? &cloud_deregister_on_reset_handler
                                : &cloud_deregister_on_reset_async_handler;
   int err = cloud_deregister(ctx, sync, timeout, handler, ctx);
@@ -93,7 +92,7 @@ cloud_deregister_on_reset_async(void *data)
   uint16_t timeout = p->timeout;
   free_api_param(p);
   if (cloud_deregister_on_reset_sync(ctx, /*sync*/ false, timeout) != 0) {
-    OC_ERR("[Cloud] failed to deregister from cloud");
+    OC_CLOUD_ERR("failed to deregister from cloud");
     cloud_context_clear(ctx);
   }
   return OC_EVENT_DONE;
@@ -109,7 +108,7 @@ cloud_deregister_on_reset(oc_cloud_context_t *ctx, bool sync, uint16_t timeout)
 
   cloud_api_param_t *p = alloc_api_param();
   if (p == NULL) {
-    OC_ERR("[Cloud] cannot allocate cloud parameters for reset");
+    OC_CLOUD_ERR("cannot allocate cloud parameters for reset");
     return false;
   }
   p->ctx = ctx;
@@ -125,7 +124,7 @@ cloud_deregistered_internal(oc_client_response_t *data)
 {
   cloud_api_param_t *p = (cloud_api_param_t *)data->user_data;
   oc_cloud_context_t *ctx = p->ctx;
-  OC_DBG("Cloud deregister: deregistered for device=%zu", ctx->device);
+  OC_CLOUD_DBG("Cloud deregister: deregistered for device=%zu", ctx->device);
 
   if (data->code < OC_STATUS_BAD_REQUEST ||
       cloud_is_connection_error_code(data->code)) {
@@ -179,7 +178,7 @@ cloud_deregister_by_request(cloud_api_param_t *p, uint16_t timeout,
   assert(p != NULL);
 
   oc_cloud_context_t *ctx = p->ctx;
-  OC_DBG("try deregister device %zu by DELETE request", ctx->device);
+  OC_CLOUD_DBG("try deregister device %zu by DELETE request", ctx->device);
   oc_cloud_access_conf_t conf = {
     .device = ctx->device,
     .selected_identity_cred_id = ctx->selected_identity_cred_id,
@@ -208,18 +207,18 @@ static void
 cloud_deregister_try_logged_in(oc_cloud_context_t *ctx,
                                oc_cloud_status_t status, void *data)
 {
-  OC_DBG("Cloud deregister: logged in for device=%zu", ctx->device);
+  OC_CLOUD_DBG("Cloud deregister: logged in for device=%zu", ctx->device);
   cloud_api_param_t *p = (cloud_api_param_t *)data;
 
   if ((status & OC_CLOUD_LOGGED_IN) == 0) {
-    OC_ERR("Failed to login to cloud for deregister");
+    OC_CLOUD_ERR("Failed to login to cloud for deregister");
     free_api_param(p);
     cloud_context_clear(ctx);
     return;
   }
 
   if (cloud_deregister_by_request(p, p->timeout, false) != 0) {
-    OC_ERR("Failed to deregister from cloud");
+    OC_CLOUD_ERR("Failed to deregister from cloud");
     free_api_param(p);
     cloud_context_clear(ctx);
     return;
@@ -233,7 +232,7 @@ cloud_deregister_refreshed_token_async(void *data)
   // short access token -> we can use it in query and deregister without login
   if (check_accesstoken_for_deregister(p->ctx)) {
     if (cloud_deregister_by_request(p, p->timeout, true) != 0) {
-      OC_ERR("Failed to deregister from cloud");
+      OC_CLOUD_ERR("Failed to deregister from cloud");
       free_api_param(p);
       cloud_context_clear(p->ctx);
     }
@@ -242,7 +241,7 @@ cloud_deregister_refreshed_token_async(void *data)
 
   // long access token -> we must login and then deregister without token
   if (cloud_login(p->ctx, cloud_deregister_try_logged_in, p, p->timeout) != 0) {
-    OC_ERR("Failed to login to cloud for deregister");
+    OC_CLOUD_ERR("Failed to login to cloud for deregister");
     free_api_param(p);
     cloud_context_clear(p->ctx);
     return OC_EVENT_DONE;
@@ -254,10 +253,10 @@ static void
 cloud_deregister_try_refreshed_token(oc_cloud_context_t *ctx,
                                      oc_cloud_status_t status, void *data)
 {
-  OC_DBG("Cloud deregister: refreshed token for device=%zu", ctx->device);
+  OC_CLOUD_DBG("Cloud deregister: refreshed token for device=%zu", ctx->device);
   cloud_api_param_t *p = (cloud_api_param_t *)data;
   if ((status & OC_CLOUD_REFRESHED_TOKEN) == 0) {
-    OC_ERR("Failed to refresh access token for deregister");
+    OC_CLOUD_ERR("Failed to refresh access token for deregister");
     free_api_param(p);
     cloud_context_clear(ctx);
     return;
@@ -273,18 +272,19 @@ cloud_deregister(oc_cloud_context_t *ctx, bool sync, uint16_t timeout,
                  oc_cloud_cb_t cb, void *data)
 {
   if ((ctx->store.status & OC_CLOUD_REGISTERED) == 0) {
-    OC_ERR("invalid cloud status(%d) for deregister", (int)ctx->store.status);
+    OC_CLOUD_ERR("invalid cloud status(%d) for deregister",
+                 (int)ctx->store.status);
     return -1;
   }
 
   if (cloud_is_deregistering(ctx)) {
-    OC_DBG("Device(%zu) is already deregistering, skipped", ctx->device);
+    OC_CLOUD_DBG("Device(%zu) is already deregistering, skipped", ctx->device);
     return CLOUD_DEREGISTER_ERROR_ALREADY_DEREGISTERING;
   }
 
   cloud_api_param_t *p = alloc_api_param();
   if (p == NULL) {
-    OC_ERR("cannot allocate cloud parameters");
+    OC_CLOUD_ERR("cannot allocate cloud parameters");
     return -1;
   }
   p->ctx = ctx;
@@ -292,7 +292,7 @@ cloud_deregister(oc_cloud_context_t *ctx, bool sync, uint16_t timeout,
   p->data = data;
   p->timeout = timeout;
 
-  OC_DBG("Deregistering of device=%zu started", ctx->device);
+  OC_CLOUD_DBG("Deregistering of device=%zu started", ctx->device);
   cloud_set_cps(ctx, OC_CPS_DEREGISTERING);
 
   bool canUseAccessToken = check_accesstoken_for_deregister(ctx);
@@ -301,7 +301,7 @@ cloud_deregister(oc_cloud_context_t *ctx, bool sync, uint16_t timeout,
   // execute deregister
   if (canUseAccessToken || isLoggedIn) {
     if (cloud_deregister_by_request(p, p->timeout, canUseAccessToken) != 0) {
-      OC_ERR("Failed to deregister from cloud");
+      OC_CLOUD_ERR("Failed to deregister from cloud");
       free_api_param(p);
       return -1;
     }
@@ -309,7 +309,7 @@ cloud_deregister(oc_cloud_context_t *ctx, bool sync, uint16_t timeout,
   }
 
   if (sync) {
-    OC_ERR("Asynchronous deregister from cloud not allowed");
+    OC_CLOUD_ERR("Asynchronous deregister from cloud not allowed");
     free_api_param(p);
     return -1;
   }
@@ -320,7 +320,7 @@ cloud_deregister(oc_cloud_context_t *ctx, bool sync, uint16_t timeout,
   if (hasRefreshToken) {
     if (cloud_refresh_token(ctx, cloud_deregister_try_refreshed_token, p,
                             timeout) != 0) {
-      OC_ERR("Failed to refresh token for deregister");
+      OC_CLOUD_ERR("Failed to refresh token for deregister");
       free_api_param(p);
       return -1;
     }
@@ -329,7 +329,7 @@ cloud_deregister(oc_cloud_context_t *ctx, bool sync, uint16_t timeout,
 
   // otherwise try full log in
   if (cloud_login(ctx, cloud_deregister_try_logged_in, p, timeout) != 0) {
-    OC_ERR("Failed to login to cloud for deregister");
+    OC_CLOUD_ERR("Failed to login to cloud for deregister");
     free_api_param(p);
     return -1;
   }

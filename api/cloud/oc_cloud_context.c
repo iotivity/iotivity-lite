@@ -23,6 +23,7 @@
 #include "oc_cloud_context_internal.h"
 #include "oc_cloud_deregister_internal.h"
 #include "oc_cloud_internal.h"
+#include "oc_cloud_log_internal.h"
 #include "oc_cloud_manager_internal.h"
 #include "oc_cloud_store_internal.h"
 #include "oc_core_res.h"
@@ -32,8 +33,6 @@
 #ifdef OC_SECURITY
 #include "security/oc_pstat.h"
 #endif /* OC_SECURITY */
-
-#include "port/oc_log_internal.h"
 
 #include <assert.h>
 
@@ -58,10 +57,10 @@ reinitialize_cloud_storage(oc_cloud_context_t *ctx)
   if (!need_to_reinitialize_cloud_storage(ctx)) {
     return;
   }
-  OC_DBG("reinitializing cloud context in storage");
+  OC_CLOUD_DBG("reinitializing cloud context in storage");
   cloud_store_initialize(&ctx->store);
   if (cloud_store_dump(&ctx->store) < 0) {
-    OC_ERR("failed to dump cloud store");
+    OC_CLOUD_ERR("failed to dump cloud store");
   }
 }
 
@@ -71,7 +70,7 @@ cloud_context_init(size_t device)
   oc_cloud_context_t *ctx =
     (oc_cloud_context_t *)oc_memb_alloc(&g_cloud_context_pool);
   if (ctx == NULL) {
-    OC_ERR("insufficient memory to create cloud context");
+    OC_CLOUD_ERR("insufficient memory to create cloud context");
     return NULL;
   }
   ctx->next = NULL;

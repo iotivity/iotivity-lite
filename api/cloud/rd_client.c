@@ -25,9 +25,9 @@
 #include "api/oc_core_res_internal.h"
 #include "api/oc_link_internal.h"
 #include "oc_api.h"
+#include "oc_cloud_log_internal.h"
 #include "oc_collection.h"
 #include "oc_core_res.h"
-#include "port/oc_log_internal.h"
 #include "rd_client_internal.h"
 #include <inttypes.h>
 #include <stdlib.h>
@@ -37,7 +37,7 @@ _add_resource_payload(CborEncoder *parent, oc_resource_t *resource,
                       const char *rel, int64_t ins)
 {
   if (!parent || !resource) {
-    OC_ERR("Error of input parameters");
+    OC_CLOUD_ERR("Error of input parameters");
     return;
   }
   oc_rep_start_object(parent, links);
@@ -61,7 +61,7 @@ rd_publish_with_device_id(const oc_endpoint_t *endpoint, const oc_link_t *links,
                           void *user_data)
 {
   if (!endpoint || !id || !links || !handler) {
-    OC_ERR("Error of input parameters");
+    OC_CLOUD_ERR("Error of input parameters");
     return false;
   }
 
@@ -82,7 +82,7 @@ rd_publish_with_device_id(const oc_endpoint_t *endpoint, const oc_link_t *links,
     oc_rep_close_array(root, links);
     oc_rep_end_root_object();
   } else {
-    OC_ERR("Could not init POST request for rd publish");
+    OC_CLOUD_ERR("Could not init POST request for rd publish");
     return false;
   }
 
@@ -125,7 +125,7 @@ rd_delete_with_device_id(const oc_endpoint_t *endpoint, const oc_link_t *links,
 {
   assert(id != NULL);
   if (endpoint == NULL || handler == NULL) {
-    OC_ERR("Error of input parameters");
+    OC_CLOUD_ERR("Error of input parameters");
     return false;
   }
 
@@ -133,11 +133,12 @@ rd_delete_with_device_id(const oc_endpoint_t *endpoint, const oc_link_t *links,
   char uri_query[URI_QUERY_LEN + 1] = { 0 }; // +1 for \0
   int written = snprintf(uri_query, URI_QUERY_LEN, "di=%s", id);
   if (written < 0) {
-    OC_ERR("Cannot unpublish device: cannot write device id(%d)", written);
+    OC_CLOUD_ERR("Cannot unpublish device: cannot write device id(%d)",
+                 written);
     return false;
   }
   if (written > URI_QUERY_LEN) {
-    OC_ERR("Cannot unpublish device: buffer too small");
+    OC_CLOUD_ERR("Cannot unpublish device: buffer too small");
     return false;
   }
 
@@ -146,12 +147,12 @@ rd_delete_with_device_id(const oc_endpoint_t *endpoint, const oc_link_t *links,
   while (links != NULL) {
     written = snprintf(buffer, buffer_size, "&ins=%" PRId64 "", links->ins);
     if (written < 0) {
-      OC_ERR("Cannot unpublish device link: cannot write instance id(%d)",
-             written);
+      OC_CLOUD_ERR("Cannot unpublish device link: cannot write instance id(%d)",
+                   written);
       return false;
     }
     if ((size_t)written > buffer_size) {
-      OC_ERR("Cannot unpublish device link: buffer too small");
+      OC_CLOUD_ERR("Cannot unpublish device link: buffer too small");
       return false;
     }
     buffer = buffer + written;

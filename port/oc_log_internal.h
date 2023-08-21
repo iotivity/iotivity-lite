@@ -64,13 +64,15 @@
 #include "android/oc_log_android.h"
 
 #if defined(OC_DEBUG) || defined(OC_PUSHDEBUG)
+#define OC_LOG_WITH_COMPONENT(level, component, ...)                           \
+  android_log((level), (component), __FILE__, __func__, __LINE__, __VA_ARGS__)
 #define OC_LOG(level, ...)                                                     \
-  android_log(oc_log_level_to_label(level), __FILE__, __func__, __LINE__,      \
-              __VA_ARGS__)
+  OC_LOG_WITH_COMPONENT(level, OC_LOG_COMPONENT_DEFAULT, __VA_ARGS__)
 #define OC_LOGipaddr(endpoint)                                                 \
-  android_log_ipaddr("DEBUG", __FILE__, __func__, __LINE__, endpoint)
+  android_log_ipaddr(OC_LOG_LEVEL_DEBUG, __FILE__, __func__, __LINE__, endpoint)
 #define OC_LOGbytes(bytes, length)                                             \
-  android_log_bytes("DEBUG", __FILE__, __func__, __LINE__, bytes, length)
+  android_log_bytes(OC_LOG_LEVEL_DEBUG, __FILE__, __func__, __LINE__, bytes,   \
+                    length)
 #else /* defined(OC_DEBUG) || defined(OC_PUSHDEBUG) */
 #define OC_LOG(level, ...)
 #define OC_LOGipaddr(endpoint)
@@ -79,27 +81,35 @@
 #endif /* __ANDROID__ */
 
 // port's layer can override this macro to provide its own logger
-#ifndef OC_LOG
-#define OC_LOG(log_level, ...)                                                 \
+#ifndef OC_LOG_WITH_COMPONENT
+#define OC_LOG_WITH_COMPONENT(log_level, log_component, ...)                   \
   do {                                                                         \
     oc_logger_t *logger = oc_log_get_logger();                                 \
     if (logger->level < (log_level)) {                                         \
       break;                                                                   \
     }                                                                          \
     if (logger->fn != NULL) {                                                  \
-      logger->fn(log_level, OC_LOG_COMPONENT_DEFAULT, __FILENAME__, __LINE__,  \
+      logger->fn((log_level), (log_component), __FILENAME__, __LINE__,         \
                  __func__, __VA_ARGS__);                                       \
       break;                                                                   \
     }                                                                          \
     char _oc_log_fn_buf[64] = { 0 };                                           \
     oc_clock_time_rfc3339(_oc_log_fn_buf, sizeof(_oc_log_fn_buf));             \
-    OC_PRINTF("[OC %s] %s: %s:%d <%s>: ", _oc_log_fn_buf,                      \
-              oc_log_level_to_label(log_level), __FILENAME__, __LINE__,        \
-              __func__);                                                       \
+    OC_PRINTF("[OC %s] ", _oc_log_fn_buf);                                     \
+    if ((log_component) != OC_LOG_COMPONENT_DEFAULT) {                         \
+      OC_PRINTF("(%s) ", oc_log_component_name(log_component));                \
+    }                                                                          \
+    OC_PRINTF("%s: %s:%d <%s>: ", oc_log_level_to_label(log_level),            \
+              __FILENAME__, __LINE__, __func__);                               \
     OC_PRINTF(__VA_ARGS__);                                                    \
     OC_PRINTF("\n");                                                           \
     fflush(stdout);                                                            \
   } while (0)
+#endif /* !OC_LOG_WITH_COMPONENT */
+
+#ifndef OC_LOG
+#define OC_LOG(log_level, ...)                                                 \
+  OC_LOG_WITH_COMPONENT(log_level, OC_LOG_COMPONENT_DEFAULT, __VA_ARGS__)
 #endif /* !OC_LOG */
 
 #ifndef OC_LOG_MAXIMUM_LEVEL

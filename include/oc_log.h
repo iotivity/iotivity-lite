@@ -33,6 +33,7 @@
 extern "C" {
 #endif
 
+#include "oc_config.h"
 #include "oc_export.h"
 #include "util/oc_compiler.h"
 
@@ -160,6 +161,9 @@ typedef enum {
  */
 typedef enum {
   OC_LOG_COMPONENT_DEFAULT = 1 << 0, ///< default, non-specific component
+#ifdef OC_CLOUD
+  OC_LOG_COMPONENT_CLOUD = 1 << 1, ///< cloud
+#endif
 } oc_log_component_t;
 
 /**

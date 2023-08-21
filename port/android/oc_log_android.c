@@ -17,33 +17,39 @@
  ****************************************************************************/
 
 #include "oc_log_android.h"
+#include "oc_log.h"
 
 #define ADDR_SIZE 64
 #define TAG_SIZE 256
 
-int
-get_log_level(const char *level)
+static int
+get_log_level(int level)
 {
-  int log_level = 0;
-  if (strcmp(level, "DEBUG") == 0) {
-    log_level = ANDROID_LOG_DEBUG;
-  } else if (strcmp(level, "WARNING") == 0) {
-    log_level = ANDROID_LOG_WARN;
-  } else if (strcmp(level, "ERROR") == 0) {
-    log_level = ANDROID_LOG_ERROR;
-  } else {
-    log_level = ANDROID_LOG_INFO;
+  if (level == OC_LOG_LEVEL_DEBUG) {
+    return ANDROID_LOG_DEBUG;
   }
-  return log_level;
+  if (level == OC_LOG_LEVEL_WARNING) {
+    return ANDROID_LOG_WARN;
+  }
+  if (level == OC_LOG_LEVEL_ERROR) {
+    return ANDROID_LOG_ERROR;
+  }
+  return ANDROID_LOG_INFO;
 }
 
-void
-get_tag(char *tag, const char *file, const char *func, int line)
+static void
+get_tag(char *tag, int component, const char *file, const char *func, int line)
 {
-  snprintf(tag, TAG_SIZE, "%s <%s:%d>", file, func, line);
+  if (component == OC_LOG_COMPONENT_DEFAULT) {
+    snprintf(tag, TAG_SIZE, "%s <%s:%d>", file, func, line);
+  } else {
+    snprintf(tag, TAG_SIZE, "(%s) %s <%s:%d>",
+             oc_log_component_name((oc_log_component_t)component), file, func,
+             line);
+  }
 }
 
-void
+static void
 get_ipaddr(char *buffer, oc_endpoint_t endpoint)
 {
   if (endpoint.flags & IPV4) {
@@ -68,11 +74,11 @@ get_ipaddr(char *buffer, oc_endpoint_t endpoint)
 }
 
 void
-android_log(const char *level, const char *file, const char *func, int line,
-            ...)
+android_log(int level, int component, const char *file, const char *func,
+            int line, ...)
 {
   char tag[TAG_SIZE];
-  get_tag(tag, file, func, line);
+  get_tag(tag, component, file, func, line);
   va_list args;
   va_start(args, line);
   char *format = va_arg(args, char *);
@@ -81,22 +87,22 @@ android_log(const char *level, const char *file, const char *func, int line,
 }
 
 void
-android_log_ipaddr(const char *level, const char *file, const char *func,
-                   int line, oc_endpoint_t endpoint)
+android_log_ipaddr(int level, const char *file, const char *func, int line,
+                   oc_endpoint_t endpoint)
 {
   char tag[TAG_SIZE];
-  get_tag(tag, file, func, line);
+  get_tag(tag, OC_LOG_COMPONENT_DEFAULT, file, func, line);
   char addr[ADDR_SIZE];
   get_ipaddr(addr, endpoint);
   __android_log_write(get_log_level(level), tag, addr);
 }
 
 void
-android_log_bytes(const char *level, const char *file, const char *func,
-                  int line, uint8_t *bytes, size_t length)
+android_log_bytes(int level, const char *file, const char *func, int line,
+                  uint8_t *bytes, size_t length)
 {
   char tag[TAG_SIZE];
-  get_tag(tag, file, func, line);
+  get_tag(tag, OC_LOG_COMPONENT_DEFAULT, file, func, line);
   char buffer[length * 3 + 1];
   uint16_t i;
   for (i = 0; i < length; ++i) {

@@ -25,14 +25,13 @@
 #include "oc_cloud_access.h"
 #include "oc_cloud_access_internal.h"
 #include "oc_cloud_internal.h"
+#include "oc_cloud_log_internal.h"
 #include "oc_core_res.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_pstat.h"
 #include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
-
-#include "port/oc_log_internal.h"
 
 /** Account URI.*/
 #ifdef OC_SPEC_VER_OIC
@@ -75,7 +74,7 @@ cloud_tls_add_peer(const oc_endpoint_t *endpoint, int selected_identity_cred_id)
     if (cloud_tls_peer_connected(peer)) {
       return true;
     }
-    OC_DBG("cloud need to initialized from the device");
+    OC_CLOUD_DBG("cloud need to initialized from the device");
     oc_tls_close_connection(endpoint);
     // TODO: might need to wait for closing of TLS connection before adding a
     // new peer
@@ -96,7 +95,7 @@ oc_cloud_access_register(oc_cloud_access_conf_t conf, const char *auth_provider,
 {
   if (conf.endpoint == NULL || conf.handler == NULL ||
       ((auth_provider == NULL || auth_code == NULL) && access_token == NULL)) {
-    OC_ERR("Error of input parameters");
+    OC_CLOUD_ERR("Error of input parameters");
     return false;
   }
 
@@ -109,14 +108,14 @@ oc_cloud_access_register(oc_cloud_access_conf_t conf, const char *auth_provider,
 
 #ifdef OC_SECURITY
   if (!cloud_tls_add_peer(conf.endpoint, conf.selected_identity_cred_id)) {
-    OC_ERR("cannot connect to cloud");
+    OC_CLOUD_ERR("cannot connect to cloud");
     return false;
   }
 #endif /* OC_SECURITY */
 
   if (!oc_init_post(OC_RSRVD_ACCOUNT_URI, conf.endpoint, NULL, conf.handler,
                     LOW_QOS, conf.user_data)) {
-    OC_ERR("Could not init POST request for sign up");
+    OC_CLOUD_ERR("Could not init POST request for sign up");
     return false;
   }
 
@@ -179,13 +178,13 @@ oc_cloud_access_deregister(oc_cloud_access_conf_t conf, const char *uid,
                            const char *access_token)
 {
   if (conf.endpoint == NULL || conf.handler == NULL) {
-    OC_ERR("Error of input parameters");
+    OC_CLOUD_ERR("Error of input parameters");
     return false;
   }
 
 #ifdef OC_SECURITY
   if (!cloud_tls_add_peer(conf.endpoint, conf.selected_identity_cred_id)) {
-    OC_ERR("cannot connect to cloud");
+    OC_CLOUD_ERR("cannot connect to cloud");
     return false;
   }
 #endif /* OC_SECURITY */
@@ -212,7 +211,7 @@ cloud_access_login_out(oc_cloud_access_conf_t conf, const char *uid,
 {
   if (conf.endpoint == NULL || conf.handler == NULL || uid == NULL ||
       access_token == NULL) {
-    OC_ERR("Error of input parameters");
+    OC_CLOUD_ERR("Error of input parameters");
     return false;
   }
 
@@ -225,14 +224,14 @@ cloud_access_login_out(oc_cloud_access_conf_t conf, const char *uid,
 
 #ifdef OC_SECURITY
   if (!cloud_tls_add_peer(conf.endpoint, conf.selected_identity_cred_id)) {
-    OC_ERR("cannot connect to cloud");
+    OC_CLOUD_ERR("cannot connect to cloud");
     return false;
   }
 #endif /* OC_SECURITY */
 
   if (!oc_init_post(OC_RSRVD_ACCOUNT_SESSION_URI, conf.endpoint, NULL,
                     conf.handler, LOW_QOS, conf.user_data)) {
-    OC_ERR("Could not init POST request for sign in/out");
+    OC_CLOUD_ERR("Could not init POST request for sign in/out");
     return false;
   }
   char uuid[OC_UUID_LEN] = { 0 };
@@ -272,7 +271,7 @@ oc_cloud_access_refresh_access_token(oc_cloud_access_conf_t conf,
 {
   if (conf.endpoint == NULL || conf.handler == NULL || uid == NULL ||
       refresh_token == NULL) {
-    OC_ERR("Error of input parameters");
+    OC_CLOUD_ERR("Error of input parameters");
     return false;
   }
 
@@ -285,14 +284,14 @@ oc_cloud_access_refresh_access_token(oc_cloud_access_conf_t conf,
 
 #ifdef OC_SECURITY
   if (!cloud_tls_add_peer(conf.endpoint, conf.selected_identity_cred_id)) {
-    OC_ERR("cannot connect to cloud");
+    OC_CLOUD_ERR("cannot connect to cloud");
     return false;
   }
 #endif /* OC_SECURITY */
 
   if (!oc_init_post(OC_RSRVD_ACCOUNT_TOKEN_REFRESH_URI, conf.endpoint, NULL,
                     conf.handler, LOW_QOS, conf.user_data)) {
-    OC_ERR("Could not init POST request for refresh access token");
+    OC_CLOUD_ERR("Could not init POST request for refresh access token");
     return false;
   }
   char uuid[OC_UUID_LEN] = { 0 };

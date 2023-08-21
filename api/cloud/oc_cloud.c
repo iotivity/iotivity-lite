@@ -27,6 +27,7 @@
 #include "oc_cloud_context_internal.h"
 #include "oc_cloud_deregister_internal.h"
 #include "oc_cloud_internal.h"
+#include "oc_cloud_log_internal.h"
 #include "oc_cloud_manager_internal.h"
 #include "oc_cloud_store_internal.h"
 #include "oc_collection.h"
@@ -55,7 +56,7 @@ cloud_is_timeout_error_code(oc_status_t code)
 void
 cloud_manager_cb(oc_cloud_context_t *ctx)
 {
-  OC_DBG("cloud manager status changed %d", (int)ctx->store.status);
+  OC_CLOUD_DBG("cloud manager status changed %d", (int)ctx->store.status);
   cloud_rd_manager_status_changed(ctx);
 
   if (ctx->callback != NULL) {
@@ -93,17 +94,17 @@ restart_manager(void *user_data)
 void
 cloud_close_endpoint(const oc_endpoint_t *cloud_ep)
 {
-  OC_DBG("cloud_close_endpoint");
+  OC_CLOUD_DBG("cloud_close_endpoint");
 #ifdef OC_SECURITY
   const oc_tls_peer_t *peer = oc_tls_get_peer(cloud_ep);
   if (peer != NULL) {
-    OC_DBG("cloud_close_endpoint: oc_tls_close_connection");
+    OC_CLOUD_DBG("cloud_close_endpoint: oc_tls_close_connection");
     oc_tls_close_connection(cloud_ep);
   } else
 #endif /* OC_SECURITY */
   {
 #ifdef OC_TCP
-    OC_DBG("cloud_close_endpoint: oc_connectivity_end_session");
+    OC_CLOUD_DBG("cloud_close_endpoint: oc_connectivity_end_session");
     oc_connectivity_end_session(cloud_ep);
 #endif /* OC_TCP */
   }
@@ -116,7 +117,7 @@ cloud_reset(size_t device, bool sync, uint16_t timeout)
   if (ctx == NULL) {
     return -1;
   }
-  OC_DBG("[Cloud] cloud_reset");
+  OC_CLOUD_DBG("cloud_reset");
 
 #ifdef OC_SECURITY
   if (oc_tls_connected(ctx->cloud_ep) &&
@@ -201,9 +202,9 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
                          const cloud_conf_update_t *data)
 {
   if (data->ci_server_len == 0) {
-    OC_DBG("[Cloud] got forced deregister via provisioning of empty cis");
+    OC_CLOUD_DBG("got forced deregister via provisioning of empty cis");
     if (cloud_reset(ctx->device, false, CLOUD_DEREGISTER_TIMEOUT) != 0) {
-      OC_DBG("[Cloud] reset failed");
+      OC_CLOUD_DBG("reset failed");
     }
     return;
   }
@@ -229,7 +230,7 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
   }
 
   if (oc_cloud_manager_start(ctx, ctx->callback, ctx->user_data) != 0) {
-    OC_ERR("cannot start cloud manager");
+    OC_CLOUD_ERR("cannot start cloud manager");
   }
 }
 
@@ -240,11 +241,11 @@ cloud_ep_session_event_handler(const oc_endpoint_t *endpoint,
 {
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)user_data;
   if (oc_endpoint_compare(endpoint, ctx->cloud_ep) != 0) {
-    OC_DBG("session handler skipped: endpoint does not match");
+    OC_CLOUD_DBG("session handler skipped: endpoint does not match");
     return;
   }
-  OC_DBG("[CM] cloud_ep_session_event_handler ep_state: %d (current: %d)",
-         (int)state, (int)ctx->cloud_ep_state);
+  OC_CLOUD_DBG("cloud_ep_session_event_handler ep_state: %d (current: %d)",
+               (int)state, (int)ctx->cloud_ep_state);
   bool state_changed = ctx->cloud_ep_state != state;
   if (!state_changed) {
     return;
@@ -323,7 +324,7 @@ cloud_is_deregistering(const oc_cloud_context_t *ctx)
 void
 oc_cloud_manager_restart(oc_cloud_context_t *ctx)
 {
-  OC_DBG("[CM] oc_cloud_manager_restart");
+  OC_CLOUD_DBG("oc_cloud_manager_restart");
 #ifdef OC_SESSION_EVENTS
   if (ctx->cloud_ep_state == OC_SESSION_CONNECTED) {
     bool is_tcp = (ctx->cloud_ep->flags & TCP) != 0;
@@ -411,7 +412,7 @@ oc_cloud_shutdown(void)
   for (size_t device = 0; device < oc_core_get_num_devices(); ++device) {
     oc_cloud_context_t *ctx = oc_cloud_get_context(device);
     if (ctx == NULL) {
-      OC_ERR("invalid cloud context for device=%zu", device);
+      OC_CLOUD_ERR("invalid cloud context for device=%zu", device);
       continue;
     }
     cloud_manager_stop(ctx);
@@ -420,7 +421,7 @@ oc_cloud_shutdown(void)
                                         false);
 #endif /* OC_SESSION_EVENTS */
     cloud_context_deinit(ctx);
-    OC_DBG("cloud_shutdown for %d", (int)device);
+    OC_CLOUD_DBG("cloud_shutdown for %d", (int)device);
   }
   oc_ri_on_delete_resource_remove_callback(oc_cloud_delete_resource);
 }
