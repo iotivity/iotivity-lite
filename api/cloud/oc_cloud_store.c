@@ -24,10 +24,10 @@
 #include "api/oc_rep_internal.h"
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
+#include "oc_cloud_log_internal.h"
 #include "oc_cloud_store_internal.h"
 #include "oc_rep.h"
 #include "port/oc_connectivity.h"
-#include "port/oc_log_internal.h"
 
 #include <stdint.h>
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -170,7 +170,7 @@ cloud_store_dump_handler(void *data)
 {
   const oc_cloud_store_t *store = (oc_cloud_store_t *)data;
   if (cloud_store_dump(store) < 0) {
-    OC_ERR("failed to dump store");
+    OC_CLOUD_ERR("failed to dump store");
   }
   return OC_EVENT_DONE;
 }
@@ -226,7 +226,7 @@ cloud_store_parse_string_property(const oc_rep_t *rep, oc_cloud_store_t *store)
     return true;
   }
 
-  OC_ERR("[CLOUD_STORE] Unknown string property %s", oc_string(rep->name));
+  OC_CLOUD_ERR("Unknown string property %s", oc_string(rep->name));
   return false;
 }
 
@@ -253,7 +253,7 @@ cloud_store_parse_int_property(const oc_rep_t *rep, oc_cloud_store_t *store)
     return true;
   }
 
-  OC_ERR("[CLOUD_STORE] Unknown integer property %s", oc_string(rep->name));
+  OC_CLOUD_ERR("Unknown integer property %s", oc_string(rep->name));
   return false;
 }
 
@@ -273,7 +273,7 @@ cloud_store_decode(const oc_rep_t *rep, oc_cloud_store_t *store)
       }
       break;
     default:
-      OC_ERR("[CLOUD_STORE] Unknown property %s", oc_string(rep->name));
+      OC_CLOUD_ERR("Unknown property %s", oc_string(rep->name));
       return -1;
     }
     rep = rep->next;
@@ -293,7 +293,7 @@ cloud_store_load_internal(const char *store_name, oc_cloud_store_t *store)
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
   if (!buf) {
-    OC_ERR("[CLOUD_STORE] alloc failed!");
+    OC_CLOUD_ERR("alloc failed!");
     return -1;
   }
 #else  /* OC_DYNAMIC_ALLOCATION */
@@ -305,7 +305,7 @@ cloud_store_load_internal(const char *store_name, oc_cloud_store_t *store)
     oc_rep_set_pool(&rep_objects);
     oc_rep_t *rep;
     if (oc_parse_rep(buf, (int)size, &rep) != 0) {
-      OC_ERR("failed to parse cloud store buffer");
+      OC_CLOUD_ERR("failed to parse cloud store buffer");
     }
     ret = cloud_store_decode(rep, store);
     oc_rep_set_pool(&rep_objects); // Reset representation pool

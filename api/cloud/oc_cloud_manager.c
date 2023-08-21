@@ -22,15 +22,15 @@
 
 #ifdef OC_CLOUD
 
-#include "oc_cloud_manager_internal.h"
 #include "api/oc_server_api_internal.h"
 #include "oc_api.h"
 #include "oc_cloud_access.h"
 #include "oc_cloud_context_internal.h"
 #include "oc_cloud_internal.h"
+#include "oc_cloud_log_internal.h"
+#include "oc_cloud_manager_internal.h"
 #include "oc_cloud_store_internal.h"
 #include "oc_endpoint.h"
-#include "port/oc_log_internal.h"
 #include "rd_client_internal.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
@@ -114,15 +114,14 @@ cloud_manager_callback_handler_async(void *data)
 void
 cloud_manager_start(oc_cloud_context_t *ctx)
 {
-  OC_DBG("[CM] cloud_manager_start");
-
+  OC_CLOUD_DBG("cloud_manager_start");
   cloud_start_process(ctx);
 }
 
 void
 cloud_manager_stop(const oc_cloud_context_t *ctx)
 {
-  OC_DBG("[CM] cloud_manager_stop");
+  OC_CLOUD_DBG("cloud_manager_stop");
   oc_remove_delayed_callback(ctx, cloud_manager_reconnect_async);
   oc_remove_delayed_callback(ctx, cloud_manager_register_async);
   oc_remove_delayed_callback(ctx, cloud_manager_login_async);
@@ -322,7 +321,7 @@ _register_handler(oc_cloud_context_t *ctx, const oc_client_response_t *data,
   }
 
   if (cloud_manager_handle_redirect_response(ctx, payload)) {
-    OC_DBG("redirect detected");
+    OC_CLOUD_DBG("redirect detected");
   }
 
   cloud_store_dump_async(&ctx->store);
@@ -408,7 +407,7 @@ cloud_manager_register_async(void *data)
     return OC_EVENT_DONE;
   }
 
-  OC_DBG("[CM] try register(%d)", ctx->retry_count);
+  OC_CLOUD_DBG("try register(%d)", ctx->retry_count);
   if (is_retry_over(ctx)) {
     // for register, we don't try to reconnect because the access token has
     // short validity
@@ -427,14 +426,14 @@ cloud_manager_register_async(void *data)
   };
   if (oc_string(ctx->store.ci_server) == NULL ||
       conv_cloud_endpoint(ctx) != 0) {
-    OC_ERR("invalid cloud server");
+    OC_CLOUD_ERR("invalid cloud server");
     goto retry;
   }
   conf.endpoint = ctx->cloud_ep;
   if (!oc_cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
                                 oc_string(ctx->store.uid),
                                 oc_string(ctx->store.access_token))) {
-    OC_ERR("failed to sent register request to cloud");
+    OC_CLOUD_ERR("failed to sent register request to cloud");
     goto retry;
   }
 
@@ -518,7 +517,7 @@ error:
 void
 oc_cloud_login_handler(oc_client_response_t *data)
 {
-  OC_DBG("login handler");
+  OC_CLOUD_DBG("login handler");
   cloud_api_param_t *p = (cloud_api_param_t *)data->user_data;
   oc_cloud_context_t *ctx = p->ctx;
   _login_handler(ctx, data, /*retryIsActive*/ false,
@@ -565,19 +564,19 @@ on_keepalive_response(oc_cloud_context_t *ctx, bool response_received,
     ok = on_keepalive_response_default(ctx, response_received, next_ping);
   }
   if (!ok) {
-    OC_ERR("[CM] keepalive failed");
+    OC_CLOUD_ERR("keepalive failed");
     return false;
   }
-  OC_DBG("[CM] keepalive sends the next ping in %llu milliseconds with %u "
-         "seconds timeout",
-         (long long unsigned)*next_ping, ctx->keepalive.ping_timeout);
+  OC_CLOUD_DBG("keepalive sends the next ping in %llu milliseconds with %u "
+               "seconds timeout",
+               (long long unsigned)*next_ping, ctx->keepalive.ping_timeout);
   return true;
 }
 
 static void
 cloud_manager_login_handler(oc_client_response_t *data)
 {
-  OC_DBG("[CM] login handler(%d)", data->code);
+  OC_CLOUD_DBG("login handler(%d)", data->code);
 
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
   oc_remove_delayed_callback(ctx, cloud_manager_login_async);
@@ -631,7 +630,7 @@ cloud_manager_login_async(void *data)
     return OC_EVENT_DONE;
   }
 
-  OC_DBG("[CM] try login (%d)", ctx->retry_count);
+  OC_CLOUD_DBG("try login (%d)", ctx->retry_count);
   if (is_retry_over(ctx)) {
     oc_reset_delayed_callback(ctx, cloud_manager_reconnect_async, 0);
     return OC_EVENT_DONE;
@@ -645,13 +644,13 @@ cloud_manager_login_async(void *data)
     .timeout = g_retry_timeout[ctx->retry_count],
   };
   if (conv_cloud_endpoint(ctx) != 0) {
-    OC_ERR("invalid cloud server");
+    OC_CLOUD_ERR("invalid cloud server");
     goto retry;
   }
   conf.endpoint = ctx->cloud_ep;
   if (!oc_cloud_access_login(conf, oc_string(ctx->store.uid),
                              oc_string(ctx->store.access_token))) {
-    OC_ERR("failed to sent sign in request to cloud");
+    OC_CLOUD_ERR("failed to sent sign in request to cloud");
     goto retry;
   }
 
@@ -776,7 +775,7 @@ error:
 void
 oc_cloud_refresh_token_handler(oc_client_response_t *data)
 {
-  OC_DBG("refresh token handler");
+  OC_CLOUD_DBG("refresh token handler");
   cloud_api_param_t *p = (cloud_api_param_t *)data->user_data;
   oc_cloud_context_t *ctx = p->ctx;
   _refresh_token_handler(ctx, data, /*retryIsActive*/ false);
@@ -793,7 +792,7 @@ oc_cloud_refresh_token_handler(oc_client_response_t *data)
 static void
 cloud_manager_refresh_token_handler(oc_client_response_t *data)
 {
-  OC_DBG("[CM] refresh token handler(%d)", data->code);
+  OC_CLOUD_DBG("refresh token handler(%d)", data->code);
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
   oc_remove_delayed_callback(ctx, cloud_manager_refresh_token_async);
   bool retry = false;
@@ -825,7 +824,7 @@ cloud_manager_refresh_token_async(void *data)
     return OC_EVENT_DONE;
   }
   oc_remove_delayed_callback(ctx, cloud_manager_send_ping_async);
-  OC_DBG("[CM] try refresh token(%d)", ctx->retry_refresh_token_count);
+  OC_CLOUD_DBG("try refresh token(%d)", ctx->retry_refresh_token_count);
 
   if (is_refresh_token_retry_over(ctx)) {
     oc_reset_delayed_callback(ctx, cloud_manager_reconnect_async, 0);
@@ -840,7 +839,7 @@ cloud_manager_refresh_token_async(void *data)
     .timeout = g_retry_timeout[ctx->retry_refresh_token_count],
   };
   if (conv_cloud_endpoint(ctx) != 0) {
-    OC_ERR("invalid cloud server");
+    OC_CLOUD_ERR("invalid cloud server");
     goto retry;
   }
   conf.endpoint = ctx->cloud_ep;
@@ -868,7 +867,7 @@ cloud_manager_send_ping_handler(oc_client_response_t *data)
   if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
     return;
   }
-  OC_DBG("[CM] send ping handler(%d)", data->code);
+  OC_CLOUD_DBG("send ping handler(%d)", data->code);
 
   bool response_received = true;
   if (data->code == OC_PING_TIMEOUT ||
@@ -883,7 +882,7 @@ cloud_manager_send_ping_handler(oc_client_response_t *data)
     oc_reset_delayed_callback_ms(ctx, cloud_manager_send_ping_async, next_ping);
     return;
   }
-  OC_DBG("[CM] ping fails with code(%d)", data->code);
+  OC_CLOUD_DBG("ping fails with code(%d)", data->code);
   cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
   oc_reset_delayed_callback(ctx, cloud_manager_reconnect_async, 0);
 }
@@ -896,7 +895,7 @@ cloud_manager_send_ping_async(void *data)
     return OC_EVENT_DONE;
   }
 
-  OC_DBG("[CM] try send ping");
+  OC_CLOUD_DBG("try send ping");
   if (!cloud_send_ping(ctx->cloud_ep, ctx->keepalive.ping_timeout,
                        cloud_manager_send_ping_handler, ctx)) {
     // While retrying, keep last error (clec) to CLOUD_OK

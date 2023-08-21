@@ -24,10 +24,9 @@
 #include "api/oc_core_res_internal.h"
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
+#include "oc_cloud_log_internal.h"
 #include "oc_cloud_store_internal.h"
 #include "oc_core_res.h"
-
-#include "port/oc_log_internal.h"
 
 #define OC_RSRVD_RES_TYPE_COAPCLOUDCONF "oic.r.coapcloudconf"
 #define OC_RSRVD_URI_COAPCLOUDCONF "/CoapCloudConfResURI"
@@ -62,33 +61,33 @@ cps_to_str(oc_cps_t cps)
 static void
 cloud_response(oc_cloud_context_t *ctx)
 {
-  OC_DBG("Creating Cloud Response");
+  OC_CLOUD_DBG("Creating Cloud Response");
   oc_rep_start_root_object();
   oc_process_baseline_interface(ctx->cloud_conf);
   oc_rep_set_text_string(root, apn,
                          (oc_string(ctx->store.auth_provider) != NULL
                             ? oc_string(ctx->store.auth_provider)
                             : ""));
-  OC_DBG("Creating Cloud Response: auth provider set");
+  OC_CLOUD_DBG("Creating Cloud Response: auth provider set");
   oc_rep_set_text_string(
     root, cis,
     (oc_string(ctx->store.ci_server) ? oc_string(ctx->store.ci_server) : ""));
 
-  OC_DBG("Creating Cloud Response: cis set");
+  OC_CLOUD_DBG("Creating Cloud Response: cis set");
 
   oc_rep_set_text_string(
     root, sid, (oc_string(ctx->store.sid) ? oc_string(ctx->store.sid) : ""));
 
-  OC_DBG("Creating Cloud Response: sid set");
+  OC_CLOUD_DBG("Creating Cloud Response: sid set");
 
   oc_rep_set_int(root, clec, (int)ctx->last_error);
 
-  OC_DBG("Creating Cloud Response: clec set");
+  OC_CLOUD_DBG("Creating Cloud Response: clec set");
 
   const char *cps = cps_to_str(ctx->store.cps);
   if (cps) {
     oc_rep_set_text_string(root, cps, cps);
-    OC_DBG("Creating Cloud Response: cps set to %s", cps);
+    OC_CLOUD_DBG("Creating Cloud Response: cps set to %s", cps);
   }
 
   oc_rep_end_root_object();
@@ -105,7 +104,7 @@ get_cloud(oc_request_t *request, oc_interface_mask_t interface, void *user_data)
                                    true);
     return;
   }
-  OC_DBG("GET request received");
+  OC_CLOUD_DBG("GET request received");
 
   cloud_response(ctx);
   oc_send_response_with_callback(request, OC_STATUS_OK, true);
@@ -165,7 +164,7 @@ post_cloud(oc_request_t *request, oc_interface_mask_t interface,
                                    true);
     return;
   }
-  OC_DBG("POST request received");
+  OC_CLOUD_DBG("POST request received");
   bool request_invalid_in_state = true;
   switch (ctx->store.cps) {
   case OC_CPS_UNINITIALIZED:
@@ -211,7 +210,7 @@ post_cloud(oc_request_t *request, oc_interface_mask_t interface,
 void
 oc_create_cloudconf_resource(size_t device)
 {
-  OC_DBG("oc_cloud_resource: Initializing CoAPCloudConf resource");
+  OC_CLOUD_DBG("oc_cloud_resource: Initializing CoAPCloudConf resource");
 
   oc_core_populate_resource(
     OCF_COAPCLOUDCONF, device, OC_RSRVD_URI_COAPCLOUDCONF,
