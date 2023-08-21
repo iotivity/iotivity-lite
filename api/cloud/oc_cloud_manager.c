@@ -327,7 +327,7 @@ _register_handler(oc_cloud_context_t *ctx, const oc_client_response_t *data,
   cloud_store_dump_async(&ctx->store);
   ctx->retry_count = 0;
   ctx->store.status |= OC_CLOUD_REGISTERED;
-
+  OC_CLOUD_INFO("Registration succeeded");
   cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERED, CLOUD_OK);
 
   return 0;
@@ -335,9 +335,11 @@ _register_handler(oc_cloud_context_t *ctx, const oc_client_response_t *data,
 error:
   ctx->store.status |= OC_CLOUD_FAILURE;
   if (err == CLOUD_ERROR_CONNECT && retryIsActive && !is_retry_over(ctx)) {
+    OC_CLOUD_DBG("Registration failed with error(%d), retrying", (int)err);
     // While retrying, keep last error (clec) to CLOUD_OK
     cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERING, CLOUD_OK);
   } else {
+    OC_CLOUD_ERR("Registration failed with error(%d)", (int)err);
     cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
   }
   return err;
@@ -429,6 +431,7 @@ cloud_manager_register_async(void *data)
     OC_CLOUD_ERR("invalid cloud server");
     goto retry;
   }
+  OC_CLOUD_INFO("Registering to %s", oc_string(ctx->store.ci_server));
   conf.endpoint = ctx->cloud_ep;
   if (!oc_cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
                                 oc_string(ctx->store.uid),
@@ -493,14 +496,17 @@ _login_handler(oc_cloud_context_t *ctx, const oc_client_response_t *data,
 
   ctx->retry_count = 0;
   ctx->store.status |= OC_CLOUD_LOGGED_IN;
+  OC_CLOUD_INFO("Login succeeded");
   cloud_set_cps_and_last_error(ctx, cps_ok, CLOUD_OK);
   return CLOUD_OK;
 
 error:
   if (err == CLOUD_ERROR_CONNECT && retryIsActive && !is_retry_over(ctx)) {
+    OC_CLOUD_DBG("Login failed with error(%d), retrying", (int)err);
     // While retrying, keep last error (clec) to CLOUD_OK
     cloud_set_cps_and_last_error(ctx, cps_ok, CLOUD_OK);
   } else {
+    OC_CLOUD_ERR("Login failed with error(%d)", (int)err);
     cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
   }
   if (err == CLOUD_ERROR_UNAUTHORIZED) {
@@ -643,10 +649,12 @@ cloud_manager_login_async(void *data)
     .user_data = ctx,
     .timeout = g_retry_timeout[ctx->retry_count],
   };
-  if (conv_cloud_endpoint(ctx) != 0) {
+  if (oc_string(ctx->store.ci_server) == NULL ||
+      conv_cloud_endpoint(ctx) != 0) {
     OC_CLOUD_ERR("invalid cloud server");
     goto retry;
   }
+  OC_CLOUD_INFO("Logining to %s", oc_string(ctx->store.ci_server));
   conf.endpoint = ctx->cloud_ep;
   if (!oc_cloud_access_login(conf, oc_string(ctx->store.uid),
                              oc_string(ctx->store.access_token))) {
@@ -743,11 +751,13 @@ _refresh_token_handler(oc_cloud_context_t *ctx,
   ctx->retry_count = 0;
   ctx->retry_refresh_token_count = 0;
   ctx->store.status |= OC_CLOUD_REFRESHED_TOKEN;
+  OC_CLOUD_INFO("Refreshing of access token succeeded");
 
   return CLOUD_OK;
 
 error:
   if (err == CLOUD_ERROR_UNAUTHORIZED) {
+    OC_CLOUD_ERR("Refreshing of access token failed with error(%d)", (int)err);
     cloud_context_clear(ctx);
     ctx->store.status |= OC_CLOUD_FAILURE;
     cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
@@ -759,9 +769,13 @@ error:
   ctx->store.status &= ~OC_CLOUD_LOGGED_IN;
   if (err == CLOUD_ERROR_CONNECT) {
     if (retryIsActive && !is_refresh_token_retry_over(ctx)) {
+      OC_CLOUD_DBG("Refreshing of access token failed with error(%d), retrying",
+                   (int)err);
       // While retrying keep last error (clec) to CLOUD_OK
       cloud_set_last_error(ctx, CLOUD_OK);
     } else {
+      OC_CLOUD_ERR("Refreshing of access token failed with error(%d)",
+                   (int)err);
       cloud_set_last_error(ctx, err);
     }
     return err;
@@ -769,6 +783,7 @@ error:
 
   ctx->store.status &= ~OC_CLOUD_REGISTERED;
   cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, err);
+  OC_CLOUD_ERR("refreshing of access token failed with error(%d)", (int)err);
   return err;
 }
 
@@ -838,12 +853,14 @@ cloud_manager_refresh_token_async(void *data)
     .user_data = ctx,
     .timeout = g_retry_timeout[ctx->retry_refresh_token_count],
   };
-  if (conv_cloud_endpoint(ctx) != 0) {
+  if (oc_string(ctx->store.ci_server) == NULL ||
+      conv_cloud_endpoint(ctx) != 0) {
     OC_CLOUD_ERR("invalid cloud server");
     goto retry;
   }
+  OC_CLOUD_INFO("Refreshing access token for %s",
+                oc_string(ctx->store.ci_server));
   conf.endpoint = ctx->cloud_ep;
-
   if (!oc_cloud_access_refresh_access_token(
         conf, oc_string(ctx->store.auth_provider), oc_string(ctx->store.uid),
         oc_string(ctx->store.refresh_token))) {

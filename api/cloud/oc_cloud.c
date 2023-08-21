@@ -252,9 +252,11 @@ cloud_ep_session_event_handler(const oc_endpoint_t *endpoint,
   }
 
   ctx->cloud_ep_state = state;
-  if (ctx->cloud_ep_state == OC_SESSION_DISCONNECTED && ctx->cloud_manager &&
-      (ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
-    cloud_manager_restart(ctx);
+  if (ctx->cloud_ep_state == OC_SESSION_DISCONNECTED && ctx->cloud_manager) {
+    OC_CLOUD_INFO("Session disconnected");
+    if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
+      cloud_manager_restart(ctx);
+    }
   }
 }
 #endif /* OC_SESSION_EVENTS */

@@ -128,8 +128,10 @@ cloud_deregistered_internal(oc_client_response_t *data)
 
   if (data->code < OC_STATUS_BAD_REQUEST ||
       cloud_is_connection_error_code(data->code)) {
+    OC_CLOUD_INFO("Deregistration successful");
     ctx->store.status = OC_CLOUD_DEREGISTERED;
   } else if (data->code >= OC_STATUS_BAD_REQUEST) {
+    OC_CLOUD_ERR("Deregistration failed with error %d", data->code);
     cloud_set_last_error(ctx, CLOUD_ERROR_RESPONSE);
     ctx->store.status |= OC_CLOUD_FAILURE;
   }
@@ -190,8 +192,8 @@ cloud_deregister_by_request(cloud_api_param_t *p, uint16_t timeout,
       conv_cloud_endpoint(ctx) != 0) {
     goto error;
   }
+  OC_CLOUD_INFO("Deregistering from %s", oc_string(ctx->store.ci_server));
   conf.endpoint = ctx->cloud_ep;
-
   if (oc_cloud_access_deregister(
         conf, oc_string(ctx->store.uid),
         useAccessToken ? oc_string(ctx->store.access_token) : NULL)) {
