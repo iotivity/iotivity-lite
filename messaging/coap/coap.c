@@ -333,6 +333,9 @@ coap_serialize_array_option(unsigned int number, unsigned int current_number,
       }
 
       ++j; /* skip the splitter */
+      if (buffer && j < length) {
+        OC_DBG("STEP %zu/%zu (%c)", j, length, array[j]);
+      }
       current_number = number;
       part_start = array + j;
     }

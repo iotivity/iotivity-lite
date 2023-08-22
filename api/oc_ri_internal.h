@@ -89,6 +89,8 @@ void oc_ri_init(void);
  */
 void oc_ri_shutdown(void);
 
+#ifdef OC_HAS_FEATURE_ETAG
+
 /** @brief Get ETag for given resource */
 uint64_t oc_ri_get_etag(const oc_resource_t *resource) OC_NONNULL();
 
@@ -106,7 +108,10 @@ uint64_t oc_ri_get_etag(const oc_resource_t *resource) OC_NONNULL();
  * @return uint64_t ETag value
  */
 uint64_t oc_ri_get_batch_etag(const oc_resource_t *resource,
-                              const oc_endpoint_t *endpoint, size_t device);
+                              const oc_endpoint_t *endpoint, size_t device)
+  OC_NONNULL();
+
+#endif /* OC_HAS_FEATURE_ETAG */
 
 /**
  * @brief free the properties of the resource
