@@ -651,7 +651,7 @@ send_notification_internal(coap_observer_t *obs, oc_response_t *response,
       "send_notification: Setting Valid response for a REVERT notification");
     status_code = VALID_2_03;
     response->response_buffer->code = VALID_2_03;
-    is_revert = !is_revert;
+    is_revert = true;
   }
 
   coap_packet_t notification;
@@ -944,6 +944,92 @@ fill_response(oc_resource_t *resource, const oc_endpoint_t *endpoint,
 }
 
 static int
+coap_iterate_observers(oc_resource_t *resource, oc_response_t *response,
+                       const oc_endpoint_t *endpoint, bool prepare_response)
+{
+  int num_notifications = 0;
+  bool resource_is_collection = false;
+  oc_interface_mask_t iface_mask = resource->default_interface;
+#ifdef OC_COLLECTIONS
+  if (oc_check_if_collection(resource)) {
+    resource_is_collection = true;
+    iface_mask = OC_IF_BASELINE;
+  }
+#endif /* OC_COLLECTIONS */
+
+  if (prepare_response && endpoint != NULL) {
+    OC_DBG("coap_notify_observers_internal: Issue GET request to resource "
+           "%s\n\n",
+           oc_string(resource->uri));
+    if (!fill_response(resource, endpoint, iface_mask, response)) {
+      return 0;
+    }
+    prepare_response = false;
+  }
+
+  const oc_resource_t *discover_resource =
+    oc_core_get_resource_by_index(OCF_RES, resource->device);
+
+  /* iterate over observers */
+  for (coap_observer_t *obs = (coap_observer_t *)oc_list_head(g_observers_list);
+       obs; obs = obs->next) {
+    if ((obs->resource != resource) ||
+        (endpoint && oc_endpoint_compare(&obs->endpoint, endpoint) != 0)) {
+      continue;
+    } // obs->resource != resource || endpoint != obs->endpoint
+    if (resource_is_collection && obs->iface_mask != OC_IF_BASELINE) {
+      continue;
+    }
+    if (obs->resource == discover_resource && obs->iface_mask == OC_IF_B) {
+      continue;
+    }
+    if (obs->iface_mask == OC_IF_STARTUP) {
+      OC_DBG("coap_notify_observers_internal: Skipping startup established "
+             "observe");
+      continue;
+    }
+    if (prepare_response) {
+#if OC_DBG_IS_ENABLED
+      oc_string_t ep_str;
+      memset(&ep_str, 0, sizeof(oc_string_t));
+      const char *ep_cstr = "";
+      if (oc_endpoint_to_string(&obs->endpoint, &ep_str) == 0) {
+        ep_cstr = oc_string(ep_str);
+      }
+      OC_DBG("coap_notify_observers_internal: Issue GET request to resource "
+             "%s for endpoint %s\n\n",
+             oc_string(resource->uri), ep_cstr);
+      oc_free_string(&ep_str);
+#endif /* OC_DBG_IS_ENABLED */
+      if (!fill_response(resource, &obs->endpoint, iface_mask, response)) {
+        break;
+      }
+    }
+    if (send_notification(obs, response, resource->uri, false) < 0) {
+      break;
+    }
+    ++num_notifications;
+  } // iterate over observers
+
+  return num_notifications;
+}
+
+#ifdef OC_COLLECTIONS
+static int
+coap_notify_collections_with_links(const oc_resource_t *resource)
+{
+  int num_links = 0;
+  if (resource->num_links > 0) {
+    int notify = coap_notify_collections(resource);
+    if (notify >= 0) {
+      num_links = notify;
+    }
+  }
+  return num_links;
+}
+#endif /* OC_COLLECTIONS */
+
+static int
 coap_notify_observers_internal(oc_resource_t *resource,
                                oc_response_buffer_t *response_buf,
                                const oc_endpoint_t *endpoint)
@@ -957,115 +1043,48 @@ coap_notify_observers_internal(oc_resource_t *resource,
   }
 #endif /* OC_SECURITY */
 
-  bool resource_is_collection = false;
-  oc_interface_mask_t iface_mask = resource->default_interface;
-#ifdef OC_COLLECTIONS
-  if (oc_check_if_collection(resource)) {
-    resource_is_collection = true;
-    iface_mask = OC_IF_BASELINE;
+  int num = 0;
+  if (resource->num_observers == 0) {
+    OC_DBG("coap_notify_observers_internal: no observers");
+    goto coap_notify_observers_internal_done;
   }
-#endif /* OC_COLLECTIONS */
-  if (resource->num_observers > 0) {
-#ifndef OC_DYNAMIC_ALLOCATION
-    uint8_t buffer[OC_MIN_OBSERVE_SIZE];
-#else  /* !OC_DYNAMIC_ALLOCATION */
-    uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
-    if (!buffer) {
-      OC_WRN("coap_notify_observers_internal: out of memory allocating buffer");
-      return 0;
-    } //! buffer
-#endif /* OC_DYNAMIC_ALLOCATION */
 
-    oc_response_t response;
-    memset(&response, 0, sizeof(response));
-    oc_response_buffer_t response_buffer;
+  oc_response_t response;
+  memset(&response, 0, sizeof(response));
+  if (response_buf != NULL) {
     response.response_buffer = response_buf;
-    bool has_response = response_buf != NULL;
-#ifdef OC_DYNAMIC_ALLOCATION
-    bool update_buffer = !has_response;
-#endif /* OC_DYNAMIC_ALLOCATION */
-    if (!has_response) {
-      response_buffer.buffer = buffer;
-      response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
-      response.response_buffer = &response_buffer;
-      if (endpoint != NULL) {
-        OC_DBG("coap_notify_observers_internal: Issue GET request to resource "
-               "%s\n\n",
-               oc_string(resource->uri));
-        if (!fill_response(resource, endpoint, iface_mask, &response)) {
-          goto leave_notify_observers;
-        }
-        has_response = true;
-      }
-    } //! response_buf && resource
-
-    const oc_resource_t *discover_resource =
-      oc_core_get_resource_by_index(OCF_RES, resource->device);
-    /* iterate over observers */
-    for (coap_observer_t *obs =
-           (coap_observer_t *)oc_list_head(g_observers_list);
-         obs; obs = obs->next) {
-      if ((obs->resource != resource) ||
-          (endpoint && oc_endpoint_compare(&obs->endpoint, endpoint) != 0)) {
-        continue;
-      } // obs->resource != resource || endpoint != obs->endpoint
-      if (resource_is_collection && obs->iface_mask != OC_IF_BASELINE) {
-        continue;
-      }
-      if (obs->resource == discover_resource && obs->iface_mask == OC_IF_B) {
-        continue;
-      }
-      if (obs->iface_mask == OC_IF_STARTUP) {
-        OC_DBG("coap_notify_observers_internal: Skipping startup established "
-               "observe");
-        continue;
-      }
-      if (!has_response) {
-#if OC_DBG_IS_ENABLED
-        oc_string_t ep_str;
-        memset(&ep_str, 0, sizeof(oc_string_t));
-        const char *ep_cstr = "";
-        if (oc_endpoint_to_string(&obs->endpoint, &ep_str) == 0) {
-          ep_cstr = oc_string(ep_str);
-        }
-        OC_DBG("coap_notify_observers_internal: Issue GET request to resource "
-               "%s for endpoint %s\n\n",
-               oc_string(resource->uri), ep_cstr);
-        oc_free_string(&ep_str);
-#endif /* OC_DBG_IS_ENABLED */
-        if (!fill_response(resource, &obs->endpoint, iface_mask, &response)) {
-          goto leave_notify_observers;
-        }
-      }
-      if (send_notification(obs, &response, resource->uri, false) < 0) {
-        break;
-      }
-    } // iterate over observers
-  leave_notify_observers:;
-#ifdef OC_DYNAMIC_ALLOCATION
-    if (update_buffer) {
-      buffer = response_buffer.buffer;
-    }
-    if (buffer) {
-      free(buffer);
-    }
-#endif /* OC_DYNAMIC_ALLOCATION */
-  } else {
-    OC_WRN("coap_notify_observers_internal: no observers");
+    num = coap_iterate_observers(resource, &response, endpoint, false);
+    goto coap_notify_observers_internal_done;
   }
 
+#ifndef OC_DYNAMIC_ALLOCATION
+  uint8_t buffer[OC_MIN_OBSERVE_SIZE] = { 0 };
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
+  if (buffer == NULL) {
+    OC_WRN("coap_notify_observers_internal: out of memory allocating buffer");
+    return -1;
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+  oc_response_buffer_t response_buffer;
+  response_buffer.buffer = buffer;
+  response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
+  response.response_buffer = &response_buffer;
+  num = coap_iterate_observers(resource, &response, endpoint, true);
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  buffer = response_buffer.buffer;
+  if (buffer) {
+    free(buffer);
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+coap_notify_observers_internal_done:
 #ifdef OC_COLLECTIONS
-  int num_links = 0;
-  if (resource->num_links > 0) {
-    int notify = coap_notify_collections(resource);
-    if (notify >= 0) {
-      num_links = notify;
-    }
-  }
-  return resource->num_observers + num_links;
-#else  /* OC_COLLECTIONS */
-  return resource->num_observers;
-#endif /* !OC_COLLECTIONS */
+  num += coap_notify_collections_with_links(resource);
+#endif /* OC_COLLECTIONS */
+  return num;
 }
 
 void
@@ -1099,13 +1118,12 @@ notify_resource_defaults_observer(oc_resource_t *resource,
       continue;
     }
     if (!fill_response(resource, &obs->endpoint, iface_mask, &response)) {
-      goto leave_notify_observers;
+      break;
     }
     if (send_notification(obs, &response, resource->uri, true) < 0) {
       break;
     }
   }
-leave_notify_observers:;
 #ifdef OC_DYNAMIC_ALLOCATION
   buffer = response_buffer.buffer;
   if (buffer) {

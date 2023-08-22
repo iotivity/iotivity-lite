@@ -993,13 +993,16 @@ oc_observe_notification_resource_defaults_delayed(void *data)
 
 #ifdef OC_HAS_FEATURE_ETAG
 
-static uint64_t
-ri_get_etag(const oc_resource_t *resource, const oc_endpoint_t *endpoint,
-            size_t device, oc_interface_mask_t iface_mask)
+uint64_t
+oc_ri_get_etag(const oc_resource_t *resource)
 {
-  if (iface_mask != OC_IF_B) {
-    return resource->etag;
-  }
+  return resource->etag;
+}
+
+uint64_t
+oc_ri_get_batch_etag(const oc_resource_t *resource,
+                     const oc_endpoint_t *endpoint, size_t device)
+{
   if (oc_core_get_resource_by_index(OCF_RES, device) == resource) {
     return oc_discovery_get_batch_etag(endpoint, device);
   }
@@ -1373,7 +1376,9 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
     uint8_t req_etag_buf_len =
       coap_options_get_etag(ctx->request, &req_etag_buf);
     uint64_t etag =
-      ri_get_etag(cur_resource, endpoint, endpoint->device, iface_mask);
+      (iface_mask == OC_IF_B)
+        ? oc_ri_get_batch_etag(cur_resource, endpoint, endpoint->device)
+        : oc_ri_get_etag(cur_resource);
     if (etag != OC_ETAG_UNINITIALIZED) {
       if (req_etag_buf_len == sizeof(etag)) {
         uint64_t req_etag;

@@ -21,10 +21,12 @@
 #include "oc_api.h"
 #include "oc_certs.h"
 #include "oc_core_res.h"
+#include "oc_helpers.h"
 #include "oc_log.h"
 #include "oc_pki.h"
 #include "port/oc_assert.h"
 #include "util/oc_features.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 #include "plgd/plgd_time.h"
@@ -337,6 +339,12 @@ app_init(void)
   if (oc_add_device_v1(new_device) != 0) {
     return -1;
   }
+
+  oc_resource_t *con = oc_core_get_resource_by_index(OCF_CON, 0);
+  if (con == NULL) {
+    return -1;
+  }
+  oc_resource_set_periodic_observable(con, 1);
   return 0;
 }
 
@@ -1492,8 +1500,18 @@ cloud_server_send_response_cb(oc_request_t *request, oc_status_t response_code)
   const char *response_code_str = oc_status_to_str(response_code);
   const char *method_str = oc_method_to_str(request->method);
   OC_PRINTF(
-    "<cloud_server_send_response_cb> method(%d): %s, uri: %s, code(%d): %s\n",
+    "<cloud_server_send_response_cb> method(%d): %s, uri: %s, code(%d): %s",
     request->method, method_str, uri, response_code, response_code_str);
+#ifdef OC_HAS_FEATURE_ETAG
+  if (request->etag != NULL) {
+    char buf[32];
+    size_t buf_size = OC_ARRAY_SIZE(buf);
+    oc_conv_byte_array_to_hex_string(request->etag, request->etag_len, buf,
+                                     &buf_size);
+    OC_PRINTF(", etag [0x%s]", buf);
+  }
+#endif /* OC_HAS_FEATURE_ETAG */
+  OC_PRINTF("\n");
   fflush(stdout);
 }
 

@@ -89,6 +89,25 @@ void oc_ri_init(void);
  */
 void oc_ri_shutdown(void);
 
+/** @brief Get ETag for given resource */
+uint64_t oc_ri_get_etag(const oc_resource_t *resource) OC_NONNULL();
+
+/**
+ * @brief Calculate batch ETag for the discovery or a collection resource.
+ *
+ * The discovery resource and a collection batch ETag are calculated as the
+ * maximum of the parent resource ETag and the ETag of all resources contained
+ * in the batch response.
+ *
+ * @param resource parent resource (cannot be NULL)
+ * @param endpoint endpoint to verify access to a resource contained by the
+ * parent (for SECURE builds, cannot be NULL)
+ * @param device device index
+ * @return uint64_t ETag value
+ */
+uint64_t oc_ri_get_batch_etag(const oc_resource_t *resource,
+                              const oc_endpoint_t *endpoint, size_t device);
+
 /**
  * @brief free the properties of the resource
  *
