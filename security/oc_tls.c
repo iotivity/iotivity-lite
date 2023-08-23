@@ -352,7 +352,7 @@ static oc_event_callback_retval_t
 reset_in_RFOTM(void *data)
 {
   size_t device = (size_t)data;
-  oc_pstat_reset_device(device, true);
+  oc_pstat_reset_device(device, false);
   return OC_EVENT_DONE;
 }
 
