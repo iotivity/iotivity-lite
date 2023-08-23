@@ -19,6 +19,7 @@
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
 #include "api/oc_ri_internal.h"
+#include "api/oc_main_internal.h"
 #include "oc_core_res.h"
 #include "port/oc_log_internal.h"
 #include "security/oc_certs_generate_internal.h"
@@ -48,7 +49,7 @@ static constexpr size_t kDeviceID{ 0 };
 
 class TestRolesWithServer : public testing::Test {
 public:
-  static void SetUpTestCase()
+  void SetUp() override
   {
     ASSERT_TRUE(oc::TestDevice::StartServer());
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
@@ -67,16 +68,9 @@ public:
 #endif /* OC_DYNAMIC_ALLOCATION */
   }
 
-  static void TearDownTestCase()
-  {
-    oc::TestDevice::StopServer();
-  }
-
   void TearDown() override
   {
-    for (auto &peer : peers_) {
-      oc_tls_remove_peer(&peer->endpoint);
-    }
+    oc::TestDevice::StopServer();
     peers_.clear();
   }
 
