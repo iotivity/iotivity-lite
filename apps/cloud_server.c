@@ -1472,12 +1472,14 @@ cloud_server_log(oc_log_level_t log_level, oc_log_component_t component,
                  const char *file, int line, const char *func, const char *fmt,
                  ...)
 {
-  (void)component;
   char log_time_buf[64] = { 0 };
   oc_clock_time_rfc3339(log_time_buf, sizeof(log_time_buf));
-
-  printf("[OC %s] %s: %s:%d <%s>: ", log_time_buf,
-         oc_log_level_to_label(log_level), file, line, func);
+  printf("[OC %s] ", log_time_buf);
+  if (component != OC_LOG_COMPONENT_DEFAULT) {
+    printf("(%s) ", oc_log_component_name(component));
+  }
+  printf("%s: %s:%d <%s>: ", oc_log_level_to_label(log_level), file, line,
+         func);
   va_list ap;
   va_start(ap, fmt);
   vprintf(fmt, ap);

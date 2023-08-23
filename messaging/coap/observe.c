@@ -56,6 +56,7 @@
 #include "api/oc_query_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_server_api_internal.h"
+#include "messaging/coap/coap_log.h"
 #include "messaging/coap/coap_options.h"
 #include "messaging/coap/observe.h"
 #include "messaging/coap/separate.h"
@@ -197,8 +198,8 @@ coap_get_observers(void)
 static void
 coap_remove_observer(coap_observer_t *o)
 {
-  OC_DBG("Removing observer for /%s [0x%02X%02X]", oc_string(o->url),
-         o->token[0], o->token[1]);
+  COAP_DBG("Removing observer for /%s [0x%02X%02X]", oc_string(o->url),
+           o->token[0], o->token[1]);
 
 #ifdef OC_BLOCK_WISE
   oc_string_view_t query = oc_query_encode_interface(o->iface_mask);
@@ -295,7 +296,7 @@ coap_add_observer(oc_resource_t *resource, uint16_t block2_size,
 
   coap_observer_t *o = oc_memb_alloc(&g_observers_memb);
   if (o == NULL) {
-    OC_WRN("insufficient memory to add new observer");
+    COAP_WRN("insufficient memory to add new observer");
     return NULL;
   }
   oc_new_string(&o->url, uri, uri_len);
@@ -313,15 +314,15 @@ coap_add_observer(oc_resource_t *resource, uint16_t block2_size,
 #endif /* OC_BLOCK_WISE */
   resource->num_observers++;
 #ifdef OC_DYNAMIC_ALLOCATION
-  OC_DBG("Adding observer (%u) for /%s [0x%02X%02X]",
-         oc_list_length(g_observers_list) + 1, oc_string(o->url), o->token[0],
-         o->token[1]);
+  COAP_DBG("Adding observer (%u) for /%s [0x%02X%02X]",
+           oc_list_length(g_observers_list) + 1, oc_string(o->url), o->token[0],
+           o->token[1]);
 #else  /* OC_DYNAMIC_ALLOCATION */
-  OC_DBG("Adding observer (%u/%u) for /%s [0x%02X%02X]",
-         oc_list_length(g_observers_list) + 1, COAP_MAX_OBSERVERS,
-         oc_string(o->url), o->token[0], o->token[1]);
+  COAP_DBG("Adding observer (%u/%u) for /%s [0x%02X%02X]",
+           oc_list_length(g_observers_list) + 1, COAP_MAX_OBSERVERS,
+           oc_string(o->url), o->token[0], o->token[1]);
 #endif /* !OC_DYNAMIC_ALLOCATION */
-  OC_DBG("Removed %d duplicate observer(s)", dup);
+  COAP_DBG("Removed %d duplicate observer(s)", dup);
   (void)dup;
   oc_list_add(g_observers_list, o);
   return o;
@@ -352,11 +353,11 @@ coap_observer_has_matching_endpoint(const coap_observer_t *obs,
 int
 coap_remove_observers_by_client(const oc_endpoint_t *endpoint)
 {
-  OC_DBG("Unregistering observers for client at: ");
-  OC_LOGipaddr(*endpoint);
+  COAP_DBG("Unregistering observers for client at: ");
+  COAP_LOGipaddr(*endpoint);
   int removed = coap_remove_observers_by_filter(
     coap_observer_has_matching_endpoint, endpoint, NULL, true);
-  OC_DBG("Removed %d observers", removed);
+  COAP_DBG("Removed %d observers", removed);
   return removed;
 }
 
@@ -382,12 +383,12 @@ bool
 coap_remove_observer_by_token(const oc_endpoint_t *endpoint,
                               const uint8_t *token, size_t token_len)
 {
-  OC_DBG("Unregistering observers for request token 0x%02X%02X", token[0],
-         token[1]);
+  COAP_DBG("Unregistering observers for request token 0x%02X%02X", token[0],
+           token[1]);
   coap_endpoint_and_token_t eat = { endpoint, token, token_len };
   int removed = coap_remove_observers_by_filter(
     coap_observer_has_matching_endpoint_and_token, &eat, NULL, false);
-  OC_DBG("Removed %d observers", removed);
+  COAP_DBG("Removed %d observers", removed);
   return removed > 0;
 }
 
@@ -409,11 +410,11 @@ coap_observer_has_matching_endpoint_and_mid(const coap_observer_t *obs,
 bool
 coap_remove_observer_by_mid(const oc_endpoint_t *endpoint, uint16_t mid)
 {
-  OC_DBG("Unregistering observers for request MID %u", mid);
+  COAP_DBG("Unregistering observers for request MID %u", mid);
   coap_endpoint_and_mid_t eam = { endpoint, mid };
   int removed = coap_remove_observers_by_filter(
     coap_observer_has_matching_endpoint_and_mid, &eam, NULL, false);
-  OC_DBG("Removed %d observers", removed);
+  COAP_DBG("Removed %d observers", removed);
   return removed > 0;
 }
 
@@ -483,10 +484,10 @@ send_not_found_notification(const coap_observer_t *obs)
 int
 coap_remove_observers_by_resource(const oc_resource_t *rsc)
 {
-  OC_DBG("Unregistering observers for resource %s", oc_string(rsc->uri));
+  COAP_DBG("Unregistering observers for resource %s", oc_string(rsc->uri));
   int removed = coap_remove_observers_by_filter(
     coap_observer_match_resource, rsc, send_not_found_notification, true);
-  OC_DBG("Removed %d observers", removed);
+  COAP_DBG("Removed %d observers", removed);
   return removed;
 }
 
@@ -516,13 +517,13 @@ send_service_unavailable_notification(const coap_observer_t *obs)
 int
 coap_remove_observers_on_dos_change(size_t device, bool reset)
 {
-  OC_DBG("Unregistering observers for device %zd (reset=%d)", device,
-         (int)reset);
+  COAP_DBG("Unregistering observers for device %zd (reset=%d)", device,
+           (int)reset);
   device_with_dos_change_t ddc = { device, reset };
   int removed = coap_remove_observers_by_filter(
     coap_observer_has_matching_device, &ddc,
     send_service_unavailable_notification, true);
-  OC_DBG("Removed %d observers", removed);
+  COAP_DBG("Removed %d observers", removed);
   return removed;
 }
 #endif /* OC_SECURITY */
@@ -550,7 +551,7 @@ send_notification_separate_response(const coap_observer_t *obs,
 
   coap_options_set_uri_path(&req, oc_string(*uri), oc_string_len(*uri));
 
-  OC_DBG("creating separate response for notification");
+  COAP_DBG("creating separate response for notification");
 #ifdef OC_BLOCK_WISE
   uint16_t block2_size = obs->block2_size;
 #else  /* !OC_BLOCK_WISE */
@@ -578,7 +579,7 @@ coap_prepare_notification_blockwise(coap_packet_t *notification,
     &obs->endpoint, OC_GET, query.data, query.length, OC_BLOCKWISE_SERVER);
   if (response_state != NULL) {
     if (response_state->payload_size != response_state->next_block_offset) {
-      OC_DBG("skipping for blockwise transfer running");
+      COAP_DBG("skipping for blockwise transfer running");
       return 0;
     }
     oc_blockwise_free_response_buffer(response_state);
@@ -594,7 +595,7 @@ coap_prepare_notification_blockwise(coap_packet_t *notification,
     &obs->endpoint, OC_GET, OC_BLOCKWISE_SERVER,
     (uint32_t)response->response_buffer->response_length, generate_etag);
   if (response_state == NULL) {
-    OC_ERR("cannot allocate response buffer");
+    COAP_ERR("cannot allocate response buffer");
     return -1;
   }
   oc_blockwise_response_state_t *bwt_state =
@@ -613,7 +614,7 @@ coap_prepare_notification_blockwise(coap_packet_t *notification,
   void *payload = oc_blockwise_dispatch_block(&bwt_state->base, 0,
                                               obs->block2_size, &payload_size);
   if (payload == NULL) {
-    OC_ERR("cannot dispatch block");
+    COAP_ERR("cannot dispatch block");
     return -1;
   }
 
@@ -669,8 +670,7 @@ coap_prepare_notification(coap_packet_t *notification,
       && (ctx.obs->endpoint.flags & TCP) == 0
 #endif /* OC_TCP */
   ) {
-    OC_DBG("send_notification: forcing CON notification to check for client "
-           "liveness");
+    COAP_DBG("forcing CON notification to check for client liveness");
     notification->type = COAP_TYPE_CON;
   }
   coap_set_payload(notification, ctx.response->response_buffer->buffer,
@@ -688,8 +688,7 @@ coap_prepare_notification(coap_packet_t *notification,
 static int
 coap_send_notification_internal(coap_send_notification_ctx_t ctx)
 {
-  OC_DBG("send_notification: send notification for resource %s",
-         oc_string(*ctx.uri));
+  COAP_DBG("send notification for resource %s", oc_string(*ctx.uri));
   if (ctx.response == NULL || ctx.obs == NULL) {
     return 0;
   }
@@ -698,17 +697,16 @@ coap_send_notification_internal(coap_send_notification_ctx_t ctx)
     return 0;
   }
 
-  OC_DBG("send_notification: notifying observer");
+  COAP_DBG("notifying observer");
   coap_transaction_t *transaction = NULL;
   if (ctx.response->response_buffer == NULL) {
-    OC_DBG("send_notification: response buffer is NULL");
+    COAP_DBG("response buffer is NULL");
     return 0;
   }
   bool is_revert = false;
   uint8_t status_code = CONTENT_2_05;
   if (ctx.obs->iface_mask == OC_IF_STARTUP_REVERT) {
-    OC_DBG(
-      "send_notification: Setting Valid response for a REVERT notification");
+    COAP_DBG("Setting Valid response for a REVERT notification");
     status_code = VALID_2_03;
     ctx.response->response_buffer->code = VALID_2_03;
     is_revert = true;
@@ -817,8 +815,8 @@ coap_notify_collection(oc_collection_t *collection,
   if (!buffer) {
 #if OC_WRN_IS_ENABLED
     oc_string_view_t iface = oc_query_encode_interface(iface_mask);
-    OC_WRN("coap_notify_collection(%s): out of memory allocating buffer",
-           iface.data != NULL ? iface.data : "NULL");
+    COAP_WRN("coap_notify_collection(%s): out of memory allocating buffer",
+             iface.data != NULL ? iface.data : "NULL");
 #endif /* OC_WRN_IS_ENABLED */
     return -1;
   }
@@ -849,8 +847,8 @@ coap_notify_collection(oc_collection_t *collection,
   if (!oc_handle_collection_request(OC_GET, &request, iface_mask, NULL)) {
 #if OC_WRN_IS_ENABLED
     oc_string_view_t iface = oc_query_encode_interface(iface_mask);
-    OC_WRN("coap_notify_collection(%s): failed to handle collection request",
-           iface.data != NULL ? iface.data : "NULL");
+    COAP_WRN("coap_notify_collection(%s): failed to handle collection request",
+             iface.data != NULL ? iface.data : "NULL");
 #endif /* OC_WRN_IS_ENABLED */
     err = -1;
     goto cleanup;
@@ -895,7 +893,7 @@ coap_notify_collections(const oc_resource_t *resource)
 #else  /* !OC_DYNAMIC_ALLOCATION */
   uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
   if (!buffer) {
-    OC_WRN("coap_notify_collections: out of memory allocating buffer");
+    COAP_WRN("out of memory allocating buffer");
     return -1;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -917,8 +915,8 @@ coap_notify_collections(const oc_resource_t *resource)
          oc_get_next_collection_with_link(resource, NULL);
        collection != NULL && collection->res.num_observers > 0;
        collection = oc_get_next_collection_with_link(resource, collection)) {
-    OC_DBG("coap_notify_collections: Issue GET request to collection for "
-           "resource");
+    COAP_DBG("Issue GET request to collection(%s) for resource(%s)",
+             oc_string(collection->res.uri), oc_string(resource->uri));
 
     request.resource = (oc_resource_t *)collection;
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -929,7 +927,7 @@ coap_notify_collections(const oc_resource_t *resource)
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
     if (!oc_handle_collection_request(OC_GET, &request, OC_IF_B, resource)) {
-      OC_WRN("coap_notify_collections: failed to handle collection request");
+      COAP_WRN("failed to handle collection request");
       continue;
     }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -1002,7 +1000,7 @@ coap_fill_response(oc_response_t *response, oc_resource_t *resource,
   response->response_buffer->buffer_size = oc_rep_get_encoded_payload_size();
 #endif /* OC_DYNAMIC_ALLOCATION */
   if (response->response_buffer->code == OC_IGNORE) {
-    OC_DBG("resource request ignored");
+    COAP_DBG("resource request ignored");
     return false;
   }
 
@@ -1032,9 +1030,7 @@ coap_iterate_observers(oc_resource_t *resource, oc_response_t *response,
 #endif /* OC_COLLECTIONS */
 
   if (prepare_response && endpoint != NULL) {
-    OC_DBG("coap_notify_observers_internal: Issue GET request to resource "
-           "%s\n\n",
-           oc_string(resource->uri));
+    COAP_DBG("prepare GET request to resource(%s)", oc_string(resource->uri));
     if (!coap_fill_response(response, resource, endpoint, iface_mask, true)) {
       return 0;
     }
@@ -1059,8 +1055,7 @@ coap_iterate_observers(oc_resource_t *resource, oc_response_t *response,
       continue;
     }
     if (obs->iface_mask == OC_IF_STARTUP) {
-      OC_DBG("coap_notify_observers_internal: Skipping startup established "
-             "observe");
+      COAP_DBG("Skipping startup established observe");
       continue;
     }
     if (prepare_response) {
@@ -1071,9 +1066,8 @@ coap_iterate_observers(oc_resource_t *resource, oc_response_t *response,
       if (oc_endpoint_to_string(&obs->endpoint, &ep_str) == 0) {
         ep_cstr = oc_string(ep_str);
       }
-      OC_DBG("coap_notify_observers_internal: Issue GET request to resource "
-             "%s for endpoint %s\n\n",
-             oc_string(resource->uri), ep_cstr);
+      COAP_DBG("prepare GET request to resource(%s) for endpoint %s",
+               oc_string(resource->uri), ep_cstr);
       oc_free_string(&ep_str);
 #endif /* OC_DBG_IS_ENABLED */
       if (!coap_fill_response(response, resource, &obs->endpoint, iface_mask,
@@ -1113,15 +1107,14 @@ coap_notify_observers_internal(oc_resource_t *resource,
 #ifdef OC_SECURITY
   const oc_sec_pstat_t *ps = oc_sec_get_pstat(resource->device);
   if (ps->s != OC_DOS_RFNOP) {
-    OC_WRN("coap_notify_observers_internal: device not in RFNOP; skipping "
-           "notification");
+    COAP_WRN("device not in RFNOP, skipping notification");
     return 0;
   }
 #endif /* OC_SECURITY */
 
   int num = 0;
   if (resource->num_observers == 0) {
-    OC_DBG("coap_notify_observers_internal: no observers");
+    COAP_DBG("no observers");
     goto coap_notify_observers_internal_done;
   }
 
@@ -1136,7 +1129,7 @@ coap_notify_observers_internal(oc_resource_t *resource,
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
   if (buffer == NULL) {
-    OC_WRN("coap_notify_observers_internal: out of memory allocating buffer");
+    COAP_WRN("out of memory allocating buffer");
     return -1;
   }
 #else  /* !OC_DYNAMIC_ALLOCATION */
@@ -1171,7 +1164,7 @@ notify_resource_defaults_observer(oc_resource_t *resource,
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
   if (buffer == NULL) {
-    OC_WRN("out of memory allocating buffer");
+    COAP_WRN("out of memory allocating buffer");
     return;
   }
 #else  /* !OC_DYNAMIC_ALLOCATION */
@@ -1222,8 +1215,8 @@ static void
 create_batch_for_removed_resource(CborEncoder *links,
                                   batch_observer_t *batch_obs)
 {
-  OC_DBG("create_batch_for_removed_resource: resource %s",
-         oc_string(batch_obs->removed_resource_uri));
+  COAP_DBG("creating batch response for resource(%s)",
+           oc_string(batch_obs->removed_resource_uri));
   oc_rep_start_object(links, links_obj);
   char href[OC_MAX_OCF_URI_SIZE];
   memcpy(href, "ocf://", 6);
@@ -1282,22 +1275,20 @@ process_batch_observers(void)
 #else  /* !OC_DYNAMIC_ALLOCATION */
   uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
   if (buffer == NULL) {
-    OC_WRN("process_batch_observers: out of memory allocating buffer");
+    COAP_WRN("out of memory allocating buffer");
     return;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_response_buffer_t response_buffer;
   memset(&response_buffer, 0, sizeof(response_buffer));
-  OC_DBG("process_batch_observers: Issue GET request to discovery resource for "
-         "%s resource\n\n",
-         batch_observer_get_resource_uri(batch_obs));
+  COAP_DBG("Issue GET request to discovery resource for %s resource",
+           batch_observer_get_resource_uri(batch_obs));
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
   while (batch_obs != NULL) {
     if (!batch_obs->resource &&
         !oc_string_len(batch_obs->removed_resource_uri)) {
-      OC_WRN("process_batch_observers: resource is NULL and "
-             "removed_resource_uri is empty");
+      COAP_WRN("resource is NULL and removed_resource_uri is empty");
       oc_list_remove(g_batch_observers_list, batch_obs);
       free_batch_observer(batch_obs);
       batch_obs = (batch_observer_t *)oc_list_head(g_batch_observers_list);
@@ -1337,16 +1328,14 @@ process_batch_observers(void)
     }
     int size_after = oc_rep_get_encoded_payload_size();
     if (size_before == size_after) {
-      OC_DBG("process_batch_observers: drop observations\n\n");
+      COAP_DBG("drop observations");
     } else {
       oc_rep_end_links_array();
       size_after = oc_rep_get_encoded_payload_size();
       if (size_after < 0) {
-        OC_ERR("process_batch_observers: invalid size after batch "
-               "serialization\n\n");
+        COAP_ERR("invalid size after batch serialization");
       } else {
-        OC_DBG("process_batch_observers: sending data with size %d\n\n",
-               size_after);
+        COAP_DBG("sending data with size %d", size_after);
         response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
         response_buffer.response_length = size_after;
         response_buffer.code = oc_status_code(OC_STATUS_OK);
@@ -1442,9 +1431,8 @@ add_notification_batch_observers_list(oc_resource_t *resource, bool removed)
     }
     batch_observer_t *o = oc_memb_alloc(&g_batch_observers_memb);
     if (o == NULL) {
-      OC_ERR("coap_notify_discovery_batch_observers: cannot allocate batch "
-             "observer for resource %s",
-             oc_string(resource->uri));
+      COAP_ERR("cannot allocate batch observer for resource (%s)",
+               oc_string(resource->uri));
       return;
     } else {
       o->obs = obs;
@@ -1463,8 +1451,8 @@ add_notification_batch_observers_list(oc_resource_t *resource, bool removed)
 void
 coap_remove_discovery_batch_observers_by_resource(oc_resource_t *resource)
 {
-  OC_DBG("coap_remove_discovery_batch_observers_by_resource: resource %s",
-         oc_string(resource->uri));
+  COAP_DBG("remove discovery batch observers for resource(%s)",
+           oc_string(resource->uri));
   remove_discovery_batch_observers(cmp_batch_by_resource, resource);
   add_notification_batch_observers_list(resource, true);
 }
@@ -1485,13 +1473,12 @@ notify_discovery_observers(oc_resource_t *resource)
 #else  /* !OC_DYNAMIC_ALLOCATION */
   uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
   if (buffer == NULL) {
-    OC_WRN("notify_discovery_observers: out of memory allocating buffer");
+    COAP_WRN("out of memory allocating buffer");
     return -1;
   } //! buffer
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-  OC_DBG("notify_discovery_observers: Issue GET request to resource %s",
-         oc_string(resource->uri));
+  COAP_DBG("Issue GET request to resource %s", oc_string(resource->uri));
   oc_response_t response;
   memset(&response, 0, sizeof(response));
   oc_response_buffer_t response_buffer;

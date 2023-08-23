@@ -55,6 +55,7 @@
 #include "api/oc_main_internal.h"
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/coap_internal.h"
+#include "messaging/coap/coap_log.h"
 #include "messaging/coap/coap_options.h"
 #include "messaging/coap/observe.h"
 #include "messaging/coap/transactions.h"
@@ -103,7 +104,7 @@ oc_coap_check_if_duplicate(uint16_t mid, uint32_t device)
 {
   for (size_t i = 0; i < OC_REQUEST_HISTORY_SIZE; i++) {
     if (g_history[i] == mid && g_history_dev[i] == device) {
-      OC_DBG("dropping duplicate request");
+      COAP_DBG("dropping duplicate request");
       return true;
     }
   }
@@ -116,7 +117,7 @@ coap_send_empty_response(coap_message_type_t type, uint16_t mid,
                          const uint8_t *token, size_t token_len, uint8_t code,
                          const oc_endpoint_t *endpoint)
 {
-  OC_DBG("CoAP send empty message: mid=%u, code=%u", mid, code);
+  COAP_DBG("CoAP send empty message: mid=%u, code=%u", mid, code);
   coap_packet_t packet; // empty response
   coap_udp_init_message(&packet, type, code, mid);
   oc_message_t *message = oc_message_allocate_outgoing();
@@ -205,16 +206,17 @@ coap_packet_get_block_options(const coap_packet_t *message, bool block2)
 static void
 coap_packet_log_message(const coap_packet_t *message)
 {
-  OC_DBG("  Parsed: CoAP version: %u, token: 0x%02X%02X, mid: %u",
-         message->version, message->token[0], message->token[1], message->mid);
+  COAP_DBG("  Parsed: CoAP version: %u, token: 0x%02X%02X, mid: %u",
+           message->version, message->token[0], message->token[1],
+           message->mid);
   if (message->type == COAP_TYPE_CON) {
-    OC_DBG("  type: CON");
+    COAP_DBG("  type: CON");
   } else if (message->type == COAP_TYPE_NON) {
-    OC_DBG("  type: NON");
+    COAP_DBG("  type: NON");
   } else if (message->type == COAP_TYPE_ACK) {
-    OC_DBG("  type: ACK");
+    COAP_DBG("  type: ACK");
   } else if (message->type == COAP_TYPE_RST) {
-    OC_DBG("  type: RST");
+    COAP_DBG("  type: RST");
   }
 }
 
@@ -268,12 +270,12 @@ coap_receive_create_request_buffer(const coap_packet_t *request,
   oc_blockwise_state_t *request_buffer = oc_blockwise_alloc_request_buffer(
     href, href_len, endpoint, request->code, OC_BLOCKWISE_SERVER, buffer_size);
   if (request_buffer == NULL) {
-    OC_ERR("could not create buffer to hold request payload");
+    COAP_ERR("could not create buffer to hold request payload");
     return NULL;
   }
   if (!oc_blockwise_handle_block(request_buffer, 0, incoming_block,
                                  (uint16_t)incoming_block_len)) {
-    OC_ERR("could not process incoming block");
+    COAP_ERR("could not process incoming block");
     request_buffer->ref_count = 0;
     return NULL;
   }
@@ -290,7 +292,7 @@ coap_receive_blockwise_block1(coap_receive_ctx_t *ctx, const char *href,
                               size_t href_len, const oc_endpoint_t *endpoint)
 {
   assert(ctx->request->code == COAP_POST || ctx->request->code == COAP_PUT);
-  OC_DBG("processing block1 option");
+  COAP_DBG("processing block1 option");
   const uint8_t *incoming_block;
   uint32_t incoming_block_len = coap_get_payload(ctx->request, &incoming_block);
   ctx->request_buffer = oc_blockwise_find_request_buffer(
@@ -308,7 +310,7 @@ coap_receive_blockwise_block1(coap_receive_ctx_t *ctx, const char *href,
 
   if (ctx->request_buffer == NULL && ctx->block1.num == 0) {
     if (oc_drop_command(endpoint->device)) {
-      OC_WRN("cannot process new request during closing TLS sessions");
+      COAP_WRN("cannot process new request during closing TLS sessions");
       return COAP_RECEIVE_ERROR;
     }
 
@@ -317,7 +319,7 @@ coap_receive_blockwise_block1(coap_receive_ctx_t *ctx, const char *href,
         buffer_size == 0) {
       buffer_size = (uint32_t)OC_MAX_APP_DATA_SIZE;
     }
-    OC_DBG("creating new block-wise request buffer");
+    COAP_DBG("creating new block-wise request buffer");
     ctx->request_buffer = oc_blockwise_alloc_request_buffer(
       href, href_len, endpoint, ctx->request->code, OC_BLOCKWISE_SERVER,
       buffer_size);
@@ -329,20 +331,20 @@ coap_receive_blockwise_block1(coap_receive_ctx_t *ctx, const char *href,
   }
 
   if (ctx->request_buffer == NULL) {
-    OC_ERR("could not create block-wise request buffer");
+    COAP_ERR("could not create block-wise request buffer");
     return COAP_RECEIVE_ERROR;
   }
 
-  OC_DBG("processing incoming block");
+  COAP_DBG("processing incoming block");
   if (!oc_blockwise_handle_block(
         ctx->request_buffer, ctx->block1.offset, incoming_block,
         MIN((uint16_t)incoming_block_len, ctx->block1.size))) {
-    OC_ERR("could not process incoming block");
+    COAP_ERR("could not process incoming block");
     return COAP_RECEIVE_ERROR;
   }
 
   if (ctx->block1.more) {
-    OC_DBG("more blocks expected; issuing request for the next block");
+    COAP_DBG("more blocks expected; issuing request for the next block");
     ctx->response->code = CONTINUE_2_31;
     coap_options_set_block1(ctx->response, ctx->block1.num, ctx->block1.more,
                             ctx->block1.size, 0);
@@ -350,7 +352,7 @@ coap_receive_blockwise_block1(coap_receive_ctx_t *ctx, const char *href,
     return COAP_RECEIVE_SUCCESS;
   }
 
-  OC_DBG("received all blocks for payload");
+  COAP_DBG("received all blocks for payload");
   if (ctx->request->type == COAP_TYPE_CON) {
     coap_send_empty_response(COAP_TYPE_ACK, ctx->request->mid, /*token*/ NULL,
                              /*token_len*/ 0, /*code*/ 0, endpoint);
@@ -370,13 +372,13 @@ static coap_receive_status_t
 coap_receive_blockwise_block2(coap_receive_ctx_t *ctx, const char *href,
                               size_t href_len, const oc_endpoint_t *endpoint)
 {
-  OC_DBG("processing block2 option");
+  COAP_DBG("processing block2 option");
   const uint8_t *incoming_block;
   uint32_t incoming_block_len = coap_get_payload(ctx->request, &incoming_block);
   // block2 in request is expected to be used with GET/FETCH and should contain
   // no payload
   if (incoming_block_len > 0) {
-    OC_ERR("invalid GET/FETCH request containing payload");
+    COAP_ERR("invalid GET/FETCH request containing payload");
     return COAP_RECEIVE_ERROR;
   }
 
@@ -389,21 +391,22 @@ coap_receive_blockwise_block2(coap_receive_ctx_t *ctx, const char *href,
         ctx->block2.size) {
       // UDP transfer can duplicate messages and we want to avoid terminate
       // BWT, so we drop the message.
-      OC_DBG("dropped message because message was already provided for block2");
+      COAP_DBG(
+        "dropped message because message was already provided for block2");
       coap_clear_transaction(ctx->transaction);
       return COAP_RECEIVE_SKIP_DUPLICATE_MESSAGE;
     }
 
-    OC_DBG("continuing ongoing block-wise transfer");
+    COAP_DBG("continuing ongoing block-wise transfer");
     uint32_t payload_size = 0;
     void *payload =
       oc_blockwise_dispatch_block(ctx->response_buffer, ctx->block2.offset,
                                   ctx->block2.size, &payload_size);
     if (payload == NULL) {
-      OC_ERR("could not dispatch block");
+      COAP_ERR("could not dispatch block");
       return COAP_RECEIVE_ERROR;
     }
-    OC_DBG("dispatching next block");
+    COAP_DBG("dispatching next block");
     uint8_t more = (ctx->response_buffer->next_block_offset <
                     ctx->response_buffer->payload_size)
                      ? 1
@@ -433,12 +436,12 @@ coap_receive_blockwise_block2(coap_receive_ctx_t *ctx, const char *href,
   }
 
   if (ctx->block2.num != 0) {
-    OC_ERR("initiating block-wise transfer with request for block_num > 0");
+    COAP_ERR("initiating block-wise transfer with request for block_num > 0");
     return COAP_RECEIVE_ERROR;
   }
 
 #if 0
-  OC_DBG(
+  COAP_DBG(
     "requesting block-wise transfer; creating new block-wise response buffer");
   if (incoming_block_len == 0)
   {
@@ -453,7 +456,7 @@ coap_receive_blockwise_block2(coap_receive_ctx_t *ctx, const char *href,
   }
 
   if (oc_drop_command(endpoint->device)) {
-    OC_WRN("cannot process new request during closing TLS sessions");
+    COAP_WRN("cannot process new request during closing TLS sessions");
     return COAP_RECEIVE_ERROR;
   }
 
@@ -490,15 +493,15 @@ coap_receive_method_payload(coap_receive_ctx_t *ctx, const char *href,
     return coap_receive_blockwise_block2(ctx, href, href_len, endpoint);
   }
   if (ctx->block1.enabled || ctx->block2.enabled) {
-    OC_ERR("unexpected block1 and block2 options");
+    COAP_ERR("unexpected block1 and block2 options");
     return COAP_RECEIVE_ERROR;
   }
 
-  OC_DBG("no block options; processing regular request");
+  COAP_DBG("no block options; processing regular request");
   const uint8_t *incoming_block;
   uint32_t incoming_block_len = coap_get_payload(ctx->request, &incoming_block);
   if (oc_drop_command(endpoint->device)) {
-    OC_WRN("cannot process new request during closing TLS sessions");
+    COAP_WRN("cannot process new request during closing TLS sessions");
     return COAP_RECEIVE_ERROR;
   }
 
@@ -511,12 +514,12 @@ coap_receive_method_payload(coap_receive_ctx_t *ctx, const char *href,
   bool is_valid_size = incoming_block_len <= ctx->block1.size;
 #endif /* OC_TCP */
   if (!is_valid_size) {
-    OC_ERR("incoming payload size exceeds maximal size");
+    COAP_ERR("incoming payload size exceeds maximal size");
     return COAP_RECEIVE_ERROR;
   }
 
   if (incoming_block_len > 0) {
-    OC_DBG("creating request buffer");
+    COAP_DBG("creating request buffer");
     ctx->request_buffer = oc_blockwise_find_request_buffer(
       href, href_len, endpoint, ctx->request->code, ctx->request->uri_query,
       ctx->request->uri_query_len, OC_BLOCKWISE_SERVER);
@@ -546,8 +549,8 @@ coap_receive_method_payload(coap_receive_ctx_t *ctx, const char *href,
     if ((endpoint->flags & MULTICAST) != 0 &&
         ctx->response_buffer->next_block_offset <
           ctx->response_buffer->payload_size) {
-      OC_DBG("Dropping duplicate block-wise transfer request due to repeated "
-             "multicast");
+      COAP_DBG("dropping duplicate block-wise transfer request due to repeated "
+               "multicast");
       coap_set_global_status_code(CLEAR_TRANSACTION);
       return COAP_RECEIVE_SUCCESS;
     }
@@ -569,7 +572,7 @@ coap_send_response(coap_receive_ctx_t *ctx)
   }
 
   if (ctx->transaction == NULL) {
-    OC_DBG("skip sending of response: transaction is NULL");
+    COAP_DBG("skip sending of response: transaction is NULL");
     return;
   }
 
@@ -607,8 +610,9 @@ send_transaction:
            ctx->response->token_len);
     ctx->transaction->token_len = ctx->response->token_len;
   }
-  OC_DBG("data buffer from:%p to:%p", (void *)ctx->transaction->message->data,
-         (void *)(ctx->transaction->message->data + oc_message_buffer_size()));
+  COAP_DBG(
+    "data buffer from:%p to:%p", (void *)ctx->transaction->message->data,
+    (void *)(ctx->transaction->message->data + oc_message_buffer_size()));
   ctx->transaction->message->length = coap_serialize_message(
     ctx->response, ctx->transaction->message->data, oc_message_buffer_size());
   if (ctx->transaction->message->length > 0) {
@@ -702,13 +706,13 @@ coap_receive_request_with_method(coap_receive_ctx_t *ctx,
                                  void *response_fn_data)
 {
 #if OC_DBG_IS_ENABLED
-  OC_DBG("  method: %s", oc_method_to_str((oc_method_t)ctx->request->code));
-  OC_DBG("  URL: %.*s", (int)ctx->request->uri_path_len,
-         ctx->request->uri_path);
-  OC_DBG("  QUERY: %.*s", (int)ctx->request->uri_query_len,
-         ctx->request->uri_query);
-  OC_DBG("  Payload: %.*s", (int)ctx->request->payload_len,
-         ctx->request->payload);
+  COAP_DBG("  method: %s", oc_method_to_str((oc_method_t)ctx->request->code));
+  COAP_DBG("  URL: %.*s", (int)ctx->request->uri_path_len,
+           ctx->request->uri_path);
+  COAP_DBG("  QUERY: %.*s", (int)ctx->request->uri_query_len,
+           ctx->request->uri_query);
+  COAP_DBG("  Payload: %.*s", (int)ctx->request->payload_len,
+           ctx->request->payload);
 #endif /* OC_DBG_IS_ENABLED */
   const char *href;
   size_t href_len = coap_options_get_uri_path(ctx->request, &href);
@@ -722,7 +726,7 @@ coap_receive_request_with_method(coap_receive_ctx_t *ctx,
   ctx->transaction =
     coap_new_transaction(ctx->response->mid, NULL, 0, endpoint);
   if (ctx->transaction == NULL) {
-    OC_ERR("could not allocate transaction");
+    COAP_ERR("could not allocate transaction");
     return COAP_RECEIVE_ERROR;
   }
 
@@ -746,7 +750,7 @@ static coap_receive_status_t
 coap_receive_invoke_client_cb(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint,
                               oc_client_cb_t *client_cb)
 {
-  OC_DBG("calling oc_client_cb_invoke");
+  COAP_DBG("calling oc_client_cb_invoke");
 #ifdef OC_BLOCK_WISE
   if (ctx->request_buffer != NULL) {
     ctx->request_buffer->ref_count = 0;
@@ -826,8 +830,8 @@ coap_receive_request_with_code(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint)
   if (!error_response && ctx->request_buffer != NULL &&
       (ctx->block1.enabled ||
        ctx->request->code == REQUEST_ENTITY_TOO_LARGE_4_13)) {
-    OC_DBG("found request buffer for uri %s",
-           oc_string(ctx->request_buffer->href));
+    COAP_DBG("found request buffer for uri %s",
+             oc_string(ctx->request_buffer->href));
     client_cb = (oc_client_cb_t *)ctx->request_buffer->client_cb;
     uint32_t payload_size = 0;
     void *payload = NULL;
@@ -837,7 +841,7 @@ coap_receive_request_with_code(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint)
         ctx->request_buffer, ctx->block1.offset + ctx->block1.size,
         ctx->block1.size, &payload_size);
     } else {
-      OC_DBG("initiating block-wise transfer with block1 option");
+      COAP_DBG("initiating block-wise transfer with block1 option");
       uint32_t peer_mtu = 0;
       if (coap_options_get_size1(ctx->request, &peer_mtu) == 1) {
         ctx->block1.size = MIN((uint16_t)peer_mtu, (uint16_t)OC_BLOCK_SIZE);
@@ -850,7 +854,7 @@ coap_receive_request_with_code(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint)
     }
 
     if (payload != NULL) {
-      OC_DBG("dispatching next block");
+      COAP_DBG("dispatching next block");
       ctx->transaction = coap_new_transaction(response_mid, NULL, 0, endpoint);
       if (ctx->transaction != NULL) {
         coap_udp_init_message(ctx->response, COAP_TYPE_CON,
@@ -900,8 +904,8 @@ coap_receive_request_with_code(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint)
         oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
         endpoint, client_cb->method, OC_BLOCKWISE_CLIENT, buffer_size, false);
       if (ctx->response_buffer != NULL) {
-        OC_DBG("created new response buffer for uri %s",
-               oc_string(ctx->response_buffer->href));
+        COAP_DBG("created new response buffer for uri %s",
+                 oc_string(ctx->response_buffer->href));
         ctx->response_buffer->client_cb = client_cb;
       }
     }
@@ -915,8 +919,8 @@ coap_receive_request_with_code(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint)
   }
 
   if (!error_response && ctx->response_buffer != NULL) {
-    OC_DBG("got response buffer for uri %s",
-           oc_string(ctx->response_buffer->href));
+    COAP_DBG("got response buffer for uri %s",
+             oc_string(ctx->response_buffer->href));
     client_cb = (oc_client_cb_t *)ctx->response_buffer->client_cb;
     oc_blockwise_response_state_t *response_state =
       (oc_blockwise_response_state_t *)ctx->response_buffer;
@@ -929,9 +933,9 @@ coap_receive_request_with_code(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint)
         oc_blockwise_handle_block(ctx->response_buffer, ctx->block2.offset,
                                   incoming_block,
                                   (uint32_t)incoming_block_len)) {
-      OC_DBG("processing incoming block");
+      COAP_DBG("processing incoming block");
       if (ctx->block2.enabled && ctx->block2.more) {
-        OC_DBG("issuing request for next block");
+        COAP_DBG("issuing request for next block");
         ctx->transaction =
           coap_new_transaction(response_mid, NULL, 0, endpoint);
         if (ctx->transaction != NULL) {
@@ -981,9 +985,9 @@ coap_receive(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint,
 coap_status_t
 coap_process_inbound_message(oc_message_t *msg)
 {
-  OC_DBG("CoAP Engine: received datalen=%u from", (unsigned int)msg->length);
-  OC_LOGipaddr(msg->endpoint);
-  OC_LOGbytes(msg->data, msg->length);
+  COAP_DBG("CoAP Engine: received datalen=%u from", (unsigned int)msg->length);
+  COAP_LOGipaddr(msg->endpoint);
+  COAP_LOGbytes(msg->data, msg->length);
 
   /* static declarations reduce stack peaks and program code size */
   static coap_packet_t message;
@@ -1003,7 +1007,7 @@ coap_process_inbound_message(oc_message_t *msg)
   coap_set_global_status_code(status);
 
   if (status != COAP_NO_ERROR) {
-    OC_ERR("Unexpected CoAP message");
+    COAP_ERR("Unexpected CoAP message");
 #ifdef OC_SECURITY
     coap_audit_log(msg);
 #endif /* OC_SECURITY */
@@ -1049,7 +1053,7 @@ coap_process_inbound_message(oc_message_t *msg)
 #ifdef OC_BLOCK_WISE
 #ifdef OC_TCP
   if ((msg->endpoint.flags & TCP) != 0 && (block1.enabled || block2.enabled)) {
-    OC_ERR(
+    COAP_ERR(
       "block options received but block-wise transfer not supported over TCP");
     ret = COAP_RECEIVE_ERROR;
     goto receive_result;
@@ -1057,7 +1061,7 @@ coap_process_inbound_message(oc_message_t *msg)
 #endif /* OC_TCP */
 #else  /* !OC_BLOCK_WISE */
   if (block1.enabled || block2.enabled) {
-    OC_ERR("block options received but block-wise transfer not supported");
+    COAP_ERR("block options received but block-wise transfer not supported");
     ret = COAP_RECEIVE_ERROR;
     goto receive_result;
   }
@@ -1126,7 +1130,7 @@ OC_PROCESS_THREAD(g_coap_engine, ev, data)
       oc_message_t *msg = (oc_message_t *)data;
       coap_status_t ret = coap_process_inbound_message(msg);
       if (ret != COAP_NO_ERROR) {
-        OC_WRN("CoAP Engine: Error processing request (%d)", (int)ret);
+        COAP_WRN("CoAP Engine: Error processing request (%d)", (int)ret);
       }
 
       oc_message_unref(msg);

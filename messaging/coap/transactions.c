@@ -47,11 +47,13 @@
  * This file is part of the Contiki operating system.
  */
 
-#include "transactions.h"
 #include "api/oc_buffer_internal.h"
+#include "api/oc_endpoint_internal.h"
 #include "api/oc_main_internal.h"
+#include "coap_log.h"
 #include "observe.h"
 #include "oc_buffer.h"
+#include "transactions.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
 #include <string.h>
@@ -68,7 +70,6 @@
 #include "security/oc_tls_internal.h"
 #endif
 
-/*---------------------------------------------------------------------------*/
 OC_MEMB(transactions_memb, coap_transaction_t, COAP_MAX_OPEN_TRANSACTIONS);
 OC_LIST(transactions_list);
 
@@ -89,7 +90,7 @@ coap_new_transaction(uint16_t mid, const uint8_t *token, uint8_t token_len,
 {
   coap_transaction_t *t = oc_memb_alloc(&transactions_memb);
   if (t == NULL) {
-    OC_ERR("insufficient memory to create transaction");
+    COAP_ERR("insufficient memory to create transaction");
     return NULL;
   }
 
@@ -99,7 +100,7 @@ coap_new_transaction(uint16_t mid, const uint8_t *token, uint8_t token_len,
     return NULL;
   }
 
-  OC_DBG("Created new transaction %u: %p", mid, (void *)t);
+  COAP_DBG("Created new transaction %u: %p", mid, (void *)t);
   t->mid = mid;
   if (token_len > 0) {
     memcpy(t->token, token, token_len);
@@ -115,7 +116,6 @@ coap_new_transaction(uint16_t mid, const uint8_t *token, uint8_t token_len,
   return t;
 }
 
-/*---------------------------------------------------------------------------*/
 void
 coap_send_transaction(coap_transaction_t *t)
 {
@@ -129,9 +129,9 @@ coap_send_transaction(coap_transaction_t *t)
   confirmable = confirmable && (t->message->endpoint.flags & TCP) == 0;
 #endif /* OC_TCP */
 
-  OC_DBG("Sending transaction(len: %zd, confirmable: %d) %u: %p",
-         t->message->length, (int)confirmable, t->mid, (void *)t);
-  OC_LOGbytes(t->message->data, t->message->length);
+  COAP_DBG("Sending transaction(len: %zd, confirmable: %d) %u: %p",
+           t->message->length, (int)confirmable, t->mid, (void *)t);
+  COAP_LOGbytes(t->message->data, t->message->length);
 
   if (!confirmable) {
     oc_message_add_ref(t->message);
@@ -144,17 +144,17 @@ coap_send_transaction(coap_transaction_t *t)
 
   if (t->retrans_counter < COAP_MAX_RETRANSMIT) {
     /* not timed out yet */
-    OC_DBG("Keeping transaction %u: %p", t->mid, (void *)t);
+    COAP_DBG("Keeping transaction %u: %p", t->mid, (void *)t);
 
     if (t->retrans_counter == 0) {
       t->retrans_timer.timer.interval =
         COAP_RESPONSE_TIMEOUT_TICKS +
         (oc_random_value() %
          (oc_clock_time_t)COAP_RESPONSE_TIMEOUT_BACKOFF_MASK);
-      OC_DBG("Initial interval %d", (int)t->retrans_timer.timer.interval);
+      COAP_DBG("Initial interval %d", (int)t->retrans_timer.timer.interval);
     } else {
       t->retrans_timer.timer.interval <<= 1; /* double */
-      OC_DBG("Doubled %d", (int)t->retrans_timer.timer.interval);
+      COAP_DBG("Doubled %d", (int)t->retrans_timer.timer.interval);
     }
 
     OC_PROCESS_CONTEXT_BEGIN(transaction_handler_process)
@@ -168,7 +168,7 @@ coap_send_transaction(coap_transaction_t *t)
     t = NULL;
   } else {
     /* timed out */
-    OC_WRN("Timeout");
+    COAP_WRN("Timeout");
 #ifdef OC_SERVER
     /* remove observers */
     coap_remove_observers_by_client(&t->message->endpoint);
@@ -191,12 +191,12 @@ coap_send_transaction(coap_transaction_t *t)
     }
   }
 }
-/*---------------------------------------------------------------------------*/
+
 void
 coap_clear_transaction(coap_transaction_t *t)
 {
   if (t) {
-    OC_DBG("Freeing transaction %u: %p", t->mid, (void *)t);
+    COAP_DBG("Freeing transaction %u: %p", t->mid, (void *)t);
 
     oc_etimer_stop(&t->retrans_timer);
     oc_message_unref(t->message);
@@ -211,7 +211,7 @@ coap_get_transaction_by_mid(uint16_t mid)
          (coap_transaction_t *)oc_list_head(transactions_list);
        t != NULL; t = t->next) {
     if (t->mid == mid) {
-      OC_DBG("Found transaction for MID %u: %p", t->mid, (void *)t);
+      COAP_DBG("Found transaction for MID %u: %p", t->mid, (void *)t);
       return t;
     }
   }
@@ -225,13 +225,13 @@ coap_get_transaction_by_token(const uint8_t *token, uint8_t token_len)
          (coap_transaction_t *)oc_list_head(transactions_list);
        t != NULL; t = t->next) {
     if (t->token_len == token_len && memcmp(t->token, token, token_len) == 0) {
-      OC_DBG("Found transaction by token %p", (void *)t);
+      COAP_DBG("Found transaction by token %p", (void *)t);
       return t;
     }
   }
   return NULL;
 }
-/*---------------------------------------------------------------------------*/
+
 void
 coap_check_transactions(void)
 {
@@ -240,7 +240,7 @@ coap_check_transactions(void)
     coap_transaction_t *next = t->next;
     if (oc_etimer_expired(&t->retrans_timer)) {
       ++(t->retrans_counter);
-      OC_DBG("Retransmitting %u (%u)", t->mid, t->retrans_counter);
+      COAP_DBG("Retransmitting %u (%u)", t->mid, t->retrans_counter);
       int removed = oc_list_length(transactions_list);
       coap_send_transaction(t);
       if ((removed - oc_list_length(transactions_list)) > 1) {
@@ -251,7 +251,7 @@ coap_check_transactions(void)
     t = next;
   }
 }
-/*---------------------------------------------------------------------------*/
+
 void
 coap_free_all_transactions(void)
 {
@@ -267,7 +267,11 @@ void
 coap_free_transactions_by_endpoint(const oc_endpoint_t *endpoint,
                                    oc_status_t code)
 {
-  OC_DBG("coap_free_transactions_by_endpoint");
+#if OC_DBG_IS_ENABLED
+  char ep_addr[64] = { 0 };
+  oc_endpoint_to_cstring(endpoint, ep_addr, OC_ARRAY_SIZE(ep_addr));
+  COAP_DBG("free transactions for endpoint(%s)", ep_addr);
+#endif /* OC_DBG_IS_ENABLED */
 #ifndef OC_CLIENT
   (void)code;
 #endif /* !OC_CLIENT */

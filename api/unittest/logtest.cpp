@@ -22,6 +22,7 @@
 #include <cstdarg>
 #include <cstdio>
 #include <gtest/gtest.h>
+#include <map>
 
 class TestLog : public testing::Test {
 public:
@@ -29,6 +30,7 @@ public:
   {
     oc_log_set_function(nullptr);
     oc_log_set_level(OC_LOG_LEVEL_INFO);
+    oc_log_set_components(0xFFFFFFFF);
   }
 };
 
@@ -96,4 +98,42 @@ TEST_F(TestLog, LogComponentName)
   EXPECT_STREQ(oc_log_component_name(static_cast<oc_log_component_t>(-1)), "");
 
   EXPECT_STREQ(oc_log_component_name(OC_LOG_COMPONENT_DEFAULT), "default");
+#ifdef OC_CLOUD
+  EXPECT_STREQ(oc_log_component_name(OC_LOG_COMPONENT_CLOUD), "cloud");
+#endif /* OC_CLOUD */
+  EXPECT_STREQ(oc_log_component_name(OC_LOG_COMPONENT_COAP), "coap");
+}
+
+namespace {
+std::map<oc_log_component_t, int> gComponentInvoked{};
+
+void
+expectNonDefault(oc_log_level_t, oc_log_component_t component, const char *,
+                 int, const char *, const char *, ...)
+{
+  EXPECT_NE(component, OC_LOG_COMPONENT_DEFAULT);
+  gComponentInvoked[component]++;
+}
+
+}
+
+TEST_F(TestLog, FilterByComponent)
+{
+  oc_log_set_level(OC_LOG_LEVEL_ERROR);
+  oc_log_set_components(0xFFFFFFFF & ~OC_LOG_COMPONENT_DEFAULT);
+  oc_log_set_function(expectNonDefault);
+  gComponentInvoked.clear();
+
+  OC_LOG_WITH_COMPONENT(OC_LOG_LEVEL_ERROR, OC_LOG_COMPONENT_DEFAULT,
+                        "default");
+#ifdef OC_CLOUD
+  OC_LOG_WITH_COMPONENT(OC_LOG_LEVEL_ERROR, OC_LOG_COMPONENT_CLOUD, "cloud");
+#endif /* OC_CLOUD */
+  OC_LOG_WITH_COMPONENT(OC_LOG_LEVEL_ERROR, OC_LOG_COMPONENT_COAP, "coap");
+
+  EXPECT_EQ(gComponentInvoked[OC_LOG_COMPONENT_DEFAULT], 0);
+#ifdef OC_CLOUD
+  EXPECT_EQ(gComponentInvoked[OC_LOG_COMPONENT_CLOUD], 1);
+#endif /* OC_CLOUD */
+  EXPECT_EQ(gComponentInvoked[OC_LOG_COMPONENT_COAP], 1);
 }

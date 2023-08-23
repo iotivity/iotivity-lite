@@ -51,11 +51,12 @@
 
 #ifdef OC_SERVER
 
-#include "oc_buffer.h"
 #include "api/oc_buffer_internal.h"
 #include "messaging/coap/coap_internal.h"
-#include "separate.h"
-#include "transactions.h"
+#include "messaging/coap/coap_log.h"
+#include "messaging/coap/separate.h"
+#include "messaging/coap/transactions.h"
+#include "oc_buffer.h"
 #include "util/oc_memb.h"
 #include <stdio.h>
 #include <string.h>
@@ -84,7 +85,7 @@ coap_separate_accept(const coap_packet_t *request,
 #ifdef OC_DYNAMIC_ALLOCATION
     separate_response->buffer = (uint8_t *)malloc(OC_MAX_APP_DATA_SIZE);
     if (!separate_response->buffer) {
-      OC_WRN("insufficient memory to store separate response");
+      COAP_WRN("insufficient memory to store separate response");
       return false;
     }
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -105,7 +106,8 @@ coap_separate_accept(const coap_packet_t *request,
     separate_store = oc_memb_alloc(&g_separate_requests);
 
     if (!separate_store) {
-      OC_WRN("insufficient memory to store new request for separate response");
+      COAP_WRN(
+        "insufficient memory to store new request for separate response");
       return false;
     }
 
@@ -133,7 +135,7 @@ coap_separate_accept(const coap_packet_t *request,
 
   /* send separate ACK for CON */
   if (request->type == COAP_TYPE_CON) {
-    OC_DBG("Sending ACK for separate response");
+    COAP_DBG("Sending ACK for separate response");
     coap_packet_t ack;
     /* ACK with empty code (0) */
     coap_udp_init_message(&ack, COAP_TYPE_ACK, 0, request->mid);
@@ -177,7 +179,7 @@ coap_separate_resume(coap_packet_t *response,
     coap_set_token(response, separate_store->token, separate_store->token_len);
   }
 }
-/*---------------------------------------------------------------------------*/
+
 void
 coap_separate_clear(oc_separate_response_t *separate_response,
                     coap_separate_t *separate_store)

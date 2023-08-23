@@ -84,13 +84,16 @@
 #ifndef OC_LOG_WITH_COMPONENT
 #define OC_LOG_WITH_COMPONENT(log_level, log_component, ...)                   \
   do {                                                                         \
-    oc_logger_t *logger = oc_log_get_logger();                                 \
-    if (logger->level < (log_level)) {                                         \
+    const oc_logger_t *_logger = oc_log_get_logger();                          \
+    if (_logger->level < (log_level)) {                                        \
       break;                                                                   \
     }                                                                          \
-    if (logger->fn != NULL) {                                                  \
-      logger->fn((log_level), (log_component), __FILENAME__, __LINE__,         \
-                 __func__, __VA_ARGS__);                                       \
+    if ((_logger->components & (log_component)) == 0) {                        \
+      break;                                                                   \
+    }                                                                          \
+    if (_logger->fn != NULL) {                                                 \
+      _logger->fn((log_level), (log_component), __FILENAME__, __LINE__,        \
+                  __func__, __VA_ARGS__);                                      \
       break;                                                                   \
     }                                                                          \
     char _oc_log_fn_buf[64] = { 0 };                                           \
@@ -188,10 +191,13 @@
   } while (0)
 
 #if OC_DBG_IS_ENABLED
-#define OC_LOG_ENDPOINT_ADDR(endpoint, addr_memb)                              \
+#define OC_LOG_ENDPOINT_ADDR(component, endpoint, addr_memb)                   \
   do {                                                                         \
-    oc_logger_t *logger = oc_log_get_logger();                                 \
-    if (logger->level < OC_LOG_LEVEL_DEBUG) {                                  \
+    const oc_logger_t *_logger = oc_log_get_logger();                          \
+    if (_logger->level < OC_LOG_LEVEL_DEBUG) {                                 \
+      break;                                                                   \
+    }                                                                          \
+    if ((_logger->components & (component)) == 0) {                            \
       break;                                                                   \
     }                                                                          \
     char _oc_log_endpoint_buf[256];                                            \
@@ -199,45 +205,68 @@
     OC_SNPRINT_ENDPOINT_ADDR(_oc_log_endpoint_buf,                             \
                              sizeof(_oc_log_endpoint_buf), endpoint,           \
                              addr_memb);                                       \
-    if (logger->fn != NULL) {                                                  \
-      logger->fn(OC_LOG_LEVEL_DEBUG, OC_LOG_COMPONENT_DEFAULT, __FILENAME__,   \
-                 __LINE__, __func__, "%s", _oc_log_endpoint_buf);              \
+    if (_logger->fn != NULL) {                                                 \
+      _logger->fn(OC_LOG_LEVEL_DEBUG, (component), __FILENAME__, __LINE__,     \
+                  __func__, "%s", _oc_log_endpoint_buf);                       \
       break;                                                                   \
     }                                                                          \
     char _oc_log_fn_buf[64] = { 0 };                                           \
     oc_clock_time_rfc3339(_oc_log_fn_buf, sizeof(_oc_log_fn_buf));             \
-    OC_PRINTF("[OC %s] %s: %s:%d <%s>: endpoint %s\n", _oc_log_fn_buf,         \
+    OC_PRINTF("[OC %s] ", _oc_log_fn_buf);                                     \
+    if ((component) != OC_LOG_COMPONENT_DEFAULT) {                             \
+      OC_PRINTF("(%s) ", oc_log_component_name(component));                    \
+    }                                                                          \
+    OC_PRINTF("%s: %s:%d <%s>: endpoint %s\n",                                 \
               oc_log_level_to_label(OC_LOG_LEVEL_DEBUG), __FILENAME__,         \
               __LINE__, __func__, _oc_log_endpoint_buf);                       \
     fflush(stdout);                                                            \
   } while (0)
+#ifndef OC_LOGipaddr_WITH_COMPONENT
+#define OC_LOGipaddr_WITH_COMPONENT(component, endpoint)                       \
+  OC_LOG_ENDPOINT_ADDR(component, endpoint, addr)
+#endif /* !OC_LOGipaddr_WITH_COMPONENT */
 #ifndef OC_LOGipaddr
-#define OC_LOGipaddr(endpoint) OC_LOG_ENDPOINT_ADDR(endpoint, addr)
+#define OC_LOGipaddr(endpoint)                                                 \
+  OC_LOGipaddr_WITH_COMPONENT(OC_LOG_COMPONENT_DEFAULT, endpoint)
 #endif /* !OC_LOGipaddr */
+#ifndef OC_LOGipaddr_local_WITH_COMPONENT
+#define OC_LOGipaddr_local_WITH_COMPONENT(component, endpoint)                 \
+  OC_LOG_ENDPOINT_ADDR(component, endpoint, addr_local)
+#endif /* !OC_LOGipaddr_local_WITH_COMPONENT */
 #ifndef OC_LOGipaddr_local
-#define OC_LOGipaddr_local(endpoint) OC_LOG_ENDPOINT_ADDR(endpoint, addr_local)
+#define OC_LOGipaddr_local(endpoint)                                           \
+  OC_LOGipaddr_local_WITH_COMPONENT(OC_LOG_COMPONENT_DEFAULT, endpoint)
 #endif /* !OC_LOGipaddr_local */
 #else  /* OC_DBG_IS_ENABLED */
+#ifndef OC_LOGipaddr_WITH_COMPONENT
+#define OC_LOGipaddr_WITH_COMPONENT(component, endpoint)
+#endif /* !OC_LOGipaddr_WITH_COMPONENT */
 #ifndef OC_LOGipaddr
 #define OC_LOGipaddr(endpoint)
 #endif /* !OC_LOGipaddr */
+#ifndef OC_LOGipaddr_local_WITH_COMPONENT
+#define OC_LOGipaddr_local_WITH_COMPONENT(component, endpoint)
+#endif /* !OC_LOGipaddr_local_WITH_COMPONENT */
 #ifndef OC_LOGipaddr_local
 #define OC_LOGipaddr_local(endpoint)
 #endif /* !OC_LOGipaddr_local */
 #endif /* !OC_DBG_IS_ENABLED */
 
-#ifndef OC_LOGbytes
+#ifndef OC_LOGbytes_WITH_COMPONENT
 #if defined(OC_NO_LOG_BYTES) || !defined(OC_DEBUG) ||                          \
   !OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_TRACE)
-#define OC_LOGbytes(bytes, length)
+#define OC_LOGbytes_WITH_COMPONENT(component, bytes, length)
 #else /* OC_NO_LOG_BYTES || !OC_DEBUG */
-#define OC_LOGbytes(bytes, length)                                             \
+#define OC_LOGbytes_WITH_COMPONENT(component, bytes, length)                   \
   do {                                                                         \
     if ((length) == 0) {                                                       \
       break;                                                                   \
     }                                                                          \
-    oc_logger_t *logger = oc_log_get_logger();                                 \
-    if (logger->level < OC_LOG_LEVEL_TRACE) {                                  \
+    const oc_logger_t *_logger = oc_log_get_logger();                          \
+    if (_logger->level < OC_LOG_LEVEL_TRACE) {                                 \
+      break;                                                                   \
+    }                                                                          \
+    if ((_logger->components & (component)) == 0) {                            \
       break;                                                                   \
     }                                                                          \
     oc_string_t _oc_log_bytes_buf;                                             \
@@ -252,19 +281,33 @@
     memset(_oc_log_bytes_buf_ptr, 0, _oc_log_bytes_buf_size);                  \
     SNPRINTFbytes(_oc_log_bytes_buf_ptr, _oc_log_bytes_buf_size - 1, bytes,    \
                   length);                                                     \
-    if (logger->fn != NULL) {                                                  \
-      logger->fn(OC_LOG_LEVEL_TRACE, OC_LOG_COMPONENT_DEFAULT, __FILENAME__,   \
-                 __LINE__, __func__, "%s", _oc_log_bytes_buf_ptr);             \
+    if (_logger->fn != NULL) {                                                 \
+      _logger->fn(OC_LOG_LEVEL_TRACE, component, __FILENAME__, __LINE__,       \
+                  __func__, "%s", _oc_log_bytes_buf_ptr);                      \
       oc_free_string(&_oc_log_bytes_buf);                                      \
       break;                                                                   \
     }                                                                          \
     char _oc_log_fn_buf[64] = { 0 };                                           \
     oc_clock_time_rfc3339(_oc_log_fn_buf, sizeof(_oc_log_fn_buf));             \
-    OC_PRINTF("[OC %s] V: %s:%d <%s>: bytes %s\n", _oc_log_fn_buf,             \
-              __FILENAME__, __LINE__, __func__, _oc_log_bytes_buf_ptr);        \
+    OC_PRINTF("[OC %s]", _oc_log_fn_buf);                                      \
+    if ((component) != OC_LOG_COMPONENT_DEFAULT) {                             \
+      OC_PRINTF(" (%s)", oc_log_component_name(component));                    \
+    }                                                                          \
+    OC_PRINTF(": %s:%d <%s>: bytes %s\n", __FILENAME__, __LINE__, __func__,    \
+              _oc_log_bytes_buf_ptr);                                          \
     oc_free_string(&_oc_log_bytes_buf);                                        \
     fflush(stdout);                                                            \
   } while (0)
+#endif /* !OC_NO_LOG_BYTES && OC_DEBUG */
+#endif /* !OC_LOGbytes_WITH_COMPONENT */
+
+#ifndef OC_LOGbytes
+#if defined(OC_NO_LOG_BYTES) || !defined(OC_DEBUG) ||                          \
+  !OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_TRACE)
+#define OC_LOGbytes(bytes, length)
+#else /* OC_NO_LOG_BYTES || !OC_DEBUG */
+#define OC_LOGbytes(bytes, length)                                             \
+  OC_LOGbytes_WITH_COMPONENT(OC_LOG_COMPONENT_DEFAULT, bytes, length)
 #endif /* !OC_NO_LOG_BYTES && OC_DEBUG */
 #endif /* !OC_LOGbytes */
 

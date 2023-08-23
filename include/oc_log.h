@@ -164,6 +164,7 @@ typedef enum {
 #ifdef OC_CLOUD
   OC_LOG_COMPONENT_CLOUD = 1 << 1, ///< cloud
 #endif
+  OC_LOG_COMPONENT_COAP = 1 << 2, ///< coap
 } oc_log_component_t;
 
 /**
