@@ -208,6 +208,10 @@ tcp_connectivity_init(ip_context_t *dev, oc_connectivity_ports_t ports)
     OC_ERR("Could not set non-blocking connect_pipe[0]");
     return false;
   }
+  if (oc_set_fd_flags(dev->tcp.connect_pipe[1], O_NONBLOCK, 0) < 0) {
+    OC_ERR("Could not set non-blocking connect_pipe[1]");
+    return false;
+  }
 
   OC_DBG("=======tcp port info.========");
   OC_DBG("  ipv6 port   : %d", oc_sock_listener_get_port(&dev->tcp.server));

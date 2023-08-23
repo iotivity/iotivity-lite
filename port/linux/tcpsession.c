@@ -116,6 +116,18 @@ signal_network_thread(const tcp_context_t *tcp)
     uint8_t dummy_value = 0xef;
     len = write(tcp->connect_pipe[1], &dummy_value, 1);
   } while (len < 0 && errno == EINTR);
+#if OC_ERR_IS_ENABLED || OC_WRN_IS_ENABLED
+  if (len < 0) {
+    if (errno != ENOSPC) {
+      OC_ERR("failed to signal wake up to network thread: %d", (int)errno);
+    }
+#if OC_WRN_IS_ENABLED
+    else {
+      OC_WRN("network thread is exhausted, because connect pipe is full");
+    }
+#endif /* OC_WRN_IS_ENABLED */
+  }
+#endif /* OC_ERR_IS_ENABLED || OC_WRN_IS_ENABLED */
 }
 
 static bool
