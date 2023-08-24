@@ -244,12 +244,13 @@ coap_receive_init_response(coap_packet_t *response,
     g_history_dev[g_idx] = (uint32_t)endpoint->device;
     g_idx = (g_idx + 1) % OC_REQUEST_HISTORY_SIZE;
 #endif /* OC_REQUEST_HISTORY */
-    coap_message_type_t reponse_type =
+    coap_message_type_t response_type =
       (href_len == OC_CHAR_ARRAY_LEN("oic/res") &&
        memcmp(href, "oic/res", href_len) == 0)
         ? COAP_TYPE_CON
         : COAP_TYPE_NON;
-    coap_udp_init_message(response, reponse_type, CONTENT_2_05, coap_get_mid());
+    coap_udp_init_message(response, response_type, CONTENT_2_05,
+                          coap_get_mid());
   }
   return COAP_RECEIVE_SUCCESS;
 }

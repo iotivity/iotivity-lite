@@ -840,12 +840,12 @@ oc_notify_observers_delayed_ms(oc_resource_t *resource, uint16_t milliseconds)
 static void
 notify_resource_changed(oc_resource_t *resource)
 {
-  if ((resource->properties & OC_OBSERVABLE) != 0) {
-    oc_notify_observers(resource);
-  }
 #ifdef OC_HAS_FEATURE_ETAG
   oc_resource_update_etag(resource);
 #endif /* OC_HAS_FEATURE_ETAG */
+  if ((resource->properties & OC_OBSERVABLE) != 0) {
+    oc_notify_observers(resource);
+  }
 }
 
 void

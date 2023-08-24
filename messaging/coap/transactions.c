@@ -122,17 +122,16 @@ coap_send_transaction(coap_transaction_t *t)
   if (!oc_main_initialized()) {
     return;
   }
-  OC_DBG("Sending transaction(len: %zd) %u: %p", t->message->length, t->mid,
-         (void *)t);
-  OC_LOGbytes(t->message->data, t->message->length);
-
   bool confirmable =
     (COAP_TYPE_CON == ((COAP_HEADER_TYPE_MASK & t->message->data[0]) >>
                        COAP_HEADER_TYPE_POSITION));
-
 #ifdef OC_TCP
   confirmable = confirmable && (t->message->endpoint.flags & TCP) == 0;
-#endif /* !OC_TCP */
+#endif /* OC_TCP */
+
+  OC_DBG("Sending transaction(len: %zd, confirmable: %d) %u: %p",
+         t->message->length, (int)confirmable, t->mid, (void *)t);
+  OC_LOGbytes(t->message->data, t->message->length);
 
   if (!confirmable) {
     oc_message_add_ref(t->message);

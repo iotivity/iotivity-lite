@@ -21,10 +21,12 @@
 #include "oc_api.h"
 #include "oc_certs.h"
 #include "oc_core_res.h"
+#include "oc_helpers.h"
 #include "oc_log.h"
 #include "oc_pki.h"
 #include "port/oc_assert.h"
 #include "util/oc_features.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 #include "plgd/plgd_time.h"
@@ -319,6 +321,7 @@ app_init(void)
 {
   oc_set_con_res_announced(true);
   if (oc_init_platform(manufacturer, NULL, NULL) != 0) {
+    OC_PRINTF("ERROR: failed to initialize platform\n");
     return -1;
   }
 #ifdef OC_HAS_FEATURE_PLGD_TIME
@@ -335,6 +338,7 @@ app_init(void)
     .ports = g_ports,
   };
   if (oc_add_device_v1(new_device) != 0) {
+    OC_PRINTF("ERROR: failed to register new device\n");
     return -1;
   }
   return 0;
@@ -614,13 +618,13 @@ get_switch_instance(const char *href, const oc_string_array_t *types,
 {
   oc_switch_t *cswitch = (oc_switch_t *)oc_memb_alloc(&switch_s);
   if (cswitch == NULL) {
-    printf("ERROR: insufficient memory to add new switch instance");
+    OC_PRINTF("ERROR: insufficient memory to add new switch instance");
     return NULL;
   }
   cswitch->resource = oc_new_resource(
     NULL, href, oc_string_array_get_allocated_size(*types), device);
   if (cswitch->resource == NULL) {
-    printf("ERROR: could not create /switch instance");
+    OC_PRINTF("ERROR: could not create /switch instance");
     oc_memb_free(&switch_s, cswitch);
     return NULL;
   }
@@ -1492,8 +1496,18 @@ cloud_server_send_response_cb(oc_request_t *request, oc_status_t response_code)
   const char *response_code_str = oc_status_to_str(response_code);
   const char *method_str = oc_method_to_str(request->method);
   OC_PRINTF(
-    "<cloud_server_send_response_cb> method(%d): %s, uri: %s, code(%d): %s\n",
+    "<cloud_server_send_response_cb> method(%d): %s, uri: %s, code(%d): %s",
     request->method, method_str, uri, response_code, response_code_str);
+#ifdef OC_HAS_FEATURE_ETAG
+  if (request->etag != NULL) {
+    char buf[32];
+    size_t buf_size = OC_ARRAY_SIZE(buf);
+    oc_conv_byte_array_to_hex_string(request->etag, request->etag_len, buf,
+                                     &buf_size);
+    OC_PRINTF(", etag [0x%s]", buf);
+  }
+#endif /* OC_HAS_FEATURE_ETAG */
+  OC_PRINTF("\n");
   fflush(stdout);
 }
 
