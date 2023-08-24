@@ -72,6 +72,7 @@ public:
     oc_connectivity_shutdown(0);
     oc_core_shutdown();
     oc_ri_shutdown();
+    oc_ri_deinit();
     oc_network_event_handler_mutex_destroy();
 
     for (const auto &entry : std::filesystem::directory_iterator(testStorage)) {

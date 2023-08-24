@@ -260,6 +260,7 @@ testProcessMessagesByProcess()
 
   oc_message_buffer_handler_stop();
   oc_ri_shutdown();
+  oc_ri_deinit();
 }
 
 TEST_F(TestMessage, RecvMessageByProcess)

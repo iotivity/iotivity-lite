@@ -336,6 +336,7 @@ oc_main_init(const oc_handler_t *handler)
   if (ret < 0) {
     oc_ri_shutdown();
     oc_shutdown_all_devices();
+    oc_ri_deinit();
     goto err;
   }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -350,6 +351,7 @@ oc_main_init(const oc_handler_t *handler)
   if (ret < 0) {
     oc_ri_shutdown();
     oc_shutdown_all_devices();
+    oc_ri_deinit();
     goto err;
   }
 #endif /* OC_SECURITY */
@@ -444,6 +446,7 @@ oc_main_shutdown(void)
 
 #ifdef OC_SECURITY
   oc_tls_shutdown();
+  oc_reset_devices_in_RFOTM();
 
   oc_sec_svr_free();
 #ifdef OC_PKI
@@ -472,6 +475,8 @@ oc_main_shutdown(void)
 #ifdef OC_MEMORY_TRACE
   oc_mem_trace_shutdown();
 #endif /* OC_MEMORY_TRACE */
+
+  oc_ri_deinit();
 }
 
 bool

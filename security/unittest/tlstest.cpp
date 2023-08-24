@@ -63,6 +63,7 @@ protected:
     oc_connectivity_shutdown(0);
     oc_core_shutdown();
     oc_ri_shutdown();
+    oc_ri_deinit();
     oc_network_event_handler_mutex_destroy();
   }
 };

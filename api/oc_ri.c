@@ -1627,6 +1627,10 @@ oc_ri_shutdown(void)
 
   ri_delete_all_app_resources();
 #endif /* OC_SERVER */
+}
 
+void
+oc_ri_deinit(void)
+{
   oc_random_destroy();
 }

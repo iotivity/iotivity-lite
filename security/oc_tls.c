@@ -352,7 +352,7 @@ static oc_event_callback_retval_t
 reset_in_RFOTM(void *data)
 {
   size_t device = (size_t)data;
-  oc_pstat_reset_device(device, false);
+  oc_reset_device_v1(device, false);
   return OC_EVENT_DONE;
 }
 
@@ -447,9 +447,7 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb, bool tls_shutdown)
   size_t device = peer->endpoint.device;
   const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
   if (pstat->s == OC_DOS_RFOTM) {
-    if (tls_shutdown) {
-      oc_pstat_reset_device(device, true);
-    } else {
+    if (!tls_shutdown) {
       oc_set_delayed_callback((void *)device, &reset_in_RFOTM, 0);
     }
   }

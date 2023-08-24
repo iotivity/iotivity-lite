@@ -349,6 +349,7 @@ public:
     oc_connectivity_shutdown(kDeviceID);
     oc_core_shutdown();
     oc_ri_shutdown();
+    oc_ri_deinit();
     oc_network_event_handler_mutex_destroy();
   }
 

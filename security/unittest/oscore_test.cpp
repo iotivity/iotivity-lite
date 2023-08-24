@@ -45,6 +45,7 @@ protected:
   void TearDown() override
   {
     oc_ri_shutdown();
+    oc_ri_deinit();
     oc_network_event_handler_mutex_destroy();
   }
 };
