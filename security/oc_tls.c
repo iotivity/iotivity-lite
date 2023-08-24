@@ -427,7 +427,7 @@ process_drop_event_for_removed_endpoint(oc_process_event_t ev,
 }
 
 static void
-oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
+oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb, bool tls_shutdown)
 {
 #if OC_DBG_IS_ENABLED
   oc_string_t endpoint_str;
@@ -447,7 +447,11 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
   size_t device = peer->endpoint.device;
   const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
   if (pstat->s == OC_DOS_RFOTM) {
-    oc_set_delayed_callback((void *)device, &reset_in_RFOTM, 0);
+    if (tls_shutdown) {
+      oc_pstat_reset_device(device, true);
+    } else {
+      oc_set_delayed_callback((void *)device, &reset_in_RFOTM, 0);
+    }
   }
 
 #ifdef OC_PKI
@@ -529,7 +533,7 @@ oc_tls_remove_peer(const oc_endpoint_t *endpoint)
 {
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer != NULL) {
-    oc_tls_free_peer(peer, false);
+    oc_tls_free_peer(peer, false, false);
   } else {
     oc_process_drop(&oc_tls_handler, process_drop_event_for_removed_endpoint,
                     endpoint);
@@ -544,7 +548,7 @@ oc_tls_close_peer(oc_tls_peer_t *peer)
   if ((peer->endpoint.flags & TCP) == 0) {
     mbedtls_ssl_close_notify(&peer->ssl_ctx);
   }
-  oc_tls_free_peer(peer, false);
+  oc_tls_free_peer(peer, false, false);
 }
 
 void
@@ -623,7 +627,7 @@ oc_dtls_inactive(void *data)
     mbedtls_ssl_close_notify(&peer->ssl_ctx);
   }
   OC_DBG("oc_tls: Removing inactive peer");
-  oc_tls_free_peer(peer, true);
+  oc_tls_free_peer(peer, true, false);
   return OC_EVENT_DONE;
 }
 
@@ -693,7 +697,7 @@ check_retry_timers(void)
                 &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
                 sizeof(peer->endpoint.addr)) != 0) {
             TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_set_client_transport_id", ret);
-            oc_tls_free_peer(peer, false);
+            oc_tls_free_peer(peer, false, false);
             peer = next;
             continue;
           }
@@ -701,7 +705,7 @@ check_retry_timers(void)
         if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
             ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
           TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_handshake", ret);
-          oc_tls_free_peer(peer, false);
+          oc_tls_free_peer(peer, false, false);
         }
       }
     }
@@ -2105,7 +2109,7 @@ oc_tls_add_new_peer(oc_tls_new_peer_params_t params)
   }
 
   if (oc_tls_peer_ssl_init(peer) != 0) {
-    oc_tls_free_peer(peer, false);
+    oc_tls_free_peer(peer, false, false);
     return NULL;
   }
 
@@ -2170,7 +2174,7 @@ oc_tls_shutdown(void)
 {
   oc_tls_peer_t *p = oc_list_pop(g_tls_peers);
   while (p != NULL) {
-    oc_tls_free_peer(p, false);
+    oc_tls_free_peer(p, false, true);
     p = oc_list_pop(g_tls_peers);
   }
 #ifdef OC_PKI
@@ -2484,7 +2488,7 @@ oc_tls_send_message_internal(oc_message_t *message)
                               ? "ssl_write_tcp"
                               : "mbedtls_ssl_write",
                             ret);
-      oc_tls_free_peer(peer, false);
+      oc_tls_free_peer(peer, false, false);
     } else {
       length = message->length;
     }
@@ -2537,7 +2541,7 @@ write_application_data(oc_tls_peer_t *peer)
                               ? "ssl_write_tcp"
                               : "mbedtls_ssl_write",
                             ret);
-      oc_tls_free_peer(peer, false);
+      oc_tls_free_peer(peer, false, false);
       break;
     }
     message = (oc_message_t *)oc_list_pop(peer->send_q);
@@ -2551,7 +2555,7 @@ oc_tls_handshake(oc_tls_peer_t *peer)
   if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
       ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
     TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_handshake", ret);
-    oc_tls_free_peer(peer, false);
+    oc_tls_free_peer(peer, false, false);
     return;
   }
   if (ret == 0) {
@@ -2576,7 +2580,7 @@ oc_tls_on_tcp_connect(const oc_endpoint_t *endpoint, int state, void *data)
     return;
   }
   OC_ERR("oc_tls_on_tcp_connect: ends with error state: %d", state);
-  oc_tls_free_peer(peer, false);
+  oc_tls_free_peer(peer, false, false);
 }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
@@ -2644,7 +2648,7 @@ oc_tls_init_connection(oc_message_t *message)
     OC_ERR(
       "oc_tls_init_connection: oc_tcp_connect returns unexpected state: %d",
       state);
-    oc_tls_free_peer(peer, false);
+    oc_tls_free_peer(peer, false, false);
     oc_message_unref(message);
     return;
   }
@@ -2729,7 +2733,7 @@ tls_read_application_data_tcp(oc_tls_peer_t *peer)
           OC_ERR("oc_tls_tcp: total receive length(%ld) is bigger than max pdu "
                  "size(%ld)",
                  (long)total_length, (long)OC_PDU_SIZE);
-          oc_tls_free_peer(peer, false);
+          oc_tls_free_peer(peer, false, false);
           return;
         }
         want_read = total_length - peer->processed_recv_message->length;
@@ -2754,7 +2758,7 @@ tls_read_application_data_tcp(oc_tls_peer_t *peer)
           mbedtls_ssl_close_notify(&peer->ssl_ctx);
         }
         TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_read", ret);
-        oc_tls_free_peer(peer, false);
+        oc_tls_free_peer(peer, false, false);
         return;
       }
       peer->processed_recv_message->length += ret;
@@ -2792,7 +2796,7 @@ tls_handshake_step(oc_tls_peer_t *peer)
             &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
             sizeof(peer->endpoint.addr)) != 0) {
         TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_set_client_transport_id", ret);
-        oc_tls_free_peer(peer, false);
+        oc_tls_free_peer(peer, false, false);
         return;
       }
       continue;
@@ -2803,7 +2807,7 @@ tls_handshake_step(oc_tls_peer_t *peer)
         break;
       }
       TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_handshake_step", ret);
-      oc_tls_free_peer(peer, false);
+      oc_tls_free_peer(peer, false, false);
       return;
     }
   } while (peer->ssl_ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER);
@@ -2858,7 +2862,7 @@ tls_read_application_data_udp(oc_tls_peer_t *peer)
       mbedtls_ssl_close_notify(&peer->ssl_ctx);
       mbedtls_ssl_close_notify(&peer->ssl_ctx);
     }
-    oc_tls_free_peer(peer, false);
+    oc_tls_free_peer(peer, false, false);
     return;
   }
 
