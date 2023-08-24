@@ -37,7 +37,6 @@ protected:
   {
     oc_ri_shutdown();
     oc_runtime_shutdown();
-    oc_runtime_shutdown();
     oc_network_event_handler_mutex_destroy();
   }
 };

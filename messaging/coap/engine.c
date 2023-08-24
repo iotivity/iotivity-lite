@@ -65,6 +65,7 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_audit.h"
+#include "security/oc_pstat_internal.h"
 #include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
 
@@ -309,10 +310,12 @@ coap_receive_blockwise_block1(coap_receive_ctx_t *ctx, const char *href,
   }
 
   if (ctx->request_buffer == NULL && ctx->block1.num == 0) {
-    if (oc_drop_command(endpoint->device)) {
+#ifdef OC_SECURITY
+    if (oc_should_drop_command_on_tls_close(endpoint->device)) {
       COAP_WRN("cannot process new request during closing TLS sessions");
       return COAP_RECEIVE_ERROR;
     }
+#endif /* OC_SECURITY */
 
     uint32_t buffer_size;
     if (!coap_options_get_size1(ctx->request, &buffer_size) ||
@@ -454,11 +457,12 @@ coap_receive_blockwise_block2(coap_receive_ctx_t *ctx, const char *href,
   if (ctx->request_buffer != NULL) {
     return COAP_RECEIVE_INVOKE_HANDLER;
   }
-
-  if (oc_drop_command(endpoint->device)) {
+#ifdef OC_SECURITY
+  if (oc_should_drop_command_on_tls_close(endpoint->device)) {
     COAP_WRN("cannot process new request during closing TLS sessions");
     return COAP_RECEIVE_ERROR;
   }
+#endif /* OC_SECURITY */
 
   uint32_t buffer_size;
   if (!coap_options_get_size2(ctx->request, &buffer_size) || buffer_size == 0) {
@@ -500,10 +504,12 @@ coap_receive_method_payload(coap_receive_ctx_t *ctx, const char *href,
   COAP_DBG("no block options; processing regular request");
   const uint8_t *incoming_block;
   uint32_t incoming_block_len = coap_get_payload(ctx->request, &incoming_block);
-  if (oc_drop_command(endpoint->device)) {
+#ifdef OC_SECURITY
+  if (oc_should_drop_command_on_tls_close(endpoint->device)) {
     COAP_WRN("cannot process new request during closing TLS sessions");
     return COAP_RECEIVE_ERROR;
   }
+#endif /* OC_SECURITY */
 
 #ifdef OC_TCP
   bool is_valid_size =

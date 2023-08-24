@@ -63,7 +63,6 @@ protected:
 #ifdef OC_HAS_FEATURE_PUSH
     oc_push_free();
 #endif /* OC_HAS_FEATURE_PUSH */
-    oc_random_destroy();
     oc_core_shutdown();
     oc_ri_shutdown();
     oc_runtime_shutdown();

@@ -673,6 +673,9 @@
     <ClInclude Include="..\..\..\security\oc_pstat.h">
       <Filter>Security</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_pstat_internal.h">
+      <Filter>Security</Filter>
+    </ClInclude>  
     <ClInclude Include="..\..\..\security\oc_store.h">
       <Filter>Security</Filter>
     </ClInclude>

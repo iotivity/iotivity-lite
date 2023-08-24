@@ -44,6 +44,7 @@
 #include "security/oc_cred_internal.h"
 #include "security/oc_doxm_internal.h"
 #include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #include "security/oc_sp_internal.h"
 #include "security/oc_svr_internal.h"
 #include "security/oc_tls_internal.h"
@@ -78,12 +79,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#ifdef OC_DYNAMIC_ALLOCATION
-static bool *g_drop_commands;
-#else  /* OC_DYNAMIC_ALLOCATION */
-static bool g_drop_commands[OC_MAX_NUM_DEVICES];
-#endif /* !OC_DYNAMIC_ALLOCATION */
 
 static bool g_initialized = false;
 static const oc_handler_t *g_app_callbacks;
@@ -341,12 +336,6 @@ oc_main_init(const oc_handler_t *handler)
     oc_runtime_shutdown();
     goto err;
   }
-#ifdef OC_DYNAMIC_ALLOCATION
-  g_drop_commands = (bool *)calloc(oc_core_get_num_devices(), sizeof(bool));
-  if (g_drop_commands == NULL) {
-    oc_abort("Insufficient memory");
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_SECURITY
   ret = oc_tls_init_context();
@@ -388,10 +377,6 @@ oc_main_init(const oc_handler_t *handler)
 
 err:
   OC_ERR("oc_main: error in stack initialization");
-#ifdef OC_DYNAMIC_ALLOCATION
-  free(g_drop_commands);
-  g_drop_commands = NULL;
-#endif /* OC_DYNAMIC_ALLOCATION */
   return ret;
 }
 
@@ -465,13 +450,6 @@ oc_main_shutdown(void)
 
   oc_shutdown_all_devices();
 
-#ifdef OC_DYNAMIC_ALLOCATION
-  free(g_drop_commands);
-  g_drop_commands = NULL;
-#else  /* !OC_DYNAMIC_ALLOCATION */
-  memset(g_drop_commands, 0, sizeof(bool) * OC_MAX_NUM_DEVICES);
-#endif /* OC_DYNAMIC_ALLOCATION */
-
   g_app_callbacks = NULL;
 
 #ifdef OC_MEMORY_TRACE
@@ -493,26 +471,4 @@ _oc_signal_event_loop(void)
   if (g_app_callbacks != NULL) {
     g_app_callbacks->signal_event_loop();
   }
-}
-
-void
-oc_set_drop_commands(size_t device, bool drop)
-{
-#ifdef OC_DYNAMIC_ALLOCATION
-  if (g_drop_commands == NULL) {
-    return;
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
-  g_drop_commands[device] = drop;
-}
-
-bool
-oc_drop_command(size_t device)
-{
-#ifdef OC_DYNAMIC_ALLOCATION
-  if (g_drop_commands == NULL) {
-    return false;
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
-  return g_drop_commands[device];
 }

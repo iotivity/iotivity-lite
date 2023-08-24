@@ -19,6 +19,7 @@
 #ifdef OC_SECURITY
 
 #include "oc_pstat.h"
+#include "oc_pstat_internal.h"
 #include "api/oc_buffer_internal.h"
 #include "api/oc_main_internal.h"
 #include "api/oc_ri_internal.h"
@@ -146,11 +147,16 @@ close_all_tls_sessions(void *data)
 {
   size_t device = (size_t)data;
   oc_close_all_tls_sessions_for_device(device);
-  oc_set_drop_commands(device, false);
   if (coap_global_status_code() == CLOSE_ALL_TLS_SESSIONS) {
     coap_set_global_status_code(COAP_NO_ERROR);
   }
   return OC_EVENT_DONE;
+}
+
+bool
+oc_should_drop_command_on_tls_close(size_t device)
+{
+  return oc_has_delayed_callback((void *)device, close_all_tls_sessions, false);
 }
 
 static bool
@@ -322,16 +328,15 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     if (!shutdown && close_all_tls_connections_immediately) {
       oc_remove_delayed_callback((void *)device, close_all_tls_sessions);
       oc_close_all_tls_sessions_for_device(device);
-      oc_set_drop_commands(device, false);
     } else if (!from_storage && !shutdown) {
-      // The request comes from oc_reset_v1 or API, so we must close all TLS
-      // after a delay so the response can be sent.
+      // In case the request originates from oc_reset_v1 or an API, this
+      // code initiates the closure of all TLS sessions after a delay to
+      // ensure the response can be sent. During this period, any incoming
+      // commands such as GET, POST, PUT, or DELETE are dropped until all TLS
+      // sessions are closed.
       status_code = CLOSE_ALL_TLS_SESSIONS;
       oc_remove_delayed_callback((void *)device, close_all_tls_sessions);
       oc_set_delayed_callback((void *)device, close_all_tls_sessions, 2);
-      // Don't accept any commands GET, POST, PUT, DELETE until all TLS sessions
-      // are closed
-      oc_set_drop_commands(device, true);
     }
     if (fp->cb != NULL) {
       oc_sec_pstat_copy(&g_pstat[device], ps);

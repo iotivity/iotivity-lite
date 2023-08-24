@@ -68,11 +68,6 @@ void get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
 void post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
                 void *data);
 
-/**
- * @brief Reset all devices in RFOTM state for shutdown.
- */
-void oc_reset_devices_in_RFOTM(void);
-
 #ifdef OC_SOFTWARE_UPDATE
 
 void oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm);

@@ -58,7 +58,6 @@ public:
     oc_runtime_init();
     oc_ri_init();
     oc_core_init();
-    oc_random_init();
     oc_tls_init_context();
     oc_add_new_device_t cfg{};
     cfg.name = "Lamp";
@@ -89,7 +88,6 @@ public:
     oc_connectivity_shutdown(device_);
     oc_sec_svr_free();
     oc_tls_shutdown();
-    oc_random_destroy();
     oc_core_shutdown();
     oc_ri_shutdown();
     oc_runtime_shutdown();

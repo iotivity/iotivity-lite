@@ -377,8 +377,6 @@ oc_core_add_new_device(oc_add_new_device_t cfg)
     oc_abort("error initializing connectivity for device");
   }
 
-  oc_set_drop_commands(device_count, false);
-
   return &g_oc_device_info[device_count];
 }
 
