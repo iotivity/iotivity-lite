@@ -17,6 +17,7 @@
  ****************************************************************************/
 
 #include "api/oc_ri_internal.h"
+#include "api/oc_runtime_internal.h"
 #include "oc_config.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -328,6 +329,7 @@ oc_main_init(const oc_handler_t *handler)
   oc_mem_trace_init();
 #endif /* OC_MEMORY_TRACE */
 
+  oc_runtime_init();
   oc_ri_init();
   oc_core_init();
   oc_network_event_handler_mutex_init();
@@ -336,7 +338,7 @@ oc_main_init(const oc_handler_t *handler)
   if (ret < 0) {
     oc_ri_shutdown();
     oc_shutdown_all_devices();
-    oc_ri_deinit();
+    oc_runtime_shutdown();
     goto err;
   }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -351,7 +353,7 @@ oc_main_init(const oc_handler_t *handler)
   if (ret < 0) {
     oc_ri_shutdown();
     oc_shutdown_all_devices();
-    oc_ri_deinit();
+    oc_runtime_shutdown();
     goto err;
   }
 #endif /* OC_SECURITY */
@@ -476,7 +478,7 @@ oc_main_shutdown(void)
   oc_mem_trace_shutdown();
 #endif /* OC_MEMORY_TRACE */
 
-  oc_ri_deinit();
+  oc_runtime_shutdown();
 }
 
 bool

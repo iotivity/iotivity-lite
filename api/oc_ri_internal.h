@@ -114,12 +114,6 @@ uint64_t oc_ri_get_batch_etag(const oc_resource_t *resource,
 #endif /* OC_HAS_FEATURE_ETAG */
 
 /**
- * @brief deinitialize runtimes
- *
- */
-void oc_ri_deinit(void);
-
-/**
  * @brief free the properties of the resource
  *
  * @param resource the resource (cannot be NULL)

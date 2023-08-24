@@ -70,9 +70,6 @@ void post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
 
 /**
  * @brief Reset all devices in RFOTM state for shutdown.
- *
- * @param device index of the device
- * @param state the state to set
  */
 void oc_reset_devices_in_RFOTM(void);
 

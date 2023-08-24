@@ -21,6 +21,7 @@
 #include "api/oc_core_res_internal.h"
 #include "api/oc_endpoint_internal.h"
 #include "api/oc_ri_internal.h"
+#include "api/oc_runtime_internal.h"
 #include "oc_api.h"
 #include "oc_config.h"
 #include "oc_core_res.h"
@@ -66,6 +67,7 @@ public:
 #endif /* _WIN32 */
 
     oc_network_event_handler_mutex_init();
+    oc_runtime_init();
     oc_ri_init();
     oc_core_init();
     ASSERT_EQ(0, oc_add_device(kDeviceURI.c_str(), kDeviceType.c_str(),
@@ -86,7 +88,7 @@ public:
     oc_connectivity_shutdown(0);
     oc_core_shutdown();
     oc_ri_shutdown();
-    oc_ri_deinit();
+    oc_runtime_shutdown();
     oc_network_event_handler_mutex_destroy();
 
 #ifdef _WIN32

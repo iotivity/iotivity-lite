@@ -444,8 +444,6 @@ oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len, size_t device)
 void
 oc_ri_init(void)
 {
-  oc_random_init();
-  oc_clock_init();
   set_mpro_status_codes();
 
 #ifdef OC_SERVER
@@ -1627,10 +1625,4 @@ oc_ri_shutdown(void)
 
   ri_delete_all_app_resources();
 #endif /* OC_SERVER */
-}
-
-void
-oc_ri_deinit(void)
-{
-  oc_random_destroy();
 }

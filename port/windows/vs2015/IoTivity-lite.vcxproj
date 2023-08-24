@@ -344,6 +344,7 @@
     <ClCompile Include="..\..\..\api\oc_rep.c" />
     <ClCompile Include="..\..\..\api\oc_resource_factory.c" />
     <ClCompile Include="..\..\..\api\oc_ri.c" />
+    <ClCompile Include="..\..\..\api\oc_runtime.c" />
     <ClCompile Include="..\..\..\api\oc_server_api.c" />
     <ClCompile Include="..\..\..\api\oc_session_events.c" />
     <ClCompile Include="..\..\..\api\oc_swupdate.c" />

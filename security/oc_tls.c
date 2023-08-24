@@ -446,10 +446,8 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb, bool tls_shutdown)
 
   size_t device = peer->endpoint.device;
   const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
-  if (pstat->s == OC_DOS_RFOTM) {
-    if (!tls_shutdown) {
-      oc_set_delayed_callback((void *)device, &reset_in_RFOTM, 0);
-    }
+  if (pstat->s == OC_DOS_RFOTM && !tls_shutdown) {
+    oc_set_delayed_callback((void *)device, &reset_in_RFOTM, 0);
   }
 
 #ifdef OC_PKI
