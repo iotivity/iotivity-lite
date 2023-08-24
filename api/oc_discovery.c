@@ -934,19 +934,21 @@ discovery_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
   } break;
 #ifdef OC_RES_BATCH_SUPPORT
   case OC_IF_B: {
-    if (request->origin
+    if (request->origin == NULL
 #ifdef OC_SECURITY
-        && request->origin->flags & SECURED
+        || (request->origin->flags & SECURED) == 0
 #endif /* OC_SECURITY */
     ) {
-      CborEncoder encoder;
-      oc_rep_start_links_array();
-      memcpy(&encoder, oc_rep_get_encoder(), sizeof(CborEncoder));
-      process_batch_request(&links_array, request->origin, device);
-      memcpy(oc_rep_get_encoder(), &encoder, sizeof(CborEncoder));
-      oc_rep_end_links_array();
-      matches++;
+      OC_ERR("oc_discovery: insecure batch interface requests are unsupported");
+      break;
     }
+    CborEncoder encoder;
+    oc_rep_start_links_array();
+    memcpy(&encoder, oc_rep_get_encoder(), sizeof(CborEncoder));
+    process_batch_request(&links_array, request->origin, device);
+    memcpy(oc_rep_get_encoder(), &encoder, sizeof(CborEncoder));
+    oc_rep_end_links_array();
+    matches++;
   } break;
 #endif /* OC_RES_BATCH_SUPPORT */
   case OC_IF_BASELINE: {
