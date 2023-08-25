@@ -32,19 +32,13 @@ extern "C" {
 void oc_reset_devices_in_RFOTM(void);
 
 /**
- * @brief Checks whether a command should be discarded when a TLS connection is
- * scheduled to be closed.
- *
- * This function evaluates whether it is appropriate to discard a command when a
- * TLS connection is scheduled to be closed. It returns true if the command
- * should be discarded, indicating that it's not suitable for execution in the
- * context of a closing TLS connection, and false otherwise.
+ * @brief Checks if reset is in progress.
  *
  * @param[in] device the index of the logical device
  *
- * @return True if the command should be discarded, false otherwise.
+ * @return True if the reset is in progress, false otherwise.
  */
-bool oc_should_drop_command_on_reset(size_t device);
+bool oc_reset_in_progress(size_t device);
 
 #ifdef __cplusplus
 }

@@ -23,6 +23,7 @@
 #include "api/oc_buffer_internal.h"
 #include "api/oc_main_internal.h"
 #include "api/oc_ri_internal.h"
+#include "api/oc_server_api_internal.h"
 #include "messaging/coap/coap_internal.h"
 #include "messaging/coap/observe.h"
 #include "oc_acl_internal.h"
@@ -151,7 +152,7 @@ delayed_reset(void *data)
 }
 
 bool
-oc_should_drop_command_on_reset(size_t device)
+oc_reset_in_progress(size_t device)
 {
   return oc_has_delayed_callback((void *)device, delayed_reset, false);
 }
@@ -257,13 +258,14 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
   OC_DBG("oc_pstat: Entering pstat_handle_state");
   switch (ps->s) {
   case OC_DOS_RESET: {
-    oc_remove_delayed_callback((void *)device, delayed_reset);
     ps->p = true;
     ps->isop = false;
     ps->cm = 1;
     ps->tm = 2;
     ps->om = 3;
     ps->sm = 4;
+
+    oc_remove_delayed_callback((void *)device, delayed_reset);
 
     memset(ps->rowneruuid.id, 0, sizeof(ps->rowneruuid.id));
     oc_sec_doxm_default(device);
@@ -316,11 +318,11 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
 #endif /* OC_DBG_IS_ENABLED */
       goto pstat_state_error;
     }
-    oc_factory_presets_t *fp = oc_get_factory_presets_cb();
-    coap_status_t status_code = COAP_NO_ERROR;
+
     if (!shutdown) {
-      oc_close_all_tls_sessions_for_device(device);
+      oc_close_all_tls_sessions_for_device_reset(device);
     }
+    oc_factory_presets_t *fp = oc_get_factory_presets_cb();
     if (fp->cb != NULL) {
       oc_sec_pstat_copy(&g_pstat[device], ps);
       OC_DBG("oc_pstat: invoking the factory presets callback");
@@ -328,7 +330,8 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
       OC_DBG("oc_pstat: returned from the factory presets callback");
       oc_sec_pstat_copy(ps, &g_pstat[device]);
     }
-    coap_set_global_status_code(status_code);
+
+    coap_set_global_status_code(COAP_NO_ERROR);
     ps->p = false;
   } break;
   case OC_DOS_RFPRO: {
@@ -661,7 +664,7 @@ oc_reset_device(size_t device)
 static bool
 set_delayed_reset(size_t device)
 {
-  if (oc_has_delayed_callback((void *)device, delayed_reset, false)) {
+  if (oc_reset_in_progress(device)) {
     return false;
   }
 #if defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_CLOUD)
