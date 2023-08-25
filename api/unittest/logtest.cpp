@@ -30,7 +30,7 @@ public:
   {
     oc_log_set_function(nullptr);
     oc_log_set_level(OC_LOG_LEVEL_INFO);
-    oc_log_set_components(0xFFFFFFFF);
+    oc_log_set_components(OC_LOG_COMPONENT_ALL);
   }
 };
 
@@ -120,7 +120,7 @@ expectNonDefault(oc_log_level_t, oc_log_component_t component, const char *,
 TEST_F(TestLog, FilterByComponent)
 {
   oc_log_set_level(OC_LOG_LEVEL_ERROR);
-  oc_log_set_components(0xFFFFFFFF & ~OC_LOG_COMPONENT_DEFAULT);
+  oc_log_set_components(OC_LOG_COMPONENT_ALL & ~OC_LOG_COMPONENT_DEFAULT);
   oc_log_set_function(expectNonDefault);
   gComponentInvoked.clear();
 

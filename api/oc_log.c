@@ -33,7 +33,7 @@
 static oc_logger_t g_logger = {
   .fn = NULL,
   .level = OC_LOG_LEVEL_INFO,
-  .components = 0xFFFFFFFF, // enable all by default
+  .components = OC_LOG_COMPONENT_ALL, // enable all by default
 };
 
 oc_logger_t *

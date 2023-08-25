@@ -44,6 +44,8 @@ typedef struct oc_logger_t
   OC_ATOMIC_UINT32_T components; ///< mask of enabled log components
 } oc_logger_t;
 
+#define OC_LOG_COMPONENT_ALL (0xFFFFFFFF)
+
 /** Get global logger */
 oc_logger_t *oc_log_get_logger(void);
 
