@@ -728,13 +728,13 @@ void oc_reset(void);
  *
  * @note Use of this function requires building with OC_SECURITY defined.
  *
- * @param[in] close_all_tls_connections_immediately true to close all TLS
+ * @param[in] force true to close all TLS
  *            connections immediately, false to close them after the 2 second
  * delay. Set to false if the device is connected to a cloud and you want to
  * unregister it.
  */
 OC_API
-void oc_reset_v1(bool close_all_tls_connections_immediately);
+void oc_reset_v1(bool force);
 
 /**
  * Reset logical device to the RFOTM state and close all opened TLS connections
@@ -771,14 +771,12 @@ void oc_reset_device(size_t device);
  *       defined.
  *
  * @param[in] device index of the logical device to reset
- * @param[in] close_all_tls_connections_immediately true to close all TLS
- *            connections immediately, false to close them after the 2 second
- * delay. Set to false if the device is connected to a cloud and you want to
- * unregister it.
+ * @param[in] force true to reset immediately, false to reset after the 2 second
+ * for terminate the connections (eg cloud unregistration)
+ *
  */
 OC_API
-bool oc_reset_device_v1(size_t device,
-                        bool close_all_tls_connections_immediately);
+bool oc_reset_device_v1(size_t device, bool force);
 
 /**
  * Callback invoked when the "owned" property of the doxm is changed

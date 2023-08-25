@@ -143,20 +143,17 @@ valid_transition(size_t device, oc_dostype_t state)
 }
 
 static oc_event_callback_retval_t
-close_all_tls_sessions(void *data)
+delayed_reset(void *data)
 {
   size_t device = (size_t)data;
-  oc_close_all_tls_sessions_for_device(device);
-  if (coap_global_status_code() == CLOSE_ALL_TLS_SESSIONS) {
-    coap_set_global_status_code(COAP_NO_ERROR);
-  }
+  oc_reset_device_v1(device, true);
   return OC_EVENT_DONE;
 }
 
 bool
-oc_should_drop_command_on_tls_close(size_t device)
+oc_should_drop_command_on_reset(size_t device)
 {
-  return oc_has_delayed_callback((void *)device, close_all_tls_sessions, false);
+  return oc_has_delayed_callback((void *)device, delayed_reset, false);
 }
 
 static bool
@@ -255,23 +252,19 @@ pstat_check_state(const oc_sec_pstat_t *ps, size_t device)
 
 static bool
 oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
-                      bool close_all_tls_connections_immediately, bool shutdown)
+                      bool shutdown)
 {
   OC_DBG("oc_pstat: Entering pstat_handle_state");
   switch (ps->s) {
   case OC_DOS_RESET: {
+    oc_remove_delayed_callback((void *)device, delayed_reset);
     ps->p = true;
     ps->isop = false;
     ps->cm = 1;
     ps->tm = 2;
     ps->om = 3;
     ps->sm = 4;
-#if defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_CLOUD)
-    cloud_reset(device, true, 0);
-    // TODO: we can allow async mode, but handling of OC_DOS_RESET that follows
-    // the reset call must be invoked asynchronously in a callback after
-    // cloud_reset finishes. Otherwise the cloud_reset won't execute correctly.
-#endif /* OC_SERVER && OC_CLIENT && OC_CLOUD */
+
     memset(ps->rowneruuid.id, 0, sizeof(ps->rowneruuid.id));
     oc_sec_doxm_default(device);
     oc_sec_cred_default(device);
@@ -325,18 +318,8 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     }
     oc_factory_presets_t *fp = oc_get_factory_presets_cb();
     coap_status_t status_code = COAP_NO_ERROR;
-    if (!shutdown && close_all_tls_connections_immediately) {
-      oc_remove_delayed_callback((void *)device, close_all_tls_sessions);
+    if (!shutdown) {
       oc_close_all_tls_sessions_for_device(device);
-    } else if (!from_storage && !shutdown) {
-      // In case the request originates from oc_reset_v1 or an API, this
-      // code initiates the closure of all TLS sessions after a delay to
-      // ensure the response can be sent. During this period, any incoming
-      // commands such as GET, POST, PUT, or DELETE are dropped until all TLS
-      // sessions are closed.
-      status_code = CLOSE_ALL_TLS_SESSIONS;
-      oc_remove_delayed_callback((void *)device, close_all_tls_sessions);
-      oc_set_delayed_callback((void *)device, close_all_tls_sessions, 2);
     }
     if (fp->cb != NULL) {
       oc_sec_pstat_copy(&g_pstat[device], ps);
@@ -427,7 +410,7 @@ void
 oc_sec_pstat_default(size_t device)
 {
   oc_sec_pstat_t ps = { .s = OC_DOS_RESET };
-  oc_pstat_handle_state(&ps, device, true, false, false);
+  oc_pstat_handle_state(&ps, device, true, false);
   oc_sec_dump_pstat(device);
 }
 
@@ -618,9 +601,10 @@ oc_sec_decode_pstat(const oc_rep_t *rep, bool from_storage, size_t device)
 #endif /* OC_SOFTWARE_UPDATE */
   if (from_storage || valid_transition(device, ps.s)) {
     if (!from_storage && transition_state) {
-      bool transition_success =
-        oc_pstat_handle_state(&ps, device, from_storage, false, false);
-      return transition_success;
+      if (ps.s == OC_DOS_RESET) {
+        return oc_reset_device_v1(device, false);
+      }
+      return oc_pstat_handle_state(&ps, device, from_storage, false);
     }
     oc_sec_pstat_copy(&g_pstat[device], &ps);
     return true;
@@ -660,12 +644,10 @@ post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 }
 
 static bool
-oc_pstat_reset_device(size_t device, bool close_all_tls_connections_immediately,
-                      bool shutdown)
+oc_pstat_reset_device(size_t device, bool shutdown)
 {
   oc_sec_pstat_t ps = { .s = OC_DOS_RESET };
-  bool ret = oc_pstat_handle_state(
-    &ps, device, false, close_all_tls_connections_immediately, shutdown);
+  bool ret = oc_pstat_handle_state(&ps, device, false, shutdown);
   oc_sec_dump_pstat(device);
   return ret;
 }
@@ -676,18 +658,36 @@ oc_reset_device(size_t device)
   oc_reset_device_v1(device, true);
 }
 
-bool
-oc_reset_device_v1(size_t device, bool close_all_tls_connections_immediately)
+static bool
+set_delayed_reset(size_t device)
 {
-  return oc_pstat_reset_device(device, close_all_tls_connections_immediately,
-                               false);
+  if (oc_has_delayed_callback((void *)device, delayed_reset, false)) {
+    return false;
+  }
+#if defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_CLOUD)
+  cloud_reset(device, true, 0);
+  // TODO: we can allow async mode, but handling of OC_DOS_RESET that follows
+  // the reset call must be invoked asynchronously in a callback after
+  // cloud_reset finishes. Otherwise the cloud_reset won't execute correctly.
+#endif /* OC_SERVER && OC_CLIENT && OC_CLOUD */
+  oc_set_delayed_callback((void *)device, delayed_reset, 2);
+  return true;
+}
+
+bool
+oc_reset_device_v1(size_t device, bool force)
+{
+  if (!force) {
+    return set_delayed_reset(device);
+  }
+  return oc_pstat_reset_device(device, false);
 }
 
 void
-oc_reset_v1(bool close_all_tls_connections_immediately)
+oc_reset_v1(bool force)
 {
   for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
-    oc_reset_device_v1(device, close_all_tls_connections_immediately);
+    oc_reset_device_v1(device, force);
   }
 }
 
@@ -702,7 +702,7 @@ oc_reset_devices_in_RFOTM(void)
 {
   for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
     if (g_pstat[device].s == OC_DOS_RFOTM) {
-      oc_pstat_reset_device(device, false, true);
+      oc_pstat_reset_device(device, true);
     }
   }
 }

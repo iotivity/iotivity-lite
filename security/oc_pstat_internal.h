@@ -44,7 +44,7 @@ void oc_reset_devices_in_RFOTM(void);
  *
  * @return True if the command should be discarded, false otherwise.
  */
-bool oc_should_drop_command_on_tls_close(size_t device);
+bool oc_should_drop_command_on_reset(size_t device);
 
 #ifdef __cplusplus
 }

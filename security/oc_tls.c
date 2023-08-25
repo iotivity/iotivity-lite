@@ -348,14 +348,6 @@ is_peer_active(const oc_tls_peer_t *peer)
   return false;
 }
 
-static oc_event_callback_retval_t
-reset_in_RFOTM(void *data)
-{
-  size_t device = (size_t)data;
-  oc_reset_device_v1(device, false);
-  return OC_EVENT_DONE;
-}
-
 static oc_event_callback_retval_t oc_dtls_inactive(void *data);
 
 #ifdef OC_CLIENT
@@ -369,7 +361,7 @@ oc_tls_free_invalid_peer(oc_tls_peer_t *peer)
   size_t device = peer->endpoint.device;
   const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
   if (pstat->s == OC_DOS_RFOTM) {
-    oc_set_delayed_callback((void *)device, &reset_in_RFOTM, 0);
+    oc_reset_device_v1(device, false);
   }
 
   oc_ri_remove_timed_event_callback(peer, oc_dtls_inactive);
@@ -447,7 +439,7 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb, bool tls_shutdown)
   size_t device = peer->endpoint.device;
   const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
   if (pstat->s == OC_DOS_RFOTM && !tls_shutdown) {
-    oc_set_delayed_callback((void *)device, &reset_in_RFOTM, 0);
+    oc_reset_device_v1(device, false);
   }
 
 #ifdef OC_PKI
