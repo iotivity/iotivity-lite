@@ -1,7 +1,7 @@
 bidict==0.21.2
 click==8.0.1
 dataclasses==0.6
-Flask==2.0.1
+Flask==2.2.5
 Flask-SocketIO==5.1.0
 importlib-metadata==4.6.1
 itsdangerous==2.0.1
