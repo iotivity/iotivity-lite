@@ -61,7 +61,7 @@ typedef struct oc_tls_peer_t
   uint8_t client_server_random[64];
   oc_uuid_t uuid;
   oc_clock_time_t timestamp; ///< activity timestamp
-  bool doc;
+  bool doc;                  ///< device onboarding connection
 #ifdef OC_PKI
   oc_string_t public_key;
 #endif /* OC_PKI */

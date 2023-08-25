@@ -33,6 +33,8 @@
 #include "port/oc_clock.h"
 #include "port/oc_log_internal.h"
 #include "port/oc_random.h"
+#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/Endpoint.h"
 #include "tests/gtest/RepPool.h"
@@ -68,7 +70,9 @@ public:
   {
     oc_random_init();
     oc_clock_init();
-
+#ifdef OC_SECURITY
+    oc_sec_pstat_init_for_devices(1);
+#endif /* OC_SECURITY */
 #ifdef OC_CLIENT
     oc_client_cbs_init();
 #endif /* OC_CLIENT */
@@ -78,6 +82,9 @@ public:
 
   static void TearDownTestCase()
   {
+#ifdef OC_SECURITY
+    oc_sec_pstat_free();
+#endif /* OC_SECURITY */
     oc_random_destroy();
   }
 

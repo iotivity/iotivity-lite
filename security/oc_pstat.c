@@ -68,6 +68,21 @@ oc_sec_pstat_free(void)
   if (g_pstat != NULL) {
     free(g_pstat);
   }
+#else
+  memset(g_pstat, 0, sizeof(g_pstat));
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+void
+oc_sec_pstat_init_for_devices(size_t num_device)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  g_pstat = (oc_sec_pstat_t *)calloc(num_device, sizeof(oc_sec_pstat_t));
+  if (!g_pstat) {
+    oc_abort("Insufficient memory");
+  }
+#else
+  (void)num_device;
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
@@ -75,11 +90,7 @@ void
 oc_sec_pstat_init(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  g_pstat =
-    (oc_sec_pstat_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_pstat_t));
-  if (!g_pstat) {
-    oc_abort("Insufficient memory");
-  }
+  oc_sec_pstat_init_for_devices(oc_core_get_num_devices());
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
@@ -154,7 +165,8 @@ delayed_reset(void *data)
 bool
 oc_reset_in_progress(size_t device)
 {
-  return  g_pstat[device].reset_in_progress || oc_has_delayed_callback((void *)device, delayed_reset, false);
+  return g_pstat[device].reset_in_progress ||
+         oc_has_delayed_callback((void *)device, delayed_reset, false);
 }
 
 static bool
@@ -449,6 +461,7 @@ oc_sec_pstat_copy(oc_sec_pstat_t *dst, const oc_sec_pstat_t *src)
   dst->tm = src->tm;
   dst->om = src->om;
   dst->sm = src->sm;
+  dst->reset_in_progress = src->reset_in_progress;
   memcpy(&dst->rowneruuid.id, src->rowneruuid.id, sizeof(src->rowneruuid.id));
 }
 

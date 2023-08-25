@@ -40,6 +40,13 @@ void oc_reset_devices_in_RFOTM(void);
  */
 bool oc_reset_in_progress(size_t device);
 
+/**
+ * @brief Initialize pstat for num devices.
+ *
+ * @param[in] num_device the number of devices
+ */
+void oc_sec_pstat_init_for_devices(size_t num_device);
+
 #ifdef __cplusplus
 }
 #endif

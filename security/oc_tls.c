@@ -358,12 +358,6 @@ oc_tls_free_invalid_peer(oc_tls_peer_t *peer)
 
   oc_list_remove(g_tls_peers, peer);
 
-  size_t device = peer->endpoint.device;
-  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
-  if (pstat->s == OC_DOS_RFOTM) {
-    oc_reset_device_v1(device, false);
-  }
-
   oc_ri_remove_timed_event_callback(peer, oc_dtls_inactive);
 
   mbedtls_ssl_free(&peer->ssl_ctx);
@@ -438,7 +432,9 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb, bool reset)
 
   size_t device = peer->endpoint.device;
   const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
-  if (pstat->s == OC_DOS_RFOTM && !reset) {
+  // Reset the device when the device onboarding connection
+  // has been closed and the device state is RFOTM.
+  if (peer->doc && pstat->s == OC_DOS_RFOTM && !reset) {
     oc_reset_device_v1(device, false);
   }
 
