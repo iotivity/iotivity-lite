@@ -40,7 +40,7 @@
 #include "security/oc_doxm_internal.h"
 #include "security/oc_entropy_internal.h"
 #include "security/oc_pki_internal.h"
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #include "security/oc_roles_internal.h"
 #include "security/oc_security_internal.h"
 #include "util/oc_features.h"

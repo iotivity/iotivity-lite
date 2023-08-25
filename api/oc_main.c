@@ -43,7 +43,6 @@
 #include "security/oc_ael.h"
 #include "security/oc_cred_internal.h"
 #include "security/oc_doxm_internal.h"
-#include "security/oc_pstat.h"
 #include "security/oc_pstat_internal.h"
 #include "security/oc_sp_internal.h"
 #include "security/oc_svr_internal.h"

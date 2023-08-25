@@ -21,7 +21,7 @@
 
 #include "oc_ri.h"
 #include "oc_uuid.h"
-#include "oc_pstat.h"
+#include "oc_pstat_internal.h"
 
 #ifdef __cplusplus
 extern "C" {

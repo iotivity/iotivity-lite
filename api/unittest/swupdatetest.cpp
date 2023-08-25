@@ -43,7 +43,7 @@
 #endif /* OC_HAS_FEATURE_PUSH */
 
 #ifdef OC_SECURITY
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #endif /* OC_SECURITY */
 
 #include <algorithm>

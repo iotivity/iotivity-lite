@@ -48,7 +48,7 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_doxm_internal.h"
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #include "security/oc_roles_internal.h"
 #include "security/oc_sdi_internal.h"
 #include "security/oc_sp_internal.h"

@@ -33,7 +33,6 @@
 #include "port/oc_clock.h"
 #include "port/oc_log_internal.h"
 #include "port/oc_random.h"
-#include "security/oc_pstat.h"
 #include "security/oc_pstat_internal.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/Endpoint.h"

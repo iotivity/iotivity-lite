@@ -27,7 +27,7 @@
 #include "oc_uuid.h"
 #include "port/oc_log_internal.h"
 #include "security/oc_doxm_internal.h"
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #include "security/oc_sdi_internal.h"
 #include "util/oc_features.h"
 

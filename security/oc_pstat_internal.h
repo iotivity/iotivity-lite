@@ -19,12 +19,65 @@
 #ifndef OC_PSTAT_INTERNAL_H
 #define OC_PSTAT_INTERNAL_H
 
+#include "oc_ri.h"
+
 #include <stddef.h>
 #include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef enum {
+  OC_DOS_RESET = 0,
+  OC_DOS_RFOTM,
+  OC_DOS_RFPRO,
+  OC_DOS_RFNOP,
+  OC_DOS_SRESET
+} oc_dostype_t;
+
+typedef enum {
+  OC_DPM_SVV = 64,
+  OC_DPM_SSV = 128,
+  OC_DPM_NSA = 256
+} oc_dpmtype_t;
+
+typedef struct
+{
+  oc_dostype_t s;         ///< Device Onboarding State
+  bool p;                 ///< Pending state
+  bool isop;              ///< Is Device Operational oc_dpmtype_t cm;
+  oc_dpmtype_t cm;        ///< Current Mode
+  oc_dpmtype_t tm;        ///< Target Mode
+  int om;                 ///< Operational Mode
+  int sm;                 ///< Supported Mode
+  oc_uuid_t rowneruuid;   ///< Resource Owner ID
+  bool reset_in_progress; ///< Reset in progress runtime flag
+} oc_sec_pstat_t;
+
+void oc_sec_pstat_init(void);
+void oc_sec_pstat_free(void);
+bool oc_sec_is_operational(size_t device);
+bool oc_sec_decode_pstat(const oc_rep_t *rep, bool from_storage, size_t device);
+void oc_sec_encode_pstat(size_t device, oc_interface_mask_t iface_mask,
+                         bool to_storage);
+
+oc_sec_pstat_t *oc_sec_get_pstat(size_t device);
+void oc_sec_pstat_default(size_t device);
+void oc_sec_pstat_copy(oc_sec_pstat_t *dst, const oc_sec_pstat_t *src);
+void oc_sec_pstat_clear(oc_sec_pstat_t *pstat);
+
+void get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
+               void *data);
+void post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
+                void *data);
+
+#ifdef OC_SOFTWARE_UPDATE
+
+void oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm);
+oc_dpmtype_t oc_sec_pstat_current_mode(size_t device);
+
+#endif /* OC_SOFTWARE_UPDATE */
 
 /**
  * @brief Reset all devices in RFOTM state for shutdown.

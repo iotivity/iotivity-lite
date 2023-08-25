@@ -28,7 +28,7 @@
 #include "oc_uuid.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "port/oc_log_internal.h"
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #include "security/oc_svr_internal.h"
 #include "security/oc_tls_internal.h"
 #include "tests/gtest/Device.h"

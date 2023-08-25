@@ -18,7 +18,6 @@
 
 #ifdef OC_SECURITY
 
-#include "oc_pstat.h"
 #include "oc_pstat_internal.h"
 #include "api/oc_buffer_internal.h"
 #include "api/oc_main_internal.h"

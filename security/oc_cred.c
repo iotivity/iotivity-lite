@@ -32,7 +32,7 @@
 #include "security/oc_certs_internal.h"
 #include "security/oc_doxm_internal.h"
 #include "security/oc_keypair_internal.h"
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #include "security/oc_roles_internal.h"
 #include "security/oc_tls_internal.h"
 #include "util/oc_list.h"

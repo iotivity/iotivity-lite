@@ -36,7 +36,7 @@
 #endif /* OC_CLIENT */
 
 #ifdef OC_SECURITY
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #include "security/oc_sdi_internal.h"
 #include "security/oc_tls_internal.h"
 #ifdef OC_RES_BATCH_SUPPORT

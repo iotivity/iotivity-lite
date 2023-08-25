@@ -28,7 +28,7 @@
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"
 #include "oc_doxm_internal.h"
-#include "oc_pstat.h"
+#include "oc_pstat_internal.h"
 #include "oc_rep.h"
 #include "oc_roles_internal.h"
 #include "oc_store.h"

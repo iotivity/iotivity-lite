@@ -28,7 +28,7 @@
 #include "port/oc_network_event_handler_internal.h"
 #include "port/oc_storage.h"
 #include "port/oc_storage_internal.h"
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #include "security/oc_svr_internal.h"
 
 #ifdef OC_SOFTWARE_UPDATE
