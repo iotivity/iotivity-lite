@@ -390,6 +390,7 @@ public:
 #ifdef OC_PKI
     oc_pki_set_verify_certificate_cb(nullptr);
 #endif /* OC_PKI */
+    oc_tls_close_peers(nullptr, nullptr);
     oc_reset_device_v1(device, true);
     // need to wait for closing of TLS sessions
     oc::TestDevice::PoolEventsMs(200);

@@ -154,7 +154,7 @@ delayed_reset(void *data)
 bool
 oc_reset_in_progress(size_t device)
 {
-  return oc_has_delayed_callback((void *)device, delayed_reset, false);
+  return  g_pstat[device].reset_in_progress || oc_has_delayed_callback((void *)device, delayed_reset, false);
 }
 
 static bool
@@ -258,6 +258,13 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
   OC_DBG("oc_pstat: Entering pstat_handle_state");
   switch (ps->s) {
   case OC_DOS_RESET: {
+    // reset is in progress
+    if (g_pstat[device].reset_in_progress) {
+      OC_DBG("oc_pstat: reset in progress");
+      return false;
+    }
+    g_pstat[device].reset_in_progress = true;
+    oc_remove_delayed_callback((void *)device, delayed_reset);
     ps->p = true;
     ps->isop = false;
     ps->cm = 1;
@@ -265,9 +272,13 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     ps->om = 3;
     ps->sm = 4;
 
-    oc_remove_delayed_callback((void *)device, delayed_reset);
-
     memset(ps->rowneruuid.id, 0, sizeof(ps->rowneruuid.id));
+#if defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_CLOUD)
+    cloud_reset(device, true, false, 0);
+    // TODO: we can allow async mode, but handling of OC_DOS_RESET that follows
+    // the reset call must be invoked asynchronously in a callback after
+    // cloud_reset finishes. Otherwise the cloud_reset won't execute correctly.
+#endif /* OC_SERVER && OC_CLIENT && OC_CLOUD */
     oc_sec_doxm_default(device);
     oc_sec_cred_default(device);
     oc_sec_acl_default(device);
@@ -292,6 +303,8 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     oc_sec_free_roles_for_device(device);
     // regenerate the key-pair for the identity device certificate.
     if (oc_sec_ecdsa_reset_keypair(device, true) < 0) {
+      oc_remove_delayed_callback((void *)device, delayed_reset);
+      g_pstat[device].reset_in_progress = false;
       goto pstat_state_error;
     }
 #endif /* OC_PKI */
@@ -316,6 +329,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
       }
       OC_DBG("ERROR in RFOTM\n");
 #endif /* OC_DBG_IS_ENABLED */
+      g_pstat[device].reset_in_progress = false;
       goto pstat_state_error;
     }
 
@@ -333,6 +347,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
 
     coap_set_global_status_code(COAP_NO_ERROR);
     ps->p = false;
+    g_pstat[device].reset_in_progress = false;
   } break;
   case OC_DOS_RFPRO: {
     ps->p = true;
@@ -668,7 +683,7 @@ set_delayed_reset(size_t device)
     return false;
   }
 #if defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_CLOUD)
-  cloud_reset(device, true, 0);
+  cloud_reset(device, false, true, 0);
   // TODO: we can allow async mode, but handling of OC_DOS_RESET that follows
   // the reset call must be invoked asynchronously in a callback after
   // cloud_reset finishes. Otherwise the cloud_reset won't execute correctly.

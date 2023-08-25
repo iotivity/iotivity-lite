@@ -111,7 +111,7 @@ cloud_close_endpoint(const oc_endpoint_t *cloud_ep)
 }
 
 int
-cloud_reset(size_t device, bool sync, uint16_t timeout)
+cloud_reset(size_t device, bool force, bool sync, uint16_t timeout)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(device);
   if (ctx == NULL) {
@@ -120,13 +120,14 @@ cloud_reset(size_t device, bool sync, uint16_t timeout)
   OC_CLOUD_DBG("cloud_reset");
 
 #ifdef OC_SECURITY
-  if (oc_tls_connected(ctx->cloud_ep) &&
+  if (!force && oc_tls_connected(ctx->cloud_ep) &&
       cloud_deregister_on_reset(ctx, sync, timeout)) {
     return 0;
   }
 #else  /* !OC_SECURITY */
   (void)timeout;
   (void)sync;
+  (void)force;
 #endif /* OC_SECURITY */
 
   cloud_context_clear(ctx);
@@ -203,7 +204,7 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
 {
   if (data->ci_server_len == 0) {
     OC_CLOUD_DBG("got forced deregister via provisioning of empty cis");
-    if (cloud_reset(ctx->device, false, CLOUD_DEREGISTER_TIMEOUT) != 0) {
+    if (cloud_reset(ctx->device, false, false, CLOUD_DEREGISTER_TIMEOUT) != 0) {
       OC_CLOUD_DBG("reset failed");
     }
     return;

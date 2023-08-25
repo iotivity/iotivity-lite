@@ -41,14 +41,15 @@ typedef enum {
 
 typedef struct
 {
-  oc_dostype_t s;       ///< Device Onboarding State
-  bool p;               ///< Pending state
-  bool isop;            ///< Is Device Operational oc_dpmtype_t cm;
-  oc_dpmtype_t cm;      ///< Current Mode
-  oc_dpmtype_t tm;      ///< Target Mode
-  int om;               ///< Operational Mode
-  int sm;               ///< Supported Mode
-  oc_uuid_t rowneruuid; ///< Resource Owner ID
+  oc_dostype_t s;         ///< Device Onboarding State
+  bool p;                 ///< Pending state
+  bool isop;              ///< Is Device Operational oc_dpmtype_t cm;
+  oc_dpmtype_t cm;        ///< Current Mode
+  oc_dpmtype_t tm;        ///< Target Mode
+  int om;                 ///< Operational Mode
+  int sm;                 ///< Supported Mode
+  oc_uuid_t rowneruuid;   ///< Resource Owner ID
+  bool reset_in_progress; ///< Reset in progress runtime flag
 } oc_sec_pstat_t;
 
 void oc_sec_pstat_init(void);
