@@ -33,6 +33,7 @@
 static oc_logger_t g_logger = {
   .fn = NULL,
   .level = OC_LOG_LEVEL_INFO,
+  .components = OC_LOG_COMPONENT_ALL, // enable all by default
 };
 
 oc_logger_t *
@@ -77,6 +78,12 @@ oc_log_level_to_label(oc_log_level_t level)
   return "";
 }
 
+void
+oc_log_set_components(uint32_t components)
+{
+  OC_ATOMIC_STORE32(g_logger.components, components);
+}
+
 const char *
 oc_log_component_name(oc_log_component_t component)
 {
@@ -87,6 +94,8 @@ oc_log_component_name(oc_log_component_t component)
   case OC_LOG_COMPONENT_CLOUD:
     return "cloud";
 #endif /* OC_CLOUD */
+  case OC_LOG_COMPONENT_COAP:
+    return "coap";
   }
   return "";
 }

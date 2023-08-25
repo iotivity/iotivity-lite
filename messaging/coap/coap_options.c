@@ -48,9 +48,9 @@
  * This file is part of the Contiki operating system.
  */
 
+#include "coap_log.h"
 #include "coap_options.h"
 #include "messaging/coap/constants.h"
-#include "port/oc_log_internal.h"
 #include "util/oc_macros_internal.h"
 
 #include <assert.h>
@@ -380,11 +380,11 @@ coap_options_set_block1(coap_packet_t *packet, uint32_t num, uint8_t more,
                         uint16_t size, uint32_t offset)
 {
   if (num > 0x0FFFFF) {
-    OC_ERR("Block1 number(%" PRIu32 ") too large", num);
+    COAP_ERR("Block1 number(%" PRIu32 ") too large", num);
     return false;
   }
   if (size < 16 || size > 2048) {
-    OC_ERR("Block1 size(%" PRIu16 ") not supported", size);
+    COAP_ERR("Block1 size(%" PRIu16 ") not supported", size);
     return false;
   }
   packet->block1_num = num;
@@ -423,11 +423,11 @@ coap_options_set_block2(coap_packet_t *packet, uint32_t num, uint8_t more,
                         uint16_t size, uint32_t offset)
 {
   if (num > 0x0FFFFF) {
-    OC_ERR("Block2 number(%" PRIu32 ") too large", num);
+    COAP_ERR("Block2 number(%" PRIu32 ") too large", num);
     return false;
   }
   if (size < 16 || size > 2048) {
-    OC_ERR("Block2 size(%" PRIu16 ") not supported", size);
+    COAP_ERR("Block2 size(%" PRIu16 ") not supported", size);
     return false;
   }
   packet->block2_num = num;

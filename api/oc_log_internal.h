@@ -39,12 +39,18 @@ extern "C" {
 
 typedef struct oc_logger_t
 {
-  oc_print_log_fn_t fn;   ///< logging function
-  OC_ATOMIC_INT8_T level; ///< mask of enabled log levels
+  oc_print_log_fn_t fn;          ///< logging function
+  OC_ATOMIC_INT8_T level;        ///< mask of enabled log levels
+  OC_ATOMIC_UINT32_T components; ///< mask of enabled log components
 } oc_logger_t;
+
+#define OC_LOG_COMPONENT_ALL (0xFFFFFFFF)
 
 /** Get global logger */
 oc_logger_t *oc_log_get_logger(void);
+
+/** Set globally enabled log components */
+void oc_log_set_components(uint32_t components);
 
 #ifdef __cplusplus
 }

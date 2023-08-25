@@ -18,6 +18,7 @@
 
 #include "api/oc_buffer_internal.h"
 #include "api/oc_helpers_internal.h"
+#include "coap_log.h"
 #include "coap_signal.h"
 #include "coap.h"
 #include "transactions.h"
@@ -36,7 +37,7 @@ coap_send_signal_message(const oc_endpoint_t *endpoint, coap_packet_t *packet)
 {
   oc_message_t *message = oc_message_allocate_outgoing();
   if (!message) {
-    OC_ERR("message alloc failed.");
+    COAP_ERR("message alloc failed.");
     return 0;
   }
 
@@ -66,7 +67,7 @@ coap_send_csm_message(const oc_endpoint_t *endpoint, uint32_t max_message_size,
   if (blockwise_transfer_option) {
     if (!coap_signal_set_blockwise_transfer(csm_pkt,
                                             blockwise_transfer_option)) {
-      OC_ERR("coap_signal_set_blockwise_transfer failed");
+      COAP_ERR("coap_signal_set_blockwise_transfer failed");
       return 0;
     }
     // Add this line below to remain until we start supporting BERT
@@ -75,11 +76,11 @@ coap_send_csm_message(const oc_endpoint_t *endpoint, uint32_t max_message_size,
 #endif /* OC_BLOCK_WISE */
 
   if (!coap_signal_set_max_msg_size(csm_pkt, max_message_size)) {
-    OC_ERR("coap_signal_set_max_msg_size failed");
+    COAP_ERR("coap_signal_set_max_msg_size failed");
     return 0;
   }
 
-  OC_DBG("send csm signal message.");
+  COAP_DBG("send csm signal message.");
   return coap_send_signal_message(endpoint, csm_pkt);
 }
 
@@ -97,7 +98,7 @@ coap_send_ping_message(const oc_endpoint_t *endpoint, uint8_t custody_option,
 
   if (custody_option) {
     if (!coap_signal_set_custody(ping_pkt, custody_option)) {
-      OC_ERR("coap_signal_set_custody failed");
+      COAP_ERR("coap_signal_set_custody failed");
       return 0;
     }
   }
@@ -109,7 +110,7 @@ coap_send_ping_message(const oc_endpoint_t *endpoint, uint8_t custody_option,
   t->message->length = coap_serialize_message(ping_pkt, t->message->data,
                                               oc_message_buffer_size());
 
-  OC_DBG("send ping signal message.");
+  COAP_DBG("send ping signal message.");
   coap_send_transaction(t);
 
   return 1;
@@ -129,12 +130,12 @@ coap_send_pong_message(const oc_endpoint_t *endpoint,
 
   if (packet->custody) {
     if (!coap_signal_set_custody(&pong_pkt, packet->custody)) {
-      OC_ERR("coap_signal_set_custody failed");
+      COAP_ERR("coap_signal_set_custody failed");
       return 0;
     }
   }
 
-  OC_DBG("send pong signal message.");
+  COAP_DBG("send pong signal message.");
   return coap_send_signal_message(endpoint, &pong_pkt);
 }
 
@@ -152,19 +153,19 @@ coap_send_release_message(const oc_endpoint_t *endpoint, const char *alt_addr,
 
   if (alt_addr && alt_addr_len > 0) {
     if (!coap_signal_set_alt_addr(release_pkt, alt_addr, alt_addr_len)) {
-      OC_ERR("coap_signal_set_alt_addr failed");
+      COAP_ERR("coap_signal_set_alt_addr failed");
       return 0;
     }
   }
 
   if (hold_off > 0) {
     if (!coap_signal_set_hold_off(release_pkt, hold_off)) {
-      OC_ERR("coap_signal_set_hold_off failed");
+      COAP_ERR("coap_signal_set_hold_off failed");
       return 0;
     }
   }
 
-  OC_DBG("send release signal message.");
+  COAP_DBG("send release signal message.");
   return coap_send_signal_message(endpoint, release_pkt);
 }
 
@@ -182,19 +183,19 @@ coap_send_abort_message(const oc_endpoint_t *endpoint, uint16_t opt,
 
   if (opt != 0) {
     if (!coap_signal_set_bad_csm(abort_pkt, opt)) {
-      OC_ERR("coap_signal_set_bad_csm failed");
+      COAP_ERR("coap_signal_set_bad_csm failed");
       return 0;
     }
   }
 
   if (diagnostic && diagnostic_len > 0) {
     if (!coap_set_payload(abort_pkt, (uint8_t *)diagnostic, diagnostic_len)) {
-      OC_ERR("coap_set_payload failed");
+      COAP_ERR("coap_set_payload failed");
       return 0;
     }
   }
 
-  OC_DBG("send abort signal message.");
+  COAP_DBG("send abort signal message.");
   return coap_send_signal_message(endpoint, abort_pkt);
 }
 
@@ -214,7 +215,7 @@ int
 handle_coap_signal_message(const coap_packet_t *packet,
                            const oc_endpoint_t *endpoint)
 {
-  OC_DBG("Coap signal message received.(code: %d)", packet->code);
+  COAP_DBG("Coap signal message received.(code: %d)", packet->code);
   if (packet->code == CSM_7_01) {
     tcp_csm_state_t state = oc_tcp_get_csm_state(endpoint);
     if (state == CSM_DONE) {
@@ -227,18 +228,18 @@ handle_coap_signal_message(const coap_packet_t *packet,
   } else if (packet->code == PING_7_02) {
     coap_send_pong_message(endpoint, packet);
   } else if (packet->code == PONG_7_03) {
-    OC_DBG("Find client cb using token :");
-    OC_DBG("  [%02X%02X%02X%02X%02X%02X%02X%02X]", packet->token[0],
-           packet->token[1], packet->token[2], packet->token[3],
-           packet->token[4], packet->token[5], packet->token[6],
-           packet->token[7]);
+    COAP_DBG("Find client cb using token :");
+    COAP_DBG("  [%02X%02X%02X%02X%02X%02X%02X%02X]", packet->token[0],
+             packet->token[1], packet->token[2], packet->token[3],
+             packet->token[4], packet->token[5], packet->token[6],
+             packet->token[7]);
   } else if (packet->code == RELEASE_7_04) {
     // alternative address
     // hold off
     oc_connectivity_end_session(endpoint);
   } else if (packet->code == ABORT_7_05) {
-    OC_WRN("Peer aborted! [code: %d(diagnostic: %*.s)]", packet->bad_csm_opt,
-           (int)packet->payload_len, (char *)packet->payload);
+    COAP_WRN("Peer aborted! [code: %d(diagnostic: %*.s)]", packet->bad_csm_opt,
+             (int)packet->payload_len, (char *)packet->payload);
   }
 
   return COAP_NO_ERROR;
