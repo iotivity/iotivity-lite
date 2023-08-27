@@ -158,6 +158,14 @@ coap_receive_status_t coap_receive(coap_receive_ctx_t *ctx,
  */
 bool oc_coap_check_if_duplicate(uint16_t mid, uint32_t device);
 
+/**
+ * @brief Clear request history for all devices.
+ *
+ * @return true
+ * @return false
+ */
+void oc_coap_clear_request_history(void);
+
 #endif /* OC_REQUEST_HISTORY */
 
 #ifdef __cplusplus

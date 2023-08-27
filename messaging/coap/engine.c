@@ -100,6 +100,14 @@ static uint16_t g_history[OC_REQUEST_HISTORY_SIZE];
 static uint32_t g_history_dev[OC_REQUEST_HISTORY_SIZE];
 static uint8_t g_idx = 0;
 
+void
+oc_coap_clear_request_history(void)
+{
+  memset(g_history, 0, sizeof(g_history));
+  memset(g_history_dev, 0, sizeof(g_history_dev));
+  g_idx = 0;
+}
+
 bool
 oc_coap_check_if_duplicate(uint16_t mid, uint32_t device)
 {
