@@ -57,8 +57,9 @@ protected:
     oc_main_init(&handler);
     oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
     while (ep) {
-      if (ep->flags & TCP && !(ep->flags & SECURED) && ep->flags & IPV4)
+      if ((ep->flags & TCP) && !(ep->flags & SECURED) && (ep->flags & IPV4)) {
         break;
+      }
       ep = ep->next;
     }
     ASSERT_NE(nullptr, ep);
