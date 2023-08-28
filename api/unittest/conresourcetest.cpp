@@ -33,6 +33,8 @@
 #include <optional>
 #include <string>
 
+using namespace std::chrono_literals;
+
 static constexpr size_t kDeviceID{ 0 };
 
 static constexpr std::string_view kDeviceName{ "Test Device 1" };
@@ -150,10 +152,11 @@ template<oc_status_t CODE>
 static std::optional<ConResourceData>
 getRequest(const std::string &query)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  if (ep == nullptr) {
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  if (!epOpt.has_value()) {
     return {};
   }
+  auto ep = std::move(*epOpt);
 
   ConResourceData crd{};
   auto get_handler = [](oc_client_response_t *data) {
@@ -164,9 +167,11 @@ getRequest(const std::string &query)
       TestConResourceWithDevice::decodePayload(data->payload);
   };
 
-  EXPECT_TRUE(
-    oc_do_get(OC_CON_URI, ep, query.c_str(), get_handler, HIGH_QOS, &crd));
-  oc::TestDevice::PoolEvents(5);
+  auto timeout = 1s;
+  EXPECT_TRUE(oc_do_get_with_timeout(OC_CON_URI, &ep, query.c_str(),
+                                     timeout.count(), get_handler, HIGH_QOS,
+                                     &crd));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   return crd;
 }
 
@@ -198,8 +203,9 @@ template<oc_status_t CODE>
 static void
 updateRequest(oc_method_t method, const std::function<void()> &payloadFn)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto post_handler = [](oc_client_response_t *data) {
     EXPECT_EQ(CODE, data->code);
@@ -211,21 +217,22 @@ updateRequest(oc_method_t method, const std::function<void()> &payloadFn)
   bool invoked = false;
   if (method == OC_POST) {
     ASSERT_TRUE(
-      oc_init_post(OC_CON_URI, ep, nullptr, post_handler, HIGH_QOS, &invoked));
+      oc_init_post(OC_CON_URI, &ep, nullptr, post_handler, HIGH_QOS, &invoked));
   } else {
     ASSERT_TRUE(
-      oc_init_put(OC_CON_URI, ep, nullptr, post_handler, HIGH_QOS, &invoked));
+      oc_init_put(OC_CON_URI, &ep, nullptr, post_handler, HIGH_QOS, &invoked));
   }
 
   payloadFn();
 
+  auto timeout = 1s;
   if (method == OC_POST) {
-    ASSERT_TRUE(oc_do_post());
+    ASSERT_TRUE(oc_do_post_with_timeout(timeout.count()));
   } else {
-    ASSERT_TRUE(oc_do_put());
+    ASSERT_TRUE(oc_do_put_with_timeout(timeout.count()));
   }
 
-  oc::TestDevice::PoolEvents(5);
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   ASSERT_TRUE(invoked);
 }
 
@@ -362,12 +369,13 @@ TEST_F(TestConResourceWithDevice, PutRequest_FailDisabledLocation)
 
 TEST_F(TestConResourceWithDevice, DeleteRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 #ifdef OC_SECURITY
   oc_status_t code = OC_STATUS_UNAUTHORIZED;
 #else  /* !OC_SECURITY */
   oc_status_t code = OC_STATUS_METHOD_NOT_ALLOWED;
 #endif /* OC_SECURITY */
-  oc::testNotSupportedMethod(OC_DELETE, ep, OC_CON_URI, nullptr, code);
+  oc::testNotSupportedMethod(OC_DELETE, &ep, OC_CON_URI, nullptr, code);
 }

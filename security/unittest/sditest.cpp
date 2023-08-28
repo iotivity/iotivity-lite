@@ -40,6 +40,8 @@
 #include <gtest/gtest.h>
 #include <string>
 
+using namespace std::chrono_literals;
+
 static const std::string testStorage{ "storage_test" };
 
 class TestSdi : public testing::Test {
@@ -238,9 +240,9 @@ TEST_F(TestSdiWithServer, GetResourceByURI)
 
 TEST_F(TestSdiWithServer, GetRequest)
 {
-  // get insecure connection to the testing device
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto get_handler = [](oc_client_response_t *data) {
     EXPECT_EQ(OC_STATUS_OK, data->code);
@@ -251,10 +253,12 @@ TEST_F(TestSdiWithServer, GetRequest)
                                              /*from_storage*/ false, sdi));
   };
 
+  auto timeout = 1s;
   oc_sec_sdi_t sdi{};
-  EXPECT_TRUE(oc_do_get(OCF_SEC_SDI_URI, ep, "if=" OC_IF_BASELINE_STR,
-                        get_handler, HIGH_QOS, &sdi));
-  oc::TestDevice::PoolEvents(5);
+  EXPECT_TRUE(oc_do_get_with_timeout(OCF_SEC_SDI_URI, &ep,
+                                     "if=" OC_IF_BASELINE_STR, timeout.count(),
+                                     get_handler, HIGH_QOS, &sdi));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
 
   oc_sec_sdi_t *s = oc_sec_sdi_get(kDeviceID);
   ASSERT_NE(nullptr, s);
@@ -263,8 +267,9 @@ TEST_F(TestSdiWithServer, GetRequest)
 
 TEST_F(TestSdiWithServer, PostRequest)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto post_handler = [](oc_client_response_t *data) {
     EXPECT_EQ(OC_STATUS_CHANGED, data->code);
@@ -276,16 +281,17 @@ TEST_F(TestSdiWithServer, PostRequest)
   };
 
   bool invoked = false;
-  ASSERT_TRUE(oc_init_post(OCF_SEC_SDI_URI, ep, nullptr, post_handler, HIGH_QOS,
-                           &invoked));
+  ASSERT_TRUE(oc_init_post(OCF_SEC_SDI_URI, &ep, nullptr, post_handler,
+                           HIGH_QOS, &invoked));
 
   oc_sec_sdi_t sdi_new{};
   TestSdi::createSdi(true, "new sdi name", sdi_new);
   oc_sec_sdi_encode_with_resource(&sdi_new, /*sdi_res*/ nullptr,
                                   static_cast<oc_interface_mask_t>(0));
 
-  EXPECT_TRUE(oc_do_post());
-  oc::TestDevice::PoolEvents(5);
+  auto timeout = 1s;
+  EXPECT_TRUE(oc_do_post_with_timeout(timeout.count()));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
 
   EXPECT_TRUE(invoked);
   TestSdi::expectEqual(*oc_sec_sdi_get(kDeviceID), sdi_new);
@@ -295,22 +301,24 @@ TEST_F(TestSdiWithServer, PostRequest)
 
 TEST_F(TestSdiWithServer, PutRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto encode_payload = []() {
     oc_sec_sdi_t sdi_new{};
     oc_sec_sdi_encode_with_resource(&sdi_new, /*sdi_res*/ nullptr,
                                     static_cast<oc_interface_mask_t>(0));
   };
-  oc::testNotSupportedMethod(OC_PUT, ep, OCF_SEC_SDI_URI, encode_payload);
+  oc::testNotSupportedMethod(OC_PUT, &ep, OCF_SEC_SDI_URI, encode_payload);
 }
 
 TEST_F(TestSdiWithServer, DeleteRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
-  oc::testNotSupportedMethod(OC_DELETE, ep, OCF_SEC_SDI_URI);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+  oc::testNotSupportedMethod(OC_DELETE, &ep, OCF_SEC_SDI_URI);
 }
 
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */

@@ -37,6 +37,8 @@
 #include <stdio.h>
 #include <string>
 
+using namespace std::chrono_literals;
+
 static const std::string kDeviceURI{ "/oic/d" };
 static const std::string kDeviceType{ "oic.d.light" };
 static const std::string kDeviceName{ "Table Lamp" };
@@ -208,10 +210,10 @@ public:
     std::vector<oc::DynamicResourceToAdd> dynResources = {
       oc::makeDynamicResourceToAdd(
         "Dynamic Device 1", "/dyn1", { "oic.d.dynamic", "oic.d.test" },
-        { OC_IF_BASELINE, OC_IF_R }, handlers, false),
+        { OC_IF_BASELINE, OC_IF_R }, handlers, OC_SECURE),
       oc::makeDynamicResourceToAdd(
         "Dynamic Device 2", "/dyn2", { "oic.d.dynamic", "oic.d.test" },
-        { OC_IF_BASELINE, OC_IF_RW }, handlers, false),
+        { OC_IF_BASELINE, OC_IF_RW }, handlers, OC_SECURE),
     };
     size_t device = 0;
     for (const auto &dr : dynResources) {
@@ -475,8 +477,9 @@ TEST_F(TestCoreResourceWithDevice, BindDeviceResourceType_F)
 
 TEST_F(TestCoreResourceWithDevice, BindDeviceResourceType_P)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDevice1ID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDevice1ID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto get_handler = [](oc_client_response_t *data) {
     ASSERT_EQ(OC_STATUS_OK, data->code);
@@ -490,10 +493,12 @@ TEST_F(TestCoreResourceWithDevice, BindDeviceResourceType_P)
     oc::TestDevice::Terminate();
   };
 
+  auto timeout = 1s;
   std::vector<std::string> rts;
-  EXPECT_TRUE(
-    oc_do_get("/oic/d", ep, "if=oic.if.baseline", get_handler, HIGH_QOS, &rts));
-  oc::TestDevice::PoolEvents(5);
+  EXPECT_TRUE(oc_do_get_with_timeout("/oic/d", &ep, "if=oic.if.baseline",
+                                     timeout.count(), get_handler, HIGH_QOS,
+                                     &rts));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   sort(rts.begin(), rts.end());
 
   std::vector<std::string> exp_rts{ "oic.wk.d", "oic.d.test1" };
@@ -519,10 +524,12 @@ TEST_F(TestCoreResourceWithDevice, BindDeviceResourceType_P)
   }
   sort(exp_rts.begin(), exp_rts.end());
 
+  timeout = 1s;
   rts.clear();
-  EXPECT_TRUE(
-    oc_do_get("/oic/d", ep, "if=oic.if.baseline", get_handler, HIGH_QOS, &rts));
-  oc::TestDevice::PoolEvents(5);
+  EXPECT_TRUE(oc_do_get_with_timeout("/oic/d", &ep, "if=oic.if.baseline",
+                                     timeout.count(), get_handler, HIGH_QOS,
+                                     &rts));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   sort(rts.begin(), rts.end());
   rts_equal(exp_rts, rts);
 }

@@ -833,7 +833,8 @@ process_batch_request(CborEncoder *links_array, const oc_endpoint_t *endpoint,
 {
   iterate_batch_response_data_t brd = { .links_array = links_array,
                                         .endpoint = endpoint };
-  oc_resources_iterate(device, true, discovery_iterate_batch_response, &brd);
+  oc_resources_iterate(device, true, true, true, true,
+                       discovery_iterate_batch_response, &brd);
 }
 
 #ifdef OC_HAS_FEATURE_ETAG
@@ -866,7 +867,8 @@ oc_discovery_get_batch_etag(const oc_endpoint_t *endpoint, size_t device)
     .endpoint = endpoint,
     .etag = OC_ETAG_UNINITIALIZED,
   };
-  oc_resources_iterate(device, true, discovery_iterate_get_batch_etag, &ged);
+  oc_resources_iterate(device, true, true, true, true,
+                       discovery_iterate_get_batch_etag, &ged);
   return ged.etag;
 }
 

@@ -814,7 +814,7 @@ oc_notify_observers_delayed_ticks(oc_resource_t *resource,
                                   oc_clock_time_t ticks)
 {
   assert(resource != NULL);
-  if (!coap_want_be_notified(resource)) {
+  if (!coap_resource_is_observed(resource)) {
     return;
   }
   oc_remove_delayed_callback(resource, &notify_observers_async);
@@ -843,9 +843,7 @@ notify_resource_changed(oc_resource_t *resource)
 #ifdef OC_HAS_FEATURE_ETAG
   oc_resource_update_etag(resource);
 #endif /* OC_HAS_FEATURE_ETAG */
-  if ((resource->properties & OC_OBSERVABLE) != 0) {
-    oc_notify_observers(resource);
-  }
+  oc_notify_observers(resource);
 }
 
 void
@@ -884,6 +882,28 @@ oc_notify_resource_changed_delayed_ms(oc_resource_t *resource,
   notify_resource_changed_delayed_ms(resource, milliseconds);
 }
 
+#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
+
+static oc_event_callback_retval_t
+notify_resource_added_or_deleted_dispatch_async(void *data)
+{
+  size_t device = (size_t)data;
+  oc_resource_t *discovery = oc_core_get_resource_by_index(OCF_RES, device);
+  if (discovery != NULL) {
+    // NOTE: order is important, notify_resource_changed must be executed before
+    // coap_process_discovery_batch_observers because it will update the ETag of
+    // the discovery resource; if the functions execute in the wrong order then
+    // the batch response will contain an out-of-date ETag
+    notify_resource_changed(discovery);
+  }
+#ifdef OC_RES_BATCH_SUPPORT
+  coap_process_discovery_batch_observers();
+#endif /* OC_RES_BATCH_SUPPORT */
+  return OC_EVENT_DONE;
+}
+
+#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
+
 void
 oc_notify_resource_added(oc_resource_t *resource)
 {
@@ -891,14 +911,15 @@ oc_notify_resource_added(oc_resource_t *resource)
   if (!oc_main_initialized()) {
     return;
   }
+
+  // dispatch must be delayed to avoid corrupting memory in case
+  // oc_notify_resource_added is invoked from a request handler
 #ifdef OC_RES_BATCH_SUPPORT
-  coap_notify_discovery_batch_observers(resource);
+  coap_add_discovery_batch_observer(resource, /*removed*/ false,
+                                    /*dispatch*/ false);
 #endif /* OC_RES_BATCH_SUPPORT */
-  oc_resource_t *discovery =
-    oc_core_get_resource_by_index(OCF_RES, resource->device);
-  if (discovery != NULL) {
-    notify_resource_changed_delayed_ms(discovery, 0);
-  }
+  oc_reset_delayed_callback((void *)resource->device,
+                            notify_resource_added_or_deleted_dispatch_async, 0);
 #else  /* !OC_DISCOVERY_RESOURCE_OBSERVABLE */
   (void)resource;
 #endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
@@ -912,15 +933,16 @@ oc_notify_resource_removed(oc_resource_t *resource)
     return;
   }
 
+  // dispatch must be delayed to avoid corrupting memory in case
+  // oc_notify_resource_removed is invoked from a request handler
 #ifdef OC_RES_BATCH_SUPPORT
-  coap_remove_discovery_batch_observers_by_resource(resource);
+  coap_remove_discovery_batch_observers(resource);
+  coap_add_discovery_batch_observer(resource, /*removed*/ true,
+                                    /*dispatch*/ false);
 #endif /* OC_RES_BATCH_SUPPORT */
+  oc_reset_delayed_callback((void *)resource->device,
+                            notify_resource_added_or_deleted_dispatch_async, 0);
 
-  oc_resource_t *discovery =
-    oc_core_get_resource_by_index(OCF_RES, resource->device);
-  if (discovery != NULL) {
-    notify_resource_changed_delayed_ms(discovery, 0);
-  }
 #else  /* !OC_DISCOVERY_RESOURCE_OBSERVABLE */
   (void)resource;
 #endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */

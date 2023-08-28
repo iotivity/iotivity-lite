@@ -142,8 +142,7 @@ TestETagWithServer::addDynamicResource(
   handlers.onGet = onRequest;
   handlers.onPost = onRequest;
   return oc::TestDevice::AddDynamicResource(
-    oc::makeDynamicResourceToAdd(name, uri, rts, ifaces, handlers, true),
-    device);
+    oc::makeDynamicResourceToAdd(name, uri, rts, ifaces, handlers), device);
 }
 
 void
@@ -465,8 +464,9 @@ getHandlerCheckCode(oc_client_response_t *data)
 TEST_F(TestETagWithServer, GetResourceWithETag)
 {
   // get insecure connection to the testing device
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID1, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID1);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   oc_resource_t *res = oc_core_get_resource_by_index(OCF_D, kDeviceID1);
   ASSERT_NE(nullptr, res);
@@ -475,7 +475,7 @@ TEST_F(TestETagWithServer, GetResourceWithETag)
   // send get request to the /oic/d resource
   bool invoked = false;
   auto timeout = 1s;
-  ASSERT_TRUE(oc_do_request(OC_GET, oc_string(res->uri), ep, nullptr,
+  ASSERT_TRUE(oc_do_request(OC_GET, oc_string(res->uri), &ep, nullptr,
                             timeout.count(), getHandlerCheckCode<OC_STATUS_OK>,
                             LOW_QOS, &invoked, nullptr, nullptr));
   oc::TestDevice::PoolEventsMsV1(timeout, true);
@@ -490,7 +490,7 @@ TEST_F(TestETagWithServer, GetResourceWithETag)
   };
   etag_t etag{};
   memcpy(etag.data(), &res->etag, sizeof(res->etag));
-  ASSERT_TRUE(oc_do_request(OC_GET, oc_string(res->uri), ep, nullptr,
+  ASSERT_TRUE(oc_do_request(OC_GET, oc_string(res->uri), &ep, nullptr,
                             timeout.count(),
                             getHandlerCheckCode<OC_STATUS_NOT_MODIFIED>,
                             LOW_QOS, &invoked, configure_req, &etag));
@@ -515,8 +515,9 @@ TEST_F(TestETagWithServer, GetResourceWithETagAndCustomBatchHandlerNoETag)
   // if etag is not set then no ETag will be sent in the response
 
   // get insecure connection to the testing device
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID1, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID1);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto getHandler = [](oc_client_response_t *data) {
     oc::TestDevice::Terminate();
@@ -528,7 +529,7 @@ TEST_F(TestETagWithServer, GetResourceWithETagAndCustomBatchHandlerNoETag)
 
   bool invoked = false;
   auto timeout = 1s;
-  ASSERT_TRUE(oc_do_request(OC_GET, oc_string(dyn->uri), ep, "if=" OC_IF_B_STR,
+  ASSERT_TRUE(oc_do_request(OC_GET, oc_string(dyn->uri), &ep, "if=" OC_IF_B_STR,
                             timeout.count(), getHandler, LOW_QOS, &invoked,
                             nullptr, nullptr));
   oc::TestDevice::PoolEventsMsV1(timeout, true);
@@ -574,8 +575,9 @@ TEST_F(TestETagWithServer, GetResourceWithETagAndCustomBatchHandler)
     kDeviceID1);
 
   // get insecure connection to the testing device
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID1, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID1);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto getHandler = [](oc_client_response_t *data) {
     oc::TestDevice::Terminate();
@@ -588,7 +590,7 @@ TEST_F(TestETagWithServer, GetResourceWithETagAndCustomBatchHandler)
 
   bool invoked = false;
   auto timeout = 1s;
-  ASSERT_TRUE(oc_do_request(OC_GET, oc_string(dyn->uri), ep, "if=" OC_IF_B_STR,
+  ASSERT_TRUE(oc_do_request(OC_GET, oc_string(dyn->uri), &ep, "if=" OC_IF_B_STR,
                             timeout.count(), getHandler, LOW_QOS, &invoked,
                             nullptr, nullptr));
   oc::TestDevice::PoolEventsMsV1(timeout, true);
@@ -606,7 +608,7 @@ TEST_F(TestETagWithServer, GetResourceWithETagAndCustomBatchHandler)
   auto configure_req = [](coap_packet_t *req, void *) {
     coap_options_set_etag(req, etag.data(), static_cast<uint8_t>(etag.size()));
   };
-  ASSERT_TRUE(oc_do_request(OC_GET, oc_string(dyn->uri), ep, "if=" OC_IF_B_STR,
+  ASSERT_TRUE(oc_do_request(OC_GET, oc_string(dyn->uri), &ep, "if=" OC_IF_B_STR,
                             timeout.count(), getHandlerWithETag, LOW_QOS,
                             &invoked, configure_req, nullptr));
   oc::TestDevice::PoolEventsMsV1(timeout, true);

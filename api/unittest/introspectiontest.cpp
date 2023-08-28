@@ -40,6 +40,8 @@
 #include <iterator>
 #include <vector>
 
+using namespace std::chrono_literals;
+
 constexpr size_t kDeviceID = 0;
 
 class TestIntrospectionWithServer : public testing::Test {
@@ -168,8 +170,9 @@ TEST_F(TestIntrospectionWithServer, GetURI_Fail)
 
 TEST_F(TestIntrospectionWithServer, GetRequest)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto get_handler = [](oc_client_response_t *data) {
     EXPECT_EQ(OC_STATUS_OK, data->code);
@@ -178,10 +181,12 @@ TEST_F(TestIntrospectionWithServer, GetRequest)
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
   };
 
+  auto timeout = 1s;
   bool invoked = false;
-  EXPECT_TRUE(oc_do_get(OC_INTROSPECTION_WK_URI, ep, "if=" OC_IF_BASELINE_STR,
-                        get_handler, HIGH_QOS, &invoked));
-  oc::TestDevice::PoolEvents(5);
+  EXPECT_TRUE(oc_do_get_with_timeout(OC_INTROSPECTION_WK_URI, &ep,
+                                     "if=" OC_IF_BASELINE_STR, timeout.count(),
+                                     get_handler, HIGH_QOS, &invoked));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   EXPECT_TRUE(invoked);
 }
 
@@ -192,8 +197,9 @@ TEST_F(TestIntrospectionWithServer, GetRequest)
 
 TEST_F(TestIntrospectionWithServer, GetDataRequest)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto get_handler = [](oc_client_response_t *data) {
     EXPECT_EQ(OC_STATUS_OK, data->code);
@@ -202,10 +208,12 @@ TEST_F(TestIntrospectionWithServer, GetDataRequest)
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
   };
 
+  auto timeout = 1s;
   bool invoked = false;
-  EXPECT_TRUE(oc_do_get(OC_INTROSPECTION_DATA_URI, ep, "if=" OC_IF_BASELINE_STR,
-                        get_handler, HIGH_QOS, &invoked));
-  oc::TestDevice::PoolEvents(5);
+  EXPECT_TRUE(oc_do_get_with_timeout(OC_INTROSPECTION_DATA_URI, &ep,
+                                     "if=" OC_IF_BASELINE_STR, timeout.count(),
+                                     get_handler, HIGH_QOS, &invoked));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   EXPECT_TRUE(invoked);
 }
 
@@ -216,8 +224,9 @@ TEST_F(TestIntrospectionWithServer, GetDataRequest_Fail)
   oc_set_min_app_data_size(idd_.size() - 1);
   startAndConfigureDevice();
 
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto get_handler = [](oc_client_response_t *data) {
     EXPECT_EQ(OC_STATUS_INTERNAL_SERVER_ERROR, data->code);
@@ -226,10 +235,12 @@ TEST_F(TestIntrospectionWithServer, GetDataRequest_Fail)
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
   };
 
+  auto timeout = 1s;
   bool invoked = false;
-  EXPECT_TRUE(oc_do_get(OC_INTROSPECTION_DATA_URI, ep, nullptr, get_handler,
-                        HIGH_QOS, &invoked));
-  oc::TestDevice::PoolEvents(5);
+  EXPECT_TRUE(oc_do_get_with_timeout(OC_INTROSPECTION_DATA_URI, &ep, nullptr,
+                                     timeout.count(), get_handler, HIGH_QOS,
+                                     &invoked));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   EXPECT_TRUE(invoked);
 
   oc::TestDevice::StopServer();
@@ -242,16 +253,18 @@ TEST_F(TestIntrospectionWithServer, GetDataRequest_Fail)
 
 TEST_F(TestIntrospectionWithServer, PostRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
-  oc::testNotSupportedMethod(OC_POST, ep, OC_INTROSPECTION_WK_URI, nullptr,
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+  oc::testNotSupportedMethod(OC_POST, &ep, OC_INTROSPECTION_WK_URI, nullptr,
                              OC_STATUS_FORBIDDEN);
 }
 
 TEST_F(TestIntrospectionWithServer, PostDataRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 #ifdef OC_SECURITY
   // introspection data is a not secured resource, but the request handler will
   // fail authorization
@@ -259,22 +272,24 @@ TEST_F(TestIntrospectionWithServer, PostDataRequest_FailMethodNotSupported)
 #else  /* !OC_SECURITY */
   oc_status_t code = OC_STATUS_METHOD_NOT_ALLOWED;
 #endif /* OC_SECURITY */
-  oc::testNotSupportedMethod(OC_POST, ep, OC_INTROSPECTION_DATA_URI, nullptr,
+  oc::testNotSupportedMethod(OC_POST, &ep, OC_INTROSPECTION_DATA_URI, nullptr,
                              code);
 }
 
 TEST_F(TestIntrospectionWithServer, PutRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
-  oc::testNotSupportedMethod(OC_PUT, ep, OC_INTROSPECTION_WK_URI, nullptr,
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+  oc::testNotSupportedMethod(OC_PUT, &ep, OC_INTROSPECTION_WK_URI, nullptr,
                              OC_STATUS_FORBIDDEN);
 }
 
 TEST_F(TestIntrospectionWithServer, PutDataRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 #ifdef OC_SECURITY
   // introspection data is a not secured resource, but the request handler will
   // fail authorization
@@ -282,22 +297,24 @@ TEST_F(TestIntrospectionWithServer, PutDataRequest_FailMethodNotSupported)
 #else  /* !OC_SECURITY */
   oc_status_t code = OC_STATUS_METHOD_NOT_ALLOWED;
 #endif /* OC_SECURITY */
-  oc::testNotSupportedMethod(OC_PUT, ep, OC_INTROSPECTION_DATA_URI, nullptr,
+  oc::testNotSupportedMethod(OC_PUT, &ep, OC_INTROSPECTION_DATA_URI, nullptr,
                              code);
 }
 
 TEST_F(TestIntrospectionWithServer, DeleteRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
-  oc::testNotSupportedMethod(OC_DELETE, ep, OC_INTROSPECTION_WK_URI, nullptr,
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+  oc::testNotSupportedMethod(OC_DELETE, &ep, OC_INTROSPECTION_WK_URI, nullptr,
                              OC_STATUS_FORBIDDEN);
 }
 
 TEST_F(TestIntrospectionWithServer, DeleteDataRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
 #ifdef OC_SECURITY
   // introspection data is a not secured resource, but the request handler will
@@ -306,7 +323,7 @@ TEST_F(TestIntrospectionWithServer, DeleteDataRequest_FailMethodNotSupported)
 #else  /* !OC_SECURITY */
   oc_status_t code = OC_STATUS_METHOD_NOT_ALLOWED;
 #endif /* OC_SECURITY */
-  oc::testNotSupportedMethod(OC_DELETE, ep, OC_INTROSPECTION_DATA_URI, nullptr,
+  oc::testNotSupportedMethod(OC_DELETE, &ep, OC_INTROSPECTION_DATA_URI, nullptr,
                              code);
 }
 

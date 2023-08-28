@@ -855,8 +855,9 @@ TEST_F(TestCollectionsWithServer, GetRequest_Baseline)
   ASSERT_NE(nullptr, col1);
 
   // get insecure connection to the testing device
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto get_handler = [](oc_client_response_t *data) {
     oc::TestDevice::Terminate();
@@ -873,7 +874,7 @@ TEST_F(TestCollectionsWithServer, GetRequest_Baseline)
 
   oc::Collection::Data data{};
   auto timeout = 1s;
-  ASSERT_TRUE(oc_do_get_with_timeout(oc_string(col1->res.uri), ep,
+  ASSERT_TRUE(oc_do_get_with_timeout(oc_string(col1->res.uri), &ep,
                                      "if=" OC_IF_BASELINE_STR, timeout.count(),
                                      get_handler, HIGH_QOS, &data));
   oc::TestDevice::PoolEventsMsV1(timeout, true);
@@ -939,8 +940,9 @@ TEST_F(TestCollectionsWithServer, GetRequest_Batch)
   ASSERT_NE(nullptr, col1);
 
   // get insecure connection to the testing device
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   struct batchData
   {
@@ -967,7 +969,7 @@ TEST_F(TestCollectionsWithServer, GetRequest_Batch)
 
   auto timeout = 1s;
   batchData bd{};
-  ASSERT_TRUE(oc_do_get_with_timeout(oc_string(col1->res.uri), ep,
+  ASSERT_TRUE(oc_do_get_with_timeout(oc_string(col1->res.uri), &ep,
                                      "if=" OC_IF_B_STR, timeout.count(),
                                      get_handler, HIGH_QOS, &bd));
   oc::TestDevice::PoolEventsMsV1(timeout, true);

@@ -37,20 +37,20 @@ oc_resource_is_initialized(const oc_resource_t *resource)
 }
 
 void
-oc_resources_iterate(size_t device, bool includePlatform,
-                     oc_resource_iterate_fn_t fn, void *data)
+oc_resources_iterate_platform(oc_resource_iterate_fn_t fn, void *data)
 {
-  if (includePlatform) {
-    // platform resources
-    for (int type = 0; type < OCF_CON; ++type) {
-      oc_resource_t *res = oc_core_get_resource_by_index(type, 0);
-      if (res != NULL && !fn(res, data)) {
-        return;
-      }
+  for (int type = 0; type < OCF_CON; ++type) {
+    oc_resource_t *res = oc_core_get_resource_by_index(type, 0);
+    if (res != NULL && !fn(res, data)) {
+      return;
     }
   }
+}
 
-  // core resources
+void
+oc_resources_iterate_core(size_t device, oc_resource_iterate_fn_t fn,
+                          void *data)
+{
   for (int type = OCF_CON; type <= OCF_D; ++type) {
     if (type == OCF_CON && !oc_get_con_res_announced()) {
       continue;
@@ -60,9 +60,14 @@ oc_resources_iterate(size_t device, bool includePlatform,
       return;
     }
   }
+}
 
 #ifdef OC_SERVER
-  // app resources
+
+void
+oc_resources_iterate_dynamic(size_t device, oc_resource_iterate_fn_t fn,
+                             void *data)
+{
   for (oc_resource_t *app_res = oc_ri_get_app_resources(); app_res != NULL;
        app_res = app_res->next) {
     if (app_res->device != device) {
@@ -72,9 +77,14 @@ oc_resources_iterate(size_t device, bool includePlatform,
       return;
     }
   }
+}
 
 #ifdef OC_COLLECTIONS
-  // collections
+
+void
+oc_resources_iterate_collections(size_t device, oc_resource_iterate_fn_t fn,
+                                 void *data)
+{
   for (oc_collection_t *col = oc_collection_get_all(); col != NULL;
        col = (oc_collection_t *)col->res.next) {
     if (col->res.device != device) {
@@ -84,6 +94,41 @@ oc_resources_iterate(size_t device, bool includePlatform,
       return;
     }
   }
+}
+
 #endif /* OC_COLLECTIONS */
+#endif /* OC_SERVER */
+
+void
+oc_resources_iterate(size_t device, bool includePlatform, bool includeCore,
+                     bool includeDynamic, bool includeCollections,
+                     oc_resource_iterate_fn_t fn, void *data)
+{
+  if (includePlatform) {
+    oc_resources_iterate_platform(fn, data);
+  }
+
+  // core resources
+  if (includeCore) {
+    oc_resources_iterate_core(device, fn, data);
+  }
+
+#ifdef OC_SERVER
+  // app resources
+  if (includeDynamic) {
+    oc_resources_iterate_dynamic(device, fn, data);
+  }
+
+#ifdef OC_COLLECTIONS
+  // collections
+  if (includeCollections) {
+    oc_resources_iterate_collections(device, fn, data);
+  }
+#else  /* OC_COLLECTIONS */
+  (void)includeCollections;
+#endif /* OC_COLLECTIONS */
+#else  /* OC_SERVER */
+  (void)includeDynamic;
+  (void)includeCollections;
 #endif /* OC_SERVER */
 }

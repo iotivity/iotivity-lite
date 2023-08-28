@@ -871,14 +871,44 @@ ri_add_collection_observation(oc_collection_t *collection,
 
 #endif /* OC_COLLECTIONS */
 
+static int
+ri_observe_handler(const coap_packet_t *request, const coap_packet_t *response,
+                   oc_resource_t *resource, uint16_t block2_size,
+                   const oc_endpoint_t *endpoint,
+                   oc_interface_mask_t iface_mask)
+{
+  if (request->code != COAP_GET || response->code >= 128 ||
+      !IS_OPTION(request, COAP_OPTION_OBSERVE)) {
+    return -1;
+  }
+  if (request->observe == OC_COAP_OPTION_OBSERVE_REGISTER) {
+    if (NULL == coap_add_observer(resource, block2_size, endpoint,
+                                  request->token, request->token_len,
+                                  request->uri_path, request->uri_path_len,
+                                  iface_mask)) {
+      OC_ERR("failed to add observer");
+      return -1;
+    }
+    return 0;
+  }
+  if (request->observe == OC_COAP_OPTION_OBSERVE_UNREGISTER) {
+    if (!coap_remove_observer_by_token(endpoint, request->token,
+                                       request->token_len)) {
+      return 0;
+    }
+    return 1;
+  }
+  return -1;
+}
+
 static bool
 ri_add_observation(const coap_packet_t *request, const coap_packet_t *response,
                    oc_resource_t *resource, bool resource_is_collection,
                    uint16_t block2_size, const oc_endpoint_t *endpoint,
                    oc_interface_mask_t iface_query)
 {
-  if (coap_observe_handler(request, response, resource, block2_size, endpoint,
-                           iface_query) >= 0) {
+  if (ri_observe_handler(request, response, resource, block2_size, endpoint,
+                         iface_query) >= 0) {
     /* If the resource is marked as periodic observable it means it must be
      * polled internally for updates (which would lead to notifications being
      * sent). If so, add the resource to a list of periodic GET callbacks to
@@ -911,8 +941,8 @@ ri_remove_observation(const coap_packet_t *request,
                       const oc_endpoint_t *endpoint,
                       oc_interface_mask_t iface_query)
 {
-  if (coap_observe_handler(request, response, resource, block2_size, endpoint,
-                           iface_query) <= 0) {
+  if (ri_observe_handler(request, response, resource, block2_size, endpoint,
+                         iface_query) <= 0) {
     return;
   }
   if ((resource->properties & OC_PERIODIC) != 0) {
@@ -954,13 +984,13 @@ ri_handle_observation(const coap_packet_t *request, coap_packet_t *response,
    * client as an observer.
    */
   if (observe == OC_COAP_OPTION_OBSERVE_REGISTER) {
-    if (ri_add_observation(request, response, resource, resource_is_collection,
-                           block2_size, endpoint, iface_query)) {
-      coap_options_set_observe(response, OC_COAP_OPTION_OBSERVE_REGISTER);
-    } else {
+    if (!ri_add_observation(request, response, resource, resource_is_collection,
+                            block2_size, endpoint, iface_query)) {
       coap_remove_observer_by_token(endpoint, request->token,
                                     request->token_len);
+      return OC_COAP_OPTION_OBSERVE_NOT_SET;
     }
+    coap_options_set_observe(response, OC_COAP_OPTION_OBSERVE_REGISTER);
     return OC_COAP_OPTION_OBSERVE_REGISTER;
   }
 
@@ -979,7 +1009,7 @@ ri_handle_observation(const coap_packet_t *request, coap_packet_t *response,
 }
 
 static oc_event_callback_retval_t
-oc_observe_notification_resource_defaults_delayed(void *data)
+ri_observe_notification_resource_defaults_delayed(void *data)
 {
   oc_resource_defaults_data_t *resource_defaults_data =
     (oc_resource_defaults_data_t *)data;
@@ -1067,9 +1097,6 @@ static void
 ri_invoke_coap_entity_set_response(coap_packet_t *response,
                                    ri_invoke_coap_entity_set_response_ctx_t ctx)
 {
-  const oc_response_buffer_t *response_buffer =
-    ctx.response_obj->response_buffer;
-
 #ifdef OC_SERVER
   oc_response_t *response_obj = ctx.response_obj;
 
@@ -1094,6 +1121,9 @@ ri_invoke_coap_entity_set_response(coap_packet_t *response,
     return;
   }
 #endif /* OC_SERVER */
+
+  const oc_response_buffer_t *response_buffer =
+    ctx.response_obj->response_buffer;
   if (response_buffer->code == OC_IGNORE) {
     /* If the server-side logic chooses to reject a request, it sends
      * below a response code of IGNORE, which results in the messaging
@@ -1131,7 +1161,7 @@ ri_invoke_coap_entity_set_response(coap_packet_t *response,
         resource_defaults_data->iface_mask = ctx.iface_mask;
         oc_ri_add_timed_event_callback_ticks(
           resource_defaults_data,
-          &oc_observe_notification_resource_defaults_delayed, 0);
+          &ri_observe_notification_resource_defaults_delayed, 0);
       } else {
         oc_notify_resource_changed_delayed_ms(ctx.resource, 0);
       }
@@ -1184,18 +1214,13 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
   memset(&response_buffer, 0, sizeof(response_buffer));
 
   oc_response_t response_obj;
-  response_obj.separate_response = NULL;
+  memset(&response_obj, 0, sizeof(response_obj));
   response_obj.response_buffer = &response_buffer;
 
   oc_request_t request_obj;
+  memset(&request_obj, 0, sizeof(request_obj));
   request_obj.response = &response_obj;
-  request_obj.request_payload = NULL;
-  request_obj.query = NULL;
-  request_obj.query_len = 0;
-  request_obj.resource = NULL;
   request_obj.origin = endpoint;
-  request_obj._payload = NULL;
-  request_obj._payload_len = 0;
   request_obj.method = method;
 
   /* Obtain request uri from the CoAP request. */
@@ -1597,6 +1622,9 @@ void
 oc_ri_shutdown(void)
 {
 #ifdef OC_SERVER
+#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
+  coap_free_all_discovery_batch_observers();
+#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
   coap_free_all_observers();
 #endif /* OC_SERVER */
   coap_free_all_transactions();

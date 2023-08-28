@@ -103,22 +103,16 @@
                                               : OC_MAX_OBSERVE_SIZE)
 
 #if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-typedef struct batch_observer
-{
-  struct batch_observer *next; /* for LIST */
-  coap_observer_t *obs;
-  oc_resource_t *resource;
-  oc_string_t removed_resource_uri;
-} batch_observer_t;
 
 OC_LIST(g_batch_observers_list);
-OC_MEMB(g_batch_observers_memb, batch_observer_t, COAP_MAX_OBSERVERS);
+OC_MEMB(g_batch_observers_memb, coap_batch_observer_t, COAP_MAX_OBSERVERS);
 
-typedef bool cmp_batch_observer_t(const batch_observer_t *o, const void *ctx);
+typedef bool cmp_batch_observer_t(const coap_batch_observer_t *o,
+                                  const void *ctx);
 
 #if OC_DBG_IS_ENABLED
 static const char *
-batch_observer_get_resource_uri(batch_observer_t *batch_obs)
+batch_observer_get_resource_uri(coap_batch_observer_t *batch_obs)
 {
   if (batch_obs->resource) {
     return oc_string(batch_obs->resource->uri);
@@ -128,13 +122,13 @@ batch_observer_get_resource_uri(batch_observer_t *batch_obs)
 #endif
 
 static bool
-cmp_batch_by_observer(const batch_observer_t *o, const void *ctx)
+cmp_batch_by_observer(const coap_batch_observer_t *o, const void *ctx)
 {
   return o->obs == (const coap_observer_t *)ctx;
 }
 
 static bool
-cmp_batch_by_resource(const batch_observer_t *o, const void *ctx)
+cmp_batch_by_resource(const coap_batch_observer_t *o, const void *ctx)
 {
   return o->resource == (const oc_resource_t *)ctx;
 }
@@ -142,7 +136,7 @@ cmp_batch_by_resource(const batch_observer_t *o, const void *ctx)
 static oc_event_callback_retval_t process_batch_observers_async(void *data);
 
 static void
-free_batch_observer(batch_observer_t *batch_obs)
+free_batch_observer(coap_batch_observer_t *batch_obs)
 {
   if (batch_obs == NULL) {
     return;
@@ -154,11 +148,11 @@ free_batch_observer(batch_observer_t *batch_obs)
 static void
 remove_discovery_batch_observers(cmp_batch_observer_t *cmp, const void *ctx)
 {
-  batch_observer_t *batch_obs =
-    (batch_observer_t *)oc_list_head(g_batch_observers_list);
+  coap_batch_observer_t *batch_obs =
+    (coap_batch_observer_t *)oc_list_head(g_batch_observers_list);
   while (batch_obs != NULL) {
-    if (cmp(batch_obs, ctx)) {
-      batch_observer_t *next = batch_obs->next;
+    if (cmp == NULL || cmp(batch_obs, ctx)) {
+      coap_batch_observer_t *next = batch_obs->next;
       oc_list_remove(g_batch_observers_list, batch_obs);
       free_batch_observer(batch_obs);
       batch_obs = next;
@@ -168,9 +162,16 @@ remove_discovery_batch_observers(cmp_batch_observer_t *cmp, const void *ctx)
   }
 }
 
+void
+coap_free_all_discovery_batch_observers(void)
+{
+  oc_remove_delayed_callback(NULL, &process_batch_observers_async);
+  remove_discovery_batch_observers(NULL, NULL);
+}
+
 #endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
 
-int32_t g_observe_counter = OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE;
+static int32_t g_observe_counter = OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE;
 
 static int32_t
 observe_increment_observe_counter(int32_t *counter)
@@ -180,6 +181,12 @@ observe_increment_observe_counter(int32_t *counter)
     ? *counter = OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE
     : ++(*counter);
   return prev;
+}
+
+void
+coap_observe_counter_reset(void)
+{
+  g_observe_counter = OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE;
 }
 
 OC_LIST(g_observers_list);
@@ -337,9 +344,6 @@ coap_free_all_observers(void)
     coap_remove_observer(obs);
     obs = next;
   }
-#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-  oc_remove_delayed_callback(NULL, &process_batch_observers_async);
-#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
 }
 
 static bool
@@ -1213,7 +1217,7 @@ dispatch_process_batch_observers(void)
 
 static void
 create_batch_for_removed_resource(CborEncoder *links,
-                                  batch_observer_t *batch_obs)
+                                  coap_batch_observer_t *batch_obs)
 {
   COAP_DBG("creating batch response for resource(%s)",
            oc_string(batch_obs->removed_resource_uri));
@@ -1236,14 +1240,19 @@ create_batch_for_removed_resource(CborEncoder *links,
 }
 
 static void
-create_batch_for_batch_observer(CborEncoder *links, batch_observer_t *batch_obs,
+create_batch_for_batch_observer(CborEncoder *links,
+                                coap_batch_observer_t *batch_obs,
                                 const oc_endpoint_t *endpoint)
 {
   if (batch_obs->resource != NULL) {
+    COAP_DBG("creating batch response for resource(%s)",
+             oc_string(batch_obs->resource->uri));
     oc_discovery_create_batch_for_resource(links, batch_obs->resource,
                                            endpoint);
     return;
   }
+  COAP_DBG("creating batch response for removed resource(%s)",
+           oc_string(batch_obs->removed_resource_uri));
   create_batch_for_removed_resource(links, batch_obs);
 }
 
@@ -1262,22 +1271,72 @@ notify_batch_observer(coap_observer_t *obs, oc_response_t *response)
   return coap_send_notification_internal(ctx);
 }
 
-static void
-process_batch_observers(void)
+static bool
+observe_batch_set_response_buffer(coap_batch_observer_t *batch_obs,
+                                  oc_response_buffer_t *response_buffer)
 {
-  batch_observer_t *batch_obs =
-    (batch_observer_t *)oc_list_head(g_batch_observers_list);
+  const coap_observer_t *obs = batch_obs->obs;
+  oc_rep_start_links_array();
+  int size_before = oc_rep_get_encoded_payload_size();
+  create_batch_for_batch_observer(&links_array, batch_obs, &obs->endpoint);
+  coap_batch_observer_t *bnext = batch_obs->next;
+  while (bnext != NULL) {
+    coap_batch_observer_t *next = bnext->next;
+    if (bnext->obs == obs) {
+      create_batch_for_batch_observer(&links_array, bnext, &obs->endpoint);
+      oc_list_remove(g_batch_observers_list, bnext);
+      free_batch_observer(bnext);
+    }
+    bnext = next;
+  }
+  int size_after = oc_rep_get_encoded_payload_size();
+  if (size_before == size_after) {
+    COAP_DBG("drop observations");
+    return false;
+  }
+  oc_rep_end_links_array();
+  size_after = oc_rep_get_encoded_payload_size();
+  if (size_after < 0) {
+    COAP_ERR("invalid size after batch serialization");
+    return false;
+  }
+  COAP_DBG("sending data with size %d", size_after);
+  response_buffer->content_format = APPLICATION_VND_OCF_CBOR;
+  response_buffer->response_length = size_after;
+  response_buffer->code = oc_status_code(OC_STATUS_OK);
+#ifdef OC_HAS_FEATURE_ETAG
+  uint64_t etag =
+    oc_ri_get_batch_etag(obs->resource, &obs->endpoint, obs->endpoint.device);
+  if (etag != OC_ETAG_UNINITIALIZED) {
+    memcpy(&response_buffer->etag.value[0], &etag, sizeof(etag));
+    response_buffer->etag.length = sizeof(etag);
+  }
+#endif /* OC_HAS_FEATURE_ETAG */
+  return true;
+}
+
+coap_batch_observer_t *
+coap_get_discovery_batch_observers(void)
+{
+  return (coap_batch_observer_t *)oc_list_head(g_batch_observers_list);
+}
+
+void
+coap_process_discovery_batch_observers(void)
+{
+  coap_batch_observer_t *batch_obs =
+    (coap_batch_observer_t *)oc_list_head(g_batch_observers_list);
   if (batch_obs == NULL) {
     return;
   }
-#ifndef OC_DYNAMIC_ALLOCATION
-  uint8_t buffer[OC_MIN_OBSERVE_SIZE];
-#else  /* !OC_DYNAMIC_ALLOCATION */
+#ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buffer = malloc(OC_MIN_OBSERVE_SIZE);
   if (buffer == NULL) {
     COAP_WRN("out of memory allocating buffer");
     return;
   }
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  uint8_t buffer[OC_MIN_OBSERVE_SIZE];
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_response_buffer_t response_buffer;
   memset(&response_buffer, 0, sizeof(response_buffer));
@@ -1285,24 +1344,22 @@ process_batch_observers(void)
            batch_observer_get_resource_uri(batch_obs));
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
+
   while (batch_obs != NULL) {
-    if (!batch_obs->resource &&
-        !oc_string_len(batch_obs->removed_resource_uri)) {
-      COAP_WRN("resource is NULL and removed_resource_uri is empty");
-      oc_list_remove(g_batch_observers_list, batch_obs);
-      free_batch_observer(batch_obs);
-      batch_obs = (batch_observer_t *)oc_list_head(g_batch_observers_list);
-      continue;
-    }
-    coap_observer_t *obs = batch_obs->obs;
 #ifdef OC_BLOCK_WISE
+    coap_observer_t *obs = batch_obs->obs;
+    // obs->iface_mask is always OC_IF_B
     oc_string_view_t query = oc_query_encode_interface(obs->iface_mask);
+    // obs->resource is always the discovery resource
     const oc_blockwise_state_t *response_state =
       oc_blockwise_find_response_buffer(oc_string(obs->resource->uri) + 1,
                                         oc_string_len(obs->resource->uri) - 1,
                                         &obs->endpoint, OC_GET, query.data,
                                         query.length, OC_BLOCKWISE_SERVER);
     if (response_state != NULL) {
+      COAP_DBG(
+        "response_state is not NULL, sending of batch response currently "
+        "in progress for endpoint, skipping to next observer");
       batch_obs = batch_obs->next;
       continue;
     }
@@ -1313,38 +1370,11 @@ process_batch_observers(void)
 #else  /* OC_DYNAMIC_ALLOCATION */
     oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
-    oc_rep_start_links_array();
-    int size_before = oc_rep_get_encoded_payload_size();
-    batch_observer_t *o = batch_obs->next;
-    create_batch_for_batch_observer(&links_array, batch_obs, &obs->endpoint);
-    while (o != NULL) {
-      batch_observer_t *next = o->next;
-      if (o->obs == obs) {
-        create_batch_for_batch_observer(&links_array, o, &obs->endpoint);
-        oc_list_remove(g_batch_observers_list, o);
-        free_batch_observer(o);
-      }
-      o = next;
-    }
-    int size_after = oc_rep_get_encoded_payload_size();
-    if (size_before == size_after) {
-      COAP_DBG("drop observations");
-    } else {
-      oc_rep_end_links_array();
-      size_after = oc_rep_get_encoded_payload_size();
-      if (size_after < 0) {
-        COAP_ERR("invalid size after batch serialization");
-      } else {
-        COAP_DBG("sending data with size %d", size_after);
-        response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
-        response_buffer.response_length = size_after;
-        response_buffer.code = oc_status_code(OC_STATUS_OK);
-        oc_response_t response;
-        memset(&response, 0, sizeof(response));
-        response.response_buffer = &response_buffer;
-        if (notify_batch_observer(obs, &response) < 0) {
-          goto leave_notify_observers;
-        }
+    if (observe_batch_set_response_buffer(batch_obs, &response_buffer)) {
+      oc_response_t response = { 0 };
+      response.response_buffer = &response_buffer;
+      if (notify_batch_observer(obs, &response) < 0) {
+        goto leave_notify_observers;
       }
     }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -1352,14 +1382,16 @@ process_batch_observers(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_list_remove(g_batch_observers_list, batch_obs);
     free_batch_observer(batch_obs);
-    batch_obs = (batch_observer_t *)oc_list_head(g_batch_observers_list);
+    batch_obs = (coap_batch_observer_t *)oc_list_head(g_batch_observers_list);
   }
 leave_notify_observers:
 #ifdef OC_DYNAMIC_ALLOCATION
   buffer = response_buffer.buffer;
-  if (buffer) {
+  if (buffer != NULL) {
     free(buffer);
   }
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  ;
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
@@ -1367,12 +1399,12 @@ static oc_event_callback_retval_t
 process_batch_observers_async(void *data)
 {
   (void)data;
-  process_batch_observers();
+  coap_process_discovery_batch_observers();
   return OC_EVENT_DONE;
 }
 
 static bool
-cmp_add_batch_observer_resource(const batch_observer_t *batch_obs,
+cmp_add_batch_observer_resource(const coap_batch_observer_t *batch_obs,
                                 const coap_observer_t *obs,
                                 const oc_resource_t *resource, bool removed)
 {
@@ -1393,33 +1425,47 @@ cmp_add_batch_observer_resource(const batch_observer_t *batch_obs,
                 oc_string(resource->uri), oc_string_len(resource->uri)) == 0;
 }
 
-static void
-add_notification_batch_observers_list(oc_resource_t *resource, bool removed)
+void
+coap_remove_discovery_batch_observers(const oc_resource_t *resource)
 {
-  if (resource == NULL) {
-    return;
-  }
+  COAP_DBG("remove discovery batch observers for resource(%s)",
+           oc_string(resource->uri));
+  remove_discovery_batch_observers(cmp_batch_by_resource, resource);
+}
+
+bool
+coap_add_discovery_batch_observer(oc_resource_t *resource, bool removed,
+                                  bool dispatch)
+{
+  assert(resource != NULL);
   const oc_resource_t *discover_resource =
     oc_core_get_resource_by_index(OCF_RES, resource->device);
   if (discover_resource == resource) {
-    return;
+    return false;
   }
 
   /* iterate over observers */
+  bool added = false;
   for (coap_observer_t *obs = (coap_observer_t *)oc_list_head(g_observers_list);
        obs; obs = obs->next) {
     if (obs->resource != discover_resource || obs->iface_mask != OC_IF_B) {
       continue;
     }
+    if (removed && (oc_string_len(resource->uri) == 0)) {
+      COAP_WRN("removed resource has no URI");
+      continue;
+    }
 #ifdef OC_SECURITY
     if (!oc_sec_check_acl(OC_GET, resource, &obs->endpoint)) {
+      COAP_DBG("resource %s not authorized for endpoint",
+               oc_string(resource->uri));
       continue;
     }
 #endif /* OC_SECURITY */
     // deduplicate observations.
     bool found = false;
-    for (batch_observer_t *batch_obs =
-           (batch_observer_t *)oc_list_head(g_batch_observers_list);
+    for (coap_batch_observer_t *batch_obs =
+           (coap_batch_observer_t *)oc_list_head(g_batch_observers_list);
          batch_obs; batch_obs = batch_obs->next) {
       if (cmp_add_batch_observer_resource(batch_obs, obs, resource, removed)) {
         found = true;
@@ -1427,41 +1473,37 @@ add_notification_batch_observers_list(oc_resource_t *resource, bool removed)
       }
     }
     if (found) {
+      COAP_DBG("skipping duplicate batch notification for resource(%s)",
+               oc_string(resource->uri));
       continue;
     }
-    batch_observer_t *o = oc_memb_alloc(&g_batch_observers_memb);
+    coap_batch_observer_t *o = oc_memb_alloc(&g_batch_observers_memb);
     if (o == NULL) {
-      COAP_ERR("cannot allocate batch observer for resource (%s)",
+      COAP_ERR("cannot allocate batch notification for resource (%s)",
                oc_string(resource->uri));
-      return;
-    } else {
-      o->obs = obs;
-      if (removed) {
-        oc_new_string(&o->removed_resource_uri, oc_string(resource->uri),
-                      oc_string_len(resource->uri));
-      } else {
-        o->resource = resource;
-      }
-      oc_list_add(g_batch_observers_list, o);
+      return false;
     }
+    o->obs = obs;
+    if (removed) {
+      COAP_DBG("batch notification for removed resource(%s) added",
+               oc_string(resource->uri));
+      oc_new_string(&o->removed_resource_uri, oc_string(resource->uri),
+                    oc_string_len(resource->uri));
+    } else {
+      COAP_DBG("batch notification for resource(%s) added",
+               oc_string(resource->uri));
+      o->resource = resource;
+    }
+    oc_list_add(g_batch_observers_list, o);
+    added = true;
   }
-  dispatch_process_batch_observers();
+
+  if (dispatch) {
+    dispatch_process_batch_observers();
+  }
+  return added;
 }
 
-void
-coap_remove_discovery_batch_observers_by_resource(oc_resource_t *resource)
-{
-  COAP_DBG("remove discovery batch observers for resource(%s)",
-           oc_string(resource->uri));
-  remove_discovery_batch_observers(cmp_batch_by_resource, resource);
-  add_notification_batch_observers_list(resource, true);
-}
-
-void
-coap_notify_discovery_batch_observers(oc_resource_t *resource)
-{
-  add_notification_batch_observers_list(resource, false);
-}
 #endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
 
 #ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
@@ -1525,8 +1567,14 @@ coap_notify_observers(oc_resource_t *resource,
 {
 #ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
 #ifdef OC_RES_BATCH_SUPPORT
-  coap_notify_discovery_batch_observers(resource);
+  coap_add_discovery_batch_observer(resource, /*removed*/ false,
+                                    /*dispatch*/ true);
 #endif /* OC_RES_BATCH_SUPPORT */
+#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
+  if ((resource->properties & OC_OBSERVABLE) == 0) {
+    return 0;
+  }
+#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
   oc_resource_t *discover_resource =
     oc_core_get_resource_by_index(OCF_RES, resource->device);
   if (resource == discover_resource) {
@@ -1536,34 +1584,8 @@ coap_notify_observers(oc_resource_t *resource,
   return coap_notify_observers_internal(resource, response_buf, endpoint);
 }
 
-int
-coap_observe_handler(const coap_packet_t *request,
-                     const coap_packet_t *response, oc_resource_t *resource,
-                     uint16_t block2_size, const oc_endpoint_t *endpoint,
-                     oc_interface_mask_t iface_mask)
-{
-  if (request->code != COAP_GET || response->code >= 128 ||
-      !IS_OPTION(request, COAP_OPTION_OBSERVE)) {
-    return -1;
-  }
-  if (request->observe == OC_COAP_OPTION_OBSERVE_REGISTER) {
-    if (NULL == coap_add_observer(resource, block2_size, endpoint,
-                                  request->token, request->token_len,
-                                  request->uri_path, request->uri_path_len,
-                                  iface_mask)) {
-      return -1;
-    }
-    return 0;
-  }
-  if (request->observe == OC_COAP_OPTION_OBSERVE_UNREGISTER) {
-    return coap_remove_observer_by_token(endpoint, request->token,
-                                         request->token_len);
-  }
-  return -1;
-}
-
 bool
-coap_want_be_notified(const oc_resource_t *resource)
+coap_resource_is_observed(const oc_resource_t *resource)
 {
 #if defined(OC_DISCOVERY_RESOURCE_OBSERVABLE) && defined(OC_RES_BATCH_SUPPORT)
   const oc_resource_t *discover_resource =
@@ -1577,7 +1599,8 @@ coap_want_be_notified(const oc_resource_t *resource)
     }
 #ifdef OC_RES_BATCH_SUPPORT
 #ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
-    if ((obs->resource == discover_resource) && (obs->iface_mask & OC_IF_B)) {
+    if ((obs->resource == discover_resource) &&
+        (obs->iface_mask & OC_IF_B) != 0) {
       return true;
     }
 #endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */

@@ -494,7 +494,7 @@ public:
     oc::TestDevice::StopServer();
   }
 
-  void TearDown() override
+  void SetUp() override
   {
     oc_resource_set_observable(oc_core_get_resource_by_index(OCF_P, kDeviceID),
                                false);
@@ -520,8 +520,9 @@ TEST_F(TestObserveCallbackWithServer, Observe)
   oc_resource_set_observable(oc_core_get_resource_by_index(OCF_P, kDeviceID),
                              true);
 
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   struct observe_data
   {
@@ -529,8 +530,8 @@ TEST_F(TestObserveCallbackWithServer, Observe)
     int lastObserveOption;
   };
   auto observe = [](oc_client_response_t *cr) {
-    EXPECT_EQ(OC_STATUS_OK, cr->code);
     oc::TestDevice::Terminate();
+    EXPECT_EQ(OC_STATUS_OK, cr->code);
     OC_DBG("OBSERVE(%d) payload: %s", cr->observe_option,
            oc::RepPool::GetJson(cr->payload).data());
     auto *od = static_cast<observe_data *>(cr->user_data);
@@ -539,16 +540,18 @@ TEST_F(TestObserveCallbackWithServer, Observe)
   };
 
   observe_data od{};
-  ASSERT_TRUE(oc_do_observe("/oic/p", ep, nullptr, observe, HIGH_QOS, &od));
-  oc::TestDevice::PoolEvents(std::chrono::seconds(3).count());
+  ASSERT_TRUE(oc_do_observe("/oic/p", &ep, nullptr, observe, HIGH_QOS, &od));
+  oc::TestDevice::PoolEventsMsV1(1s);
   EXPECT_EQ(1, od.counter);
-  EXPECT_EQ(0, od.lastObserveOption);
+  EXPECT_EQ(OC_COAP_OPTION_OBSERVE_REGISTER, od.lastObserveOption);
 
   od.counter = 0;
-  ASSERT_TRUE(oc_stop_observe("/oic/p", ep));
-  oc::TestDevice::PoolEvents(std::chrono::seconds(3).count());
+  ASSERT_TRUE(oc_stop_observe("/oic/p", &ep));
+  oc::TestDevice::PoolEventsMsV1(1s);
   EXPECT_EQ(1, od.counter);
-  EXPECT_EQ(-1, od.lastObserveOption);
+  EXPECT_EQ(OC_COAP_OPTION_OBSERVE_NOT_SET, od.lastObserveOption);
+
+  ASSERT_EQ(nullptr, oc_ri_get_client_cb("/oic/p", &ep, OC_GET));
 }
 
 TEST_F(TestObserveCallbackWithServer, PeriodicObserve)
@@ -568,21 +571,22 @@ TEST_F(TestObserveCallbackWithServer, PeriodicObserve)
     int lastObserveOption;
   };
   auto observe = [](oc_client_response_t *cr) {
+    if (cr->observe_option == OC_COAP_OPTION_OBSERVE_NOT_SET) {
+      oc::TestDevice::Terminate();
+    }
     EXPECT_EQ(OC_STATUS_OK, cr->code);
     OC_DBG("OBSERVE(%d) payload: %s", cr->observe_option,
            oc::RepPool::GetJson(cr->payload).data());
     auto *od = static_cast<observe_data *>(cr->user_data);
     od->lastObserveOption = cr->observe_option;
     ++od->counter;
-    if (cr->observe_option == -1) {
-      oc::TestDevice::Terminate();
-    }
   };
 
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
   observe_data od{};
-  ASSERT_TRUE(oc_do_observe("/oic/p", ep, nullptr, observe, HIGH_QOS, &od));
+  ASSERT_TRUE(oc_do_observe("/oic/p", &ep, nullptr, observe, HIGH_QOS, &od));
   // give enough time to receive do processing and receive the initial
   // notification (observe_option == 0)
   uint64_t mseconds = std::chrono::milliseconds(700).count();
@@ -593,10 +597,10 @@ TEST_F(TestObserveCallbackWithServer, PeriodicObserve)
   EXPECT_EQ(1, oc_periodic_observe_callback_count());
 
   od.counter = 0;
-  ASSERT_TRUE(oc_stop_observe("/oic/p", ep));
-
-  oc::TestDevice::PoolEvents(std::chrono::seconds(2).count());
-  EXPECT_EQ(-1, od.lastObserveOption);
+  od.lastObserveOption = 0;
+  ASSERT_TRUE(oc_stop_observe("/oic/p", &ep));
+  oc::TestDevice::PoolEventsMsV1(1s);
+  EXPECT_EQ(OC_COAP_OPTION_OBSERVE_NOT_SET, od.lastObserveOption);
   EXPECT_EQ(1, od.counter);
   EXPECT_EQ(0, oc_periodic_observe_callback_count());
 
@@ -611,13 +615,14 @@ TEST_F(TestObserveCallbackWithServer, PeriodicObserve)
 // resource data
 TEST_F(TestObserveCallbackWithServer, ObserveNonObservable)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto observe = [](oc_client_response_t *cr) {
-    EXPECT_EQ(OC_STATUS_OK, cr->code);
-    EXPECT_EQ(-1, cr->observe_option);
     oc::TestDevice::Terminate();
+    EXPECT_EQ(OC_STATUS_OK, cr->code);
+    EXPECT_EQ(OC_COAP_OPTION_OBSERVE_NOT_SET, cr->observe_option);
     OC_DBG("OBSERVE(%d) payload: %s", cr->observe_option,
            oc::RepPool::GetJson(cr->payload).data());
     ++(*static_cast<int *>(cr->user_data));
@@ -625,8 +630,8 @@ TEST_F(TestObserveCallbackWithServer, ObserveNonObservable)
 
   int counter = 0;
   ASSERT_TRUE(
-    oc_do_observe("/oic/p", ep, nullptr, observe, HIGH_QOS, &counter));
-  oc::TestDevice::PoolEvents(std::chrono::seconds(3).count());
+    oc_do_observe("/oic/p", &ep, nullptr, observe, HIGH_QOS, &counter));
+  oc::TestDevice::PoolEventsMsV1(1s);
   EXPECT_EQ(1, counter);
 }
 
@@ -646,9 +651,8 @@ TEST_F(TestObserveCallbackWithServer, ObserveCollection)
     int lastObserveOption;
   };
   auto observe = [](oc_client_response_t *cr) {
-    EXPECT_EQ(OC_STATUS_OK, cr->code);
-
     oc::TestDevice::Terminate();
+    EXPECT_EQ(OC_STATUS_OK, cr->code);
     auto *od = static_cast<observe_data *>(cr->user_data);
     od->lastObserveOption = cr->observe_option;
     ++od->counter;
@@ -667,20 +671,21 @@ TEST_F(TestObserveCallbackWithServer, ObserveCollection)
     }
   };
 
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
   observe_data od{};
-  ASSERT_TRUE(oc_do_observe(oc_string(switches_.collection->res.uri), ep,
+  ASSERT_TRUE(oc_do_observe(oc_string(switches_.collection->res.uri), &ep,
                             nullptr, observe, HIGH_QOS, &od));
-  oc::TestDevice::PoolEvents(std::chrono::seconds(3).count());
+  oc::TestDevice::PoolEventsMsV1(1s);
   EXPECT_EQ(1, od.counter);
-  EXPECT_EQ(0, od.lastObserveOption);
+  EXPECT_EQ(OC_COAP_OPTION_OBSERVE_REGISTER, od.lastObserveOption);
 
   od.counter = 0;
-  ASSERT_TRUE(oc_stop_observe(oc_string(switches_.collection->res.uri), ep));
-  oc::TestDevice::PoolEvents(std::chrono::seconds(3).count());
+  ASSERT_TRUE(oc_stop_observe(oc_string(switches_.collection->res.uri), &ep));
+  oc::TestDevice::PoolEventsMsV1(1s);
   EXPECT_EQ(1, od.counter);
-  EXPECT_EQ(-1, od.lastObserveOption);
+  EXPECT_EQ(OC_COAP_OPTION_OBSERVE_NOT_SET, od.lastObserveOption);
 }
 
 // TODO fix:
@@ -691,63 +696,64 @@ TEST_F(TestObserveCallbackWithServer, ObserveCollection)
 
 #ifndef OC_SECURITY
 
-TEST_F(TestObserveCallbackWithServer, PeriodicObserveCollection)
-{
-  //   auto interval = 1s;
-  //   oc_resource_set_periodic_observable(&switches_.collection->res,
-  //                                       interval.count());
-  // #ifdef OC_SECURITY
-  //   oc_sec_self_own(kDeviceID);
-  // #endif // OC_SECURITY
+// TEST_F(TestObserveCallbackWithServer, PeriodicObserveCollection)
+// {
+//   auto interval = 1s;
+//   oc_resource_set_periodic_observable(&switches_.collection->res,
+//                                       interval.count());
+// #ifdef OC_SECURITY
+//   oc_sec_self_own(kDeviceID);
+// #endif // OC_SECURITY
 
-  //   struct observe_data
-  //   {
-  //     int counter;
-  //     int lastObserveOption;
-  //   };
-  //   auto observe = [](oc_client_response_t *cr) {
-  //     EXPECT_EQ(OC_STATUS_OK, cr->code);
-  //     OC_DBG("OBSERVE(%d) payload: %s", cr->observe_option,
-  //            oc::RepPool::GetJson(cr->payload).data());
-  //     auto *od = static_cast<observe_data *>(cr->user_data);
-  //     od->lastObserveOption = cr->observe_option;
-  //     ++od->counter;
-  //     if (cr->observe_option == -1) {
-  //       oc::TestDevice::Terminate();
-  //     }
-  //   };
+//   struct observe_data
+//   {
+//     int counter;
+//     int lastObserveOption;
+//   };
+//   auto observe = [](oc_client_response_t *cr) {
+//     EXPECT_EQ(OC_STATUS_OK, cr->code);
+//     OC_DBG("OBSERVE(%d) payload: %s", cr->observe_option,
+//            oc::RepPool::GetJson(cr->payload).data());
+//     auto *od = static_cast<observe_data *>(cr->user_data);
+//     od->lastObserveOption = cr->observe_option;
+//     ++od->counter;
+//     if (cr->observe_option == -1) {
+//       oc::TestDevice::Terminate();
+//     }
+//   };
 
-  //   const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0,
-  //   SECURED); ASSERT_NE(nullptr, ep); observe_data od{};
-  //   ASSERT_TRUE(oc_do_observe(oc_string(switches_.collection->res.uri), ep,
-  //                             "if=" OC_IF_BASELINE_STR, observe, HIGH_QOS,
-  //                             &od));
-  //   oc::TestDevice::PoolEventsMs(std::chrono::milliseconds(interval).count()
-  //   *
-  //                                2.5f);
-  //   EXPECT_LE(3, od.counter);
-  //   EXPECT_EQ(1, oc_periodic_observe_callback_count());
+// auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+// ASSERT_TRUE(epOpt.has_value());
+// auto ep = std::move(*epOpt);
+// observe_data od{};
+// ASSERT_TRUE(oc_do_observe(oc_string(switches_.collection->res.uri), &ep,
+//                           "if=" OC_IF_BASELINE_STR, observe, HIGH_QOS, &od));
+//   oc::TestDevice::PoolEventsMs(std::chrono::milliseconds(interval).count()
+//   *
+//                                2.5f);
+//   EXPECT_LE(3, od.counter);
+//   EXPECT_EQ(1, oc_periodic_observe_callback_count());
 
-  //   od.counter = 0;
-  //   ASSERT_TRUE(oc_stop_observe(oc_string(switches_.collection->res.uri),
-  //   ep));
+//   od.counter = 0;
+//   ASSERT_TRUE(oc_stop_observe(oc_string(switches_.collection->res.uri),
+//   &ep));
 
-  //   oc::TestDevice::PoolEvents(std::chrono::seconds(2).count());
+//   oc::TestDevice::PoolEvents(std::chrono::seconds(2).count());
 
-  // #ifdef OC_SECURITY
-  //   oc_reset_device_v1(kDeviceID, true);
-  //   // need to wait for closing of TLS sessions
-  //   oc::TestDevice::PoolEventsMs(200);
-  // #endif // OC_SECURITY
-}
+// #ifdef OC_SECURITY
+//   oc_reset_device_v1(kDeviceID, true);
+//   // need to wait for closing of TLS sessions
+//   oc::TestDevice::PoolEventsMs(200);
+// #endif // OC_SECURITY
+// }
 
-TEST_F(TestObserveCallbackWithServer, PeriodicBatchObserveCollection)
-{
-  // TODO:
-  // add a collection with multiple subresources
-  // make it periodically observable
-  // wait for observation notifications of all subresources
-}
+// TEST_F(TestObserveCallbackWithServer, PeriodicBatchObserveCollection)
+// {
+// TODO:
+// add a collection with multiple subresources
+// make it periodically observable
+// wait for observation notifications of all subresources
+// }
 
 #endif // OC_SECURITY
 

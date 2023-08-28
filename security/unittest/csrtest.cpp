@@ -35,6 +35,10 @@
 #include <gtest/gtest.h>
 #include <mbedtls/x509_crt.h>
 
+using namespace std::chrono_literals;
+
+static constexpr size_t kDeviceID = 0;
+
 class TestCSRWithDevice : public testing::Test {
 public:
   static void SetUpTestCase()
@@ -48,11 +52,7 @@ public:
     }
   }
 
-  void SetUp() override
-  {
-    EXPECT_TRUE(oc::TestDevice::StartServer());
-    g_device = oc::TestDevice::CountDevices() - 1;
-  }
+  void SetUp() override { EXPECT_TRUE(oc::TestDevice::StartServer()); }
 
   void TearDown() override
   {
@@ -61,11 +61,9 @@ public:
   }
 
   static std::vector<mbedtls_ecp_group_id> g_ocf_ecs;
-  static size_t g_device;
 };
 
 std::vector<mbedtls_ecp_group_id> TestCSRWithDevice::g_ocf_ecs{};
-size_t TestCSRWithDevice::g_device;
 
 TEST_F(TestCSRWithDevice, GenerateError)
 {
@@ -74,39 +72,39 @@ TEST_F(TestCSRWithDevice, GenerateError)
                                    too_small.data(), too_small.size()))
     << "invalid device";
 
-  EXPECT_GT(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA256,
+  EXPECT_GT(0, oc_sec_csr_generate(kDeviceID, MBEDTLS_MD_SHA256,
                                    too_small.data(), too_small.size()))
     << "buffer too small";
 
   std::array<unsigned char, 512> csr{};
-  EXPECT_GT(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_NONE, csr.data(),
-                                   csr.size()))
+  EXPECT_GT(
+    0, oc_sec_csr_generate(kDeviceID, MBEDTLS_MD_NONE, csr.data(), csr.size()))
     << "invalid message digest type";
 }
 
 TEST_F(TestCSRWithDevice, GenerateMDs)
 {
   std::array<unsigned char, 512> csr{};
-  EXPECT_GT(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_MD5, csr.data(),
-                                   csr.size()))
+  EXPECT_GT(
+    0, oc_sec_csr_generate(kDeviceID, MBEDTLS_MD_MD5, csr.data(), csr.size()))
     << "md5 enabled";
-  EXPECT_GT(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA1, csr.data(),
-                                   csr.size()))
+  EXPECT_GT(
+    0, oc_sec_csr_generate(kDeviceID, MBEDTLS_MD_SHA1, csr.data(), csr.size()))
     << "sha1 enabled";
-  EXPECT_GT(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_RIPEMD160,
-                                   csr.data(), csr.size()))
+  EXPECT_GT(0, oc_sec_csr_generate(kDeviceID, MBEDTLS_MD_RIPEMD160, csr.data(),
+                                   csr.size()))
     << "ripemd-160 enabled";
 
-  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA224, csr.data(),
+  EXPECT_EQ(0, oc_sec_csr_generate(kDeviceID, MBEDTLS_MD_SHA224, csr.data(),
                                    csr.size()))
     << "sha224 disabled";
-  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA256, csr.data(),
+  EXPECT_EQ(0, oc_sec_csr_generate(kDeviceID, MBEDTLS_MD_SHA256, csr.data(),
                                    csr.size()))
     << "sha256 disabled";
-  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA384, csr.data(),
+  EXPECT_EQ(0, oc_sec_csr_generate(kDeviceID, MBEDTLS_MD_SHA384, csr.data(),
                                    csr.size()))
     << "sha384 disabled";
-  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA512, csr.data(),
+  EXPECT_EQ(0, oc_sec_csr_generate(kDeviceID, MBEDTLS_MD_SHA512, csr.data(),
                                    csr.size()))
     << "sha512 disabled";
 }
@@ -114,8 +112,8 @@ TEST_F(TestCSRWithDevice, GenerateMDs)
 TEST_F(TestCSRWithDevice, ValidateFail)
 {
   std::array<unsigned char, 512> csr_pem{};
-  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA224,
-                                   csr_pem.data(), csr_pem.size()));
+  EXPECT_EQ(0, oc_sec_csr_generate(kDeviceID, MBEDTLS_MD_SHA224, csr_pem.data(),
+                                   csr_pem.size()));
 
   mbedtls_x509_csr csr;
   EXPECT_EQ(0, mbedtls_x509_csr_parse(&csr, csr_pem.data(), csr_pem.size()));
@@ -131,8 +129,8 @@ TEST_F(TestCSRWithDevice, ValidateFail)
 TEST_F(TestCSRWithDevice, ValidateSkipSignature)
 {
   std::array<unsigned char, 512> csr_pem{};
-  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA224,
-                                   csr_pem.data(), csr_pem.size()));
+  EXPECT_EQ(0, oc_sec_csr_generate(kDeviceID, MBEDTLS_MD_SHA224, csr_pem.data(),
+                                   csr_pem.size()));
 
   mbedtls_x509_csr csr;
   EXPECT_EQ(0, mbedtls_x509_csr_parse(&csr, csr_pem.data(), csr_pem.size()));
@@ -144,8 +142,8 @@ TEST_F(TestCSRWithDevice, ValidateSkipSignature)
 TEST_F(TestCSRWithDevice, Validate256)
 {
   std::array<unsigned char, 512> csr_pem{};
-  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA256,
-                                   csr_pem.data(), csr_pem.size()));
+  EXPECT_EQ(0, oc_sec_csr_generate(kDeviceID, MBEDTLS_MD_SHA256, csr_pem.data(),
+                                   csr_pem.size()));
 
   mbedtls_x509_csr csr;
   EXPECT_EQ(0, mbedtls_x509_csr_parse(&csr, csr_pem.data(), csr_pem.size()));
@@ -218,8 +216,8 @@ TEST_F(TestCSRWithDevice, Valid256ExtractPublicKey)
 TEST_F(TestCSRWithDevice, Validate384)
 {
   std::array<unsigned char, 512> csr_pem{};
-  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA384,
-                                   csr_pem.data(), csr_pem.size()));
+  EXPECT_EQ(0, oc_sec_csr_generate(kDeviceID, MBEDTLS_MD_SHA384, csr_pem.data(),
+                                   csr_pem.size()));
 
   mbedtls_x509_csr csr;
   EXPECT_EQ(0, mbedtls_x509_csr_parse(&csr, csr_pem.data(), csr_pem.size()));
@@ -279,7 +277,7 @@ TEST_F(TestCSRWithDevice, RegenerateDeviceKeypair)
   ASSERT_EQ(0, oc_sec_ecdsa_count_keypairs());
 
   std::array<unsigned char, 512> csr{};
-  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA256, csr.data(),
+  EXPECT_EQ(0, oc_sec_csr_generate(kDeviceID, MBEDTLS_MD_SHA256, csr.data(),
                                    csr.size()));
 
   ASSERT_LT(0, oc_sec_ecdsa_count_keypairs());
@@ -293,24 +291,25 @@ TEST_F(TestCSRWithDevice, Resource)
   oc_sec_certs_md_set_signature_algorithm(MBEDTLS_MD_SHA384);
   oc_sec_certs_ecp_set_group_id(MBEDTLS_ECP_DP_SECP384R1);
 
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   ASSERT_TRUE(
-    oc::SetAccessInRFOTM(OCF_SEC_CSR, /*device*/ 0, true, OC_PERM_RETRIEVE));
+    oc::SetAccessInRFOTM(OCF_SEC_CSR, kDeviceID, true, OC_PERM_RETRIEVE));
 
   auto csr_handler = [](oc_client_response_t *data) {
-    EXPECT_EQ(OC_STATUS_OK, data->code);
     oc::TestDevice::Terminate();
-    auto *invoked = static_cast<bool *>(data->user_data);
-    *invoked = true;
+    EXPECT_EQ(OC_STATUS_OK, data->code);
+    *static_cast<bool *>(data->user_data) = true;
   };
 
+  auto timeout = 1s;
   bool invoked = false;
-  EXPECT_TRUE(oc_do_get(OCF_SEC_CSR_URI, ep, "if=oic.if.baseline", csr_handler,
-                        HIGH_QOS, &invoked));
-  oc::TestDevice::PoolEvents(5);
+  EXPECT_TRUE(oc_do_get_with_timeout(OCF_SEC_CSR_URI, &ep, "if=oic.if.baseline",
+                                     timeout.count(), csr_handler, HIGH_QOS,
+                                     &invoked));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
 
   EXPECT_TRUE(invoked);
 }
@@ -432,8 +431,8 @@ oc::keypair_t TestCSRWithDeviceTPM::g_key_pair{};
 TEST_F(TestCSRWithDeviceTPM, Validate256SimulateTPM)
 {
   std::array<unsigned char, 512> csr_pem{};
-  EXPECT_EQ(0, oc_sec_csr_generate(/*device*/ 0, MBEDTLS_MD_SHA256,
-                                   csr_pem.data(), csr_pem.size()));
+  EXPECT_EQ(0, oc_sec_csr_generate(kDeviceID, MBEDTLS_MD_SHA256, csr_pem.data(),
+                                   csr_pem.size()));
 
   mbedtls_x509_csr csr;
   EXPECT_EQ(0, mbedtls_x509_csr_parse(&csr, csr_pem.data(), csr_pem.size()));

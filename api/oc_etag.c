@@ -135,7 +135,8 @@ etag_store_encode(size_t device, void *data)
   (void)data;
   oc_rep_start_root_object();
   // we store platform resources only for device 0
-  oc_resources_iterate(device, device == 0, etag_iterate_encode_resource, NULL);
+  oc_resources_iterate(device, device == 0, true, true, true,
+                       etag_iterate_encode_resource, NULL);
   oc_rep_end_root_object();
   return oc_rep_get_cbor_errno();
 }
@@ -209,7 +210,7 @@ etag_store_decode_etags(const oc_rep_t *rep, size_t device, void *data)
   // rep
   uint64_t *etag = (uint64_t *)data;
   etag_update_from_rep_data_t rep_data = { rep, etag };
-  oc_resources_iterate(device, device == 0,
+  oc_resources_iterate(device, device == 0, true, true, true,
                        etag_iterate_update_resources_by_rep, &rep_data);
   return 0;
 }
@@ -233,7 +234,8 @@ oc_etag_load_from_storage(bool from_storage_only)
   for (size_t i = 0; i < oc_core_get_num_devices(); ++i) {
     if (!from_storage_only) {
       // clear all etags
-      oc_resources_iterate(i, i == 0, etag_iterate_clear_etag, NULL);
+      oc_resources_iterate(i, i == 0, true, true, true, etag_iterate_clear_etag,
+                           NULL);
     }
 
     // load etags from storage
@@ -251,7 +253,8 @@ oc_etag_load_from_storage(bool from_storage_only)
   if (!from_storage_only) {
     // update empty etags
     for (size_t i = 0; i < oc_core_get_num_devices(); ++i) {
-      oc_resources_iterate(i, i == 0, etag_iterate_update_empty_etag, NULL);
+      oc_resources_iterate(i, i == 0, true, true, true,
+                           etag_iterate_update_empty_etag, NULL);
     }
   }
   return success;

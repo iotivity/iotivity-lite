@@ -731,9 +731,9 @@ TEST_F(TestSWUpdateWithServer, ValidateUpdate_InvalidPropertyValue)
 
 TEST_F(TestSWUpdateWithServer, GetRequest)
 {
-  // get insecure connection to the testing device
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   oc_swupdate_t *swupdate = oc_swupdate_get(kDeviceID);
   ASSERT_NE(nullptr, swupdate);
@@ -756,10 +756,12 @@ TEST_F(TestSWUpdateWithServer, GetRequest)
                                    swu));
   };
 
+  auto timeout = 1s;
   oc_swupdate_t swu_get{};
-  EXPECT_TRUE(oc_do_get(OCF_SW_UPDATE_URI, ep, "if=" OC_IF_BASELINE_STR,
-                        get_handler, HIGH_QOS, &swu_get));
-  oc::TestDevice::PoolEvents(5);
+  EXPECT_TRUE(oc_do_get_with_timeout(OCF_SW_UPDATE_URI, &ep,
+                                     "if=" OC_IF_BASELINE_STR, timeout.count(),
+                                     get_handler, HIGH_QOS, &swu_get));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
 
   TestSWUpdate::expectEqual(*oc_swupdate_get(kDeviceID), swu_get);
   oc_swupdate_clear(&swu_get);
@@ -768,6 +770,10 @@ TEST_F(TestSWUpdateWithServer, GetRequest)
 static void
 postRequest(const std::function<void()> &payloadFn)
 {
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
   auto post_handler = [](oc_client_response_t *data) {
     EXPECT_EQ(OC_STATUS_CHANGED, data->code);
     oc::TestDevice::Terminate();
@@ -776,18 +782,15 @@ postRequest(const std::function<void()> &payloadFn)
     *invoked = true;
   };
 
-  // get insecure connection to the testing device
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
-
   bool invoked = false;
-  ASSERT_TRUE(oc_init_post(OCF_SW_UPDATE_URI, ep, nullptr, post_handler,
+  ASSERT_TRUE(oc_init_post(OCF_SW_UPDATE_URI, &ep, nullptr, post_handler,
                            HIGH_QOS, &invoked));
 
   payloadFn();
 
-  ASSERT_TRUE(oc_do_post());
-  oc::TestDevice::PoolEvents(5);
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_post_with_timeout(timeout.count()));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   ASSERT_TRUE(invoked);
 }
 
@@ -907,9 +910,9 @@ template<oc_status_t ErrorCode>
 static void
 postRequestWithFailure(const std::function<void()> &payloadFn)
 {
-  // get insecure connection to the testing device
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto post_handler = [](oc_client_response_t *data) {
     EXPECT_EQ(ErrorCode, data->code);
@@ -920,14 +923,15 @@ postRequestWithFailure(const std::function<void()> &payloadFn)
   };
 
   bool invoked = false;
-  ASSERT_TRUE(oc_init_post(OCF_SW_UPDATE_URI, ep, nullptr, post_handler,
+  ASSERT_TRUE(oc_init_post(OCF_SW_UPDATE_URI, &ep, nullptr, post_handler,
                            HIGH_QOS, &invoked));
 
   // get payload
   payloadFn();
 
-  ASSERT_TRUE(oc_do_post());
-  oc::TestDevice::PoolEvents(5);
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_post_with_timeout(timeout.count()));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   ASSERT_TRUE(invoked);
 }
 // POST request should fail if updatetime is not set
@@ -1014,22 +1018,23 @@ TEST_F(TestSWUpdateWithServer, PostRequest_FailInvalidPackageURL)
 
 TEST_F(TestSWUpdateWithServer, PutRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
-
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
   auto encode_payload = []() {
     oc_swupdate_t swu_new{};
     EXPECT_EQ(0, oc_swupdate_encode_with_resource(&swu_new, /*swu_res*/ nullptr,
                                                   /*flags*/ 0));
   };
-  oc::testNotSupportedMethod(OC_PUT, ep, OCF_SW_UPDATE_URI, encode_payload);
+  oc::testNotSupportedMethod(OC_PUT, &ep, OCF_SW_UPDATE_URI, encode_payload);
 }
 
 TEST_F(TestSWUpdateWithServer, DeleteRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
-  oc::testNotSupportedMethod(OC_DELETE, ep, OCF_SW_UPDATE_URI);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+  oc::testNotSupportedMethod(OC_DELETE, &ep, OCF_SW_UPDATE_URI);
 }
 
 #endif /* !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */

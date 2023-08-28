@@ -161,7 +161,8 @@ collection_notify_resource_changed(oc_collection_t *collection)
 {
   oc_reset_delayed_callback(collection, collection_notify_links_list_async, 0);
 #if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-  coap_notify_discovery_batch_observers(&collection->res);
+  coap_add_discovery_batch_observer(&collection->res, /*removed*/ false,
+                                    /*dispatch*/ true);
 #endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
 #ifdef OC_HAS_FEATURE_ETAG
   oc_resource_update_etag(&collection->res);

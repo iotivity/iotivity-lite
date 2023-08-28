@@ -25,18 +25,22 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # cloud (ipv4+tcp) on, collection create on, /oic/res observable on, push on, rfotm on
-          - build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+          # cloud (ipv4+tcp) on, collection create on, push on, rfotm on
+          - build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+          # security off, ipv4 on, collection create on, push on, rfotm on
+          - build_args: "-DOC_SECURITY_ENABLED=OFF -DOC_IPV4_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON"
           # ipv6 dns on, oscore off, rep realloc on
           - build_args: "-DOC_DNS_LOOKUP_IPV6_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
-          # ipv4 on, tcp on, dynamic allocation off, rfotm on
+          # ipv4 on, tcp on, dynamic allocation off, rfotm on, push off (because it forces dynamic allocation)
           - build_args: "-DOC_IPV4_ENABLED=ON -DOC_TCP_ENABLED=ON -DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
-          # security off, cloud (ipv4+tcp), collection create on, push on, introspection IDD off
+          # security off, dynamic allocation off, push off (because it forces dynamic allocation)
+          - build_args: "-DOC_SECURITY_ENABLED=OFF -DOC_DYNAMIC_ALLOCATION_ENABLED=OFF"
+          # security off, cloud (ipv4+tcp), collection create on, introspection IDD off
           - build_args: "-DOC_SECURITY_ENABLED=OFF -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_IDD_API_ENABLED=OFF"
 
     uses: ./.github/workflows/unit-test-with-cfg.yml
     with:
-      build_args: "-DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON ${{ matrix.build_args }}"
+      build_args: "-DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON ${{ matrix.build_args }}"
       build_type: Debug
       coverage: true
 
