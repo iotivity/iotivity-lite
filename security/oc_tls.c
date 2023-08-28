@@ -413,7 +413,7 @@ process_drop_event_for_removed_endpoint(oc_process_event_t ev,
 }
 
 static void
-oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb, bool reset)
+oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb, bool from_reset)
 {
 #if OC_DBG_IS_ENABLED
   oc_string_t endpoint_str;
@@ -434,7 +434,7 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb, bool reset)
   const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
   // Reset the device when the device onboarding connection
   // has been closed and the device state is RFOTM.
-  if (peer->doc && pstat->s == OC_DOS_RFOTM && !reset) {
+  if (peer->doc && pstat->s == OC_DOS_RFOTM && !from_reset) {
     oc_reset_device_v1(device, false);
   }
 
@@ -525,14 +525,14 @@ oc_tls_remove_peer(const oc_endpoint_t *endpoint)
 }
 
 static void
-oc_tls_close_peer(oc_tls_peer_t *peer, bool reset)
+oc_tls_close_peer(oc_tls_peer_t *peer, bool from_reset)
 {
   assert(peer != NULL);
   mbedtls_ssl_close_notify(&peer->ssl_ctx);
   if ((peer->endpoint.flags & TCP) == 0) {
     mbedtls_ssl_close_notify(&peer->ssl_ctx);
   }
-  oc_tls_free_peer(peer, false, reset);
+  oc_tls_free_peer(peer, false, from_reset);
 }
 
 void
@@ -2219,11 +2219,11 @@ dtls_init_err:
 }
 
 static void
-tls_close_connection(const oc_endpoint_t *endpoint, bool reset)
+tls_close_connection(const oc_endpoint_t *endpoint, bool from_reset)
 {
   oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
   if (peer != NULL) {
-    oc_tls_close_peer(peer, reset);
+    oc_tls_close_peer(peer, from_reset);
   }
 }
 
