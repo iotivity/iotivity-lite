@@ -432,6 +432,9 @@ oc_main_shutdown(void)
 
 #ifdef OC_SECURITY
   oc_tls_shutdown();
+
+  // In case that the device is still in onboarding state(RFOTM), it will be
+  // reset to allow re-onboarding.
   oc_reset_devices_in_RFOTM();
 
   oc_sec_svr_free();

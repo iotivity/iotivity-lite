@@ -66,6 +66,7 @@ oc_sec_pstat_free(void)
 #ifdef OC_DYNAMIC_ALLOCATION
   if (g_pstat != NULL) {
     free(g_pstat);
+    g_pstat = NULL;
   }
 #else
   memset(g_pstat, 0, sizeof(g_pstat));

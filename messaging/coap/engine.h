@@ -160,9 +160,6 @@ bool oc_coap_check_if_duplicate(uint16_t mid, uint32_t device);
 
 /**
  * @brief Clear request history for all devices.
- *
- * @return true
- * @return false
  */
 void oc_coap_clear_request_history(void);
 
