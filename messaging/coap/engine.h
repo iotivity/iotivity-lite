@@ -156,7 +156,8 @@ coap_receive_status_t coap_receive(coap_receive_ctx_t *ctx,
  * @param mid message id to check
  * @return true message is a duplicate
  */
-bool oc_coap_check_if_duplicate(const oc_endpoint_t *endpoint, uint16_t mid);
+bool oc_coap_check_if_duplicate(const oc_endpoint_t *endpoint, uint16_t mid)
+  OC_NONNULL();
 
 /**
  * @brief Initialize request history.

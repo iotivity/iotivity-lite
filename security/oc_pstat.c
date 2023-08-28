@@ -286,10 +286,8 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
 
     memset(ps->rowneruuid.id, 0, sizeof(ps->rowneruuid.id));
 #if defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_CLOUD)
+    // Reset the cloud without deregistration.
     cloud_reset(device, true, false, 0);
-    // TODO: we can allow async mode, but handling of OC_DOS_RESET that follows
-    // the reset call must be invoked asynchronously in a callback after
-    // cloud_reset finishes. Otherwise the cloud_reset won't execute correctly.
 #endif /* OC_SERVER && OC_CLIENT && OC_CLOUD */
     oc_sec_doxm_default(device);
     oc_sec_cred_default(device);
