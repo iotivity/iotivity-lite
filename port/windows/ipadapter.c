@@ -450,15 +450,10 @@ get_interface_addresses(ifaddr_t *ifaddr_list, ip_context_t *dev,
 }
 
 static void
-refresh_endpoints_list(ip_context_t *dev, ifaddr_t *ifaddr_list)
+refresh_endpoints_list(ip_context_t *dev)
 {
-  bool ifaddr_supplied = false;
   free_endpoints_list(dev);
-  if (!ifaddr_list) {
-    ifaddr_list = get_network_addresses();
-  } else {
-    ifaddr_supplied = true;
-  }
+  ifaddr_t *ifaddr_list = get_network_addresses();
   get_interface_addresses(ifaddr_list, dev, AF_INET6, dev->port, false, false);
 #ifdef OC_SECURITY
   get_interface_addresses(ifaddr_list, dev, AF_INET6, dev->dtls_port, true,
@@ -487,9 +482,6 @@ refresh_endpoints_list(ip_context_t *dev, ifaddr_t *ifaddr_list)
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
 #endif /* OC_TCP */
-  if (!ifaddr_supplied) {
-    free_network_addresses(ifaddr_list);
-  }
 }
 
 static int
@@ -508,9 +500,17 @@ process_interface_change_event(void)
 #ifdef OC_IPV4
     ret += update_mcast_socket(dev->mcast4_sock, AF_INET, ifaddr_list);
 #endif /* OC_IPV4 */
-    oc_network_event_handler_mutex_lock();
-    refresh_endpoints_list(dev, ifaddr_list);
-    oc_network_event_handler_mutex_unlock();
+
+    bool swapped = false;
+    int8_t expected = OC_ATOMIC_LOAD8(dev->flags);
+    while ((expected & IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST) == 0) {
+      int8_t desired =
+        (int8_t)(expected | IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST);
+      OC_ATOMIC_COMPARE_AND_SWAP8(dev->flags, expected, desired, swapped);
+      if (swapped) {
+        break;
+      }
+    }
   }
 
 #ifdef OC_NETWORK_MONITOR
@@ -901,10 +901,21 @@ oc_connectivity_get_endpoints(size_t device)
     return NULL;
   }
 
-  if (oc_list_length(dev->eps) == 0) {
-    oc_network_event_handler_mutex_lock();
-    refresh_endpoints_list(dev, NULL);
-    oc_network_event_handler_mutex_unlock();
+  bool refresh = false;
+  bool swapped = false;
+  int8_t expected = OC_ATOMIC_LOAD8(dev->flags);
+  while ((expected & IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST) != 0) {
+    int8_t desired =
+      (int8_t)(expected & ~IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST);
+    OC_ATOMIC_COMPARE_AND_SWAP8(dev->flags, expected, desired, swapped);
+    if (swapped) {
+      refresh = true;
+      break;
+    }
+  }
+
+  if (oc_list_length(dev->eps) == 0 || refresh) {
+    refresh_endpoints_list(dev);
   }
 
   return oc_list_head(dev->eps);

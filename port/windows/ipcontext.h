@@ -29,11 +29,17 @@
 #include <Mswsock.h>
 #include <iphlpapi.h>
 #include <ws2tcpip.h>
+#include "util/oc_atomic.h"
 // clang-format on
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+typedef enum {
+  IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST =
+    1 << 0, ///< used to signal that endpoint list needs to be refreshed
+} ip_context_flags_t;
 
 typedef enum {
   ADAPTER_STATUS_NONE = 0, /* Nothing happens */
@@ -107,6 +113,7 @@ typedef struct ip_context_t
   DWORD event_thread;
   BOOL terminate;
   size_t device;
+  OC_ATOMIC_INT8_T flags;
 } ip_context_t;
 
 #ifdef __cplusplus

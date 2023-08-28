@@ -19,6 +19,7 @@
 #include "coap.h"
 #include "coap_signal.h"
 #include "oc_api.h"
+#include "oc_endpoint.h"
 
 #include <array>
 #include <cstdlib>
@@ -29,7 +30,7 @@
 #if defined(OC_TCP) && defined(OC_IPV4)
 
 static const size_t device = 0;
-static oc_endpoint_t *target_ep;
+static oc_endpoint_t target_ep;
 
 static void
 signal_event_loop(void)
@@ -63,7 +64,7 @@ protected:
       ep = ep->next;
     }
     ASSERT_NE(nullptr, ep);
-    target_ep = ep;
+    oc_endpoint_copy(&target_ep, ep);
   }
 
   void TearDown() override { oc_main_shutdown(); }
@@ -71,7 +72,7 @@ protected:
 
 TEST_F(TestCoapSignal, coap_send_csm_message_P)
 {
-  int ret = coap_send_csm_message(target_ep, OC_PDU_SIZE, 1);
+  int ret = coap_send_csm_message(&target_ep, OC_PDU_SIZE, 1);
   EXPECT_EQ(1, ret);
 }
 
@@ -84,7 +85,7 @@ TEST_F(TestCoapSignal, coap_send_csm_message_N)
 TEST_F(TestCoapSignal, coap_send_ping_message_P)
 {
   std::array<uint8_t, 4> token = { 0x01, 0x02, 0x03, 0x04 };
-  int ret = coap_send_ping_message(target_ep, 1, token.data(), token.size());
+  int ret = coap_send_ping_message(&target_ep, 1, token.data(), token.size());
   EXPECT_EQ(1, ret);
 }
 
@@ -102,7 +103,7 @@ TEST_F(TestCoapSignal, coap_send_pong_message_P)
   coap_set_token(&packet, token.data(), token.size());
   ASSERT_TRUE(coap_signal_set_custody(&packet, 1));
 
-  int ret = coap_send_pong_message(target_ep, &packet);
+  int ret = coap_send_pong_message(&target_ep, &packet);
   EXPECT_EQ(1, ret);
 }
 
@@ -116,7 +117,7 @@ TEST_F(TestCoapSignal, coap_send_release_message_P)
 {
   std::string addr = "coap+tcp://127.0.0.1:5683";
   uint32_t hold_off = 10;
-  int ret = coap_send_release_message(target_ep, addr.c_str(),
+  int ret = coap_send_release_message(&target_ep, addr.c_str(),
                                       addr.length() + 1, hold_off);
   EXPECT_EQ(1, ret);
 }
@@ -133,7 +134,7 @@ TEST_F(TestCoapSignal, coap_send_abort_message_P)
   std::string msg = "Abort!";
 
   int ret =
-    coap_send_abort_message(target_ep, opt, msg.c_str(), msg.length() + 1);
+    coap_send_abort_message(&target_ep, opt, msg.c_str(), msg.length() + 1);
   EXPECT_EQ(1, ret);
 }
 
