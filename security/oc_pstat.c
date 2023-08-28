@@ -701,6 +701,17 @@ set_delayed_reset(size_t device)
   // the reset call must be invoked asynchronously in a callback after
   // cloud_reset finishes. Otherwise the cloud_reset won't execute correctly.
 #endif /* OC_SERVER && OC_CLIENT && OC_CLOUD */
+#ifdef OC_SERVER
+  coap_remove_observers_on_dos_change(device, true);
+#endif /* OC_SERVER */
+  oc_sec_pstat_t ps = { .s = OC_DOS_RESET,
+                        .p = true,
+                        .isop = false,
+                        .cm = 1,
+                        .tm = 2,
+                        .om = 3,
+                        .sm = 4 };
+  oc_sec_pstat_copy(&g_pstat[device], &ps);
   oc_set_delayed_callback((void *)device, delayed_reset, 2);
   return true;
 }

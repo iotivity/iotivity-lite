@@ -331,13 +331,6 @@ coap_receive_blockwise_block1(coap_receive_ctx_t *ctx, const char *href,
   }
 
   if (ctx->request_buffer == NULL && ctx->block1.num == 0) {
-#ifdef OC_SECURITY
-    if (oc_reset_in_progress(endpoint->device)) {
-      COAP_WRN("cannot process new request during closing TLS sessions");
-      return COAP_RECEIVE_ERROR;
-    }
-#endif /* OC_SECURITY */
-
     uint32_t buffer_size;
     if (!coap_options_get_size1(ctx->request, &buffer_size) ||
         buffer_size == 0) {
@@ -478,12 +471,6 @@ coap_receive_blockwise_block2(coap_receive_ctx_t *ctx, const char *href,
   if (ctx->request_buffer != NULL) {
     return COAP_RECEIVE_INVOKE_HANDLER;
   }
-#ifdef OC_SECURITY
-  if (oc_reset_in_progress(endpoint->device)) {
-    COAP_WRN("cannot process new request during closing TLS sessions");
-    return COAP_RECEIVE_ERROR;
-  }
-#endif /* OC_SECURITY */
 
   uint32_t buffer_size;
   if (!coap_options_get_size2(ctx->request, &buffer_size) || buffer_size == 0) {
@@ -526,8 +513,10 @@ coap_receive_method_payload(coap_receive_ctx_t *ctx, const char *href,
   const uint8_t *incoming_block;
   uint32_t incoming_block_len = coap_get_payload(ctx->request, &incoming_block);
 #ifdef OC_SECURITY
-  if (oc_reset_in_progress(endpoint->device)) {
-    COAP_WRN("cannot process new request during closing TLS sessions");
+  // Drop unsecured (unicast/multicast) requests during reset the device.
+  if (oc_reset_in_progress(endpoint->device) &&
+      ((endpoint->flags & SECURED) == 0)) {
+    COAP_WRN("cannot process new requests during reset the device");
     return COAP_RECEIVE_ERROR;
   }
 #endif /* OC_SECURITY */
