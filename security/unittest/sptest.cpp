@@ -49,6 +49,8 @@
 #include <gtest/gtest.h>
 #include <string>
 
+using namespace std::chrono_literals;
+
 static constexpr size_t kDeviceID{ 0 };
 
 class TestSecurityProfile : public testing::Test {
@@ -314,9 +316,9 @@ public:
 
 TEST_F(TestSecurityProfileWithServer, GetRequest)
 {
-  // get insecure connection to the testing device
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   oc_sec_sp_t *profile = oc_sec_sp_get(kDeviceID);
   ASSERT_NE(nullptr, profile);
@@ -332,11 +334,13 @@ TEST_F(TestSecurityProfileWithServer, GetRequest)
       data->payload, OC_SEC_SP_DECODE_FLAG_IGNORE_UNKNOWN_PROPERTIES, sp));
   };
 
+  auto timeout = 1s;
   oc_sec_sp_t sp{};
   sp.credid = oc_sec_sp_get(kDeviceID)->credid;
-  EXPECT_TRUE(oc_do_get(OCF_SEC_SP_URI, ep, "if=" OC_IF_BASELINE_STR,
-                        get_handler, HIGH_QOS, &sp));
-  oc::TestDevice::PoolEvents(5);
+  EXPECT_TRUE(oc_do_get_with_timeout(OCF_SEC_SP_URI, &ep,
+                                     "if=" OC_IF_BASELINE_STR, timeout.count(),
+                                     get_handler, HIGH_QOS, &sp));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
 
   TestSecurityProfile::expectEqual(*oc_sec_sp_get(kDeviceID), sp);
 }
@@ -354,9 +358,9 @@ encodePayload(unsigned supported_profiles, oc_sp_types_t current_profile)
 
 TEST_F(TestSecurityProfileWithServer, PostRequest)
 {
-  // get insecure connection to the testing device
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   oc_sec_sp_t *profile = oc_sec_sp_get(kDeviceID);
   ASSERT_NE(nullptr, profile);
@@ -372,12 +376,14 @@ TEST_F(TestSecurityProfileWithServer, PostRequest)
   };
 
   bool invoked = false;
-  ASSERT_TRUE(oc_init_post(OCF_SEC_SP_URI, ep, nullptr, post_handler, HIGH_QOS,
+  ASSERT_TRUE(oc_init_post(OCF_SEC_SP_URI, &ep, nullptr, post_handler, HIGH_QOS,
                            &invoked));
 
   oc_sec_sp_t sp_new = encodePayload(OC_SP_BASELINE | OC_SP_BLACK, OC_SP_BLACK);
-  ASSERT_TRUE(oc_do_post());
-  oc::TestDevice::PoolEvents(5);
+
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_post_with_timeout(timeout.count()));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
 
   ASSERT_TRUE(invoked);
   TestSecurityProfile::expectEqual(*oc_sec_sp_get(kDeviceID), sp_new, true);
@@ -385,9 +391,9 @@ TEST_F(TestSecurityProfileWithServer, PostRequest)
 
 TEST_F(TestSecurityProfileWithServer, PostRequest_FailInvalidData)
 {
-  // get insecure connection to the testing device
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto post_handler = [](oc_client_response_t *data) {
     EXPECT_EQ(OC_STATUS_BAD_REQUEST, data->code);
@@ -398,34 +404,35 @@ TEST_F(TestSecurityProfileWithServer, PostRequest_FailInvalidData)
   };
 
   bool invoked = false;
-
-  ASSERT_TRUE(oc_init_post(OCF_SEC_SP_URI, ep, nullptr, post_handler, HIGH_QOS,
+  ASSERT_TRUE(oc_init_post(OCF_SEC_SP_URI, &ep, nullptr, post_handler, HIGH_QOS,
                            &invoked));
   oc_rep_start_root_object();
   oc_rep_set_int(root, myAttribute, 1337);
   oc_rep_end_root_object();
-  ASSERT_TRUE(oc_do_post());
-  oc::TestDevice::PoolEvents(5);
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_post_with_timeout(timeout.count()));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
 
   ASSERT_TRUE(invoked);
 }
 
 TEST_F(TestSecurityProfileWithServer, PutRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
-
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
   auto encode_payload = []() {
     encodePayload(OC_SP_BASELINE | OC_SP_BLACK, OC_SP_BLACK);
   };
-  oc::testNotSupportedMethod(OC_PUT, ep, OCF_SEC_SP_URI, encode_payload);
+  oc::testNotSupportedMethod(OC_PUT, &ep, OCF_SEC_SP_URI, encode_payload);
 }
 
 TEST_F(TestSecurityProfileWithServer, DeleteRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
-  oc::testNotSupportedMethod(OC_DELETE, ep, OCF_SEC_SP_URI);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+  oc::testNotSupportedMethod(OC_DELETE, &ep, OCF_SEC_SP_URI);
 }
 
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM  */

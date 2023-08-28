@@ -446,10 +446,9 @@ TEST_F(TestRolesWithServer, AddRole_FailAllocation)
 
 TEST_F(TestRolesWithServer, GetRequest)
 {
-  // get insecure connection to the testing device
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto get_handler = [](oc_client_response_t *data) {
     oc::TestDevice::Terminate();
@@ -463,7 +462,7 @@ TEST_F(TestRolesWithServer, GetRequest)
 
   bool invoked = false;
   auto timeout = 1s;
-  ASSERT_TRUE(oc_do_get_with_timeout(OCF_SEC_ROLES_URI, ep,
+  ASSERT_TRUE(oc_do_get_with_timeout(OCF_SEC_ROLES_URI, &ep,
                                      "if=" OC_IF_BASELINE_STR, timeout.count(),
                                      get_handler, HIGH_QOS, &invoked));
   oc::TestDevice::PoolEventsMsV1(timeout, true);
@@ -480,10 +479,9 @@ TEST_F(TestRolesWithServer, PostRequest)
 
 TEST_F(TestRolesWithServer, DeleteRequest)
 {
-  // get insecure connection to the testing device
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto delete_handler = [](oc_client_response_t *data) {
     oc::TestDevice::Terminate();
@@ -493,7 +491,7 @@ TEST_F(TestRolesWithServer, DeleteRequest)
 
   bool invoked = false;
   auto timeout = 1s;
-  ASSERT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, ep, nullptr,
+  ASSERT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, &ep, nullptr,
                                         timeout.count(), delete_handler,
                                         HIGH_QOS, &invoked));
   oc::TestDevice::PoolEventsMsV1(timeout, true);
@@ -504,9 +502,9 @@ TEST_F(TestRolesWithServer, DeleteRequest)
 
 TEST_F(TestRolesWithServer, DeleteRequest_FailInvalidCredid)
 {
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto delete_handler = [](oc_client_response_t *data) {
     oc::TestDevice::Terminate();
@@ -518,7 +516,7 @@ TEST_F(TestRolesWithServer, DeleteRequest_FailInvalidCredid)
   std::string query = "credid=abc";
   bool invoked = false;
   auto timeout = 1s;
-  ASSERT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, ep, query.c_str(),
+  ASSERT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, &ep, query.c_str(),
                                         timeout.count(), delete_handler,
                                         HIGH_QOS, &invoked));
   oc::TestDevice::PoolEventsMsV1(timeout, true);
@@ -527,7 +525,7 @@ TEST_F(TestRolesWithServer, DeleteRequest_FailInvalidCredid)
   // negative
   invoked = false;
   query = "credid=-1";
-  ASSERT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, ep, query.c_str(),
+  ASSERT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, &ep, query.c_str(),
                                         timeout.count(), delete_handler,
                                         HIGH_QOS, &invoked));
   oc::TestDevice::PoolEventsMsV1(timeout, true);
@@ -538,7 +536,7 @@ TEST_F(TestRolesWithServer, DeleteRequest_FailInvalidCredid)
   query = "credid=" +
           std::to_string(
             static_cast<int64_t>(std::numeric_limits<int32_t>::max()) + 1);
-  ASSERT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, ep, query.c_str(),
+  ASSERT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, &ep, query.c_str(),
                                         timeout.count(), delete_handler,
                                         HIGH_QOS, &invoked));
   oc::TestDevice::PoolEventsMsV1(timeout, true);
@@ -547,7 +545,7 @@ TEST_F(TestRolesWithServer, DeleteRequest_FailInvalidCredid)
   // not found
   invoked = false;
   query = "credid=42";
-  ASSERT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, ep, query.c_str(),
+  ASSERT_TRUE(oc_do_delete_with_timeout(OCF_SEC_ROLES_URI, &ep, query.c_str(),
                                         timeout.count(), delete_handler,
                                         HIGH_QOS, &invoked));
   oc::TestDevice::PoolEventsMsV1(timeout, true);
@@ -558,15 +556,16 @@ TEST_F(TestRolesWithServer, DeleteRequest_FailInvalidCredid)
 
 TEST_F(TestRolesWithServer, PutRequest_FailMethodNotSupported)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
   oc_status_t error_code = OC_STATUS_METHOD_NOT_ALLOWED;
 #else  /* !OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   oc_status_t error_code = OC_STATUS_UNAUTHORIZED;
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
-  oc::testNotSupportedMethod(OC_PUT, ep, OCF_SEC_ROLES_URI, nullptr,
+  oc::testNotSupportedMethod(OC_PUT, &ep, OCF_SEC_ROLES_URI, nullptr,
                              error_code);
 }
 

@@ -173,7 +173,7 @@ prepare_coap_request(oc_client_cb_t *cb, coap_configure_request_fn_t configure,
       oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, &cb->endpoint,
       cb->method, OC_BLOCKWISE_CLIENT, (uint32_t)OC_MIN_APP_DATA_SIZE);
     if (!g_request_buffer) {
-      OC_ERR("g_request_buffer is NULL");
+      OC_ERR("global request_buffer is NULL");
       return false;
     }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -548,40 +548,40 @@ oc_do_observe(const char *uri, const oc_endpoint_t *endpoint, const char *query,
 
   oc_client_cb_t *cb = oc_ri_alloc_client_cb(uri, endpoint, OC_GET, query,
                                              client_handler, qos, user_data);
-  if (!cb)
+  if (cb == NULL) {
+    OC_ERR("cannot observe resource: cannot allocate client callback");
     return false;
-
+  }
   cb->observe_seq = OC_COAP_OPTION_OBSERVE_REGISTER;
 
-  bool status = false;
-
-  status = prepare_coap_request(cb, NULL, NULL);
-
-  if (status)
-    status = dispatch_coap_request();
-
-  return status;
+  if (!prepare_coap_request(cb, NULL, NULL)) {
+    OC_ERR("cannot observe resource: failed to prepare coap request");
+    oc_client_cb_free(cb);
+    return false;
+  }
+  return dispatch_coap_request();
 }
 
 bool
 oc_stop_observe(const char *uri, const oc_endpoint_t *endpoint)
 {
+  // TODO: this might cause an issue if either the client is observing the URI
+  // multiple times or if the client is currently waiting for a GET response,
+  // oc_ri_get_client_cb will return the first client callback found which might
+  // not be the one we want to stop observing
   oc_client_cb_t *cb = oc_ri_get_client_cb(uri, endpoint, OC_GET);
-
-  if (!cb)
+  if (cb == NULL) {
+    OC_ERR("cannot stop observation: no client callback found");
     return false;
-
+  }
   cb->mid = coap_get_mid();
   cb->observe_seq = OC_COAP_OPTION_OBSERVE_UNREGISTER;
 
-  bool status = false;
-
-  status = prepare_coap_request(cb, NULL, NULL);
-
-  if (status)
-    status = dispatch_coap_request();
-
-  return status;
+  if (!prepare_coap_request(cb, NULL, NULL)) {
+    OC_ERR("cannot stop observation: failed to prepare coap request");
+    return false;
+  }
+  return dispatch_coap_request();
 }
 
 #ifdef OC_TCP

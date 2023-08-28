@@ -708,7 +708,7 @@ public:
       oc::makeDynamicResourceToAdd("Dynamic Device 1", kResourceURI.data(),
                                    { "oic.d.dynamic", "oic.d.test" },
                                    { OC_IF_BASELINE, OC_IF_RW }, handlers,
-                                   false),
+                                   OC_SECURE),
       kDeviceID);
     ASSERT_NE(res, nullptr);
 
@@ -764,17 +764,14 @@ TestMessagingBlockwiseWithServer::onPost(oc_request_t *request,
 
 TEST_F(TestMessagingBlockwiseWithServer, BlockwiseRequest_FailInvalidMessage)
 {
-  unsigned flags = 0;
-#ifdef OC_TCP
-  flags |= TCP;
-#endif /* OC_TCP */
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(kDeviceID, flags, SECURED);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   oc_message_t *msg = oc_allocate_message();
   memset(&msg->data[0], 'a', 42);
   msg->length = 42;
-  memcpy(&msg->endpoint, ep, sizeof(oc_endpoint_t));
+  memcpy(&msg->endpoint, &ep, sizeof(oc_endpoint_t));
 
   EXPECT_NE(COAP_NO_ERROR, coap_process_inbound_message(msg));
 
@@ -793,9 +790,9 @@ TEST_F(TestMessagingBlockwiseWithServer, BlockwiseRequest_FailInvalidMessage)
 
 TEST_F(TestMessagingBlockwiseWithServer, GetLargeResource)
 {
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED | TCP);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED | TCP);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   auto get_handler = [](oc_client_response_t *data) {
     EXPECT_EQ(OC_STATUS_OK, data->code);
@@ -811,7 +808,7 @@ TEST_F(TestMessagingBlockwiseWithServer, GetLargeResource)
 
   bool invoked = false;
   auto timeout = 1s;
-  ASSERT_TRUE(oc_do_request(OC_GET, kResourceURI.data(), ep, nullptr,
+  ASSERT_TRUE(oc_do_request(OC_GET, kResourceURI.data(), &ep, nullptr,
                             timeout.count(), get_handler, LOW_QOS, &invoked,
                             configure_packet, nullptr));
   oc::TestDevice::PoolEventsMsV1(timeout, true);
@@ -820,9 +817,9 @@ TEST_F(TestMessagingBlockwiseWithServer, GetLargeResource)
 
 TEST_F(TestMessagingBlockwiseWithServer, PostLargeResource)
 {
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED | TCP);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED | TCP);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   bool invoked = false;
   auto post_handler = [](oc_client_response_t *data) {
@@ -835,7 +832,7 @@ TEST_F(TestMessagingBlockwiseWithServer, PostLargeResource)
     coap_options_set_block1(packet, 0, 1, static_cast<uint16_t>(OC_BLOCK_SIZE),
                             0);
   };
-  ASSERT_TRUE(oc_init_async_request(OC_POST, kResourceURI.data(), ep, nullptr,
+  ASSERT_TRUE(oc_init_async_request(OC_POST, kResourceURI.data(), &ep, nullptr,
                                     post_handler, HIGH_QOS, &invoked,
                                     configure_packet, nullptr));
   oc_rep_start_root_object();

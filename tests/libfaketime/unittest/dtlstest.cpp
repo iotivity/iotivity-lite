@@ -105,9 +105,9 @@ TEST_F(TestDTLSWithServer, InactivityMonitorChangeTimeForwards)
   oc_dtls_set_inactivity_timeout(2 * OC_CLOCK_SECOND);
 
   // DTLS endpoint
-  const oc_endpoint_t *ep =
-    oc::TestDevice::GetEndpoint(/*device*/ 0, SECURED, TCP);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID, SECURED, TCP);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   oc::tls::PreSharedKey psk = {
     0xD1, 0xD0, 0xDB, 0x1F, 0x8B, 0xB2, 0x40, 0x55,
@@ -121,7 +121,7 @@ TEST_F(TestDTLSWithServer, InactivityMonitorChangeTimeForwards)
   dtls.SetPresharedKey(psk, *hint);
   DTLSData data{};
   data.client = &dtls;
-  data.ep = ep;
+  data.ep = &ep;
   data.status = &dtls_status;
 #ifdef MINGW_WINTHREAD
   DWORD dtls_thread_id;

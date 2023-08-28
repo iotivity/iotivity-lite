@@ -30,6 +30,7 @@
 #include <array>
 #include <gtest/gtest.h>
 #include <string>
+#include <unordered_map>
 
 class TestObserver : public testing::Test {
 public:
@@ -451,14 +452,168 @@ public:
   static void SetUpTestCase() { ASSERT_TRUE(oc::TestDevice::StartServer()); }
 
   static void TearDownTestCase() { oc::TestDevice::StopServer(); }
+
+  void SetUp() override
+  {
+#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
+    coap_free_all_discovery_batch_observers();
+#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
+    coap_free_all_observers();
+  }
 };
+
+TEST_F(TestObserverWithServer, ResourceIsObserved)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  oc_resource_t *con = oc_core_get_resource_by_index(OCF_CON, kDeviceID);
+  ASSERT_NE(nullptr, con);
+  ASSERT_FALSE(coap_resource_is_observed(con));
+
+  std::array<uint8_t, COAP_TOKEN_LEN> token;
+  oc_random_buffer(token.data(), token.size());
+  std::string observeURI = &oc_string(con->uri)[1];
+  ASSERT_NE(nullptr, coap_add_observer(con, 1024, &ep, token.data(),
+                                       token.size(), observeURI.c_str(),
+                                       observeURI.length(), OC_IF_BASELINE));
+  EXPECT_TRUE(coap_resource_is_observed(con));
+
+  coap_remove_observer_by_token(&ep, token.data(), token.size());
+  ASSERT_FALSE(coap_resource_is_observed(con));
+}
+
+#ifdef OC_RES_BATCH_SUPPORT
+
+#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
+
+static void
+addDiscoveryObserverWithBatchInterface()
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+  oc_resource_t *discovery = oc_core_get_resource_by_index(OCF_RES, kDeviceID);
+  ASSERT_NE(nullptr, discovery);
+  std::array<uint8_t, COAP_TOKEN_LEN> token;
+  oc_random_buffer(token.data(), token.size());
+  std::string observeURI = &oc_string(discovery->uri)[1];
+  ASSERT_NE(nullptr, coap_add_observer(discovery, 1024, &ep, token.data(),
+                                       token.size(), observeURI.c_str(),
+                                       observeURI.length(), OC_IF_B));
+}
+
+TEST_F(TestObserverWithServer, ResourceIsObservedByBatch)
+{
+  oc_resource_t *con = oc_core_get_resource_by_index(OCF_CON, kDeviceID);
+  ASSERT_NE(nullptr, con);
+  ASSERT_FALSE(coap_resource_is_observed(con));
+
+  addDiscoveryObserverWithBatchInterface();
+  EXPECT_TRUE(coap_resource_is_observed(con));
+}
+
+TEST_F(TestObserverWithServer,
+       AddDiscoveryBatchObserver_FailDiscoveryNotObserved)
+{
+  std::string uri = "/a";
+  oc_resource_t resource{};
+  resource.uri = { nullptr, uri.length() + 1, &uri[0] };
+  EXPECT_FALSE(coap_add_discovery_batch_observer(&resource, /*removed*/ false,
+                                                 /*dispatch*/ false));
+
+  ASSERT_EQ(nullptr, coap_get_discovery_batch_observers());
+}
+
+TEST_F(TestObserverWithServer, AddDiscoveryBatchObserver_FailInvalidResource)
+{
+  addDiscoveryObserverWithBatchInterface();
+  oc_resource_t resource{};
+  // removed resource must have non-empty URI set to succeed
+  EXPECT_FALSE(coap_add_discovery_batch_observer(&resource, /*removed*/ true,
+                                                 /*dispatch*/ false));
+  std::string uri = "";
+  resource.uri = { nullptr, uri.length() + 1, &uri[0] };
+  EXPECT_FALSE(coap_add_discovery_batch_observer(&resource, /*removed*/ true,
+                                                 /*dispatch*/ false));
+}
+
+TEST_F(TestObserverWithServer, AddDiscoveryBatchObserver_FailDiscoveryResource)
+{
+  addDiscoveryObserverWithBatchInterface();
+
+  oc_resource_t *discovery = oc_core_get_resource_by_index(OCF_RES, kDeviceID);
+  ASSERT_NE(nullptr, discovery);
+  // discovery resource itself cannot create a batch notification
+  EXPECT_FALSE(coap_add_discovery_batch_observer(discovery, /*removed*/ false,
+                                                 /*dispatch*/ false));
+  EXPECT_FALSE(coap_add_discovery_batch_observer(discovery, /*removed*/ true,
+                                                 /*dispatch*/ false));
+}
+
+#ifndef OC_SECURITY
+
+// TODO: setup ACLs for secure builds
+
+TEST_F(TestObserverWithServer, AddDiscoveryBatchObserver_FailDuplicate)
+{
+  addDiscoveryObserverWithBatchInterface();
+
+  std::string uri = "/a";
+  oc_resource_t resource{};
+  resource.uri = { nullptr, uri.length() + 1, &uri[0] };
+  EXPECT_TRUE(coap_add_discovery_batch_observer(&resource, /*removed*/ false,
+                                                /*dispatch*/ false));
+  EXPECT_FALSE(coap_add_discovery_batch_observer(&resource, /*removed*/ false,
+                                                 /*dispatch*/ false));
+}
+
+#ifndef OC_DYNAMIC_ALLOCATION
+
+TEST_F(TestObserverWithServer, AddDiscoveryBatchObserver_FailAllocation)
+{
+  addDiscoveryObserverWithBatchInterface();
+
+  std::string uri = "/ok";
+  std::vector<oc_resource_t> resources{};
+  for (int i = 0; i < COAP_MAX_OBSERVERS; ++i) {
+    oc_resource_t resource{};
+    resource.uri = { nullptr, uri.length() + 1, &uri[0] };
+    resources.emplace_back(std::move(resource));
+  }
+  for (auto &resource : resources) {
+    EXPECT_TRUE(coap_add_discovery_batch_observer(&resource,
+                                                  /*removed*/ false,
+                                                  /*dispatch*/ false));
+  }
+
+  // out of static memory
+  std::string failUri = "/fail";
+  oc_resource_t resource{};
+  resource.uri = { nullptr, failUri.length() + 1, &failUri[0] };
+  EXPECT_FALSE(coap_add_discovery_batch_observer(&resource,
+                                                 /*removed*/ false,
+                                                 /*dispatch*/ false));
+}
+
+#endif /* !OC_DYNAMIC_ALLOCATION */
+
+#endif /* !OC_SECURITY */
+
+#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
+
+// TODO: resource is observed if its parent collection is batch observed
+
+#endif /* OC_RES_BATCH_SUPPORT */
 
 #ifdef OC_SECURITY
 
 TEST_F(TestObserverWithServer, RemoveAllObserversOnDOSChange)
 {
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   std::array<uint8_t, COAP_TOKEN_LEN> token;
   oc_random_buffer(token.data(), token.size());
@@ -466,21 +621,21 @@ TEST_F(TestObserverWithServer, RemoveAllObserversOnDOSChange)
   oc_resource_t *platform = oc_core_get_resource_by_index(OCF_P, kDeviceID);
   ASSERT_NE(nullptr, platform);
   EXPECT_NE(nullptr,
-            coap_add_observer(platform, 1024, ep, token.data(), token.size(),
+            coap_add_observer(platform, 1024, &ep, token.data(), token.size(),
                               oc_string(platform->uri),
                               oc_string_len(platform->uri), OC_IF_BASELINE));
 
   oc_resource_t *con = oc_core_get_resource_by_index(OCF_CON, kDeviceID);
   ASSERT_NE(nullptr, con);
   EXPECT_NE(nullptr,
-            coap_add_observer(con, 1024, ep, token.data(), token.size(),
+            coap_add_observer(con, 1024, &ep, token.data(), token.size(),
                               oc_string(con->uri), oc_string_len(con->uri),
                               OC_IF_BASELINE));
 
   oc_resource_t *doxm = oc_core_get_resource_by_index(OCF_SEC_DOXM, kDeviceID);
   ASSERT_NE(nullptr, doxm);
   EXPECT_NE(nullptr,
-            coap_add_observer(doxm, 1024, ep, token.data(), token.size(),
+            coap_add_observer(doxm, 1024, &ep, token.data(), token.size(),
                               oc_string(doxm->uri), oc_string_len(doxm->uri),
                               OC_IF_BASELINE));
 

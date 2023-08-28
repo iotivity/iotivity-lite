@@ -39,9 +39,10 @@
 #include <cstdlib>
 #include <ctime>
 #include <gtest/gtest.h>
+#include <optional>
 #include <string>
 
-static const size_t g_device = 0;
+static constexpr size_t kDeviceID = 0;
 
 class TestConnectivity : public testing::Test {
 public:
@@ -62,9 +63,9 @@ TEST(TestConnectivity_init, oc_connectivity_initDefault)
 {
   oc_connectivity_ports_t ports;
   memset(&ports, 0, sizeof(oc_connectivity_ports_t));
-  int ret = oc_connectivity_init(g_device, ports);
+  int ret = oc_connectivity_init(kDeviceID, ports);
   EXPECT_EQ(0, ret);
-  oc_connectivity_shutdown(g_device);
+  oc_connectivity_shutdown(kDeviceID);
 }
 
 TEST(TestConnectivity_init, oc_connectivity_initTCPDisabled)
@@ -85,9 +86,9 @@ TEST(TestConnectivity_init, oc_connectivity_initTCPDisabled)
 #if defined(OC_SECURITY)
   ports.udp.secure_port = 5684;
 #endif /* OC_SECURITY */
-  int ret = oc_connectivity_init(g_device, ports);
+  int ret = oc_connectivity_init(kDeviceID, ports);
   EXPECT_EQ(0, ret);
-  oc_connectivity_shutdown(g_device);
+  oc_connectivity_shutdown(kDeviceID);
 }
 
 TEST(TestConnectivity_init, oc_connectivity_initUDPDisabled)
@@ -108,9 +109,9 @@ TEST(TestConnectivity_init, oc_connectivity_initUDPDisabled)
   ports.tcp.secure_port = 5684;
 #endif /* OC_SECURITY */
 #endif /* OC_TCP */
-  int ret = oc_connectivity_init(g_device, ports);
+  int ret = oc_connectivity_init(kDeviceID, ports);
   EXPECT_EQ(0, ret);
-  oc_connectivity_shutdown(g_device);
+  oc_connectivity_shutdown(kDeviceID);
 }
 
 TEST(TestConnectivity_init, oc_connectivity_initAllDisabled)
@@ -121,9 +122,9 @@ TEST(TestConnectivity_init, oc_connectivity_initAllDisabled)
 #ifdef OC_TCP
   ports.tcp.flags = OC_CONNECTIVITY_DISABLE_ALL_PORTS;
 #endif /* OC_TCP */
-  int ret = oc_connectivity_init(g_device, ports);
+  int ret = oc_connectivity_init(kDeviceID, ports);
   EXPECT_EQ(0, ret);
-  oc_connectivity_shutdown(g_device);
+  oc_connectivity_shutdown(kDeviceID);
 }
 
 static void
@@ -341,8 +342,7 @@ TEST_F(TestConnectivity, handle_session_event_callback_v1)
                void *user_data) {
     EXPECT_NE(nullptr, ep);
     EXPECT_EQ(OC_SESSION_CONNECTED, state);
-    auto *invoked = static_cast<bool *>(user_data);
-    *invoked = true;
+    *static_cast<bool *>(user_data) = true;
   };
 
   bool invoked{};
@@ -383,14 +383,14 @@ public:
 
   void TearDown() override { oc::TestDevice::StopServer(); }
 
-  static oc_endpoint_t *findEndpoint(size_t device);
+  static std::optional<oc_endpoint_t> findEndpoint(size_t device);
 
   static std::atomic<bool> is_callback_received;
 };
 
 std::atomic<bool> TestConnectivityWithServer::is_callback_received{ false };
 
-oc_endpoint_t *
+std::optional<oc_endpoint_t>
 TestConnectivityWithServer::findEndpoint(size_t device)
 {
   int flags = 0;
@@ -404,14 +404,14 @@ TestConnectivityWithServer::findEndpoint(size_t device)
   flags |= TCP;
 #endif /* OC_TCP */
 
-  oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(device, flags);
-  EXPECT_NE(nullptr, ep);
+  auto ep = oc::TestDevice::GetEndpoint(device, flags, 0);
+  EXPECT_TRUE(ep.has_value());
   return ep;
 }
 
 TEST_F(TestConnectivityWithServer, oc_connectivity_get_endpoints)
 {
-  oc_endpoint_t *ep = oc_connectivity_get_endpoints(g_device);
+  oc_endpoint_t *ep = oc_connectivity_get_endpoints(kDeviceID);
   EXPECT_NE(nullptr, ep);
 }
 
@@ -430,9 +430,12 @@ on_tcp_connect(const oc_endpoint_t *, int state, void *)
 
 TEST_F(TestConnectivityWithServer, oc_tcp_update_csm_state_P)
 {
-  oc_endpoint_t *ep = findEndpoint(g_device);
+  auto epOpt = findEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
-  int ret = oc_tcp_connect(ep, on_tcp_connect, this);
+  int ret = oc_tcp_connect(&ep, on_tcp_connect, this);
   EXPECT_LE(0, ret);
   if (ret == OC_TCP_SOCKET_STATE_CONNECTING) {
     OC_DBG("oc_tcp_update_csm_state_P wait");
@@ -440,7 +443,7 @@ TEST_F(TestConnectivityWithServer, oc_tcp_update_csm_state_P)
   }
 #else  /* !OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
   oc_message_t *msg = oc_allocate_message();
-  memcpy(&msg->endpoint, ep, sizeof(oc_endpoint_t));
+  memcpy(&msg->endpoint, &ep, sizeof(oc_endpoint_t));
   coap_packet_t packet = {};
   coap_tcp_init_message(&packet, CSM_7_01);
   std::array<uint8_t, 8> payload{ "connect" };
@@ -454,22 +457,21 @@ TEST_F(TestConnectivityWithServer, oc_tcp_update_csm_state_P)
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
 #ifdef OC_TCP
-  EXPECT_EQ(OC_TCP_SOCKET_STATE_CONNECTED, oc_tcp_connection_state(ep));
+  EXPECT_EQ(OC_TCP_SOCKET_STATE_CONNECTED, oc_tcp_connection_state(&ep));
 #endif /* OC_TCP */
 
-  EXPECT_EQ(0, oc_tcp_update_csm_state(ep, CSM_DONE));
-  EXPECT_EQ(CSM_DONE, oc_tcp_get_csm_state(ep));
+  EXPECT_EQ(0, oc_tcp_update_csm_state(&ep, CSM_DONE));
+  EXPECT_EQ(CSM_DONE, oc_tcp_get_csm_state(&ep));
 }
 
 TEST_F(TestConnectivityWithServer, oc_tcp_update_csm_state_N)
 {
-  oc_endpoint_t *ep = findEndpoint(g_device);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = findEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
-  oc_tcp_update_csm_state(ep, CSM_DONE);
-
-  tcp_csm_state_t ret = oc_tcp_get_csm_state(ep);
-
+  oc_tcp_update_csm_state(&ep, CSM_DONE);
+  tcp_csm_state_t ret = oc_tcp_get_csm_state(&ep);
   EXPECT_NE(CSM_DONE, ret);
 }
 
@@ -537,16 +539,19 @@ TEST_F(TestConnectivityWithServer, oc_tcp_connect_timeout)
 
 TEST_F(TestConnectivityWithServer, oc_tcp_connect_repeat_fail)
 {
-  oc_endpoint_t *ep = findEndpoint(g_device);
-  int ret = oc_tcp_connect(ep, on_tcp_connect, this);
+  auto epOpt = findEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  int ret = oc_tcp_connect(&ep, on_tcp_connect, this);
   EXPECT_LE(0, ret);
   if (ret == OC_TCP_SOCKET_STATE_CONNECTING) {
     OC_DBG("oc_tcp_connect_repeat_fail wait");
     oc::TestDevice::PoolEvents(10);
   }
-  EXPECT_EQ(OC_TCP_SOCKET_STATE_CONNECTED, oc_tcp_connection_state(ep));
+  EXPECT_EQ(OC_TCP_SOCKET_STATE_CONNECTED, oc_tcp_connection_state(&ep));
   EXPECT_EQ(OC_TCP_SOCKET_ERROR_EXISTS_CONNECTED,
-            oc_tcp_connect(ep, nullptr, this));
+            oc_tcp_connect(&ep, nullptr, this));
 }
 
 TEST_F(TestConnectivityWithServer, oc_tcp_connecting_repeat_fail)
@@ -561,14 +566,17 @@ TEST_F(TestConnectivityWithServer, oc_tcp_connecting_repeat_fail)
 /** create a TCP session, wait for it to connect and send data */
 TEST_F(TestConnectivityWithServer, oc_tcp_send_buffer2)
 {
-  oc_endpoint_t *ep = findEndpoint(g_device);
-  int ret = oc_tcp_connect(ep, on_tcp_connect, this);
+  auto epOpt = findEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  int ret = oc_tcp_connect(&ep, on_tcp_connect, this);
   EXPECT_LE(0, ret);
   if (ret == OC_TCP_SOCKET_STATE_CONNECTING) {
     OC_DBG("oc_tcp_send_buffer2 wait");
     oc::TestDevice::PoolEvents(5);
   }
-  EXPECT_EQ(OC_TCP_SOCKET_STATE_CONNECTED, oc_tcp_connection_state(ep));
+  EXPECT_EQ(OC_TCP_SOCKET_STATE_CONNECTED, oc_tcp_connection_state(&ep));
 
   coap_packet_t packet = {};
   coap_tcp_init_message(&packet, CSM_7_01);
@@ -577,7 +585,7 @@ TEST_F(TestConnectivityWithServer, oc_tcp_send_buffer2)
   packet.payload_len = payload.size();
 
   oc_message_t *msg = oc_allocate_message();
-  memcpy(&msg->endpoint, ep, sizeof(oc_endpoint_t));
+  memcpy(&msg->endpoint, &ep, sizeof(oc_endpoint_t));
   msg->length =
     coap_serialize_message(&packet, msg->data, oc_message_buffer_size());
 

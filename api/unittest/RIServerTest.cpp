@@ -591,9 +591,9 @@ TEST_F(TestOcRiWithServer, RiDelayedDeleteResourceOnShutdown_P)
 
 TEST_F(TestOcRiWithServer, RiMultipleDeleteResourceRequests_P)
 {
-  // get insecure connection to the testing device
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   oc_resource_t *res =
     oc::TestDevice::GetDynamicResource(kDeviceID, /*index*/ 0);
@@ -610,11 +610,12 @@ TEST_F(TestOcRiWithServer, RiMultipleDeleteResourceRequests_P)
     }
   };
 
-  EXPECT_TRUE(oc_do_delete_with_timeout(oc_string(res->uri), ep, nullptr, 2,
-                                        onDeleteResponse, HIGH_QOS,
+  uint16_t timeout_s = 2;
+  EXPECT_TRUE(oc_do_delete_with_timeout(oc_string(res->uri), &ep, nullptr,
+                                        timeout_s, onDeleteResponse, HIGH_QOS,
                                         &onDeleteResponseCounter));
-  EXPECT_TRUE(oc_do_delete_with_timeout(oc_string(res->uri), ep, nullptr, 2,
-                                        onDeleteResponse, HIGH_QOS,
+  EXPECT_TRUE(oc_do_delete_with_timeout(oc_string(res->uri), &ep, nullptr,
+                                        timeout_s, onDeleteResponse, HIGH_QOS,
                                         &onDeleteResponseCounter));
   oc_process_suspend(&oc_timed_callback_events);
   oc::TestDevice::PoolEventsMs(1000);
@@ -631,9 +632,9 @@ TEST_F(TestOcRiWithServer, RiMultipleDeleteResourceRequests_P)
 
 TEST_F(TestOcRiWithServer, RiRequestAfterDeleteResourceRequest_P)
 {
-  // get insecure connection to the testing device
-  const oc_endpoint_t *ep = oc::TestDevice::GetEndpoint(kDeviceID, 0, SECURED);
-  ASSERT_NE(nullptr, ep);
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
 
   oc_resource_t *res =
     oc::TestDevice::GetDynamicResource(kDeviceID, /*index*/ 0);
@@ -661,11 +662,12 @@ TEST_F(TestOcRiWithServer, RiRequestAfterDeleteResourceRequest_P)
     }
   };
 
-  EXPECT_TRUE(oc_do_delete_with_timeout(oc_string(res->uri), ep, nullptr, 2,
-                                        onDeleteResponse, HIGH_QOS,
+  uint16_t timeout_s = 2;
+  EXPECT_TRUE(oc_do_delete_with_timeout(oc_string(res->uri), &ep, nullptr,
+                                        timeout_s, onDeleteResponse, HIGH_QOS,
                                         &responseCounter));
-  EXPECT_TRUE(oc_do_get_with_timeout(oc_string(res->uri), ep, nullptr, 2,
-                                     onRequestResponse, HIGH_QOS,
+  EXPECT_TRUE(oc_do_get_with_timeout(oc_string(res->uri), &ep, nullptr,
+                                     timeout_s, onRequestResponse, HIGH_QOS,
                                      &responseCounter));
 
   oc_process_suspend(&oc_timed_callback_events);

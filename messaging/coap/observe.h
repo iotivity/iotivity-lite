@@ -147,12 +147,58 @@ int coap_remove_observers_on_dos_change(size_t device, bool reset);
 /** @brief Deallocate and remove all observers. */
 void coap_free_all_observers(void);
 
-void coap_remove_discovery_batch_observers_by_resource(oc_resource_t *resource);
-void coap_notify_discovery_batch_observers(oc_resource_t *resource);
+#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
+
+typedef struct coap_batch_observer_s
+{
+  struct coap_batch_observer_s *next;
+  coap_observer_t *obs;
+  oc_resource_t *resource;
+  oc_string_t removed_resource_uri;
+} coap_batch_observer_t;
+
+/**
+ * @brief Create a batch observation notification for given resource and
+ * schedule a dispatch to send all existing batch observation notifications.
+ *
+ * @param resource observed resource
+ * @param removed resource is being removed
+ * @param dispatch schedule a execution of
+ * coap_process_discovery_batch_observers
+ *
+ * @return true if notification was created
+ */
+bool coap_add_discovery_batch_observer(oc_resource_t *resource, bool removed,
+                                       bool dispatch) OC_NONNULL();
+
+/**
+ * @brief Remove and deallocate batch observation notification for given
+ * resource
+ *
+ * @param resource resource to match (matched by pointer, cannot be NULL)
+ */
+void coap_remove_discovery_batch_observers(const oc_resource_t *resource)
+  OC_NONNULL();
+
+/** @brief Get global list of batch observation notifications */
+coap_batch_observer_t *coap_get_discovery_batch_observers(void);
+
+/** @brief Go over the list of previously generated batch observation
+ * notifications and try sending them all. */
+void coap_process_discovery_batch_observers(void);
+
+/** @brief Deallocate and remove all batch observation notifications. */
+void coap_free_all_discovery_batch_observers(void);
+
+#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
+
 int coap_notify_observers(oc_resource_t *resource,
                           oc_response_buffer_t *response_buf,
                           const oc_endpoint_t *endpoint);
-bool coap_want_be_notified(const oc_resource_t *resource);
+
+/** @brief Check if resource is observed. */
+bool coap_resource_is_observed(const oc_resource_t *resource);
+
 void notify_resource_defaults_observer(oc_resource_t *resource,
                                        oc_interface_mask_t iface_mask);
 
@@ -199,10 +245,11 @@ void coap_notify_collection_observers(const oc_collection_t *collection,
                                       oc_response_buffer_t *response_buf,
                                       oc_interface_mask_t iface_mask);
 
-int coap_observe_handler(const coap_packet_t *request,
-                         const coap_packet_t *response, oc_resource_t *resource,
-                         uint16_t block2_size, const oc_endpoint_t *endpoint,
-                         oc_interface_mask_t iface_mask) OC_NONNULL();
+/**
+ * @brief Reset the global observation sequence counter to
+ * OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE
+ */
+void coap_observe_counter_reset(void);
 
 #ifdef __cplusplus
 }

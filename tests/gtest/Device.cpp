@@ -33,9 +33,12 @@
 #include <algorithm>
 #include <array>
 #include <gtest/gtest.h>
+#include <optional>
 #include <vector>
 
 namespace oc {
+
+using namespace std::chrono_literals;
 
 void
 testNotSupportedMethod(oc_method_t method, const oc_endpoint_t *ep,
@@ -72,24 +75,27 @@ testNotSupportedMethod(oc_method_t method, const oc_endpoint_t *ep,
   if (payloadFn != nullptr) {
     payloadFn();
   }
+
+  auto timeout = 1s;
   switch (method) {
   case OC_GET:
-    EXPECT_TRUE(oc_do_get(uri.c_str(), ep, nullptr, handler, HIGH_QOS, &hd));
+    EXPECT_TRUE(oc_do_get_with_timeout(
+      uri.c_str(), ep, nullptr, timeout.count(), handler, HIGH_QOS, &hd));
     break;
   case OC_DELETE:
-    EXPECT_TRUE(oc_do_delete(uri.c_str(), ep, nullptr, handler, HIGH_QOS, &hd));
+    EXPECT_TRUE(oc_do_delete_with_timeout(
+      uri.c_str(), ep, nullptr, timeout.count(), handler, HIGH_QOS, &hd));
     break;
   case OC_POST:
-    ASSERT_TRUE(oc_do_post());
+    ASSERT_TRUE(oc_do_post_with_timeout(timeout.count()));
     break;
   case OC_PUT:
-    ASSERT_TRUE(oc_do_put());
+    ASSERT_TRUE(oc_do_put_with_timeout(timeout.count()));
     break;
   default:
     GTEST_FAIL();
   }
-  oc::TestDevice::PoolEvents(5);
-
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
   EXPECT_TRUE(hd.invoked);
 }
 
@@ -343,7 +349,7 @@ TestDevice::AddDynamicResource(const DynamicResourceToAdd &dr, size_t device)
 
   (void)permission;
 #ifdef OC_SECURITY
-  if (dr.isPublic) {
+  if ((dr.properties & OC_SECURE) == 0) {
     oc_resource_make_public(res);
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
     oc_resource_set_access_in_RFOTM(
@@ -352,7 +358,8 @@ TestDevice::AddDynamicResource(const DynamicResourceToAdd &dr, size_t device)
   }
 #endif /* OC_SECURITY */
 
-  oc_resource_set_discoverable(res, dr.isDiscoverable);
+  oc_resource_set_discoverable(res, (dr.properties & OC_DISCOVERABLE) != 0);
+  oc_resource_set_observable(res, (dr.properties & OC_OBSERVABLE) != 0);
 
   if (!oc_add_resource(res)) {
     oc_delete_resource(res);
@@ -409,7 +416,7 @@ TestDevice::ClearDynamicResources()
 
 #endif /* OC_SERVER */
 
-oc_endpoint_t *
+std::optional<oc_endpoint_t>
 TestDevice::GetEndpoint(size_t device, unsigned flags, unsigned exclude_flags)
 {
   oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
@@ -433,11 +440,11 @@ TestDevice::GetEndpoint(size_t device, unsigned flags, unsigned exclude_flags)
   while (ep != nullptr) {
     if (has_matching_flags(ep, flags, exclude_flags) &&
         has_matching_device(ep, device)) {
-      return ep;
+      return *ep;
     }
     ep = ep->next;
   }
-  return nullptr;
+  return std::nullopt;
 }
 
 int

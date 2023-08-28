@@ -21,6 +21,7 @@
 #include "oc_api.h"
 #include "oc_config.h"
 #include "oc_endpoint.h"
+#include "oc_ri.h"
 #include "port/oc_clock.h"
 #include "util/oc_atomic.h"
 #include "util/oc_features.h"
@@ -33,6 +34,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -115,8 +117,7 @@ struct DynamicResourceToAdd
   const std::vector<std::string> rts;
   const std::vector<oc_interface_mask_t> ifaces;
   DynamicResourceHandler handlers;
-  bool isPublic;
-  bool isDiscoverable;
+  unsigned properties;
 };
 
 inline DynamicResourceToAdd
@@ -124,9 +125,9 @@ makeDynamicResourceToAdd(const std::string &name, const std::string &uri,
                          const std::vector<std::string> &rts,
                          const std::vector<oc_interface_mask_t> &ifaces,
                          const DynamicResourceHandler &handlers,
-                         bool isPublic = true, bool isDiscoverable = true)
+                         unsigned properties = OC_DISCOVERABLE)
 {
-  return { name, uri, rts, ifaces, handlers, isPublic, isDiscoverable };
+  return { name, uri, rts, ifaces, handlers, properties };
 }
 
 #endif /* OC_SERVER */
@@ -193,16 +194,34 @@ public:
   static void ClearDynamicResources();
 #endif /* OC_SERVER */
 
+  static constexpr unsigned kDefaultEndpointExcludeFlags = SECURED;
+
+  constexpr static unsigned defaultEndpointIncludeFlags()
+  {
+    unsigned flags = 0;
+#ifdef OC_IPV4
+    // force IPv4 if it is enabled
+    flags |= IPV4;
+#endif /* OC_IPV4 */
+
+#ifdef OC_TCP
+    // force TCP if it is enabled
+    flags |= TCP;
+#endif /* OC_TCP */
+    return flags;
+  }
+
   /**
    * @brief Get the Endpoint object
    *
    * @param device index of device associated with the endpoint
    * @param flags flags that the endpoint flags must contain
    * @param exclude_flags flags that the endpoint flags cannot contain
-   * @return oc_endpoint_t* matching endpoint or nullptr
+   * @return oc_endpoint_t matching endpoint or std::nullopt if not found
    */
-  static oc_endpoint_t *GetEndpoint(size_t device, unsigned flags = 0,
-                                    unsigned exclude_flags = 0);
+  static std::optional<oc_endpoint_t> GetEndpoint(
+    size_t device, unsigned flags = defaultEndpointIncludeFlags(),
+    unsigned exclude_flags = kDefaultEndpointExcludeFlags);
 
 private:
   static int SetSystemTime(oc_clock_time_t time, void *user_data);

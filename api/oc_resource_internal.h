@@ -51,16 +51,45 @@ typedef bool (*oc_resource_iterate_fn_t)(oc_resource_t *resource, void *data);
  * @brief Iterate over all resources of given device and invoke given callback.
  *
  * @param device device to iterate
- * @param includePlatform true to include platform resources
+ * @param includePlatform true to include core platform resources
+ * @param includeCore true to include core (non-platform) resources
+ * @param includeDynamic true to include dynamic resources
+ * @param includeCollections true to include collection resources
  * @param fn callback invoked for each resource (cannot be NULL)
  * @param data custom user data passed to \p fn
  *
  * @note if \p fn returns false then iteration is stopped immediately and the
  * remaining resources are not iterated
  */
-void oc_resources_iterate(size_t device, bool includePlatform,
+void oc_resources_iterate(size_t device, bool includePlatform, bool includeCore,
+                          bool includeDynamic, bool includeCollections,
                           oc_resource_iterate_fn_t fn, void *data)
-  OC_NONNULL(3);
+  OC_NONNULL(6);
+
+/** @brief Iterate over all platform resources and invoke given callback. */
+void oc_resources_iterate_platform(oc_resource_iterate_fn_t fn, void *data)
+  OC_NONNULL(1);
+
+/** @brief Iterate over all core resources and invoke given callback. */
+void oc_resources_iterate_core(size_t device, oc_resource_iterate_fn_t fn,
+                               void *data) OC_NONNULL(2);
+
+#ifdef OC_SERVER
+
+/** @brief Iterate over all dynamic resources and invoke given callback. */
+void oc_resources_iterate_dynamic(size_t device, oc_resource_iterate_fn_t fn,
+                                  void *data) OC_NONNULL(2);
+
+#ifdef OC_COLLECTIONS
+
+/** @brief Iterate over all collection resources and invoke given callback. */
+void oc_resources_iterate_collections(size_t device,
+                                      oc_resource_iterate_fn_t fn, void *data)
+  OC_NONNULL(2);
+
+#endif /* OC_COLLECTIONS */
+
+#endif /* OC_SERVER */
 
 #ifdef __cplusplus
 }

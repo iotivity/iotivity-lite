@@ -57,6 +57,7 @@
 #include "util/oc_list.h"
 #include "util/oc_macros_internal.h"
 #include "util/oc_memb.h"
+#include "util/oc_macros_internal.h"
 #include <string.h>
 
 #ifdef OC_BLOCK_WISE
