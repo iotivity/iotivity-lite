@@ -109,11 +109,24 @@ oc_request_history_init(void)
 }
 
 bool
-oc_coap_check_if_duplicate(uint16_t mid, uint32_t device)
+oc_coap_check_if_duplicate(const oc_endpoint_t *endpoint, uint16_t mid)
 {
   for (size_t i = 0; i < OC_REQUEST_HISTORY_SIZE; i++) {
-    if (g_history[i] == mid && g_history_dev[i] == device) {
-      COAP_DBG("dropping duplicate request");
+    if (g_history[i] == mid && g_history_dev[i] == (uint32_t)endpoint->device) {
+#if OC_WRN_IS_ENABLED || OC_DBG_IS_ENABLED
+      char ipaddr[OC_IPADDR_BUFF_SIZE];
+      OC_SNPRINTFipaddr(ipaddr, OC_IPADDR_BUFF_SIZE, *endpoint);
+      if (endpoint->flags & SECURED) {
+        COAP_WRN("dropping duplicate request with mid %d from %s", (int)mid,
+                 ipaddr);
+      }
+#if OC_DBG_IS_ENABLED
+      else {
+        COAP_DBG("dropping duplicate request with mid %d from %s", (int)mid,
+                 ipaddr);
+      }
+#endif /* OC_DBG_IS_ENABLED */
+#endif /* OC_WRN_IS_ENABLED || OC_DBG_IS_ENABLED */
       return true;
     }
   }
@@ -248,7 +261,7 @@ coap_receive_init_response(coap_packet_t *response,
     coap_udp_init_message(response, COAP_TYPE_ACK, CONTENT_2_05, mid);
   } else {
 #ifdef OC_REQUEST_HISTORY
-    if (oc_coap_check_if_duplicate(mid, (uint32_t)endpoint->device)) {
+    if (oc_coap_check_if_duplicate(endpoint, mid)) {
       return COAP_RECEIVE_SKIP_DUPLICATE_MESSAGE;
     }
     g_history[g_idx] = mid;

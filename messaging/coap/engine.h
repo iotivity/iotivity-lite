@@ -152,11 +152,11 @@ coap_receive_status_t coap_receive(coap_receive_ctx_t *ctx,
  * @brief Check request history array if already contains the given (message id,
  * device id) pair.
  *
+ * @param endpoint endpoint to check
  * @param mid message id to check
- * @param device device id to check
  * @return true message is a duplicate
  */
-bool oc_coap_check_if_duplicate(uint16_t mid, uint32_t device);
+bool oc_coap_check_if_duplicate(const oc_endpoint_t *endpoint, uint16_t mid);
 
 /**
  * @brief Initialize request history.

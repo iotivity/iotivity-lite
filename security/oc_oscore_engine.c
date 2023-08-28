@@ -126,8 +126,7 @@ oscore_parse_message(oc_message_t *message)
 
   if (oscore_pkt.transport_type == COAP_TRANSPORT_UDP &&
       oscore_pkt.code <= OC_FETCH &&
-      oc_coap_check_if_duplicate(oscore_pkt.mid,
-                                 (uint32_t)message->endpoint.device)) {
+      oc_coap_check_if_duplicate(&message->endpoint, oscore_pkt.mid)) {
     OC_DBG("dropping duplicate request");
     return false;
   }
