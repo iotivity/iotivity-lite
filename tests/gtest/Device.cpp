@@ -188,7 +188,7 @@ Device::Terminate()
   OC_ATOMIC_STORE8(terminate_, 1);
   SignalEventLoop();
 #ifdef OC_REQUEST_HISTORY
-  oc_coap_clear_request_history();
+  oc_request_history_init();
 #endif /* OC_REQUEST_HISTORY */
 }
 

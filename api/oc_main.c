@@ -326,6 +326,10 @@ oc_main_init(const oc_handler_t *handler)
   oc_runtime_init();
   oc_ri_init();
   oc_core_init();
+#ifdef OC_REQUEST_HISTORY
+  oc_request_history_init();
+#endif /* OC_REQUEST_HISTORY */
+
   oc_network_event_handler_mutex_init();
 
   int ret = g_app_callbacks->init();

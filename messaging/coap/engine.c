@@ -101,7 +101,7 @@ static uint32_t g_history_dev[OC_REQUEST_HISTORY_SIZE];
 static uint8_t g_idx = 0;
 
 void
-oc_coap_clear_request_history(void)
+oc_request_history_init(void)
 {
   memset(g_history, 0, sizeof(g_history));
   memset(g_history_dev, 0, sizeof(g_history_dev));
