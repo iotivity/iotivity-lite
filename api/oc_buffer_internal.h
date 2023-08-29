@@ -89,11 +89,11 @@ void oc_tcp_connect_session(oc_tcp_on_connect_event_t *event);
 
 #ifdef OC_SECURITY
 /**
- * @brief close all tls session for the specific device
+ * @brief close all tls session for reset the specific device
  *
  * @param device the device index
  */
-void oc_close_all_tls_sessions_for_device(size_t device);
+void oc_close_all_tls_sessions_for_device_reset(size_t device);
 #endif /* OC_SECURITY */
 
 #ifdef __cplusplus

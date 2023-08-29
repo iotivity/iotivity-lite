@@ -278,7 +278,7 @@
     <ClInclude Include="..\..\..\security\oc_doxm_internal.h" />
     <ClInclude Include="..\..\..\security\oc_keypair_internal.h" />
     <ClInclude Include="..\..\..\security\oc_obt_internal.h" />
-    <ClInclude Include="..\..\..\security\oc_pstat.h" />
+    <ClInclude Include="..\..\..\security\oc_pstat_internal.h" />
     <ClInclude Include="..\..\..\security\oc_roles_internal.h" />
     <ClInclude Include="..\..\..\security\oc_sdi_internal.h" />
     <ClInclude Include="..\..\..\security\oc_sp_internal.h" />
@@ -344,6 +344,7 @@
     <ClCompile Include="..\..\..\api\oc_rep.c" />
     <ClCompile Include="..\..\..\api\oc_resource_factory.c" />
     <ClCompile Include="..\..\..\api\oc_ri.c" />
+    <ClCompile Include="..\..\..\api\oc_runtime.c" />
     <ClCompile Include="..\..\..\api\oc_server_api.c" />
     <ClCompile Include="..\..\..\api\oc_session_events.c" />
     <ClCompile Include="..\..\..\api\oc_swupdate.c" />

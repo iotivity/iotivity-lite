@@ -247,7 +247,7 @@ oc_tcp_connect_session(oc_tcp_on_connect_event_t *event)
 
 #ifdef OC_SECURITY
 void
-oc_close_all_tls_sessions_for_device(size_t device)
+oc_close_all_tls_sessions_for_device_reset(size_t device)
 {
   oc_process_post(&oc_message_buffer_handler,
                   oc_event_to_oc_process_event(TLS_CLOSE_ALL_SESSIONS),

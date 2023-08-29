@@ -48,7 +48,7 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_doxm_internal.h"
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #include "security/oc_roles_internal.h"
 #include "security/oc_sdi_internal.h"
 #include "security/oc_sp_internal.h"
@@ -376,8 +376,6 @@ oc_core_add_new_device(oc_add_new_device_t cfg)
   if (oc_connectivity_init(device_count, cfg.ports) < 0) {
     oc_abort("error initializing connectivity for device");
   }
-
-  oc_set_drop_commands(device_count, false);
 
   return &g_oc_device_info[device_count];
 }

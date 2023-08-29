@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright (c) 2019 Intel Corporation
+ * Copyright 2023 plgd.dev s.r.o, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,25 @@
  *
  ****************************************************************************/
 
-#ifndef OC_MAIN_INTERNAL_H
-#define OC_MAIN_INTERNAL_H
-
-#include "oc_api.h"
-#include <stdbool.h>
-#include <stddef.h>
+#ifndef OC_RUNTIME_INTERNAL_H
+#define OC_RUNTIME_INTERNAL_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef struct oc_factory_presets_t
-{
-  oc_factory_presets_cb_t cb;
-  void *data;
-} oc_factory_presets_t;
+/**
+ * @brief initialize the runtime
+ */
+void oc_runtime_init(void);
 
-oc_factory_presets_t *oc_get_factory_presets_cb(void);
-
-/** @brief Check if the IoT stack is initialized. */
-bool oc_main_initialized(void);
+/**
+ * @brief shut down the runtime
+ */
+void oc_runtime_shutdown(void);
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* OC_MAIN_INTERNAL_H */
+#endif /* OC_RUNTIME_INTERNAL_H */

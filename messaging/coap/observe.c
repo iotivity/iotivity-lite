@@ -75,7 +75,7 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_acl_internal.h"
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #endif /* OC_SECURITY */
 
 #ifdef OC_BLOCK_WISE

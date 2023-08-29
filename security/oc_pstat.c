@@ -18,10 +18,11 @@
 
 #ifdef OC_SECURITY
 
-#include "oc_pstat.h"
+#include "oc_pstat_internal.h"
 #include "api/oc_buffer_internal.h"
 #include "api/oc_main_internal.h"
 #include "api/oc_ri_internal.h"
+#include "api/oc_server_api_internal.h"
 #include "messaging/coap/coap_internal.h"
 #include "messaging/coap/observe.h"
 #include "oc_acl_internal.h"
@@ -65,7 +66,23 @@ oc_sec_pstat_free(void)
 #ifdef OC_DYNAMIC_ALLOCATION
   if (g_pstat != NULL) {
     free(g_pstat);
+    g_pstat = NULL;
   }
+#else
+  memset(g_pstat, 0, sizeof(g_pstat));
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+void
+oc_sec_pstat_init_for_devices(size_t num_device)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  g_pstat = (oc_sec_pstat_t *)calloc(num_device, sizeof(oc_sec_pstat_t));
+  if (!g_pstat) {
+    oc_abort("Insufficient memory");
+  }
+#else
+  (void)num_device;
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
@@ -73,11 +90,7 @@ void
 oc_sec_pstat_init(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  g_pstat =
-    (oc_sec_pstat_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_pstat_t));
-  if (!g_pstat) {
-    oc_abort("Insufficient memory");
-  }
+  oc_sec_pstat_init_for_devices(oc_core_get_num_devices());
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
@@ -142,15 +155,18 @@ valid_transition(size_t device, oc_dostype_t state)
 }
 
 static oc_event_callback_retval_t
-close_all_tls_sessions(void *data)
+delayed_reset(void *data)
 {
   size_t device = (size_t)data;
-  oc_close_all_tls_sessions_for_device(device);
-  oc_set_drop_commands(device, false);
-  if (coap_global_status_code() == CLOSE_ALL_TLS_SESSIONS) {
-    coap_set_global_status_code(COAP_NO_ERROR);
-  }
+  oc_reset_device_v1(device, true);
   return OC_EVENT_DONE;
+}
+
+bool
+oc_reset_in_progress(size_t device)
+{
+  return g_pstat[device].reset_in_progress ||
+         oc_has_delayed_callback((void *)device, delayed_reset, false);
 }
 
 static bool
@@ -249,24 +265,30 @@ pstat_check_state(const oc_sec_pstat_t *ps, size_t device)
 
 static bool
 oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
-                      bool close_all_tls_connections_immediately)
+                      bool shutdown)
 {
   OC_DBG("oc_pstat: Entering pstat_handle_state");
   switch (ps->s) {
   case OC_DOS_RESET: {
+    // reset is in progress
+    if (g_pstat[device].reset_in_progress) {
+      OC_DBG("oc_pstat: reset in progress");
+      return false;
+    }
+    g_pstat[device].reset_in_progress = true;
+    oc_remove_delayed_callback((void *)device, delayed_reset);
     ps->p = true;
     ps->isop = false;
     ps->cm = 1;
     ps->tm = 2;
     ps->om = 3;
     ps->sm = 4;
-#if defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_CLOUD)
-    cloud_reset(device, true, 0);
-    // TODO: we can allow async mode, but handling of OC_DOS_RESET that follows
-    // the reset call must be invoked asynchronously in a callback after
-    // cloud_reset finishes. Otherwise the cloud_reset won't execute correctly.
-#endif /* OC_SERVER && OC_CLIENT && OC_CLOUD */
+
     memset(ps->rowneruuid.id, 0, sizeof(ps->rowneruuid.id));
+#if defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_CLOUD)
+    // Reset the cloud without deregistration.
+    cloud_reset(device, true, false, 0);
+#endif /* OC_SERVER && OC_CLIENT && OC_CLOUD */
     oc_sec_doxm_default(device);
     oc_sec_cred_default(device);
     oc_sec_acl_default(device);
@@ -275,7 +297,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
 #ifdef OC_SOFTWARE_UPDATE
     oc_swupdate_default(device);
 #endif /* OC_SOFTWARE_UPDATE */
-    if (!from_storage && oc_get_con_res_announced()) {
+    if ((!from_storage || shutdown) && oc_get_con_res_announced()) {
 #if OC_WIPE_NAME
       oc_device_info_t *di = oc_core_get_device_info(device);
       oc_free_string(&di->name);
@@ -291,6 +313,8 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     oc_sec_free_roles_for_device(device);
     // regenerate the key-pair for the identity device certificate.
     if (oc_sec_ecdsa_reset_keypair(device, true) < 0) {
+      oc_remove_delayed_callback((void *)device, delayed_reset);
+      g_pstat[device].reset_in_progress = false;
       goto pstat_state_error;
     }
 #endif /* OC_PKI */
@@ -315,24 +339,14 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
       }
       OC_DBG("ERROR in RFOTM\n");
 #endif /* OC_DBG_IS_ENABLED */
+      g_pstat[device].reset_in_progress = false;
       goto pstat_state_error;
     }
-    oc_factory_presets_t *fp = oc_get_factory_presets_cb();
-    coap_status_t status_code = COAP_NO_ERROR;
-    if (close_all_tls_connections_immediately) {
-      oc_remove_delayed_callback((void *)device, close_all_tls_sessions);
-      oc_close_all_tls_sessions_for_device(device);
-      oc_set_drop_commands(device, false);
-    } else if (!from_storage) {
-      // The request comes from oc_reset_v1 or API, so we must close all TLS
-      // after a delay so the response can be sent.
-      status_code = CLOSE_ALL_TLS_SESSIONS;
-      oc_remove_delayed_callback((void *)device, close_all_tls_sessions);
-      oc_set_delayed_callback((void *)device, close_all_tls_sessions, 2);
-      // Don't accept any commands GET, POST, PUT, DELETE until all TLS sessions
-      // are closed
-      oc_set_drop_commands(device, true);
+
+    if (!shutdown) {
+      oc_close_all_tls_sessions_for_device_reset(device);
     }
+    oc_factory_presets_t *fp = oc_get_factory_presets_cb();
     if (fp->cb != NULL) {
       oc_sec_pstat_copy(&g_pstat[device], ps);
       OC_DBG("oc_pstat: invoking the factory presets callback");
@@ -340,8 +354,10 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
       OC_DBG("oc_pstat: returned from the factory presets callback");
       oc_sec_pstat_copy(ps, &g_pstat[device]);
     }
-    coap_set_global_status_code(status_code);
+
+    coap_set_global_status_code(COAP_NO_ERROR);
     ps->p = false;
+    g_pstat[device].reset_in_progress = false;
   } break;
   case OC_DOS_RFPRO: {
     ps->p = true;
@@ -443,6 +459,7 @@ oc_sec_pstat_copy(oc_sec_pstat_t *dst, const oc_sec_pstat_t *src)
   dst->tm = src->tm;
   dst->om = src->om;
   dst->sm = src->sm;
+  dst->reset_in_progress = src->reset_in_progress;
   memcpy(&dst->rowneruuid.id, src->rowneruuid.id, sizeof(src->rowneruuid.id));
 }
 
@@ -613,9 +630,10 @@ oc_sec_decode_pstat(const oc_rep_t *rep, bool from_storage, size_t device)
 #endif /* OC_SOFTWARE_UPDATE */
   if (from_storage || valid_transition(device, ps.s)) {
     if (!from_storage && transition_state) {
-      bool transition_success =
-        oc_pstat_handle_state(&ps, device, from_storage, false);
-      return transition_success;
+      if (ps.s == OC_DOS_RESET) {
+        return oc_reset_device_v1(device, false);
+      }
+      return oc_pstat_handle_state(&ps, device, from_storage, false);
     }
     oc_sec_pstat_copy(&g_pstat[device], &ps);
     return true;
@@ -654,12 +672,11 @@ post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 }
 
-bool
-oc_pstat_reset_device(size_t device, bool close_all_tls_connections_immediately)
+static bool
+oc_pstat_reset_device(size_t device, bool shutdown)
 {
   oc_sec_pstat_t ps = { .s = OC_DOS_RESET };
-  bool ret = oc_pstat_handle_state(&ps, device, false,
-                                   close_all_tls_connections_immediately);
+  bool ret = oc_pstat_handle_state(&ps, device, false, shutdown);
   oc_sec_dump_pstat(device);
   return ret;
 }
@@ -667,20 +684,50 @@ oc_pstat_reset_device(size_t device, bool close_all_tls_connections_immediately)
 void
 oc_reset_device(size_t device)
 {
-  oc_pstat_reset_device(device, true);
+  oc_reset_device_v1(device, true);
+}
+
+static bool
+set_delayed_reset(size_t device)
+{
+  if (oc_reset_in_progress(device)) {
+    return false;
+  }
+#if defined(OC_SERVER) && defined(OC_CLIENT) && defined(OC_CLOUD)
+  cloud_reset(device, false, true, 0);
+  // TODO: we can allow async mode, but handling of OC_DOS_RESET that follows
+  // the reset call must be invoked asynchronously in a callback after
+  // cloud_reset finishes. Otherwise the cloud_reset won't execute correctly.
+#endif /* OC_SERVER && OC_CLIENT && OC_CLOUD */
+#ifdef OC_SERVER
+  coap_remove_observers_on_dos_change(device, true);
+#endif /* OC_SERVER */
+  oc_sec_pstat_t ps = { .s = OC_DOS_RESET,
+                        .p = true,
+                        .isop = false,
+                        .cm = 1,
+                        .tm = 2,
+                        .om = 3,
+                        .sm = 4 };
+  oc_sec_pstat_copy(&g_pstat[device], &ps);
+  oc_set_delayed_callback((void *)device, delayed_reset, 2);
+  return true;
 }
 
 bool
-oc_reset_device_v1(size_t device, bool close_all_tls_connections_immediately)
+oc_reset_device_v1(size_t device, bool force)
 {
-  return oc_pstat_reset_device(device, close_all_tls_connections_immediately);
+  if (!force) {
+    return set_delayed_reset(device);
+  }
+  return oc_pstat_reset_device(device, false);
 }
 
 void
-oc_reset_v1(bool close_all_tls_connections_immediately)
+oc_reset_v1(bool force)
 {
   for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
-    oc_reset_device_v1(device, close_all_tls_connections_immediately);
+    oc_reset_device_v1(device, force);
   }
 }
 
@@ -688,5 +735,15 @@ void
 oc_reset(void)
 {
   oc_reset_v1(true);
+}
+
+void
+oc_reset_devices_in_RFOTM(void)
+{
+  for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
+    if (g_pstat[device].s == OC_DOS_RFOTM) {
+      oc_pstat_reset_device(device, true);
+    }
+  }
 }
 #endif /* OC_SECURITY */

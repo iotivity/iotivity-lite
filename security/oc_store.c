@@ -27,7 +27,7 @@
 #include "oc_cred_internal.h"
 #include "oc_doxm_internal.h"
 #include "oc_keypair_internal.h"
-#include "oc_pstat.h"
+#include "oc_pstat_internal.h"
 #include "oc_rep.h"
 #include "oc_sdi_internal.h"
 #include "oc_sp_internal.h"

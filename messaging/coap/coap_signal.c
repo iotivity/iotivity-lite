@@ -88,8 +88,15 @@ int
 coap_send_ping_message(const oc_endpoint_t *endpoint, uint8_t custody_option,
                        const uint8_t *token, uint8_t token_len)
 {
-  if (!endpoint || !token || token_len == 0 || !(endpoint->flags & TCP))
+  if (!endpoint || !token || token_len == 0 || !(endpoint->flags & TCP)) {
+    COAP_ERR(
+      "coap_send_ping_message failed for invalid arguments (endpoint: %s,"
+      " token: %s, token_len: %s, tcp: %s)",
+      endpoint ? "ok" : "invalid", token ? "ok" : "invalid",
+      token_len > 0 ? "ok" : "invalid",
+      endpoint && (endpoint->flags & TCP) ? "ok" : "invalid");
     return 0;
+  }
 
   coap_packet_t ping_pkt[1];
   coap_tcp_init_message(ping_pkt, PING_7_02);

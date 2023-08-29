@@ -33,7 +33,7 @@
 #include "port/oc_clock.h"
 #include "port/oc_log_internal.h"
 #ifdef OC_SECURITY
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #endif /* OC_SECURITY  */
 #include "util/oc_compiler.h"
 #include "util/oc_macros_internal.h"

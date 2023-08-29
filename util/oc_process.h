@@ -541,16 +541,6 @@ int oc_process_is_running(const struct oc_process *p);
  */
 int oc_process_nevents(void);
 
-#ifdef OC_SECURITY
-/**
- * Check if closing of all tls sessions is currently scheduled by the process.
- *
- * \return true closing of all tls is sessions is scheduled by the process
- * \return false otherwise
- */
-bool oc_process_is_closing_all_tls_sessions(void);
-#endif /* OC_SECURITY */
-
 /** @} */
 
 extern struct oc_process *oc_process_list;

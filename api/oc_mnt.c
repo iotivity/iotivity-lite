@@ -29,7 +29,7 @@
 #include "util/oc_compiler.h"
 
 #ifdef OC_SECURITY
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #endif /* OC_SECURITY */
 
 #include <stdio.h>
@@ -63,7 +63,7 @@ post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   bool success = false;
   if (oc_rep_get_bool(request->request_payload, "fr", &fr) && fr) {
 #ifdef OC_SECURITY
-    success = oc_pstat_reset_device(request->resource->device, false);
+    success = oc_reset_device_v1(request->resource->device, false);
 #else  /* OC_SECURITY */
     success = true;
 #endif /* !OC_SECURITY */

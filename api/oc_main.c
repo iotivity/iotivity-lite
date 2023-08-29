@@ -17,6 +17,7 @@
  ****************************************************************************/
 
 #include "api/oc_ri_internal.h"
+#include "api/oc_runtime_internal.h"
 #include "oc_config.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -42,7 +43,7 @@
 #include "security/oc_ael.h"
 #include "security/oc_cred_internal.h"
 #include "security/oc_doxm_internal.h"
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #include "security/oc_sp_internal.h"
 #include "security/oc_svr_internal.h"
 #include "security/oc_tls_internal.h"
@@ -77,12 +78,6 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-#ifdef OC_DYNAMIC_ALLOCATION
-static bool *g_drop_commands;
-#else  /* OC_DYNAMIC_ALLOCATION */
-static bool g_drop_commands[OC_MAX_NUM_DEVICES];
-#endif /* !OC_DYNAMIC_ALLOCATION */
 
 static bool g_initialized = false;
 static const oc_handler_t *g_app_callbacks;
@@ -328,28 +323,29 @@ oc_main_init(const oc_handler_t *handler)
   oc_mem_trace_init();
 #endif /* OC_MEMORY_TRACE */
 
+  oc_runtime_init();
   oc_ri_init();
   oc_core_init();
+#ifdef OC_REQUEST_HISTORY
+  oc_request_history_init();
+#endif /* OC_REQUEST_HISTORY */
+
   oc_network_event_handler_mutex_init();
 
   int ret = g_app_callbacks->init();
   if (ret < 0) {
     oc_ri_shutdown();
     oc_shutdown_all_devices();
+    oc_runtime_shutdown();
     goto err;
   }
-#ifdef OC_DYNAMIC_ALLOCATION
-  g_drop_commands = (bool *)calloc(oc_core_get_num_devices(), sizeof(bool));
-  if (g_drop_commands == NULL) {
-    oc_abort("Insufficient memory");
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_SECURITY
   ret = oc_tls_init_context();
   if (ret < 0) {
     oc_ri_shutdown();
     oc_shutdown_all_devices();
+    oc_runtime_shutdown();
     goto err;
   }
 #endif /* OC_SECURITY */
@@ -384,10 +380,6 @@ oc_main_init(const oc_handler_t *handler)
 
 err:
   OC_ERR("oc_main: error in stack initialization");
-#ifdef OC_DYNAMIC_ALLOCATION
-  free(g_drop_commands);
-  g_drop_commands = NULL;
-#endif /* OC_DYNAMIC_ALLOCATION */
   return ret;
 }
 
@@ -445,6 +437,10 @@ oc_main_shutdown(void)
 #ifdef OC_SECURITY
   oc_tls_shutdown();
 
+  // In case that the device is still in onboarding state(RFOTM), it will be
+  // reset to allow re-onboarding.
+  oc_reset_devices_in_RFOTM();
+
   oc_sec_svr_free();
 #ifdef OC_PKI
 #ifdef OC_CLIENT
@@ -460,18 +456,13 @@ oc_main_shutdown(void)
 
   oc_shutdown_all_devices();
 
-#ifdef OC_DYNAMIC_ALLOCATION
-  free(g_drop_commands);
-  g_drop_commands = NULL;
-#else  /* !OC_DYNAMIC_ALLOCATION */
-  memset(g_drop_commands, 0, sizeof(bool) * OC_MAX_NUM_DEVICES);
-#endif /* OC_DYNAMIC_ALLOCATION */
-
   g_app_callbacks = NULL;
 
 #ifdef OC_MEMORY_TRACE
   oc_mem_trace_shutdown();
 #endif /* OC_MEMORY_TRACE */
+
+  oc_runtime_shutdown();
 }
 
 bool
@@ -486,26 +477,4 @@ _oc_signal_event_loop(void)
   if (g_app_callbacks != NULL) {
     g_app_callbacks->signal_event_loop();
   }
-}
-
-void
-oc_set_drop_commands(size_t device, bool drop)
-{
-#ifdef OC_DYNAMIC_ALLOCATION
-  if (g_drop_commands == NULL) {
-    return;
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
-  g_drop_commands[device] = drop;
-}
-
-bool
-oc_drop_command(size_t device)
-{
-#ifdef OC_DYNAMIC_ALLOCATION
-  if (g_drop_commands == NULL) {
-    return false;
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
-  return g_drop_commands[device];
 }

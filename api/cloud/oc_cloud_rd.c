@@ -25,7 +25,7 @@
 #include "rd_client_internal.h"
 
 #ifdef OC_SECURITY
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #endif /* OC_SECURITY */
 
 #define ONE_HOUR 3600

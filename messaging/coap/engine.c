@@ -65,6 +65,7 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_audit.h"
+#include "security/oc_pstat_internal.h"
 #include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
 
@@ -99,12 +100,33 @@ static uint16_t g_history[OC_REQUEST_HISTORY_SIZE];
 static uint32_t g_history_dev[OC_REQUEST_HISTORY_SIZE];
 static uint8_t g_idx = 0;
 
+void
+oc_request_history_init(void)
+{
+  memset(g_history, 0, sizeof(g_history));
+  memset(g_history_dev, 0, sizeof(g_history_dev));
+  g_idx = 0;
+}
+
 bool
-oc_coap_check_if_duplicate(uint16_t mid, uint32_t device)
+oc_coap_check_if_duplicate(const oc_endpoint_t *endpoint, uint16_t mid)
 {
   for (size_t i = 0; i < OC_REQUEST_HISTORY_SIZE; i++) {
-    if (g_history[i] == mid && g_history_dev[i] == device) {
-      COAP_DBG("dropping duplicate request");
+    if (g_history[i] == mid && g_history_dev[i] == (uint32_t)endpoint->device) {
+#if OC_WRN_IS_ENABLED || OC_DBG_IS_ENABLED
+      char ipaddr[OC_IPADDR_BUFF_SIZE];
+      OC_SNPRINTFipaddr(ipaddr, OC_IPADDR_BUFF_SIZE, *endpoint);
+      if (endpoint->flags & SECURED) {
+        COAP_WRN("dropping duplicate request with mid %d from %s", (int)mid,
+                 ipaddr);
+      }
+#if OC_DBG_IS_ENABLED
+      else {
+        COAP_DBG("dropping duplicate request with mid %d from %s", (int)mid,
+                 ipaddr);
+      }
+#endif /* OC_DBG_IS_ENABLED */
+#endif /* OC_WRN_IS_ENABLED || OC_DBG_IS_ENABLED */
       return true;
     }
   }
@@ -239,7 +261,7 @@ coap_receive_init_response(coap_packet_t *response,
     coap_udp_init_message(response, COAP_TYPE_ACK, CONTENT_2_05, mid);
   } else {
 #ifdef OC_REQUEST_HISTORY
-    if (oc_coap_check_if_duplicate(mid, (uint32_t)endpoint->device)) {
+    if (oc_coap_check_if_duplicate(endpoint, mid)) {
       return COAP_RECEIVE_SKIP_DUPLICATE_MESSAGE;
     }
     g_history[g_idx] = mid;
@@ -309,11 +331,6 @@ coap_receive_blockwise_block1(coap_receive_ctx_t *ctx, const char *href,
   }
 
   if (ctx->request_buffer == NULL && ctx->block1.num == 0) {
-    if (oc_drop_command(endpoint->device)) {
-      COAP_WRN("cannot process new request during closing TLS sessions");
-      return COAP_RECEIVE_ERROR;
-    }
-
     uint32_t buffer_size;
     if (!coap_options_get_size1(ctx->request, &buffer_size) ||
         buffer_size == 0) {
@@ -455,11 +472,6 @@ coap_receive_blockwise_block2(coap_receive_ctx_t *ctx, const char *href,
     return COAP_RECEIVE_INVOKE_HANDLER;
   }
 
-  if (oc_drop_command(endpoint->device)) {
-    COAP_WRN("cannot process new request during closing TLS sessions");
-    return COAP_RECEIVE_ERROR;
-  }
-
   uint32_t buffer_size;
   if (!coap_options_get_size2(ctx->request, &buffer_size) || buffer_size == 0) {
     buffer_size = (uint32_t)OC_MAX_APP_DATA_SIZE;
@@ -500,10 +512,14 @@ coap_receive_method_payload(coap_receive_ctx_t *ctx, const char *href,
   COAP_DBG("no block options; processing regular request");
   const uint8_t *incoming_block;
   uint32_t incoming_block_len = coap_get_payload(ctx->request, &incoming_block);
-  if (oc_drop_command(endpoint->device)) {
-    COAP_WRN("cannot process new request during closing TLS sessions");
+#ifdef OC_SECURITY
+  // Drop unsecured (unicast/multicast) requests during reset the device.
+  if (oc_reset_in_progress(endpoint->device) &&
+      ((endpoint->flags & SECURED) == 0)) {
+    COAP_WRN("cannot process new requests during reset the device");
     return COAP_RECEIVE_ERROR;
   }
+#endif /* OC_SECURITY */
 
 #ifdef OC_TCP
   bool is_valid_size =

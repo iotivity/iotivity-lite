@@ -24,7 +24,7 @@
 #include "oc_acl_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
-#include "oc_pstat.h"
+#include "oc_pstat_internal.h"
 #include "oc_store.h"
 #include "oc_tls_internal.h"
 #include "port/oc_assert.h"

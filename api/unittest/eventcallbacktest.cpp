@@ -21,6 +21,7 @@
 #include "api/oc_event_callback_internal.h"
 #include "api/oc_events_internal.h"
 #include "api/oc_link_internal.h"
+#include "api/oc_runtime_internal.h"
 #include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_ri.h"
@@ -41,7 +42,7 @@
 #endif /* OC_HAS_FEATURE_PUSH */
 
 #ifdef OC_SECURITY
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #include "security/oc_security_internal.h"
 #endif /* OC_SECURITY */
 
@@ -333,6 +334,7 @@ public:
   static void SetUpTestCase()
   {
     oc_network_event_handler_mutex_init();
+    oc_runtime_init();
     oc_ri_init();
     oc_core_init();
     ASSERT_EQ(0, oc_add_device(kDeviceURI.c_str(), kDeviceType.c_str(),
@@ -349,6 +351,7 @@ public:
     oc_connectivity_shutdown(kDeviceID);
     oc_core_shutdown();
     oc_ri_shutdown();
+    oc_runtime_shutdown();
     oc_network_event_handler_mutex_destroy();
   }
 

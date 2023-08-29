@@ -16,10 +16,13 @@
  *
  ****************************************************************************/
 
-#ifndef OC_PSTAT_H
-#define OC_PSTAT_H
+#ifndef OC_PSTAT_INTERNAL_H
+#define OC_PSTAT_INTERNAL_H
 
 #include "oc_ri.h"
+
+#include <stddef.h>
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -41,14 +44,15 @@ typedef enum {
 
 typedef struct
 {
-  oc_dostype_t s;       ///< Device Onboarding State
-  bool p;               ///< Pending state
-  bool isop;            ///< Is Device Operational oc_dpmtype_t cm;
-  oc_dpmtype_t cm;      ///< Current Mode
-  oc_dpmtype_t tm;      ///< Target Mode
-  int om;               ///< Operational Mode
-  int sm;               ///< Supported Mode
-  oc_uuid_t rowneruuid; ///< Resource Owner ID
+  oc_dostype_t s;         ///< Device Onboarding State
+  bool p;                 ///< Pending state
+  bool isop;              ///< Is Device Operational oc_dpmtype_t cm;
+  oc_dpmtype_t cm;        ///< Current Mode
+  oc_dpmtype_t tm;        ///< Target Mode
+  int om;                 ///< Operational Mode
+  int sm;                 ///< Supported Mode
+  oc_uuid_t rowneruuid;   ///< Resource Owner ID
+  bool reset_in_progress; ///< Reset in progress runtime flag
 } oc_sec_pstat_t;
 
 void oc_sec_pstat_init(void);
@@ -67,7 +71,6 @@ void get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
                void *data);
 void post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
                 void *data);
-bool oc_pstat_reset_device(size_t device, bool self_reset);
 
 #ifdef OC_SOFTWARE_UPDATE
 
@@ -75,6 +78,27 @@ void oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm);
 oc_dpmtype_t oc_sec_pstat_current_mode(size_t device);
 
 #endif /* OC_SOFTWARE_UPDATE */
+
+/**
+ * @brief Reset all devices in RFOTM state for shutdown.
+ */
+void oc_reset_devices_in_RFOTM(void);
+
+/**
+ * @brief Checks if reset is in progress.
+ *
+ * @param[in] device the index of the logical device
+ *
+ * @return True if the reset is in progress, false otherwise.
+ */
+bool oc_reset_in_progress(size_t device);
+
+/**
+ * @brief Initialize pstat for num devices.
+ *
+ * @param[in] num_device the number of devices
+ */
+void oc_sec_pstat_init_for_devices(size_t num_device);
 
 #ifdef __cplusplus
 }

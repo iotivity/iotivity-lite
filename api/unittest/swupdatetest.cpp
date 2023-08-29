@@ -23,6 +23,7 @@
 #include "api/oc_core_res_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_ri_internal.h"
+#include "api/oc_runtime_internal.h"
 #include "api/oc_swupdate_internal.h"
 #include "oc_acl.h"
 #include "oc_api.h"
@@ -42,7 +43,7 @@
 #endif /* OC_HAS_FEATURE_PUSH */
 
 #ifdef OC_SECURITY
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #endif /* OC_SECURITY */
 
 #include <algorithm>
@@ -60,6 +61,7 @@ public:
   static void SetUpTestCase()
   {
     oc_network_event_handler_mutex_init();
+    oc_runtime_init();
     oc_ri_init();
     oc_core_init();
     ASSERT_EQ(0, oc_add_device(oc::DefaultDevice.uri.c_str(),
@@ -81,6 +83,7 @@ public:
     oc_connectivity_shutdown(kDeviceID);
     oc_core_shutdown();
     oc_ri_shutdown();
+    oc_runtime_shutdown();
     oc_network_event_handler_mutex_destroy();
 
     ASSERT_EQ(0, oc::TestStorage.Clear());

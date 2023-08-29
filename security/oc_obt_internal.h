@@ -27,7 +27,7 @@
 #include "oc_obt.h"
 #include "oc_role.h"
 #include "oc_uuid.h"
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #include "util/oc_list.h"
 #include "util/oc_compiler.h"
 

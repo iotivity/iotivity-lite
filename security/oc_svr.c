@@ -27,7 +27,7 @@
 #include "oc_csr_internal.h"
 #include "oc_csr.h"
 #include "oc_doxm_internal.h"
-#include "oc_pstat.h"
+#include "oc_pstat_internal.h"
 #include "oc_ri.h"
 #include "oc_roles_internal.h"
 #include "oc_sdi_internal.h"

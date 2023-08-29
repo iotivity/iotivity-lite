@@ -29,7 +29,7 @@
 #include "oc_core_res.h"
 
 #ifdef OC_SECURITY
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
 

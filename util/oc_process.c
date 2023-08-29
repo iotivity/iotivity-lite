@@ -363,26 +363,7 @@ oc_process_nevents(void)
 {
   return (int)g_nevents + OC_ATOMIC_LOAD8(g_poll_requested);
 }
-/*---------------------------------------------------------------------------*/
-#ifdef OC_SECURITY
-bool
-oc_process_is_closing_all_tls_sessions(void)
-{
-  if (coap_global_status_code() == CLOSE_ALL_TLS_SESSIONS) {
-    return true;
-  }
 
-  const oc_process_event_t tls_close =
-    oc_event_to_oc_process_event(TLS_CLOSE_ALL_SESSIONS);
-  for (oc_process_num_events_t i = 0; i < g_nevents; ++i) {
-    oc_process_num_events_t index = (g_fevent + i) % OC_PROCESS_NUMEVENTS;
-    if (g_events[index].ev == tls_close) {
-      return true;
-    }
-  }
-  return false;
-}
-#endif /* OC_SECURITY */
 /*---------------------------------------------------------------------------*/
 int
 oc_process_drop(const struct oc_process *p, oc_process_drop_event_t drop_event,

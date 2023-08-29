@@ -23,6 +23,7 @@
 #include "api/oc_link_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_ri_server_internal.h"
+#include "api/oc_runtime_internal.h"
 #include "api/oc_server_api_internal.h"
 #include "oc_api.h"
 #include "oc_collection.h"
@@ -50,12 +51,14 @@ public:
   void SetUp() override
   {
     oc_network_event_handler_mutex_init();
+    oc_runtime_init();
     oc_ri_init();
   }
 
   void TearDown() override
   {
     oc_ri_shutdown();
+    oc_runtime_shutdown();
     oc_network_event_handler_mutex_destroy();
   }
 

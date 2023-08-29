@@ -28,7 +28,7 @@
 #include "oc_api.h"
 #include "oc_clock_util.h"
 #include "oc_core_res.h"
-#include "oc_pstat.h"
+#include "oc_pstat_internal.h"
 #include "oc_store.h"
 #include "port/oc_log_internal.h"
 #ifdef OC_DYNAMIC_ALLOCATION

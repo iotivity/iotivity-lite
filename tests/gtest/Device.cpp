@@ -24,6 +24,7 @@
 #include "oc_api.h"
 #include "oc_clock_util.h"
 #include "oc_core_res.h"
+#include "messaging/coap/engine.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 #include "plgd/plgd_time.h"
@@ -186,6 +187,9 @@ Device::Terminate()
 {
   OC_ATOMIC_STORE8(terminate_, 1);
   SignalEventLoop();
+#ifdef OC_REQUEST_HISTORY
+  oc_request_history_init();
+#endif /* OC_REQUEST_HISTORY */
 }
 
 void

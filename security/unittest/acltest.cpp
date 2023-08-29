@@ -20,13 +20,14 @@
 
 #include "api/oc_core_res_internal.h"
 #include "api/oc_ri_internal.h"
+#include "api/oc_runtime_internal.h"
 #include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_uuid.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "security/oc_acl_internal.h"
-#include "security/oc_pstat.h"
+#include "security/oc_pstat_internal.h"
 #include "util/oc_list.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
@@ -48,6 +49,7 @@ protected:
   void SetUp() override
   {
     oc_network_event_handler_mutex_init();
+    oc_runtime_init();
     oc_ri_init();
     oc_core_init();
     ASSERT_EQ(0, oc_add_device(kDeviceURI.c_str(), kDeviceType.c_str(),
@@ -66,6 +68,7 @@ protected:
     oc_connectivity_shutdown(device_id_);
     oc_core_shutdown();
     oc_ri_shutdown();
+    oc_runtime_shutdown();
     oc_network_event_handler_mutex_destroy();
   }
 

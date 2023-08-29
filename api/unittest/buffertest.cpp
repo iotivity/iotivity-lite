@@ -18,6 +18,7 @@
 
 #include "api/oc_buffer_internal.h"
 #include "api/oc_ri_internal.h"
+#include "api/oc_runtime_internal.h"
 #include "oc_buffer.h"
 #include "oc_config.h"
 #include "port/oc_network_event_handler_internal.h"
@@ -231,6 +232,7 @@ template<class Event, void Op(Event *)>
 void
 testProcessMessagesByProcess()
 {
+  oc_runtime_init();
   oc_ri_init();
 
   using oc_event_uptr = std::unique_ptr<Event, void (*)(Event *)>;
@@ -260,6 +262,7 @@ testProcessMessagesByProcess()
 
   oc_message_buffer_handler_stop();
   oc_ri_shutdown();
+  oc_runtime_shutdown();
 }
 
 TEST_F(TestMessage, RecvMessageByProcess)

@@ -21,6 +21,7 @@
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
 
 #include "api/oc_ri_internal.h"
+#include "api/oc_runtime_internal.h"
 #include "messaging/coap/coap.h"
 #include "messaging/coap/oscore.h"
 #include "oc_helpers.h"
@@ -39,12 +40,14 @@ protected:
   void SetUp() override
   {
     oc_network_event_handler_mutex_init();
+    oc_runtime_init();
     oc_ri_init();
   }
 
   void TearDown() override
   {
     oc_ri_shutdown();
+    oc_runtime_shutdown();
     oc_network_event_handler_mutex_destroy();
   }
 };

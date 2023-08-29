@@ -176,6 +176,9 @@
     <ClCompile Include="..\..\..\api\oc_ri.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_runtime.c">
+      <Filter>Core</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\api\oc_server_api.c">
       <Filter>Core</Filter>
     </ClCompile>
@@ -667,9 +670,9 @@
     <ClInclude Include="..\..\..\security\oc_doxm_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_pstat.h">
+    <ClInclude Include="..\..\..\security\oc_pstat_internal.h">
       <Filter>Security</Filter>
-    </ClInclude>
+    </ClInclude>  
     <ClInclude Include="..\..\..\security\oc_store.h">
       <Filter>Security</Filter>
     </ClInclude>

@@ -91,13 +91,14 @@ bool cloud_is_deregistering(const oc_cloud_context_t *ctx);
  * endpoint peer exists.
  *
  * @param device device index
+ * @param force just reset the context without execution of deregistration
  * @param sync for synchronous (no attempted login) execution of deregistration
  * for security device
  * @param timeout timeout for asynchronous deregistration requests
  * @return 0 on success
  * @return -1 on failure
  */
-int cloud_reset(size_t device, bool sync, uint16_t timeout);
+int cloud_reset(size_t device, bool force, bool sync, uint16_t timeout);
 
 /**
  * @brief Set cloud configuration.
