@@ -55,6 +55,8 @@ typedef struct
   bool reset_in_progress; ///< Reset in progress runtime flag
 } oc_sec_pstat_t;
 
+#define OC_PSTAT_RESET_DELAY_MS (2000)
+
 void oc_sec_pstat_init(void);
 void oc_sec_pstat_free(void);
 bool oc_sec_is_operational(size_t device);
@@ -99,6 +101,22 @@ bool oc_reset_in_progress(size_t device);
  * @param[in] num_device the number of devices
  */
 void oc_sec_pstat_init_for_devices(size_t num_device);
+
+#ifdef OC_TEST
+
+/**
+ * @brief Set interval in milliseconds before delayed reset is performed.
+ *
+ * @param delay_ms the interval in milliseconds
+ *
+ * @sa oc_reset_device_v1
+ */
+void oc_pstat_set_reset_delay_ms(uint64_t delay_ms);
+
+/** @brief Get reset delay interval in milliseconds. */
+uint64_t oc_pstat_get_reset_delay_ms(void);
+
+#endif /* OC_TEST */
 
 #ifdef __cplusplus
 }
