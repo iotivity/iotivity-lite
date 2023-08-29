@@ -980,7 +980,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
     endif()
 
     file(GLOB UTILTEST_SRC util/unittest/*.cpp)
-    oc_package_add_test(TARGET utiltest SOURCES ${UTILTEST_SRC})
+    oc_package_add_test(TARGET utiltest SOURCES ${COMMONTEST_SRC} ${UTILTEST_SRC})
 
     if(OC_CLOUD_ENABLED)
         file(GLOB CLOUDTEST_SRC api/cloud/unittest/*.cpp)

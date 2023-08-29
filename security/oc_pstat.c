@@ -687,6 +687,24 @@ oc_reset_device(size_t device)
   oc_reset_device_v1(device, true);
 }
 
+#ifdef OC_TEST
+
+static uint64_t g_reset_delay_ms = OC_PSTAT_RESET_DELAY_MS;
+
+void
+oc_pstat_set_reset_delay_ms(uint64_t delay_ms)
+{
+  g_reset_delay_ms = delay_ms;
+}
+
+uint64_t
+oc_pstat_get_reset_delay_ms()
+{
+  return g_reset_delay_ms;
+}
+
+#endif /* OC_TEST */
+
 static bool
 set_delayed_reset(size_t device)
 {
@@ -710,7 +728,13 @@ set_delayed_reset(size_t device)
                         .om = 3,
                         .sm = 4 };
   oc_sec_pstat_copy(&g_pstat[device], &ps);
-  oc_set_delayed_callback((void *)device, delayed_reset, 2);
+#ifdef OC_TEST
+  oc_set_delayed_callback_ms_v1((void *)device, delayed_reset,
+                                oc_pstat_get_reset_delay_ms());
+#else  /* !OC_TEST */
+  oc_set_delayed_callback_ms_v1((void *)device, delayed_reset,
+                                OC_PSTAT_RESET_DELAY_MS);
+#endif /* OC_TEST */
   return true;
 }
 

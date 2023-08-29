@@ -55,6 +55,7 @@
 #include "oc_buffer.h"
 #include "transactions.h"
 #include "util/oc_list.h"
+#include "util/oc_macros_internal.h"
 #include "util/oc_memb.h"
 #include <string.h>
 

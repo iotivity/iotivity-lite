@@ -104,13 +104,12 @@ static OC_ATOMIC_INT8_T g_poll_requested;
 static void call_process(struct oc_process *p, oc_process_event_t ev,
                          oc_process_data_t data);
 
-/*---------------------------------------------------------------------------*/
 oc_process_event_t
 oc_process_alloc_event(void)
 {
   return oc_lastevent++;
 }
-/*---------------------------------------------------------------------------*/
+
 void
 oc_process_start(struct oc_process *p, oc_process_data_t data)
 {
@@ -134,7 +133,7 @@ oc_process_start(struct oc_process *p, oc_process_data_t data)
   /* Post a synchronous initialization event to the process. */
   oc_process_post_synch(p, OC_PROCESS_EVENT_INIT, data);
 }
-/*---------------------------------------------------------------------------*/
+
 static void
 exit_process(struct oc_process *p, const struct oc_process *fromprocess)
 {
@@ -197,7 +196,7 @@ exit_process(struct oc_process *p, const struct oc_process *fromprocess)
 
   oc_process_current = old_current;
 }
-/*---------------------------------------------------------------------------*/
+
 static void
 call_process(struct oc_process *p, oc_process_event_t ev,
              oc_process_data_t data)
@@ -231,13 +230,13 @@ call_process(struct oc_process *p, oc_process_event_t ev,
     break;
   }
 }
-/*---------------------------------------------------------------------------*/
+
 void
 oc_process_exit(struct oc_process *p)
 {
   exit_process(p, OC_PROCESS_CURRENT());
 }
-/*---------------------------------------------------------------------------*/
+
 void
 oc_process_shutdown(void)
 {
@@ -262,11 +261,11 @@ oc_process_init(void)
   g_nevents = g_fevent = 0;
   oc_process_current = oc_process_list = NULL;
 }
-/*---------------------------------------------------------------------------*/
+
 /*
  * Call each process' poll handler.
  */
-/*---------------------------------------------------------------------------*/
+
 static void
 do_poll(void)
 {
@@ -282,12 +281,11 @@ do_poll(void)
     }
   }
 }
-/*---------------------------------------------------------------------------*/
+
 /*
  * Process the next event in the event queue and deliver it to
  * listening processes.
  */
-/*---------------------------------------------------------------------------*/
 static void
 do_event(void)
 {
@@ -343,7 +341,7 @@ do_event(void)
     call_process(receiver, ev, data);
   }
 }
-/*---------------------------------------------------------------------------*/
+
 int
 oc_process_run(void)
 {
@@ -357,14 +355,29 @@ oc_process_run(void)
 
   return (int)g_nevents + OC_ATOMIC_LOAD8(g_poll_requested);
 }
-/*---------------------------------------------------------------------------*/
+
 int
 oc_process_nevents(void)
 {
   return (int)g_nevents + OC_ATOMIC_LOAD8(g_poll_requested);
 }
 
-/*---------------------------------------------------------------------------*/
+#ifdef OC_SECURITY
+bool
+oc_process_is_closing_all_tls_sessions(void)
+{
+  const oc_process_event_t tls_close =
+    oc_event_to_oc_process_event(TLS_CLOSE_ALL_SESSIONS);
+  for (oc_process_num_events_t i = 0; i < g_nevents; ++i) {
+    oc_process_num_events_t index = (g_fevent + i) % OC_PROCESS_NUMEVENTS;
+    if (g_events[index].ev == tls_close) {
+      return true;
+    }
+  }
+  return false;
+}
+#endif /* OC_SECURITY */
+
 int
 oc_process_drop(const struct oc_process *p, oc_process_drop_event_t drop_event,
                 const void *user_data)
@@ -407,7 +420,6 @@ oc_process_drop(const struct oc_process *p, oc_process_drop_event_t drop_event,
   return dropped;
 }
 
-/*---------------------------------------------------------------------------*/
 int
 oc_process_post(struct oc_process *p, oc_process_event_t ev,
                 oc_process_data_t data)
@@ -448,7 +460,7 @@ oc_process_post(struct oc_process *p, oc_process_event_t ev,
 
   return OC_PROCESS_ERR_OK;
 }
-/*---------------------------------------------------------------------------*/
+
 void
 oc_process_post_synch(struct oc_process *p, oc_process_event_t ev,
                       oc_process_data_t data)
@@ -458,7 +470,7 @@ oc_process_post_synch(struct oc_process *p, oc_process_event_t ev,
   call_process(p, ev, data);
   oc_process_current = caller;
 }
-/*---------------------------------------------------------------------------*/
+
 void
 oc_process_poll(struct oc_process *p)
 {
@@ -470,13 +482,12 @@ oc_process_poll(struct oc_process *p)
     }
   }
 }
-/*---------------------------------------------------------------------------*/
+
 int
 oc_process_is_running(const struct oc_process *p)
 {
   return OC_ATOMIC_LOAD8(p->state) != OC_PROCESS_STATE_NONE;
 }
-/*---------------------------------------------------------------------------*/
 
 #ifdef OC_TEST
 
