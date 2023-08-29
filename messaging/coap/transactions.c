@@ -168,7 +168,13 @@ coap_send_transaction(coap_transaction_t *t)
     t = NULL;
   } else {
     /* timed out */
-    COAP_WRN("Timeout");
+#if OC_WRN_IS_ENABLED
+    char endpoint_buf[256];
+    memset(endpoint_buf, 0, sizeof(endpoint_buf));
+    OC_SNPRINT_ENDPOINT_ADDR(endpoint_buf, sizeof(endpoint_buf),
+                             t->message->endpoint, addr);
+    COAP_WRN("Timeout for %s with mid %d", endpoint_buf, t->mid);
+#endif /* OC_WRN_IS_ENABLED */
 #ifdef OC_SERVER
     /* remove observers */
     coap_remove_observers_by_client(&t->message->endpoint);

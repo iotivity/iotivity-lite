@@ -24,6 +24,7 @@
 #include "oc_helpers.h"
 #include "oc_log.h"
 #include "oc_pki.h"
+#include "oc_clock_util.h"
 #include "port/oc_assert.h"
 #include "util/oc_features.h"
 #include "util/oc_macros_internal.h"
@@ -1495,11 +1496,14 @@ cloud_server_send_response_cb(oc_request_t *request, oc_status_t response_code)
   if (request->resource != NULL) {
     uri = oc_string(request->resource->uri);
   }
+  char timebuf[64] = { 0 };
+  oc_clock_time_rfc3339(timebuf, sizeof(timebuf));
   const char *response_code_str = oc_status_to_str(response_code);
   const char *method_str = oc_method_to_str(request->method);
-  OC_PRINTF(
-    "<cloud_server_send_response_cb> method(%d): %s, uri: %s, code(%d): %s",
-    request->method, method_str, uri, response_code, response_code_str);
+  OC_PRINTF("[CS %s] <cloud_server_send_response_cb> method(%d): %s, uri: %s, "
+            "code(%d): %s",
+            timebuf, request->method, method_str, uri, response_code,
+            response_code_str);
 #ifdef OC_HAS_FEATURE_ETAG
   if (request->etag != NULL) {
     char buf[32];
