@@ -882,6 +882,7 @@ oc_sec_add_new_cred(size_t device, bool roles_resource,
     .privatedata = privatedata,
     .role = role,
     .authority = authority,
+    .tag = tag,
 #ifdef OC_PKI
     .publicdata = publicdata,
     .keypair = kp,
