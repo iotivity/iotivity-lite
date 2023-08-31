@@ -677,6 +677,14 @@ coap_receive_set_response_by_handler(coap_receive_ctx_t *ctx,
     if (payload && ctx->response_buffer->payload_size > 0) {
       coap_set_payload(ctx->response, payload, payload_size);
     }
+#ifdef OC_HAS_FEATURE_ETAG
+    const oc_blockwise_response_state_t *response_state =
+      (oc_blockwise_response_state_t *)ctx->response_buffer;
+    if (response_state->etag.length > 0) {
+      coap_options_set_etag(ctx->response, response_state->etag.value,
+                            response_state->etag.length);
+    }
+#endif /* OC_HAS_FEATURE_ETAG */
     ctx->response_buffer->ref_count = 0;
     return ctx->response->code;
   }
