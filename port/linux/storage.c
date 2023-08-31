@@ -24,6 +24,7 @@
 #include "port/oc_storage_internal.h"
 #include "storage.h"
 #include "util/oc_secure_string_internal.h"
+#include "util/oc_macros_internal.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -40,11 +41,15 @@ int
 oc_storage_config(const char *store)
 {
   if (store == NULL || store[0] == '\0') {
+    OC_ERR("failed to configure storage: store path is empty");
     return -EINVAL;
   }
 
   size_t store_len = oc_strnlen(store, OC_STORE_PATH_SIZE);
   if (store_len >= OC_STORE_PATH_SIZE) {
+    OC_ERR("failed to configure storage: store path length is greater "
+           "than %d",
+           (int)OC_STORE_PATH_SIZE);
     return -ENOENT;
   }
 
@@ -58,6 +63,9 @@ oc_storage_config(const char *store)
   memcpy(g_store_path, store, g_store_path_len);
   if (g_store_path[g_store_path_len - 1] != '/') {
     if (g_store_path_len + 1 >= OC_STORE_PATH_SIZE) {
+      OC_ERR("failed to append '/' to store path: store path length is greater "
+             "than %d",
+             (int)OC_STORE_PATH_SIZE);
       oc_storage_reset();
       return -ENOENT;
     }
@@ -96,12 +104,18 @@ long
 oc_storage_read(const char *store, uint8_t *buf, size_t size)
 {
   if (g_store_path_len == 0) {
+    OC_ERR("failed to read from storage: store path is empty");
     return -ENOENT;
   }
 
   size_t store_len = oc_strnlen_s(store, OC_STORE_PATH_SIZE);
   if ((store_len == 0) ||
       (store_len + g_store_path_len >= OC_STORE_PATH_SIZE)) {
+    OC_ERR("failed to read from storage: %s",
+           store_len == 0
+             ? "store path is empty"
+             : "store path length is greater than " OC_EXPAND_TO_STR(
+                 OC_STORE_PATH_SIZE));
     return -ENOENT;
   }
   memcpy(g_store_path + g_store_path_len, store, store_len);
@@ -109,25 +123,35 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
 
   FILE *fp = fopen(g_store_path, "rb");
   if (fp == NULL) {
+    OC_ERR("failed to open %s for read: %d", g_store_path, errno);
     return -EINVAL;
   }
 
   if (fseek(fp, 0, SEEK_END) != 0) {
+    OC_ERR("failed to fseek to the end of file %s: %d", g_store_path, errno);
     goto error;
   }
   long fsize = ftell(fp);
   if (fsize < 0) {
+    OC_ERR("failed to ftell file %s: %d", g_store_path, errno);
     goto error;
   }
   if ((size_t)fsize > size) {
+    OC_ERR("file %s is bigger (%u) than the provided buffer size(%u)",
+           g_store_path, (unsigned)fsize, (unsigned)size);
     errno = EINVAL;
     goto error;
   }
   if (fseek(fp, 0, SEEK_SET) != 0) {
+    OC_ERR("failed to fseek to the start of file %s: %d", g_store_path, errno);
     goto error;
   }
 
   size = fread(buf, 1, size, fp);
+  if (size != (size_t)fsize) {
+    OC_ERR("failed to fread file %s: %d", g_store_path, errno);
+    goto error;
+  }
   fclose(fp);
   return (long)size;
 
@@ -137,21 +161,24 @@ error:
 }
 
 static long
-write_and_flush(FILE *fp, const uint8_t *buf, size_t size)
+write_and_flush(FILE *fp, const char *file, const uint8_t *buf, size_t size)
 {
   assert(fp != NULL);
+#if !OC_ERR_IS_ENABLED
+  (void)file;
+#endif /* !OC_ERR_IS_ENABLED */
   errno = 0;
   size_t wsize = fwrite(buf, 1, size, fp);
   if (wsize < size && ferror(fp) != 0) {
-    OC_ERR("failed to write to storage file");
+    OC_ERR("failed to write to the storage file %s: %d", file, errno);
     return -errno;
   }
   if (fflush(fp) != 0) {
-    OC_ERR("failed to flush storage file");
+    OC_ERR("failed to flush the storage file %s: %d", file, errno);
     return -errno;
   }
   if (fsync(fileno(fp)) != 0) {
-    OC_ERR("failed to sync storage file");
+    OC_ERR("failed to sync the storage file %s: %d", file, errno);
     return -errno;
   }
   return (long)wsize;
@@ -167,6 +194,11 @@ oc_storage_write(const char *store, const uint8_t *buf, size_t size)
   size_t store_len = oc_strnlen_s(store, OC_STORE_PATH_SIZE);
   if ((store_len == 0) ||
       (store_len + g_store_path_len >= OC_STORE_PATH_SIZE)) {
+    OC_ERR("failed to write to storage: %s",
+           store_len == 0
+             ? "store path is empty"
+             : "store path length is greater than " OC_EXPAND_TO_STR(
+                 OC_STORE_PATH_SIZE));
     return -ENOENT;
   }
   memcpy(g_store_path + g_store_path_len, store, store_len);
@@ -175,12 +207,13 @@ oc_storage_write(const char *store, const uint8_t *buf, size_t size)
   while (true) {
     FILE *fp = fopen(g_store_path, "wb");
     if (fp == NULL) {
+      OC_ERR("failed to open %s for write: %d", g_store_path, errno);
       return -EINVAL;
     }
 
-    long ret = write_and_flush(fp, buf, size);
+    long ret = write_and_flush(fp, g_store_path, buf, size);
     if (fclose(fp) != 0) {
-      OC_ERR("failed to close storage file");
+      OC_ERR("failed to close the storage file %s: %d", g_store_path, errno);
     }
     if (ret < 0 && (ret == -EAGAIN || ret == -EINTR)) {
       continue;
