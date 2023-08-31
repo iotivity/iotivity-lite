@@ -24,6 +24,7 @@
 #include "port/oc_storage_internal.h"
 #include "storage.h"
 #include "util/oc_secure_string_internal.h"
+#include "util/oc_macros_internal.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -32,9 +33,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-
-#define OC_STORAGE_STR(s) #s
-#define OC_STORAGE_XSTR(s) OC_STORAGE_STR(s)
 
 static char g_store_path[OC_STORE_PATH_SIZE] = { 0 };
 static uint8_t g_store_path_len = 0;
@@ -50,7 +48,8 @@ oc_storage_config(const char *store)
   size_t store_len = oc_strnlen(store, OC_STORE_PATH_SIZE);
   if (store_len >= OC_STORE_PATH_SIZE) {
     OC_ERR("failed to configure storage: store path length is greater "
-           "than " OC_STORAGE_XSTR(OC_STORE_PATH_SIZE));
+           "than %d",
+           (int)OC_STORE_PATH_SIZE);
     return -ENOENT;
   }
 
@@ -65,7 +64,8 @@ oc_storage_config(const char *store)
   if (g_store_path[g_store_path_len - 1] != '/') {
     if (g_store_path_len + 1 >= OC_STORE_PATH_SIZE) {
       OC_ERR("failed to append '/' to store path: store path length is greater "
-             "than " OC_STORAGE_XSTR(OC_STORE_PATH_SIZE));
+             "than %d",
+             (int)OC_STORE_PATH_SIZE);
       oc_storage_reset();
       return -ENOENT;
     }
@@ -114,7 +114,7 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
     OC_ERR("failed to read from storage: %s",
            store_len == 0
              ? "store path is empty"
-             : "store path length is greater than " OC_STORAGE_XSTR(
+             : "store path length is greater than " OC_EXPAND_TO_STR(
                  OC_STORE_PATH_SIZE));
     return -ENOENT;
   }
@@ -197,7 +197,7 @@ oc_storage_write(const char *store, const uint8_t *buf, size_t size)
     OC_ERR("failed to write to storage: %s",
            store_len == 0
              ? "store path is empty"
-             : "store path length is greater than " OC_STORAGE_XSTR(
+             : "store path length is greater than " OC_EXPAND_TO_STR(
                  OC_STORE_PATH_SIZE));
     return -ENOENT;
   }
