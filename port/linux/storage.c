@@ -123,8 +123,14 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
 
   FILE *fp = fopen(g_store_path, "rb");
   if (fp == NULL) {
-    OC_ERR("failed to open %s for read: %d", g_store_path, errno);
-    return -EINVAL;
+#if OC_ERR_IS_ENABLED
+    if (errno != ENOENT) {
+      OC_ERR("failed to open %s for read: %d", g_store_path, errno);
+      return -errno;
+    }
+#endif /* OC_ERR_IS_ENABLED */
+    OC_DBG("failed to open %s for read: %d", g_store_path, errno);
+    return -errno;
   }
 
   if (fseek(fp, 0, SEEK_END) != 0) {
@@ -208,7 +214,7 @@ oc_storage_write(const char *store, const uint8_t *buf, size_t size)
     FILE *fp = fopen(g_store_path, "wb");
     if (fp == NULL) {
       OC_ERR("failed to open %s for write: %d", g_store_path, errno);
-      return -EINVAL;
+      return -errno;
     }
 
     long ret = write_and_flush(fp, g_store_path, buf, size);
