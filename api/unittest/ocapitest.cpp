@@ -575,8 +575,16 @@ public:
 
 class TestServerClient : public testing::Test {
 protected:
-  static void SetUpTestCase() { ApiHelper::init(); }
-  static void TearDownTestCase() { ApiHelper::deinit(); }
+  static void SetUpTestCase()
+  {
+    oc_log_set_level(OC_LOG_LEVEL_DEBUG);
+    ApiHelper::init();
+  }
+  static void TearDownTestCase()
+  {
+    ApiHelper::deinit();
+    oc_log_set_level(OC_LOG_LEVEL_INFO);
+  }
 
   void SetUp() override
   {

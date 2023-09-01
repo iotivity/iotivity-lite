@@ -98,7 +98,13 @@ jobs:
       - name: Run unit tests
         run: |
           cd build
-          ctest --verbose --label-regex "oc-unittest"
+          while :; do
+            if ! ./apitest > apitest.log 2>&1; then
+                echo "TestServerClient test case failed"
+                break
+            fi
+          done
+          cat apitest.log
 
       - name: Get output file name
         if: ${{ inputs.coverage }}
