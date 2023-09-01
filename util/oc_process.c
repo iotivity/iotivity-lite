@@ -35,6 +35,7 @@
 #include "oc_process.h"
 #include "oc_process_internal.h"
 #include "oc_buffer.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_atomic.h"
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -269,6 +270,7 @@ oc_process_init(void)
 static void
 do_poll(void)
 {
+  OC_DBG("do_poll");
   OC_ATOMIC_STORE8(g_poll_requested, 0);
   /* Call the processes that needs to be polled. */
   for (struct oc_process *p = oc_process_list; p != NULL; p = p->next) {
@@ -320,7 +322,6 @@ do_event(void)
      order of their priority. */
   if (receiver == OC_PROCESS_BROADCAST) {
     for (p = oc_process_list; p != NULL; p = p->next) {
-
       /* If we have been requested to poll a process, we do this in
          between processing the broadcast event. */
       if (OC_ATOMIC_LOAD8(g_poll_requested)) {
@@ -474,13 +475,17 @@ oc_process_post_synch(struct oc_process *p, oc_process_event_t ev,
 void
 oc_process_poll(struct oc_process *p)
 {
-  if (p != NULL) {
-    unsigned char state = OC_ATOMIC_LOAD8(p->state);
-    if (state == OC_PROCESS_STATE_RUNNING || state == OC_PROCESS_STATE_CALLED) {
-      OC_ATOMIC_STORE8(p->needspoll, 1);
-      OC_ATOMIC_STORE8(g_poll_requested, 1);
-    }
+  if (p == NULL) {
+    return;
   }
+  unsigned char state = OC_ATOMIC_LOAD8(p->state);
+  if (state == OC_PROCESS_STATE_RUNNING || state == OC_PROCESS_STATE_CALLED) {
+    OC_DBG("requested poll for process %s", p->name);
+    OC_ATOMIC_STORE8(p->needspoll, 1);
+    OC_ATOMIC_STORE8(g_poll_requested, 1);
+    return;
+  }
+  OC_DBG("requested poll for process %s skipped", p->name);
 }
 
 int

@@ -43,8 +43,10 @@ static bool g_interface_down;
 static void
 oc_process_network_event(void)
 {
+  OC_DBG("oc_process_network_event");
   oc_network_event_handler_mutex_lock();
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+  OC_DBG("network connects");
   oc_tcp_on_connect_event_t *event =
     (oc_tcp_on_connect_event_t *)oc_list_pop(g_network_tcp_connect_events);
   while (event != NULL) {
@@ -53,12 +55,14 @@ oc_process_network_event(void)
       (oc_tcp_on_connect_event_t *)oc_list_pop(g_network_tcp_connect_events);
   }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+  OC_DBG("network receives");
   oc_message_t *message = (oc_message_t *)oc_list_pop(g_network_events);
   while (message != NULL) {
     oc_recv_message(message);
     message = (oc_message_t *)oc_list_pop(g_network_events);
   }
 #ifdef OC_NETWORK_MONITOR
+  OC_DBG("network monitor");
   if (g_interface_up) {
     oc_process_post(&oc_network_events,
                     oc_event_to_oc_process_event(INTERFACE_UP), NULL);
@@ -71,9 +75,10 @@ oc_process_network_event(void)
   }
 #endif /* OC_NETWORK_MONITOR */
   oc_network_event_handler_mutex_unlock();
+  OC_DBG("oc_process_network_event done");
 }
 
-OC_PROCESS(oc_network_events, "");
+OC_PROCESS(oc_network_events, "Network events");
 OC_PROCESS_THREAD(oc_network_events, ev, data)
 {
   (void)data;

@@ -38,11 +38,11 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # security off, cloud (ipv4+tcp), collection create on, push on, introspection IDD off
-          - build_args: "-DOC_SECURITY_ENABLED=OFF -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_IDD_API_ENABLED=OFF"
+          # security off, cloud (ipv4+tcp), collection create on
+          - build_args: "-DOC_SECURITY_ENABLED=OFF -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_TSAN_ENABLED=ON"
     uses: ./.github/workflows/unit-test-with-cfg.yml
     with:
-      build_args: -DOC_LOG_MAXIMUM_LOG_LEVEL=DEBUG -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON ${{ matrix.build_args }}
+      build_args: -DOC_DEBUG_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON ${{ matrix.build_args }}
       build_type: Debug
       clang: ${{ github.event_name == 'workflow_dispatch' && inputs.clang }}
       coverage: false

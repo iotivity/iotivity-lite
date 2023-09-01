@@ -99,7 +99,7 @@ jobs:
         run: |
           cd build
           while :; do
-            if ! ./apitest > apitest.log 2>&1; then
+            if ! ./apitest --gtest_filter="TestServerClient.*" > apitest.log 2>&1; then
                 echo "TestServerClient test case failed"
                 break
             fi
