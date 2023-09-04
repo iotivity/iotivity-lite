@@ -182,7 +182,6 @@ cloud_store_dump_async(const oc_cloud_store_t *store)
   // so this void* cast which drops const is safe
   oc_remove_delayed_callback((void *)store, cloud_store_dump_handler);
   oc_set_delayed_callback((void *)store, cloud_store_dump_handler, 0);
-  _oc_signal_event_loop();
 }
 
 static bool

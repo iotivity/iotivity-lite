@@ -294,7 +294,7 @@ start_server(void)
     return ret;
   }
 
-  while (quit != true) {
+  while (!quit) {
     oc_clock_time_t next_event_mt = oc_main_poll_v1();
     pthread_mutex_lock(&mutex);
     if (next_event_mt == 0) {

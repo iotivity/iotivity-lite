@@ -170,23 +170,20 @@ cloud_start_process(oc_cloud_context_t *ctx)
       ctx->store.cps == OC_CPS_READYTOREGISTER) {
     oc_reset_delayed_callback(ctx, cloud_manager_register_async,
                               g_retry_timeout[0]);
-    goto finish;
+    return;
   }
   if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
     if (cloud_context_has_permanent_access_token(ctx)) {
       oc_reset_delayed_callback(ctx, cloud_manager_login_async,
                                 g_retry_timeout[0]);
-      goto finish;
+      return;
     }
     if (cloud_context_has_refresh_token(ctx)) {
       oc_reset_delayed_callback(ctx, cloud_manager_refresh_token_async,
                                 g_retry_timeout[0]);
-      goto finish;
+      return;
     }
   }
-
-finish:
-  _oc_signal_event_loop();
 }
 
 static uint64_t

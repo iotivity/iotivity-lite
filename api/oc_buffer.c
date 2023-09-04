@@ -229,7 +229,6 @@ oc_send_message(oc_message_t *message)
                       message) == OC_PROCESS_ERR_FULL) {
     oc_message_unref(message);
   }
-  _oc_signal_event_loop();
 }
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
@@ -241,7 +240,6 @@ oc_tcp_connect_session(oc_tcp_on_connect_event_t *event)
                       event) == OC_PROCESS_ERR_FULL) {
     oc_tcp_on_connect_event_free(event);
   }
-  _oc_signal_event_loop();
 }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 

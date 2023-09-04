@@ -75,6 +75,9 @@
 #include "api/plgd/plgd_time_internal.h"
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 
+#if defined(OC_DEBUG) && defined(__linux__)
+#include <pthread.h>
+#endif /* OC_DEBUG && __linux__ */
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -82,6 +85,10 @@
 static bool g_initialized = false;
 static const oc_handler_t *g_app_callbacks;
 static oc_factory_presets_t g_factory_presets;
+
+#if defined(OC_DEBUG) && defined(__linux__)
+static pthread_t g_main_thread;
+#endif /* OC_DEBUG && __linux__ */
 
 void
 oc_set_factory_presets_cb(oc_factory_presets_cb_t cb, void *data)
@@ -317,6 +324,10 @@ oc_main_init(const oc_handler_t *handler)
     return 0;
   }
 
+#if defined(OC_DEBUG) && defined(__linux__)
+  g_main_thread = pthread_self();
+#endif /* OC_DEBUG && __linux__ */
+
   g_app_callbacks = handler;
 
 #ifdef OC_MEMORY_TRACE
@@ -474,6 +485,12 @@ oc_main_initialized(void)
 void
 _oc_signal_event_loop(void)
 {
+#if defined(OC_DEBUG) && defined(__linux__)
+  if (pthread_equal(pthread_self(), g_main_thread)) {
+    oc_abort("_oc_signal_event_loop called from main thread");
+  }
+#endif /* OC_DEBUG && __linux__ */
+
   if (g_app_callbacks != NULL) {
     g_app_callbacks->signal_event_loop();
   }

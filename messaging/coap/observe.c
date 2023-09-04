@@ -1212,7 +1212,6 @@ static void
 dispatch_process_batch_observers(void)
 {
   oc_reset_delayed_callback(NULL, &process_batch_observers_async, 0);
-  _oc_signal_event_loop();
 }
 
 static void

@@ -39,6 +39,8 @@ OC_PROCESS_NAME(oc_network_events);
  * @brief network receive event
  *
  * @param message the network message
+ *
+ * @note called from network thread
  */
 void oc_network_receive_event(oc_message_t *message);
 
@@ -47,6 +49,8 @@ void oc_network_receive_event(oc_message_t *message);
  * @brief network TCP connect event
  *
  * @param event the TCP on connect event
+ *
+ * @note called from network thread
  */
 void oc_network_tcp_connect_event(oc_tcp_on_connect_event_t *event);
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
