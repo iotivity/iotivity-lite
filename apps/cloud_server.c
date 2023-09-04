@@ -27,7 +27,7 @@
 #include "oc_clock_util.h"
 #include "port/oc_assert.h"
 #include "util/oc_features.h"
-#include "util/oc_macros_internal.h"
+#include "util/oc_process.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 #include "plgd/plgd_time.h"
@@ -42,35 +42,38 @@
 #include <getopt.h>
 #endif /* _MSC_VER */
 
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
 #define CHAR_ARRAY_LEN(x) (sizeof(x) - 1)
 
-static bool quit = false;
+static bool g_quit = false;
 
 #ifdef _WIN32
 #include <windows.h>
 
-static CONDITION_VARIABLE cv;
-static CRITICAL_SECTION cs;
+static CONDITION_VARIABLE g_cv;
+static CRITICAL_SECTION g_cs;
 
 static void
 signal_event_loop(void)
 {
-  WakeConditionVariable(&cv);
+  EnterCriticalSection(&g_cs);
+  WakeConditionVariable(&g_cv);
+  LeaveCriticalSection(&g_cs);
 }
 
 static void
 handle_signal(int signal)
 {
   (void)signal;
-  quit = true;
+  g_quit = true;
   signal_event_loop();
 }
 
 static int
 init(void)
 {
-  InitializeCriticalSection(&cs);
-  InitializeConditionVariable(&cv);
+  InitializeCriticalSection(&g_cs);
+  InitializeConditionVariable(&g_cv);
   signal(SIGINT, handle_signal);
   return 0;
 }
@@ -84,19 +87,24 @@ deinit(void)
 static void
 run_loop(void)
 {
-  while (!quit) {
-    EnterCriticalSection(&cs);
+  while (!g_quit) {
     oc_clock_time_t next_event_mt = oc_main_poll_v1();
+    EnterCriticalSection(&g_cs);
+    if (oc_process_nevents() > 0) {
+      LeaveCriticalSection(&g_cs);
+      continue;
+    }
     if (next_event_mt == 0) {
-      SleepConditionVariableCS(&cv, &cs, INFINITE);
+      SleepConditionVariableCS(&g_cv, &g_cs, INFINITE);
     } else {
       oc_clock_time_t now_mt = oc_clock_time_monotonic();
       if (now_mt < next_event_mt) {
         SleepConditionVariableCS(
-          &cv, &cs, (DWORD)((next_event_mt - now_mt) * 1000 / OC_CLOCK_SECOND));
+          &g_cv, &g_cs,
+          (DWORD)((next_event_mt - now_mt) * 1000 / OC_CLOCK_SECOND));
       }
     }
-    LeaveCriticalSection(&cs);
+    LeaveCriticalSection(&g_cs);
   }
 }
 
@@ -107,13 +115,15 @@ run_loop(void)
 #include <sys/types.h> // suseconds_t
 #include <unistd.h>
 
-static pthread_mutex_t mutex;
-static pthread_cond_t cv;
+static pthread_mutex_t g_mutex;
+static pthread_cond_t g_cv;
 
 static void
 signal_event_loop(void)
 {
-  pthread_cond_signal(&cv);
+  pthread_mutex_lock(&g_mutex);
+  pthread_cond_signal(&g_cv);
+  pthread_mutex_unlock(&g_mutex);
 }
 
 static void
@@ -122,7 +132,7 @@ handle_signal(int signal)
   if (signal == SIGPIPE) {
     return;
   }
-  quit = true;
+  g_quit = true;
   signal_event_loop();
 }
 
@@ -137,7 +147,7 @@ init(void)
   sigaction(SIGPIPE, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
 
-  int err = pthread_mutex_init(&mutex, NULL);
+  int err = pthread_mutex_init(&g_mutex, NULL);
   if (err != 0) {
     OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
     return false;
@@ -146,21 +156,21 @@ init(void)
   err = pthread_condattr_init(&attr);
   if (err != 0) {
     OC_PRINTF("ERROR: pthread_condattr_init failed (error=%d)!\n", err);
-    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&g_mutex);
     return false;
   }
   err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
   if (err != 0) {
     OC_PRINTF("ERROR: pthread_condattr_setclock failed (error=%d)!\n", err);
     pthread_condattr_destroy(&attr);
-    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&g_mutex);
     return false;
   }
-  err = pthread_cond_init(&cv, &attr);
+  err = pthread_cond_init(&g_cv, &attr);
   if (err != 0) {
     OC_PRINTF("ERROR: pthread_cond_init failed (error=%d)!\n", err);
     pthread_condattr_destroy(&attr);
-    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&g_mutex);
     return false;
   }
   pthread_condattr_destroy(&attr);
@@ -170,18 +180,22 @@ init(void)
 static void
 deinit(void)
 {
-  pthread_cond_destroy(&cv);
-  pthread_mutex_destroy(&mutex);
+  pthread_cond_destroy(&g_cv);
+  pthread_mutex_destroy(&g_mutex);
 }
 
 static void
 run_loop(void)
 {
-  while (!quit) {
+  while (!g_quit) {
     oc_clock_time_t next_event_mt = oc_main_poll_v1();
-    pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&g_mutex);
+    if (oc_process_nevents() > 0) {
+      pthread_mutex_unlock(&g_mutex);
+      continue;
+    }
     if (next_event_mt == 0) {
-      pthread_cond_wait(&cv, &mutex);
+      pthread_cond_wait(&g_cv, &g_mutex);
     } else {
       struct timespec next_event = { 1, 0 };
       oc_clock_time_t next_event_cv;
@@ -189,9 +203,9 @@ run_loop(void)
                                            &next_event_cv)) {
         next_event = oc_clock_time_to_timespec(next_event_cv);
       }
-      pthread_cond_timedwait(&cv, &mutex, &next_event);
+      pthread_cond_timedwait(&g_cv, &g_mutex, &next_event);
     }
-    pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&g_mutex);
   }
 }
 
@@ -1507,7 +1521,7 @@ cloud_server_send_response_cb(oc_request_t *request, oc_status_t response_code)
 #ifdef OC_HAS_FEATURE_ETAG
   if (request->etag != NULL) {
     char buf[32];
-    size_t buf_size = OC_ARRAY_SIZE(buf);
+    size_t buf_size = ARRAY_SIZE(buf);
     oc_conv_byte_array_to_hex_string(request->etag, request->etag_len, buf,
                                      &buf_size);
     OC_PRINTF(", etag [0x%s]", buf);

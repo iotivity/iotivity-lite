@@ -217,36 +217,51 @@ TestMain::Terminate()
   SignalEventLoop();
 }
 
+static constexpr int kRepeats = 3000;
+
+static void *
+pollProcessAndSignal(void *data)
+{
+  auto *instance = static_cast<TestMain *>(data);
+  for (int i = 0; i < kRepeats && OC_ATOMIC_LOAD8(TestMain::terminate) == 0;
+       ++i) {
+    OC_DBG("request poll");
+    OC_ATOMIC_STORE8(TestMain::needsPoll, 1);
+    oc_process_poll(&test_process);
+    instance->SignalEventLoop();
+    while (OC_ATOMIC_LOAD8(TestMain::terminate) == 0 &&
+           OC_ATOMIC_LOAD8(TestMain::needsPoll) != 0) {
+      continue;
+    }
+  }
+  instance->Terminate();
+  return nullptr;
+}
+
+#ifdef _WIN32
+
+static DWORD
+pollProcessAndSignalWin32(LPVOID data)
+{
+  pollProcessAndSignal(data);
+  return 0;
+}
+
+#endif /* _WIN32 */
+
 void
 TestMain::testSignalEventLoopinThreadWithMainLoop(
   std::function<void()> mainLoop)
 {
-  static constexpr int kRepeats = 3000;
-
-  auto signalFn = [](void *data) -> void * {
-    auto *instance = static_cast<TestMain *>(data);
-    for (int i = 0; i < kRepeats && OC_ATOMIC_LOAD8(TestMain::terminate) == 0;
-         ++i) {
-      OC_DBG("request poll");
-      OC_ATOMIC_STORE8(TestMain::needsPoll, 1);
-      oc_process_poll(&test_process);
-      instance->SignalEventLoop();
-      while (OC_ATOMIC_LOAD8(TestMain::terminate) == 0 &&
-             OC_ATOMIC_LOAD8(TestMain::needsPoll) != 0) {
-        continue;
-      }
-    }
-    instance->Terminate();
-    return nullptr;
-  };
-
 #ifdef _WIN32
-  HANDLE worker_thread = CreateThread(
-    nullptr, 0, (LPTHREAD_START_ROUTINE)signalFn, nullptr, 0, nullptr);
+  DWORD worker_thread_id;
+  HANDLE worker_thread = CreateThread(nullptr, 0, pollProcessAndSignalWin32,
+                                      nullptr, 0, &worker_thread_id);
   ASSERT_NE(worker_thread, nullptr);
 #else  /* !_WIN32 */
   pthread_t worker_thread;
-  ASSERT_EQ(0, pthread_create(&worker_thread, nullptr, signalFn, nullptr));
+  ASSERT_EQ(
+    0, pthread_create(&worker_thread, nullptr, pollProcessAndSignal, this));
 #endif /* _WIN32 */
 
   auto timeout = 2000ms;
