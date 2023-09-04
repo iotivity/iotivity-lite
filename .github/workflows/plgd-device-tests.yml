@@ -9,6 +9,10 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref_name != 'master' }}
 
+env:
+  CLOUD_SERVER_DOCKER_FILE: docker/apps/Dockerfile.cloud-server-debug
+  CLOUD_SERVER_DOCKER_FILE_CLANG: docker/apps/Dockerfile.cloud-server-debug-clang
+
 on:
   # Triggers the workflow on push or pull request events but only for the master branch
   push:
@@ -43,16 +47,22 @@ jobs:
         include:
           - name: cloud-server-tsan
             args: "-DOC_TSAN_ENABLED=ON"
+            clang: true
           - name: cloud-server-tsan-access-in-RFOTM
             args: "-DOC_TSAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+            clang: true
           - name: cloud-server-discovery-resource-observable-tsan
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            clang: true
           - name: cloud-server-discovery-resource-observable-tsan-access-in-RFOTM
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+            clang: true
           - name: cloud-server-rep-realloc-tsan
             args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            clang: true
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc-tsan
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            clang: true
 
     uses: ./.github/workflows/plgd-device-test-with-cfg.yml
     with:
@@ -61,4 +71,5 @@ jobs:
       build_type: Debug
       cert_signature_algorithm: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_signature_algorithm) || 'ECDSA-SHA256' }}
       cert_elliptic_curve: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_elliptic_curve) || 'P256' }}
+      clang: ${{ matrix.clang || false }}
       skip: ${{ matrix.skip || false }}

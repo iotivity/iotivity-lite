@@ -25,6 +25,11 @@ on:
         type: string
         required: false
         default: P256
+      clang:
+        description: Use clang instead of gcc to build cloud server
+        type: boolean
+        required: false
+        default: false
       coverage:
         type: boolean
         required: false
@@ -42,6 +47,7 @@ env:
   CERT_TOOL_IMAGE: ghcr.io/plgd-dev/hub/cert-tool:vnext
   CERT_PATH: .tmp/pki_certs
   CLOUD_SERVER_DOCKER_FILE: docker/apps/Dockerfile.cloud-server-debug
+  CLOUD_SERVER_DOCKER_FILE_CLANG: docker/apps/Dockerfile.cloud-server-debug-clang
   CLOUD_SERVER_DOCKER_TAG: dbg
 
 jobs:
@@ -60,7 +66,7 @@ jobs:
         with:
           context: .
           push: false
-          file: ${{ env.CLOUD_SERVER_DOCKER_FILE }}
+          file: ${{ (inputs.clang && env.CLOUD_SERVER_DOCKER_FILE_CLANG) || env.CLOUD_SERVER_DOCKER_FILE }}
           tags: ${{ env.CLOUD_SERVER_DOCKER_TAG }}
           build-args: |
             BUILD_ARGS=${{ inputs.build_args }}

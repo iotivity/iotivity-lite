@@ -15,7 +15,7 @@ pids=()
 echo "called_from_lib:libfaketimeMT.so.1" > /tmp/tsan.suppressions
 # gcc-11 on ubuntu 22.04 with thread sanitizer enabled reports a double lock when
 # pthread_cond_signal is called under a locked mutex
-echo "mutex:signal_event_loop" >> /tmp/tsan.suppressions
+# echo "mutex:signal_event_loop" >> /tmp/tsan.suppressions
 for ((i=0;i<$NUM_DEVICES;i++)); do
     export ASAN_OPTIONS="atexit=1:log_path=/tmp/${i}.asan.log:verify_asan_link_order=0"
     # abort on first tsan problem found
