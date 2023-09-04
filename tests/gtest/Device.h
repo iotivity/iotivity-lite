@@ -26,7 +26,7 @@
 #include "util/oc_atomic.h"
 #include "util/oc_features.h"
 
-#if defined(_WIN32)
+#ifdef _WIN32
 #include <windows.h>
 #else /* !_WIN32 */
 #include <pthread.h>

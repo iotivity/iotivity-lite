@@ -241,11 +241,13 @@ public:
 
   static void signalEventLoop(void)
   {
+    lock();
 #ifdef _WIN32
     WakeConditionVariable(&s_cv);
 #else
     pthread_cond_signal(&s_cv);
 #endif /* _WIN32 */
+    unlock();
   }
 
   static oc_event_callback_retval_t quitEvent(void *)
@@ -298,8 +300,12 @@ public:
     oc_set_delayed_callback_ms_v1(nullptr, quitEvent, msecs);
 
     while (OC_ATOMIC_LOAD8(s_terminate) == 0) {
-      lock();
       oc_clock_time_t next_event = oc_main_poll_v1();
+      lock();
+      if (oc_process_nevents() > 0) {
+        unlock();
+        continue;
+      }
       if (OC_ATOMIC_LOAD8(s_terminate) != 0) {
         unlock();
         break;
