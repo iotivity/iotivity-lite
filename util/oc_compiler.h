@@ -68,6 +68,12 @@
 #endif
 
 #if defined(__clang__) || defined(__GNUC__)
+#define OC_NO_SANITIZE(...) __attribute__((no_sanitize(__VA_ARGS__)))
+#else
+#define OC_NO_SANITIZE(...)
+#endif
+
+#if defined(__clang__) || defined(__GNUC__)
 #if defined(__MINGW32__) && defined(__USE_MINGW_ANSI_STDIO) &&                 \
   __USE_MINGW_ANSI_STDIO == 1
 #define OC_PRINTF_FORMAT(...) __attribute__((format(gnu_printf, __VA_ARGS__)))
