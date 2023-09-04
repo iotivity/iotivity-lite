@@ -242,7 +242,7 @@ oc_etag_load_from_storage(bool from_storage_only)
     long ret = oc_storage_data_load(OC_ETAG_STORE_NAME, i,
                                     etag_store_decode_etags, &etag);
     if (ret <= 0) {
-      OC_ERR("failed to load etags for device %zu", i);
+      OC_DBG("failed to load etags for device %zu", i);
       success = false;
     }
   }

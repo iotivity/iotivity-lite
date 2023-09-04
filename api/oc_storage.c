@@ -119,7 +119,7 @@ oc_storage_data_load(const char *name, size_t device,
 
   long ret = oc_storage_read(svr_tag, buf.buffer, buf.size);
   if (ret < 0) {
-    OC_ERR("cannot load from %s from store: read error(%ld)", name, ret);
+    OC_DBG("cannot load from %s from store: read error(%ld)", name, ret);
     goto error;
   }
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);

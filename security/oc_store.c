@@ -49,8 +49,8 @@ void
 oc_sec_load_doxm(size_t device)
 {
   if (oc_storage_data_load("doxm", device, store_decode_doxm, NULL) <= 0) {
+    OC_DBG("failed to load doxm from storage for device(%zu)", device);
     oc_sec_doxm_default(device);
-    OC_ERR("failed to load doxm from storage for device(%zu)", device);
     return;
   }
   OC_DBG("%s resource loaded from storage for device(%zu)", "doxm", device);
@@ -92,8 +92,8 @@ void
 oc_sec_load_pstat(size_t device)
 {
   if (oc_storage_data_load("pstat", device, store_decode_pstat, NULL) <= 0) {
+    OC_DBG("failed to load pstat from storage for device(%zu)", device);
     oc_sec_pstat_default(device);
-    OC_ERR("failed to load pstat from storage for device(%zu)", device);
     return;
   }
   OC_DBG("%s resource loaded from storage for device(%zu)", "pstat", device);
@@ -132,7 +132,7 @@ oc_sec_load_sp(size_t device)
 {
   if (oc_storage_data_load(OCF_SEC_SP_STORE_NAME, device, store_decode_sp,
                            NULL) <= 0) {
-    OC_ERR("failed to load sp from storage for device(%zu)", device);
+    OC_DBG("failed to load sp from storage for device(%zu)", device);
     oc_sec_sp_default(device);
     return;
   }
@@ -492,7 +492,7 @@ oc_sec_load_sdi(size_t device)
 {
   if (oc_storage_data_load(OCF_SEC_SDI_STORE_NAME, device, store_decode_sdi,
                            NULL) <= 0) {
-    OC_ERR("failed to load sdi from storage for device(%zu)", device);
+    OC_DBG("failed to load sdi from storage for device(%zu)", device);
     oc_sec_sdi_default(device);
     return;
   }

@@ -514,7 +514,7 @@ plgd_time_load(void)
   plgd_time_t pt = { 0 };
   if (oc_storage_data_load(PLGD_TIME_STORE_NAME, 0, store_decode_plgd_time,
                            &pt) <= 0) {
-    OC_ERR("failed to load plgd-time from storage");
+    OC_DBG("failed to load plgd-time from storage");
     return false;
   }
 
