@@ -362,6 +362,12 @@ oc_process_nevents(void)
   return (int)g_nevents + OC_ATOMIC_LOAD8(g_poll_requested);
 }
 
+bool
+oc_process_needs_poll(void)
+{
+  return OC_ATOMIC_LOAD8(g_poll_requested) != 0;
+}
+
 #ifdef OC_SECURITY
 bool
 oc_process_is_closing_all_tls_sessions(void)
@@ -486,7 +492,7 @@ oc_process_poll(struct oc_process *p)
 int
 oc_process_is_running(const struct oc_process *p)
 {
-  return OC_ATOMIC_LOAD8(p->state) != OC_PROCESS_STATE_NONE;
+  return OC_ATOMIC_LOAD8(p->state) != OC_PROCESS_STATE_NONE ? 1 : 0;
 }
 
 #ifdef OC_TEST

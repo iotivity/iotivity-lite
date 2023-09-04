@@ -380,15 +380,10 @@ TEST_F(TestEventTimer, Adjust)
   oc_etimer_set(&et, interval);
   OC_PROCESS_CONTEXT_END(&oc_test_process_1)
 
-  TestEventTimer::Poll();
-  ASSERT_FALSE(oc_etimer_expired(&et));
-
-  oc_clock_time_t wait = interval + interval / 2;
-  oc_etimer_adjust(&et, static_cast<int>(wait));
-  oc_clock_wait(wait);
-  TestEventTimer::Poll();
-  EXPECT_FALSE(oc_etimer_expired(&et));
-  EXPECT_TRUE(oc_etimer_pending());
+  oc_clock_time_t next = TestEventTimer::Poll();
+  oc_etimer_adjust(&et, static_cast<int>(interval));
+  oc_clock_time_t next_adjusted = TestEventTimer::Poll();
+  EXPECT_LT(next, next_adjusted);
 
   oc_etimer_stop(&et);
 }

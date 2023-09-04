@@ -49,6 +49,8 @@ jobs:
             args: "-DOC_ASAN_ENABLED=ON"
           - name: cloud-server-tsan
             args: "-DOC_TSAN_ENABLED=ON"
+            # GCC thread-sanitizer keeps reporting false positives, so we use clang instead for tests with thread-sanitizer
+            clang: true
 
           - name: cloud-server-access-in-RFOTM
             args: "-DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
@@ -56,6 +58,7 @@ jobs:
             args: "-DOC_ASAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           - name: cloud-server-tsan-access-in-RFOTM
             args: "-DOC_TSAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+            clang: true
 
           - name: cloud-server-discovery-resource-observable
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
@@ -63,6 +66,7 @@ jobs:
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-tsan
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            clang: true
 
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
@@ -70,6 +74,7 @@ jobs:
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-tsan-access-in-RFOTM
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+            clang: true
 
           - name: cloud-server-rep-realloc
             args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
@@ -77,6 +82,7 @@ jobs:
             args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
           - name: cloud-server-rep-realloc-tsan
             args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            clang: true
 
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc
             # same configuration as "cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc" in the SonarCloud scan job, skip for events that trigger both jobs
@@ -86,6 +92,7 @@ jobs:
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON-DOC_ASAN_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc-tsan
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            clang: true
 
     uses: ./.github/workflows/plgd-device-test-with-cfg.yml
     with:
@@ -94,4 +101,5 @@ jobs:
       build_type: Debug
       cert_signature_algorithm: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_signature_algorithm) || 'ECDSA-SHA256' }}
       cert_elliptic_curve: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_elliptic_curve) || 'P256' }}
+      clang: ${{ matrix.clang || false }}
       skip: ${{ matrix.skip || false }}

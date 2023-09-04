@@ -411,6 +411,12 @@ oc_main_poll(void)
   return (oc_clock_time_t)((int64_t)(next_event_mt - now_mt) + (int64_t)now);
 }
 
+bool
+oc_main_needs_poll(void)
+{
+  return oc_process_needs_poll();
+}
+
 void
 oc_main_shutdown(void)
 {

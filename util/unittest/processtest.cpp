@@ -18,6 +18,7 @@
 
 #include "api/oc_buffer_internal.h"
 #include "api/oc_events_internal.h"
+#include "port/oc_log_internal.h"
 #include "tests/gtest/Device.h"
 #include "util/oc_process.h"
 #include "util/oc_process_internal.h"
@@ -33,6 +34,20 @@ using namespace std::chrono_literals;
 
 static constexpr size_t kDeviceID{ 0 };
 
+OC_PROCESS(test_process, "Testing process");
+
+OC_PROCESS_THREAD(test_process, ev, data)
+{
+  (void)data;
+  OC_PROCESS_POLLHANDLER([]() { OC_DBG("polling"); }());
+  OC_PROCESS_BEGIN();
+  while (oc_process_is_running(&test_process)) {
+    OC_PROCESS_YIELD();
+    OC_DBG("received event(%d)", (int)ev);
+  }
+  OC_PROCESS_END();
+}
+
 class TestProcess : public testing::Test {
 public:
   static void SetUpTestCase()
@@ -41,8 +56,27 @@ public:
     oc_event_assign_oc_process_events();
   }
 
-  static void TearDownTestCase() { oc_process_shutdown(); }
+  static void TearDownTestCase()
+  {
+    oc_process_exit(&test_process);
+    oc_process_shutdown();
+  }
 };
+
+TEST_F(TestProcess, Start)
+{
+  EXPECT_EQ(0, oc_process_is_running(&test_process));
+
+  oc_process_start(&test_process, nullptr);
+  EXPECT_EQ(1, oc_process_is_running(&test_process));
+
+  // multiple starts are ignored
+  oc_process_start(&test_process, nullptr);
+  EXPECT_EQ(1, oc_process_is_running(&test_process));
+
+  oc_process_exit(&test_process);
+  EXPECT_EQ(0, oc_process_is_running(&test_process));
+}
 
 #ifdef OC_SECURITY
 

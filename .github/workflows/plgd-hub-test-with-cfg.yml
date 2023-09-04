@@ -30,6 +30,11 @@ on:
         type: string
         required: false
         default: P256
+      clang:
+        description: Use clang instead of gcc
+        type: boolean
+        required: false
+        default: false
       coverage:
         description: gather and upload coverage data
         type: boolean
@@ -58,6 +63,7 @@ on:
 env:
   TEST_CLOUD_SERVER_IMAGE: ghcr.io/plgd-dev/hub/test-cloud-server:latest
   CLOUD_SERVER_DOCKER_FILE: docker/apps/Dockerfile.cloud-server-debug
+  CLOUD_SERVER_CLANG_DOCKER_FILE: docker/apps/Dockerfile.cloud-server-debug-clang
   CLOUD_SERVER_DOCKER_TAG: dbg
 
 jobs:
@@ -78,7 +84,7 @@ jobs:
           build-args: |
             BUILD_ARGS=${{ inputs.build_args }}
             BUILD_TYPE=${{ inputs.build_type }}
-          file: ${{ env.CLOUD_SERVER_DOCKER_FILE }}
+          file: ${{ (inputs.clang && env.CLOUD_SERVER_CLANG_DOCKER_FILE) || env.CLOUD_SERVER_DOCKER_FILE }}
           tags: ${{ env.CLOUD_SERVER_DOCKER_TAG }}
 
       - name: Pull plgd hub tests image

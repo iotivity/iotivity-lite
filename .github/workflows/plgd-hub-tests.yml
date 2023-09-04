@@ -47,6 +47,8 @@ jobs:
             build_args: "-DOC_ASAN_ENABLED=ON"
           - name: cloud-server-tsan
             build_args: "-DOC_TSAN_ENABLED=ON"
+            # GCC thread-sanitizer keeps reporting false positives, so we use clang instead for tests with thread-sanitizer
+            clang: true
 
           - name: cloud-server-simulate-tpm-asan
             build_args: "-DOC_ASAN_ENABLED=ON"
@@ -64,6 +66,7 @@ jobs:
             build_args: "-DOC_TSAN_ENABLED=ON"
             docker_args: '-e FAKETIME="@2000-01-01 11:12:13"'
             args: "--disable-tls-verify-time"
+            clang: true
 
           - name: cloud-server-time-2100-01-01
             build_args: ""
@@ -77,6 +80,7 @@ jobs:
             build_args: "-DOC_TSAN_ENABLED=ON"
             docker_args: '-e FAKETIME="@2100-01-01 11:12:13"'
             args: "--disable-tls-verify-time"
+            clang: true
 
           - name: cloud-server-set-mbedtls-time-2000-01-01
             build_args: ""
@@ -93,6 +97,7 @@ jobs:
             build_args: "-DOC_ASAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           - name: cloud-server-tsan-access-in-RFOTM
             build_args: "-DOC_TSAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+            clang: true
 
           - name: cloud-server-discovery-resource-observable
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
@@ -100,6 +105,7 @@ jobs:
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-tsan
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            clang: true
 
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM
             # same configuration as "cloud-server-discovery-resource-observable-access-in-RFOTM" in the SonarCloud scan job, skip for events that trigger both jobs
@@ -109,6 +115,7 @@ jobs:
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-tsan-access-in-RFOTM
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+            clang: true
 
           - name: cloud-server-rep-realloc
             build_args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
@@ -116,6 +123,7 @@ jobs:
             build_args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
           - name: cloud-server-rep-realloc-tsan
             build_args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            clang: true
 
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
@@ -123,6 +131,7 @@ jobs:
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc-tsan
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            clang: true
 
           # ports
           - name: cloud-server-tcp-disabled
@@ -138,6 +147,7 @@ jobs:
             hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-tsan
             build_args: "-DOC_TSAN_ENABLED=ON"
+            clang: true
             hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
 
           - name: dtls-cloud-server-discovery-resource-observable
@@ -148,6 +158,7 @@ jobs:
             hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-discovery-resource-observable-tsan
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            clang: true
             hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
 
           - name: dtls-cloud-server-rep-realloc
@@ -160,6 +171,7 @@ jobs:
             hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-rep-realloc-tsan
             build_args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            clang: true
             hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
 
           - name: dtls-cloud-server-discovery-resource-observable-rep-realloc
@@ -170,6 +182,7 @@ jobs:
             hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
           - name: dtls-cloud-server-discovery-resource-observable-rep-realloc-tsan
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
+            clang: true
             hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
 
     uses: ./.github/workflows/plgd-hub-test-with-cfg.yml
@@ -182,4 +195,5 @@ jobs:
       docker_args: ${{ matrix.docker_args }}
       cert_signature_algorithm: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_signature_algorithm) || 'ECDSA-SHA256' }}
       cert_elliptic_curve: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_elliptic_curve) || 'P256' }}
+      clang: ${{ matrix.clang || false }}
       skip: ${{ matrix.skip || false }}

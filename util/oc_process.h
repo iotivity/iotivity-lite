@@ -541,6 +541,13 @@ int oc_process_is_running(const struct oc_process *p);
  */
 int oc_process_nevents(void);
 
+/**
+ *  Check if processes need to be polled.
+ *
+ * \return True if there are processes that need to be polled.
+ */
+bool oc_process_needs_poll(void);
+
 #ifdef OC_SECURITY
 
 /**
