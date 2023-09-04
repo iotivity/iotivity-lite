@@ -942,7 +942,7 @@ oc_swupdate_load(size_t device)
   long ret = oc_storage_data_load(OCF_SW_UPDATE_STORE_NAME, device,
                                   swupdate_store_decode, NULL);
   if (ret <= 0) {
-    OC_ERR("swupdate: failed to load swupdate from storage for device(%zu)",
+    OC_DBG("swupdate: failed to load swupdate from storage for device(%zu)",
            device);
     oc_swupdate_default(device);
     return ret;
