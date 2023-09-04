@@ -59,8 +59,8 @@ static EventGroupHandle_t wifi_event_group;
 static const int IPV4_CONNECTED_BIT = BIT0;
 static const int IPV6_CONNECTED_BIT = BIT1;
 
-static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t cv = PTHREAD_COND_INITIALIZER;
+static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_cond_t g_cv = PTHREAD_COND_INITIALIZER;
 static struct timespec ts;
 static int quit = 0;
 static bool light_state = false;
@@ -172,7 +172,9 @@ register_resources(void)
 static void
 signal_event_loop(void)
 {
-  pthread_cond_signal(&cv);
+  pthread_mutex_lock(&g_mutex);
+  pthread_cond_signal(&g_cv);
+  pthread_mutex_unlock(&g_mutex);
 }
 
 static void
@@ -571,14 +573,18 @@ server_main(void *pvParameter)
 
   while (quit != 1) {
     oc_clock_time_t next_event = oc_main_poll();
-    pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&g_mutex);
+    if (oc_main_needs_poll()) {
+      pthread_mutex_unlock(&g_mutex);
+      continue;
+    }
     if (next_event == 0) {
-      pthread_cond_wait(&cv, &mutex);
+      pthread_cond_wait(&g_cv, &g_mutex);
     } else {
       ts = oc_clock_time_to_timespec(next_event);
-      pthread_cond_timedwait(&cv, &mutex, &ts);
+      pthread_cond_timedwait(&g_cv, &g_mutex, &ts);
     }
-    pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&g_mutex);
   }
 
 #ifdef OC_HAS_FEATURE_PLGD_HAWKBIT
@@ -603,7 +609,7 @@ app_main(void)
   gpio_reset_pin(BLINK_GPIO);
   gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
 
-  pthread_cond_init(&cv, NULL);
+  pthread_cond_init(&g_cv, NULL);
 
   print_macro_info();
 

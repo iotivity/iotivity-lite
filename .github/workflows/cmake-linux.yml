@@ -102,6 +102,8 @@ jobs:
             install_faketime: false
           # thread sanitizer
           - args: -DOC_TSAN_ENABLED=ON
+            # GCC thread-sanitizer keeps reporting false positives, so we use clang instead for tests with thread-sanitizer
+            clang: true
             install_faketime: true
           # undefined behaviour sanitizer
           - args: -DOC_UBSAN_ENABLED=ON

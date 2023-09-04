@@ -292,6 +292,19 @@ oc_clock_time_t oc_main_poll(void)
   OC_DEPRECATED("replaced by oc_main_poll_v1 in v2.2.5.6");
 
 /**
+ * @brief Check if process polling was requested
+ *
+ * @return true A polling of processes was requested by a call to
+ * oc_process_poll and oc_main_poll_v1 should be called.
+ * @return false Otherwise
+ *
+ * @sa oc_main_poll
+ * @sa oc_process_poll
+ */
+OC_API
+bool oc_main_needs_poll(void);
+
+/**
  * Shutdown and free all stack related resources
  */
 OC_API

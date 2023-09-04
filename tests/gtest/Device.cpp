@@ -133,11 +133,13 @@ Device::~Device()
 void
 Device::SignalEventLoop()
 {
+  Lock();
 #ifdef _WIN32
   WakeConditionVariable(&cv_);
 #else
   pthread_cond_signal(&cv_);
 #endif /* _WIN32 */
+  Unlock();
 }
 
 void
@@ -217,8 +219,12 @@ Device::PoolEventsMs(uint64_t mseconds, bool addDelay)
   oc_set_delayed_callback_ms_v1(this, Device::QuitEvent, interval);
 
   while (OC_ATOMIC_LOAD8(terminate_) == 0) {
-    Lock();
     oc_clock_time_t next_event = oc_main_poll_v1();
+    Lock();
+    if (oc_main_needs_poll()) {
+      Unlock();
+      continue;
+    }
     if (OC_ATOMIC_LOAD8(terminate_) != 0) {
       Unlock();
       break;
