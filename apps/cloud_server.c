@@ -120,12 +120,7 @@ static pthread_mutex_t g_mutex;
 static pthread_cond_t g_cv;
 
 static void
-#if !defined(__clang__) && defined(__GNUC__)
-  /* gcc-11 on ubuntu 22.04 with thread sanitizer enabled reports a double lock
-     when pthread_cond_signal is called under a locked mutex */
-  __attribute__((no_sanitize("thread")))
-#endif /* !__clang__ && __GNUC__ */
-  signal_event_loop(void)
+signal_event_loop(void)
 {
   pthread_mutex_lock(&g_mutex);
   pthread_cond_signal(&g_cv);

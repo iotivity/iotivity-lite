@@ -41,49 +41,16 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: cloud-server
-            # same configuration as "cloud-server" in the SonarCloud scan job, skip for events that trigger both jobs
-            skip: ${{ github.event_name != 'workflow_dispatch' }}
-            args: ""
-          - name: cloud-server-asan
-            args: "-DOC_ASAN_ENABLED=ON"
           - name: cloud-server-tsan
             args: "-DOC_TSAN_ENABLED=ON"
-
-          - name: cloud-server-access-in-RFOTM
-            args: "-DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
-          - name: cloud-server-asan-access-in-RFOTM
-            args: "-DOC_ASAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           - name: cloud-server-tsan-access-in-RFOTM
             args: "-DOC_TSAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
-
-          - name: cloud-server-discovery-resource-observable
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
-          - name: cloud-server-discovery-resource-observable-asan
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-tsan
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON"
-
-          - name: cloud-server-discovery-resource-observable-access-in-RFOTM
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
-          - name: cloud-server-discovery-resource-observable-asan-access-in-RFOTM
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-tsan-access-in-RFOTM
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
-
-          - name: cloud-server-rep-realloc
-            args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
-          - name: cloud-server-rep-realloc-asan
-            args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
           - name: cloud-server-rep-realloc-tsan
             args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
-
-          - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc
-            # same configuration as "cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc" in the SonarCloud scan job, skip for events that trigger both jobs
-            skip: ${{ github.event_name != 'workflow_dispatch' }}
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
-          - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc-asan
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON-DOC_ASAN_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc-tsan
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
 

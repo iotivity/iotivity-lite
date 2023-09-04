@@ -3,11 +3,14 @@ ARG BUILD_TYPE=Release
 ARG BUILD_ARGS
 RUN apt-get update -y && \
 	DEBIAN_FRONTEND="noninteractive" apt-get install -y bash ca-certificates cmake curl gdb git-core gcovr g++ make patch python3 --no-install-recommends
+RUN DEBIAN_FRONTEND="noninteractive" apt-get install -y clang-15
+RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 200 && \
+	update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 200
 COPY ./  /iotivity-lite/
 RUN cd /iotivity-lite/ && git submodule update --recursive
 RUN mkdir /iotivity-lite/build && \
 	cd /iotivity-lite/build && \
-	cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=OFF -DOC_CLOUD_ENABLED=ON ${BUILD_ARGS} .. && \
+	cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DBUILD_TESTING=OFF -DOC_CLOUD_ENABLED=ON ${BUILD_ARGS} .. && \
 	cmake --build . --target cloud_server
 RUN cp /iotivity-lite/build/apps/cloud_server /iotivity-lite/port/linux/service
 
