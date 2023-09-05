@@ -32,7 +32,7 @@ jobs:
           ref: ${{ fromJSON(steps.get_branch.outputs.data).repository.pullRequest.headRefName }}
 
       - name: add reaction
-        uses: peter-evans/create-or-update-comment@v2
+        uses: peter-evans/create-or-update-comment@v3
         with:
           comment-id: ${{ github.event.comment.id }}
           reactions: eyes

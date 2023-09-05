@@ -18,7 +18,7 @@ jobs:
           private_key: ${{ secrets.PRIVATE_KEY }}
           installation_id: 24124545
       - name: Publish comment
-        uses: peter-evans/create-or-update-comment@v1
+        uses: peter-evans/create-or-update-comment@v3
         with:
           token: ${{ steps.generate_token.outputs.token }}
           issue-number: ${{ github.event.pull_request.number }}
