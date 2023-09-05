@@ -91,7 +91,7 @@ jobs:
     needs: [unit-tests, plgd-device-tests, plgd-hub-tests]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: "true"
           fetch-depth: 0 # Shallow clones should be disabled for a better relevancy of SonarCloud analysis
