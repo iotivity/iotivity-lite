@@ -41,7 +41,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           submodules: "true"
 
@@ -52,7 +52,7 @@ jobs:
           echo compiler='-DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang' >> $GITHUB_OUTPUT
 
       - name: Checkout libfaketime
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: wolfcw/libfaketime
           path: libfaketime
