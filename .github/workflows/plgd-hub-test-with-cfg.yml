@@ -61,7 +61,7 @@ on:
         default: false
 
 env:
-  TEST_CLOUD_SERVER_IMAGE: ghcr.io/plgd-dev/hub/test-cloud-server:latest
+  TEST_CLOUD_SERVER_IMAGE: ghcr.io/plgd-dev/hub/test-cloud-server:vnext-pr1050
   CLOUD_SERVER_DOCKER_FILE: docker/apps/Dockerfile.cloud-server-debug
   CLOUD_SERVER_CLANG_DOCKER_FILE: docker/apps/Dockerfile.cloud-server-debug-clang
   CLOUD_SERVER_DOCKER_TAG: dbg
