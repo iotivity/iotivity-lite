@@ -919,7 +919,8 @@ discovery_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
   // for dev without SVRs, ignore queries for backward compatibility
 #ifdef OC_SECURITY
   const char *q;
-  int ql = oc_get_query_value(request, OCF_RES_QUERY_SDUUID, &q);
+  int ql = oc_get_query_value_v1(request, OCF_RES_QUERY_SDUUID,
+                                 OC_CHAR_ARRAY_LEN(OCF_RES_QUERY_SDUUID), &q);
   if (ql > 0 && !discovery_check_sduuid(request, q, (size_t)ql)) {
     return;
   }

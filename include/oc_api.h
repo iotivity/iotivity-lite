@@ -1383,9 +1383,9 @@ int oc_iterate_query(const oc_request_t *request, const char **key,
   OC_NONNULL(1, 2, 3);
 
 /**
- * Iterate though the URI query parameters for a specific key.
+ * @brief Iterate though the URI query parameters for a specific key.
  *
- * Before calling oc_iterate_query_get_values() the first time
+ * Before calling oc_iterate_query_get_values_v1() the first time
  * oc_init_query_iterator() must be called to reset the query iterator to the
  * first query parameter.
  *
@@ -1396,13 +1396,13 @@ int oc_iterate_query(const oc_request_t *request, const char **key,
  * Example:
  * ```
  * bool more_query_params = false;
- * const char* expected_value = "world"
- * char *value = NULL;
+ * const char* expected_value = "world";
+ * const char *value = NULL;
  * int value_len = -1;
  * oc_init_query_iterator();
  * do {
- * more_query_params = oc_iterate_query_get_values(request, "hello",
- *                                                 &value, &value_len);
+ *   more_query_params = oc_iterate_query_get_values_v1(request, "hello",
+ *                         strlen("hello"), &value, &value_len);
  *   if (rt_len > 0) {
  *     printf("Found %s = %.*s\n", "hello", value_len, value);
  *   }
@@ -1412,6 +1412,7 @@ int oc_iterate_query(const oc_request_t *request, const char **key,
  * @param[in] request the oc_request_t that contains the query parameters
  * (cannot be NULL)
  * @param[in] key the key being searched for (cannot be NULL)
+ * @param[in] key_len the length of the key
  * @param[out] value pointer to the value string for to the key=value pair
  * (cannot be NULL)
  * @param[out] value_len the length of the value string (cannot be NULL)
@@ -1419,13 +1420,25 @@ int oc_iterate_query(const oc_request_t *request, const char **key,
  * @return True if there are more query parameters to iterate through
  */
 OC_API
-bool oc_iterate_query_get_values(const oc_request_t *request, const char *key,
-                                 const char **value, int *value_len)
+bool oc_iterate_query_get_values_v1(const oc_request_t *request,
+                                    const char *key, size_t key_len,
+                                    const char **value, int *value_len)
   OC_NONNULL();
 
 /**
- * Get a pointer to the start of the value in a URL query parameter key=value
- * pair.
+ * @brief Iterate though the URI query parameters for a specific key.
+ *
+ * @deprecated replaced by oc_iterate_query_get_values_v1 in v2.2.5.8
+ */
+OC_API
+bool oc_iterate_query_get_values(const oc_request_t *request, const char *key,
+                                 const char **value, int *value_len)
+  OC_NONNULL()
+    OC_DEPRECATED("replaced by oc_iterate_query_get_values_v1 in v2.2.5.8");
+
+/**
+ * @brief Get a pointer to the start of the value in a URL query parameter
+ * key=value pair.
  *
  * @note The char pointer returned is pointing to the string location in the
  *       query string. Do not rely on a nul terminator to find the end of the
@@ -1433,6 +1446,7 @@ bool oc_iterate_query_get_values(const oc_request_t *request, const char *key,
  *
  * @param[in] request the oc_request_t that contains the query parameters
  * @param[in] key the key being searched for (cannot be NULL)
+ * @param[in] key_len the length of the key
  * @param[out] value pointer to the value string assigned to the key
  *
  * @return
@@ -1440,22 +1454,46 @@ bool oc_iterate_query_get_values(const oc_request_t *request, const char *key,
  *   - `-1` if there are no additional query parameters
  */
 OC_API
-int oc_get_query_value(const oc_request_t *request, const char *key,
-                       const char **value) OC_NONNULL(2);
+int oc_get_query_value_v1(const oc_request_t *request, const char *key,
+                          size_t key_len, const char **value) OC_NONNULL(2);
 
 /**
- * Checks if a query parameter 'key' exist in the URL query parameter
+ * @brief Get a pointer to the start of the value in a URL query parameter
+ * key=value pair.
  *
- * @param[in] request the oc_request_t that contains the query parameters
- * @param[in] key the key being searched for (cannot be NULL)
+ * @deprecated replaced by oc_get_query_value_v1 in v2.2.5.8
+ */
+OC_API
+int oc_get_query_value(const oc_request_t *request, const char *key,
+                       const char **value) OC_NONNULL(2)
+  OC_DEPRECATED("replaced by oc_get_query_value_v1 in v2.2.5.8");
+
+/**
+ * @brief Checks if a query parameter 'key' exist in the URL query parameter
  *
- * @return
- *   - 1 exist
- *   - -1 does not exist
+ * @param request the oc_request_t that contains the query parameters
+ * @param key the key being searched for (cannot be NULL)
+ * @param key_len the length of the key
+ *
+ * @return true if the key exist in the query parameter
+ * @return false if the key does not exist in the query parameter
+ */
+OC_API
+bool oc_query_value_exists_v1(const oc_request_t *request, const char *key,
+                              size_t key_len) OC_NONNULL(2);
+
+/**
+ * @brief Checks if a query parameter 'key' exist in the URL query parameter
+ *
+ * @return 1 if the key exist in the query parameter
+ * @return -1 if the key does not exist in the query parameter
+ *
+ * @deprecated replaced by oc_query_value_exists_v1 in v2.2.5.8
  */
 OC_API
 int oc_query_value_exists(const oc_request_t *request, const char *key)
-  OC_NONNULL(2);
+  OC_NONNULL(2)
+    OC_DEPRECATED("replaced by oc_query_value_exists_v1 in v2.2.5.8");
 
 /**
  * Called after the response to a GET, PUT, POST or DELETE call has been

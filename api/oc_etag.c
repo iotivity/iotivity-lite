@@ -271,6 +271,44 @@ oc_etag_load_and_clear(void)
 #endif /* OC_STORAGE */
 
 void
+oc_etag_query_iterate_incremental_updates(const char *query, size_t query_len)
+{
+  (void)query;
+  (void)query_len;
+
+  // incChanges=<etag1 in base64>,<etag2 in base64>,...<etagk in
+  // base64>&incChanges<etagk+1>,...
+  // const char *key = "incChanges";
+  // size_t key_len = strlen(key);
+
+  // size_t n = 0;
+  // while (true) {
+  //   const char *value;
+  //   size_t value_len;
+  //   if (oc_ri_get_query_nth_key_value(query, query_len, key, key_len, value,
+  //                                     value_len, n) == -1) {
+  //     break;
+  //   }
+  //   OC_DBG("oc_etag: incremental update query: %.*s", (int)value_len, value);
+  //   ++n;
+  // }
+
+  // for (size_t pos = 0; pos < query_len;) {
+  //   const char *value = NULL;
+  //   int value_len =
+  //     oc_ri_get_query_value(query + pos, query_len - pos, key, &value);
+  //   if (value_len == -1) {
+  //     // pos == 0 key not found, otherwise device id not match the device.
+  //     return pos == 0;
+  //   }
+  //   if (OC_UUID_LEN == value_len + 1 && strncmp(di, value, value_len) == 0) {
+  //     return true;
+  //   }
+  //   pos = (value - query) + value_len;
+  // }
+}
+
+void
 oc_resource_set_etag(oc_resource_t *resource, uint64_t etag)
 {
   assert(resource != NULL);

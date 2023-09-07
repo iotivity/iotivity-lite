@@ -64,6 +64,19 @@ static constexpr std::string_view kDynamicResourceURI2{ "/dyn2" };
 
 using namespace std::chrono_literals;
 
+class TestETag : public ::testing::Test {
+public:
+  static void SetUpTestCase() { oc_log_set_level(OC_LOG_LEVEL_DEBUG); }
+
+  static void TearDownTestCase() { oc_log_set_level(OC_LOG_LEVEL_INFO); }
+};
+
+TEST_F(TestETag, IterateIncrementalUpdates)
+{
+  // std::string query = "";
+  // oc_etag_query_iterate_incremental_updates(query.c_str(), query.length());
+}
+
 class TestETagWithServer : public ::testing::Test {
 public:
   static void SetUpTestCase()

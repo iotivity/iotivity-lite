@@ -242,6 +242,9 @@ static void (*oc_push_arrived)(oc_pushd_resource_rep_t *) = NULL;
 #define OC_PUSH_PROP_PRT "prt"
 #define OC_PUSH_PROP_PIF "pif"
 #define OC_PUSH_PROP_SOURCERT "sourcert"
+#define OC_PUSH_PROP_RECEIVEURI "receiveruri"
+
+#define OC_PUSH_QUERY_RECEIVERURI "receiveruri"
 
 void
 oc_set_on_push_arrived(oc_on_push_arrived_t func)
@@ -1854,7 +1857,7 @@ _update_recv_obj(oc_recv_t *recv_obj, const oc_recvs_t *recvs_instance,
   while (rep) {
     switch (rep->type) {
     case OC_REP_STRING:
-      if (strcmp(oc_string(rep->name), "receiveruri") == 0) {
+      if (strcmp(oc_string(rep->name), OC_PUSH_PROP_RECEIVEURI) == 0) {
         OC_PUSH_DBG("target receiveruri: \"%s\", new receiveruri: \"%s\"",
                     oc_string(recv_obj->receiveruri),
                     oc_string(rep->value.string));
@@ -1923,7 +1926,7 @@ _create_recv_obj(oc_recvs_t *recvs_instance, oc_rep_t *rep)
   while (rep) {
     switch (rep->type) {
     case OC_REP_STRING:
-      if (strcmp(oc_string(rep->name), "receiveruri") == 0) {
+      if (strcmp(oc_string(rep->name), OC_PUSH_PROP_RECEIVEURI) == 0) {
         oc_new_string(&recv_obj->receiveruri, oc_string(rep->value.string),
                       oc_string_len(rep->value.string));
         mandatory_property_check |= 0x1;
@@ -1994,7 +1997,7 @@ _validate_recv_obj_list(oc_rep_t *obj_list)
     for (; rep != NULL; rep = rep->next) {
       switch (rep->type) {
       case OC_REP_STRING:
-        if (strcmp(oc_string(rep->name), "receiveruri") == 0) {
+        if (strcmp(oc_string(rep->name), OC_PUSH_PROP_RECEIVEURI) == 0) {
           mandatory_property_check |= 0x1;
         }
         break;
@@ -2078,8 +2081,9 @@ post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
 
   /* try to get "receiveruri" parameter */
   if (request->query) {
-    uri_param_len = oc_ri_get_query_value(request->query, request->query_len,
-                                          "receiveruri", &uri_param);
+    uri_param_len = oc_ri_get_query_value_v1(
+      request->query, request->query_len, OC_PUSH_QUERY_RECEIVERURI,
+      OC_CHAR_ARRAY_LEN(OC_PUSH_QUERY_RECEIVERURI), &uri_param);
     if (uri_param_len != -1) {
       OC_PUSH_DBG(
         "received query string: \"%.*s\", found \"receiveruri\": \"%.*s\" ",
@@ -2174,8 +2178,9 @@ delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
 
   /* try to get "receiveruri" parameter */
   if (request->query) {
-    uri_param_len = oc_ri_get_query_value(request->query, request->query_len,
-                                          "receiveruri", &uri_param);
+    uri_param_len = oc_ri_get_query_value_v1(
+      request->query, request->query_len, OC_PUSH_QUERY_RECEIVERURI,
+      OC_CHAR_ARRAY_LEN(OC_PUSH_QUERY_RECEIVERURI), &uri_param);
     if (uri_param_len != -1) {
       OC_PUSH_DBG(
         "received query string: \"%.*s\", found \"receiveruri\": \"%.*s\" ",

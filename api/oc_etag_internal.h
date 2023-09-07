@@ -25,6 +25,7 @@
 #include "util/oc_compiler.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -42,6 +43,9 @@ uint64_t oc_etag_set_global(uint64_t etag);
 
 /**  Get the next global ETag value. */
 uint64_t oc_etag_get(void);
+
+void oc_etag_query_iterate_incremental_updates(const char *query,
+                                               size_t query_len) OC_NONNULL();
 
 /** @brief Set ETag of given resource */
 void oc_resource_set_etag(oc_resource_t *resource, uint64_t etag) OC_NONNULL();

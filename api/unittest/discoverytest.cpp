@@ -905,6 +905,34 @@ TEST_F(TestDiscoveryWithServer, GetRequestBatch)
 #endif /* OC_SECURITY */
 }
 
+TEST_F(TestDiscoveryWithServer, GetRequestBatchIncremental)
+{
+  // feature iba pre discovery res
+
+  // incChanges=<etag1 in base64>,<etag2 in base64>,..<etag20 in
+  // base64>&incChanges<etag21 in base64>,...&...
+
+  // batch discovery -> all resources except /oic/res, /.well-known/core, SVRs
+  // and secure resources without ACLs
+
+  // example -> etag0 + 3 etags in query
+  // 1. etag-0 -> try to find resource with etag0
+  //   -> if batch etag is equal: done, return VALID
+  //   -> not equal: continue
+  // 2. etag-1
+  //   -> check if etag-1 is in the resources -> store candidate etag
+  // 3. etag-2
+  //   -> if etag-2 is greater than current candidate etag -> check if etag-2 is
+  //   in the resources -> use it as candidate etag
+  //
+  // 4. etag-3
+  //
+  // if no candidate -> send all resources
+
+  // payload ako batch -> pole resourcov {"href": "...", "etag": "...", "rep":
+  // {...}} }
+}
+
 #endif /* OC_RES_BATCH_SUPPORT */
 
 #ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE

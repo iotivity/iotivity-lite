@@ -988,7 +988,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         oc_package_add_test(TARGET cloudtest SOURCES ${COMMONTEST_SRC} ${CLOUDTEST_SRC})
     endif()
 
-    if(UNIX)
+    if(UNIX AND NOT OC_TSAN_ENABLED)
         # install https://github.com/wolfcw/libfaketime for this test suit to run
         find_library(FAKETIME_LIBRARY
             NAMES libfaketimeMT.so.1
