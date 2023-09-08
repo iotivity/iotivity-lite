@@ -187,6 +187,9 @@ coap_batch_observer_t *coap_get_discovery_batch_observers(void);
  * notifications and try sending them all. */
 void coap_process_discovery_batch_observers(void);
 
+/** @brief Schedule dispatch of coap_process_discovery_batch_observers. */
+void coap_dispatch_process_batch_observers(void);
+
 /** @brief Deallocate and remove all batch observation notifications. */
 void coap_free_all_discovery_batch_observers(void);
 

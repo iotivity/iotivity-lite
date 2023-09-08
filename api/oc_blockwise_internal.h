@@ -87,6 +87,7 @@ typedef struct oc_blockwise_request_state_s
 typedef struct oc_blockwise_response_state_s
 {
   oc_blockwise_state_t base;
+  coap_status_t code;
   oc_coap_etag_t etag;
 
 #ifdef OC_CLIENT
@@ -119,13 +120,14 @@ oc_blockwise_state_t *oc_blockwise_alloc_request_buffer(
  * @param method method
  * @param role the role (client or server)
  * @param buffer_size the buffer size for allocation
+ * @param code the response code
  * @param generate_etag generate ETag
  * @return oc_blockwise_state_t*
  */
 oc_blockwise_state_t *oc_blockwise_alloc_response_buffer(
   const char *href, size_t href_len, const oc_endpoint_t *endpoint,
   oc_method_t method, oc_blockwise_role_t role, uint32_t buffer_size,
-  bool generate_etag) OC_NONNULL(3);
+  coap_status_t code, bool generate_etag) OC_NONNULL(3);
 
 /**
  * @brief free the request buffer

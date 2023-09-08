@@ -514,8 +514,8 @@ ri_delete_resource(oc_resource_t *resource, bool notify)
 {
   OC_DBG("delete resource(%p)", (void *)resource);
 
-#if defined(OC_COLLECTIONS)
-#if defined(OC_COLLECTIONS_IF_CREATE)
+#ifdef OC_COLLECTIONS
+#ifdef OC_COLLECTIONS_IF_CREATE
   oc_rt_created_t *rtc = oc_rt_get_factory_create_for_resource(resource);
   if (rtc != NULL) {
     /* For dynamically created resources invoke the created instance destructor
@@ -526,8 +526,11 @@ ri_delete_resource(oc_resource_t *resource, bool notify)
     oc_rt_factory_free_created_resource(rtc, rtc->rf);
     return;
   }
-#endif /* (OC_COLLECTIONS_IF_CREATE) */
+#endif /* OC_COLLECTIONS_IF_CREATE */
 
+#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
+  bool needsBatchDispatch = false;
+#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
   // remove the resource from the collections
   oc_collection_t *collection =
     oc_get_next_collection_with_link(resource, NULL);
@@ -535,12 +538,17 @@ ri_delete_resource(oc_resource_t *resource, bool notify)
     oc_link_t *link = oc_get_link_by_uri(collection, oc_string(resource->uri),
                                          oc_string_len(resource->uri));
     if (link != NULL) {
-      oc_collection_remove_link(&collection->res, link);
+      if (oc_collection_remove_link_and_notify(&collection->res, link, notify,
+                                               /*batchDispatch*/ false)) {
+#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
+        needsBatchDispatch = true;
+#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
+      }
       oc_delete_link(link);
     }
     collection = oc_get_next_collection_with_link(resource, collection);
   }
-#endif /* (OC_COLLECTIONS) */
+#endif /* OC_COLLECTIONS */
 
   bool removed = oc_list_remove2(g_app_resources, resource) != NULL;
   removed =
@@ -558,8 +566,20 @@ ri_delete_resource(oc_resource_t *resource, bool notify)
 #endif /* !OC_DBG_IS_ENABLED */
   }
 
-  if (removed && notify) {
-    oc_notify_resource_removed(resource);
+  if (notify) {
+    if (removed) {
+      oc_notify_resource_removed(resource);
+    } else {
+#if defined(OC_COLLECTIONS) && defined(OC_RES_BATCH_SUPPORT) &&                \
+  defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
+      // if oc_notify_resource_removed is not called, then we need to dispatch
+      // manually if it is requested
+      if (needsBatchDispatch) {
+        coap_dispatch_process_batch_observers();
+      }
+#endif /* OC_COLLECTIONS && OC_RES_BATCH_SUPPORT &&                            \
+          OC_DISCOVERY_RESOURCE_OBSERVABLE */
+    }
   }
 
   oc_ri_free_resource_properties(resource);
@@ -1171,8 +1191,12 @@ ri_invoke_coap_entity_set_response(coap_packet_t *response,
 #endif /* OC_SERVER */
   if (response_buffer->response_length > 0) {
 #ifdef OC_BLOCK_WISE
-    (*ctx.response_state)->payload_size =
+    assert(*ctx.response_state != NULL);
+    oc_blockwise_response_state_t *bw_response_buffer =
+      (oc_blockwise_response_state_t *)*ctx.response_state;
+    bw_response_buffer->base.payload_size =
       (uint32_t)response_buffer->response_length;
+    bw_response_buffer->code = response_buffer->code;
 #else  /* OC_BLOCK_WISE */
     coap_set_payload(response, response_buffer->buffer,
                      response_buffer->response_length);
@@ -1436,7 +1460,7 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
       OC_DBG("creating new block-wise response state");
       *ctx->response_state = oc_blockwise_alloc_response_buffer(
         uri_path, uri_path_len, endpoint, method, OC_BLOCKWISE_SERVER,
-        (uint32_t)OC_MIN_APP_DATA_SIZE, generate_etag);
+        (uint32_t)OC_MIN_APP_DATA_SIZE, CONTENT_2_05, generate_etag);
       if (*ctx->response_state == NULL) {
         OC_ERR("failure to alloc response state");
         bad_request = true;
@@ -1584,7 +1608,8 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
 #else  /* !OC_BLOCK_WISE */
   uint16_t block2_size = 0;
 #endif /* OC_BLOCK_WISE */
-  if (success && response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
+  if (success && method == OC_GET &&
+      response_buffer.code < oc_status_code(OC_STATUS_BAD_REQUEST)) {
     observe = ri_handle_observation(ctx->request, ctx->response, cur_resource,
                                     resource_is_collection, block2_size,
                                     endpoint, iface_query);

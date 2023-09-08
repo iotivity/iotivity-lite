@@ -118,7 +118,7 @@ typedef bool (*coap_make_response_fn_t)(coap_make_response_ctx_t *,
 
 typedef struct
 {
-  const coap_packet_t *request;
+  const coap_packet_t *message;
   coap_packet_t *response;
   coap_transaction_t *transaction;
 #ifdef OC_BLOCK_WISE

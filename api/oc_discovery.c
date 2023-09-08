@@ -19,6 +19,7 @@
 #include "api/oc_core_res_internal.h"
 #include "api/oc_discovery_internal.h"
 #include "api/oc_endpoint_internal.h"
+#include "api/oc_helpers_internal.h"
 #include "api/oc_resource_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_server_api_internal.h"
@@ -437,12 +438,19 @@ process_device_resources(CborEncoder *links, const oc_request_t *request)
 
 static void
 send_response(oc_request_t *request, oc_content_format_t content_format,
-              int matches, size_t response_length)
+              bool is_empty, oc_status_t code, size_t response_length)
 {
-  oc_status_t code = OC_STATUS_OK;
-  if (matches && response_length) {
+  if (!is_empty && response_length > 0) {
     //  do nothing - response already set up
-  } else if (request->origin && (request->origin->flags & MULTICAST) == 0) {
+    oc_send_response_internal(request, code, content_format, response_length,
+                              code != OC_IGNORE);
+    return;
+  }
+
+  if (code == OC_STATUS_NOT_MODIFIED && is_empty) {
+    response_length = 0;
+  } else if (request->origin != NULL &&
+             (request->origin->flags & MULTICAST) == 0) {
     code = OC_STATUS_BAD_REQUEST;
     response_length = 0;
   } else {
@@ -697,7 +705,7 @@ oc_core_1_1_discovery_handler(oc_request_t *request,
   }
 
   int response_length = oc_rep_get_encoded_payload_size();
-  send_response(request, APPLICATION_CBOR, matches,
+  send_response(request, APPLICATION_CBOR, matches == 0, OC_STATUS_OK,
                 response_length < 0 ? 0 : (size_t)response_length);
 }
 #endif /* OC_SPEC_VER_OIC */
@@ -741,12 +749,38 @@ oc_discovery_resource_is_in_batch_response(const oc_resource_t *resource,
 }
 
 static void
-process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
-                       const oc_endpoint_t *endpoint)
+discovery_process_batch_response_write_href(char *buffer, size_t buffer_size,
+                                            size_t device, oc_string_view_t uri)
+{
+  assert(buffer_size > OC_CHAR_ARRAY_LEN(OC_SCHEME_OCF) + OC_UUID_LEN);
+  memcpy(buffer, OC_SCHEME_OCF, OC_CHAR_ARRAY_LEN(OC_SCHEME_OCF));
+  buffer = buffer + OC_CHAR_ARRAY_LEN(OC_SCHEME_OCF);
+  buffer_size = buffer_size - OC_CHAR_ARRAY_LEN(OC_SCHEME_OCF);
+  oc_uuid_to_str(oc_core_get_device_id(device), buffer, OC_UUID_LEN);
+  buffer += OC_UUID_LEN - 1;
+  buffer_size -= OC_UUID_LEN - 1;
+  size_t to_write = uri.length;
+  if (to_write + 1 > buffer_size) {
+    OC_WRN("resource uri(%s) truncated", uri.data);
+    to_write = buffer_size - 1;
+  }
+  assert(to_write > 0);
+  memcpy(buffer, uri.data, to_write);
+  buffer[to_write] = '\0';
+}
+
+typedef bool (*discovery_process_batch_response_filter_t)(const oc_resource_t *,
+                                                          void *);
+
+static bool
+discovery_process_batch_response(
+  CborEncoder *encoder, oc_resource_t *resource, const oc_endpoint_t *endpoint,
+  discovery_process_batch_response_filter_t filter, void *filter_data)
 {
   if (resource == NULL ||
-      !oc_discovery_resource_is_in_batch_response(resource, endpoint, true)) {
-    return;
+      !oc_discovery_resource_is_in_batch_response(resource, endpoint, true) ||
+      (filter != NULL && !filter(resource, filter_data))) {
+    return false;
   }
   oc_request_t rest_request;
   memset(&rest_request, 0, sizeof(oc_request_t));
@@ -761,15 +795,12 @@ process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
   rest_request.query_len = 0;
   rest_request.method = OC_GET;
 
-  oc_rep_start_object((links_array), links_obj);
+  oc_rep_start_object(encoder, links_obj);
 
   char href[OC_MAX_OCF_URI_SIZE] = { 0 };
-  memcpy(href, OC_SCHEME_OCF, OC_CHAR_ARRAY_LEN(OC_SCHEME_OCF));
-  char *buffer = href + OC_CHAR_ARRAY_LEN(OC_SCHEME_OCF);
-  oc_uuid_to_str(oc_core_get_device_id(resource->device), buffer, OC_UUID_LEN);
-  buffer += OC_UUID_LEN - 1;
-  memcpy(buffer, oc_string(resource->uri), oc_string_len(resource->uri));
-  buffer[oc_string_len(resource->uri)] = '\0';
+  discovery_process_batch_response_write_href(href, OC_MAX_OCF_URI_SIZE,
+                                              resource->device,
+                                              oc_string_view2(&resource->uri));
 
   oc_rep_set_text_string_v1(links_obj, href, href,
                             oc_strnlen(href, OC_ARRAY_SIZE(href)));
@@ -805,7 +836,8 @@ process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
     oc_rep_end_root_object();
   }
   memcpy(oc_rep_object(links_obj), oc_rep_get_encoder(), sizeof(CborEncoder));
-  oc_rep_end_object((links_array), links_obj);
+  oc_rep_end_object(encoder, links_obj);
+  return true;
 }
 
 void
@@ -813,31 +845,28 @@ oc_discovery_create_batch_for_resource(CborEncoder *links,
                                        oc_resource_t *resource,
                                        const oc_endpoint_t *endpoint)
 {
-  process_batch_response(links, resource, endpoint);
+  discovery_process_batch_response(links, resource, endpoint, NULL, NULL);
 }
 
 typedef struct
 {
-  CborEncoder *links_array;
+  CborEncoder *links;
   const oc_endpoint_t *endpoint;
-} iterate_batch_response_data_t;
+  discovery_process_batch_response_filter_t filter;
+  void *filter_data;
+  int matches;
+} discovery_batch_response_data_t;
 
 static bool
 discovery_iterate_batch_response(oc_resource_t *resource, void *data)
 {
-  iterate_batch_response_data_t *brd = (iterate_batch_response_data_t *)data;
-  process_batch_response(brd->links_array, resource, brd->endpoint);
+  discovery_batch_response_data_t *brd =
+    (discovery_batch_response_data_t *)data;
+  if (discovery_process_batch_response(brd->links, resource, brd->endpoint,
+                                       brd->filter, brd->filter_data)) {
+    ++brd->matches;
+  }
   return true;
-}
-
-static void
-process_batch_request(CborEncoder *links_array, const oc_endpoint_t *endpoint,
-                      size_t device)
-{
-  iterate_batch_response_data_t brd = { .links_array = links_array,
-                                        .endpoint = endpoint };
-  oc_resources_iterate(device, true, true, true, true,
-                       discovery_iterate_batch_response, &brd);
 }
 
 #ifdef OC_HAS_FEATURE_ETAG
@@ -846,19 +875,19 @@ typedef struct
 {
   const oc_endpoint_t *endpoint;
   uint64_t etag;
-} iterate_get_etag_data_t;
+} discovery_get_max_etag_data_t;
 
 static bool
-discovery_iterate_get_batch_etag(oc_resource_t *resource, void *data)
+discovery_batch_iterate_get_max_etag(oc_resource_t *resource, void *data)
 {
-  iterate_get_etag_data_t *ged = (iterate_get_etag_data_t *)data;
-  if (!oc_discovery_resource_is_in_batch_response(resource, ged->endpoint,
+  discovery_get_max_etag_data_t *gmed = (discovery_get_max_etag_data_t *)data;
+  if (!oc_discovery_resource_is_in_batch_response(resource, gmed->endpoint,
                                                   false)) {
     return true;
   }
 
-  if (resource->etag > ged->etag) {
-    ged->etag = resource->etag;
+  if (resource->etag > gmed->etag) {
+    gmed->etag = resource->etag;
   }
   return true;
 }
@@ -866,16 +895,160 @@ discovery_iterate_get_batch_etag(oc_resource_t *resource, void *data)
 uint64_t
 oc_discovery_get_batch_etag(const oc_endpoint_t *endpoint, size_t device)
 {
-  iterate_get_etag_data_t ged = {
+  discovery_get_max_etag_data_t gmed = {
     .endpoint = endpoint,
     .etag = OC_ETAG_UNINITIALIZED,
   };
   oc_resources_iterate(device, true, true, true, true,
-                       discovery_iterate_get_batch_etag, &ged);
-  return ged.etag;
+                       discovery_batch_iterate_get_max_etag, &gmed);
+  return gmed.etag;
 }
 
+#ifdef OC_HAS_FEATURE_ETAG_INCREMENTAL_CHANGES
+
+typedef struct
+{
+  const oc_endpoint_t *endpoint;
+  uint64_t etag;
+  bool found;
+} discovery_get_equal_etag_data_t;
+
+static bool
+discovery_batch_iterate_get_equal_etag(oc_resource_t *resource, void *data)
+{
+  discovery_get_equal_etag_data_t *geed =
+    (discovery_get_equal_etag_data_t *)data;
+  if (!oc_discovery_resource_is_in_batch_response(resource, geed->endpoint,
+                                                  false)) {
+    return true;
+  }
+
+  if (resource->etag == geed->etag) {
+    OC_DBG("resource(%s) with etag %" PRIu64 " found", oc_string(resource->uri),
+           resource->etag);
+    geed->found = true;
+    return false;
+  }
+  return true;
+}
+
+static bool
+discovery_batch_has_resource_with_etag(uint64_t etag,
+                                       const oc_endpoint_t *endpoint,
+                                       size_t device)
+{
+  // check if a resource with given etag exists, if so we can use it
+  discovery_get_equal_etag_data_t geed = {
+    .endpoint = endpoint,
+    .etag = etag,
+    .found = false,
+  };
+  oc_resources_iterate(device, true, true, true, true,
+                       discovery_batch_iterate_get_equal_etag, &geed);
+  return geed.found;
+}
+
+typedef struct
+{
+  const oc_endpoint_t *endpoint;
+  size_t device;
+  uint64_t etag;
+} discovery_find_candidate_etag_data_t;
+
+static bool
+discovery_iterate_incremental_updates(uint64_t etag, void *user_data)
+{
+  OC_DBG("oc_discovery: checking candidate etag(%" PRIu64 ")", etag);
+  discovery_find_candidate_etag_data_t *ced =
+    (discovery_find_candidate_etag_data_t *)user_data;
+  if (etag < ced->etag) {
+    return true;
+  }
+  if (!discovery_batch_has_resource_with_etag(etag, ced->endpoint,
+                                              ced->device)) {
+    OC_DBG("oc_discovery: no resource found for candidate etag(%" PRIu64 ")",
+           etag);
+    return true;
+  }
+  OC_DBG("oc_discovery: new candidate etag(%" PRIu64 ")", etag);
+  ced->etag = etag;
+  return true;
+}
+
+static uint64_t
+discovery_find_incremental_updates_etag(const oc_request_t *request)
+{
+  // check incChanges key in query, if present we check if a resource with given
+  // etag exists and then return only resources with etag > request->etag
+  if (!oc_etag_has_incremental_updates_query(request->query,
+                                             request->query_len)) {
+    return OC_ETAG_UNINITIALIZED;
+  }
+
+  OC_DBG("oc_discovery: find highest valid etag for incremental updates");
+  discovery_find_candidate_etag_data_t ced = {
+    .endpoint = request->origin,
+    .device = request->resource->device,
+    .etag = OC_ETAG_UNINITIALIZED,
+  };
+  if (request->etag_len == sizeof(uint64_t)) {
+    uint64_t etag0 = OC_ETAG_UNINITIALIZED;
+    memcpy(&etag0, &request->etag[0], sizeof(uint64_t));
+    if (discovery_batch_has_resource_with_etag(etag0, request->origin,
+                                               request->resource->device)) {
+      OC_DBG("oc_discovery: candidate etag0(%" PRIu64 ")", etag0);
+      ced.etag = etag0;
+    }
+  }
+  oc_etag_iterate_incremental_updates_query(
+    request->query, request->query_len, discovery_iterate_incremental_updates,
+    &ced);
+  return ced.etag;
+}
+
+static bool
+process_batch_request_filter_by_etag(const oc_resource_t *resource, void *data)
+{
+  const uint64_t *etag = (uint64_t *)data;
+  return resource->etag > *etag;
+}
+
+#endif /* OC_HAS_FEATURE_ETAG_INCREMENTAL_CHANGES */
+
 #endif /* OC_HAS_FEATURE_ETAG */
+
+static oc_status_t
+discovery_process_batch_request(CborEncoder *links, const oc_request_t *request)
+{
+  const oc_endpoint_t *endpoint = request->origin;
+  size_t device = request->resource->device;
+  discovery_batch_response_data_t brd = {
+    .links = links,
+    .endpoint = endpoint,
+    .filter = NULL,
+    .filter_data = NULL,
+    .matches = 0,
+  };
+#ifdef OC_HAS_FEATURE_ETAG_INCREMENTAL_CHANGES
+  uint64_t etag = discovery_find_incremental_updates_etag(request);
+  if (etag != OC_ETAG_UNINITIALIZED) {
+    brd.filter = process_batch_request_filter_by_etag;
+    brd.filter_data = &etag;
+  }
+#endif /* OC_HAS_FEATURE_ETAG_INCREMENTAL_CHANGES */
+
+  oc_resources_iterate(device, true, true, true, true,
+                       discovery_iterate_batch_response, &brd);
+
+#ifdef OC_HAS_FEATURE_ETAG_INCREMENTAL_CHANGES
+  if (etag != OC_ETAG_UNINITIALIZED && brd.matches == 0) {
+    OC_DBG("oc_discovery: no resources with etag > %" PRIu64 " found", etag);
+    // no resources with etag > request->etag found, so we can return VALID
+    return OC_STATUS_NOT_MODIFIED;
+  }
+#endif /* OC_HAS_FEATURE_ETAG_INCREMENTAL_CHANGES */
+  return OC_STATUS_OK;
+}
 
 #endif /* OC_RES_BATCH_SUPPORT */
 
@@ -929,13 +1102,12 @@ discovery_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 #endif /* OC_SECURITY */
 
+  oc_status_t code = OC_STATUS_OK;
   int matches = 0;
-  size_t device = request->resource->device;
-
   switch (iface_mask) {
   case OC_IF_LL: {
     oc_rep_start_links_array();
-    matches += process_device_resources(oc_rep_array(links), request);
+    matches = process_device_resources(oc_rep_array(links), request);
     oc_rep_end_links_array();
   } break;
 #ifdef OC_RES_BATCH_SUPPORT
@@ -948,16 +1120,16 @@ discovery_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
       OC_ERR("oc_discovery: insecure batch interface requests are unsupported");
       break;
     }
-    CborEncoder encoder;
     oc_rep_start_links_array();
-    memcpy(&encoder, oc_rep_get_encoder(), sizeof(CborEncoder));
-    process_batch_request(&links_array, request->origin, device);
-    memcpy(oc_rep_get_encoder(), &encoder, sizeof(CborEncoder));
+    code = discovery_process_batch_request(oc_rep_array(links), request);
     oc_rep_end_links_array();
-    matches++;
+    if (code != OC_STATUS_NOT_MODIFIED) {
+      ++matches;
+    }
   } break;
 #endif /* OC_RES_BATCH_SUPPORT */
   case OC_IF_BASELINE: {
+    size_t device = request->resource->device;
     oc_rep_start_links_array();
     oc_rep_start_object(oc_rep_array(links), props);
     memcpy(&root_map, &props_map, sizeof(CborEncoder));
@@ -975,7 +1147,7 @@ discovery_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
     }
 #endif
     oc_rep_set_array(root, links);
-    matches += process_device_resources(oc_rep_array(links), request);
+    matches = process_device_resources(oc_rep_array(links), request);
     oc_rep_close_array(root, links);
     memcpy(&props_map, &root_map, sizeof(CborEncoder));
     oc_rep_end_object(oc_rep_array(links), props);
@@ -986,7 +1158,7 @@ discovery_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 
   int response_length = oc_rep_get_encoded_payload_size();
-  send_response(request, APPLICATION_VND_OCF_CBOR, matches,
+  send_response(request, APPLICATION_VND_OCF_CBOR, matches == 0, code,
                 response_length < 0 ? 0 : (size_t)response_length);
 }
 
@@ -1088,7 +1260,8 @@ oc_wkcore_discovery_handler(oc_request_t *request,
     response_length += length;
   }
 
-  send_response(request, APPLICATION_LINK_FORMAT, matches, response_length);
+  send_response(request, APPLICATION_LINK_FORMAT, matches == 0, OC_STATUS_OK,
+                response_length);
 }
 
 void

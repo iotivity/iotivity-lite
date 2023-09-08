@@ -604,7 +604,8 @@ coap_prepare_notification_blockwise(coap_packet_t *notification,
   response_state = oc_blockwise_alloc_response_buffer(
     oc_string(obs->resource->uri) + 1, oc_string_len(obs->resource->uri) - 1,
     &obs->endpoint, OC_GET, OC_BLOCKWISE_SERVER,
-    (uint32_t)response->response_buffer->response_length, generate_etag);
+    (uint32_t)response->response_buffer->response_length, CONTENT_2_05,
+    generate_etag);
   if (response_state == NULL) {
     COAP_ERR("cannot allocate response buffer");
     return -1;
@@ -1213,8 +1214,8 @@ notify_resource_defaults_observer(oc_resource_t *resource,
 }
 
 #if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-static void
-dispatch_process_batch_observers(void)
+void
+coap_dispatch_process_batch_observers(void)
 {
   oc_reset_delayed_callback(NULL, &process_batch_observers_async, 0);
   _oc_signal_event_loop();
@@ -1270,7 +1271,7 @@ notify_batch_observer(coap_observer_t *obs, oc_response_t *response)
     .uri = &obs->resource->uri,
     .ignore_is_revert = true,
 #ifdef OC_BLOCK_WISE
-    .finish_cb = dispatch_process_batch_observers,
+    .finish_cb = coap_dispatch_process_batch_observers,
 #endif /* OC_BLOCK_WISE */
   };
   return coap_send_notification_internal(ctx);
@@ -1505,7 +1506,7 @@ coap_add_discovery_batch_observer(oc_resource_t *resource, bool removed,
   }
 
   if (dispatch) {
-    dispatch_process_batch_observers();
+    coap_dispatch_process_batch_observers();
   }
   return added;
 }

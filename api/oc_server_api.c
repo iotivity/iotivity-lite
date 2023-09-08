@@ -722,7 +722,7 @@ handle_separate_response_request(coap_separate_t *request,
     response_state = oc_blockwise_alloc_response_buffer(
       oc_string(request->uri), oc_string_len(request->uri), &request->endpoint,
       request->method, OC_BLOCKWISE_SERVER,
-      (uint32_t)response_buffer->response_length, false);
+      (uint32_t)response_buffer->response_length, CONTENT_2_05, false);
     if (response_state == NULL) {
       return;
     }
