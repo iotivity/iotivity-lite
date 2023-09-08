@@ -525,7 +525,7 @@ oc_interface_mask_t oc_ri_get_interface_mask(const char *iface,
  * @brief retrieve the resource by uri and device index
  *
  * @param uri the uri of the resource
- * @param uri_len the lenght of the uri
+ * @param uri_len the length of the uri
  * @param device the device index
  * @return oc_resource_t* the resource structure
  */
@@ -626,7 +626,7 @@ bool oc_ri_on_delete_resource_remove_callback(oc_ri_delete_resource_cb_t cb)
  * @param[out] key_len the length of the key (cannot be NULL)
  * @param[out] value the value belonging to the key
  * @param[out] value_len the length of the value
- * @param n the position to query
+ * @param n the position to query (must be > 0)
  * @return int the position of the next key value pair in the query
  * @return int -1 on failure
  */
@@ -639,36 +639,61 @@ int oc_ri_get_query_nth_key_value(const char *query, size_t query_len,
  * @brief retrieve the value of the query parameter "key"
  *
  * @param query the input query
- * @param query_len the query lenght
+ * @param query_len the query length
  * @param key the wanted key (cannot be NULL)
+ * @param key_len the length of the wanted key
  * @param value the returned value
- * @return int the lenght of the value
+ * @return -1 if the key is not found
+ * @return the length of the value
  */
-int oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
-                          const char **value) OC_NONNULL(3);
+int oc_ri_get_query_value_v1(const char *query, size_t query_len,
+                             const char *key, size_t key_len,
+                             const char **value) OC_NONNULL(3);
 
 /**
- * @brief checks if key exist in query
+ * @brief retrieve the value of the query parameter "key"
  *
- * @param[in] query the query to inspect
- * @param[in] query_len the lenght of the query
- * @param[in] key the key to be checked if exist, key is null terminated (cannot
+ * @deprecated replaced by oc_ri_get_query_value_v1 in v2.2.5.9
+ */
+int oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
+                          const char **value) OC_NONNULL(3)
+  OC_DEPRECATED("replaced by oc_ri_get_query_value_v1 in v2.2.5.9");
+
+/**
+ * @brief Checks if key exist in query
+ *
+ * @param query the query to inspect
+ * @param query_len the length of the query
+ * @param key the key to be checked if exist, key is null terminated (cannot
  * be NULL)
- * @return int -1 = not exists
+ * @param key_len the key length
+ * @return true if key exists
+ */
+bool oc_ri_query_exists_v1(const char *query, size_t query_len, const char *key,
+                           size_t key_len) OC_NONNULL(3);
+
+/**
+ * @brief Checks if key exist in query
+ *
+ * @return -1 if key does not exist
+ *
+ * @deprecated replaced by oc_ri_query_exists_v1 in v2.2.5.9
  */
 int oc_ri_query_exists(const char *query, size_t query_len, const char *key)
-  OC_NONNULL(3);
+  OC_NONNULL(3) OC_DEPRECATED("replaced by oc_ri_query_exists_v1 in v2.2.5.9");
 
 /**
  * @brief check if the nth key exists
  *
  * @param query the query to inspect
- * @param query_len the lenght of the query
+ * @param query_len the length of the query
  * @param key the key to be checked if exist, key is not null terminated (cannot
  * be NULL)
  * @param key_len the key length (cannot be NULL)
- * @param n index of the key
- * @return int -1 = not exists
+ * @param n index of the key (must be > 0)
+ * @return -1 if key does not exist
+ * @return >= 0 if key exists and the value is the position of the next key in
+ * the query or query_len if it is the last key
  */
 int oc_ri_query_nth_key_exists(const char *query, size_t query_len,
                                const char **key, size_t *key_len, size_t n)

@@ -1832,7 +1832,8 @@ cred_resource_delete(oc_request_t *request, oc_interface_mask_t iface_mask,
   }
 
   const char *query_param = NULL;
-  int ret = oc_get_query_value(request, "credid", &query_param);
+  int ret = oc_get_query_value_v1(request, "credid",
+                                  OC_CHAR_ARRAY_LEN("credid"), &query_param);
   if (ret != -1) {
     errno = 0;
     long credid =

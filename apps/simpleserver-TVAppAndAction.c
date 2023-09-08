@@ -32,6 +32,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define CHAR_ARRAY_LEN(x) (sizeof(x) - 1)
+
 #ifdef __linux__
 #include <pthread.h>
 static pthread_mutex_t mutex;
@@ -228,7 +230,8 @@ get_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
   const char *action = NULL;
   int action_len = -1;
   oc_init_query_iterator();
-  oc_iterate_query_get_values(request, "action", &action, &action_len);
+  oc_iterate_query_get_values_v1(request, "action", CHAR_ARRAY_LEN("action"),
+                                 &action, &action_len);
 
   if (action_len > 0) {
     // An action parm was received
@@ -273,7 +276,8 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
   const char *action = NULL;
   int action_len = -1;
   oc_init_query_iterator();
-  oc_iterate_query_get_values(request, "action", &action, &action_len);
+  oc_iterate_query_get_values_v1(request, "action", CHAR_ARRAY_LEN("action"),
+                                 &action, &action_len);
 
   if (action_len > 0) {
     printf("POST action length = %d \n", action_len);

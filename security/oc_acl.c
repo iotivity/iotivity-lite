@@ -1364,7 +1364,8 @@ delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 
   bool success = false;
   const char *query_param = 0;
-  int ret = oc_get_query_value(request, "aceid", &query_param);
+  int ret = oc_get_query_value_v1(request, "aceid", OC_CHAR_ARRAY_LEN("aceid"),
+                                  &query_param);
   int aceid = 0;
   if (ret != -1) {
     aceid = (int)strtoul(query_param, NULL, 10);

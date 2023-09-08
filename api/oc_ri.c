@@ -345,8 +345,8 @@ oc_ri_filter_request_by_device_id(size_t device, const char *query,
   oc_uuid_to_str(device_id, di, OC_UUID_LEN);
   for (size_t pos = 0; pos < query_len;) {
     const char *value = NULL;
-    int value_len =
-      oc_ri_get_query_value(query + pos, query_len - pos, "di", &value);
+    int value_len = oc_ri_get_query_value_v1(query + pos, query_len - pos, "di",
+                                             OC_CHAR_ARRAY_LEN("di"), &value);
     if (value_len == -1) {
       // pos == 0 key not found, otherwise device id not match the device.
       return pos == 0;
@@ -1256,8 +1256,8 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
     request_obj.query_len = uri_query_len;
     /* Check if query string includes interface selection. */
     const char *iface = NULL;
-    int iface_len =
-      oc_ri_get_query_value(uri_query, uri_query_len, "if", &iface);
+    int iface_len = oc_ri_get_query_value_v1(uri_query, uri_query_len, "if",
+                                             OC_CHAR_ARRAY_LEN("if"), &iface);
     if (iface_len != -1 && iface != NULL) {
       iface_query |= oc_ri_get_interface_mask(iface, (size_t)iface_len);
     }

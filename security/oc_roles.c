@@ -371,7 +371,8 @@ roles_resource_delete(oc_request_t *request, oc_interface_mask_t iface_mask,
   (void)data;
   const oc_tls_peer_t *client = oc_tls_get_peer(request->origin);
   const char *query_param = NULL;
-  int ret = oc_get_query_value(request, "credid", &query_param);
+  int ret = oc_get_query_value_v1(request, "credid",
+                                  OC_CHAR_ARRAY_LEN("credid"), &query_param);
   if (ret == -1) {
     // no query param, delete all roles
     oc_sec_free_roles(client);

@@ -167,6 +167,7 @@ struct oc_response_s
 %ignore oc_ri_free_resource_properties;
 %ignore oc_ri_get_query_nth_key_value;
 %ignore oc_ri_get_query_value;
+%ignore oc_ri_get_query_value_v1;
 %ignore oc_ri_get_interface_mask;
 
 #define OC_API

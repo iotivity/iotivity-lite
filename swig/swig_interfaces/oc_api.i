@@ -901,7 +901,9 @@ void jni_oc_con_callback(size_t device_index, const oc_rep_t *rep)
 %ignore oc_init_query_iterator;
 %ignore oc_iterate_query;
 %ignore oc_get_query_value;
+%ignore oc_get_query_value_v1;
 %ignore oc_iterate_query_get_values;
+%ignore oc_iterate_query_get_values_v1;
 
 %typemap(jni)    jobject getQueryValues "jobject";
 %typemap(jtype)  jobject getQueryValues "java.util.List<OCQueryValue>";

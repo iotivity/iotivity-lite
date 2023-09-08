@@ -58,6 +58,8 @@ static const char *manufacturer = "OCF";
 #define btoa(x) ((x) ? "true" : "false")
 #define MAX_ARRAY 10 /* max size of the array */
 
+#define CHAR_ARRAY_LEN(x) (sizeof(x) - 1)
+
 /* global property variables for path: "/dali" */
 static const char *g_dali_RESOURCE_PROPERTY_NAME_pld =
   "pld"; /* the name for the attribute */
@@ -606,7 +608,8 @@ get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
   bool invalid_query = false;
   const char *units;
   units_t u = temp_units;
-  int units_len = oc_get_query_value(request, "units", &units);
+  int units_len =
+    oc_get_query_value_v1(request, "units", CHAR_ARRAY_LEN("units"), &units);
   if (units_len != -1) {
     if (units[0] == 'K') {
       u = K;
@@ -1633,7 +1636,8 @@ get_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
   const char *action = NULL;
   int action_len = -1;
   oc_init_query_iterator();
-  oc_iterate_query_get_values(request, "action", &action, &action_len);
+  oc_iterate_query_get_values_v1(request, "action", CHAR_ARRAY_LEN("action"),
+                                 &action, &action_len);
 
   if (action_len > 0) {
     // An action parm was received
@@ -1678,7 +1682,8 @@ post_remotecontrol(oc_request_t *request, oc_interface_mask_t iface_mask,
   const char *action = NULL;
   int action_len = -1;
   oc_init_query_iterator();
-  oc_iterate_query_get_values(request, "action", &action, &action_len);
+  oc_iterate_query_get_values_v1(request, "action", CHAR_ARRAY_LEN("action"),
+                                 &action, &action_len);
 
   if (action_len > 0) {
     OC_PRINTF("POST action length = %d \n", action_len);

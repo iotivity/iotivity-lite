@@ -197,6 +197,7 @@ static CRITICAL_SECTION cs;   /**< event loop variable */
 #endif
 
 #define btoa(x) ((x) ? "true" : "false")
+#define CHAR_ARRAY_LEN(x) (sizeof(x) - 1)
 
 #define MAX_STRING 30         /**< max size of the strings. */
 #define MAX_PAYLOAD_STRING 65 /**< max size strings in the payload */
@@ -682,7 +683,8 @@ post_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
   const char *_scan = NULL; /* not null terminated  */
 
   /* do a scan to all devices */
-  int _scan_len = oc_get_query_value(request, "scan", &_scan);
+  int _scan_len =
+    oc_get_query_value_v1(request, "scan", CHAR_ARRAY_LEN("scan"), &_scan);
   if (_scan_len > 0) {
     OC_PRINTF("   Send multicast discovery\n");
     issue_requests_all();
@@ -690,7 +692,8 @@ post_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
     return;
   }
 
-  int _di_len = oc_get_query_value(request, "di", &_di);
+  int _di_len =
+    oc_get_query_value_v1(request, "di", CHAR_ARRAY_LEN("di"), &_di);
   if (_di_len != -1) {
     /* input check
      * ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$
@@ -770,7 +773,6 @@ STATIC void
 delete_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
                      void *user_data)
 {
-  (void)request;
   (void)interfaces;
   (void)user_data;
   bool error_state = true;
@@ -780,7 +782,8 @@ delete_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
 
   /* query name 'di' type: 'string'*/
   const char *_di = NULL; /* not null terminated  */
-  int _di_len = oc_get_query_value(request, "di", &_di);
+  int _di_len =
+    oc_get_query_value_v1(request, "di", CHAR_ARRAY_LEN("di"), &_di);
   if (_di_len != -1) {
     /* input check
      * ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$
@@ -1124,7 +1127,6 @@ STATIC void
 post_resource(oc_request_t *request, oc_interface_mask_t interfaces,
               void *user_data)
 {
-  (void)request;
   (void)interfaces;
   (void)user_data;
 
@@ -1227,9 +1229,6 @@ STATIC void
 delete_resource(oc_request_t *request, oc_interface_mask_t interfaces,
                 void *user_data)
 {
-  (void)request;
-  (void)interfaces;
-  (void)user_data;
   (void)interfaces;
   (void)user_data;
   char query_as_string[MAX_URI_LENGTH * 2] = "";
@@ -1277,11 +1276,10 @@ delete_resource(oc_request_t *request, oc_interface_mask_t interfaces,
 STATIC oc_discovery_flags_t
 discovery(const char *anchor, const char *uri, oc_string_array_t types,
           oc_interface_mask_t iface_mask, const oc_endpoint_t *endpoint,
-          oc_resource_properties_t bm, bool x, void *user_data)
+          oc_resource_properties_t bm, bool more, void *user_data)
 {
-  (void)user_data;
   (void)bm;
-  (void)x;
+  (void)more;
   int i;
   char url[MAX_URI_LENGTH];
   char this_udn[200];
