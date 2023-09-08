@@ -70,6 +70,7 @@ start_manager(void *user_data)
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)user_data;
   oc_free_endpoint(ctx->cloud_ep);
   ctx->cloud_ep = oc_new_endpoint();
+  ctx->store.status &= ~OC_CLOUD_LOGGED_IN;
   cloud_manager_start(ctx);
   return OC_EVENT_DONE;
 }
