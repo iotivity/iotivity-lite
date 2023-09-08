@@ -148,7 +148,7 @@ dispatch_coap_request(void)
 
 static bool
 prepare_coap_request(oc_client_cb_t *cb, coap_configure_request_fn_t configure,
-                     void *configure_data)
+                     const void *configure_data)
 {
   coap_message_type_t type = COAP_TYPE_NON;
 
@@ -378,7 +378,7 @@ oc_do_request(oc_method_t method, const char *uri,
               uint16_t timeout_seconds, oc_response_handler_t handler,
               oc_qos_t qos, void *user_data,
               coap_configure_request_fn_t configure_request,
-              void *configure_request_data)
+              const void *configure_request_data)
 {
   assert(uri != NULL);
   assert(handler != NULL);
@@ -394,13 +394,11 @@ oc_do_request(oc_method_t method, const char *uri,
     return NULL;
   }
 
-  bool status =
-    prepare_coap_request(cb, configure_request, configure_request_data);
-  if (status) {
-    status = dispatch_coap_request();
-  }
-  if (!status) {
+  if (!prepare_coap_request(cb, configure_request, configure_request_data)) {
     oc_client_cb_free(cb);
+    return NULL;
+  }
+  if (!dispatch_coap_request()) {
     return NULL;
   }
   if (timeout_seconds > 0) {
@@ -452,7 +450,7 @@ oc_init_async_request(oc_method_t method, const char *uri,
                       oc_response_handler_t handler, oc_qos_t qos,
                       void *user_data,
                       coap_configure_request_fn_t configure_request,
-                      void *configure_request_data)
+                      const void *configure_request_data)
 {
   assert(uri != NULL);
   assert(handler != NULL);
@@ -484,8 +482,7 @@ oc_do_async_request_with_timeout(uint16_t timeout_seconds, oc_method_t method)
     return false;
   }
 
-  bool dispatch = dispatch_coap_request();
-  if (!dispatch) {
+  if (!dispatch_coap_request()) {
     return false;
   }
 
@@ -639,9 +636,13 @@ oc_do_ipv4_discovery(const char *query, oc_client_handler_t handler,
   if (cb == NULL) {
     return NULL;
   }
+  if (!prepare_coap_request(cb, NULL, NULL)) {
+    oc_client_cb_free(cb);
+    return NULL;
+  }
   cb->discovery = true;
-  if (prepare_coap_request(cb, NULL, NULL)) {
-    dispatch_coap_request();
+  if (!dispatch_coap_request()) {
+    return NULL;
   }
   return cb;
 }
@@ -665,19 +666,15 @@ oc_do_ipv4_multicast(const char *uri, const char *query,
     return NULL;
   }
 
+  if (!prepare_coap_request(cb, NULL, NULL)) {
+    oc_client_cb_free(cb);
+    return NULL;
+  }
   cb->multicast = true;
-
-  bool status = prepare_coap_request(cb, NULL, NULL);
-
-  if (status) {
-    status = dispatch_coap_request();
+  if (!dispatch_coap_request()) {
+    return NULL;
   }
-
-  if (status) {
-    return cb;
-  }
-
-  return NULL;
+  return cb;
 }
 #endif /* OC_IPV4 */
 
@@ -709,25 +706,20 @@ multi_scope_ipv6_multicast(const oc_client_cb_t *cb4, uint8_t scope,
 
   oc_client_cb_t *cb = oc_ri_alloc_client_cb(
     uri, &mcast, OC_GET, query, client_handler, LOW_QOS, user_data);
-
-  if (cb) {
-    if (cb4) {
-      cb->mid = cb4->mid;
-      memcpy(cb->token, cb4->token, cb4->token_len);
-    }
-    cb->multicast = true;
-    if (prepare_coap_request(cb, NULL, NULL) && dispatch_coap_request()) {
-      return true;
-    }
-
-    if (g_dispatch.transaction) {
-      coap_clear_transaction(g_dispatch.transaction);
-      g_dispatch.transaction = NULL;
-    }
-    oc_client_cb_free(cb);
-    g_dispatch.client_cb = NULL;
+  if (cb == NULL) {
+    return false;
   }
-  return false;
+  if (cb4 != NULL) {
+    cb->mid = cb4->mid;
+    memcpy(cb->token, cb4->token, cb4->token_len);
+  }
+
+  if (!prepare_coap_request(cb, NULL, NULL)) {
+    oc_client_cb_free(cb);
+    return false;
+  }
+  cb->multicast = true;
+  return dispatch_coap_request();
 }
 
 bool
@@ -775,28 +767,20 @@ dispatch_ip_discovery(const oc_client_cb_t *cb4, const char *query,
 
   oc_client_cb_t *cb = oc_ri_alloc_client_cb(OCF_RES_URI, endpoint, OC_GET,
                                              query, handler, qos, user_data);
-
   if (cb == NULL) {
     return false;
   }
-  cb->discovery = true;
-  if (cb4) {
+  if (cb4 != NULL) {
     cb->mid = cb4->mid;
     memcpy(cb->token, cb4->token, cb4->token_len);
   }
 
-  if (prepare_coap_request(cb, NULL, NULL) && dispatch_coap_request()) {
-    return true;
+  if (!prepare_coap_request(cb, NULL, NULL)) {
+    oc_client_cb_free(cb);
+    return false;
   }
-
-  if (g_dispatch.transaction) {
-    coap_clear_transaction(g_dispatch.transaction);
-    g_dispatch.transaction = NULL;
-  }
-
-  oc_client_cb_free(cb);
-  g_dispatch.client_cb = NULL;
-  return false;
+  cb->discovery = true;
+  return dispatch_coap_request();
 }
 
 static bool

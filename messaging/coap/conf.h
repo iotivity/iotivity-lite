@@ -52,16 +52,25 @@
 
 #include "constants.h"
 #include "oc_config.h"
+#include "util/oc_features.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#ifdef OC_TEST
+#ifndef COAP_MAX_HEADER_SIZE
+#ifdef OC_HAS_FEATURE_ETAG_INCREMENTAL_CHANGES
+#define COAP_MAX_HEADER_SIZE (300)
+#endif /* OC_HAS_FEATURE_ETAG_INCREMENTAL_CHANGES */
+#endif /* !COAP_MAX_HEADER_SIZE */
+#endif /* OC_TEST */
+
 /* The number of concurrent messages that can be stored for retransmission in
  * the transaction layer. */
 #ifndef COAP_MAX_OPEN_TRANSACTIONS
 #define COAP_MAX_OPEN_TRANSACTIONS (OC_MAX_NUM_CONCURRENT_REQUESTS)
-#endif /* COAP_MAX_OPEN_TRANSACTIONS */
+#endif /* !COAP_MAX_OPEN_TRANSACTIONS */
 
 /* Conservative size limit, as not all options have to be set at the same time.
  * Check when Proxy-Uri option is used */
@@ -70,17 +79,23 @@ extern "C" {
 
 #ifdef OC_BLOCK_WISE
 #define COAP_MAX_HEADER_SIZE                                                   \
-  (4 + COAP_TOKEN_LEN + 3 + COAP_ETAG_LEN + 4 + 4 + 150)
-#else /* OC_BLOCK_WISE */
+  (4 + COAP_TOKEN_LEN + 3 + 4 + 4 + COAP_ETAG_LEN + 150)
+#else /* !OC_BLOCK_WISE */
+#ifdef OC_HAS_FEATURE_ETAG
+#define COAP_MAX_HEADER_SIZE                                                   \
+  (4 + COAP_TOKEN_LEN + 3 + 4 + 4 + COAP_ETAG_LEN + 100)
+#else /* !OC_HAS_FEATURE_ETAG */
 #define COAP_MAX_HEADER_SIZE (4 + COAP_TOKEN_LEN + 3 + 4 + 4 + 100)
-#endif /* !OC_BLOCK_WISE */
-#endif /* COAP_MAX_HEADER_SIZE */
+#endif /* OC_HAS_FEATURE_ETAG */
+#endif /* OC_BLOCK_WISE */
+
+#endif /* !COAP_MAX_HEADER_SIZE */
 
 /* Number of observer slots (each takes abot xxx bytes) */
 #ifndef COAP_MAX_OBSERVERS
 #define COAP_MAX_OBSERVERS                                                     \
   (OC_MAX_APP_RESOURCES + OC_MAX_NUM_CONCURRENT_REQUESTS)
-#endif /* COAP_MAX_OBSERVERS */
+#endif /* !COAP_MAX_OBSERVERS */
 
 #ifdef __cplusplus
 }

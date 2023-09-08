@@ -392,19 +392,9 @@ struct CollectionData
 
 class TestCollectionsWithServer : public testing::Test {
 public:
-  static void SetUpTestCase()
-  {
-    oc_log_set_level(OC_LOG_LEVEL_DEBUG);
+  static void SetUpTestCase() { ASSERT_TRUE(oc::TestDevice::StartServer()); }
 
-    ASSERT_TRUE(oc::TestDevice::StartServer());
-  }
-
-  static void TearDownTestCase()
-  {
-    oc::TestDevice::StopServer();
-
-    oc_log_set_level(OC_LOG_LEVEL_INFO);
-  }
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 
   void SetUp() override
   {

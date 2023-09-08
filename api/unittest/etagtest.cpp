@@ -26,6 +26,7 @@
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/coap_options.h"
 #include "oc_api.h"
+#include "oc_base64.h"
 #include "oc_config.h"
 #include "oc_core_res.h"
 #include "port/oc_log_internal.h"
@@ -33,6 +34,7 @@
 #include "tests/gtest/RepPool.h"
 #include "tests/gtest/Resource.h"
 #include "tests/gtest/Storage.h"
+#include "util/oc_features.h"
 
 #ifdef OC_COLLECTIONS
 #include "api/oc_collection_internal.h"
@@ -64,12 +66,273 @@ static constexpr std::string_view kDynamicResourceURI2{ "/dyn2" };
 
 using namespace std::chrono_literals;
 
+class TestETag : public ::testing::Test {};
+
+#ifdef OC_HAS_FEATURE_ETAG_INCREMENTAL_CHANGES
+
+TEST_F(TestETag, HasIncrementalUpdatesQuery_F)
+{
+  EXPECT_FALSE(oc_etag_has_incremental_updates_query(nullptr, 0));
+
+  std::string query = "";
+  EXPECT_FALSE(
+    oc_etag_has_incremental_updates_query(query.c_str(), query.length()));
+
+  // prefix
+  query = std::string(OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY);
+  query = query.substr(0, query.size() - 1);
+  EXPECT_FALSE(
+    oc_etag_has_incremental_updates_query(query.c_str(), query.length()));
+
+  // suffix
+  query = std::string(OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY) + "_";
+  EXPECT_FALSE(
+    oc_etag_has_incremental_updates_query(query.c_str(), query.length()));
+}
+
+TEST_F(TestETag, HasIncrementalUpdatesQuery)
+{
+  std::string query = OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY;
+  EXPECT_TRUE(
+    oc_etag_has_incremental_updates_query(query.c_str(), query.length()));
+
+  query = std::string(OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY) + "=";
+  EXPECT_TRUE(
+    oc_etag_has_incremental_updates_query(query.c_str(), query.length()));
+
+  query = "key1=1&key2=2&" + std::string(OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY);
+  EXPECT_TRUE(
+    oc_etag_has_incremental_updates_query(query.c_str(), query.length()));
+}
+
+static bool
+iterateGetETags(uint64_t etag, void *data)
+{
+  auto &etags = *static_cast<std::vector<uint64_t> *>(data);
+  etags.push_back(etag);
+  // stop iteration if etag is 0
+  return etag != 0;
+}
+
+static std::vector<uint8_t>
+encodeETagToBase64(uint64_t etag)
+{
+  std::array<uint8_t, sizeof(etag)> etag_buf{};
+  memcpy(&etag_buf[0], &etag, sizeof(etag));
+  std::array<uint8_t, 12> b64{};
+  int b64_len =
+    oc_base64_encode_v1(OC_BASE64_ENCODING_URL, false, etag_buf.data(),
+                        etag_buf.size(), b64.data(), b64.size());
+  if (b64_len < 0) {
+    throw std::string("base64 encoding failed");
+  }
+
+  std::vector<uint8_t> encodedETag{};
+  encodedETag.insert(encodedETag.end(), b64.data(),
+                     b64.data() + static_cast<size_t>(b64_len));
+  return encodedETag;
+}
+
+static std::string
+incrementalUpdatesQuery(const std::vector<uint64_t> &etags)
+{
+  std::string query{ OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY };
+  query += "=";
+  for (size_t i = 0; i < etags.size(); ++i) {
+    if (i > 0) {
+      query += ",";
+    }
+
+    auto b64 = encodeETagToBase64(etags[i]);
+    query.insert(query.end(), b64.begin(), b64.end());
+  }
+  return query;
+}
+
+TEST_F(TestETag, IterateIncrementalUpdates_Empty)
+{
+  std::string query = "";
+  std::vector<uint64_t> etags{};
+  oc_etag_iterate_incremental_updates_query(query.c_str(), query.length(),
+                                            iterateGetETags, &etags);
+  EXPECT_TRUE(etags.empty());
+
+  // key is prefix of OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY
+  query = "inc=";
+  auto b64 = encodeETagToBase64(123);
+  query.insert(query.end(), b64.begin(), b64.end());
+  etags.clear();
+  oc_etag_iterate_incremental_updates_query(query.c_str(), query.length(),
+                                            iterateGetETags, &etags);
+  EXPECT_TRUE(etags.empty());
+
+  // key is suffix of OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY
+  query = std::string(OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY) + "123=";
+  b64 = encodeETagToBase64(123);
+  query.insert(query.end(), b64.begin(), b64.end());
+  etags.clear();
+  oc_etag_iterate_incremental_updates_query(query.c_str(), query.length(),
+                                            iterateGetETags, &etags);
+  EXPECT_TRUE(etags.empty());
+
+  // different key
+  query = "if=oic.if.baseline";
+  etags.clear();
+  oc_etag_iterate_incremental_updates_query(query.c_str(), query.length(),
+                                            iterateGetETags, &etags);
+  EXPECT_TRUE(etags.empty());
+
+  // no value
+  query = incrementalUpdatesQuery({});
+  etags.clear();
+  oc_etag_iterate_incremental_updates_query(query.c_str(), query.length(),
+                                            iterateGetETags, &etags);
+  EXPECT_TRUE(etags.empty());
+
+  // only separators as value
+  query = std::string(OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY) + "=,,,,,,,,,,&" +
+          OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY + "=";
+  etags.clear();
+  oc_etag_iterate_incremental_updates_query(query.c_str(), query.length(),
+                                            iterateGetETags, &etags);
+  EXPECT_TRUE(etags.empty());
+}
+
+TEST_F(TestETag, IterateIncrementalUpdates_Invalid)
+{
+  // non base64 value
+  std::string query =
+    std::string(OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY) + "=invalid";
+  std::vector<uint64_t> etags{};
+  oc_etag_iterate_incremental_updates_query(query.c_str(), query.length(),
+                                            iterateGetETags, &etags);
+  EXPECT_TRUE(etags.empty());
+
+  // base64 encoded value shorter than 8 bytes
+  std::vector<uint8_t> buf{ 'l', 'e', 'e', 't' };
+  std::array<uint8_t, 32> b64{};
+  int b64_len =
+    oc_base64_encode(buf.data(), buf.size(), b64.data(), b64.size());
+  ASSERT_NE(-1, b64_len);
+  query = std::string(OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY) + "=";
+  query.insert(query.end(), b64.data(),
+               b64.data() + static_cast<size_t>(b64_len));
+  etags.clear();
+  oc_etag_iterate_incremental_updates_query(query.c_str(), query.length(),
+                                            iterateGetETags, &etags);
+  EXPECT_TRUE(etags.empty());
+
+  // value longer than 8 bytes
+  buf = { 's', 'u', 'p', 'e', 'r', 'l', 'e', 'e', 't', 'e', 't', 'a', 'g' };
+  b64_len = oc_base64_encode(buf.data(), buf.size(), b64.data(), b64.size());
+  ASSERT_NE(-1, b64_len);
+  query = std::string(OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY) + "=";
+  query.insert(query.end(), b64.data(),
+               b64.data() + static_cast<size_t>(b64_len));
+  etags.clear();
+  oc_etag_iterate_incremental_updates_query(query.c_str(), query.length(),
+                                            iterateGetETags, &etags);
+  EXPECT_TRUE(etags.empty());
+}
+
+TEST_F(TestETag, IterateIncrementalUpdates_Single)
+{
+  uint64_t etag = 123;
+  std::string query = incrementalUpdatesQuery({ etag });
+  std::vector<uint64_t> etags{};
+  oc_etag_iterate_incremental_updates_query(query.data(), query.length(),
+                                            iterateGetETags, &etags);
+  ASSERT_EQ(1, etags.size());
+  EXPECT_EQ(123, etags[0]);
+}
+
+TEST_F(TestETag, IterateIncrementalUpdates_MultipleKeys)
+{
+  std::vector<uint64_t> etags{ 1, 2345, 45678901, 890123456789,
+                               234567890123456 };
+  std::string query{};
+  for (size_t i = 0; i < etags.size(); ++i) {
+    if (i > 0) {
+      query += "&";
+    }
+    query += incrementalUpdatesQuery({ etags[i] });
+  }
+  std::vector<uint64_t> parsedETags{};
+  oc_etag_iterate_incremental_updates_query(query.data(), query.length(),
+                                            iterateGetETags, &parsedETags);
+  ASSERT_EQ(etags.size(), parsedETags.size());
+  for (size_t i = 0; i < etags.size(); ++i) {
+    EXPECT_EQ(etags[i], parsedETags[i]);
+  }
+}
+
+TEST_F(TestETag, IterateIncrementalUpdates_MultipleETags)
+{
+  std::vector<uint64_t> etags{ 1, 2345, 45678901, 890123456789,
+                               234567890123456 };
+  std::string query = incrementalUpdatesQuery(etags);
+  std::vector<uint64_t> parsedETags{};
+  oc_etag_iterate_incremental_updates_query(query.data(), query.length(),
+                                            iterateGetETags, &parsedETags);
+  ASSERT_EQ(etags.size(), parsedETags.size());
+  for (size_t i = 0; i < etags.size(); ++i) {
+    EXPECT_EQ(etags[i], parsedETags[i]);
+  }
+}
+
+TEST_F(TestETag, IterateIncrementalUpdates_StopIteration)
+{
+  std::vector<uint64_t> etags{ 1, 2345, 0, 890123456789, 234567890123456 };
+  std::string query = incrementalUpdatesQuery(etags);
+  std::vector<uint64_t> parsedETags{};
+  oc_etag_iterate_incremental_updates_query(query.data(), query.length(),
+                                            iterateGetETags, &parsedETags);
+  auto it = std::find(etags.begin(), etags.end(), 0);
+  ASSERT_NE(etags.end(), it);
+  size_t etagsCount = static_cast<size_t>(std::distance(etags.begin(), it)) + 1;
+  ASSERT_EQ(etagsCount, parsedETags.size());
+  for (size_t i = 0; i < etagsCount; ++i) {
+    EXPECT_EQ(etags[i], parsedETags[i]);
+  }
+}
+
+TEST_F(TestETag, IterateIncrementalUpdates)
+{
+  std::vector<uint64_t> etags{
+    1, 2345, 45678901, 890123456789, 234567890123456, 7777777
+  };
+
+  std::string query = "first=1&" + incrementalUpdatesQuery({ etags[0] });
+  query += std::string("&second=2&") + OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY +
+           "=123,,,";
+  auto b64 = encodeETagToBase64(etags[1]);
+  query.insert(query.end(), b64.begin(), b64.end());
+  query += ",,";
+  b64 = encodeETagToBase64(etags[2]);
+  query.insert(query.end(), b64.begin(), b64.end());
+  query += ",filler,";
+  b64 = encodeETagToBase64(etags[3]);
+  query.insert(query.end(), b64.begin(), b64.end());
+  query += "&third=";
+  b64 = encodeETagToBase64(1337);
+  query.insert(query.end(), b64.begin(), b64.end());
+  query += "&" + incrementalUpdatesQuery({ etags[4], etags[5] });
+  query += ",,,,&fourth=4";
+  std::vector<uint64_t> parsedETags{};
+  oc_etag_iterate_incremental_updates_query(query.data(), query.length(),
+                                            iterateGetETags, &parsedETags);
+  ASSERT_EQ(etags.size(), parsedETags.size());
+  for (size_t i = 0; i < etags.size(); ++i) {
+    EXPECT_EQ(etags[i], parsedETags[i]);
+  }
+}
+
+#endif /* OC_HAS_FEATURE_ETAG_INCREMENTAL_CHANGES */
+
 class TestETagWithServer : public ::testing::Test {
 public:
   static void SetUpTestCase()
   {
-    oc_log_set_level(OC_LOG_LEVEL_DEBUG);
-
 #ifdef OC_STORAGE
     ASSERT_EQ(0, oc::TestStorage.Config());
 #endif // OC_STORAGE
@@ -104,8 +367,6 @@ public:
 #ifdef OC_STORAGE
     ASSERT_EQ(0, oc::TestStorage.Clear());
 #endif // OC_STORAGE
-
-    oc_log_set_level(OC_LOG_LEVEL_INFO);
   }
 
   void TearDown() override
@@ -412,8 +673,8 @@ TEST_F(TestETagWithServer, Dump_FailNoStorage)
   ASSERT_EQ(0, oc::TestStorage.Config());
 }
 
-// if the storage is empty then oc_etag_load_from_storage should use oc_etag_get
-// to set etags on all resources
+// if the storage is empty then oc_etag_load_from_storage should use
+// oc_etag_get to set etags on all resources
 TEST_F(TestETagWithServer, ClearStorage)
 {
   // set all etags to 1337
@@ -432,7 +693,8 @@ TEST_F(TestETagWithServer, ClearStorage)
   });
 }
 
-// if storage is not properly initialized then oc_etag_clear_storage should fail
+// if storage is not properly initialized then oc_etag_clear_storage should
+// fail
 TEST_F(TestETagWithServer, ClearStorage_Fail)
 {
   ASSERT_EQ(0, oc::TestStorage.Clear());
@@ -483,8 +745,8 @@ TEST_F(TestETagWithServer, GetResourceWithETag)
 
   invoked = false;
   using etag_t = std::array<uint8_t, COAP_ETAG_LEN>;
-  auto configure_req = [](coap_packet_t *req, void *data) {
-    auto etag = static_cast<etag_t *>(data);
+  auto configure_req = [](coap_packet_t *req, const void *data) {
+    auto etag = static_cast<const etag_t *>(data);
     coap_options_set_etag(req, etag->data(),
                           static_cast<uint8_t>(etag->size()));
   };
@@ -605,7 +867,7 @@ TEST_F(TestETagWithServer, GetResourceWithETagAndCustomBatchHandler)
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
   };
   invoked = false;
-  auto configure_req = [](coap_packet_t *req, void *) {
+  auto configure_req = [](coap_packet_t *req, const void *) {
     coap_options_set_etag(req, etag.data(), static_cast<uint8_t>(etag.size()));
   };
   ASSERT_TRUE(oc_do_request(OC_GET, oc_string(dyn->uri), &ep, "if=" OC_IF_B_STR,

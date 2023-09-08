@@ -55,6 +55,11 @@
 
 #if defined(OC_ETAG) && defined(OC_SERVER)
 #define OC_HAS_FEATURE_ETAG
+
+#ifdef OC_RES_BATCH_SUPPORT
+#define OC_HAS_FEATURE_ETAG_INCREMENTAL_CHANGES
+#endif /* OC_RES_BATCH_SUPPORT */
+
 #endif /* OC_ETAG && OC_SERVER */
 
 #endif /* OC_FEATURES_H */

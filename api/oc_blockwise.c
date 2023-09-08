@@ -184,7 +184,8 @@ oc_blockwise_state_t *
 oc_blockwise_alloc_response_buffer(const char *href, size_t href_len,
                                    const oc_endpoint_t *endpoint,
                                    oc_method_t method, oc_blockwise_role_t role,
-                                   uint32_t buffer_size, bool generate_etag)
+                                   uint32_t buffer_size, coap_status_t code,
+                                   bool generate_etag)
 {
   oc_blockwise_response_state_t *buffer =
     (oc_blockwise_response_state_t *)blockwise_init_buffer(
@@ -194,6 +195,7 @@ oc_blockwise_alloc_response_buffer(const char *href, size_t href_len,
     OC_ERR("cannot allocate block-wise response buffer");
     return NULL;
   }
+  buffer->code = code;
   if (generate_etag) {
     oc_random_buffer(buffer->etag.value, sizeof(buffer->etag.value));
     buffer->etag.length = sizeof(buffer->etag.value);

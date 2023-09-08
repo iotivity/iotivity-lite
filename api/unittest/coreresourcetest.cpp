@@ -48,7 +48,6 @@ static const std::string kOCFDataModelVersion{ "ocf.res.1.0.0" };
 
 static constexpr size_t kDevice1ID{ 0 };
 static constexpr std::string_view kDevice1Name{ "Test Device 1" };
-static constexpr size_t kDevice2ID{ 1 };
 static constexpr std::string_view kDevice2Name{ "Test Device 2" };
 
 class TestCoreResource : public testing::Test {

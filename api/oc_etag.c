@@ -22,6 +22,8 @@
 
 #include "api/oc_etag_internal.h"
 #include "api/oc_resource_internal.h"
+#include "messaging/coap/coap_options.h"
+#include "oc_base64.h"
 #include "oc_core_res.h"
 #include "oc_rep.h"
 #include "oc_ri.h"
@@ -80,6 +82,94 @@ oc_etag_get(void)
   etag += etag_random();
   return oc_etag_set_global(etag);
 }
+
+#ifdef OC_HAS_FEATURE_ETAG_INCREMENTAL_CHANGES
+
+bool
+oc_etag_has_incremental_updates_query(const char *query, size_t query_len)
+{
+  return oc_ri_query_exists_v1(
+    query, query_len, OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY,
+    OC_CHAR_ARRAY_LEN(OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY));
+}
+
+static bool
+etag_process_incremental_updates_value(
+  const char *value, size_t value_len,
+  oc_etag_iterate_incremental_updates_fn_t etag_fn, void *etag_fn_data)
+{
+  // decode base64
+#define ETAG_BASE64_BUFFER_SIZE (12)
+  uint8_t buffer[ETAG_BASE64_BUFFER_SIZE] = { 0 };
+  int len =
+    oc_base64_decode_v1(OC_BASE64_ENCODING_URL, false, (const uint8_t *)value,
+                        value_len, buffer, OC_ARRAY_SIZE(buffer));
+  if (len < 0) {
+    OC_DBG("oc_etag: failed to decode value (%.*s)", (int)value_len, value);
+    return true;
+  }
+  uint64_t etag;
+  if ((size_t)len != sizeof(etag)) {
+    OC_DBG("oc_etag: invalid etag size(%d)", len);
+    return true;
+  }
+  memcpy(&etag, buffer, sizeof(etag));
+  OC_DBG("oc_etag: decoded etag: %" PRIu64, etag);
+  return etag_fn(etag, etag_fn_data);
+}
+
+static bool
+etag_process_incremental_updates_values(
+  const char *value, size_t value_len,
+  oc_etag_iterate_incremental_updates_fn_t etag_fn, void *etag_fn_data)
+{
+  size_t pos = 0;
+  while (pos < value_len) {
+    if (value[pos] == ',') {
+      ++pos;
+      continue;
+    }
+    const char *item = value + pos;
+    size_t end = pos;
+    while (end < value_len && value[end] != ',') {
+      ++end;
+    }
+    size_t len = end - pos;
+    if (!etag_process_incremental_updates_value(item, len, etag_fn,
+                                                etag_fn_data)) {
+      return false;
+    }
+    pos = end;
+  }
+
+  return true;
+}
+
+void
+oc_etag_iterate_incremental_updates_query(
+  const char *query, size_t query_len,
+  oc_etag_iterate_incremental_updates_fn_t etag_fn, void *etag_fn_data)
+{
+  for (size_t pos = 0; pos < query_len;) {
+    const char *value = NULL;
+    int value_len = oc_ri_get_query_value_v1(
+      query + pos, query_len - pos, OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY,
+      OC_CHAR_ARRAY_LEN(OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY), &value);
+    if (value_len == -1) {
+      return;
+    }
+    OC_DBG("oc_etag: incremental update query %.*s", (int)value_len, value);
+    pos = (value - query) + value_len + 1;
+
+    if (!etag_process_incremental_updates_values(value, value_len, etag_fn,
+                                                 etag_fn_data)) {
+      OC_DBG("oc_etag: incremental update query iteration stopped");
+      return;
+    }
+  }
+}
+
+#endif /* OC_HAS_FEATURE_ETAG_INCREMENTAL_CHANGES */
 
 #ifdef OC_STORAGE
 

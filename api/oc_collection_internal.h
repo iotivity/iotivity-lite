@@ -92,6 +92,20 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                                   const oc_resource_t *notify_resource)
   OC_NONNULL(2);
 
+/**
+ * @brief Remove link from a collection and notify observers.
+ *
+ * @param collection the collection to remove the link from
+ * @param link the link to remove
+ * @param notify whether to notify observers
+ * @param batchDispatch whether to schedule dispatch of batch notifications
+ * @return true link was removed
+ * @return false link was not removed
+ */
+bool oc_collection_remove_link_and_notify(oc_resource_t *collection,
+                                          const oc_link_t *link, bool notify,
+                                          bool batchDispatch);
+
 #ifdef OC_COLLECTIONS_IF_CREATE
 
 /** @brief Free all resource type factories and resources that have been created

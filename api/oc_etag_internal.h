@@ -23,8 +23,10 @@
 #include "oc_etag.h"
 #include "oc_ri.h"
 #include "util/oc_compiler.h"
+#include "util/oc_features.h"
 
 #include <stdbool.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -48,6 +50,39 @@ void oc_resource_set_etag(oc_resource_t *resource, uint64_t etag) OC_NONNULL();
 
 /** @brief Get ETag of given resource */
 uint64_t oc_resource_get_etag(const oc_resource_t *resource) OC_NONNULL();
+
+#ifdef OC_HAS_FEATURE_ETAG_INCREMENTAL_CHANGES
+
+#define OC_ETAG_QUERY_INCREMENTAL_CHANGES_KEY "incChanges"
+
+/** @brief Check if "incChanges" key is present in the query string */
+bool oc_etag_has_incremental_updates_query(const char *query, size_t query_len);
+
+/** @brief Callback invoked for each etag in the incremental updates query
+ *
+ * @param etag parsed etag value
+ * @param user_data user data passed to
+ * oc_etag_iterate_incremental_updates_query
+ * @return true to continue iteration
+ * @return false to stop iteration
+ */
+typedef bool (*oc_etag_iterate_incremental_updates_fn_t)(uint64_t etag,
+                                                         void *user_data);
+
+/**
+ * @brief Iterate over etags in the incremental updates query
+ *
+ * @param query query string
+ * @param query_len length of the query string
+ * @param etag_fn callback invoked for each etag
+ * @param etag_fn_data user data passed to etag_fn
+ */
+void oc_etag_iterate_incremental_updates_query(
+  const char *query, size_t query_len,
+  oc_etag_iterate_incremental_updates_fn_t etag_fn, void *etag_fn_data)
+  OC_NONNULL(3);
+
+#endif /* OC_HAS_FEATURE_ETAG_INCREMENTAL_CHANGES */
 
 #ifdef OC_STORAGE
 

@@ -242,14 +242,14 @@ oc_list_remove(oc_list_t list, const void *item)
  */
 /*---------------------------------------------------------------------------*/
 void *
-oc_list_remove2(oc_list_t list, void *item)
+oc_list_remove2(oc_list_t list, const void *item)
 {
-  struct list **l;
-
-  for (l = (struct list **)list; *l != NULL; l = &(*l)->next) {
+  for (struct list **l = (struct list **)list; *l != NULL; l = &(*l)->next) {
     if (*l == item) {
+      struct list *l2 = *l;
       *l = (*l)->next;
-      return item;
+      l2->next = NULL;
+      return l2;
     }
   }
 

@@ -158,16 +158,19 @@ oc_collections_free_all(void)
 }
 
 static void
-collection_notify_resource_changed(oc_collection_t *collection)
+collection_notify_resource_changed(oc_collection_t *collection,
+                                   bool batchDispatch)
 {
-  oc_reset_delayed_callback(collection, collection_notify_links_list_async, 0);
-#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-  coap_add_discovery_batch_observer(&collection->res, /*removed*/ false,
-                                    /*dispatch*/ true);
-#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
 #ifdef OC_HAS_FEATURE_ETAG
   oc_resource_update_etag(&collection->res);
 #endif /* OC_HAS_FEATURE_ETAG */
+  oc_reset_delayed_callback(collection, collection_notify_links_list_async, 0);
+#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
+  coap_add_discovery_batch_observer(&collection->res, /*removed*/ false,
+                                    batchDispatch);
+#else  /* !OC_RES_BATCH_SUPPORT || !OC_DISCOVERY_RESOURCE_OBSERVABLE */
+  (void)batchDispatch;
+#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
 }
 
 void
@@ -210,18 +213,32 @@ oc_collection_add_link(oc_resource_t *collection, oc_link_t *link)
   if (link->resource == collection) {
     oc_string_array_add_item(link->rel, "self");
   }
-  collection_notify_resource_changed(col);
+  collection_notify_resource_changed(col, true);
+}
+
+bool
+oc_collection_remove_link_and_notify(oc_resource_t *collection,
+                                     const oc_link_t *link, bool notify,
+                                     bool batchDispatch)
+{
+  if (collection == NULL || link == NULL) {
+    return false;
+  }
+  oc_collection_t *col = (oc_collection_t *)collection;
+  if (oc_list_remove2(col->links, link) == NULL) {
+    return false;
+  }
+  if (notify) {
+    collection_notify_resource_changed(col, batchDispatch);
+  }
+  return true;
 }
 
 void
 oc_collection_remove_link(oc_resource_t *collection, const oc_link_t *link)
 {
-  if (collection == NULL || link == NULL) {
-    return;
-  }
-  oc_collection_t *col = (oc_collection_t *)collection;
-  oc_list_remove(col->links, link);
-  collection_notify_resource_changed(col);
+  oc_collection_remove_link_and_notify(collection, link, /*notify*/ true,
+                                       /*batchDispatch*/ true);
 }
 
 oc_link_t *

@@ -108,7 +108,8 @@ public:
                                                method, role, buffer_size);
     }
     return oc_blockwise_alloc_response_buffer(href.data(), href.length(), &ep,
-                                              method, role, buffer_size, false);
+                                              method, role, buffer_size,
+                                              CONTENT_2_05, false);
   }
 };
 
@@ -143,8 +144,9 @@ TEST_F(TestMessagingBlockwise, AllocBlockwiseResponse_F)
 {
   std::string_view ep_str = "coap://[ff02::152]";
   oc_endpoint_t ep = oc::endpoint::FromString(std::string(ep_str));
-  ASSERT_EQ(nullptr, oc_blockwise_alloc_response_buffer(
-                       nullptr, 0, &ep, OC_GET, OC_BLOCKWISE_CLIENT, 8, false));
+  ASSERT_EQ(nullptr, oc_blockwise_alloc_response_buffer(nullptr, 0, &ep, OC_GET,
+                                                        OC_BLOCKWISE_CLIENT, 8,
+                                                        CONTENT_2_05, false));
 
 #ifndef OC_DYNAMIC_ALLOCATION
   for (size_t i = 0; i < OC_MAX_NUM_CONCURRENT_REQUESTS; ++i) {
@@ -801,7 +803,7 @@ TEST_F(TestMessagingBlockwiseWithServer, GetLargeResource)
     *static_cast<bool *>(data->user_data) = true;
   };
 
-  auto configure_packet = [](coap_packet_t *packet, void *) {
+  auto configure_packet = [](coap_packet_t *packet, const void *) {
     coap_options_set_block2(packet, 0, 0, static_cast<uint16_t>(OC_BLOCK_SIZE),
                             0);
   };
@@ -828,7 +830,7 @@ TEST_F(TestMessagingBlockwiseWithServer, PostLargeResource)
     *static_cast<bool *>(data->user_data) = true;
   };
 
-  auto configure_packet = [](coap_packet_t *packet, void *) {
+  auto configure_packet = [](coap_packet_t *packet, const void *) {
     coap_options_set_block1(packet, 0, 1, static_cast<uint16_t>(OC_BLOCK_SIZE),
                             0);
   };
