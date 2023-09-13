@@ -521,6 +521,11 @@ coap_receive_method_payload(coap_receive_ctx_t *ctx, const char *href,
   }
 #endif /* OC_SECURITY */
 
+  if (!oc_main_initialized()) {
+    COAP_DBG("cannot process new requests during shutdown iotivity-lite stack");
+    return COAP_RECEIVE_ERROR;
+  }
+
 #ifdef OC_TCP
   bool is_valid_size =
     ((endpoint->flags & TCP) != 0 &&
