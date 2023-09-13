@@ -16,6 +16,10 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
     inputs:
+      build_type:
+        description: "Type of the build"
+        type: string
+        default: "Debug"
       clang:
         description: "Compile using clang"
         required: false
@@ -71,7 +75,7 @@ jobs:
     uses: ./.github/workflows/unit-test-with-cfg.yml
     with:
       build_args: -DOC_LOG_MAXIMUM_LOG_LEVEL=INFO -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON ${{ matrix.args }}
-      build_type: Debug
+      build_type: ${{ (github.event_name == 'workflow_dispatch' && inputs.build_type) || 'Debug' }}
       clang: ${{ github.event_name == 'workflow_dispatch' && inputs.clang }}
       coverage: false
       install_mbedtls: ${{ github.event_name == 'workflow_dispatch' && inputs.install_mbedtls }}
@@ -82,7 +86,7 @@ jobs:
     with:
       # cloud on (ipv4+tcp on), collections create on, maintenance resource on, well-known core resource on, software update on, /oic/res observable on, push notification on, plgd-time on, etag on
       build_args: -DOC_LOG_MAXIMUM_LOG_LEVEL=INFO -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON
-      build_type: Debug
+      build_type: ${{ (github.event_name == 'workflow_dispatch' && inputs.build_type) || 'Debug' }}
       clang: ${{ github.event_name == 'workflow_dispatch' && inputs.clang }}
       coverage: false
       install_mbedtls: ${{ github.event_name != 'workflow_dispatch' }}
@@ -114,7 +118,7 @@ jobs:
     uses: ./.github/workflows/unit-test-with-cfg.yml
     with:
       build_args: -DOC_LOG_MAXIMUM_LOG_LEVEL=INFO -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON ${{ matrix.args }}
-      build_type: Debug
+      build_type: ${{ (github.event_name == 'workflow_dispatch' && inputs.build_type) || 'Debug' }}
       clang: ${{ github.event_name == 'workflow_dispatch' && inputs.clang }}
       coverage: false
       install_mbedtls: ${{ github.event_name == 'workflow_dispatch' && inputs.install_mbedtls }}

@@ -19,7 +19,8 @@ on:
         required: true
       build_type:
         type: string
-        required: true
+        required: false
+        default: Debug
       cert_signature_algorithm:
         description: Signature algorithm used in generated certificates
         type: string
@@ -30,11 +31,6 @@ on:
         type: string
         required: false
         default: P256
-      clang:
-        description: Use clang instead of gcc
-        type: boolean
-        required: false
-        default: false
       coverage:
         description: gather and upload coverage data
         type: boolean
@@ -45,6 +41,11 @@ on:
         type: string
         required: false
         default: ""
+      docker_file:
+        description: Dockerfile used to build the cloud_server container
+        type: string
+        required: false
+        default: docker/apps/Dockerfile.cloud-server-debug
       hub_args:
         description: arguments forwarded to the docker run command of the plgd-dev/hub/test-cloud-server container
         type: string
@@ -62,8 +63,6 @@ on:
 
 env:
   TEST_CLOUD_SERVER_IMAGE: ghcr.io/plgd-dev/hub/test-cloud-server:latest
-  CLOUD_SERVER_DOCKER_FILE: docker/apps/Dockerfile.cloud-server-debug
-  CLOUD_SERVER_CLANG_DOCKER_FILE: docker/apps/Dockerfile.cloud-server-debug-clang
   CLOUD_SERVER_DOCKER_TAG: dbg
 
 jobs:
@@ -84,7 +83,7 @@ jobs:
           build-args: |
             BUILD_ARGS=${{ inputs.build_args }}
             BUILD_TYPE=${{ inputs.build_type }}
-          file: ${{ (inputs.clang && env.CLOUD_SERVER_CLANG_DOCKER_FILE) || env.CLOUD_SERVER_DOCKER_FILE }}
+          file: ${{ inputs.docker_file }}
           tags: ${{ env.CLOUD_SERVER_DOCKER_TAG }}
 
       - name: Pull plgd hub tests image
