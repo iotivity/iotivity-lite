@@ -19,6 +19,10 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
     inputs:
+      build_type:
+        description: "Type of the build"
+        type: string
+        default: "Debug"
       cert_signature_algorithm:
         type: choice
         description: Signature algorithm used in generated certificates
@@ -50,7 +54,7 @@ jobs:
           - name: cloud-server-tsan
             args: "-DOC_TSAN_ENABLED=ON"
             # GCC thread-sanitizer keeps reporting false positives, so we use clang instead for tests with thread-sanitizer
-            clang: true
+            docker_file: docker/apps/Dockerfile.cloud-server-debug-clang
 
           - name: cloud-server-access-in-RFOTM
             args: "-DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
@@ -58,7 +62,7 @@ jobs:
             args: "-DOC_ASAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           - name: cloud-server-tsan-access-in-RFOTM
             args: "-DOC_TSAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
-            clang: true
+            docker_file: docker/apps/Dockerfile.cloud-server-debug-clang
 
           - name: cloud-server-discovery-resource-observable
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON"
@@ -66,7 +70,7 @@ jobs:
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-tsan
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON"
-            clang: true
+            docker_file: docker/apps/Dockerfile.cloud-server-debug-clang
 
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
@@ -74,7 +78,7 @@ jobs:
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_ASAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-tsan-access-in-RFOTM
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_TSAN_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
-            clang: true
+            docker_file: docker/apps/Dockerfile.cloud-server-debug-clang
 
           - name: cloud-server-rep-realloc
             args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
@@ -82,24 +86,29 @@ jobs:
             args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
           - name: cloud-server-rep-realloc-tsan
             args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
-            clang: true
+            docker_file: docker/apps/Dockerfile.cloud-server-debug-clang
 
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc
             # same configuration as "cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc" in the SonarCloud scan job, skip for events that trigger both jobs
             skip: ${{ github.event_name != 'workflow_dispatch' }}
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc-asan
-            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON-DOC_ASAN_ENABLED=ON"
+            args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_ASAN_ENABLED=ON"
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc-tsan
             args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
-            clang: true
+            docker_file: docker/apps/Dockerfile.cloud-server-debug-clang
+
+          - name: cloud-server-release-discovery-resource-observable-access-in-RFOTM-rep-realloc
+            args: "-DOC_DEBUG_ENABLED=OFF -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
+            build_type: Release
+            docker_file: docker/apps/Dockerfile.cloud-server
 
     uses: ./.github/workflows/plgd-device-test-with-cfg.yml
     with:
       name: ${{ matrix.name }}
       build_args: -DOC_DEBUG_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON ${{ matrix.args }}
-      build_type: Debug
+      build_type: ${{ (github.event_name == 'workflow_dispatch' && inputs.build_type) || (matrix.build_type || 'Debug') }}
       cert_signature_algorithm: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_signature_algorithm) || 'ECDSA-SHA256' }}
       cert_elliptic_curve: ${{ (github.event_name == 'workflow_dispatch' && inputs.cert_elliptic_curve) || 'P256' }}
-      clang: ${{ matrix.clang || false }}
+      docker_file: ${{ matrix.docker_file || 'docker/apps/Dockerfile.cloud-server-debug' }}
       skip: ${{ matrix.skip || false }}
