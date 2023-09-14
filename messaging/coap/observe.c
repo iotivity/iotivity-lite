@@ -52,6 +52,7 @@
 #ifdef OC_SERVER
 
 #include "api/oc_buffer_internal.h"
+#include "api/oc_endpoint_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_query_internal.h"
 #include "api/oc_ri_internal.h"
@@ -1064,15 +1065,13 @@ coap_iterate_observers(oc_resource_t *resource, oc_response_t *response,
     }
     if (prepare_response) {
 #if OC_DBG_IS_ENABLED
-      oc_string_t ep_str;
-      memset(&ep_str, 0, sizeof(oc_string_t));
+      oc_string64_t ep_str;
       const char *ep_cstr = "";
-      if (oc_endpoint_to_string(&obs->endpoint, &ep_str) == 0) {
+      if (oc_endpoint_to_string64(&obs->endpoint, &ep_str)) {
         ep_cstr = oc_string(ep_str);
       }
       COAP_DBG("prepare GET request to resource(%s) for endpoint %s",
                oc_string(resource->uri), ep_cstr);
-      oc_free_string(&ep_str);
 #endif /* OC_DBG_IS_ENABLED */
       if (!coap_fill_response(response, resource, &obs->endpoint, iface_mask,
                               true)) {

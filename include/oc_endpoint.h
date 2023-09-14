@@ -143,7 +143,7 @@ void oc_endpoint_set_di(oc_endpoint_t *endpoint, const oc_uuid_t *di);
 
 /**
  * @brief convert the endpoint to a human readable string (e.g.
- * "coaps://[fe::22]:/")
+ * "coaps://[fe::22]:1234")
  *
  * @param endpoint the endpoint
  * @param endpoint_str endpoint as human readable string
@@ -152,6 +152,18 @@ void oc_endpoint_set_di(oc_endpoint_t *endpoint, const oc_uuid_t *di);
 OC_API
 int oc_endpoint_to_string(const oc_endpoint_t *endpoint,
                           oc_string_t *endpoint_str);
+
+/**
+ * @brief convert the endpoint to a human readable string (e.g.
+ * "coaps://[fe::22]:1234")
+ *
+ * @param endpoint the endpoint
+ * @param buffer output buffer
+ * @param buffer_size size of output buffer
+ * @return number of written bytes, -1 for error
+ */
+int oc_endpoint_to_cstring(const oc_endpoint_t *endpoint, char *buffer,
+                           size_t buffer_size) OC_NONNULL();
 
 /**
  * @brief string to endpoint

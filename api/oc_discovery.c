@@ -18,6 +18,7 @@
 
 #include "api/oc_core_res_internal.h"
 #include "api/oc_discovery_internal.h"
+#include "api/oc_endpoint_internal.h"
 #include "api/oc_resource_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_server_api_internal.h"
@@ -122,12 +123,11 @@ discovery_encode_endpoint(CborEncoder *eps, const oc_endpoint_t *ep,
                           int latency)
 {
   oc_rep_begin_object(eps, ep);
-  oc_string_t ep_str;
-  if (oc_endpoint_to_string(ep, &ep_str) == 0) {
+  oc_string64_t ep_str;
+  if (oc_endpoint_to_string64(ep, &ep_str)) {
     g_err |= oc_rep_encode_text_string(&ep_map, "ep", OC_CHAR_ARRAY_LEN("ep"));
     g_err |= oc_rep_encode_text_string(&ep_map, oc_string(ep_str),
                                        oc_string_len(ep_str));
-    oc_free_string(&ep_str);
   }
   if (latency > 0) {
     g_err |=
@@ -1058,14 +1058,15 @@ oc_wkcore_discovery_handler(oc_request_t *request,
     oc_string_t uri;
     memset(&uri, 0, sizeof(oc_string_t));
     while (eps != NULL) {
-      if (eps->flags & SECURED) {
-        oc_string_t ep;
-        if (oc_endpoint_to_string(eps, &ep) == 0) {
-          length = clf_add_str_to_buffer(oc_string(ep), oc_string_len(ep));
-          response_length += length;
-          oc_free_string(&ep);
-          break;
-        }
+      if ((eps->flags & SECURED) == 0) {
+        eps = eps->next;
+        continue;
+      }
+      oc_string64_t ep;
+      if (oc_endpoint_to_string64(eps, &ep)) {
+        length = clf_add_str_to_buffer(oc_string(ep), oc_string_len(ep));
+        response_length += length;
+        break;
       }
       eps = eps->next;
     }

@@ -21,6 +21,7 @@
 #ifdef OC_INTROSPECTION
 
 #include "api/oc_core_res_internal.h"
+#include "api/oc_endpoint_internal.h"
 #include "api/oc_introspection_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_server_api_internal.h"
@@ -126,10 +127,9 @@ oc_introspection_wk_get_uri(size_t device, int interface_index,
     if ((interface_index == -1 ||
          eps->interface_index == (unsigned)interface_index) &&
         (eps->flags == flags)) {
-      oc_string_t ep;
-      if (oc_endpoint_to_string(eps, &ep) == 0) {
+      oc_string64_t ep;
+      if (oc_endpoint_to_string64(eps, &ep)) {
         oc_concat_strings(uri, oc_string(ep), OC_INTROSPECTION_DATA_URI);
-        oc_free_string(&ep);
         return true;
       }
     }

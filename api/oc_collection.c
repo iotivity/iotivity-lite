@@ -20,6 +20,7 @@
 
 #if defined(OC_COLLECTIONS) && defined(OC_SERVER)
 #include "api/oc_collection_internal.h"
+#include "api/oc_endpoint_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_link_internal.h"
 #include "api/oc_ri_internal.h"
@@ -715,10 +716,9 @@ collection_encode_links(const oc_collection_t *collection,
         continue;
       }
       oc_rep_object_array_start_item(eps);
-      oc_string_t ep;
-      if (oc_endpoint_to_string(eps, &ep) == 0) {
+      oc_string64_t ep;
+      if (oc_endpoint_to_string64(eps, &ep)) {
         oc_rep_set_text_string_v1(eps, ep, oc_string(ep), oc_string_len(ep));
-        oc_free_string(&ep);
       }
       oc_rep_object_array_end_item(eps);
     }
@@ -856,10 +856,9 @@ oc_handle_collection_linked_list_request(oc_request_t *request)
           continue;
         }
         oc_rep_object_array_start_item(eps);
-        oc_string_t ep;
-        if (oc_endpoint_to_string(eps, &ep) == 0) {
+        oc_string64_t ep;
+        if (oc_endpoint_to_string64(eps, &ep)) {
           oc_rep_set_text_string_v1(eps, ep, oc_string(ep), oc_string_len(ep));
-          oc_free_string(&ep);
         }
         oc_rep_object_array_end_item(eps);
       }

@@ -594,8 +594,11 @@ TEST_F(TestPlgdTimeWithServer, FetchTimeFail)
   ep_flags |= TCP;
 #endif /* OC_TCP */
 
-  std::string ep_str =
-    std::string(oc_endpoint_flags_to_scheme(ep_flags)) + "[ff02::158]:12345";
+  std::array<char, 16> scheme{};
+  size_t scheme_len = scheme.size();
+  oc_endpoint_flags_to_scheme(ep_flags, &scheme[0], &scheme_len);
+
+  std::string ep_str = std::string(scheme.data()) + "[ff02::158]:12345";
   oc_endpoint_t ep = oc::endpoint::FromString(ep_str);
 
   auto fetch_handler = [](oc_status_t code, oc_clock_time_t, void *data) {

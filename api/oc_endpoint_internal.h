@@ -21,8 +21,11 @@
 
 #include "oc_endpoint.h"
 #include "util/oc_compiler.h"
+#include "util/oc_macros_internal.h"
 
 #include <stdint.h>
+#include <stdbool.h>
+#include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -40,27 +43,57 @@ extern "C" {
 
 #define OC_SCHEME_OCF "ocf://"
 
-/** @brief Get scheme string for transport flags */
-const char *oc_endpoint_flags_to_scheme(unsigned flags) OC_RETURNS_NONNULL;
+/**
+ * @brief Get scheme string for transport flags
+ *
+ * @param flags type of endpoint
+ * @param buf to store the scheme
+ * @param buf_len length of the buffer and will be set to the length of the
+ * used/needed buffer.
+ * @return return number of written bytes. -1 for error
+ */
+int oc_endpoint_flags_to_scheme(unsigned flags, char *buf, size_t buf_len);
 
 /**
  * @brief Convert the endpoint to a human readable string (e.g.
- * "coaps://[fe::22]:/")
+ * "[fe::22]:1234")
  *
  * @param endpoint the endpoint
  * @param buffer output buffer
  * @param buffer_size size of output buffer
- * @return int 0 success
+ * @return number of written bytes, -1 for error
  */
-int oc_endpoint_to_cstring(const oc_endpoint_t *endpoint, char *buffer,
-                           uint32_t buffer_size) OC_NONNULL();
+int oc_endpoint_address_and_port_to_cstring(const oc_endpoint_t *endpoint,
+                                            char *buffer, size_t buffer_size)
+  OC_NONNULL();
 
 /** @brief Get host of the endpoint as string */
 int oc_endpoint_host(const oc_endpoint_t *endpoint, char *buffer,
-                     uint32_t buffer_size) OC_NONNULL();
+                     size_t buffer_size) OC_NONNULL();
 
 /** @brief Get port of the endpoint */
 int oc_endpoint_port(const oc_endpoint_t *endpoint) OC_NONNULL();
+
+typedef struct oc_string64_s
+{
+  size_t size;
+  char ptr[64];
+} oc_string64_t;
+
+#define oc_string64_cap(ocstring)                                              \
+  (OC_ARRAY_SIZE((ocstring).ptr) - (ocstring).size)
+
+/**
+ * @brief convert the endpoint to a human readable string (e.g.
+ * "coaps://[fe::22]:1234").
+ *
+ * @param endpoint the endpoint
+ * @param endpoint_str endpoint as human readable string
+ * @return true for success
+ */
+OC_API
+bool oc_endpoint_to_string64(const oc_endpoint_t *endpoint,
+                             oc_string64_t *endpoint_str);
 
 #ifdef __cplusplus
 }
