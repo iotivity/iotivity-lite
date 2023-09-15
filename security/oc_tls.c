@@ -2038,7 +2038,7 @@ tls_is_valid_doc(size_t device)
     OC_ERR("oc_tls: DOC not valid: oxmsel not set");
     return false;
   }
-  if (oc_list_length(g_tls_peers) != 0) {
+  if (oc_tls_num_peers(device) != 0) {
     OC_ERR("oc_tls: DOC not valid: multiple DOC peers not allowed");
     /* Allow only a single DOC */
     return false;

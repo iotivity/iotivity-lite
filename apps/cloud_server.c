@@ -38,6 +38,8 @@
 #include <inttypes.h>
 #include <signal.h>
 #include <stdarg.h>
+#include <stdbool.h>
+#include <stdio.h>
 
 #ifndef _MSC_VER
 #include <getopt.h>
@@ -245,6 +247,7 @@ static const char *device_name = "CloudServer";
 
 static const char *manufacturer = "ocfcloud.com";
 static oc_connectivity_ports_t g_ports;
+static size_t g_num_devices = 1;
 
 #ifdef OC_SECURITY
 static const char *cis;
@@ -302,6 +305,18 @@ cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
   }
 }
 
+static bool
+factory_device_name(size_t device, char *buf, size_t buf_len)
+{
+  int written = 0;
+  if (device == 0) {
+    written = snprintf(buf, buf_len, "%s", device_name);
+  } else {
+    written = snprintf(buf, buf_len, "%s-%d", device_name, (int)device);
+  }
+  return (written < 0 || written >= (int)buf_len) ? false : true;
+}
+
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 static int
 print_time(oc_clock_time_t time, void *data)
@@ -343,19 +358,29 @@ app_init(void)
 #ifdef OC_HAS_FEATURE_PLGD_TIME
   plgd_time_init();
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
-  oc_add_new_device_t new_device = {
-    .uri = "oic/d",
-    .rt = device_rt,
-    .name = device_name,
-    .spec_version = spec_version,
-    .data_model_version = data_model_version,
-    .add_device_cb = NULL,
-    .add_device_cb_data = NULL,
-    .ports = g_ports,
-  };
-  if (oc_add_device_v1(new_device) != 0) {
-    OC_PRINTF("ERROR: failed to register new device\n");
-    return -1;
+  for (size_t i = 0; i < g_num_devices; ++i) {
+    char dev_name[128];
+    const char *dev_name_ptr = device_name;
+    if (factory_device_name(i, dev_name, sizeof(dev_name))) {
+      dev_name_ptr = dev_name;
+    }
+
+    oc_add_new_device_t new_device = {
+      .uri = "oic/d",
+      .rt = device_rt,
+      .name = dev_name_ptr,
+      .spec_version = spec_version,
+      .data_model_version = data_model_version,
+      .add_device_cb = NULL,
+      .add_device_cb_data = NULL,
+    };
+    if (i == 0) {
+      new_device.ports = g_ports;
+    }
+    if (oc_add_device_v1(new_device) != 0) {
+      OC_PRINTF("ERROR: failed to register new device\n");
+      return -1;
+    }
   }
   return 0;
 }
@@ -730,26 +755,26 @@ register_collection(void)
 #endif /* OC_COLLECTIONS */
 
 static bool
-register_con(void)
+register_con(size_t device)
 {
-  oc_resource_t *con_res = oc_core_get_resource_by_index(OCF_CON, 0);
+  oc_resource_t *con_res = oc_core_get_resource_by_index(OCF_CON, device);
   return oc_cloud_add_resource(con_res) == 0;
 }
 
 #ifdef OC_MNT
 static bool
-register_mnt(void)
+register_mnt(size_t device)
 {
-  oc_resource_t *mnt_res = oc_core_get_resource_by_index(OCF_MNT, 0);
+  oc_resource_t *mnt_res = oc_core_get_resource_by_index(OCF_MNT, device);
   return oc_cloud_add_resource(mnt_res) == 0;
 }
 #endif /* OC_MNT */
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 static bool
-register_plgd_time(void)
+register_plgd_time(size_t device)
 {
-  oc_resource_t *ptime_res = oc_core_get_resource_by_index(PLGD_TIME, 0);
+  oc_resource_t *ptime_res = oc_core_get_resource_by_index(PLGD_TIME, device);
   return oc_cloud_add_resource(ptime_res) == 0;
 }
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
@@ -765,19 +790,21 @@ register_resources(void)
     oc_abort("ERROR: could not register collection\n");
   }
 #endif /* OC_COLLECTIONS */
-  if (!register_con()) {
-    oc_abort("ERROR: could not register con resource\n");
-  }
+  for (size_t i = 0; i < g_num_devices; ++i) {
+    if (!register_con(i)) {
+      oc_abort("ERROR: could not register con resource\n");
+    }
 #ifdef OC_MNT
-  if (!register_mnt()) {
-    oc_abort("ERROR: could not register mnt resource\n");
-  }
+    if (!register_mnt(i)) {
+      oc_abort("ERROR: could not register mnt resource\n");
+    }
 #endif /* OC_MNT */
 #ifdef OC_HAS_FEATURE_PLGD_TIME
-  if (!register_plgd_time()) {
-    oc_abort("ERROR: could not register plgd time resource\n");
-  }
+    if (!register_plgd_time(i)) {
+      oc_abort("ERROR: could not register plgd time resource\n");
+    }
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
+  }
 }
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
@@ -830,8 +857,13 @@ factory_presets_cb(size_t device, void *data)
 #if defined(OC_SECURITY) && defined(OC_PKI)
   // preserve name after factory reset
   oc_device_info_t *dev = oc_core_get_device_info(device);
+  char dev_name[128];
+  const char *dev_name_ptr = device_name;
+  if (factory_device_name(device, dev_name, sizeof(dev_name))) {
+    dev_name_ptr = dev_name;
+  }
   oc_free_string(&dev->name);
-  oc_new_string(&dev->name, device_name, strlen(device_name));
+  oc_new_string(&dev->name, dev_name_ptr, strlen(dev_name_ptr));
 
   unsigned char cloud_ca[4096];
   size_t cert_len = 4096;
@@ -882,12 +914,12 @@ factory_presets_cb(size_t device, void *data)
 }
 
 static void
-display_device_uuid(void)
+display_device_uuid(size_t device)
 {
   char buffer[OC_UUID_LEN];
-  oc_uuid_to_str(oc_core_get_device_id(0), buffer, sizeof(buffer));
+  oc_uuid_to_str(oc_core_get_device_id(device), buffer, sizeof(buffer));
 
-  OC_PRINTF("Started device with ID: %s\n", buffer);
+  OC_PRINTF("Started device %d with ID: %s\n", (int)device, buffer);
 }
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
@@ -1062,6 +1094,7 @@ simulate_tpm_pk_free_key(size_t device, const unsigned char *key, size_t keylen)
 #define OPT_DISABLE_TLS_VERIFY_TIME "disable-tls-verify-time"
 #define OPT_HELP "help"
 #define OPT_NUM_RESOURCES "num-resources"
+#define OPT_NUM_DEVICES "num-devices"
 #define OPT_DEVICE_NAME "device-name"
 #define OPT_CLOUD_AUTH_CODE "cloud-auth-code"
 #define OPT_CLOUD_CIS "cloud-endpoint"
@@ -1106,6 +1139,7 @@ printhelp(const char *exec_path)
   OC_PRINTF("  -p | --%-26s cloud authorization provider name\n",
             OPT_CLOUD_APN);
   OC_PRINTF("  -r | --%-26s number of resources\n", OPT_NUM_RESOURCES);
+  OC_PRINTF("  -c | --%-26s number of devices\n", OPT_NUM_DEVICES);
 #if defined(OC_SECURITY) && defined(OC_PKI)
   OC_PRINTF("  -d | --%-26s disable time verification during TLS handshake\n",
             OPT_DISABLE_TLS_VERIFY_TIME);
@@ -1221,6 +1255,7 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
     { OPT_CLOUD_APN, required_argument, NULL, 'p' },
     { OPT_NUM_RESOURCES, required_argument, NULL, 'r' },
     { OPT_LOG_LEVEL, required_argument, NULL, 'l' },
+    { OPT_NUM_DEVICES, required_argument, NULL, 'c' },
 #if defined(OC_SECURITY) && defined(OC_PKI)
     { OPT_DISABLE_TLS_VERIFY_TIME, no_argument, NULL, 'd' },
     { OPT_SIMULATE_TPM, no_argument, NULL, 'm' },
@@ -1298,6 +1333,18 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
         return false;
       }
       num_resources = (int)val;
+      break;
+    }
+    case 'c': {
+      char *eptr = NULL;
+      errno = 0;
+      long val = strtol(optarg, &eptr, 10); // NOLINT(readability-magic-numbers)
+      if (errno != 0 || eptr == optarg || (*eptr) != '\0' || val < 0 ||
+          val > INT32_MAX) {
+        OC_PRINTF("invalid number of resources argument value(%s)\n", optarg);
+        return false;
+      }
+      g_num_devices = (size_t)val;
       break;
     }
     case 'l': {
@@ -1553,8 +1600,10 @@ main(int argc, char *argv[])
   OC_PRINTF("Using parameters: device_name: %s, auth_code: %s, cis: %s, "
             "sid: %s, "
             "apn: %s, "
-            "num_resources: %d, ",
-            device_name, auth_code, cis, sid, apn, num_resources);
+            "num_resources: %d, "
+            "num_devices: %d, ",
+            device_name, auth_code, cis, sid, apn, num_resources,
+            (int)g_num_devices);
 #if defined(OC_SECURITY) && defined(OC_PKI)
   OC_PRINTF("disable_tls_time_verification: %s, ",
             parsed_options.disable_tls_verify_time ? "true" : "false");
@@ -1655,14 +1704,16 @@ main(int argc, char *argv[])
     return ret;
   }
 
-  oc_cloud_context_t *ctx = oc_cloud_get_context(0);
-  if (ctx) {
-    oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
-    if (cis) {
-      oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+  for (size_t i = 0; i < g_num_devices; ++i) {
+    oc_cloud_context_t *ctx = oc_cloud_get_context(0);
+    if (ctx) {
+      oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
+      if (cis) {
+        oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
+      }
     }
+    display_device_uuid(i);
   }
-  display_device_uuid();
 #ifdef OC_HAS_FEATURE_PLGD_TIME
   if (g_time != (oc_clock_time_t)-1) {
     plgd_time_set_time(g_time);
@@ -1671,7 +1722,12 @@ main(int argc, char *argv[])
 
   run_loop();
 
-  oc_cloud_manager_stop(ctx);
+  for (size_t i = 0; i < g_num_devices; ++i) {
+    oc_cloud_context_t *ctx = oc_cloud_get_context(0);
+    if (ctx) {
+      oc_cloud_manager_stop(ctx);
+    }
+  }
   oc_main_shutdown();
   deinit();
   return 0;
