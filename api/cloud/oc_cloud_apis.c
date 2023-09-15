@@ -63,6 +63,10 @@ conv_cloud_endpoint(oc_cloud_context_t *ctx)
   int ret = 0;
   if (ctx->cloud_ep != NULL && oc_endpoint_is_empty(ctx->cloud_ep)) {
     ret = oc_string_to_endpoint(&ctx->store.ci_server, ctx->cloud_ep, NULL);
+    if (ret == 0) {
+      // set device id to cloud endpoint for multiple servers
+      ctx->cloud_ep->device = ctx->device;
+    }
 #ifdef OC_DNS_CACHE
     oc_dns_clear_cache();
 #endif /* OC_DNS_CACHE */
