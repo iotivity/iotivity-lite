@@ -488,11 +488,9 @@ coap_receive_blockwise_block2(coap_receive_ctx_t *ctx, const char *href,
 }
 
 static coap_receive_status_t
-coap_receive_method_payload(coap_receive_ctx_t *ctx, const char *href,
-                            size_t href_len, const oc_endpoint_t *endpoint)
+coap_receive_blockwise(coap_receive_ctx_t *ctx, const char *href,
+                       size_t href_len, const oc_endpoint_t *endpoint)
 {
-  assert(ctx->request->code >= COAP_GET && ctx->request->code <= COAP_DELETE);
-
   // block1 and block2 options are expected to be used with UDP protocol
   if (ctx->block1.enabled &&
       // block1 is expected only for POST/PUT requests
@@ -504,14 +502,27 @@ coap_receive_method_payload(coap_receive_ctx_t *ctx, const char *href,
       ctx->request->code == COAP_GET) {
     return coap_receive_blockwise_block2(ctx, href, href_len, endpoint);
   }
+
+  COAP_ERR("unexpected block1 or block2 option(s)");
+  return COAP_RECEIVE_ERROR;
+}
+
+static coap_receive_status_t
+coap_receive_method_payload(coap_receive_ctx_t *ctx, const char *href,
+                            size_t href_len, const oc_endpoint_t *endpoint)
+{
+  assert(ctx->request->code >= COAP_GET && ctx->request->code <= COAP_DELETE);
+
   if (ctx->block1.enabled || ctx->block2.enabled) {
-    COAP_ERR("unexpected block1 and block2 options");
+    return coap_receive_blockwise(ctx, href, href_len, endpoint);
+  }
+  COAP_DBG("no block options; processing regular request");
+
+  if (!oc_main_initialized()) {
+    COAP_DBG("cannot process new requests during shutdown iotivity-lite stack");
     return COAP_RECEIVE_ERROR;
   }
 
-  COAP_DBG("no block options; processing regular request");
-  const uint8_t *incoming_block;
-  uint32_t incoming_block_len = coap_get_payload(ctx->request, &incoming_block);
 #ifdef OC_SECURITY
   // Drop unsecured (unicast/multicast) requests during reset the device.
   if (oc_reset_in_progress(endpoint->device) &&
@@ -521,6 +532,8 @@ coap_receive_method_payload(coap_receive_ctx_t *ctx, const char *href,
   }
 #endif /* OC_SECURITY */
 
+  const uint8_t *incoming_block;
+  uint32_t incoming_block_len = coap_get_payload(ctx->request, &incoming_block);
 #ifdef OC_TCP
   bool is_valid_size =
     ((endpoint->flags & TCP) != 0 &&
