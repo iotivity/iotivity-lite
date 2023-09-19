@@ -22,7 +22,9 @@
 #include "oc_helpers.h"
 #include "oc_uuid.h"
 #include "port/common/oc_ip.h"
+#include "port/oc_connectivity.h"
 #include "port/oc_random.h"
+#include "tests/gtest/Device.h"
 #include "tests/gtest/Endpoint.h"
 
 #include <array>
@@ -133,6 +135,18 @@ TEST_F(TestEndpoint, EndpointFlagsToScheme)
 #endif /* OC_TCP */
 }
 
+TEST_F(TestEndpoint, EndpointToCStringInvalid)
+{
+  oc_endpoint_t ep = oc::endpoint::FromString("coap://[::1]:42");
+  // cannot fit scheme
+  std::array<char, 1> too_small{};
+  EXPECT_EQ(-1, oc_endpoint_to_cstring(&ep, &too_small[0], too_small.size()));
+
+  // can fit scheme but not address
+  std::array<char, OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS_TCP) + 1> too_small2{};
+  EXPECT_EQ(-1, oc_endpoint_to_cstring(&ep, &too_small2[0], too_small2.size()));
+}
+
 TEST_F(TestEndpoint, EndpointToStringInvalid)
 {
   EXPECT_EQ(-1, oc_endpoint_to_string(nullptr, nullptr));
@@ -141,6 +155,8 @@ TEST_F(TestEndpoint, EndpointToStringInvalid)
   EXPECT_EQ(-1, oc_endpoint_to_string(nullptr, &ep_str));
 
   oc_endpoint_t ep{};
+  EXPECT_EQ(-1, oc_endpoint_to_string(&ep, nullptr));
+
   EXPECT_EQ(-1, oc_endpoint_to_string(&ep, &ep_str));
 }
 
@@ -208,6 +224,19 @@ TEST_F(TestEndpoint, IPv6AddressToString)
   EXPECT_EQ(8, oc_ipv6_address_and_port_to_string(&ep.addr.ipv6, larger.data(),
                                                   larger.size()));
   EXPECT_STREQ(ENDPOINT_ADDR.data(), larger.data());
+}
+
+TEST_F(TestEndpoint, EndpointToString64Invalid)
+{
+  EXPECT_FALSE(oc_endpoint_to_string64(nullptr, nullptr));
+
+  oc_string64_t ep_str{};
+  EXPECT_FALSE(oc_endpoint_to_string64(nullptr, &ep_str));
+
+  oc_endpoint_t ep{};
+  EXPECT_FALSE(oc_endpoint_to_string64(&ep, nullptr));
+
+  EXPECT_FALSE(oc_endpoint_to_string64(&ep, &ep_str));
 }
 
 TEST_F(TestEndpoint, IPv6EndpointToString64)
@@ -289,10 +318,20 @@ TEST_F(TestEndpoint, StringToEndpoint)
 
   for (size_t i = 0; i < spu0.size(); ++i) {
     oc_endpoint_t ep = oc::endpoint::FromString(spu0[i]);
+
     oc_string_t ep_str{};
     EXPECT_EQ(0, oc_endpoint_to_string(&ep, &ep_str));
     EXPECT_STREQ(exp[i].c_str(), oc_string(ep_str));
     oc_free_string(&ep_str);
+
+    oc_string64_t ep_str64{};
+    EXPECT_TRUE(oc_endpoint_to_string64(&ep, &ep_str64));
+    EXPECT_STREQ(exp[i].c_str(), oc_string(ep_str64));
+
+    std::array<char, 64> ep_buf{};
+    EXPECT_EQ(exp[i].length(),
+              oc_endpoint_to_cstring(&ep, &ep_buf[0], ep_buf.size()));
+    EXPECT_STREQ(exp[i].c_str(), ep_buf.data());
   }
 }
 
@@ -869,3 +908,48 @@ TEST_F(TestEndpoint, EndpointHost)
   }
 #endif /* OC_IPV4 */
 }
+
+#ifdef OC_CLIENT
+
+static constexpr size_t kDeviceID{ 0 };
+
+class TestEndpointWithServer : public testing::Test {
+public:
+  static void SetUpTestCase() { ASSERT_TRUE(oc::TestDevice::StartServer()); }
+
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
+};
+
+TEST_F(TestEndpointWithServer, SetLocalAddressFail)
+{
+  oc_endpoint_t ep{};
+  oc_endpoint_set_local_address(&ep, UINT32_MAX);
+  EXPECT_TRUE(oc_endpoint_is_empty(&ep));
+}
+
+TEST_F(TestEndpointWithServer, SetLocalAddress)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  std::array<char, sizeof(ep.addr_local)> addr_empty{};
+  ASSERT_EQ(0, memcmp(&ep.addr_local, &addr_empty[0], sizeof(ep.addr_local)));
+
+  // oc_endpoint_set_local_address should modify only the output parameter,
+  // which is a local copy in this test case, so the global endpoints shouldn't
+  // be modified
+  auto checkEndpoints = [](size_t device) {
+    oc_endpoint_t *eps = oc_connectivity_get_endpoints(device);
+    while (eps != nullptr) {
+      EXPECT_NE(0, memcmp(&eps->addr, &eps->addr_local, sizeof(eps->addr)));
+      eps = eps->next;
+    }
+  };
+
+  oc_endpoint_set_local_address(&ep, ep.interface_index);
+  EXPECT_NE(0, memcmp(&ep.addr_local, &addr_empty[0], sizeof(ep.addr_local)));
+  checkEndpoints(kDeviceID);
+}
+
+#endif /* OC_CLIENT */

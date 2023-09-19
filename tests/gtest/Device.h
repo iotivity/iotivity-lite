@@ -223,6 +223,15 @@ public:
     size_t device, unsigned flags = defaultEndpointIncludeFlags(),
     unsigned exclude_flags = kDefaultEndpointExcludeFlags);
 
+  /** @brief Get pointer to a matching endpoint of a device
+   *
+   * @warning list of endpoints might get refreshed by each call of the method,
+   * so you should not store the pointer for later use
+   */
+  static oc_endpoint_t *GetEndpointPtr(
+    size_t device, unsigned flags = defaultEndpointIncludeFlags(),
+    unsigned exclude_flags = kDefaultEndpointExcludeFlags);
+
 private:
   static int SetSystemTime(oc_clock_time_t time, void *user_data);
 

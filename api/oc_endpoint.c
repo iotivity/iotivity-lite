@@ -16,8 +16,9 @@
  *
  ****************************************************************************/
 
+#include "api/oc_endpoint_internal.h"
+#include "api/oc_helpers_internal.h"
 #include "oc_endpoint.h"
-#include "oc_endpoint_internal.h"
 #include "oc_core_res.h"
 #include "port/common/oc_ip.h"
 #include "port/oc_connectivity.h"
@@ -66,33 +67,34 @@ oc_endpoint_set_di(oc_endpoint_t *endpoint, const oc_uuid_t *di)
   memcpy(endpoint->di.id, di->id, sizeof(di->id));
 }
 
-int
-oc_endpoint_flags_to_scheme(unsigned flags, char *buf, size_t size)
+static oc_string_view_t
+endpoint_flags_to_scheme(unsigned flags)
 {
-  const char *scheme = OC_SCHEME_COAP;
-  size_t needed = OC_CHAR_ARRAY_LEN(OC_SCHEME_COAP);
-  if ((flags & SECURED) != 0) {
-    needed = OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS);
-    scheme = OC_SCHEME_COAPS;
-  }
 #ifdef OC_TCP
   if ((flags & TCP) != 0) {
     if ((flags & SECURED) != 0) {
-      needed = OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS_TCP);
-      scheme = OC_SCHEME_COAPS_TCP;
-    } else {
-      needed = OC_CHAR_ARRAY_LEN(OC_SCHEME_COAP_TCP);
-      scheme = OC_SCHEME_COAP_TCP;
+      return OC_STRING_VIEW(OC_SCHEME_COAPS_TCP);
     }
+    return OC_STRING_VIEW(OC_SCHEME_COAP_TCP);
   }
 #endif /* OC_TCP */
-
-  if (buf == NULL) {
-    return (int)needed;
+  if ((flags & SECURED) != 0) {
+    return OC_STRING_VIEW(OC_SCHEME_COAPS);
   }
-  if (needed <= size) {
-    memcpy(buf, scheme, needed);
-    return (int)needed;
+  return OC_STRING_VIEW(OC_SCHEME_COAP);
+}
+
+int
+oc_endpoint_flags_to_scheme(unsigned flags, char *buffer, size_t buffer_size)
+{
+  oc_string_view_t scheme = endpoint_flags_to_scheme(flags);
+  if (buffer == NULL) {
+    return (int)scheme.length;
+  }
+  if (scheme.length < buffer_size) {
+    memcpy(buffer, scheme.data, scheme.length);
+    buffer[scheme.length] = '\0';
+    return (int)scheme.length;
   }
   return -1;
 }
@@ -403,26 +405,8 @@ parse_endpoint_uri(const oc_string_t *endpoint_str,
     return false;
   }
 
-  const char *address = NULL;
-  switch (flags) {
-#ifdef OC_TCP
-  case TCP | SECURED:
-    address = ep + OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS_TCP);
-    break;
-  case TCP:
-    address = ep + OC_CHAR_ARRAY_LEN(OC_SCHEME_COAP_TCP);
-    break;
-#endif /* OC_TCP */
-  case SECURED:
-    address = ep + OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS);
-    break;
-  case 0:
-    address = ep + OC_CHAR_ARRAY_LEN(OC_SCHEME_COAP);
-    break;
-  default:
-    OC_ERR("invalid endpoint(%s) uri scheme: %d", ep != NULL ? ep : "", flags);
-    return false;
-  }
+  oc_string_view_t scheme = endpoint_flags_to_scheme(flags);
+  const char *address = ep + scheme.length;
   size_t ep_len = oc_string_len(*endpoint_str);
   size_t address_len = ep_len - (address - ep);
 
@@ -751,12 +735,7 @@ oc_endpoint_list_copy(oc_endpoint_t **dst, const oc_endpoint_t *src)
   return count;
 
 oc_endpoint_list_copy_err:
-  ep = head;
-  while (ep != NULL) {
-    oc_endpoint_t *next = ep->next;
-    oc_free_endpoint(ep);
-    ep = next;
-  }
+  oc_endpoint_list_free(head);
   return -1;
 }
 

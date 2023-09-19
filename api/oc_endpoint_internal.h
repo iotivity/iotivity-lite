@@ -44,22 +44,25 @@ extern "C" {
 #define OC_SCHEME_OCF "ocf://"
 
 /**
- * @brief Get scheme string for transport flags
+ * @brief Write the scheme string (including NUL terminator) for given transport
+ * flags to buffer
  *
- * @param flags type of endpoint
- * @param buf to store the scheme
- * @param buf_len length of the buffer and will be set to the length of the
- * used/needed buffer.
- * @return return number of written bytes. -1 for error
+ * @param flags transport flags of an endpoint
+ * @param buffer output buffer (if NULL the function returns the number of bytes
+ * that would have been written, excluding the NUL terminator)
+ * @param buffer_size size of output buffer
+ * @return return number of written bytes (excluding the NUL terminator)
+ * @return -1 for error
  */
-int oc_endpoint_flags_to_scheme(unsigned flags, char *buf, size_t buf_len);
+int oc_endpoint_flags_to_scheme(unsigned flags, char *buffer,
+                                size_t buffer_size);
 
 /**
  * @brief Convert the endpoint to a human readable string (e.g.
  * "[fe::22]:1234")
  *
- * @param endpoint the endpoint
- * @param buffer output buffer
+ * @param endpoint the endpoint (cannot be NULL)
+ * @param buffer output buffer (cannot be NULL)
  * @param buffer_size size of output buffer
  * @return number of written bytes, -1 for error
  */
@@ -91,7 +94,6 @@ typedef struct oc_string64_s
  * @param endpoint_str endpoint as human readable string
  * @return true for success
  */
-OC_API
 bool oc_endpoint_to_string64(const oc_endpoint_t *endpoint,
                              oc_string64_t *endpoint_str);
 
