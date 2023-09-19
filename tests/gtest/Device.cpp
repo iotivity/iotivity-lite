@@ -470,7 +470,7 @@ TestDevice::SetSystemTime(oc_clock_time_t time, void *user_data)
   auto *v = static_cast<oc_clock_time_t *>(user_data);
   *v = time;
 
-  std::array<char, 64> ts = { 0 };
+  std::array<char, 64> ts{};
   oc_clock_encode_time_rfc3339(time, ts.data(), ts.size());
   OC_DBG("set system_time: %s", ts.data());
   return 0;

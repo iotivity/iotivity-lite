@@ -182,15 +182,15 @@ typedef struct jni_callback_data_s
   jni_callback_valid_t cb_valid;
 } jni_callback_data;
 
-jni_callback_data *jni_list_get_head();
+jni_callback_data *jni_list_get_head(void);
 void jni_list_add(jni_callback_data *item);
 void jni_list_remove(jni_callback_data *item);
-void jni_list_clear();
+void jni_list_clear(void);
 jni_callback_data *jni_list_get_item_by_java_callback(jobject callback);
 jni_callback_data *jni_list_get_item_by_callback_valid(
   jni_callback_valid_t cb_valid);
 
-JavaVM *get_jvm();
+JavaVM *get_jvm(void);
 
 JNIEnv *get_jni_env(jint *getEnvResult);
 

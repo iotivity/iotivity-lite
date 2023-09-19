@@ -96,7 +96,7 @@ DTLS= 	aes.c		aesni.c   	asn1parse.c	asn1write.c	base64.c	\
 	ssl_srv.c	ssl_ticket.c	ssl_tls.c	x509write_csr.c\
 	x509write_crt.c	x509_create.c	x509_csr.c ssl_msg.c constant_time.c \
 	nist_kw.c aria.c rsa_alt_helpers.c
-DTLSFLAGS=-I../../deps/mbedtls/include
+DTLSFLAGS=-I../../deps/mbedtls/include -Wno-error=unused
 
 CBOR_DIR=../../deps/tinycbor/src
 CBOR=$(CBOR_DIR)/cborencoder.c $(CBOR_DIR)/cborencoder_close_container_checked.c \

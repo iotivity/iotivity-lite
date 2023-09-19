@@ -133,7 +133,7 @@ DTLS= \
 	x509_csr.c	platform_util.c ssl_msg.c constant_time.c \
 	nist_kw.c aria.c rsa_alt_helpers.c
 
-DTLSFLAGS=-I../../deps/mbedtls/include
+DTLSFLAGS=-I../../deps/mbedtls/include -Wno-error=unused
 
 CBOR=../../deps/tinycbor/src/cborencoder.c ../../deps/tinycbor/src/cborencoder_close_container_checked.c ../../deps/tinycbor/src/cborencoder_float.c ../../deps/tinycbor/src/cborparser.c ../../deps/tinycbor/src/cborparser_float.c# ../../deps/tinycbor/src/cbortojson.c ../../deps/tinycbor/src/cborpretty.c ../../deps/tinycbor/src/cborparser_dup_string.c
 

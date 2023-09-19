@@ -92,7 +92,7 @@ char * jni_uuid_to_str(const oc_uuid_t *uuid)
 %rename(generateUuid) jni_gen_uuid;
 %newobject jni_gen_uuid;
 %inline %{
-oc_uuid_t * jni_gen_uuid()
+oc_uuid_t * jni_gen_uuid(void)
 {
   oc_uuid_t *value = (oc_uuid_t *)malloc(sizeof(oc_uuid_t));
   oc_gen_uuid(value);

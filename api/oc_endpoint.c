@@ -503,7 +503,8 @@ static int
 oc_parse_endpoint_string(const oc_string_t *endpoint_str,
                          oc_endpoint_t *endpoint, oc_string_t *uri)
 {
-  endpoint_uri_t ep_uri = { 0 };
+  endpoint_uri_t ep_uri;
+  memset(&ep_uri, 0, sizeof(endpoint_uri_t));
   if (!parse_endpoint_uri(endpoint_str, &ep_uri, uri != NULL)) {
     return -1;
   }

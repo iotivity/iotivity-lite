@@ -238,7 +238,7 @@ typedef struct oc_collection_s oc_collection_t;
 %rename(addCollection) oc_add_collection;
 
 // DOCUMENTATION workaround
-%javamethodmodifiers oc_add_collection "/**
+%javamethodmodifiers oc_add_collection_v1 "/**
    * Adds a collection to the list of collections.
    * <p>
    * If the caller makes the collection discoverable, then it will

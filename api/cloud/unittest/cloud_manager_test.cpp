@@ -67,7 +67,7 @@ public:
 
 TEST_F(TestCloudManager, cloud_manager_start_initialized_without_retry_f)
 {
-  uint8_t retry_original[6] = { 0 };
+  uint8_t retry_original[6]{};
   size_t retry_original_size = cloud_manager_get_retry(
     retry_original, sizeof(retry_original) / sizeof(retry_original[0]));
   EXPECT_NE((size_t)-1, retry_original_size);

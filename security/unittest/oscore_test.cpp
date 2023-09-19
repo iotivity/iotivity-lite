@@ -73,7 +73,7 @@ TEST_F(TestOSCORE, ClientKDFWithSalt_P)
    recipient nonce: 0x4722d4dd6d944169eefb54987c (13 bytes)
   */
 
-  std::array<uint8_t, 512> secret;
+  std::array<uint8_t, 512> secret{};
   size_t secret_len = secret.size();
   std::string secret_str = "0102030405060708090a0b0c0d0e0f10";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(secret_str.c_str(),
@@ -82,7 +82,7 @@ TEST_F(TestOSCORE, ClientKDFWithSalt_P)
             0);
   EXPECT_EQ(secret_len, 16);
 
-  std::array<uint8_t, 512> salt;
+  std::array<uint8_t, 512> salt{};
   size_t salt_len = salt.size();
   std::string salt_str = "9e7ca92223786340";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(
@@ -90,9 +90,9 @@ TEST_F(TestOSCORE, ClientKDFWithSalt_P)
             0);
   EXPECT_EQ(salt_len, 8);
 
-  std::array<char, 512> testvec;
+  std::array<char, 512> testvec{};
   size_t testvec_len = testvec.size();
-  std::array<uint8_t, OSCORE_KEY_LEN> key;
+  std::array<uint8_t, OSCORE_KEY_LEN> key{};
   EXPECT_EQ(oc_oscore_context_derive_param(
               nullptr, 0, nullptr, 0, "Key", secret.data(), secret_len,
               salt.data(), salt_len, key.data(), key.size()),
@@ -113,7 +113,7 @@ TEST_F(TestOSCORE, ClientKDFWithSalt_P)
             0);
   EXPECT_STREQ(testvec.data(), "ffb14e093c94c9cac9471648b4f98710");
 
-  std::array<uint8_t, OSCORE_COMMON_IV_LEN> iv;
+  std::array<uint8_t, OSCORE_COMMON_IV_LEN> iv{};
   EXPECT_EQ(oc_oscore_context_derive_param(
               nullptr, 0, nullptr, 0, "IV", secret.data(), secret_len,
               salt.data(), salt_len, iv.data(), iv.size()),
@@ -124,8 +124,8 @@ TEST_F(TestOSCORE, ClientKDFWithSalt_P)
             0);
   EXPECT_STREQ(testvec.data(), "4622d4dd6d944168eefb54987c");
 
-  std::array<uint8_t, 1> piv = { 0 };
-  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce;
+  std::array<uint8_t, 1> piv{};
+  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce{};
   oc_oscore_AEAD_nonce(nullptr, 0, piv.data(), piv.size(), iv.data(),
                        nonce.data(), nonce.size());
   testvec_len = testvec.size();
@@ -161,7 +161,7 @@ TEST_F(TestOSCORE, ServerKDFWithSalt_P)
     recipient nonce: 0x4722d4dd6d944169eefb54987c (13 bytes)
   */
 
-  std::array<uint8_t, 512> secret;
+  std::array<uint8_t, 512> secret{};
   size_t secret_len = secret.size();
   std::string secret_str = "0102030405060708090a0b0c0d0e0f10";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(secret_str.c_str(),
@@ -170,7 +170,7 @@ TEST_F(TestOSCORE, ServerKDFWithSalt_P)
             0);
   EXPECT_EQ(secret_len, 16);
 
-  std::array<uint8_t, 512> salt;
+  std::array<uint8_t, 512> salt{};
   size_t salt_len = secret.size();
   std::string salt_str = "9e7ca92223786340";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(
@@ -178,11 +178,11 @@ TEST_F(TestOSCORE, ServerKDFWithSalt_P)
             0);
   EXPECT_EQ(salt_len, 8);
 
-  std::array<char, 512> testvec;
+  std::array<char, 512> testvec{};
   size_t testvec_len = testvec.size();
   std::array<uint8_t, 1> sid = { 0x01 };
-  std::array<uint8_t, OSCORE_KEY_LEN> key;
-  std::array<uint8_t, OSCORE_COMMON_IV_LEN> iv;
+  std::array<uint8_t, OSCORE_KEY_LEN> key{};
+  std::array<uint8_t, OSCORE_COMMON_IV_LEN> iv{};
   EXPECT_EQ(oc_oscore_context_derive_param(
               sid.data(), sid.size(), nullptr, 0, "Key", secret.data(),
               secret_len, salt.data(), salt_len, key.data(), key.size()),
@@ -212,8 +212,8 @@ TEST_F(TestOSCORE, ServerKDFWithSalt_P)
             0);
   EXPECT_STREQ(testvec.data(), "4622d4dd6d944168eefb54987c");
 
-  std::array<uint8_t, 1> piv = { 0 };
-  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce;
+  std::array<uint8_t, 1> piv{};
+  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce{};
   oc_oscore_AEAD_nonce(sid.data(), sid.size(), piv.data(), piv.size(),
                        iv.data(), nonce.data(), nonce.size());
   testvec_len = testvec.size();
@@ -249,7 +249,7 @@ TEST_F(TestOSCORE, ClientKDFWithoutSalt_P)
     recipient nonce: 0xbf35ae297d2dace810c52e99f9 (13 bytes)
   */
 
-  std::array<uint8_t, 512> secret;
+  std::array<uint8_t, 512> secret{};
   size_t secret_len = secret.size();
   std::string secret_str = "0102030405060708090a0b0c0d0e0f10";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(secret_str.c_str(),
@@ -258,10 +258,10 @@ TEST_F(TestOSCORE, ClientKDFWithoutSalt_P)
             0);
   EXPECT_EQ(secret_len, 16);
 
-  std::array<char, 512> testvec;
+  std::array<char, 512> testvec{};
   size_t testvec_len = testvec.size();
-  std::array<uint8_t, 1> sid = { 0 };
-  std::array<uint8_t, OSCORE_KEY_LEN> key;
+  std::array<uint8_t, 1> sid{};
+  std::array<uint8_t, OSCORE_KEY_LEN> key{};
   EXPECT_EQ(oc_oscore_context_derive_param(sid.data(), sid.size(), nullptr, 0,
                                            "Key", secret.data(), secret_len,
                                            nullptr, 0, key.data(), key.size()),
@@ -282,7 +282,7 @@ TEST_F(TestOSCORE, ClientKDFWithoutSalt_P)
             0);
   EXPECT_STREQ(testvec.data(), "e57b5635815177cd679ab4bcec9d7dda");
 
-  std::array<uint8_t, OSCORE_COMMON_IV_LEN> iv;
+  std::array<uint8_t, OSCORE_COMMON_IV_LEN> iv{};
   EXPECT_EQ(oc_oscore_context_derive_param(nullptr, 0, nullptr, 0, "IV",
                                            secret.data(), secret_len, nullptr,
                                            0, iv.data(), iv.size()),
@@ -293,8 +293,8 @@ TEST_F(TestOSCORE, ClientKDFWithoutSalt_P)
             0);
   EXPECT_STREQ(testvec.data(), "be35ae297d2dace910c52e99f9");
 
-  std::array<uint8_t, 1> piv = { 0 };
-  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce;
+  std::array<uint8_t, 1> piv{};
+  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce{};
 
   oc_oscore_AEAD_nonce(sid.data(), sid.size(), piv.data(), piv.size(),
                        iv.data(), nonce.data(), nonce.size());
@@ -330,7 +330,7 @@ TEST_F(TestOSCORE, ServerKDFWithoutSalt_P)
     recipient nonce: 0xbf35ae297d2dace910c52e99f9 (13 bytes)
   */
 
-  std::array<uint8_t, 512> secret;
+  std::array<uint8_t, 512> secret{};
   size_t secret_len = secret.size();
   std::string secret_str = "0102030405060708090a0b0c0d0e0f10";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(secret_str.c_str(),
@@ -339,10 +339,10 @@ TEST_F(TestOSCORE, ServerKDFWithoutSalt_P)
             0);
   EXPECT_EQ(secret_len, 16);
 
-  std::array<char, 512> testvec;
+  std::array<char, 512> testvec{};
   size_t testvec_len = testvec.size();
   std::array<uint8_t, 1> sid = { 0x01 };
-  std::array<uint8_t, OSCORE_KEY_LEN> key;
+  std::array<uint8_t, OSCORE_KEY_LEN> key{};
   EXPECT_EQ(oc_oscore_context_derive_param(sid.data(), sid.size(), nullptr, 0,
                                            "Key", secret.data(), secret_len,
                                            nullptr, 0, key.data(), key.size()),
@@ -352,7 +352,7 @@ TEST_F(TestOSCORE, ServerKDFWithoutSalt_P)
             0);
   EXPECT_STREQ(testvec.data(), "e57b5635815177cd679ab4bcec9d7dda");
 
-  std::array<uint8_t, 1> rid = { 0 };
+  std::array<uint8_t, 1> rid{};
   EXPECT_EQ(oc_oscore_context_derive_param(rid.data(), rid.size(), nullptr, 0,
                                            "Key", secret.data(), secret_len,
                                            nullptr, 0, key.data(), key.size()),
@@ -363,7 +363,7 @@ TEST_F(TestOSCORE, ServerKDFWithoutSalt_P)
             0);
   EXPECT_STREQ(testvec.data(), "321b26943253c7ffb6003b0b64d74041");
 
-  std::array<uint8_t, OSCORE_COMMON_IV_LEN> iv;
+  std::array<uint8_t, OSCORE_COMMON_IV_LEN> iv{};
   EXPECT_EQ(oc_oscore_context_derive_param(nullptr, 0, nullptr, 0, "IV",
                                            secret.data(), secret_len, nullptr,
                                            0, iv.data(), iv.size()),
@@ -374,8 +374,8 @@ TEST_F(TestOSCORE, ServerKDFWithoutSalt_P)
             0);
   EXPECT_STREQ(testvec.data(), "be35ae297d2dace910c52e99f9");
 
-  std::array<uint8_t, 1> piv = { 0 };
-  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce;
+  std::array<uint8_t, 1> piv{};
+  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce{};
   oc_oscore_AEAD_nonce(sid.data(), sid.size(), piv.data(), piv.size(),
                        iv.data(), nonce.data(), nonce.size());
   testvec_len = testvec.size();
@@ -413,7 +413,7 @@ TEST_F(TestOSCORE, ClientKDFWithIDContext_P)
     recipient nonce: 0x2da58fb85ff1b81d0b7181b85e (13 bytes)
   */
 
-  std::array<uint8_t, 512> secret;
+  std::array<uint8_t, 512> secret{};
   size_t secret_len = secret.size();
   std::string secret_str = "0102030405060708090a0b0c0d0e0f10";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(secret_str.c_str(),
@@ -422,7 +422,7 @@ TEST_F(TestOSCORE, ClientKDFWithIDContext_P)
             0);
   EXPECT_EQ(secret_len, 16);
 
-  std::array<uint8_t, 512> salt;
+  std::array<uint8_t, 512> salt{};
   size_t salt_len = salt.size();
   std::string salt_str = "9e7ca92223786340";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(
@@ -430,7 +430,7 @@ TEST_F(TestOSCORE, ClientKDFWithIDContext_P)
             0);
   EXPECT_EQ(salt_len, 8);
 
-  std::array<uint8_t, 512> idctx;
+  std::array<uint8_t, 512> idctx{};
   size_t idctx_len = idctx.size();
   std::string idctx_str = "37cbf3210017a2d3";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(
@@ -438,12 +438,12 @@ TEST_F(TestOSCORE, ClientKDFWithIDContext_P)
             0);
   EXPECT_EQ(idctx_len, 8);
 
-  std::array<uint8_t, OSCORE_KEY_LEN> key;
+  std::array<uint8_t, OSCORE_KEY_LEN> key{};
   EXPECT_EQ(oc_oscore_context_derive_param(
               nullptr, 0, idctx.data(), idctx_len, "Key", secret.data(),
               secret_len, salt.data(), salt_len, key.data(), key.size()),
             0);
-  std::array<char, 512> testvec;
+  std::array<char, 512> testvec{};
   size_t testvec_len = testvec.size();
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(key.data(), key.size(),
                                              testvec.data(), &testvec_len),
@@ -462,7 +462,7 @@ TEST_F(TestOSCORE, ClientKDFWithIDContext_P)
             0);
   EXPECT_STREQ(testvec.data(), "e39a0c7c77b43f03b4b39ab9a268699f");
 
-  std::array<uint8_t, OSCORE_COMMON_IV_LEN> iv;
+  std::array<uint8_t, OSCORE_COMMON_IV_LEN> iv{};
   EXPECT_EQ(oc_oscore_context_derive_param(
               nullptr, 0, idctx.data(), idctx_len, "IV", secret.data(),
               secret_len, salt.data(), salt_len, iv.data(), iv.size()),
@@ -473,8 +473,8 @@ TEST_F(TestOSCORE, ClientKDFWithIDContext_P)
             0);
   EXPECT_STREQ(testvec.data(), "2ca58fb85ff1b81c0b7181b85e");
 
-  std::array<uint8_t, 1> piv = { 0 };
-  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce;
+  std::array<uint8_t, 1> piv{};
+  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce{};
   oc_oscore_AEAD_nonce(nullptr, 0, piv.data(), piv.size(), iv.data(),
                        nonce.data(), nonce.size());
   testvec_len = testvec.size();
@@ -511,7 +511,7 @@ TEST_F(TestOSCORE, ServerKDFWithIDContext_P)
     recipient nonce: 0x2ca58fb85ff1b81c0b7181b85e (13 bytes)
   */
 
-  std::array<uint8_t, 512> secret;
+  std::array<uint8_t, 512> secret{};
   size_t secret_len = secret.size();
   std::string secret_str = "0102030405060708090a0b0c0d0e0f10";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(secret_str.c_str(),
@@ -520,7 +520,7 @@ TEST_F(TestOSCORE, ServerKDFWithIDContext_P)
             0);
   EXPECT_EQ(secret_len, 16);
 
-  std::array<uint8_t, 512> salt;
+  std::array<uint8_t, 512> salt{};
   size_t salt_len = salt.size();
   std::string salt_str = "9e7ca92223786340";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(
@@ -528,7 +528,7 @@ TEST_F(TestOSCORE, ServerKDFWithIDContext_P)
             0);
   EXPECT_EQ(salt_len, 8);
 
-  std::array<uint8_t, 512> idctx;
+  std::array<uint8_t, 512> idctx{};
   size_t idctx_len = idctx.size();
   std::string idctx_str = "37cbf3210017a2d3";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(
@@ -536,10 +536,10 @@ TEST_F(TestOSCORE, ServerKDFWithIDContext_P)
             0);
   EXPECT_EQ(idctx_len, 8);
 
-  std::array<char, 512> testvec;
+  std::array<char, 512> testvec{};
   size_t testvec_len = testvec.size();
   std::array<uint8_t, 1> sid = { 0x01 };
-  std::array<uint8_t, OSCORE_KEY_LEN> key;
+  std::array<uint8_t, OSCORE_KEY_LEN> key{};
   EXPECT_EQ(oc_oscore_context_derive_param(sid.data(), sid.size(), idctx.data(),
                                            idctx_len, "Key", secret.data(),
                                            secret_len, salt.data(), salt_len,
@@ -560,7 +560,7 @@ TEST_F(TestOSCORE, ServerKDFWithIDContext_P)
             0);
   EXPECT_STREQ(testvec.data(), "af2a1300a5e95788b356336eeecd2b92");
 
-  std::array<uint8_t, OSCORE_COMMON_IV_LEN> iv;
+  std::array<uint8_t, OSCORE_COMMON_IV_LEN> iv{};
   EXPECT_EQ(oc_oscore_context_derive_param(
               nullptr, 0, idctx.data(), idctx_len, "IV", secret.data(),
               secret_len, salt.data(), salt_len, iv.data(), iv.size()),
@@ -571,8 +571,8 @@ TEST_F(TestOSCORE, ServerKDFWithIDContext_P)
             0);
   EXPECT_STREQ(testvec.data(), "2ca58fb85ff1b81c0b7181b85e");
 
-  std::array<uint8_t, 1> piv = { 0 };
-  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce;
+  std::array<uint8_t, 1> piv{};
+  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce{};
   oc_oscore_AEAD_nonce(sid.data(), sid.size(), piv.data(), piv.size(),
                        iv.data(), nonce.data(), nonce.size());
   testvec_len = testvec.size();
@@ -598,7 +598,7 @@ TEST_F(TestOSCORE, ClientRequest1_P)
      0x44015d1f00003974396c6f63616c686f737483747631 (22 bytes)
   */
 
-  std::array<uint8_t, 512> buffer;
+  std::array<uint8_t, 512> buffer{};
   size_t buffer_len = buffer.size();
   std::string request_str = "44015d1f00003974396c6f63616c686f737483747631";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(request_str.c_str(),
@@ -614,7 +614,7 @@ TEST_F(TestOSCORE, ClientRequest1_P)
   /* Common IV: 0x4622d4dd6d944168eefb54987c (13 bytes) */
 
   std::string civ_str = "4622d4dd6d944168eefb54987c";
-  std::array<uint8_t, 512> civ;
+  std::array<uint8_t, 512> civ{};
   size_t civ_len = civ.size();
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(civ_str.c_str(), civ_str.length(),
                                              civ.data(), &civ_len),
@@ -626,26 +626,26 @@ TEST_F(TestOSCORE, ClientRequest1_P)
     Sender Sequence Number: 20
   */
   std::string key_str = "f0910ed7295e6ad4b54fc793154302ff";
-  std::array<uint8_t, 512> skey;
+  std::array<uint8_t, 512> skey{};
   size_t skey_len = skey.size();
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(key_str.c_str(), key_str.length(),
                                              skey.data(), &skey_len),
             0);
 
   uint64_t ssn = 20;
-  std::array<uint8_t, OSCORE_PIV_LEN> piv;
+  std::array<uint8_t, OSCORE_PIV_LEN> piv{};
   uint8_t piv_len = piv.size();
   oscore_store_piv(ssn, piv.data(), &piv_len);
 
   /* Verify AAD: 0x8368456e63727970743040488501810a40411440 (20 bytes) */
 
-  std::array<uint8_t, OSCORE_AAD_MAX_LEN> AAD;
+  std::array<uint8_t, OSCORE_AAD_MAX_LEN> AAD{};
   uint8_t AAD_len = AAD.size();
   EXPECT_EQ(oc_oscore_compose_AAD(nullptr, 0, piv.data(), piv_len, AAD.data(),
                                   &AAD_len),
             0);
 
-  std::array<char, 512> testvec;
+  std::array<char, 512> testvec{};
   size_t testvec_len = testvec.size();
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(AAD.data(), AAD_len,
                                              testvec.data(), &testvec_len),
@@ -665,7 +665,7 @@ TEST_F(TestOSCORE, ClientRequest1_P)
   EXPECT_STREQ(testvec.data(), "01b3747631");
 
   /* Verify nonce: 0x4622d4dd6d944168eefb549868 (13 bytes) */
-  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce;
+  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce{};
   oc_oscore_AEAD_nonce(nullptr, 0, piv.data(), piv_len, civ.data(),
                        nonce.data(), nonce.size());
   testvec_len = testvec.size();
@@ -721,7 +721,7 @@ TEST_F(TestOSCORE, ClientRequest2_P)
      0x440171c30000b932396c6f63616c686f737483747631 (22 bytes)
   */
 
-  std::array<uint8_t, 512> buffer;
+  std::array<uint8_t, 512> buffer{};
   size_t buffer_len = buffer.size();
   std::string request_str = "440171c30000b932396c6f63616c686f737483747631";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(request_str.c_str(),
@@ -736,7 +736,7 @@ TEST_F(TestOSCORE, ClientRequest2_P)
 
   /* Common IV: 0xbe35ae297d2dace910c52e99f9 (13 bytes) */
 
-  std::array<uint8_t, 512> civ;
+  std::array<uint8_t, 512> civ{};
   size_t civ_len = civ.size();
   std::string civ_str = "be35ae297d2dace910c52e99f9";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(civ_str.c_str(), civ_str.length(),
@@ -748,8 +748,8 @@ TEST_F(TestOSCORE, ClientRequest2_P)
     Sender Key: 0x321b26943253c7ffb6003b0b64d74041 (16 bytes)
     Sender Sequence Number: 20
   */
-  std::array<uint8_t, 1> sid = { 0 };
-  std::array<uint8_t, 512> skey;
+  std::array<uint8_t, 1> sid{};
+  std::array<uint8_t, 512> skey{};
   size_t skey_len = skey.size();
   std::string key_str = "321b26943253c7ffb6003b0b64d74041";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(key_str.c_str(), key_str.length(),
@@ -757,19 +757,19 @@ TEST_F(TestOSCORE, ClientRequest2_P)
             0);
 
   uint64_t ssn = 20;
-  std::array<uint8_t, OSCORE_PIV_LEN> piv;
+  std::array<uint8_t, OSCORE_PIV_LEN> piv{};
   uint8_t piv_len = piv.size();
   oscore_store_piv(ssn, piv.data(), &piv_len);
 
   /* Verify AAD: 0x8368456e63727970743040498501810a4100411440 (20 bytes) */
 
-  std::array<uint8_t, OSCORE_AAD_MAX_LEN> AAD;
+  std::array<uint8_t, OSCORE_AAD_MAX_LEN> AAD{};
   uint8_t AAD_len = AAD.size();
   EXPECT_EQ(oc_oscore_compose_AAD(sid.data(), sid.size(), piv.data(), piv_len,
                                   AAD.data(), &AAD_len),
             0);
 
-  std::array<char, 512> testvec;
+  std::array<char, 512> testvec{};
   size_t testvec_len = testvec.size();
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(AAD.data(), AAD_len,
                                              testvec.data(), &testvec_len),
@@ -789,7 +789,7 @@ TEST_F(TestOSCORE, ClientRequest2_P)
   EXPECT_STREQ(testvec.data(), "01b3747631");
 
   /* Verify nonce: 0xbf35ae297d2dace910c52e99ed (13 bytes) */
-  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce;
+  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce{};
   oc_oscore_AEAD_nonce(sid.data(), sid.size(), piv.data(), piv_len, civ.data(),
                        nonce.data(), nonce.size());
   testvec_len = testvec.size();
@@ -845,7 +845,7 @@ TEST_F(TestOSCORE, ClientRequest3_P)
      0x44012f8eef9bbf7a396c6f63616c686f737483747631 (22 bytes)
   */
 
-  std::array<uint8_t, 512> buffer;
+  std::array<uint8_t, 512> buffer{};
   size_t buffer_len = buffer.size();
   std::string request_str = "44012f8eef9bbf7a396c6f63616c686f737483747631";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(request_str.c_str(),
@@ -860,7 +860,7 @@ TEST_F(TestOSCORE, ClientRequest3_P)
 
   /* Common IV: 0x2ca58fb85ff1b81c0b7181b85e (13 bytes) */
 
-  std::array<uint8_t, 512> civ;
+  std::array<uint8_t, 512> civ{};
   size_t civ_len = civ.size();
   std::string civ_str = "2ca58fb85ff1b81c0b7181b85e";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(civ_str.c_str(), civ_str.length(),
@@ -873,14 +873,14 @@ TEST_F(TestOSCORE, ClientRequest3_P)
     Sender Key: 0xaf2a1300a5e95788b356336eeecd2b92 (16 bytes)
     Sender Sequence Number: 20
   */
-  std::array<uint8_t, 512> idctx;
+  std::array<uint8_t, 512> idctx{};
   size_t idctx_len = idctx.size();
   std::string idctx_str = "37cbf3210017a2d3";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(
               idctx_str.c_str(), idctx_str.length(), idctx.data(), &idctx_len),
             0);
 
-  std::array<uint8_t, 512> skey;
+  std::array<uint8_t, 512> skey{};
   size_t skey_len = skey.size();
   std::string key_str = "af2a1300a5e95788b356336eeecd2b92";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(key_str.c_str(), key_str.length(),
@@ -888,19 +888,19 @@ TEST_F(TestOSCORE, ClientRequest3_P)
             0);
 
   uint64_t ssn = 20;
-  std::array<uint8_t, OSCORE_PIV_LEN> piv;
+  std::array<uint8_t, OSCORE_PIV_LEN> piv{};
   uint8_t piv_len = piv.size();
   oscore_store_piv(ssn, piv.data(), &piv_len);
 
   /* Verify AAD: 0x8368456e63727970743040488501810a40411440 (20 bytes) */
 
-  std::array<uint8_t, OSCORE_AAD_MAX_LEN> AAD;
+  std::array<uint8_t, OSCORE_AAD_MAX_LEN> AAD{};
   uint8_t AAD_len = AAD.size();
   EXPECT_EQ(oc_oscore_compose_AAD(nullptr, 0, piv.data(), piv_len, AAD.data(),
                                   &AAD_len),
             0);
 
-  std::array<char, 512> testvec;
+  std::array<char, 512> testvec{};
   size_t testvec_len = testvec.size();
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(AAD.data(), AAD_len,
                                              testvec.data(), &testvec_len),
@@ -920,7 +920,7 @@ TEST_F(TestOSCORE, ClientRequest3_P)
   EXPECT_STREQ(testvec.data(), "01b3747631");
 
   /* Verify nonce: 0x2ca58fb85ff1b81c0b7181b84a (13 bytes) */
-  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce;
+  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce{};
   oc_oscore_AEAD_nonce(nullptr, 0, piv.data(), piv_len, civ.data(),
                        nonce.data(), nonce.size());
   testvec_len = testvec.size();
@@ -977,7 +977,7 @@ TEST_F(TestOSCORE, ServerResponse1_P)
      0x64455d1f00003974ff48656c6c6f20576f726c6421 (21 bytes)
   */
 
-  std::array<uint8_t, 512> buffer;
+  std::array<uint8_t, 512> buffer{};
   size_t buffer_len = buffer.size();
   std::string response_str = "64455d1f00003974ff48656c6c6f20576f726c6421";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(response_str.c_str(),
@@ -992,7 +992,7 @@ TEST_F(TestOSCORE, ServerResponse1_P)
 
   /* Common IV: 0x4622d4dd6d944168eefb54987c (13 bytes) */
 
-  std::array<uint8_t, 512> civ;
+  std::array<uint8_t, 512> civ{};
   size_t civ_len = civ.size();
   std::string civ_str = "4622d4dd6d944168eefb54987c";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(civ_str.c_str(), civ_str.length(),
@@ -1004,7 +1004,7 @@ TEST_F(TestOSCORE, ServerResponse1_P)
     Sender Key: 0xffb14e093c94c9cac9471648b4f98710 (16 bytes)
     Sender Sequence Number: 0
   */
-  std::array<uint8_t, 512> skey;
+  std::array<uint8_t, 512> skey{};
   size_t skey_len = skey.size();
   std::string key_str = "ffb14e093c94c9cac9471648b4f98710";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(key_str.c_str(), key_str.length(),
@@ -1015,13 +1015,13 @@ TEST_F(TestOSCORE, ServerResponse1_P)
   std::array<uint8_t, 1> request_piv = { 0x14 };
 
   /* Verify AAD: 0x8368456e63727970743040488501810a40411440 (20 bytes) */
-  std::array<uint8_t, OSCORE_AAD_MAX_LEN> AAD;
+  std::array<uint8_t, OSCORE_AAD_MAX_LEN> AAD{};
   uint8_t AAD_len = AAD.size();
   EXPECT_EQ(oc_oscore_compose_AAD(nullptr, 0, request_piv.data(),
                                   request_piv.size(), AAD.data(), &AAD_len),
             0);
 
-  std::array<char, 512> testvec;
+  std::array<char, 512> testvec{};
   size_t testvec_len = testvec.size();
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(AAD.data(), AAD_len,
                                              testvec.data(), &testvec_len),
@@ -1042,7 +1042,7 @@ TEST_F(TestOSCORE, ServerResponse1_P)
 
   /* Verify nonce: 0x4622d4dd6d944168eefb549868 (13 bytes) */
   /* Using nonce from request in test vector C.4 */
-  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce;
+  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce{};
   oc_oscore_AEAD_nonce(nullptr, 0, request_piv.data(), request_piv.size(),
                        civ.data(), nonce.data(), nonce.size());
   testvec_len = testvec.size();
@@ -1100,7 +1100,7 @@ TEST_F(TestOSCORE, ServerResponse2_P)
      0x64455d1f00003974ff48656c6c6f20576f726c6421 (21 bytes)
   */
 
-  std::array<uint8_t, 512> buffer;
+  std::array<uint8_t, 512> buffer{};
   size_t buffer_len = buffer.size();
   std::string response_str = "64455d1f00003974ff48656c6c6f20576f726c6421";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(response_str.c_str(),
@@ -1115,7 +1115,7 @@ TEST_F(TestOSCORE, ServerResponse2_P)
 
   /* Common IV: 0x4622d4dd6d944168eefb54987c (13 bytes) */
 
-  std::array<uint8_t, 512> civ;
+  std::array<uint8_t, 512> civ{};
   size_t civ_len = civ.size();
   std::string civ_str = "4622d4dd6d944168eefb54987c";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(civ_str.c_str(), civ_str.length(),
@@ -1125,7 +1125,7 @@ TEST_F(TestOSCORE, ServerResponse2_P)
   /*
     Sender Key: 0xffb14e093c94c9cac9471648b4f98710 (16 bytes)
   */
-  std::array<uint8_t, 512> skey;
+  std::array<uint8_t, 512> skey{};
   size_t skey_len = skey.size();
   std::string key_str = "ffb14e093c94c9cac9471648b4f98710";
   EXPECT_EQ(oc_conv_hex_string_to_byte_array(key_str.c_str(), key_str.length(),
@@ -1135,13 +1135,13 @@ TEST_F(TestOSCORE, ServerResponse2_P)
   /* Using request_piv & request_kid from test vetor in C.4 */
   std::array<uint8_t, 1> request_piv = { 0x14 };
   /* Verify AAD: 0x8368456e63727970743040488501810a40411440 (20 bytes) */
-  std::array<uint8_t, OSCORE_AAD_MAX_LEN> AAD;
+  std::array<uint8_t, OSCORE_AAD_MAX_LEN> AAD{};
   uint8_t AAD_len = AAD.size();
   EXPECT_EQ(oc_oscore_compose_AAD(nullptr, 0, request_piv.data(),
                                   request_piv.size(), AAD.data(), &AAD_len),
             0);
 
-  std::array<char, 512> testvec;
+  std::array<char, 512> testvec{};
   size_t testvec_len = testvec.size();
   EXPECT_EQ(oc_conv_byte_array_to_hex_string(AAD.data(), AAD_len,
                                              testvec.data(), &testvec_len),
@@ -1165,9 +1165,9 @@ TEST_F(TestOSCORE, ServerResponse2_P)
     Sender Sequence Number: 0
   */
   std::array<uint8_t, 1> sid = { 0x01 };
-  std::array<uint8_t, 1> piv = { 0 };
+  std::array<uint8_t, 1> piv{};
   /* Verify nonce: 0x4722d4dd6d944169eefb54987c (13 bytes) */
-  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce;
+  std::array<uint8_t, OSCORE_AEAD_NONCE_LEN> nonce{};
   oc_oscore_AEAD_nonce(sid.data(), sid.size(), piv.data(), piv.size(),
                        civ.data(), nonce.data(), nonce.size());
   testvec_len = testvec.size();

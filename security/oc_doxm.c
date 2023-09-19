@@ -57,7 +57,7 @@
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include <stdlib.h>
-static oc_sec_doxm_t *g_doxm;
+static oc_sec_doxm_t *g_doxm = NULL;
 #else  /* OC_DYNAMIC_ALLOCATION */
 static oc_sec_doxm_t g_doxm[OC_MAX_NUM_DEVICES] = { 0 };
 #endif /* !OC_DYNAMIC_ALLOCATION */
