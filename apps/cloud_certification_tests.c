@@ -388,7 +388,7 @@ struct switch_t
   bool state;
 };
 
-static struct switch_t bswitch = { 0 };
+static struct switch_t bswitch = { false };
 
 static void
 get_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
@@ -469,7 +469,7 @@ register_resources(void)
 }
 
 static oc_resource_t *reg_resource = NULL;
-static struct switch_t reg_bswitch = { 0 };
+static struct switch_t reg_bswitch = { false };
 
 static void
 add_resource(void)

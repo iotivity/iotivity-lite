@@ -881,9 +881,12 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
   int pcode = oc_status_code(OC_STATUS_BAD_REQUEST);
   CborEncoder encoder;
   CborEncoder prev_link;
-  oc_request_t rest_request = { 0 };
-  oc_response_t response = { 0 };
+  oc_request_t rest_request;
+  memset(&rest_request, 0, sizeof(oc_request_t));
+  oc_response_t response;
+  memset(&response, 0, sizeof(oc_response_t));
   oc_response_buffer_t response_buffer;
+  memset(&response_buffer, 0, sizeof(oc_response_buffer_t));
   bool method_not_found = false;
   bool get_delete = false;
   const oc_rep_t *rep = request->request_payload;

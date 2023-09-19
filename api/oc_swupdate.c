@@ -757,8 +757,10 @@ swupdate_decode(const oc_rep_t *rep, int flags, bool has_purl,
 bool
 oc_swupdate_decode(const oc_rep_t *rep, int flags, oc_swupdate_t *dst)
 {
-  oc_swupdate_on_error_t on_error = { NULL, NULL };
-  oc_swupdate_decode_t swudecode = { 0 };
+  oc_swupdate_on_error_t on_error;
+  memset(&on_error, 0, sizeof(on_error));
+  oc_swupdate_decode_t swudecode;
+  memset(&swudecode, 0, sizeof(swudecode));
   if (!swupdate_decode(rep, flags, oc_string(dst->purl) != NULL, on_error,
                        &swudecode)) {
     return false;
@@ -782,7 +784,8 @@ oc_swupdate_validate_update(size_t device, const oc_rep_t *rep,
     .fn = on_error,
     .data = on_error_data,
   };
-  oc_swupdate_decode_t swudecode = { 0 };
+  oc_swupdate_decode_t swudecode;
+  memset(&swudecode, 0, sizeof(swudecode));
   return swupdate_decode(rep, OC_SWUPDATE_DECODE_FLAG_VALIDATE_DECODED_DATA,
                          oc_string(g_sw[device].purl) != NULL, on_error_impl,
                          &swudecode);

@@ -1370,7 +1370,8 @@ coap_process_discovery_batch_observers(void)
     oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
     if (observe_batch_set_response_buffer(batch_obs, &response_buffer)) {
-      oc_response_t response = { 0 };
+      oc_response_t response;
+      memset(&response, 0, sizeof(response));
       response.response_buffer = &response_buffer;
       if (notify_batch_observer(obs, &response) < 0) {
         goto leave_notify_observers;

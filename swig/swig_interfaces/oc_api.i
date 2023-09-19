@@ -531,7 +531,7 @@ void jni_set_random_pin_callback(oc_random_pin_cb_t cb, jni_callback_data *jcb) 
 %ignore oc_reset;
 %rename(reset) jni_reset;
 %inline %{
-void jni_reset() {
+void jni_reset(void) {
   OC_DBG("JNI: %s\n", __func__);
 #ifdef OC_SECURITY
   oc_reset();

@@ -181,7 +181,8 @@ oc_sec_sdi_decode_with_state(const oc_rep_t *rep, oc_dostype_t state,
 {
   assert(sdi != NULL);
 
-  sdi_decode_data_t sdi_data = { 0 };
+  sdi_decode_data_t sdi_data;
+  memset(&sdi_data, 0, sizeof(sdi_data));
   for (; rep != NULL; rep = rep->next) {
     switch (rep->type) {
     case OC_REP_STRING:

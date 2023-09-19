@@ -399,7 +399,8 @@ get_interface_addresses(ifaddr_t *ifaddr_list, ip_context_t *dev,
 {
   ifaddr_t *ifaddr;
 
-  oc_endpoint_t ep = { 0 };
+  oc_endpoint_t ep;
+  memset(&ep, 0, sizeof(oc_endpoint_t));
 
   if (secure) {
     ep.flags = SECURED;

@@ -565,7 +565,8 @@ get_endpoints(oc_client_response_t *data)
     return;
   }
 
-  oc_uuid_t di = { 0 };
+  oc_uuid_t di;
+  memset(&di, 0, sizeof(oc_uuid_t));
   // skip "ocf://" prefix
   oc_str_to_uuid(oc_string(*anchor) + 6, &di);
   const oc_uuid_t *my_uuid = oc_core_get_device_id(0);

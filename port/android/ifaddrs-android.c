@@ -51,8 +51,6 @@ struct netlinkrequest
   struct ifaddrmsg msg;
 };
 
-static const int kMaxReadSize = 4096;
-
 static int
 set_ifname(struct ifaddrs *ifaddr, int interface)
 {
@@ -111,7 +109,7 @@ set_addresses(struct ifaddrs *ifaddr, struct ifaddrmsg *msg, void *data,
 static int
 make_prefixes(struct ifaddrs *ifaddr, int family, int prefixlen)
 {
-  char *prefix = NULL;
+  unsigned char *prefix = NULL;
   if (family == AF_INET) {
     struct sockaddr_in *mask = malloc(sizeof(struct sockaddr_in));
     memset(mask, 0, sizeof(struct sockaddr_in));
@@ -121,7 +119,7 @@ make_prefixes(struct ifaddrs *ifaddr, int family, int prefixlen)
     if (prefixlen > 32) {
       prefixlen = 32;
     }
-    prefix = (char *)&mask->sin_addr;
+    prefix = (unsigned char *)&mask->sin_addr;
   } else if (family == AF_INET6) {
     struct sockaddr_in6 *mask = malloc(sizeof(struct sockaddr_in6));
     memset(mask, 0, sizeof(struct sockaddr_in6));
@@ -131,14 +129,14 @@ make_prefixes(struct ifaddrs *ifaddr, int family, int prefixlen)
     if (prefixlen > 128) {
       prefixlen = 128;
     }
-    prefix = (char *)&mask->sin6_addr;
+    prefix = (unsigned char *)&mask->sin6_addr;
   } else {
     return -1;
   }
   for (int i = 0; i < (prefixlen / 8); i++) {
     *prefix++ = 0xFF;
   }
-  char remainder = 0xff;
+  unsigned char remainder = 0xFF;
   remainder <<= (8 - prefixlen % 8);
   *prefix = remainder;
   return 0;
@@ -184,8 +182,10 @@ android_getifaddrs(struct ifaddrs **result)
   }
   struct ifaddrs *start = NULL;
   struct ifaddrs *current = NULL;
-  char buf[kMaxReadSize];
-  ssize_t amount_read = recv(fd, &buf, kMaxReadSize, 0);
+#define MAX_READ_SIZE (4096)
+  char buf[MAX_READ_SIZE] = { 0 };
+#undef MAX_READ_SIZE
+  ssize_t amount_read = recv(fd, &buf, OC_ARRAY_SIZE(buf), 0);
   while (amount_read > 0) {
     struct nlmsghdr *header = (struct nlmsghdr *)&buf[0];
     size_t header_size = (size_t)amount_read;
@@ -234,7 +234,7 @@ android_getifaddrs(struct ifaddrs **result)
       }
       }
     }
-    amount_read = recv(fd, &buf, kMaxReadSize, 0);
+    amount_read = recv(fd, &buf, OC_ARRAY_SIZE(buf), 0);
   }
   close(fd);
   android_freeifaddrs(start);

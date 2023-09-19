@@ -748,9 +748,12 @@ process_batch_response(CborEncoder *links_array, oc_resource_t *resource,
       !oc_discovery_resource_is_in_batch_response(resource, endpoint, true)) {
     return;
   }
-  oc_request_t rest_request = { 0 };
-  oc_response_t response = { 0 };
+  oc_request_t rest_request;
+  memset(&rest_request, 0, sizeof(oc_request_t));
+  oc_response_t response;
+  memset(&response, 0, sizeof(oc_response_t));
   oc_response_buffer_t response_buffer;
+  memset(&response_buffer, 0, sizeof(oc_response_buffer_t));
   response.response_buffer = &response_buffer;
   rest_request.response = &response;
   rest_request.origin = endpoint;

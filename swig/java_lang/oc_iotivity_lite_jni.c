@@ -413,7 +413,7 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
 }
 
 JavaVM *
-get_jvm()
+get_jvm(void)
 {
   return jvm;
 }
@@ -428,7 +428,7 @@ get_jvm()
 OC_LIST(jni_callbacks);
 
 jni_callback_data *
-jni_list_get_head()
+jni_list_get_head(void)
 {
   return (jni_callback_data *)oc_list_head(jni_callbacks);
 }
@@ -459,7 +459,7 @@ jni_list_remove(jni_callback_data *item)
 }
 
 void
-jni_list_clear()
+jni_list_clear(void)
 {
   OC_DBG("JNI: - lock %s\n", __func__);
   jni_mutex_lock(jni_sync_lock);

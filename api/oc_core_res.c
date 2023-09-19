@@ -76,12 +76,17 @@
 static oc_resource_t *g_core_resources = NULL;
 static oc_device_info_t *g_oc_device_info = NULL;
 #else  /* OC_DYNAMIC_ALLOCATION */
-static oc_resource_t
-  g_core_resources[OC_NUM_CORE_PLATFORM_RESOURCES +
-                   (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * OC_MAX_NUM_DEVICES)];
-static oc_device_info_t g_oc_device_info[OC_MAX_NUM_DEVICES];
+static oc_resource_t g_core_resources[OC_NUM_CORE_PLATFORM_RESOURCES +
+                                      (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES *
+                                       OC_MAX_NUM_DEVICES)] = { 0 };
+static oc_device_info_t g_oc_device_info[OC_MAX_NUM_DEVICES] = { 0 };
 #endif /* !OC_DYNAMIC_ALLOCATION */
-static oc_platform_info_t g_oc_platform_info = { 0 };
+static oc_platform_info_t g_oc_platform_info = {
+  .pi = { { 0 } },
+  .mfg_name = { 0 },
+  .init_platform_cb = NULL,
+  .data = NULL,
+};
 
 static int g_res_latency = 0;
 static OC_ATOMIC_UINT32_T g_device_count = 0;

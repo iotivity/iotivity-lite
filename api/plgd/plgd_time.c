@@ -83,7 +83,13 @@ OC_MEMB(g_time_verify_certificate_params_s, time_verify_certificate_params_t,
 
 #endif /* OC_CLIENT */
 
-static plgd_time_t g_oc_plgd_time = { 0 };
+static plgd_time_t g_oc_plgd_time = {
+  .store = { 0 },
+  .status = 0,
+  .update_time = 0,
+  .set_system_time = NULL,
+  .set_system_time_data = NULL,
+};
 
 plgd_time_t *
 plgd_time_get(void)
@@ -511,7 +517,8 @@ store_decode_plgd_time(const oc_rep_t *rep, size_t device, void *data)
 bool
 plgd_time_load(void)
 {
-  plgd_time_t pt = { 0 };
+  plgd_time_t pt;
+  memset(&pt, 0, sizeof(pt));
   if (oc_storage_data_load(PLGD_TIME_STORE_NAME, 0, store_decode_plgd_time,
                            &pt) <= 0) {
     OC_DBG("failed to load plgd-time from storage");
@@ -532,7 +539,8 @@ plgd_time_resource_post(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)data;
-  plgd_time_t pt = { 0 };
+  plgd_time_t pt;
+  memset(&pt, 0, sizeof(pt));
   if (!plgd_time_decode(request->request_payload, &pt)) {
     OC_ERR("cannot decode data for plgd-time resource");
     oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);

@@ -93,7 +93,7 @@ uint8_t *g_new_rep_buffer = NULL;
 struct oc_memb g_rep_objects;
 %}
 %inline %{
-void deleteBuffer() {
+void deleteBuffer(void) {
   free(g_new_rep_buffer);
   g_new_rep_buffer = NULL;
 }
@@ -345,7 +345,7 @@ void jni_rep_end_array(CborEncoder *parent, CborEncoder *arrayObject) {
 %rename (beginLinksArray) jni_rep_start_links_array;
 %inline %{
 /* Alt implementation of oc_rep_start_links_array macro */
-CborEncoder * jni_rep_start_links_array() {
+CborEncoder * jni_rep_start_links_array(void) {
   OC_DBG("JNI: %s\n", __func__);
   oc_rep_encoder_create_array(oc_rep_get_encoder(), &links_array, CborIndefiniteLength);
   return &links_array;
@@ -355,7 +355,7 @@ CborEncoder * jni_rep_start_links_array() {
 %rename (endLinksArray) jni_rep_end_links_array;
 %inline %{
 /* Alt implementation of oc_rep_end_links_array macro */
-void jni_rep_end_links_array() {
+void jni_rep_end_links_array(void) {
   OC_DBG("JNI: %s\n", __func__);
   oc_rep_end_links_array();
 }
@@ -373,7 +373,7 @@ void jni_rep_end_links_array() {
 %rename(beginRootObject) jni_begin_root_object;
 %inline %{
 /* Alt implementation of oc_rep_start_root_object macro */
-CborEncoder * jni_begin_root_object() {
+CborEncoder * jni_begin_root_object(void) {
   OC_DBG("JNI: %s\n", __func__);
   g_err |= oc_rep_encoder_create_map(oc_rep_get_encoder(), &root_map, CborIndefiniteLength);
   return &root_map;
@@ -390,7 +390,7 @@ CborEncoder * jni_begin_root_object() {
   public";
 %rename(endRootObject) jni_rep_end_root_object;
 %inline %{
-void jni_rep_end_root_object() {
+void jni_rep_end_root_object(void) {
   OC_DBG("JNI: %s\n", __func__);
   oc_rep_end_root_object();
 }
@@ -1083,7 +1083,7 @@ void jni_rep_rep_set_string_array(CborEncoder *object, const char* key, oc_strin
  * to enable encode/decode unit testing. This function is not expected to be used in typical
  * use case. It should only be called after calling oc_rep_end_root_object.
  */
-oc_rep_t * jni_rep_get_rep_from_root_object() {
+oc_rep_t * jni_rep_get_rep_from_root_object(void) {
   oc_rep_t * rep = (oc_rep_t *)malloc(sizeof(oc_rep_t));
   const uint8_t *payload = oc_rep_get_encoder_buf();
   int payload_len = oc_rep_get_encoded_payload_size();
@@ -1112,7 +1112,7 @@ oc_rep_t * jni_rep_get_rep_from_root_object() {
 %ignore oc_rep_get_cbor_errno;
 %rename(getCborErrno) jni_rep_get_cbor_errno;
 %inline %{
-int jni_rep_get_cbor_errno() {
+int jni_rep_get_cbor_errno(void) {
   return (int)oc_rep_get_cbor_errno();
 }
 %}
@@ -1126,7 +1126,7 @@ int jni_rep_get_cbor_errno() {
    */
   public";
 %inline %{
-void clearCborErrno() {
+void clearCborErrno(void) {
   g_err = CborNoError;
 }
 %}

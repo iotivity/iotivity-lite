@@ -239,10 +239,9 @@ get_ip_context_for_device(size_t device)
 static int
 add_mcast_sock_to_ipv4_mcast_group(int mcast_sock, const esp_ip4_addr_t *local)
 {
-  struct ip_mreq imreq = { 0 };
-  int err = 0;
-  // Configure source interface
+  struct ip_mreq imreq;
   memset(&imreq, 0, sizeof(struct ip_mreq));
+  // Configure source interface
   inet_addr_from_ip4addr(&imreq.imr_interface, local);
   imreq.imr_multiaddr.s_addr = htonl(ALL_COAP_NODES_V4);
   OC_DBG("Configured IPV4 Multicast address %s",
@@ -253,8 +252,8 @@ add_mcast_sock_to_ipv4_mcast_group(int mcast_sock, const esp_ip4_addr_t *local)
     return -1;
   }
 
-  err = setsockopt(mcast_sock, IPPROTO_IP, IP_MULTICAST_IF,
-                   &imreq.imr_interface, sizeof(struct in_addr));
+  int err = setsockopt(mcast_sock, IPPROTO_IP, IP_MULTICAST_IF,
+                       &imreq.imr_interface, sizeof(struct in_addr));
   if (err < 0) {
     OC_ERR("setsockopt IP_MULTICAST_IF ret:%d", err);
     return -1;
@@ -421,7 +420,8 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
 {
   for (esp_netif_t *esp_netif = esp_netif_next(NULL); esp_netif;
        esp_netif = esp_netif_next(esp_netif)) {
-    oc_endpoint_t ep = { 0 };
+    oc_endpoint_t ep;
+    memset(&ep, 0, sizeof(oc_endpoint_t));
     int if_index = esp_netif_get_netif_impl_index(esp_netif);
     if (if_index < 0) {
       OC_ERR("esp_netif_get_netif_impl_index returns error");
