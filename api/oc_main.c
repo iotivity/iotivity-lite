@@ -313,7 +313,7 @@ main_load_resources(void)
 int
 oc_main_init(const oc_handler_t *handler)
 {
-  if (g_initialized == true) {
+  if (g_initialized) {
     return 0;
   }
 
@@ -367,7 +367,6 @@ oc_main_init(const oc_handler_t *handler)
 #endif /* OC_SERVER */
 
   OC_DBG("oc_main: stack initialized");
-
   g_initialized = true;
 
 #ifdef OC_CLIENT
@@ -420,10 +419,9 @@ oc_main_needs_poll(void)
 void
 oc_main_shutdown(void)
 {
-  if (g_initialized == false) {
+  if (!g_initialized) {
     return;
   }
-
   g_initialized = false;
 
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
