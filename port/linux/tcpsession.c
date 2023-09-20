@@ -19,6 +19,7 @@
 #define __USE_GNU
 
 #include "api/oc_buffer_internal.h"
+#include "api/oc_endpoint_internal.h"
 #include "api/oc_network_events_internal.h"
 #include "api/oc_session_events_internal.h"
 #include "api/oc_tcp_internal.h"
@@ -199,15 +200,14 @@ get_interface_index(int sock)
 static void
 log_new_session(oc_endpoint_t *endpoint, int sock, bool is_connected)
 {
-  oc_string_t ep;
+  oc_string64_t ep;
   const char *addr = "";
-  if (oc_endpoint_to_string(endpoint, &ep) == 0) {
+  if (oc_endpoint_to_string64(endpoint, &ep)) {
     addr = oc_string(ep);
   }
   OC_DBG("new TCP session endpoint: %s, endpoint interface: %d, sock: %d, "
          "connected: %d",
          addr, endpoint->interface_index, sock, (int)is_connected);
-  oc_free_string(&ep);
 }
 #endif /* OC_DBG_IS_ENABLED */
 

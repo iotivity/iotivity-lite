@@ -45,7 +45,7 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
  * @brief cast oc_string to string
  *
  */
-#define oc_string(ocstring) (oc_cast(ocstring, char))
+#define oc_string(ocstring) ((char *)(ocstring).ptr)
 
 #ifdef OC_MEMORY_TRACE
 #define oc_alloc_string(ocstring, size)                                        \

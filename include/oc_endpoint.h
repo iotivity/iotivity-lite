@@ -27,6 +27,7 @@
 #ifdef OC_OSCORE
 #include "messaging/coap/oscore_constants.h"
 #endif /* OC_OSCORE */
+#include "util/oc_compiler.h"
 
 #include <stdbool.h>
 
@@ -139,11 +140,12 @@ void oc_free_endpoint(oc_endpoint_t *endpoint);
  * @param di device identifier (cannot be NULL)
  */
 OC_API
-void oc_endpoint_set_di(oc_endpoint_t *endpoint, const oc_uuid_t *di);
+void oc_endpoint_set_di(oc_endpoint_t *endpoint, const oc_uuid_t *di)
+  OC_NONNULL();
 
 /**
  * @brief convert the endpoint to a human readable string (e.g.
- * "coaps://[fe::22]:/")
+ * "coaps://[fe::22]:1234")
  *
  * @param endpoint the endpoint
  * @param endpoint_str endpoint as human readable string
@@ -152,6 +154,19 @@ void oc_endpoint_set_di(oc_endpoint_t *endpoint, const oc_uuid_t *di);
 OC_API
 int oc_endpoint_to_string(const oc_endpoint_t *endpoint,
                           oc_string_t *endpoint_str);
+
+/**
+ * @brief convert the endpoint to a human readable string (e.g.
+ * "coaps://[fe::22]:1234")
+ *
+ * @param endpoint the endpoint (cannot be NULL)
+ * @param buffer output buffer (cannot be NULL)
+ * @param buffer_size size of output buffer
+ * @return number of written bytes, -1 for error
+ */
+OC_API
+int oc_endpoint_to_cstring(const oc_endpoint_t *endpoint, char *buffer,
+                           size_t buffer_size) OC_NONNULL();
 
 /**
  * @brief string to endpoint
@@ -168,7 +183,7 @@ int oc_string_to_endpoint(const oc_string_t *endpoint_str,
 /**
  * @brief parse path component (ie. the part after the first '/') of a uri
  *
- * @param[in] endpoint_str uri to parse
+ * @param endpoint_str uri to parse
  * @param[out] path output variable
  * @return 0 on success
  * @return -1 on failure
@@ -215,16 +230,18 @@ int oc_endpoint_compare_address(const oc_endpoint_t *ep1,
  * @return false otherwise
  */
 OC_API
-bool oc_endpoint_is_empty(const oc_endpoint_t *endpoint);
+bool oc_endpoint_is_empty(const oc_endpoint_t *endpoint) OC_NONNULL();
 
 /**
- * @brief set interface index on the endpoint
+ * @brief set local address on endpoint from the first device endpoint with
+ * matching flags and interface index
  *
- * @param ep the endpoint (cannot be NULL)
+ * @param[in,out] ep the endpoint (cannot be NULL)
  * @param interface_index the interface index
  */
 OC_API
-void oc_endpoint_set_local_address(oc_endpoint_t *ep, unsigned interface_index);
+void oc_endpoint_set_local_address(oc_endpoint_t *ep, unsigned interface_index)
+  OC_NONNULL();
 
 /**
  * @brief copy endpoint
@@ -233,16 +250,21 @@ void oc_endpoint_set_local_address(oc_endpoint_t *ep, unsigned interface_index);
  * @param src source endpoint (cannot be NULL)
  */
 OC_API
-void oc_endpoint_copy(oc_endpoint_t *dst, const oc_endpoint_t *src);
+void oc_endpoint_copy(oc_endpoint_t *dst, const oc_endpoint_t *src)
+  OC_NONNULL();
 
 /**
  * @brief copy list of endpoints
  *
  * @param dst destination list of endpoints (cannot be NULL)
  * @param src source list of endpoints
+ *
+ * @return 0 on success
+ * @return -1 on failure
  */
 OC_API
-int oc_endpoint_list_copy(oc_endpoint_t **dst, const oc_endpoint_t *src);
+int oc_endpoint_list_copy(oc_endpoint_t **dst, const oc_endpoint_t *src)
+  OC_NONNULL(1);
 
 /**
  * @brief deallocate a linked list of endpoints

@@ -22,13 +22,16 @@
 #include "oc_helpers.h"
 #include "oc_uuid.h"
 #include "port/common/oc_ip.h"
+#include "port/oc_connectivity.h"
 #include "port/oc_random.h"
+#include "tests/gtest/Device.h"
 #include "tests/gtest/Endpoint.h"
 
 #include <array>
 #include <cstdlib>
 #include <gtest/gtest.h>
 #include <string>
+#include <string_view>
 #include <vector>
 
 #ifdef _WIN32
@@ -94,6 +97,56 @@ TEST_F(TestEndpoint, SetDeviceID)
   oc_random_destroy();
 }
 
+TEST_F(TestEndpoint, EndpointFlagsToScheme)
+{
+  std::array<char, 13> buf;
+  buf.fill(0);
+  EXPECT_EQ(OC_CHAR_ARRAY_LEN(OC_SCHEME_COAP),
+            oc_endpoint_flags_to_scheme(0, buf.data(), buf.size()));
+  EXPECT_STREQ(OC_SCHEME_COAP, buf.data());
+  EXPECT_EQ(OC_CHAR_ARRAY_LEN(OC_SCHEME_COAP),
+            oc_endpoint_flags_to_scheme(0, nullptr, 0));
+  EXPECT_EQ(-1, oc_endpoint_flags_to_scheme(0, buf.data(), 0));
+
+  buf.fill(0);
+  EXPECT_EQ(OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS),
+            oc_endpoint_flags_to_scheme(SECURED, buf.data(), buf.size()));
+  EXPECT_STREQ(OC_SCHEME_COAPS, buf.data());
+  EXPECT_EQ(OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS),
+            oc_endpoint_flags_to_scheme(SECURED, nullptr, 0));
+  EXPECT_EQ(-1, oc_endpoint_flags_to_scheme(SECURED, buf.data(), 0));
+
+#ifdef OC_TCP
+  buf.fill(0);
+  EXPECT_EQ(OC_CHAR_ARRAY_LEN(OC_SCHEME_COAP_TCP),
+            oc_endpoint_flags_to_scheme(TCP, buf.data(), buf.size()));
+  EXPECT_STREQ(OC_SCHEME_COAP_TCP, buf.data());
+  EXPECT_EQ(OC_CHAR_ARRAY_LEN(OC_SCHEME_COAP_TCP),
+            oc_endpoint_flags_to_scheme(TCP, nullptr, 0));
+  EXPECT_EQ(-1, oc_endpoint_flags_to_scheme(TCP, buf.data(), 0));
+
+  buf.fill(0);
+  EXPECT_EQ(OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS_TCP),
+            oc_endpoint_flags_to_scheme(SECURED | TCP, buf.data(), buf.size()));
+  EXPECT_STREQ(OC_SCHEME_COAPS_TCP, buf.data());
+  EXPECT_EQ(OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS_TCP),
+            oc_endpoint_flags_to_scheme(SECURED | TCP, nullptr, 0));
+  EXPECT_EQ(-1, oc_endpoint_flags_to_scheme(SECURED | TCP, buf.data(), 0));
+#endif /* OC_TCP */
+}
+
+TEST_F(TestEndpoint, EndpointToCStringInvalid)
+{
+  oc_endpoint_t ep = oc::endpoint::FromString("coap://[::1]:42");
+  // cannot fit scheme
+  std::array<char, 1> too_small{};
+  EXPECT_EQ(-1, oc_endpoint_to_cstring(&ep, &too_small[0], too_small.size()));
+
+  // can fit scheme but not address
+  std::array<char, OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS_TCP) + 1> too_small2{};
+  EXPECT_EQ(-1, oc_endpoint_to_cstring(&ep, &too_small2[0], too_small2.size()));
+}
+
 TEST_F(TestEndpoint, EndpointToStringInvalid)
 {
   EXPECT_EQ(-1, oc_endpoint_to_string(nullptr, nullptr));
@@ -102,6 +155,8 @@ TEST_F(TestEndpoint, EndpointToStringInvalid)
   EXPECT_EQ(-1, oc_endpoint_to_string(nullptr, &ep_str));
 
   oc_endpoint_t ep{};
+  EXPECT_EQ(-1, oc_endpoint_to_string(&ep, nullptr));
+
   EXPECT_EQ(-1, oc_endpoint_to_string(&ep, &ep_str));
 }
 
@@ -137,9 +192,9 @@ TEST_F(TestEndpoint, StringToEndpointInvalid)
 
 TEST_F(TestEndpoint, IPv6AddressToStringFail)
 {
-#define ENDPOINT_ADDR "[fe80:123::1]:42"
+  constexpr std::string_view ENDPOINT_ADDR = "[fe80:123::1]:42";
+  std::string ep_str = "coap://" + std::string(ENDPOINT_ADDR);
 
-  std::string ep_str = "coap://" ENDPOINT_ADDR;
   oc_endpoint_t ep = oc::endpoint::FromString(ep_str);
   std::array<char, 1> too_small{};
   EXPECT_EQ(-1, oc_ipv6_address_and_port_to_string(
@@ -152,33 +207,57 @@ TEST_F(TestEndpoint, IPv6AddressToStringFail)
   std::array<char, sizeof(ENDPOINT_ADDR) - 1> too_small3{};
   EXPECT_EQ(-1, oc_ipv6_address_and_port_to_string(
                   &ep.addr.ipv6, too_small3.data(), too_small3.size()));
-#undef ENDPOINT_ADDR
 }
 
 TEST_F(TestEndpoint, IPv6AddressToString)
 {
-#define ENDPOINT_ADDR "[::1]:42"
-  std::string ep_str = "coap://" ENDPOINT_ADDR;
+  constexpr std::string_view ENDPOINT_ADDR = "[::1]:42";
+  std::string ep_str = "coap://" + std::string(ENDPOINT_ADDR);
   oc_endpoint_t ep = oc::endpoint::FromString(ep_str);
 
   std::array<char, sizeof(ENDPOINT_ADDR)> exact{};
-  EXPECT_EQ(0, oc_ipv6_address_and_port_to_string(&ep.addr.ipv6, exact.data(),
+  EXPECT_EQ(8, oc_ipv6_address_and_port_to_string(&ep.addr.ipv6, exact.data(),
                                                   exact.size()));
-  EXPECT_STREQ(ENDPOINT_ADDR, exact.data());
+  EXPECT_STREQ(ENDPOINT_ADDR.data(), exact.data());
 
   std::array<char, 256> larger{};
-  EXPECT_EQ(0, oc_ipv6_address_and_port_to_string(&ep.addr.ipv6, larger.data(),
+  EXPECT_EQ(8, oc_ipv6_address_and_port_to_string(&ep.addr.ipv6, larger.data(),
                                                   larger.size()));
-  EXPECT_STREQ(ENDPOINT_ADDR, larger.data());
-#undef ENDPOINT_ADDR
+  EXPECT_STREQ(ENDPOINT_ADDR.data(), larger.data());
+}
+
+TEST_F(TestEndpoint, EndpointToString64Invalid)
+{
+  EXPECT_FALSE(oc_endpoint_to_string64(nullptr, nullptr));
+
+  oc_string64_t ep_str{};
+  EXPECT_FALSE(oc_endpoint_to_string64(nullptr, &ep_str));
+
+  oc_endpoint_t ep{};
+  EXPECT_FALSE(oc_endpoint_to_string64(&ep, nullptr));
+
+  EXPECT_FALSE(oc_endpoint_to_string64(&ep, &ep_str));
+}
+
+TEST_F(TestEndpoint, IPv6EndpointToString64)
+{
+  constexpr std::string_view ENDPOINT_ADDR = "[::1]:42";
+  std::string ep_str = "coap://" + std::string(ENDPOINT_ADDR);
+  oc_endpoint_t ep = oc::endpoint::FromString(ep_str);
+
+  oc_string64_t ep_str64{};
+  oc_endpoint_to_string64(&ep, &ep_str64);
+  EXPECT_EQ(15, oc_string_len(ep_str64));
+  EXPECT_EQ(15, strlen(oc_string(ep_str64)));
+  EXPECT_STREQ(ep_str.c_str(), oc_string(ep_str64));
 }
 
 #ifdef OC_IPV4
 
 TEST_F(TestEndpoint, IPv4AddressToStringFail)
 {
-#define ENDPOINT_ADDR "127.0.0.1:80"
-  std::string ep_str = "coap://" ENDPOINT_ADDR;
+  constexpr std::string_view ENDPOINT_ADDR = "127.0.0.1:80";
+  std::string ep_str = "coap://" + std::string(ENDPOINT_ADDR);
   oc_endpoint_t ep = oc::endpoint::FromString(ep_str);
   std::array<char, 1> too_small{};
   EXPECT_EQ(-1, oc_ipv4_address_and_port_to_string(
@@ -187,24 +266,37 @@ TEST_F(TestEndpoint, IPv4AddressToStringFail)
   std::array<char, sizeof("127.0.0.1")> too_small2{};
   EXPECT_EQ(-1, oc_ipv4_address_and_port_to_string(
                   &ep.addr.ipv4, too_small2.data(), too_small2.size()));
-#undef ENDPOINT_ADDR
 }
 
 TEST_F(TestEndpoint, IPv4AddressToString)
 {
-#define ENDPOINT_ADDR "127.0.0.1:80"
-  std::string ep_str = "coap://" ENDPOINT_ADDR;
+  constexpr std::string_view ENDPOINT_ADDR = "127.0.0.1:80";
+  std::string ep_str = "coap://" + std::string(ENDPOINT_ADDR);
   oc_endpoint_t ep = oc::endpoint::FromString(ep_str);
   std::array<char, sizeof(ENDPOINT_ADDR)> exact{};
-  EXPECT_EQ(0, oc_ipv4_address_and_port_to_string(&ep.addr.ipv4, exact.data(),
-                                                  exact.size()));
-  EXPECT_STREQ(ENDPOINT_ADDR, exact.data());
+  EXPECT_EQ(12, oc_ipv4_address_and_port_to_string(&ep.addr.ipv4, exact.data(),
+                                                   exact.size()));
+  EXPECT_STREQ(ENDPOINT_ADDR.data(), exact.data());
 
   std::array<char, 256> larger{};
-  EXPECT_EQ(0, oc_ipv4_address_and_port_to_string(&ep.addr.ipv4, larger.data(),
-                                                  larger.size()));
-  EXPECT_STREQ(ENDPOINT_ADDR, larger.data());
-#undef ENDPOINT_ADDR
+  EXPECT_EQ(12, oc_ipv4_address_and_port_to_string(&ep.addr.ipv4, larger.data(),
+                                                   larger.size()));
+  EXPECT_STREQ(ENDPOINT_ADDR.data(), larger.data());
+}
+
+TEST_F(TestEndpoint, IPv4EndpointToString64)
+{
+  constexpr std::string_view ENDPOINT_ADDR = "127.0.0.1:80";
+  std::string ep_str = "coap://" + std::string(ENDPOINT_ADDR);
+  oc_endpoint_t ep = oc::endpoint::FromString(ep_str);
+
+  EXPECT_FALSE(oc_endpoint_to_string64(&ep, nullptr));
+
+  oc_string64_t ep_str64{};
+  EXPECT_TRUE(oc_endpoint_to_string64(&ep, &ep_str64));
+  EXPECT_EQ(19, oc_string_len(ep_str64));
+  EXPECT_EQ(19, strlen(oc_string(ep_str64)));
+  EXPECT_STREQ(ep_str.c_str(), oc_string(ep_str64));
 }
 
 #endif /* OC_IPV4 */
@@ -226,10 +318,20 @@ TEST_F(TestEndpoint, StringToEndpoint)
 
   for (size_t i = 0; i < spu0.size(); ++i) {
     oc_endpoint_t ep = oc::endpoint::FromString(spu0[i]);
+
     oc_string_t ep_str{};
     EXPECT_EQ(0, oc_endpoint_to_string(&ep, &ep_str));
     EXPECT_STREQ(exp[i].c_str(), oc_string(ep_str));
     oc_free_string(&ep_str);
+
+    oc_string64_t ep_str64{};
+    EXPECT_TRUE(oc_endpoint_to_string64(&ep, &ep_str64));
+    EXPECT_STREQ(exp[i].c_str(), oc_string(ep_str64));
+
+    std::array<char, 64> ep_buf{};
+    EXPECT_EQ(exp[i].length(),
+              oc_endpoint_to_cstring(&ep, &ep_buf[0], ep_buf.size()));
+    EXPECT_STREQ(exp[i].c_str(), ep_buf.data());
   }
 }
 
@@ -806,3 +908,48 @@ TEST_F(TestEndpoint, EndpointHost)
   }
 #endif /* OC_IPV4 */
 }
+
+#ifdef OC_CLIENT
+
+static constexpr size_t kDeviceID{ 0 };
+
+class TestEndpointWithServer : public testing::Test {
+public:
+  static void SetUpTestCase() { ASSERT_TRUE(oc::TestDevice::StartServer()); }
+
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
+};
+
+TEST_F(TestEndpointWithServer, SetLocalAddressFail)
+{
+  oc_endpoint_t ep{};
+  oc_endpoint_set_local_address(&ep, UINT32_MAX);
+  EXPECT_TRUE(oc_endpoint_is_empty(&ep));
+}
+
+TEST_F(TestEndpointWithServer, SetLocalAddress)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  std::array<char, sizeof(ep.addr_local)> addr_empty{};
+  ASSERT_EQ(0, memcmp(&ep.addr_local, &addr_empty[0], sizeof(ep.addr_local)));
+
+  // oc_endpoint_set_local_address should modify only the output parameter,
+  // which is a local copy in this test case, so the global endpoints shouldn't
+  // be modified
+  auto checkEndpoints = [](size_t device) {
+    oc_endpoint_t *eps = oc_connectivity_get_endpoints(device);
+    while (eps != nullptr) {
+      EXPECT_NE(0, memcmp(&eps->addr, &eps->addr_local, sizeof(eps->addr)));
+      eps = eps->next;
+    }
+  };
+
+  oc_endpoint_set_local_address(&ep, ep.interface_index);
+  EXPECT_NE(0, memcmp(&ep.addr_local, &addr_empty[0], sizeof(ep.addr_local)));
+  checkEndpoints(kDeviceID);
+}
+
+#endif /* OC_CLIENT */

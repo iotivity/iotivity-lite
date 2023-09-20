@@ -31,21 +31,21 @@ extern "C" {
 
 /** @brief Convert an IPv6 address to a human readable string */
 int oc_ipv6_address_to_string(const oc_ipv6_addr_t *ipv6, char *buffer,
-                              uint32_t buffer_size) OC_NONNULL();
+                              size_t buffer_size) OC_NONNULL();
 
 /** Convert an IPv6 address with port to a human readable string */
 int oc_ipv6_address_and_port_to_string(const oc_ipv6_addr_t *ipv6, char *buffer,
-                                       uint32_t buffer_size) OC_NONNULL();
+                                       size_t buffer_size) OC_NONNULL();
 
 #ifdef OC_IPV4
 
 /** @brief Convert an IPv4 address to a human readable string */
 int oc_ipv4_address_to_string(const oc_ipv4_addr_t *ipv4, char *buffer,
-                              uint32_t buffer_size) OC_NONNULL();
+                              size_t buffer_size) OC_NONNULL();
 
 /** Convert an IPv4 address with port to a human readable string */
 int oc_ipv4_address_and_port_to_string(const oc_ipv4_addr_t *ipv4, char *buffer,
-                                       uint32_t buffer_size) OC_NONNULL();
+                                       size_t buffer_size) OC_NONNULL();
 
 #endif /* OC_IPV4 */
 

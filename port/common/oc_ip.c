@@ -41,12 +41,13 @@
 
 int
 oc_ipv6_address_to_string(const oc_ipv6_addr_t *ipv6, char *buffer,
-                          uint32_t buffer_size)
+                          size_t buffer_size)
 {
   assert(ipv6 != NULL);
   assert(buffer != NULL);
 
-  if (inet_ntop(AF_INET6, ipv6->address, buffer, buffer_size) == NULL) {
+  if (inet_ntop(AF_INET6, ipv6->address, buffer, (socklen_t)buffer_size) ==
+      NULL) {
     return -1;
   }
   // safe: maximal IPv6 length is 45
@@ -55,42 +56,42 @@ oc_ipv6_address_to_string(const oc_ipv6_addr_t *ipv6, char *buffer,
 
 int
 oc_ipv6_address_and_port_to_string(const oc_ipv6_addr_t *ipv6, char *buffer,
-                                   uint32_t buffer_size)
+                                   size_t buffer_size)
 {
   assert(ipv6 != NULL);
   assert(buffer != NULL);
-  // shortest valid ipv6 address with a port
+  // shortest valid IPv6 address with a port
   if (buffer_size < sizeof("[::1]:X")) {
     return -1;
   }
-  uint32_t start = 0;
+  size_t start = 0;
   buffer[start++] = '[';
   int written =
     oc_ipv6_address_to_string(ipv6, &buffer[start], buffer_size - start);
   if (written < 0) {
     return -1;
   }
-  start += (uint32_t)written;
-
-  written = snprintf(&buffer[start], buffer_size - start, "]:%u", ipv6->port);
-  if ((written < 0) || start + (uint32_t)written >= buffer_size) {
+  start += (size_t)written;
+  size_t remaining_space = buffer_size - start;
+  written = snprintf(&buffer[start], remaining_space, "]:%u", ipv6->port);
+  if (written < 0 || (size_t)written >= remaining_space) {
     return -1;
   }
-  return 0;
+  return (int)(start + written);
 }
 
 #ifdef OC_IPV4
 
 int
 oc_ipv4_address_to_string(const oc_ipv4_addr_t *ipv4, char *buffer,
-                          uint32_t buffer_size)
+                          size_t buffer_size)
 {
   assert(buffer != NULL);
 
   const uint8_t *addr = ipv4->address;
   int written = snprintf(buffer, buffer_size, "%u.%u.%u.%u", addr[0], addr[1],
                          addr[2], addr[3]);
-  if ((written < 0) || (uint32_t)written >= buffer_size) {
+  if ((written < 0) || (size_t)written >= buffer_size) {
     return -1;
   }
   return written;
@@ -98,7 +99,7 @@ oc_ipv4_address_to_string(const oc_ipv4_addr_t *ipv4, char *buffer,
 
 int
 oc_ipv4_address_and_port_to_string(const oc_ipv4_addr_t *ipv4, char *buffer,
-                                   uint32_t buffer_size)
+                                   size_t buffer_size)
 {
   assert(ipv4 != NULL);
   assert(buffer != NULL);
@@ -107,13 +108,14 @@ oc_ipv4_address_and_port_to_string(const oc_ipv4_addr_t *ipv4, char *buffer,
   if (written < 0) {
     return -1;
   }
+  int ret = written;
 
   buffer_size -= written;
   written = snprintf(&buffer[written], buffer_size, ":%u", ipv4->port);
-  if ((written < 0) || (uint32_t)written >= buffer_size) {
+  if ((written < 0) || (size_t)written >= buffer_size) {
     return -1;
   }
-  return 0;
+  return ret + written;
 }
 
 #endif /* OC_IPV4 */

@@ -28,6 +28,7 @@
 
 #include "api/oc_helpers_internal.h"
 #include "api/oc_rep_internal.h"
+#include "api/oc_endpoint_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_core_res_internal.h"
@@ -572,9 +573,9 @@ get_ns_properties(const oc_resource_t *resource, oc_interface_mask_t iface_mask,
     /*
      * pushtarget
      */
-    oc_string_t ep;
+    oc_string64_t ep;
     oc_string_t full_uri;
-    if (oc_endpoint_to_string(&ns_instance->pushtarget_ep, &ep) < 0) {
+    if (!oc_endpoint_to_string64(&ns_instance->pushtarget_ep, &ep)) {
       /* handle NULL pushtarget... */
 #if 0
 			char ipv6addrstr[50], ipv4addrstr[50];
@@ -594,8 +595,6 @@ get_ns_properties(const oc_resource_t *resource, oc_interface_mask_t iface_mask,
                           oc_string(ns_instance->targetpath));
       else
         oc_new_string(&full_uri, oc_string(ep), oc_string_len(ep));
-
-      oc_free_string(&ep);
     }
 
     oc_rep_set_text_string(root, pushtarget, oc_string(full_uri));
@@ -2428,9 +2427,10 @@ push_update(oc_ns_t *ns_instance)
     return false;
   }
 #ifdef OC_PUSHDEBUG
-  oc_string_t ep, full_uri;
+  oc_string64_t ep;
+  oc_string_t full_uri;
 
-  oc_endpoint_to_string(&ns_instance->pushtarget_ep, &ep);
+  oc_endpoint_to_string64(&ns_instance->pushtarget_ep, &ep);
   if (oc_string_len(ns_instance->targetpath)) {
     oc_concat_strings(&full_uri, oc_string(ep),
                       oc_string(ns_instance->targetpath));
@@ -2440,7 +2440,6 @@ push_update(oc_ns_t *ns_instance)
 
   OC_PUSH_DBG("push \"%s\" ====> \"%s\"", oc_string(src_rsc->uri),
               oc_string(full_uri));
-  oc_free_string(&ep);
   oc_free_string(&full_uri);
 #endif
   OC_PUSH_DBG("state of Push Proxy (\"%s\") is changed (%s => %s)",

@@ -16,8 +16,9 @@
  *
  ****************************************************************************/
 
+#include "api/oc_endpoint_internal.h"
+#include "api/oc_helpers_internal.h"
 #include "oc_endpoint.h"
-#include "oc_endpoint_internal.h"
 #include "oc_core_res.h"
 #include "port/common/oc_ip.h"
 #include "port/oc_connectivity.h"
@@ -66,26 +67,41 @@ oc_endpoint_set_di(oc_endpoint_t *endpoint, const oc_uuid_t *di)
   memcpy(endpoint->di.id, di->id, sizeof(di->id));
 }
 
-const char *
-oc_endpoint_flags_to_scheme(unsigned flags)
+static oc_string_view_t
+endpoint_flags_to_scheme(unsigned flags)
 {
 #ifdef OC_TCP
   if ((flags & TCP) != 0) {
     if ((flags & SECURED) != 0) {
-      return OC_SCHEME_COAPS_TCP;
+      return OC_STRING_VIEW(OC_SCHEME_COAPS_TCP);
     }
-    return OC_SCHEME_COAP_TCP;
+    return OC_STRING_VIEW(OC_SCHEME_COAP_TCP);
   }
-#endif
+#endif /* OC_TCP */
   if ((flags & SECURED) != 0) {
-    return OC_SCHEME_COAPS;
+    return OC_STRING_VIEW(OC_SCHEME_COAPS);
   }
-  return OC_SCHEME_COAP;
+  return OC_STRING_VIEW(OC_SCHEME_COAP);
+}
+
+int
+oc_endpoint_flags_to_scheme(unsigned flags, char *buffer, size_t buffer_size)
+{
+  oc_string_view_t scheme = endpoint_flags_to_scheme(flags);
+  if (buffer == NULL) {
+    return (int)scheme.length;
+  }
+  if (scheme.length < buffer_size) {
+    memcpy(buffer, scheme.data, scheme.length);
+    buffer[scheme.length] = '\0';
+    return (int)scheme.length;
+  }
+  return -1;
 }
 
 int
 oc_endpoint_host(const oc_endpoint_t *endpoint, char *buffer,
-                 uint32_t buffer_size)
+                 size_t buffer_size)
 {
 #ifdef OC_IPV4
   if ((endpoint->flags & IPV4) != 0) {
@@ -99,8 +115,8 @@ oc_endpoint_host(const oc_endpoint_t *endpoint, char *buffer,
 }
 
 int
-oc_endpoint_to_cstring(const oc_endpoint_t *endpoint, char *buffer,
-                       uint32_t buffer_size)
+oc_endpoint_address_and_port_to_cstring(const oc_endpoint_t *endpoint,
+                                        char *buffer, size_t buffer_size)
 {
 #ifdef OC_IPV4
   if ((endpoint->flags & IPV4) != 0) {
@@ -116,19 +132,55 @@ oc_endpoint_to_cstring(const oc_endpoint_t *endpoint, char *buffer,
 }
 
 int
+oc_endpoint_to_cstring(const oc_endpoint_t *endpoint, char *buffer,
+                       size_t buffer_size)
+{
+  int written =
+    oc_endpoint_flags_to_scheme(endpoint->flags, buffer, buffer_size);
+  if (written < 0) {
+    return -1;
+  }
+  int len = written;
+  buffer += written;
+  buffer_size -= (size_t)written;
+  written =
+    oc_endpoint_address_and_port_to_cstring(endpoint, buffer, buffer_size);
+  if (written < 0) {
+    return -1;
+  }
+  return len + written;
+}
+
+int
 oc_endpoint_to_string(const oc_endpoint_t *endpoint, oc_string_t *endpoint_str)
 {
   if (!endpoint || !endpoint_str) {
     return -1;
   }
 
-  char ip[OC_IPV6_MAXSTRLEN] = { 0 };
-  if (oc_endpoint_to_cstring(endpoint, ip, OC_ARRAY_SIZE(ip)) != 0) {
+  oc_string64_t ep_str;
+  if (!oc_endpoint_to_string64(endpoint, &ep_str)) {
     return -1;
   }
-  oc_concat_strings(endpoint_str, oc_endpoint_flags_to_scheme(endpoint->flags),
-                    ip);
+  oc_new_string(endpoint_str, oc_string(ep_str), oc_string_len(ep_str));
   return 0;
+}
+
+bool
+oc_endpoint_to_string64(const oc_endpoint_t *endpoint,
+                        oc_string64_t *endpoint_str)
+{
+  if (!endpoint || !endpoint_str) {
+    return false;
+  }
+  memset(endpoint_str, 0, sizeof(oc_string64_t));
+  int written = oc_endpoint_to_cstring(endpoint, oc_string(*endpoint_str),
+                                       OC_ARRAY_SIZE(endpoint_str->ptr));
+  if (written < 0) {
+    return false;
+  }
+  endpoint_str->size = (size_t)written + 1;
+  return true;
 }
 
 int
@@ -353,26 +405,8 @@ parse_endpoint_uri(const oc_string_t *endpoint_str,
     return false;
   }
 
-  const char *address = NULL;
-  switch (flags) {
-#ifdef OC_TCP
-  case TCP | SECURED:
-    address = ep + OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS_TCP);
-    break;
-  case TCP:
-    address = ep + OC_CHAR_ARRAY_LEN(OC_SCHEME_COAP_TCP);
-    break;
-#endif /* OC_TCP */
-  case SECURED:
-    address = ep + OC_CHAR_ARRAY_LEN(OC_SCHEME_COAPS);
-    break;
-  case 0:
-    address = ep + OC_CHAR_ARRAY_LEN(OC_SCHEME_COAP);
-    break;
-  default:
-    OC_ERR("invalid endpoint(%s) uri scheme: %d", ep != NULL ? ep : "", flags);
-    return false;
-  }
+  oc_string_view_t scheme = endpoint_flags_to_scheme(flags);
+  const char *address = ep + scheme.length;
   size_t ep_len = oc_string_len(*endpoint_str);
   size_t address_len = ep_len - (address - ep);
 
@@ -701,12 +735,7 @@ oc_endpoint_list_copy(oc_endpoint_t **dst, const oc_endpoint_t *src)
   return count;
 
 oc_endpoint_list_copy_err:
-  ep = head;
-  while (ep != NULL) {
-    oc_endpoint_t *next = ep->next;
-    oc_free_endpoint(ep);
-    ep = next;
-  }
+  oc_endpoint_list_free(head);
   return -1;
 }
 

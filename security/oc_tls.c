@@ -20,6 +20,7 @@
 
 #include "oc_tls_internal.h"
 #include "api/oc_buffer_internal.h"
+#include "api/oc_endpoint_internal.h"
 #include "api/oc_events_internal.h"
 #include "api/oc_network_events_internal.h"
 #include "api/oc_session_events_internal.h"
@@ -398,13 +399,12 @@ process_drop_event_for_removed_endpoint(oc_process_event_t ev,
   oc_message_t *message = (oc_message_t *)data;
   if (oc_endpoint_compare(&message->endpoint, endpoint) == 0) {
 #if OC_DBG_IS_ENABLED
-    oc_string_t endpoint_str;
-    oc_endpoint_to_string(&message->endpoint, &endpoint_str);
+    oc_string64_t endpoint_str;
+    oc_endpoint_to_string64(&message->endpoint, &endpoint_str);
     OC_DBG("oc_tls: dropping %s message for removed endpoint(%s)",
            (ev == oc_event_to_oc_process_event(RI_TO_TLS_EVENT)) ? "sent"
                                                                  : "received",
            oc_string(endpoint_str));
-    oc_free_string(&endpoint_str);
 #endif /* OC_DBG_IS_ENABLED */
     oc_message_unref(message);
     return true;
@@ -416,12 +416,11 @@ static void
 oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb, bool from_reset)
 {
 #if OC_DBG_IS_ENABLED
-  oc_string_t endpoint_str;
-  oc_endpoint_to_string(&peer->endpoint, &endpoint_str);
+  oc_string64_t endpoint_str;
+  oc_endpoint_to_string64(&peer->endpoint, &endpoint_str);
   OC_DBG("oc_tls: freeing peer(%p): endpoint(%s), role(%s)", (void *)peer,
          oc_string(endpoint_str),
          peer->role == MBEDTLS_SSL_IS_SERVER ? "server" : "client");
-  oc_free_string(&endpoint_str);
 #endif /* OC_DBG_IS_ENABLED */
 #ifdef OC_PKI
   if (peer->user_data.free != NULL) {
@@ -2110,12 +2109,11 @@ oc_tls_add_new_peer(oc_tls_new_peer_params_t params)
 
   oc_list_add(g_tls_peers, peer);
 #if OC_DBG_IS_ENABLED
-  oc_string_t endpoint_str;
-  oc_endpoint_to_string(&peer->endpoint, &endpoint_str);
+  oc_string64_t endpoint_str;
+  oc_endpoint_to_string64(&peer->endpoint, &endpoint_str);
   OC_DBG("oc_tls: new peer(%p) added: endpoint(%s), role(%s)", (void *)peer,
          oc_string(endpoint_str),
          peer->role == MBEDTLS_SSL_IS_SERVER ? "server" : "client");
-  oc_free_string(&endpoint_str);
 #endif /* OC_DBG_IS_ENABLED */
 
   return peer;
@@ -2939,13 +2937,12 @@ oc_tls_recv_message(oc_message_t *message)
     peer = oc_tls_get_peer(&message->endpoint);
     if (peer != NULL && peer->role != MBEDTLS_SSL_IS_CLIENT) {
 #if OC_ERR_IS_ENABLED
-      oc_string_t endpoint_str;
-      oc_endpoint_to_string(&message->endpoint, &endpoint_str);
+      oc_string64_t endpoint_str;
+      oc_endpoint_to_string64(&message->endpoint, &endpoint_str);
       // The peer is not a client, so it is not possible to receive a message.
       OC_ERR("oc_tls: TCP-TLS peer %p with endpoint(%s) is not in role as "
              "client but as server",
              (void *)peer, oc_string(endpoint_str));
-      oc_free_string(&endpoint_str);
 #endif /* OC_ERR_IS_ENABLED */
       peer = NULL;
     }

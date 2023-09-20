@@ -276,9 +276,9 @@ coap_free_transactions_by_endpoint(const oc_endpoint_t *endpoint,
                                    oc_status_t code)
 {
 #if OC_DBG_IS_ENABLED
-  char ep_addr[64] = { 0 };
-  oc_endpoint_to_cstring(endpoint, ep_addr, OC_ARRAY_SIZE(ep_addr));
-  COAP_DBG("free transactions for endpoint(%s)", ep_addr);
+  oc_string64_t ep_str;
+  oc_endpoint_to_string64(endpoint, &ep_str);
+  COAP_DBG("free transactions for endpoint(%s)", oc_string(ep_str));
 #endif /* OC_DBG_IS_ENABLED */
 #ifndef OC_CLIENT
   (void)code;

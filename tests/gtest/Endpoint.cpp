@@ -51,10 +51,9 @@ FromString(const std::string &addr, oc_endpoint_t *ep, oc_string_t *uri)
 std::string
 ToAddress(const oc_endpoint_t &ep)
 {
-  oc_string_t ep_str{};
-  oc_endpoint_to_string(&ep, &ep_str);
+  oc_string64_t ep_str{};
+  oc_endpoint_to_string64(&ep, &ep_str);
   std::string s(oc_string(ep_str));
-  oc_free_string(&ep_str);
   return s;
 }
 

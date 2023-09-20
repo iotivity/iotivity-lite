@@ -422,8 +422,9 @@ TestDevice::ClearDynamicResources()
 
 #endif /* OC_SERVER */
 
-std::optional<oc_endpoint_t>
-TestDevice::GetEndpoint(size_t device, unsigned flags, unsigned exclude_flags)
+oc_endpoint_t *
+TestDevice::GetEndpointPtr(size_t device, unsigned flags,
+                           unsigned exclude_flags)
 {
   oc_endpoint_t *ep = oc_connectivity_get_endpoints(device);
   auto has_matching_flags = [](const oc_endpoint_t *ep, unsigned flags,
@@ -446,9 +447,19 @@ TestDevice::GetEndpoint(size_t device, unsigned flags, unsigned exclude_flags)
   while (ep != nullptr) {
     if (has_matching_flags(ep, flags, exclude_flags) &&
         has_matching_device(ep, device)) {
-      return *ep;
+      return ep;
     }
     ep = ep->next;
+  }
+  return nullptr;
+}
+
+std::optional<oc_endpoint_t>
+TestDevice::GetEndpoint(size_t device, unsigned flags, unsigned exclude_flags)
+{
+  oc_endpoint_t *ep = GetEndpointPtr(device, flags, exclude_flags);
+  if (ep != nullptr) {
+    return *ep;
   }
   return std::nullopt;
 }
