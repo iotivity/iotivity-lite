@@ -279,6 +279,16 @@ int oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len,
                   const oc_uuid_t *uuid, unsigned int c, uint8_t *key,
                   uint32_t key_len);
 
+/**
+ * @brief Check if event is inbound or outbound (i.e. processing this event will
+ * create a (D)TLS session)
+ *
+ * @param event event to check
+ * @return true if event is inbound or outbound
+ * @return false otherwise
+ */
+bool oc_tls_event_is_inbound_or_outbound(oc_process_event_t event);
+
 #ifdef OC_TEST
 void oc_dtls_set_inactivity_timeout(oc_clock_time_t timeout);
 oc_clock_time_t oc_dtls_inactivity_timeout(void);

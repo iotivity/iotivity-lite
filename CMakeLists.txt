@@ -599,11 +599,11 @@ endif()
 # enable clang-tidy for iotivity targets
 oc_enable_clang_tidy()
 
-add_library(common-obj OBJECT ${COMMON_SRC})
-target_compile_definitions(common-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS})
-target_compile_options(common-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
-target_include_directories(common-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
-target_link_libraries(common-obj PRIVATE ${TINYCBOR_DEP})
+add_library(client-common-obj OBJECT ${COMMON_SRC})
+target_compile_definitions(client-common-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT")
+target_compile_options(client-common-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
+target_include_directories(client-common-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
+target_link_libraries(client-common-obj PRIVATE ${TINYCBOR_DEP})
 
 add_library(client-obj OBJECT ${CLIENT_SRC})
 target_compile_definitions(client-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT")
@@ -614,7 +614,7 @@ if(OC_SECURITY_ENABLED)
     target_link_libraries(client-obj PRIVATE ${MBEDTLS_DEP})
 endif()
 
-add_library(server-obj OBJECT ${SERVER_SRC})
+add_library(server-obj OBJECT ${COMMON_SRC} ${SERVER_SRC})
 target_compile_definitions(server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_SERVER")
 target_compile_options(server-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
@@ -623,7 +623,7 @@ if(OC_SECURITY_ENABLED)
     target_link_libraries(server-obj PRIVATE ${MBEDTLS_DEP})
 endif()
 
-add_library(client-server-obj OBJECT ${CLIENT_SRC})
+add_library(client-server-obj OBJECT ${COMMON_SRC} ${CLIENT_SRC})
 target_compile_definitions(client-server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT" "OC_SERVER")
 target_compile_options(client-server-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
@@ -657,7 +657,7 @@ endif()
 # ####### Compose static and shared libraries ########
 # Client
 set(client-lib-obj
-    $<TARGET_OBJECTS:common-obj>
+    $<TARGET_OBJECTS:client-common-obj>
     $<TARGET_OBJECTS:client-obj>
 )
 
@@ -713,7 +713,6 @@ endif()
 
 # Server
 set(server-lib-obj
-    $<TARGET_OBJECTS:common-obj>
     $<TARGET_OBJECTS:server-obj>
 )
 
@@ -769,7 +768,6 @@ endif()
 
 # Client-Server
 set(client-server-lib-obj
-    $<TARGET_OBJECTS:common-obj>
     $<TARGET_OBJECTS:client-server-obj>
 )
 
@@ -842,7 +840,7 @@ endif()
 if(OC_SECURITY_ENABLED)
     # Python client
     set(client-python-lib-obj
-        $<TARGET_OBJECTS:common-obj>
+        $<TARGET_OBJECTS:client-common-obj>
         $<TARGET_OBJECTS:client-obj>
         $<TARGET_OBJECTS:python-obj>
     )

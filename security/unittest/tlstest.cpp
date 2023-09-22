@@ -16,25 +16,33 @@
  *
  ******************************************************************/
 
-#if defined(OC_TCP) && defined(OC_SECURITY)
+#ifdef OC_SECURITY
 
+#include "api/oc_buffer_internal.h"
 #include "api/oc_core_res_internal.h"
+#include "api/oc_events_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_runtime_internal.h"
+#include "messaging/coap/coap_signal.h"
 #include "oc_api.h"
 #include "oc_endpoint.h"
 #include "oc_signal_event_loop.h"
 #include "oc_core_res.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "security/oc_tls_internal.h"
+#include "tests/gtest/Device.h"
+#include "tests/gtest/Endpoint.h"
+#include "util/oc_process_internal.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
 
+#include <array>
 #include <cstdlib>
 #include <gtest/gtest.h>
 
+static constexpr size_t kDeviceID{ 0 };
 static const std::string kDeviceURI{ "/oic/d" };
 static const std::string kDeviceType{ "oic.d.light" };
 static const std::string kDeviceName{ "Table Lamp" };
@@ -95,4 +103,93 @@ TEST_F(TestTlsConnection, TlsConnectionTest_N)
   oc_free_endpoint(endpoint);
 }
 
-#endif /* OC_TCP && OC_SECURITY */
+class TestEventsWithServer : public testing::Test {
+public:
+  static void SetUpTestCase() { ASSERT_TRUE(oc::TestDevice::StartServer()); }
+
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
+};
+
+static size_t
+countInboundOrOutboundEvents()
+{
+  size_t count = 0;
+  oc_process_iterate_events(
+    [](const struct oc_process *, oc_process_event_t ev, oc_process_data_t,
+       void *user_data) {
+      if (oc_tls_event_is_inbound_or_outbound(ev)) {
+        ++(*static_cast<size_t *>(user_data));
+      }
+      return true;
+    },
+    &count);
+  return count;
+}
+
+TEST_F(TestEventsWithServer, DropOutputMessages)
+{
+  unsigned includeFlags = 0;
+#ifdef OC_IPV4
+  includeFlags |= IPV4;
+  includeFlags |= SECURED;
+#endif /* OC_IPV4 */
+
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID, includeFlags, TCP);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  ASSERT_EQ(0, countInboundOrOutboundEvents());
+  oc_message_t *msg = oc_allocate_message();
+  memcpy(&msg->endpoint, &ep, sizeof(oc_endpoint_t));
+  coap_packet_t packet = {};
+  coap_udp_init_message(&packet, COAP_TYPE_RST, 0, 0);
+  std::array<uint8_t, 8> payload{ "connect" };
+  packet.payload = payload.data();
+  packet.payload_len = payload.size();
+  msg->length =
+    coap_serialize_message(&packet, msg->data, oc_message_buffer_size());
+
+  oc_send_message(msg);
+  EXPECT_LT(0, countInboundOrOutboundEvents());
+
+  oc_tls_remove_peer(&ep);
+  ASSERT_EQ(0, countInboundOrOutboundEvents());
+}
+
+#ifdef OC_TCP
+
+TEST_F(TestEventsWithServer, DropOutputMessagesTCP)
+{
+  unsigned includeFlags = TCP;
+#ifdef OC_IPV4
+  includeFlags |= IPV4;
+  includeFlags |= SECURED;
+#endif /* OC_IPV4 */
+
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID, includeFlags, 0);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  ASSERT_EQ(0, countInboundOrOutboundEvents());
+  oc_message_t *msg = oc_allocate_message();
+  memcpy(&msg->endpoint, &ep, sizeof(oc_endpoint_t));
+  coap_packet_t packet = {};
+  coap_tcp_init_message(&packet, CSM_7_01);
+  std::array<uint8_t, 8> payload{ "connect" };
+  packet.payload = payload.data();
+  packet.payload_len = payload.size();
+  msg->length =
+    coap_serialize_message(&packet, msg->data, oc_message_buffer_size());
+
+  oc_send_message(msg);
+  EXPECT_LT(0, countInboundOrOutboundEvents());
+
+  oc_tls_remove_peer(&ep);
+  ASSERT_EQ(0, countInboundOrOutboundEvents());
+}
+#endif /* OC_TCP */
+
+// TODO: tests for oscore
+// TODO: tests for inbound data
+
+#endif /* OC_SECURITY */

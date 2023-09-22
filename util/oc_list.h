@@ -82,6 +82,11 @@ extern "C" {
   static void *OC_LIST_CONCAT(name, _list) = NULL;                             \
   static oc_list_t name = &OC_LIST_CONCAT(name, _list)
 
+/** Non-static version of OC_LIST */
+#define OC_LIST_LOCAL(name)                                                    \
+  void *OC_LIST_CONCAT(name, _list) = NULL;                                    \
+  oc_list_t name = &OC_LIST_CONCAT(name, _list)
+
 /**
  * Declare a linked list inside a structure declaraction.
  *

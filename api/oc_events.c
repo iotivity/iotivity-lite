@@ -18,6 +18,7 @@
  ***************************************************************************/
 
 #include "oc_events_internal.h"
+#include "util/oc_features.h"
 
 #include <assert.h>
 
@@ -38,3 +39,84 @@ oc_event_to_oc_process_event(oc_events_t event)
   assert(event < __NUM_OC_EVENT_TYPES__);
   return oc_events[event];
 }
+
+#if OC_DBG_IS_ENABLED
+
+oc_string_view_t
+oc_process_event_name(oc_process_event_t event)
+{
+  if (event == oc_event_to_oc_process_event(INBOUND_NETWORK_EVENT)) {
+    return OC_STRING_VIEW("inbound-message");
+  }
+  if (event == oc_event_to_oc_process_event(OUTBOUND_NETWORK_EVENT)) {
+    return OC_STRING_VIEW("outbound-message");
+  }
+  if (event == oc_event_to_oc_process_event(UDP_TO_TLS_EVENT)) {
+    return OC_STRING_VIEW("inbound-tls-message");
+  }
+  if (event == oc_event_to_oc_process_event(RI_TO_TLS_EVENT)) {
+    return OC_STRING_VIEW("outbound-tls-message");
+  }
+  if (event == oc_event_to_oc_process_event(INBOUND_RI_EVENT)) {
+    return OC_STRING_VIEW("inbound-coap-message");
+  }
+  if (event == oc_event_to_oc_process_event(TLS_READ_DECRYPTED_DATA)) {
+    return OC_STRING_VIEW("inbound-application-data");
+  }
+#ifdef OC_CLIENT
+  if (event == oc_event_to_oc_process_event(TLS_WRITE_APPLICATION_DATA)) {
+    return OC_STRING_VIEW("outbound-application-data");
+  }
+#endif /* OC_CLIENT */
+#ifdef OC_OSCORE
+  if (event == oc_event_to_oc_process_event(INBOUND_OSCORE_EVENT)) {
+    return OC_STRING_VIEW("inbound-oscore-message");
+  }
+  if (event == oc_event_to_oc_process_event(OUTBOUND_OSCORE_EVENT)) {
+    return OC_STRING_VIEW("outbound-oscore-message");
+  }
+  if (event == oc_event_to_oc_process_event(OUTBOUND_GROUP_OSCORE_EVENT)) {
+    return OC_STRING_VIEW("outbound-oscore-multicast-message");
+  }
+#endif /* OC_OSCORE */
+  if (event == oc_event_to_oc_process_event(TLS_CLOSE_ALL_SESSIONS)) {
+    return OC_STRING_VIEW("close-all-tls-sessions");
+  }
+#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+  if (event == oc_event_to_oc_process_event(TCP_CONNECT_SESSION)) {
+    return OC_STRING_VIEW("connect-tcp-session");
+  }
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+
+#ifdef OC_NETWORK_MONITOR
+  if (event == oc_event_to_oc_process_event(INTERFACE_DOWN)) {
+    return OC_STRING_VIEW("network-down");
+  }
+  if (event == oc_event_to_oc_process_event(INTERFACE_UP)) {
+    return OC_STRING_VIEW("network-up");
+  }
+#endif /* OC_NETWORK_MONITOR */
+
+#ifdef OC_SOFTWARE_UPDATE
+  if (event == oc_event_to_oc_process_event(SW_UPDATE_NSA)) {
+    return OC_STRING_VIEW("software-update-available");
+  }
+  if (event == oc_event_to_oc_process_event(SW_UPDATE_DOWNLOADED)) {
+    return OC_STRING_VIEW("software-update-downloaded");
+  }
+  if (event == oc_event_to_oc_process_event(SW_UPDATE_UPGRADING)) {
+    return OC_STRING_VIEW("software-update-upgrading");
+  }
+  if (event == oc_event_to_oc_process_event(SW_UPDATE_DONE)) {
+    return OC_STRING_VIEW("software-update-done");
+  }
+#endif /* OC_SOFTWARE_UPDATE */
+#ifdef OC_HAS_FEATURE_PUSH
+  if (event == oc_event_to_oc_process_event(PUSH_RSC_STATE_CHANGED)) {
+    return OC_STRING_VIEW("push-resource-state-changed");
+  }
+#endif /* OC_HAS_FEATURE_PUSH */
+  return OC_STRING_VIEW("");
+}
+
+#endif /* OC_DBG_IS_ENABLED */

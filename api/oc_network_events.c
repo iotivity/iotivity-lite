@@ -16,8 +16,10 @@
  *
  ****************************************************************************/
 
-#include "oc_network_events_internal.h"
 #include "api/oc_buffer_internal.h"
+#include "api/oc_endpoint_internal.h"
+#include "api/oc_events_internal.h"
+#include "api/oc_network_events_internal.h"
 #include "messaging/coap/coap.h"
 #include "oc_buffer.h"
 #include "oc_config.h"
@@ -30,6 +32,8 @@
 #include "port/oc_network_event_handler_internal.h"
 #include "util/oc_features.h"
 #include "util/oc_list.h"
+
+#include <assert.h>
 
 OC_LIST(g_network_events);
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
@@ -45,32 +49,45 @@ oc_process_network_event(void)
 {
   oc_network_event_handler_mutex_lock();
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+  OC_LIST_LOCAL(network_tcp_connect_events);
+  oc_list_copy(network_tcp_connect_events, g_network_tcp_connect_events);
+  oc_list_init(g_network_tcp_connect_events);
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+  OC_LIST_LOCAL(network_events);
+  oc_list_copy(network_events, g_network_events);
+  oc_list_init(g_network_events);
+#ifdef OC_NETWORK_MONITOR
+  bool interface_up = g_interface_up;
+  g_interface_up = false;
+  bool interface_down = g_interface_down;
+  g_interface_down = false;
+#endif /* OC_NETWORK_MONITOR */
+  oc_network_event_handler_mutex_unlock();
+
+#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
   oc_tcp_on_connect_event_t *event =
-    (oc_tcp_on_connect_event_t *)oc_list_pop(g_network_tcp_connect_events);
+    (oc_tcp_on_connect_event_t *)oc_list_pop(network_tcp_connect_events);
   while (event != NULL) {
     oc_tcp_connect_session(event);
     event =
-      (oc_tcp_on_connect_event_t *)oc_list_pop(g_network_tcp_connect_events);
+      (oc_tcp_on_connect_event_t *)oc_list_pop(network_tcp_connect_events);
   }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
-  oc_message_t *message = (oc_message_t *)oc_list_pop(g_network_events);
+  oc_message_t *message = (oc_message_t *)oc_list_pop(network_events);
   while (message != NULL) {
     oc_recv_message(message);
-    message = (oc_message_t *)oc_list_pop(g_network_events);
+    message = (oc_message_t *)oc_list_pop(network_events);
   }
 #ifdef OC_NETWORK_MONITOR
-  if (g_interface_up) {
+  if (interface_up) {
     oc_process_post(&oc_network_events,
                     oc_event_to_oc_process_event(INTERFACE_UP), NULL);
-    g_interface_up = false;
   }
-  if (g_interface_down) {
+  if (interface_down) {
     oc_process_post(&oc_network_events,
                     oc_event_to_oc_process_event(INTERFACE_DOWN), NULL);
-    g_interface_down = false;
   }
 #endif /* OC_NETWORK_MONITOR */
-  oc_network_event_handler_mutex_unlock();
 }
 
 OC_PROCESS(oc_network_events, "");
@@ -95,9 +112,6 @@ OC_PROCESS_THREAD(oc_network_events, ev, data)
 void
 oc_network_receive_event(oc_message_t *message)
 {
-  if (!message) {
-    return;
-  }
   if (!oc_process_is_running(&oc_network_events)) {
     oc_message_unref(message);
     return;
@@ -134,6 +148,35 @@ oc_network_tcp_connect_event(oc_tcp_on_connect_event_t *event)
   _oc_signal_event_loop();
 }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+
+int
+oc_network_drop_receive_events(const oc_endpoint_t *endpoint)
+{
+  int dropped = 0;
+  oc_network_event_handler_mutex_lock();
+  for (oc_message_t *message = (oc_message_t *)oc_list_head(g_network_events);
+       message != NULL;) {
+    oc_message_t *next = message->next;
+    if (oc_endpoint_compare(&message->endpoint, endpoint) == 0) {
+      oc_list_remove(g_network_events, message);
+#if OC_DBG_IS_ENABLED
+      // GCOVR_EXCL_START
+      oc_process_event_t ev =
+        oc_event_to_oc_process_event(INBOUND_NETWORK_EVENT);
+      oc_string_view_t ev_name = oc_process_event_name(ev);
+      oc_string64_t endpoint_str;
+      OC_DBG("oc_network_events: dropping %s for endpoint(%s)", ev_name.data,
+             oc_string(endpoint_str));
+      // GCOVR_EXCL_STOP
+#endif /* OC_DBG_IS_ENABLED */
+      oc_message_unref(message);
+      ++dropped;
+    }
+    message = next;
+  }
+  oc_network_event_handler_mutex_unlock();
+  return dropped;
+}
 
 #ifdef OC_NETWORK_MONITOR
 void
