@@ -822,7 +822,7 @@ oscore_send_error:
 OC_PROCESS_THREAD(oc_oscore_handler, ev, data)
 {
   OC_PROCESS_BEGIN();
-  while (1) {
+  while (oc_process_is_running(&oc_oscore_handler)) {
     OC_PROCESS_YIELD();
 
     if (ev == oc_event_to_oc_process_event(INBOUND_OSCORE_EVENT)) {

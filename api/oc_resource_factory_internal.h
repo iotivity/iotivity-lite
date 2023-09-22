@@ -19,6 +19,8 @@
 #ifndef OC_RESOURCE_FACTORY_INTERNAL_H
 #define OC_RESOURCE_FACTORY_INTERNAL_H
 
+#if defined(OC_COLLECTIONS) && defined(OC_COLLECTIONS_IF_CREATE)
+
 #include "oc_api.h"
 
 #ifdef __cplusplus
@@ -61,5 +63,7 @@ void oc_fi_factory_free_all_created_resources(void);
 #ifdef __cplusplus
 }
 #endif
+
+#endif /* OC_COLLECTIONS && OC_COLLECTIONS_IF_CREATE */
 
 #endif /* OC_RESOURCE_FACTORY_INTERNAL_H */

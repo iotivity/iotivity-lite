@@ -19,6 +19,9 @@
 #ifndef OC_EVENTS_H
 #define OC_EVENTS_H
 
+#include "api/oc_helpers_internal.h"
+#include "oc_config.h"
+#include "port/oc_log_internal.h"
 #include "util/oc_features.h"
 #include "util/oc_process.h"
 
@@ -33,9 +36,13 @@ typedef enum {
   INBOUND_RI_EVENT,
   OUTBOUND_NETWORK_EVENT,
   TLS_READ_DECRYPTED_DATA,
+#ifdef OC_CLIENT
   TLS_WRITE_APPLICATION_DATA,
+#endif /* OC_CLIENT */
+#ifdef OC_NETWORK_MONITOR
   INTERFACE_DOWN,
   INTERFACE_UP,
+#endif                    /* OC_NETWORK_MONITOR */
   TLS_CLOSE_ALL_SESSIONS, /* close all TLS sessions for reset reason*/
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
   TCP_CONNECT_SESSION,
@@ -68,6 +75,13 @@ void oc_event_assign_oc_process_events(void);
  * @return corresponding oc_process_event_t value
  */
 oc_process_event_t oc_event_to_oc_process_event(oc_events_t event);
+
+#if OC_DBG_IS_ENABLED
+
+/** @brief Get human-readable name for event */
+oc_string_view_t oc_process_event_name(oc_process_event_t event);
+
+#endif /* OC_DBG_IS_ENABLED */
 
 #ifdef __cplusplus
 }

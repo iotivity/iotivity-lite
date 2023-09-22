@@ -352,6 +352,7 @@ is_peer_active(const oc_tls_peer_t *peer)
 static oc_event_callback_retval_t oc_dtls_inactive(void *data);
 
 #ifdef OC_CLIENT
+
 static void
 oc_tls_free_invalid_peer(oc_tls_peer_t *peer)
 {
@@ -386,30 +387,89 @@ oc_tls_free_invalid_peer(oc_tls_peer_t *peer)
 }
 #endif /* OC_CLIENT */
 
-static bool
-process_drop_event_for_removed_endpoint(oc_process_event_t ev,
-                                        oc_process_data_t data,
-                                        const void *user_data)
+bool
+oc_tls_event_is_inbound_or_outbound(oc_process_event_t event)
 {
-  const oc_endpoint_t *endpoint = (const oc_endpoint_t *)user_data;
-  if (ev != oc_event_to_oc_process_event(RI_TO_TLS_EVENT) &&
-      ev != oc_event_to_oc_process_event(UDP_TO_TLS_EVENT)) {
+  return (event == oc_event_to_oc_process_event(RI_TO_TLS_EVENT) ||
+          event == oc_event_to_oc_process_event(UDP_TO_TLS_EVENT) ||
+#ifdef OC_OSCORE
+          event == oc_event_to_oc_process_event(INBOUND_OSCORE_EVENT) ||
+          event == oc_event_to_oc_process_event(OUTBOUND_OSCORE_EVENT) ||
+#endif /* OC_OSCORE */
+          event == oc_event_to_oc_process_event(INBOUND_RI_EVENT) ||
+          event == oc_event_to_oc_process_event(OUTBOUND_NETWORK_EVENT) ||
+          event == oc_event_to_oc_process_event(INBOUND_NETWORK_EVENT) ||
+#ifdef OC_CLIENT
+          event == oc_event_to_oc_process_event(TLS_WRITE_APPLICATION_DATA) ||
+#endif /* OC_CLIENT */
+          event == oc_event_to_oc_process_event(TLS_READ_DECRYPTED_DATA));
+}
+
+static bool
+tls_process_drop_event_for_removed_endpoint(oc_process_event_t ev,
+                                            oc_process_data_t data,
+                                            const void *user_data)
+{
+  if (!oc_tls_event_is_inbound_or_outbound(ev)) {
     return false;
   }
+  const oc_endpoint_t *endpoint = (const oc_endpoint_t *)user_data;
+  if (
+#ifdef OC_CLIENT
+    ev == oc_event_to_oc_process_event(TLS_WRITE_APPLICATION_DATA) ||
+#endif /* OC_CLIENT */
+    ev == oc_event_to_oc_process_event(TLS_READ_DECRYPTED_DATA)) {
+    const oc_tls_peer_t *peer = (const oc_tls_peer_t *)data;
+    if (oc_endpoint_compare(&peer->endpoint, endpoint) == 0) {
+      // the peer will be removed, just drop the event
+#if OC_DBG_IS_ENABLED
+      // GCOVR_EXCL_START
+      oc_string64_t endpoint_str;
+      oc_endpoint_to_string64(&peer->endpoint, &endpoint_str);
+      oc_string_view_t ev_name = oc_process_event_name(ev);
+      OC_DBG("oc_tls: dropping %s for removed endpoint(%s)", ev_name.data,
+             oc_string(endpoint_str));
+      // GCOVR_EXCL_STOP
+#endif /* OC_DBG_IS_ENABLED */
+      return true;
+    }
+    return false;
+  }
+
   oc_message_t *message = (oc_message_t *)data;
   if (oc_endpoint_compare(&message->endpoint, endpoint) == 0) {
 #if OC_DBG_IS_ENABLED
+    // GCOVR_EXCL_START
     oc_string64_t endpoint_str;
     oc_endpoint_to_string64(&message->endpoint, &endpoint_str);
-    OC_DBG("oc_tls: dropping %s message for removed endpoint(%s)",
-           (ev == oc_event_to_oc_process_event(RI_TO_TLS_EVENT)) ? "sent"
-                                                                 : "received",
+    oc_string_view_t ev_name = oc_process_event_name(ev);
+    OC_DBG("oc_tls: dropping %s for removed endpoint(%s)", ev_name.data,
            oc_string(endpoint_str));
+    // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
     oc_message_unref(message);
     return true;
   }
   return false;
+}
+
+static void
+tls_drop_endpoint_events(const oc_endpoint_t *endpoint)
+{
+  oc_network_drop_receive_events(endpoint);
+
+  oc_process_drop(&oc_tls_handler, tls_process_drop_event_for_removed_endpoint,
+                  endpoint);
+  OC_PROCESS_NAME(oc_message_buffer_handler);
+  oc_process_drop(&oc_message_buffer_handler,
+                  tls_process_drop_event_for_removed_endpoint, endpoint);
+  OC_PROCESS_NAME(g_coap_engine);
+  oc_process_drop(&g_coap_engine, tls_process_drop_event_for_removed_endpoint,
+                  endpoint);
+#ifdef OC_OSCORE
+  oc_process_drop(&oc_oscore_handler,
+                  tls_process_drop_event_for_removed_endpoint, endpoint);
+#endif /* OC_OSCORE */
 }
 
 static void
@@ -462,8 +522,7 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb, bool from_reset)
     oc_message_unref(message);
     message = (oc_message_t *)oc_list_pop(peer->recv_q);
   }
-  oc_process_drop(&oc_tls_handler, process_drop_event_for_removed_endpoint,
-                  &peer->endpoint);
+  tls_drop_endpoint_events(&peer->endpoint);
 #ifdef OC_PKI
   oc_free_string(&peer->public_key);
 #endif /* OC_PKI */
@@ -518,8 +577,7 @@ oc_tls_remove_peer(const oc_endpoint_t *endpoint)
   if (peer != NULL) {
     oc_tls_free_peer(peer, false, false);
   } else {
-    oc_process_drop(&oc_tls_handler, process_drop_event_for_removed_endpoint,
-                    endpoint);
+    tls_drop_endpoint_events(endpoint);
   }
 }
 
@@ -3000,7 +3058,7 @@ OC_PROCESS_THREAD(oc_tls_handler, ev, data)
 {
   OC_PROCESS_POLLHANDLER(close_all_tls_sessions());
   OC_PROCESS_BEGIN();
-  while (true) {
+  while (oc_process_is_running(&oc_tls_handler)) {
     OC_PROCESS_YIELD();
 
     if (ev == oc_event_to_oc_process_event(UDP_TO_TLS_EVENT)) {
