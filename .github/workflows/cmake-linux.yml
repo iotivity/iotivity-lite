@@ -119,7 +119,7 @@ jobs:
     with:
       build_args: -DOC_LOG_MAXIMUM_LOG_LEVEL=INFO -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON ${{ matrix.args }}
       build_type: ${{ (github.event_name == 'workflow_dispatch' && inputs.build_type) || 'Debug' }}
-      clang: ${{ github.event_name == 'workflow_dispatch' && inputs.clang }}
+      clang: ${{ ((github.event_name == 'workflow_dispatch' && inputs.clang) || matrix.clang) || false }}
       coverage: false
       install_mbedtls: ${{ github.event_name == 'workflow_dispatch' && inputs.install_mbedtls }}
       install_tinycbor: ${{ github.event_name == 'workflow_dispatch' && inputs.install_tinycbor }}

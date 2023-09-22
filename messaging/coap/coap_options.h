@@ -87,6 +87,8 @@ extern "C" {
     +-----+---+---+---+---+----------------+--------+--------+----------+
 */
 
+#define COAP_OPTION_QUERY_MAX_SIZE (255)
+
 /**
  * @brief Get the Content-Format option value.
  *

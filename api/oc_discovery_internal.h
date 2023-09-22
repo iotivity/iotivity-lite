@@ -73,7 +73,7 @@ void oc_create_discovery_resource(size_t device);
  * the callbacks)
  *
  * @param payload the recieved discovery response
- * @param len lenght of the payload
+ * @param len length of the payload
  * @param handler handler of the discovery
  * @param endpoint endpoint
  * @param user_data the user data to be supplied to the handler

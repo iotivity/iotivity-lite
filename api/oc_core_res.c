@@ -833,8 +833,8 @@ oc_filter_resource_by_rt(const oc_resource_t *resource,
   do {
     const char *rt = NULL;
     int rt_len = -1;
-    more_query_params =
-      oc_iterate_query_get_values(request, "rt", &rt, &rt_len);
+    more_query_params = oc_iterate_query_get_values_v1(
+      request, "rt", OC_CHAR_ARRAY_LEN("rt"), &rt, &rt_len);
     if (rt_len <= 0) {
       continue;
     }

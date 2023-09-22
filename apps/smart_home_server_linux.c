@@ -32,6 +32,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#define CHAR_ARRAY_LEN(x) (sizeof(x) - 1)
+
 static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 
@@ -134,7 +136,8 @@ get_temp(oc_request_t *request, oc_interface_mask_t iface_mask, void *user_data)
   bool invalid_query = false;
   const char *units;
   units_t u = temp_units;
-  int units_len = oc_get_query_value(request, "units", &units);
+  int units_len =
+    oc_get_query_value_v1(request, "units", CHAR_ARRAY_LEN("units"), &units);
   if (units_len != -1) {
     if (units[0] == 'K') {
       u = K;

@@ -243,6 +243,10 @@ static void (*oc_push_arrived)(oc_pushd_resource_rep_t *) = NULL;
 #define OC_PUSH_PROP_PRT "prt"
 #define OC_PUSH_PROP_PIF "pif"
 #define OC_PUSH_PROP_SOURCERT "sourcert"
+#define OC_PUSH_PROP_RECEIVEURI "receiveruri"
+#define OC_PUSH_PROP_RTS "rts"
+
+#define OC_PUSH_QUERY_RECEIVERURI "receiveruri"
 
 void
 oc_set_on_push_arrived(oc_on_push_arrived_t func)
@@ -1853,7 +1857,8 @@ _update_recv_obj(oc_recv_t *recv_obj, const oc_recvs_t *recvs_instance,
   while (rep) {
     switch (rep->type) {
     case OC_REP_STRING:
-      if (strcmp(oc_string(rep->name), "receiveruri") == 0) {
+      if (oc_rep_is_property(rep, OC_PUSH_PROP_RECEIVEURI,
+                             OC_CHAR_ARRAY_LEN(OC_PUSH_PROP_RECEIVEURI))) {
         OC_PUSH_DBG("target receiveruri: \"%s\", new receiveruri: \"%s\"",
                     oc_string(recv_obj->receiveruri),
                     oc_string(rep->value.string));
@@ -1880,7 +1885,8 @@ _update_recv_obj(oc_recv_t *recv_obj, const oc_recvs_t *recvs_instance,
       break;
 
     case OC_REP_STRING_ARRAY:
-      if (strcmp(oc_string(rep->name), "rts") == 0) {
+      if (oc_rep_is_property(rep, OC_PUSH_PROP_RTS,
+                             OC_CHAR_ARRAY_LEN(OC_PUSH_PROP_RTS))) {
         oc_free_string_array(&recv_obj->rts);
         size_t len = oc_string_array_get_allocated_size(rep->value.array);
         oc_new_string_array(&recv_obj->rts, len);
@@ -1922,7 +1928,8 @@ _create_recv_obj(oc_recvs_t *recvs_instance, oc_rep_t *rep)
   while (rep) {
     switch (rep->type) {
     case OC_REP_STRING:
-      if (strcmp(oc_string(rep->name), "receiveruri") == 0) {
+      if (oc_rep_is_property(rep, OC_PUSH_PROP_RECEIVEURI,
+                             OC_CHAR_ARRAY_LEN(OC_PUSH_PROP_RECEIVEURI))) {
         oc_new_string(&recv_obj->receiveruri, oc_string(rep->value.string),
                       oc_string_len(rep->value.string));
         mandatory_property_check |= 0x1;
@@ -1930,7 +1937,8 @@ _create_recv_obj(oc_recvs_t *recvs_instance, oc_rep_t *rep)
       break;
 
     case OC_REP_STRING_ARRAY:
-      if (strcmp(oc_string(rep->name), "rts") == 0) {
+      if (oc_rep_is_property(rep, OC_PUSH_PROP_RTS,
+                             OC_CHAR_ARRAY_LEN(OC_PUSH_PROP_RTS))) {
         size_t len = oc_string_array_get_allocated_size(rep->value.array);
         oc_new_string_array(&recv_obj->rts, len);
 
@@ -1993,13 +2001,15 @@ _validate_recv_obj_list(oc_rep_t *obj_list)
     for (; rep != NULL; rep = rep->next) {
       switch (rep->type) {
       case OC_REP_STRING:
-        if (strcmp(oc_string(rep->name), "receiveruri") == 0) {
+        if (oc_rep_is_property(rep, OC_PUSH_PROP_RECEIVEURI,
+                               OC_CHAR_ARRAY_LEN(OC_PUSH_PROP_RECEIVEURI))) {
           mandatory_property_check |= 0x1;
         }
         break;
 
       case OC_REP_STRING_ARRAY:
-        if (strcmp(oc_string(rep->name), "rts") == 0) {
+        if (oc_rep_is_property(rep, OC_PUSH_PROP_RTS,
+                               OC_CHAR_ARRAY_LEN(OC_PUSH_PROP_RTS))) {
           mandatory_property_check |= 0x2;
         }
         break;
@@ -2077,8 +2087,9 @@ post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
 
   /* try to get "receiveruri" parameter */
   if (request->query) {
-    uri_param_len = oc_ri_get_query_value(request->query, request->query_len,
-                                          "receiveruri", &uri_param);
+    uri_param_len = oc_ri_get_query_value_v1(
+      request->query, request->query_len, OC_PUSH_QUERY_RECEIVERURI,
+      OC_CHAR_ARRAY_LEN(OC_PUSH_QUERY_RECEIVERURI), &uri_param);
     if (uri_param_len != -1) {
       OC_PUSH_DBG(
         "received query string: \"%.*s\", found \"receiveruri\": \"%.*s\" ",
@@ -2113,7 +2124,7 @@ post_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
                       uri_param_len, uri_param);
 
           /*
-           * if there is already NORMAL resource whose path is same as requested
+           * if there is already NORMAL resource whose path is same as equested
            * target uri, just ignore this request and return error!
            */
           if (oc_ri_get_app_resource_by_uri(uri_param, uri_param_len,
@@ -2173,8 +2184,9 @@ delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
 
   /* try to get "receiveruri" parameter */
   if (request->query) {
-    uri_param_len = oc_ri_get_query_value(request->query, request->query_len,
-                                          "receiveruri", &uri_param);
+    uri_param_len = oc_ri_get_query_value_v1(
+      request->query, request->query_len, OC_PUSH_QUERY_RECEIVERURI,
+      OC_CHAR_ARRAY_LEN(OC_PUSH_QUERY_RECEIVERURI), &uri_param);
     if (uri_param_len != -1) {
       OC_PUSH_DBG(
         "received query string: \"%.*s\", found \"receiveruri\": \"%.*s\" ",
@@ -2214,13 +2226,10 @@ delete_pushrecv(oc_request_t *request, oc_interface_mask_t iface_mask,
           /* if the given `receiveruri` parameter is not in existing receivers
            * array, add new receiver object to the receivers array */
 #ifdef OC_PUSHDEBUG
-          //					oc_string_t uri;
-          //					oc_new_string(&uri, uri_param, uri_param_len);
           OC_PUSH_DBG(
             "can't find receiver object which has uri(\"%.*s\"), ignore it...",
             uri_param_len, uri_param);
-//					oc_free_string(&uri);
-#endif
+#endif /* OC_PUSHDEBUG */
           result = OC_STATUS_NOT_FOUND;
         }
       } else {

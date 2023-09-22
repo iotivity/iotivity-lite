@@ -289,7 +289,8 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   case OC_IF_RW:
   case OC_IF_BASELINE: {
     const char *q;
-    int ql = oc_get_query_value(request, OC_DOXM_OWNED, &q);
+    int ql = oc_get_query_value_v1(request, OC_DOXM_OWNED,
+                                   OC_CHAR_ARRAY_LEN(OC_DOXM_OWNED), &q);
     size_t device = request->resource->device;
 
     if (ql > 0 &&
@@ -313,7 +314,8 @@ get_doxm(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
     // FOR DEVELOPMENT USE ONLY
 #ifdef OC_DOXM_UUID_FILTER
     const char *q2;
-    int ql2 = oc_get_query_value(request, OC_DOXM_DEVICEUUID, &q2);
+    int ql2 = oc_get_query_value_v1(request, OC_DOXM_DEVICEUUID,
+                                    OC_CHAR_ARRAY_LEN(OC_DOXM_DEVICEUUID), &q2);
 
     // q2 is not null terminated, so we subtract 1 from the comparison length
     if (ql2 > 0) {
