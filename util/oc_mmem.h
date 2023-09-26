@@ -41,43 +41,28 @@
 extern "C" {
 #endif
 
+typedef enum {
+  BYTE_POOL,
+  INT_POOL,
+  DOUBLE_POOL,
+} oc_mmem_pool_t;
+
 #define OC_MMEM_PTR(m) (struct oc_mmem *)(m)->ptr
 
+/**
+ * @brief An allocation block.
+ *
+ * @warning With OC_DYNAMIC_ALLOCATION not defined, the allocation and
+ * deallocation of structs typedef-ed from oc_mmem_t is not thread-safe.
+ */
 struct oc_mmem
 {
-  struct oc_mmem *next;
-  size_t size;
-  void *ptr;
+#ifndef OC_DYNAMIC_ALLOCATION
+  struct oc_mmem *next; ///< Pointer to next block in memory pool.
+#endif                  /* !OC_DYNAMIC_ALLOCATION */
+  size_t size;          ///< Size of this block.
+  void *ptr;            ///< Pointer to the memory.
 };
-
-typedef enum { BYTE_POOL, INT_POOL, DOUBLE_POOL } pool;
-
-void oc_mmem_init(void);
-
-#ifdef OC_MEMORY_TRACE
-
-#define oc_mmem_alloc(m, size, pool_type)                                      \
-  _oc_mmem_alloc(__func__, m, size, pool_type)
-#define oc_mmem_free(m, pool_type) _oc_mmem_free(__func__, m, pool_type)
-
-#else /* OC_MEMORY_TRACE */
-
-#define oc_mmem_alloc(m, size, pool_type) _oc_mmem_alloc(m, size, pool_type)
-#define oc_mmem_free(m, pool_type) _oc_mmem_free(m, pool_type)
-
-#endif /* !OC_MEMORY_TRACE */
-
-size_t _oc_mmem_alloc(
-#ifdef OC_MEMORY_TRACE
-  const char *func,
-#endif
-  struct oc_mmem *m, size_t size, pool pool_type);
-
-void _oc_mmem_free(
-#ifdef OC_MEMORY_TRACE
-  const char *func,
-#endif
-  struct oc_mmem *m, pool pool_type);
 
 #ifdef __cplusplus
 }

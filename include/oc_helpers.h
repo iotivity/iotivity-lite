@@ -273,7 +273,7 @@ void _oc_free_array(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  oc_array_t *ocarray, pool type);
+  oc_array_t *ocarray, oc_mmem_pool_t type);
 
 /**
  * @brief reset ocstring contents
@@ -308,7 +308,7 @@ void _oc_new_array(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  oc_array_t *ocarray, size_t size, pool type);
+  oc_array_t *ocarray, size_t size, oc_mmem_pool_t type);
 
 /**
  * @brief allocate string array

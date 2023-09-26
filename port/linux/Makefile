@@ -115,7 +115,7 @@ endif
 
 CTIMESTAMP+=../../api/c-timestamp/timestamp_compare.c ../../api/c-timestamp/timestamp_format.c ../../api/c-timestamp/timestamp_valid.c ../../api/c-timestamp/timestamp_parse.c
 
-SRC_PORT_COMMON:=$(wildcard ../../port/common/*.c)
+SRC_PORT_COMMON:=$(wildcard ../../port/common/*.c) $(wildcard ../../port/common/posix/*.c)
 ifneq ($(MEMORY_TRACE),1)
 SRC_UTIL:=$(filter-out %_mem_trace.c,$(wildcard ../../util/*.c))
 else
@@ -167,7 +167,7 @@ OBJ_PYTHON=$(addprefix obj/python/,$(notdir $(SRC_PYTHON:.c=.o)))
 # $(info    OBJ_PYTHON is $(OBJ_PYTHON))
 # $(info    SRC_PYTHON is $(SRC_PYTHON))
 
-VPATH=../../api/:../../api/client/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:../../port/common/:../../python/:../../util/:
+VPATH=../../api/:../../api/client/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:../../port/common/:../../port/common/posix/:../../python/:../../util/:
 VPATH+=../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -pthread -lrt
 

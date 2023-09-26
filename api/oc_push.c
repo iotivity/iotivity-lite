@@ -43,6 +43,7 @@
 #include "util/oc_list.h"
 #include "util/oc_macros_internal.h"
 #include "util/oc_mmem.h"
+#include "util/oc_mmem_internal.h"
 #include "util/oc_process.h"
 
 #include <inttypes.h>
@@ -221,21 +222,6 @@ static void (*oc_push_arrived)(oc_pushd_resource_rep_t *) = NULL;
 #define pp_update_state(state, new_state)                                      \
   (oc_set_string(&(state), (new_state), strlen((new_state))))
 
-/**
- * @brief initialize oc_string_t object
- */
-#define oc_init_string(str)                                                    \
-  do {                                                                         \
-    (str).size = 0;                                                            \
-    (str).ptr = NULL;                                                          \
-    (str).next = NULL;                                                         \
-  } while (0)
-
-/**
- * @brief initialize oc_string_array_t object
- */
-#define oc_init_string_array(str_array) oc_init_string((str_array))
-
 #define OC_PUSH_PROP_PHREF "phref"
 #define OC_PUSH_PROP_PUSHTARGET "pushtarget"
 #define OC_PUSH_PROP_PUSHQIF "pushqif"
@@ -317,11 +303,8 @@ set_ns_properties(const oc_resource_t *resource, const oc_rep_t *rep,
 
         } else {
           /* if non-NULL pushtarget.. */
-          oc_endpoint_t *new_ep;
-          oc_string_t new_targetpath;
-
-          new_ep = oc_new_endpoint();
-          oc_init_string(new_targetpath);
+          oc_endpoint_t *new_ep = oc_new_endpoint();
+          oc_string_t new_targetpath = OC_MMEM_NULL();
 
           OC_PUSH_DBG("oic.r.pushproxy:pushtarget (%s)",
                       oc_string(rep->value.string));
@@ -751,12 +734,12 @@ get_ns_instance(const char *href, const oc_string_array_t *types,
               oc_string(ns_instance->resource->uri), PUSHCONFIG_RESOURCE_PATH);
 
   /* initialize properties */
-  oc_init_string(ns_instance->phref);
-  oc_init_string_array(ns_instance->prt);
-  oc_init_string_array(ns_instance->pif);
-  oc_init_string(ns_instance->pushtarget_di);
-  oc_init_string(ns_instance->targetpath);
-  oc_init_string_array(ns_instance->sourcert);
+  ns_instance->phref = OC_MMEM_NULL();
+  ns_instance->prt = OC_MMEM_NULL();
+  ns_instance->pif = OC_MMEM_NULL();
+  ns_instance->pushtarget_di = OC_MMEM_NULL();
+  ns_instance->targetpath = OC_MMEM_NULL();
+  ns_instance->sourcert = OC_MMEM_NULL();
   oc_new_string(&ns_instance->state, pp_statestr(OC_PP_WFP),
                 strlen(pp_statestr(OC_PP_WFP)));
   ns_instance->user_data = NULL;
@@ -2467,7 +2450,7 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
 
   OC_PROCESS_BEGIN();
 
-  while (1) {
+  while (oc_process_is_running(&oc_push_process)) {
 
 #if 0
 		int device_count = oc_core_get_num_devices();

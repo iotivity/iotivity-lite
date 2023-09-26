@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#ifndef OC_MEM_TRACE_H
-#define OC_MEM_TRACE_H
+#ifndef OC_MEM_TRACE_INTERNAL_H
+#define OC_MEM_TRACE_INTERNAL_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,4 +34,4 @@ void oc_mem_trace_shutdown(void);
 }
 #endif
 
-#endif /* OC_MEM_TRACE_H */
+#endif /* OC_MEM_TRACE_INTERNAL_H */

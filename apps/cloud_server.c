@@ -40,6 +40,7 @@
 #include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #ifndef _MSC_VER
 #include <getopt.h>

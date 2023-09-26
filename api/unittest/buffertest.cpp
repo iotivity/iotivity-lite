@@ -21,6 +21,7 @@
 #include "api/oc_runtime_internal.h"
 #include "oc_buffer.h"
 #include "oc_config.h"
+#include "port/oc_allocator_internal.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "util/oc_features.h"
 #include "util/oc_memb.h"
@@ -40,13 +41,21 @@ public:
   static void SetUpTestCase()
   {
     (void)kTestMessagesPoolSize;
+#ifndef OC_DYNAMIC_ALLOCATION
+    oc_allocator_mutex_init();
+#endif /* OC_DYNAMIC_ALLOCATION */
     oc_memb_init(&oc_test_messages);
     oc_set_buffers_avail_cb(onIncomingBufferAvailable);
     oc_memb_set_buffers_avail_cb(&oc_test_messages, onTestBufferAvailable);
-    oc_network_event_handler_mutex_init();
   }
 
-  static void TearDownTestCase() { oc_network_event_handler_mutex_destroy(); }
+  static void TearDownTestCase()
+  {
+    oc_set_buffers_avail_cb(nullptr);
+#ifndef OC_DYNAMIC_ALLOCATION
+    oc_allocator_mutex_destroy();
+#endif /* OC_DYNAMIC_ALLOCATION */
+  }
 
   void SetUp() override
   {
@@ -232,6 +241,7 @@ template<class Event, void Op(Event *)>
 void
 testProcessMessagesByProcess()
 {
+  oc_network_event_handler_mutex_init();
   oc_runtime_init();
   oc_ri_init();
 
@@ -263,6 +273,7 @@ testProcessMessagesByProcess()
   oc_message_buffer_handler_stop();
   oc_ri_shutdown();
   oc_runtime_shutdown();
+  oc_network_event_handler_mutex_destroy();
 }
 
 TEST_F(TestMessage, RecvMessageByProcess)

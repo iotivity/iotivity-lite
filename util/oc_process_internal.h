@@ -41,6 +41,42 @@ void oc_process_init(void);
  */
 void oc_process_shutdown(void);
 
+/**
+ * @brief This function is responsible for determining whether an event should
+ * be removed from the event queue of a given process.
+ *
+ * @param ev The event to be dropped.
+ * @param data The auxiliary data to be sent with the event
+ * @param user_data Data to be passed to the drop_event function.
+ * @return true Drop the event.
+ */
+
+/**
+ * @brief Callback invoked for each event iterated by
+ * oc_process_iterate_events.
+ *
+ * @param p process of the event
+ * @param ev the event
+ * @param data data of the event
+ * @return true to continue iteration
+ * @return false to stop iteration
+ */
+typedef bool (*oc_process_iterate_event_fn_t)(const struct oc_process *p,
+                                              oc_process_event_t ev,
+                                              oc_process_data_t data,
+                                              void *user_data);
+/**
+ * @brief Iterate over all events and invoke given callback.
+ *
+ * @param fn callback invoked for each resource (cannot be NULL)
+ * @param fn_data custom user data passed to \p fn
+ *
+ * @note if \p fn returns false then iteration is stopped immediately and the
+ * remaining events are not iterated
+ */
+void oc_process_iterate_events(oc_process_iterate_event_fn_t fn, void *fn_data)
+  OC_NONNULL(1);
+
 #ifdef OC_TEST
 
 /** @brief Get the maximal number of events */

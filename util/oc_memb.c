@@ -38,10 +38,9 @@
 #include <string.h>
 
 #ifdef OC_MEMORY_TRACE
-#include "oc_mem_trace.h"
+#include "util/oc_mem_trace_internal.h"
 #endif
 
-/*---------------------------------------------------------------------------*/
 void
 oc_memb_init(struct oc_memb *m)
 {
@@ -50,7 +49,7 @@ oc_memb_init(struct oc_memb *m)
     memset(m->mem, 0, (unsigned)m->num * sizeof(char *));
   }
 }
-/*---------------------------------------------------------------------------*/
+
 void *
 _oc_memb_alloc(
 #ifdef OC_MEMORY_TRACE
@@ -99,7 +98,7 @@ _oc_memb_alloc(
 
   return ptr;
 }
-/*---------------------------------------------------------------------------*/
+
 char
 _oc_memb_free(
 #ifdef OC_MEMORY_TRACE
@@ -138,19 +137,19 @@ _oc_memb_free(
     free(ptr);
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
-  if (m->buffers_avail_cb) {
+  if (m->buffers_avail_cb != NULL) {
     m->buffers_avail_cb(oc_memb_numfree(m));
   }
   return 0;
 }
-/*---------------------------------------------------------------------------*/
-int
+
+bool
 oc_memb_inmemb(const struct oc_memb *m, const void *ptr)
 {
   return ((const char *)ptr >= (char *)m->mem) &&
          ((const char *)ptr < ((char *)m->mem + (ptrdiff_t)(m->num * m->size)));
 }
-/*---------------------------------------------------------------------------*/
+
 int
 oc_memb_numfree(const struct oc_memb *m)
 {
@@ -162,11 +161,10 @@ oc_memb_numfree(const struct oc_memb *m)
   }
   return num_free;
 }
-/*---------------------------------------------------------------------------*/
+
 void
 oc_memb_set_buffers_avail_cb(struct oc_memb *m,
                              oc_memb_buffers_avail_callback_t cb)
 {
   m->buffers_avail_cb = cb;
 }
-/*---------------------------------------------------------------------------*/

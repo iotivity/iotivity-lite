@@ -23,7 +23,7 @@
 #include "oc_events_internal.h"
 #include "oc_signal_event_loop.h"
 #include "port/oc_log_internal.h"
-#include "port/oc_network_event_handler_internal.h"
+#include "port/oc_allocator_internal.h"
 #include "util/oc_features.h"
 #include "util/oc_macros_internal.h"
 #include "util/oc_memb.h"
@@ -57,17 +57,25 @@ message_deallocate(oc_message_t *message, struct oc_memb *pool)
 #if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
   free(message->data);
 #endif /* OC_DYNAMIC_ALLOCATION && !OC_INOUT_BUFFER_SIZE */
-  oc_network_event_handler_mutex_lock();
+#ifndef OC_DYNAMIC_ALLOCATION
+  oc_allocator_mutex_lock();
+#endif /* !OC_DYNAMIC_ALLOCATION */
   oc_memb_free(pool, message);
-  oc_network_event_handler_mutex_unlock();
+#ifndef OC_DYNAMIC_ALLOCATION
+  oc_allocator_mutex_unlock();
+#endif /* !OC_DYNAMIC_ALLOCATION */
 }
 
 static oc_message_t *
 message_allocate_with_size(struct oc_memb *pool, size_t size)
 {
-  oc_network_event_handler_mutex_lock();
+#ifndef OC_DYNAMIC_ALLOCATION
+  oc_allocator_mutex_lock();
+#endif /* !OC_DYNAMIC_ALLOCATION */
   oc_message_t *message = (oc_message_t *)oc_memb_alloc(pool);
-  oc_network_event_handler_mutex_unlock();
+#ifndef OC_DYNAMIC_ALLOCATION
+  oc_allocator_mutex_unlock();
+#endif /* !OC_DYNAMIC_ALLOCATION */
   if (message == NULL) {
 #if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_SIZE)
     OC_WRN("buffer: No free TX/RX buffers!");

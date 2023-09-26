@@ -48,20 +48,43 @@ typedef struct oc_string_view_t
   size_t length;
 } oc_string_view_t;
 
+#ifdef __cplusplus
+
+#define OC_STRING_VIEW(str)                                                    \
+  oc_string_view_t                                                             \
+  {                                                                            \
+    (str), OC_CHAR_ARRAY_LEN(str),                                             \
+  }
+
+/** Create empty oc_string_view_t. */
+#define OC_STRING_VIEW_NULL()                                                  \
+  oc_string_view_t                                                             \
+  {                                                                            \
+    NULL, 0,                                                                   \
+  }
+
+#else /* !__cplusplus */
+
 #define OC_STRING_VIEW(str)                                                    \
   (oc_string_view_t)                                                           \
   {                                                                            \
     .data = (str), .length = OC_CHAR_ARRAY_LEN(str),                           \
   }
 
+/** Create empty oc_string_view_t. */
+#define OC_STRING_VIEW_NULL()                                                  \
+  (oc_string_view_t)                                                           \
+  {                                                                            \
+    .data = NULL, .length = 0,                                                 \
+  }
+
+#endif /* __cplusplus */
+
 /** Create an oc_string_view_t from a C-string. */
 oc_string_view_t oc_string_view(const char *data, size_t length);
 
 /** Create an oc_string_view_t from an oc_string_t. */
 oc_string_view_t oc_string_view2(const oc_string_t *str);
-
-/** Create empty oc_string_view_t. */
-oc_string_view_t oc_string_view_null(void);
 
 /**
  * @brief Compare two oc_string_view_t values.

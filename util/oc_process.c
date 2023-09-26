@@ -384,6 +384,18 @@ oc_process_is_closing_all_tls_sessions(void)
 }
 #endif /* OC_SECURITY */
 
+void
+oc_process_iterate_events(oc_process_iterate_event_fn_t fn, void *fn_data)
+{
+  for (oc_process_num_events_t i = 0; i < g_nevents; ++i) {
+    oc_process_num_events_t index = (g_fevent + i) % OC_PROCESS_NUMEVENTS;
+    struct event_data *event = &g_events[index];
+    if (!fn(event->p, event->ev, event->data, fn_data)) {
+      return;
+    }
+  }
+}
+
 int
 oc_process_drop(const struct oc_process *p, oc_process_drop_event_t drop_event,
                 const void *user_data)

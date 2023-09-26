@@ -287,6 +287,9 @@
     <ClCompile Include="..\..\..\messaging\coap\transactions.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\oc_allocator.c">
+      <Filter>Port</Filter>
+    </ClCompile>
     <ClCompile Include="..\abort.c">
       <Filter>Port</Filter>
     </ClCompile>
@@ -523,6 +526,9 @@
     <ClInclude Include="..\..\..\include\oc_api.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\oc_allocator_internal.h">
+      <Filter>Port</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\oc_assert.h">
       <Filter>Port</Filter>
     </ClInclude>
@@ -546,6 +552,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_collection.h">
       <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oc_connectivity_internal.h">
+      <Filter>Port</Filter>
     </ClInclude>
     <ClInclude Include="..\..\oc_connectivity.h">
       <Filter>Port</Filter>
@@ -613,13 +622,16 @@
     <ClInclude Include="..\..\..\include\oc_uuid.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\oc_log.h">
+    <ClInclude Include="..\..\oc_log_internal.h">
       <Filter>Port</Filter>
     </ClInclude>
     <ClInclude Include="..\..\oc_network_event_handler_internal.h">
       <Filter>Port</Filter>
     </ClInclude>
     <ClInclude Include="..\..\oc_random.h">
+      <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oc_storage_internal.h">
       <Filter>Port</Filter>
     </ClInclude>
     <ClInclude Include="..\..\oc_storage.h">
@@ -672,7 +684,7 @@
     </ClInclude>
     <ClInclude Include="..\..\..\security\oc_pstat_internal.h">
       <Filter>Security</Filter>
-    </ClInclude>  
+    </ClInclude>
     <ClInclude Include="..\..\..\security\oc_store.h">
       <Filter>Security</Filter>
     </ClInclude>

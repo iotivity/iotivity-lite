@@ -22,6 +22,7 @@
 #include "oc_helpers.h"
 #include "oc_uuid.h"
 #include "port/common/oc_ip.h"
+#include "port/oc_allocator_internal.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_random.h"
 #include "tests/gtest/Device.h"
@@ -49,10 +50,17 @@ public:
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif /* _WIN32 */
+#ifndef OC_DYNAMIC_ALLOCATION
+    oc_allocator_mutex_init();
+#endif /* !OC_DYNAMIC_ALLOCATION */
   }
 
   void TearDown() override
   {
+#ifndef OC_DYNAMIC_ALLOCATION
+    oc_allocator_mutex_destroy();
+#endif /* !OC_DYNAMIC_ALLOCATION */
+
 #ifdef _WIN32
     WSACleanup();
 #endif /* _WIN32 */
