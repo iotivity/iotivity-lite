@@ -64,7 +64,7 @@
 #endif /* OC_SOFTWARE_UPDATE */
 
 #ifdef OC_MEMORY_TRACE
-#include "util/oc_mem_trace.h"
+#include "util/oc_mem_trace_internal.h"
 #endif /* OC_MEMORY_TRACE */
 
 #ifdef OC_HAS_FEATURE_PUSH

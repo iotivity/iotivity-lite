@@ -32,42 +32,50 @@
  *
  */
 
-#include "oc_mmem.h"
 #include "oc_config.h"
 #include "oc_list.h"
+#include "oc_mmem.h"
+#include "oc_mmem_internal.h"
 #include "port/oc_log_internal.h"
+
+#ifdef OC_MEMORY_TRACE
+#include "util/oc_mem_trace_internal.h"
+#endif /* OC_MEMORY_TRACE */
+
+#include <stdbool.h>
 #include <stdint.h>
 #include <string.h>
-#ifdef OC_MEMORY_TRACE
-#include "oc_mem_trace.h"
-#include <stdbool.h>
-#endif
+
+#ifdef OC_DYNAMIC_ALLOCATION
+#include <stdlib.h>
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 #ifndef OC_DYNAMIC_ALLOCATION
 #if !defined(OC_BYTES_POOL_SIZE) || !defined(OC_INTS_POOL_SIZE) ||             \
   !defined(OC_DOUBLES_POOL_SIZE)
 #error "Please define byte, int, double pool sizes in oc_config.h"
-#endif /* ...POOL_SIZE */
+#endif /* !OC_BYTES_POOL_SIZE || !OC_INTS_POOL_SIZE || !OC_DOUBLES_POOL_SIZE   \
+        */
 
-static double doubles[OC_DOUBLES_POOL_SIZE];
-static int64_t ints[OC_INTS_POOL_SIZE];
-static unsigned char bytes[OC_BYTES_POOL_SIZE];
-static unsigned int avail_bytes, avail_ints, avail_doubles;
+static unsigned char g_mmem_bytes[OC_BYTES_POOL_SIZE] = { 0 };
+static unsigned int g_mmem_avail_bytes = OC_BYTES_POOL_SIZE;
+OC_LIST(g_mmem_bytes_list);
 
-OC_LIST(bytes_list);
-OC_LIST(ints_list);
-OC_LIST(doubles_list);
-#else /* !OC_DYNAMIC_ALLOCATION */
-#include <stdlib.h>
-#endif /* OC_DYNAMIC_ALLOCATION */
-/*---------------------------------------------------------------------------*/
+static int64_t g_mmem_ints[OC_INTS_POOL_SIZE] = { 0 };
+static unsigned int g_mmem_avail_ints = OC_INTS_POOL_SIZE;
+OC_LIST(g_mmem_ints_list);
+
+static double g_mmem_doubles[OC_DOUBLES_POOL_SIZE] = { 0.0 };
+static unsigned int g_mmem_avail_doubles = OC_DOUBLES_POOL_SIZE;
+OC_LIST(g_mmem_doubles_list);
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
 size_t
 _oc_mmem_alloc(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  struct oc_mmem *m, size_t size, pool pool_type)
+  struct oc_mmem *m, size_t size, oc_mmem_pool_t pool_type)
 {
   if (!m) {
     OC_ERR("oc_mmem is NULL");
@@ -83,14 +91,14 @@ _oc_mmem_alloc(
     m->ptr = malloc(size);
     m->size = size;
 #else  /* !OC_DYNAMIC_ALLOCATION */
-    if (avail_bytes < size) {
+    if (g_mmem_avail_bytes < size) {
       OC_WRN("byte pool exhausted");
       return 0;
     }
-    oc_list_add(bytes_list, m);
-    m->ptr = &bytes[OC_BYTES_POOL_SIZE - avail_bytes];
+    oc_list_add(g_mmem_bytes_list, m);
+    m->ptr = &g_mmem_bytes[OC_BYTES_POOL_SIZE - g_mmem_avail_bytes];
     m->size = size;
-    avail_bytes -= size;
+    g_mmem_avail_bytes -= size;
 #endif /* OC_DYNAMIC_ALLOCATION */
     break;
   case INT_POOL:
@@ -99,14 +107,14 @@ _oc_mmem_alloc(
     m->ptr = malloc(size * sizeof(int64_t));
     m->size = size;
 #else  /* OC_DYNAMIC_ALLOCATION */
-    if (avail_ints < size) {
+    if (g_mmem_avail_ints < size) {
       OC_WRN("int pool exhausted");
       return 0;
     }
-    oc_list_add(ints_list, m);
-    m->ptr = &ints[OC_INTS_POOL_SIZE - avail_ints];
+    oc_list_add(g_mmem_ints_list, m);
+    m->ptr = &g_mmem_ints[OC_INTS_POOL_SIZE - g_mmem_avail_ints];
     m->size = size;
-    avail_ints -= size;
+    g_mmem_avail_ints -= size;
 #endif /* !OC_DYNAMIC_ALLOCATION */
     break;
   case DOUBLE_POOL:
@@ -115,14 +123,14 @@ _oc_mmem_alloc(
     m->ptr = malloc(size * sizeof(double));
     m->size = size;
 #else  /* OC_DYNAMIC_ALLOCATION */
-    if (avail_doubles < size) {
+    if (g_mmem_avail_doubles < size) {
       OC_WRN("double pool exhausted");
       return 0;
     }
-    oc_list_add(doubles_list, m);
-    m->ptr = &doubles[OC_DOUBLES_POOL_SIZE - avail_doubles];
+    oc_list_add(g_mmem_doubles_list, m);
+    m->ptr = &g_mmem_doubles[OC_DOUBLES_POOL_SIZE - g_mmem_avail_doubles];
     m->size = size;
-    avail_doubles -= size;
+    g_mmem_avail_doubles -= size;
 #endif /* !OC_DYNAMIC_ALLOCATION */
     break;
   default:
@@ -141,7 +149,7 @@ _oc_mmem_free(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  struct oc_mmem *m, pool pool_type)
+  struct oc_mmem *m, oc_mmem_pool_t pool_type)
 {
   if (!m) {
     OC_ERR("oc_mmem is NULL");
@@ -170,17 +178,18 @@ _oc_mmem_free(
     switch (pool_type) {
     case BYTE_POOL:
       memmove(m->ptr, m->next->ptr,
-              &bytes[OC_BYTES_POOL_SIZE - avail_bytes] -
+              &g_mmem_bytes[OC_BYTES_POOL_SIZE - g_mmem_avail_bytes] -
                 (unsigned char *)m->next->ptr);
 
       break;
     case INT_POOL:
       memmove(m->ptr, m->next->ptr,
-              &ints[OC_INTS_POOL_SIZE - avail_ints] - (int64_t *)m->next->ptr);
+              &g_mmem_ints[OC_INTS_POOL_SIZE - g_mmem_avail_ints] -
+                (int64_t *)m->next->ptr);
       break;
     case DOUBLE_POOL:
       memmove(m->ptr, m->next->ptr,
-              &doubles[OC_DOUBLES_POOL_SIZE - avail_doubles] -
+              &g_mmem_doubles[OC_DOUBLES_POOL_SIZE - g_mmem_avail_doubles] -
                 (double *)m->next->ptr);
       break;
     default:
@@ -194,16 +203,16 @@ _oc_mmem_free(
 
   switch (pool_type) {
   case BYTE_POOL:
-    avail_bytes += m->size;
-    oc_list_remove(bytes_list, m);
+    g_mmem_avail_bytes += m->size;
+    oc_list_remove(g_mmem_bytes_list, m);
     break;
   case INT_POOL:
-    avail_ints += m->size;
-    oc_list_remove(ints_list, m);
+    g_mmem_avail_ints += m->size;
+    oc_list_remove(g_mmem_ints_list, m);
     break;
   case DOUBLE_POOL:
-    avail_doubles += m->size;
-    oc_list_remove(doubles_list, m);
+    g_mmem_avail_doubles += m->size;
+    oc_list_remove(g_mmem_doubles_list, m);
     break;
   }
 #else  /* !OC_DYNAMIC_ALLOCATION */
@@ -217,17 +226,16 @@ void
 oc_mmem_init(void)
 {
 #ifndef OC_DYNAMIC_ALLOCATION
-  static int inited = 0;
-  if (inited) {
+  static bool initialized = false;
+  if (initialized) {
     return;
   }
-  oc_list_init(bytes_list);
-  oc_list_init(ints_list);
-  oc_list_init(doubles_list);
-  avail_bytes = OC_BYTES_POOL_SIZE;
-  avail_ints = OC_INTS_POOL_SIZE;
-  avail_doubles = OC_DOUBLES_POOL_SIZE;
-  inited = 1;
+  oc_list_init(g_mmem_bytes_list);
+  oc_list_init(g_mmem_ints_list);
+  oc_list_init(g_mmem_doubles_list);
+  g_mmem_avail_bytes = OC_BYTES_POOL_SIZE;
+  g_mmem_avail_ints = OC_INTS_POOL_SIZE;
+  g_mmem_avail_doubles = OC_DOUBLES_POOL_SIZE;
+  initialized = true;
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
-/*---------------------------------------------------------------------------*/

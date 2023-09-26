@@ -108,7 +108,12 @@ jobs:
           - args: -DOC_TSAN_ENABLED=ON
             # GCC thread-sanitizer keeps reporting false positives, so we use clang instead for tests with thread-sanitizer
             clang: true
-            install_faketime: true
+            install_faketime: false
+            # static allocation requires additional thread synchronization
+          - args: -DOC_TSAN_ENABLED=ON -DOC_DYNAMIC_ALLOCATION_ENABLED=OFF
+            # GCC thread-sanitizer keeps reporting false positives, so we use clang instead for tests with thread-sanitizer
+            clang: true
+            install_faketime: false
           # undefined behaviour sanitizer
           - args: -DOC_UBSAN_ENABLED=ON
             install_faketime: true

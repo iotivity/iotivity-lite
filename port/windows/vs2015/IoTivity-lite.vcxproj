@@ -296,12 +296,15 @@
     <ClInclude Include="..\..\..\util\pt\lc.h" />
     <ClInclude Include="..\..\..\util\pt\pt-sem.h" />
     <ClInclude Include="..\..\..\util\pt\pt.h" />
+    <ClInclude Include="..\..\oc_allocator_internal.h.h" />
     <ClInclude Include="..\..\oc_assert.h" />
     <ClInclude Include="..\..\oc_clock.h" />
+    <ClInclude Include="..\..\oc_connectivity_internal.h" />
     <ClInclude Include="..\..\oc_connectivity.h" />
-    <ClInclude Include="..\..\oc_log.h" />
+    <ClInclude Include="..\..\oc_log_internal.h" />
     <ClInclude Include="..\..\oc_network_event_handler_internal.h" />
     <ClInclude Include="..\..\oc_random.h" />
+    <ClInclude Include="..\..\oc_storage_internal.h" />
     <ClInclude Include="..\..\oc_storage.h" />
     <ClInclude Include="..\ipcontext.h" />
     <ClInclude Include="..\mutex.h" />
@@ -459,6 +462,7 @@
     <ClCompile Include="..\..\..\util\oc_mmem.c" />
     <ClCompile Include="..\..\..\util\oc_process.c" />
     <ClCompile Include="..\..\..\util\oc_timer.c" />
+    <ClCompile Include="..\oc_allocator.c" />
     <ClCompile Include="..\abort.c" />
     <ClCompile Include="..\clock.c" />
     <ClCompile Include="..\ipadapter.c" />

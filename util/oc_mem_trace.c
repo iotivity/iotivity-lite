@@ -18,15 +18,15 @@
 
 #ifdef OC_MEMORY_TRACE
 
+#include "oc_list.h"
+#include "port/oc_log_internal.h"
+#include "util/oc_mem_trace_internal.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-#include "oc_list.h"
-#include "oc_mem_trace.h"
-#include "port/oc_log_internal.h"
-
-#define FUNC_NAME_LEN 30
+#define FUNC_NAME_LEN (30)
 
 typedef struct _mem_info
 {

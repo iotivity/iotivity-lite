@@ -33,7 +33,7 @@
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
 
-#include "port/oc_network_event_handler_internal.h"
+#include "port/oc_allocator_internal.h"
 #include "util/oc_memb.h"
 
 OC_MEMB(g_oc_tcp_on_connect_event_s, oc_tcp_on_connect_event_t,
@@ -42,10 +42,14 @@ OC_MEMB(g_oc_tcp_on_connect_event_s, oc_tcp_on_connect_event_t,
 static oc_tcp_on_connect_event_t *
 oc_tcp_on_connect_event_allocate(void)
 {
-  oc_network_event_handler_mutex_lock();
+#ifndef OC_DYNAMIC_ALLOCATION
+  oc_allocator_mutex_lock();
+#endif /* !OC_DYNAMIC_ALLOCATION */
   oc_tcp_on_connect_event_t *event =
     (oc_tcp_on_connect_event_t *)oc_memb_alloc(&g_oc_tcp_on_connect_event_s);
-  oc_network_event_handler_mutex_unlock();
+#ifndef OC_DYNAMIC_ALLOCATION
+  oc_allocator_mutex_unlock();
+#endif /* !OC_DYNAMIC_ALLOCATION */
   return event;
 }
 
@@ -71,9 +75,13 @@ oc_tcp_on_connect_event_free(oc_tcp_on_connect_event_t *event)
   if (event == NULL) {
     return;
   }
-  oc_network_event_handler_mutex_lock();
+#ifndef OC_DYNAMIC_ALLOCATION
+  oc_allocator_mutex_lock();
+#endif /* !OC_DYNAMIC_ALLOCATION */
   oc_memb_free(&g_oc_tcp_on_connect_event_s, event);
-  oc_network_event_handler_mutex_unlock();
+#ifndef OC_DYNAMIC_ALLOCATION
+  oc_allocator_mutex_unlock();
+#endif /* !OC_DYNAMIC_ALLOCATION */
 }
 
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */

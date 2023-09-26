@@ -22,6 +22,7 @@
 
 #include "api/oc_collection_internal.h"
 #include "api/oc_event_callback_internal.h"
+#include "api/oc_helpers_internal.h"
 #include "api/oc_link_internal.h"
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/oc_coap.h"
@@ -32,6 +33,7 @@
 #include "tests/gtest/RepPool.h"
 #include "tests/gtest/Resource.h"
 #include "util/oc_features.h"
+#include "util/oc_mmem_internal.h"
 
 #ifdef OC_HAS_FEATURE_ETAG
 #include "oc_etag.h"
@@ -234,7 +236,7 @@ TEST_F(TestCollections, AddLink)
 
   std::string uri_1 = "/a";
   oc_resource_t resource_1{};
-  resource_1.uri = { nullptr, uri_1.length() + 1, &uri_1[0] };
+  resource_1.uri = OC_MMEM(&uri_1[0], uri_1.length() + 1, nullptr);
   oc_link_t *link_1 = oc_new_link(&resource_1);
   ASSERT_NE(link_1, nullptr);
   oc_collection_add_link(&collection->res, link_1);
@@ -242,7 +244,7 @@ TEST_F(TestCollections, AddLink)
 
   std::string uri_2 = "/b";
   oc_resource_t resource_2{};
-  resource_2.uri = { nullptr, uri_2.length() + 1, &uri_2[0] };
+  resource_2.uri = OC_MMEM(&uri_2[0], uri_2.length() + 1, nullptr);
   oc_link_t *link_2 = oc_new_link(&resource_2);
   ASSERT_NE(link_2, nullptr);
   oc_collection_add_link(&collection->res, link_2);
@@ -272,21 +274,21 @@ TEST_F(TestCollections, RemoveLink)
 
   std::string uri_1 = "/ccc";
   oc_resource_t resource_1{};
-  resource_1.uri = { nullptr, uri_1.length() + 1, &uri_1[0] };
+  resource_1.uri = OC_MMEM(&uri_1[0], uri_1.length() + 1, nullptr);
   oc_link_t *link_1 = oc_new_link(&resource_1);
   ASSERT_NE(link_1, nullptr);
   oc_collection_add_link(&collection->res, link_1);
 
   std::string uri_2 = "/bb";
   oc_resource_t resource_2{};
-  resource_2.uri = { nullptr, uri_2.length() + 1, &uri_2[0] };
+  resource_2.uri = OC_MMEM(&uri_2[0], uri_2.length() + 1, nullptr);
   oc_link_t *link_2 = oc_new_link(&resource_2);
   ASSERT_NE(link_2, nullptr);
   oc_collection_add_link(&collection->res, link_2);
 
   std::string uri_3 = "/a";
   oc_resource_t resource_3{};
-  resource_3.uri = { nullptr, uri_3.length() + 1, &uri_3[0] };
+  resource_3.uri = OC_MMEM(&uri_3[0], uri_3.length() + 1, nullptr);
   oc_link_t *link_3 = oc_new_link(&resource_3);
   ASSERT_NE(link_3, nullptr);
   oc_collection_add_link(&collection->res, link_3);
@@ -319,14 +321,14 @@ TEST_F(TestCollections, GetLinkByURI)
 
   std::string uri_1 = "/aaa";
   oc_resource_t resource_1{};
-  resource_1.uri = { nullptr, uri_1.length() + 1, &uri_1[0] };
+  resource_1.uri = OC_MMEM(&uri_1[0], uri_1.length() + 1, nullptr);
   oc_link_t *link_1 = oc_new_link(&resource_1);
   ASSERT_NE(link_1, nullptr);
   oc_collection_add_link(&collection->res, link_1);
 
   std::string uri_2 = "/bbb";
   oc_resource_t resource_2{};
-  resource_2.uri = { nullptr, uri_2.length() + 1, &uri_2[0] };
+  resource_2.uri = OC_MMEM(&uri_2[0], uri_2.length() + 1, nullptr);
   oc_link_t *link_2 = oc_new_link(&resource_2);
   ASSERT_NE(link_2, nullptr);
   oc_collection_add_link(&collection->res, link_2);

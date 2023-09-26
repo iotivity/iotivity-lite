@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright 2023 plgd.dev s.r.o, All Rights Reserved.
+ * Copyright (c) 2023 plgd.dev s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -16,29 +16,35 @@
  *
  ****************************************************************************/
 
-#include "oc_runtime_internal.h"
-#include "port/oc_random.h"
-#include "port/oc_clock.h"
-
-#ifndef OC_DYNAMIC_ALLOCATION
+#include "mutex.h"
 #include "port/oc_allocator_internal.h"
-#endif /* !OC_DYNAMIC_ALLOCATION */
+
+#ifndef OC_DYNAMIC_ALLOCATION
+
+static mutex_t g_allocator_mutex;
 
 void
-oc_runtime_init(void)
+oc_allocator_mutex_init(void)
 {
-  oc_random_init();
-  oc_clock_init();
-#ifndef OC_DYNAMIC_ALLOCATION
-  oc_allocator_mutex_init();
-#endif /* !OC_DYNAMIC_ALLOCATION */
+  mutex_init(&g_allocator_mutex);
 }
 
 void
-oc_runtime_shutdown(void)
+oc_allocator_mutex_lock(void)
 {
-#ifndef OC_DYNAMIC_ALLOCATION
-  oc_allocator_mutex_destroy();
-#endif /* !OC_DYNAMIC_ALLOCATION */
-  oc_random_destroy();
+  mutex_lock(&g_allocator_mutex);
 }
+
+void
+oc_allocator_mutex_unlock(void)
+{
+  mutex_unlock(&g_allocator_mutex);
+}
+
+void
+oc_allocator_mutex_destroy(void)
+{
+  mutex_destroy(&g_allocator_mutex);
+}
+
+#endif /* !OC_DYNAMIC_ALLOCATION */

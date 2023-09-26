@@ -72,7 +72,7 @@ static const uint8_t ALL_COAP_NODES_SL[] = { 0xff, 0x05, 0, 0, 0, 0, 0, 0,
 
 #define ALL_COAP_NODES_V4 0xe00001bb
 
-static HANDLE mutex;
+static HANDLE g_network_mutex;
 SOCKET ifchange_sock;
 BOOL ifchange_initialized;
 OVERLAPPED ifchange_event;
@@ -168,7 +168,7 @@ remove_all_network_interface_cbs(void)
 void
 oc_network_event_handler_mutex_init(void)
 {
-  mutex = mutex_new();
+  g_network_mutex = mutex_new();
 #ifdef OC_NETWORK_MONITOR
   oc_network_interface_cb_mutex = mutex_new();
 #endif /* OC_NETWORK_MONITOR */
@@ -180,13 +180,13 @@ oc_network_event_handler_mutex_init(void)
 void
 oc_network_event_handler_mutex_lock(void)
 {
-  mutex_lock(mutex);
+  mutex_lock(g_network_mutex);
 }
 
 void
 oc_network_event_handler_mutex_unlock(void)
 {
-  mutex_unlock(mutex);
+  mutex_unlock(g_network_mutex);
 }
 
 void
@@ -196,7 +196,7 @@ oc_network_event_handler_mutex_destroy(void)
   oc_tcp_adapter_mutex_destroy();
 #endif /* OC_TCP */
   ifchange_initialized = false;
-  mutex_free(mutex);
+  mutex_free(g_network_mutex);
   closesocket(ifchange_sock);
 #ifdef OC_NETWORK_MONITOR
   mutex_free(oc_network_interface_cb_mutex);

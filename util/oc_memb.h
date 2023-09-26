@@ -48,6 +48,10 @@
 #define OC_MEMB_H
 
 #include "oc_config.h"
+#include "oc_export.h"
+#include "util/oc_compiler.h"
+
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -143,13 +147,15 @@ struct oc_memb
  *
  * \param m A memory block previously declared with MEMB().
  */
-void oc_memb_init(struct oc_memb *m);
+OC_API
+void oc_memb_init(struct oc_memb *m) OC_NONNULL();
 
 /**
  * Allocate a memory block from a block of memory declared with MEMB().
  *
  * \param m A memory block previously declared with MEMB().
  */
+OC_API
 void *_oc_memb_alloc(
 #ifdef OC_MEMORY_TRACE
   const char *func,
@@ -160,7 +166,7 @@ void *_oc_memb_alloc(
  * Deallocate a memory block from a memory block previously declared
  * with MEMB().
  *
- * \param m m A memory block previously declared with MEMB().
+ * \param m A memory block previously declared with MEMB().
  *
  * \param ptr A pointer to the memory block that is to be deallocated.
  *
@@ -168,6 +174,7 @@ void *_oc_memb_alloc(
  * if successfully deallocated) or -1 if the pointer "ptr" did not
  * point to a legal memory block.
  */
+OC_API
 char _oc_memb_free(
 #ifdef OC_MEMORY_TRACE
   const char *func,
@@ -182,11 +189,35 @@ char _oc_memb_free(
 #define oc_memb_free(m, ptr) _oc_memb_free(m, ptr)
 #endif
 
+/**
+ * @brief Set callback invoked when memory for given block becomes available.
+ *
+ * @param m A memory block previously declared with MEMB().
+ * @param cb Callback invoked when memory for given block becomes available.
+ */
+OC_API
 void oc_memb_set_buffers_avail_cb(struct oc_memb *m,
-                                  oc_memb_buffers_avail_callback_t cb);
+                                  oc_memb_buffers_avail_callback_t cb)
+  OC_NONNULL(1);
 
-int oc_memb_inmemb(const struct oc_memb *m, const void *ptr);
+/**
+ * @brief Check if given pointer is in given memory block.
+ *
+ * @param m A memory block previously declared with MEMB().
+ * @param ptr A pointer to be checked.
+ * @return true If the pointer is in given memory block.
+ * @return false Otherwise.
+ */
+OC_API
+bool oc_memb_inmemb(const struct oc_memb *m, const void *ptr);
 
+/**
+ * @brief Get the number of free memory blocks in given memory block.
+ *
+ * @param m A memory block previously declared with MEMB().
+ * @return number of free memory blocks in given memory block.
+ */
+OC_API
 int oc_memb_numfree(const struct oc_memb *m);
 
 #ifdef __cplusplus

@@ -20,8 +20,8 @@
 #include "oc_endpoint.h"
 #include "oc_buffer.h"
 #include "api/oc_udp_internal.h"
+#include "port/oc_allocator_internal.h"
 #include "port/oc_log_internal.h"
-#include "port/oc_network_event_handler_internal.h"
 
 #include <array>
 #include <cstdlib>
@@ -39,19 +39,23 @@ class UDPMessage : public testing::Test {
 public:
   void SetUp() override
   {
-    oc_network_event_handler_mutex_init();
 #ifdef _WIN32
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif /* _WIN32 */
+#ifndef OC_DYNAMIC_ALLOCATION
+    oc_allocator_mutex_init();
+#endif /* !OC_DYNAMIC_ALLOCATION */
   }
 
   void TearDown() override
   {
+#ifndef OC_DYNAMIC_ALLOCATION
+    oc_allocator_mutex_destroy();
+#endif /* !OC_DYNAMIC_ALLOCATION */
 #ifdef _WIN32
     WSACleanup();
 #endif /* _WIN32 */
-    oc_network_event_handler_mutex_destroy();
   }
 
   static void ValidateMessage(bool exp, bool secure,

@@ -72,7 +72,7 @@ std::function<void(oc_etimer *etimer)> TestEventTimer::onEventTimer_{};
 OC_PROCESS_THREAD(oc_test_process, ev, data)
 {
   OC_PROCESS_BEGIN();
-  while (true) {
+  while (oc_process_is_running(&oc_test_process)) {
     OC_PROCESS_YIELD();
 
     OC_INFO("received event 0x%x", (int)ev);

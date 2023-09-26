@@ -23,6 +23,7 @@
 #include "port/oc_log_internal.h"
 #include "port/oc_random.h"
 #include "util/oc_macros_internal.h"
+#include "util/oc_mmem_internal.h"
 #include <assert.h>
 #include <inttypes.h>
 #include <stdbool.h>
@@ -35,7 +36,7 @@ oc_malloc(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  oc_handle_t *block, size_t num_items, pool pool_type)
+  oc_handle_t *block, size_t num_items, oc_mmem_pool_t pool_type)
 {
   if (!g_mmem_initialized) {
     oc_mmem_init();
@@ -54,7 +55,7 @@ oc_free(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  oc_handle_t *block, pool pool_type)
+  oc_handle_t *block, oc_mmem_pool_t pool_type)
 {
   _oc_mmem_free(
 #ifdef OC_MEMORY_TRACE
@@ -62,7 +63,9 @@ oc_free(
 #endif
     block, pool_type);
 
+#ifndef OC_DYNAMIC_ALLOCATION
   block->next = NULL;
+#endif /* !OC_DYNAMIC_ALLOCATION */
   block->ptr = NULL;
   block->size = 0;
 }
@@ -156,12 +159,6 @@ oc_string_view2(const oc_string_t *str)
   return oc_string_view(oc_string(*str), oc_string_len(*str));
 }
 
-oc_string_view_t
-oc_string_view_null(void)
-{
-  return oc_string_view(NULL, 0);
-}
-
 bool
 oc_string_view_is_equal(oc_string_view_t str1, oc_string_view_t str2)
 {
@@ -215,7 +212,7 @@ _oc_new_array(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  oc_array_t *ocarray, size_t size, pool type)
+  oc_array_t *ocarray, size_t size, oc_mmem_pool_t type)
 {
   switch (type) {
   case INT_POOL:
@@ -237,7 +234,7 @@ _oc_free_array(
 #ifdef OC_MEMORY_TRACE
   const char *func,
 #endif
-  oc_array_t *ocarray, pool type)
+  oc_array_t *ocarray, oc_mmem_pool_t type)
 {
   oc_free(
 #ifdef OC_MEMORY_TRACE
