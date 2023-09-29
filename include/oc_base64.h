@@ -21,7 +21,9 @@
 #ifndef OC_BASE64_H
 #define OC_BASE64_H
 
+#include "oc_export.h"
 #include "util/oc_compiler.h"
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -30,7 +32,7 @@ extern "C" {
 #endif
 
 /**
- * encode byte buffer to base64 string. The base64 encoder does not NUL
+ * Encode byte buffer to base64 string. The base64 encoder does not NUL
  * terminate its output. User the return value to add '\0' to the end of the
  * string.
  *
@@ -54,17 +56,18 @@ extern "C" {
  *    // append NUL character to end of string.
  *    b64Buf[output_len] = '\0';
  *
- * @param[in]  input pointer to input byte array to be encoded
- * @param[in]  input_len size of input byte array
+ * @param[in] input pointer to input byte array to be encoded
+ * @param[in] input_size size of input byte array
  * @param[out] output_buffer buffer to hold the base 64 encoded string
- * @param[in]  output_buffer_len size of the output_buffer
+ * @param[in] output_buffer_size size of the output_buffer
  *
  * @return
  *    - the size of the base64 encoded string
  *    - `-1` if the output buffer provided was not large enough
  */
-int oc_base64_encode(const uint8_t *input, size_t input_len,
-                     uint8_t *output_buffer, size_t output_buffer_len);
+OC_API
+int oc_base64_encode(const uint8_t *input, size_t input_size,
+                     uint8_t *output_buffer, size_t output_buffer_size);
 
 /**
  * In place decoding of base 64 string. Size of a base 64 input string will
@@ -84,7 +87,81 @@ int oc_base64_encode(const uint8_t *input, size_t input_len,
  *   - '-1' if unable to decode string. This should only happen if the string
  *     is not a properly encoded base64 string.
  */
+OC_API
 int oc_base64_decode(uint8_t *str, size_t len);
+
+typedef enum {
+  OC_BASE64_ENCODING_STD, // encode using standard base64 encoding
+  OC_BASE64_ENCODING_URL, // encode using URL safe base64 encoding
+} oc_base64_encoding_t;
+
+/**
+ * Calculate the size of the output buffer required to encode a byte array to
+ * base64.
+ *
+ * @param size size of the input byte array
+ * @param padding true if padding should be used
+ *
+ * @return size of the output buffer required to encode the input byte array
+ */
+OC_API
+size_t oc_base64_encoded_output_size(size_t size, bool padding);
+
+/**
+ * Encode byte buffer to base64 string. The base64 encoder does not NUL
+ * terminate its output. User the return value to add '\0' to the end of the
+ * string.
+ *
+ * @param encoding type of encoding to use
+ * @param padding true if padding should be used
+ * @param input pointer to input byte array to be encoded
+ * @param input_size size of input byte array
+ * @param[out] output_buffer buffer to hold the base 64 encoded string
+ * @param output_buffer_size size of the output_buffer
+ *
+ * @return
+ *    - the size of the base64 encoded string
+ *    - `-1` if the output buffer provided was not large enough
+ */
+OC_API
+int oc_base64_encode_v1(oc_base64_encoding_t encoding, bool padding,
+                        const uint8_t *input, size_t input_size,
+                        uint8_t *output_buffer, size_t output_buffer_size);
+
+/**
+ * Calculate the size of the output buffer required to store a decoded base64
+ * array.
+ *
+ * @param input input base64-encoded array
+ * @param input_size size of the input base64-encoded array
+ * @param padding true if the input array is padded with '=' characters at the
+ * end
+ *
+ * @return -1 if the input array is not a valid base64-encoded array
+ * @return size of the output buffer required to decode the input array
+ */
+OC_API
+int oc_base64_decoded_output_size(const uint8_t *input, size_t input_size,
+                                  bool padding);
+
+/**
+ * Decode a base64 array to a byte array.
+ *
+ * @param encoding type of encoding to use
+ * @param padding true if the input array is padded with '=' characters at the
+ * end
+ * @param input pointer to base64 encoded string
+ * @param input_size size of base64 encoded string
+ * @param[out] output_buffer buffer to hold the decoded byte array
+ * @param output_buffer_size size of the output_buffer
+ *
+ * @return -1 on failure
+ * @return >=0 the size of the decoded byte array on success
+ */
+OC_API
+int oc_base64_decode_v1(oc_base64_encoding_t encoding, bool padding,
+                        const uint8_t *input, size_t input_size,
+                        uint8_t *output_buffer, size_t output_buffer_size);
 
 #ifdef __cplusplus
 }
