@@ -56,6 +56,7 @@ typedef struct oc_blockwise_state_s
   oc_string_t href;
   oc_endpoint_t endpoint;
   oc_method_t method;
+  oc_content_format_t content_format;
   oc_blockwise_role_t role;
   uint32_t payload_size;
   uint32_t next_block_offset;

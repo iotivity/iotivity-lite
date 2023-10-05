@@ -110,14 +110,14 @@ bool oc_string_is_equal(const oc_string_t *str1, const oc_string_t *str2)
 /**
  * @brief Compare an oc_string with a C-string
  *
- * @param str1 oc_string (cannot be NULL)
- * @param str2 C-string (cannot be NULL)
+ * @param str1 oc_string
+ * @param str2 C-string
  * @param str2_len length of \p str2
  * @return true strings are equal
  * @return false strings are not equal
  */
 bool oc_string_is_cstr_equal(const oc_string_t *str1, const char *str2,
-                             size_t str2_len) OC_NONNULL();
+                             size_t str2_len);
 
 /**
  * @brief Fill buffer with random values.

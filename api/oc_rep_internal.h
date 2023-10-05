@@ -29,6 +29,13 @@
 extern "C" {
 #endif
 
+typedef enum oc_rep_error_t {
+  OC_REP_NO_ERROR = 0,
+
+  OC_REP_ERROR_INTERNAL = -1,
+  OC_REP_ERROR_OUT_OF_MEMORY = -2,
+} oc_rep_error_t;
+
 /**
  * @brief Check whether property matches by name.
  *
@@ -66,7 +73,7 @@ bool oc_rep_is_property_with_type(const oc_rep_t *rep,
  *
  * @see oc_process_baseline_interface
  */
-bool oc_rep_is_baseline_interface_property(const oc_rep_t *rep);
+bool oc_rep_is_baseline_interface_property(const oc_rep_t *rep) OC_NONNULL();
 
 #ifdef __cplusplus
 }

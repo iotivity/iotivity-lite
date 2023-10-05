@@ -18,6 +18,7 @@ for ((i=0;i<$NUM_DEVICES;i++)); do
     export ASAN_OPTIONS="debug=true:atexit=true:check_initialization_order=true:detect_stack_use_after_return=true:alloc_dealloc_mismatch=true:detect_invalid_pointer_pairs=2:strict_string_checks=true:log_path=/tmp/${i}.asan.log:verify_asan_link_order=0"
     # abort on first tsan problem found
     export TSAN_OPTIONS="halt_on_error=1:abort_on_error=true:log_path=/tmp/${i}.tsan.log:suppressions=/tmp/tsan.suppressions"
+    export UBSAN_OPTIONS="print_stacktrace=1"
     export LD_PRELOAD=/usr/local/lib/faketime/libfaketimeMT.so.1
     ${PREFIX_EXEC} /iotivity-lite/port/linux/service $@ > /tmp/$i.log 2>&1 &
     pids+=($!)

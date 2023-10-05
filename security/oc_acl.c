@@ -18,6 +18,7 @@
 
 #ifdef OC_SECURITY
 
+#include "api/oc_core_res_internal.h"
 #include "api/oc_discovery_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_ri_internal.h"
@@ -373,9 +374,10 @@ oc_sec_check_acl_on_get(const oc_resource_t *resource, bool is_otm)
   /* Retrieve requests to "/oic/res", "/oic/d" and "/oic/p" shall be granted.
    */
   if (is_otm &&
-      ((uri_len == 8 &&
+      ((uri_len == OC_CHAR_ARRAY_LEN(OCF_RES_URI) &&
         memcmp(uri, OCF_RES_URI, OC_CHAR_ARRAY_LEN(OCF_RES_URI)) == 0) ||
-       (uri_len == 6 && memcmp(uri, "/oic/d", 6) == 0) ||
+       (uri_len == OC_CHAR_ARRAY_LEN(OCF_D_URI) &&
+        memcmp(uri, OCF_D_URI, OC_CHAR_ARRAY_LEN(OCF_D_URI)) == 0) ||
        (uri_len == 6 && memcmp(uri, "/oic/p", 6) == 0))) {
     return true;
   }
@@ -1308,7 +1310,7 @@ bool
 oc_sec_acl_add_bootstrap_acl(size_t device)
 {
   bool ret = oc_sec_acl_anon_connection(device, OCF_RES_URI, OC_PERM_RETRIEVE);
-  ret = oc_sec_acl_anon_connection(device, "/oic/d", OC_PERM_RETRIEVE) && ret;
+  ret = oc_sec_acl_anon_connection(device, OCF_D_URI, OC_PERM_RETRIEVE) && ret;
   ret = oc_sec_acl_anon_connection(device, "/oic/p", OC_PERM_RETRIEVE) && ret;
 #ifdef OC_WKCORE
   ret =

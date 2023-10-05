@@ -117,8 +117,8 @@ void coap_options_set_content_format(coap_packet_t *packet,
  * @param packet packet to read (cannot be NULL)
  * @param[out] accept output parameter for the Accept value (cannot be NULL)
  */
-bool coap_options_get_accept(const coap_packet_t *packet, uint16_t *accept)
-  OC_NONNULL();
+bool coap_options_get_accept(const coap_packet_t *packet,
+                             oc_content_format_t *accept) OC_NONNULL();
 
 /**
  * @brief Set the Accept option value.
@@ -126,7 +126,7 @@ bool coap_options_get_accept(const coap_packet_t *packet, uint16_t *accept)
  * The CoAP Accept option can be used to indicate which Content-Format is
  * acceptable to the client.
  */
-void coap_options_set_accept(coap_packet_t *packet, uint16_t accept)
+void coap_options_set_accept(coap_packet_t *packet, oc_content_format_t accept)
   OC_NONNULL();
 
 /**

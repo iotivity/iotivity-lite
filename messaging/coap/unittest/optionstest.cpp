@@ -30,9 +30,9 @@ TEST_F(TestOptions, GetContentFormat)
 {
   coap_packet_t packet{};
   EXPECT_EQ(0, IS_OPTION(&packet, COAP_OPTION_CONTENT_FORMAT));
-  auto content_format = static_cast<oc_content_format_t>(-1);
+  auto content_format = APPLICATION_NOT_DEFINED;
   EXPECT_FALSE(coap_options_get_content_format(&packet, &content_format));
-  EXPECT_EQ(static_cast<oc_content_format_t>(-1), content_format);
+  EXPECT_EQ(APPLICATION_NOT_DEFINED, content_format);
 }
 
 TEST_F(TestOptions, SetContentFormat)
@@ -41,25 +41,25 @@ TEST_F(TestOptions, SetContentFormat)
   EXPECT_EQ(0, IS_OPTION(&packet, COAP_OPTION_CONTENT_FORMAT));
   coap_options_set_content_format(&packet, APPLICATION_CBOR);
   EXPECT_NE(0, IS_OPTION(&packet, COAP_OPTION_CONTENT_FORMAT));
-  auto content_format = static_cast<oc_content_format_t>(-1);
+  auto content_format = APPLICATION_NOT_DEFINED;
   EXPECT_TRUE(coap_options_get_content_format(&packet, &content_format));
   EXPECT_EQ(APPLICATION_CBOR, content_format);
 
   // unset Content-Format
   UNSET_OPTION(&packet, COAP_OPTION_CONTENT_FORMAT);
   EXPECT_EQ(0, IS_OPTION(&packet, COAP_OPTION_CONTENT_FORMAT));
-  content_format = static_cast<oc_content_format_t>(-1);
+  content_format = APPLICATION_NOT_DEFINED;
   EXPECT_FALSE(coap_options_get_content_format(&packet, &content_format));
-  EXPECT_EQ(static_cast<oc_content_format_t>(-1), content_format);
+  EXPECT_EQ(APPLICATION_NOT_DEFINED, content_format);
 }
 
 TEST_F(TestOptions, GetAccept)
 {
   coap_packet_t packet{};
   EXPECT_EQ(0, IS_OPTION(&packet, COAP_OPTION_ACCEPT));
-  auto accept = static_cast<uint16_t>(-1);
+  auto accept = APPLICATION_NOT_DEFINED;
   EXPECT_FALSE(coap_options_get_accept(&packet, &accept));
-  EXPECT_EQ(static_cast<uint16_t>(-1), accept);
+  EXPECT_EQ(APPLICATION_NOT_DEFINED, accept);
 }
 
 TEST_F(TestOptions, SetAccept)
@@ -68,16 +68,16 @@ TEST_F(TestOptions, SetAccept)
   EXPECT_EQ(0, IS_OPTION(&packet, COAP_OPTION_ACCEPT));
   coap_options_set_accept(&packet, APPLICATION_CBOR);
   EXPECT_NE(0, IS_OPTION(&packet, COAP_OPTION_ACCEPT));
-  auto accept = static_cast<uint16_t>(-1);
+  auto accept = APPLICATION_NOT_DEFINED;
   EXPECT_TRUE(coap_options_get_accept(&packet, &accept));
   EXPECT_EQ(APPLICATION_CBOR, accept);
 
   // unset Accept
   UNSET_OPTION(&packet, COAP_OPTION_ACCEPT);
   EXPECT_EQ(0, IS_OPTION(&packet, COAP_OPTION_ACCEPT));
-  accept = static_cast<uint16_t>(-1);
+  accept = APPLICATION_NOT_DEFINED;
   EXPECT_FALSE(coap_options_get_accept(&packet, &accept));
-  EXPECT_EQ(static_cast<uint16_t>(-1), accept);
+  EXPECT_EQ(APPLICATION_NOT_DEFINED, accept);
 }
 
 TEST_F(TestOptions, GetMaxAge)

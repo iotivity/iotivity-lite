@@ -62,6 +62,7 @@ set(OC_APP_DATA_BUFFER_SIZE "" CACHE STRING "Custom static buffer size for appli
 set(OC_APP_DATA_BUFFER_POOL "" CACHE STRING "Custom static size of application messages.")
 set(OC_VERSION_1_1_0_ENABLED OFF CACHE BOOL "Enable OCF version 1.1")
 set(OC_ETAG_ENABLED OFF CACHE BOOL "Enable Entity Tag (ETag) support.")
+set(OC_JSON_ENCODER_ENABLED OFF CACHE BOOL "Enable JSON encoder/decoder support.")
 set(PLGD_DEV_TIME_ENABLED OFF CACHE BOOL "Enable plgd time feature.")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -99,8 +100,16 @@ if(UNIX)
 
     if(OC_UBSAN_ENABLED)
         message(STATUS "Undefined behaviour sanitizer enabled")
-        add_compile_options(${CMAKE_C_FLAGS_DEBUG} -fsanitize=undefined -fno-omit-frame-pointer)
+        if(OC_COMPILER_IS_CLANG)
+            # -fno-sanitize-recover=undefined,local-bounds,nullability
+            add_compile_options(${CMAKE_C_FLAGS_DEBUG} -fsanitize=undefined,local-bounds,nullability -fno-omit-frame-pointer)
+        else()
+            # -fno-sanitize-recover=undefined
+            add_compile_options(${CMAKE_C_FLAGS_DEBUG} -fsanitize=undefined -fno-omit-frame-pointer)
+        endif()
         add_link_options(-fsanitize=undefined)
+        # halt_on_error=1
+        set(OC_UBSAN_OPTIONS "print_stacktrace=1")
     endif()
 
     if(OC_COMPILER_IS_CLANG)
@@ -411,6 +420,10 @@ if(OC_ETAG_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_ETAG")
 endif()
 
+if(OC_JSON_ENCODER_ENABLED)
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_JSON_ENCODER")
+endif()
+
 if(PLGD_DEV_TIME_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "PLGD_DEV_TIME")
     if(BUILD_MBEDTLS)
@@ -472,6 +485,13 @@ if(OC_PKI_ENABLED)
     list(APPEND COMMON_SRC
         ${PROJECT_SOURCE_DIR}/api/c-timestamp/timestamp_tm.c
     )
+endif()
+
+if(OC_JSON_ENCODER_ENABLED)
+    file(GLOB JSMN_SRC
+        ${PROJECT_SOURCE_DIR}/util/jsmn/*.c
+    )
+    list(APPEND COMMON_SRC ${JSMN_SRC})
 endif()
 
 if(PLGD_DEV_TIME_ENABLED)
@@ -971,6 +991,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         FILES ${apitest_files}
         ENVIRONMENT "ASAN_OPTIONS=${OC_ASAN_OPTIONS}"
                     "TSAN_OPTIONS=${OC_TSAN_OPTIONS}"
+                    "UBSAN_OPTIONS=${OC_UBSAN_OPTIONS}"
     )
 
     file(GLOB TIMESTAMPTEST_SRC api/c-timestamp/unittest/*.cpp)
@@ -979,6 +1000,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         SOURCES ${TIMESTAMPTEST_SRC}
         ENVIRONMENT "ASAN_OPTIONS=${OC_ASAN_OPTIONS}"
                     "TSAN_OPTIONS=${OC_TSAN_OPTIONS}"
+                    "UBSAN_OPTIONS=${OC_UBSAN_OPTIONS}"
     )
 
     file(GLOB PLATFORMTEST_SRC port/unittest/*.cpp)
@@ -988,6 +1010,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         SOURCES ${COMMONTEST_SRC} ${PLATFORMTEST_SRC}
         ENVIRONMENT "ASAN_OPTIONS=${OC_ASAN_OPTIONS}"
                     "TSAN_OPTIONS=${OC_TSAN_OPTIONS}"
+                    "UBSAN_OPTIONS=${OC_UBSAN_OPTIONS}"
     )
 
     file(GLOB MESSAGINGTEST_SRC messaging/coap/unittest/*.cpp)
@@ -996,6 +1019,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         SOURCES ${COMMONTEST_SRC} ${MESSAGINGTEST_SRC}
         ENVIRONMENT "ASAN_OPTIONS=${OC_ASAN_OPTIONS}"
                     "TSAN_OPTIONS=${OC_TSAN_OPTIONS}"
+                    "UBSAN_OPTIONS=${OC_UBSAN_OPTIONS}"
     )
 
     if(OC_SECURITY_ENABLED)
@@ -1005,6 +1029,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
             SOURCES ${COMMONTEST_SRC} ${SECURITYTEST_SRC}
             ENVIRONMENT "ASAN_OPTIONS=${OC_ASAN_OPTIONS}"
                         "TSAN_OPTIONS=${OC_TSAN_OPTIONS}"
+                        "UBSAN_OPTIONS=${OC_UBSAN_OPTIONS}"
         )
 
         file(COPY ${PROJECT_SOURCE_DIR}/apps/pki_certs
@@ -1018,6 +1043,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         SOURCES ${COMMONTEST_SRC} ${UTILTEST_SRC}
         ENVIRONMENT "ASAN_OPTIONS=${OC_ASAN_OPTIONS}"
                     "TSAN_OPTIONS=${OC_TSAN_OPTIONS}"
+                    "UBSAN_OPTIONS=${OC_UBSAN_OPTIONS}"
     )
 
     if(OC_CLOUD_ENABLED)
@@ -1028,6 +1054,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
             SOURCES ${COMMONTEST_SRC} ${CLOUDTEST_SRC}
             ENVIRONMENT "ASAN_OPTIONS=${OC_ASAN_OPTIONS}"
                         "TSAN_OPTIONS=${OC_TSAN_OPTIONS}"
+                        "UBSAN_OPTIONS=${OC_UBSAN_OPTIONS}"
         )
     endif()
 

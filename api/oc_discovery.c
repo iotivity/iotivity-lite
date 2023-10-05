@@ -1201,8 +1201,8 @@ oc_wkcore_discovery_handler(oc_request_t *request,
   const char *rt_device = NULL;
   size_t rt_devlen = 0;
   size_t device = request->resource->device;
-  oc_resource_t *resource =
-    oc_core_get_resource_by_uri_v1("oic/d", OC_CHAR_ARRAY_LEN("oic/d"), device);
+  oc_resource_t *resource = oc_core_get_resource_by_uri_v1(
+    OCF_D_URI, OC_CHAR_ARRAY_LEN(OCF_D_URI), device);
   for (size_t i = 0; i < oc_string_array_get_allocated_size(resource->types);
        ++i) {
     size_t size = oc_string_array_get_item_size(resource->types, i);
@@ -1227,7 +1227,6 @@ oc_wkcore_discovery_handler(oc_request_t *request,
     // oic.d.sensor";if="oic.if.11 oic.if.baseline"
 
     size_t length = clf_add_line_to_buffer("<");
-    response_length += length;
 
     oc_endpoint_t *eps =
       oc_connectivity_get_endpoints(request->resource->device);
@@ -1240,22 +1239,17 @@ oc_wkcore_discovery_handler(oc_request_t *request,
       }
       oc_string64_t ep;
       if (oc_endpoint_to_string64(eps, &ep)) {
-        length = clf_add_str_to_buffer(oc_string(ep), oc_string_len(ep));
-        response_length += length;
+        length += clf_add_str_to_buffer(oc_string(ep), oc_string_len(ep));
         break;
       }
       eps = eps->next;
     }
 
-    length = clf_add_line_to_buffer("/oic/res>;");
-    response_length += length;
-    length = clf_add_line_to_buffer("rt=\"oic.wk.res ");
-    response_length += length;
-    length = clf_add_str_to_buffer(rt_device, rt_devlen);
-    response_length += length;
-    length = clf_add_line_to_buffer("\";");
-    response_length += length;
-    length =
+    length += clf_add_line_to_buffer("/oic/res>;");
+    length += clf_add_line_to_buffer("rt=\"oic.wk.res ");
+    length += clf_add_str_to_buffer(rt_device, rt_devlen);
+    length += clf_add_line_to_buffer("\";");
+    length +=
       clf_add_line_to_buffer("if=\"oic.if.ll oic.if.baseline\";ct=10000");
     response_length += length;
   }

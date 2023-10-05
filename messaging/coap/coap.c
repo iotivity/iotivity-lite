@@ -678,6 +678,30 @@ coap_parse_signal_options(coap_packet_t *packet, unsigned int option_number,
 }
 #endif /* OC_TCP */
 
+static bool
+coap_parse_is_valid_content_format_option(int64_t content_format)
+{
+  return content_format == APPLICATION_VND_OCF_CBOR
+#ifdef OC_SPEC_VER_OIC
+         || content_format == APPLICATION_CBOR
+#endif /* OC_SPEC_VER_OIC */
+#ifdef OC_JSON_ENCODER
+         || content_format == APPLICATION_JSON ||
+         content_format == APPLICATION_TD_JSON
+#endif /* OC_JSON_ENCODER */
+    ;
+}
+
+static bool
+coap_parse_is_valid_accept_option(int64_t accept)
+{
+  return coap_parse_is_valid_content_format_option(accept)
+#ifdef OC_WKCORE
+         || accept == APPLICATION_LINK_FORMAT
+#endif /* OC_SPEC_VER_OIC */
+    ;
+}
+
 static coap_status_t
 coap_oscore_parse_inner_option(coap_packet_t *packet,
                                unsigned int option_number, uint8_t *option,
@@ -687,11 +711,7 @@ coap_oscore_parse_inner_option(coap_packet_t *packet,
   case COAP_OPTION_CONTENT_FORMAT: {
     int64_t content_format = coap_parse_int_option(option, option_length);
     COAP_DBG("  Content-Format [%" PRId64 "]", content_format);
-    if (content_format != APPLICATION_VND_OCF_CBOR
-#ifdef OC_SPEC_VER_OIC
-        && content_format != APPLICATION_CBOR
-#endif /* OC_SPEC_VER_OIC */
-    ) {
+    if (!coap_parse_is_valid_content_format_option(content_format)) {
       return UNSUPPORTED_MEDIA_TYPE_4_15;
     }
     packet->content_format = (uint16_t)content_format;
@@ -712,17 +732,7 @@ coap_oscore_parse_inner_option(coap_packet_t *packet,
   case COAP_OPTION_ACCEPT: {
     int64_t accept = coap_parse_int_option(option, option_length);
     COAP_DBG("  Accept [%" PRId64 "]", accept);
-    if (accept != APPLICATION_VND_OCF_CBOR
-#ifdef OC_SPEC_VER_OIC
-        && accept != APPLICATION_CBOR
-#endif /* OC_SPEC_VER_OIC */
-#ifdef OC_WKCORE
-        && accept != APPLICATION_LINK_FORMAT
-#endif /* OC_SPEC_VER_OIC */
-#ifdef OC_CBOR
-        && accept != APPLICATION_CBOR
-#endif /* OC_SPEC_VER_OIC */
-    ) {
+    if (!coap_parse_is_valid_accept_option(accept)) {
       return NOT_ACCEPTABLE_4_06;
     }
     packet->accept = (uint16_t)accept;

@@ -49,6 +49,7 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_network_events.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_query.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_rep.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_rep_decode.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_rep_encode.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_rep_to_json.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_resource.c

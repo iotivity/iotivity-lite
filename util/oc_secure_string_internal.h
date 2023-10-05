@@ -27,6 +27,12 @@
 extern "C" {
 #endif
 
+/** Maximal allowed length (including null-terminator) of C-strings, strings
+ * with greater length are considered invalid.  */
+#ifndef OC_MAX_STRING_LENGTH
+#define OC_MAX_STRING_LENGTH (4096)
+#endif /* !OC_MAX_STRING_LENGTH */
+
 /**
  * @brief Get the number of characters in the string, not including the
  * terminating null character.

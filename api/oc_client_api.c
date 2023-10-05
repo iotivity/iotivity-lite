@@ -20,15 +20,16 @@
 
 #ifdef OC_CLIENT
 
+#include "api/client/oc_client_cb_internal.h"
 #include "api/oc_client_api_internal.h"
 #include "api/oc_discovery_internal.h"
 #include "api/oc_helpers_internal.h"
-#include "oc_message_internal.h"
-#include "api/client/oc_client_cb_internal.h"
+#include "api/oc_rep_encode_internal.h"
 #include "messaging/coap/coap.h"
 #include "messaging/coap/coap_options.h"
 #include "messaging/coap/transactions.h"
 #include "oc_api.h"
+#include "oc_message_internal.h"
 #include "oc_ri_internal.h"
 
 #ifdef OC_TCP
@@ -106,7 +107,8 @@ dispatch_coap_request(void)
     } else
 #endif /* OC_SPEC_VER_OIC */
     {
-      coap_options_set_content_format(g_request, APPLICATION_VND_OCF_CBOR);
+      coap_options_set_content_format(g_request,
+                                      oc_rep_encoder_get_content_format());
     }
   }
 
@@ -210,7 +212,7 @@ prepare_coap_request(oc_client_cb_t *cb, coap_configure_request_fn_t configure,
   } else
 #endif /* OC_SPEC_VER_OIC */
   {
-    coap_options_set_accept(g_request, APPLICATION_VND_OCF_CBOR);
+    coap_options_set_accept(g_request, oc_rep_encoder_get_content_format());
   }
 
   coap_set_token(g_request, cb->token, cb->token_len);
@@ -270,7 +272,8 @@ oc_do_multicast_update(void)
                    (uint32_t)payload_size);
 
   if (payload_size > 0) {
-    coap_options_set_content_format(g_request, APPLICATION_VND_OCF_CBOR);
+    coap_options_set_content_format(g_request,
+                                    oc_rep_encoder_get_content_format());
   }
 
   g_multicast_update->length = coap_serialize_message(

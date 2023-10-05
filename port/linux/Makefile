@@ -16,6 +16,7 @@ export OSCORE ?= 1
 INTROSPECTION ?= 1
 export IDD ?= 1
 export ETAG ?= 0
+export JSON_ENCODER ?= 0
 DESTDIR ?= /usr/local
 install_bin_dir?=${DESTDIR}/opt/iotivity-lite/bin/
 prefix = $(DESTDIR)
@@ -121,6 +122,9 @@ SRC_UTIL:=$(filter-out %_mem_trace.c,$(wildcard ../../util/*.c))
 else
 SRC_UTIL:=$(wildcard ../../util/*.c)
 endif
+ifeq ($(JSON_ENCODER),1)
+SRC_UTIL+=$(wildcard ../../util/jsmn/*.c)
+endif
 SRC_COMMON:=${CBOR} ${CTIMESTAMP} ${SRC_PORT_COMMON} ${SRC_UTIL}
 SRC_API:=$(wildcard ../../api/*.c)
 ifneq ($(INTROSPECTION),1)
@@ -128,6 +132,9 @@ SRC_API:=$(filter-out %oc_introspection.c,${SRC_API})
 endif
 ifneq ($(ETAG),1)
 SRC_API:=$(filter-out %oc_etag.c,${SRC_API})
+endif
+ifneq ($(JSON_ENCODER),1)
+SRC_API:=$(filter-out %oc_rep_decode_json.c %oc_rep_encode_json.c,${SRC_API})
 endif
 SRC:=${SRC_API} $(wildcard ../../messaging/coap/*.c ../../port/linux/*.c)
 SRC_CLIENT:=$(wildcard ../../api/client/*.c)
@@ -167,7 +174,10 @@ OBJ_PYTHON=$(addprefix obj/python/,$(notdir $(SRC_PYTHON:.c=.o)))
 # $(info    OBJ_PYTHON is $(OBJ_PYTHON))
 # $(info    SRC_PYTHON is $(SRC_PYTHON))
 
-VPATH=../../api/:../../api/client/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:../../port/common/:../../port/common/posix/:../../python/:../../util/:
+VPATH=../../api/:../../api/client/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:
+VPATH+=../../port/common/:../../port/common/posix/:
+VPATH+=../../python/:
+VPATH+=../../util/:../../util/jsmn/:
 VPATH+=../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -pthread -lrt
 
@@ -304,6 +314,10 @@ endif
 
 ifeq ($(ETAG),1)
 	EXTRA_CFLAGS += -DOC_ETAG
+endif
+
+ifeq ($(JSON_ENCODER),1)
+	EXTRA_CFLAGS += -DOC_JSON_ENCODER
 endif
 
 # DPP-baesd Streamlined Onboarding applications

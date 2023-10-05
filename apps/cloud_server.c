@@ -1118,6 +1118,10 @@ simulate_tpm_pk_free_key(size_t device, const unsigned char *key, size_t keylen)
 #define OPT_TIME "time"
 #define OPT_SET_SYSTEM_TIME "set-system-time"
 
+#ifdef OC_JSON_ENCODER
+#define OPT_JSON_ENCODER "json-encoder"
+#endif /* OC_JSON_ENCODER */
+
 #define OPT_ARG_DEVICE_NAME OPT_DEVICE_NAME
 #define OPT_ARG_CLOUD_AUTH_CODE OPT_CLOUD_AUTH_CODE
 #define OPT_ARG_CLOUD_CIS OPT_CLOUD_CIS
@@ -1179,6 +1183,10 @@ printhelp(const char *exec_path)
   OC_PRINTF("  -x | --%-26s IPv6 TLS port (use -1 to disable it)\n",
             OPT_LISTEN_TLS_PORT " <port>");
 #endif /* OC_SECURITY */
+#ifdef OC_JSON_ENCODER
+  OC_PRINTF("  -j | --%-26s use JSON encoder to encode message payloads\n",
+            OPT_JSON_ENCODER);
+#endif /* OC_JSON_ENCODER */
   OC_PRINTF("ARGUMENTS:\n");
   OC_PRINTF("  %-33s device name (optional, default: cloud_server)\n",
             OPT_ARG_DEVICE_NAME);
@@ -1280,6 +1288,9 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
     { OPT_LISTEN_DTLS_PORT, required_argument, NULL, 'w' },
     { OPT_LISTEN_TLS_PORT, required_argument, NULL, 'x' },
 #endif /* OC_SECURITY */
+#ifdef OC_JSON_ENCODER
+    { OPT_JSON_ENCODER, no_argument, NULL, 'j' },
+#endif /* OC_JSON_ENCODER */
     { NULL, 0, NULL, 0 },
   };
 
@@ -1504,6 +1515,11 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
       break;
     }
 #endif /* OC_SECURITY */
+#ifdef OC_JSON_ENCODER
+    case 'j':
+      oc_rep_encoder_set_type(OC_REP_JSON_ENCODER);
+      break;
+#endif /* OC_JSON_ENCODER */
     default:
       OC_PRINTF("invalid option(%s)\n", argv[optind]);
       return false;

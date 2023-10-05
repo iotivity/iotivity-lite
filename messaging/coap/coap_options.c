@@ -77,7 +77,8 @@ coap_options_set_content_format(coap_packet_t *packet,
 }
 
 bool
-coap_options_get_accept(const coap_packet_t *packet, uint16_t *accept)
+coap_options_get_accept(const coap_packet_t *packet,
+                        oc_content_format_t *accept)
 {
   if (!IS_OPTION(packet, COAP_OPTION_ACCEPT)) {
     return false;
@@ -87,9 +88,10 @@ coap_options_get_accept(const coap_packet_t *packet, uint16_t *accept)
 }
 
 void
-coap_options_set_accept(coap_packet_t *packet, uint16_t accept)
+coap_options_set_accept(coap_packet_t *packet, oc_content_format_t accept)
 {
-  packet->accept = accept;
+  assert(accept <= UINT16_MAX);
+  packet->accept = (uint16_t)accept;
   SET_OPTION(packet, COAP_OPTION_ACCEPT);
 }
 

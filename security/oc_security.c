@@ -102,7 +102,7 @@ oc_sec_self_own(size_t device)
   oc_sec_sdi_t *sdi = oc_sec_sdi_get(device);
   const oc_device_info_t *self = oc_core_get_device_info(device);
   oc_gen_uuid(&sdi->uuid);
-  oc_new_string(&sdi->name, oc_string(self->name), oc_string_len(self->name));
+  oc_set_string(&sdi->name, oc_string(self->name), oc_string_len(self->name));
   sdi->priv = false;
 
   oc_sec_dump_pstat(device);

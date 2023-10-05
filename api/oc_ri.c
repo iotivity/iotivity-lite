@@ -20,6 +20,8 @@
 #include "api/oc_events_internal.h"
 #include "api/oc_message_buffer_internal.h"
 #include "api/oc_network_events_internal.h"
+#include "api/oc_rep_encode_internal.h"
+#include "api/oc_rep_decode_internal.h"
 #include "messaging/coap/coap_internal.h"
 #include "messaging/coap/coap_options.h"
 #include "messaging/coap/constants.h"
@@ -840,8 +842,8 @@ static ocf_version_t
 ri_get_ocf_version_from_header(const coap_packet_t *request)
 {
 #ifdef OC_SPEC_VER_OIC
-  uint16_t accept = 0;
-  if (coap_options_get_accept(request, &accept) == 1) {
+  oc_content_format_t accept = APPLICATION_NOT_DEFINED;
+  if (coap_options_get_accept(request, &accept)) {
     if (accept == APPLICATION_CBOR) {
       return OIC_VER_1_1_0;
     }
@@ -1236,6 +1238,7 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
    */
   oc_response_buffer_t response_buffer;
   memset(&response_buffer, 0, sizeof(response_buffer));
+  response_buffer.content_format = APPLICATION_NOT_DEFINED;
 
   oc_response_t response_obj;
   memset(&response_obj, 0, sizeof(response_obj));
@@ -1260,7 +1263,7 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
   coap_options_get_content_format(ctx->request, &cf);
 
   /* Read the accept CoAP option in the request */
-  uint16_t accept = 0;
+  oc_content_format_t accept = APPLICATION_NOT_DEFINED;
   coap_options_get_accept(ctx->request, &accept);
 
   /* Initialize OCF interface selector. */
@@ -1312,8 +1315,7 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
 
   bool bad_request = false;
   bool entity_too_large = false;
-  if (payload_len > 0 &&
-      (cf == APPLICATION_CBOR || cf == APPLICATION_VND_OCF_CBOR)) {
+  if (payload_len > 0 && oc_rep_decoder_set_type_by_content_format(cf)) {
     /* Attempt to parse request payload using tinyCBOR via oc_rep helper
      * functions. The result of this parse is a tree of oc_rep_t structures
      * which will reflect the schema of the payload.
@@ -1519,6 +1521,7 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
 #else  /* OC_DYNAMIC_ALLOCATION */
     oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
+    oc_rep_encoder_set_type_by_accept(accept);
 
     oc_status_t ret = ri_invoke_request_handler(
       cur_resource, method, &request_obj, iface_mask, resource_is_collection);

@@ -1867,6 +1867,10 @@ char *jni_rep_to_json(oc_rep_t *rep, bool prettyPrint)
 }
 %}
 
+%ignore oc_rep_encoder_type_t;
+%ignore oc_rep_encoder_set_type;
+%ignore oc_rep_encoder_get_type;
+
 #define OC_API
 #define OC_DEPRECATED(...)
 #define OC_NONNULL(...)
