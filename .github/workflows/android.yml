@@ -41,8 +41,8 @@ jobs:
         include:
           # default (ip4 on, secure on, pki on, dynamic allocation on, tcp on, cloud on, java on, IDD on)
           - args: ""
-          # debug on
-          - args: "DEBUG=1"
+          # debug on, json encoder on
+          - args: "DEBUG=1 JSON_ENCODER=1"
           # secure off
           - args: "SECURE=0"
           # TODO: reenable when dynamic allocation is fixed

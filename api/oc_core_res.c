@@ -307,6 +307,29 @@ core_update_device_data(uint32_t device_count, oc_add_new_device_t cfg)
   g_oc_device_info[device_count].data = cfg.add_device_cb_data;
 }
 
+static void
+oc_create_device_resource(size_t device_count, const char *uri, const char *rt)
+{
+  /* Construct device resource */
+  int properties = OC_DISCOVERABLE;
+#ifdef OC_CLOUD
+  properties |= OC_OBSERVABLE;
+#endif /* OC_CLOUD */
+  if (oc_strnlen(rt, OC_CHAR_ARRAY_LEN(OCF_D_RT) + 1) ==
+        OC_CHAR_ARRAY_LEN(OCF_D_RT) &&
+      strncmp(rt, OCF_D_RT, OC_CHAR_ARRAY_LEN(OCF_D_RT)) == 0) {
+    oc_core_populate_resource(OCF_D, device_count, uri,
+                              OC_IF_R | OC_IF_BASELINE, OC_IF_R, properties,
+                              oc_core_device_handler, /*put*/ NULL,
+                              /*post*/ NULL, /*delete*/ NULL, 1, rt);
+  } else {
+    oc_core_populate_resource(OCF_D, device_count, uri,
+                              OC_IF_R | OC_IF_BASELINE, OC_IF_R, properties,
+                              oc_core_device_handler, /*put*/ NULL,
+                              /*post*/ NULL, /*delete*/ NULL, 2, rt, OCF_D_RT);
+  }
+}
+
 oc_device_info_t *
 oc_core_add_new_device(oc_add_new_device_t cfg)
 {
@@ -336,20 +359,7 @@ oc_core_add_new_device(oc_add_new_device_t cfg)
 
   core_update_device_data(device_count, cfg);
 
-  /* Construct device resource */
-  int properties = OC_DISCOVERABLE;
-#ifdef OC_CLOUD
-  properties |= OC_OBSERVABLE;
-#endif /* OC_CLOUD */
-  if (strlen(cfg.rt) == 8 && strncmp(cfg.rt, "oic.wk.d", 8) == 0) {
-    oc_core_populate_resource(OCF_D, device_count, cfg.uri,
-                              OC_IF_R | OC_IF_BASELINE, OC_IF_R, properties,
-                              oc_core_device_handler, 0, 0, 0, 1, cfg.rt);
-  } else {
-    oc_core_populate_resource(
-      OCF_D, device_count, cfg.uri, OC_IF_R | OC_IF_BASELINE, OC_IF_R,
-      properties, oc_core_device_handler, 0, 0, 0, 2, cfg.rt, "oic.wk.d");
-  }
+  oc_create_device_resource(device_count, cfg.uri, cfg.rt);
 
   if (oc_get_con_res_announced()) {
     /* Construct oic.wk.con resource for this device. */
@@ -705,8 +715,8 @@ oc_core_get_resource_type_by_uri(const char *uri, size_t uri_len)
                            OC_CHAR_ARRAY_LEN("/oic/p"))) {
     return OCF_P;
   }
-  if (core_is_resource_uri(uri, uri_len, "/oic/d",
-                           OC_CHAR_ARRAY_LEN("/oic/p"))) {
+  if (core_is_resource_uri(uri, uri_len, OCF_D_URI,
+                           OC_CHAR_ARRAY_LEN(OCF_D_URI))) {
     return OCF_D;
   }
   if (core_is_resource_uri(uri, uri_len, OCF_RES_URI,

@@ -16,6 +16,7 @@
  *
  ****************************************************************************/
 
+#include "api/oc_rep_internal.h"
 #include "RepPool.h"
 
 #include <gtest/gtest.h>
@@ -27,7 +28,7 @@ RepPool::RepPool(size_t size)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_rep_new_realloc_v1(&buffer_, 0, size);
-#else
+#else  /* !OC_DYNAMIC_ALLOCATION */
   buffer_.resize(size);
   oc_rep_new_v1(buffer_.data(), buffer_.size());
   memset(rep_objects_alloc_, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));
@@ -47,7 +48,7 @@ RepPool::Clear()
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   oc_rep_new_realloc_v1(&buffer_, 0, size_);
-#else
+#else  /* !OC_DYNAMIC_ALLOCATION */
   buffer_.resize(size_);
   oc_rep_new_v1(buffer_.data(), buffer_.size());
   memset(rep_objects_alloc_, 0, OC_MAX_NUM_REP_OBJECTS * sizeof(char));

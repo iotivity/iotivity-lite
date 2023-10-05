@@ -53,10 +53,8 @@ TEST_F(TestCloud, cloud_set_last_error)
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
 
-  int err = 123;
-
-  cloud_set_last_error(ctx, (oc_cloud_error_t)err);
-  ASSERT_EQ((oc_cloud_error_t)err, ctx->last_error);
+  cloud_set_last_error(ctx, CLOUD_ERROR_RESPONSE);
+  ASSERT_EQ(CLOUD_ERROR_RESPONSE, ctx->last_error);
 }
 
 TEST_F(TestCloud, cloud_update_by_resource)

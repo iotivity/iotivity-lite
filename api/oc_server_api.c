@@ -155,7 +155,14 @@ oc_send_response_with_callback(oc_request_t *request, oc_status_t response_code,
   if (!request) {
     return;
   }
+
+  // if no accept header is present, use APPLICATION_VND_OCF_CBOR
   oc_content_format_t content_format = APPLICATION_VND_OCF_CBOR;
+  if (request->response->response_buffer->content_format ==
+        APPLICATION_NOT_DEFINED &&
+      request->accept != APPLICATION_NOT_DEFINED) {
+    content_format = request->accept;
+  }
 #ifdef OC_SPEC_VER_OIC
   if (request->origin && request->origin->version == OIC_VER_1_1_0) {
     content_format = APPLICATION_CBOR;

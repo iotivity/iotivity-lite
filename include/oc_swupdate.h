@@ -189,7 +189,7 @@ typedef bool (*oc_swupdate_on_validate_update_error_fn_t)(
 OC_API
 bool oc_swupdate_validate_update(
   size_t device, const oc_rep_t *rep,
-  oc_swupdate_on_validate_update_error_fn_t on_error, void *data) OC_NONNULL(2);
+  oc_swupdate_on_validate_update_error_fn_t on_error, void *data);
 
 #ifdef __cplusplus
 }

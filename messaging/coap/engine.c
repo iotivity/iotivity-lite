@@ -439,7 +439,11 @@ coap_receive_blockwise_block2(coap_receive_ctx_t *ctx, const char *href,
       ctx->transaction->mid = ctx->response->mid;
       coap_options_set_accept(ctx->response, APPLICATION_VND_OCF_CBOR);
     }
-    coap_options_set_content_format(ctx->response, APPLICATION_VND_OCF_CBOR);
+    oc_content_format_t cf = APPLICATION_VND_OCF_CBOR;
+    if (response_state->base.content_format > 0) {
+      cf = response_state->base.content_format;
+    }
+    coap_options_set_content_format(ctx->response, cf);
     coap_set_payload(ctx->response, payload, payload_size);
     coap_options_set_block2(ctx->response, ctx->block2.num, more,
                             ctx->block2.size, 0);
@@ -679,6 +683,7 @@ coap_receive_set_response_by_handler(coap_receive_ctx_t *ctx,
     return ctx->response->code;
   }
 
+  ctx->response_buffer->content_format = ctx->response->content_format;
 #ifdef OC_BLOCK_WISE
 #ifdef OC_TCP
   if ((endpoint->flags & TCP) != 0) {

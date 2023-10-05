@@ -762,32 +762,6 @@ TEST_F(TestDiscoveryWithServer, GetRequestBaseline)
 
 #ifdef OC_RES_BATCH_SUPPORT
 
-static void
-verifyBatchPayloadResource(const DiscoveryBatchData &dbd,
-                           const oc_resource_t *resource)
-{
-  ASSERT_NE(nullptr, resource);
-  const auto &it = dbd.find(std::string(oc_string(resource->uri)));
-  ASSERT_NE(std::end(dbd), it)
-    << "resource: " << oc_string(resource->uri) << " not found";
-#ifdef OC_HAS_FEATURE_ETAG
-  oc_coap_etag_t etag{};
-  std::copy(it->second.etag.begin(), it->second.etag.end(), etag.value);
-  etag.length = static_cast<uint8_t>(it->second.etag.size());
-  TestDiscoveryWithServer::assertResourceETag(etag, resource);
-#endif /* OC_HAS_FEATURE_ETAG */
-}
-
-static void
-verifyBatchPayload(const DiscoveryBatchData &dbd,
-                   const std::vector<const oc_resource_t *> &expected)
-{
-  ASSERT_EQ(expected.size(), dbd.size());
-  for (const auto *resource : expected) {
-    verifyBatchPayloadResource(dbd, resource);
-  }
-}
-
 struct batch_resources_t
 {
   const oc_endpoint_t *endpoint;
@@ -814,12 +788,42 @@ getBatchResources(const oc_endpoint_t *endpoint)
   return batch;
 }
 
+#ifndef OC_SECURITY
+
+static void
+verifyBatchPayloadResource(const DiscoveryBatchData &dbd,
+                           const oc_resource_t *resource)
+{
+  ASSERT_NE(nullptr, resource);
+  const auto &it = dbd.find(std::string(oc_string(resource->uri)));
+  ASSERT_NE(std::end(dbd), it)
+    << "resource: " << oc_string(resource->uri) << " not found";
+#ifdef OC_HAS_FEATURE_ETAG
+  oc_coap_etag_t etag{};
+  std::copy(it->second.etag.begin(), it->second.etag.end(), etag.value);
+  etag.length = static_cast<uint8_t>(it->second.etag.size());
+  TestDiscoveryWithServer::assertResourceETag(etag, resource);
+#endif /* OC_HAS_FEATURE_ETAG */
+}
+
+static void
+verifyBatchPayload(const DiscoveryBatchData &dbd,
+                   const std::vector<const oc_resource_t *> &expected)
+{
+  ASSERT_EQ(expected.size(), dbd.size());
+  for (const auto *resource : expected) {
+    verifyBatchPayloadResource(dbd, resource);
+  }
+}
+
 static void
 verifyBatchPayload(const DiscoveryBatchData &dbd, const oc_endpoint_t *endpoint)
 {
   auto br = getBatchResources(endpoint);
   verifyBatchPayload(dbd, br.resources);
 }
+
+#endif /* !OC_SECURITY */
 
 static DiscoveryBatchData
 parseBatchPayload(const oc_rep_t *payload)
@@ -1285,31 +1289,6 @@ TEST_F(TestDiscoveryWithServer, GetRequestBatchIncremental_AllAscending)
 
 #ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
 
-namespace {
-
-void
-updateResourceByPost(std::string_view uri, const oc_endpoint_t *endpoint,
-                     const std::function<void()> &payloadFn)
-{
-  auto post_handler = [](oc_client_response_t *data) {
-    oc::TestDevice::Terminate();
-    EXPECT_EQ(OC_STATUS_CHANGED, data->code);
-    OC_DBG("POST payload: %s", oc::RepPool::GetJson(data->payload).data());
-    *static_cast<bool *>(data->user_data) = true;
-  };
-
-  bool invoked = false;
-  ASSERT_TRUE(oc_init_post(uri.data(), endpoint, nullptr, post_handler, LOW_QOS,
-                           &invoked));
-  payloadFn();
-  auto timeout = 1s;
-  ASSERT_TRUE(oc_do_post_with_timeout(timeout.count()));
-  oc::TestDevice::PoolEventsMsV1(timeout, true);
-  ASSERT_TRUE(invoked);
-}
-
-} // namespace
-
 // observe with default (LL) interface
 TEST_F(TestDiscoveryWithServer, Observe)
 {
@@ -1543,6 +1522,27 @@ onBatchObserve(oc_client_response_t *cr)
                                              obd->batch);
   }
 #endif /* OC_HAS_FEATURE_ETAG */
+}
+
+static void
+updateResourceByPost(std::string_view uri, const oc_endpoint_t *endpoint,
+                     const std::function<void()> &payloadFn)
+{
+  auto post_handler = [](oc_client_response_t *data) {
+    oc::TestDevice::Terminate();
+    EXPECT_EQ(OC_STATUS_CHANGED, data->code);
+    OC_DBG("POST payload: %s", oc::RepPool::GetJson(data->payload).data());
+    *static_cast<bool *>(data->user_data) = true;
+  };
+
+  bool invoked = false;
+  ASSERT_TRUE(oc_init_post(uri.data(), endpoint, nullptr, post_handler, LOW_QOS,
+                           &invoked));
+  payloadFn();
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_post_with_timeout(timeout.count()));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  ASSERT_TRUE(invoked);
 }
 
 TEST_F(TestDiscoveryWithServer, ObserveBatchWithResourceUpdate)

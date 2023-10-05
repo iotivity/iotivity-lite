@@ -28,6 +28,7 @@ jobs:
             -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON
             -DPLGD_DEV_TIME_ENABLED=ON
             -DOC_ETAG_ENABLED=ON
+            -DOC_JSON_ENCODER_ENABLED=ON
             -B ${{github.workspace}}/build
 
       - uses: vapier/coverity-scan-action@v1

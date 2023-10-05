@@ -34,6 +34,9 @@
 extern "C" {
 #endif
 
+#define OCF_D_URI "/oic/d"
+#define OCF_D_RT "oic.wk.d"
+
 /**
  * @brief initialize the core functionality
  */

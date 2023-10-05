@@ -1182,6 +1182,9 @@ oc_cred_usage_from_string(const char *str, size_t str_len)
 oc_sec_credusage_t
 oc_cred_parse_credusage(const oc_string_t *credusage_string)
 {
+  if (oc_string_len(*credusage_string) == 0) {
+    return OC_CREDUSAGE_NULL;
+  }
   return oc_cred_usage_from_string(oc_string(*credusage_string),
                                    oc_string_len(*credusage_string));
 }
@@ -1328,6 +1331,9 @@ oc_cred_encoding_from_string(const char *str, size_t str_len)
 oc_sec_encoding_t
 oc_cred_parse_encoding(const oc_string_t *encoding_string)
 {
+  if (oc_string_len(*encoding_string) == 0) {
+    return OC_ENCODING_UNSUPPORTED;
+  }
   return oc_cred_encoding_from_string(oc_string(*encoding_string),
                                       oc_string_len(*encoding_string));
 }

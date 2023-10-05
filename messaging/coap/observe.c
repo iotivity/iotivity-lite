@@ -622,6 +622,7 @@ coap_prepare_notification_blockwise(coap_packet_t *notification,
          response->response_buffer->response_length);
   bwt_state->base.payload_size =
     (uint32_t)response->response_buffer->response_length;
+  bwt_state->base.content_format = response->response_buffer->content_format;
   uint32_t payload_size = 0;
   void *payload = oc_blockwise_dispatch_block(&bwt_state->base, 0,
                                               obs->block2_size, &payload_size);
@@ -841,6 +842,7 @@ coap_notify_collection(oc_collection_t *collection,
   memset(&response_buffer, 0, sizeof(response_buffer));
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
+  response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
   response.response_buffer = &response_buffer;
   request.response = &response;
   request.request_payload = NULL;
@@ -919,6 +921,7 @@ coap_notify_collections(const oc_resource_t *resource)
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
   response.response_buffer = &response_buffer;
+  response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
   request.response = &response;
   request.request_payload = NULL;
   request.method = OC_GET;
@@ -1150,7 +1153,9 @@ coap_notify_observers_internal(oc_resource_t *resource,
   memset(&response_buffer, 0, sizeof(response_buffer));
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
+  response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
   response.response_buffer = &response_buffer;
+
   num = coap_iterate_observers(resource, &response, endpoint, true);
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -1187,6 +1192,7 @@ notify_resource_defaults_observer(oc_resource_t *resource,
   memset(&response_buffer, 0, sizeof(response_buffer));
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
+  response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
   response.response_buffer = &response_buffer;
   /* iterate over observers */
   for (coap_observer_t *obs = (coap_observer_t *)oc_list_head(g_observers_list);
@@ -1350,6 +1356,7 @@ coap_process_discovery_batch_observers(void)
            batch_observer_get_resource_uri(batch_obs));
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
+  response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
 
   while (batch_obs != NULL) {
 #ifdef OC_BLOCK_WISE
@@ -1534,6 +1541,7 @@ notify_discovery_observers(oc_resource_t *resource)
   memset(&response_buffer, 0, sizeof(response_buffer));
   response_buffer.buffer = buffer;
   response_buffer.buffer_size = OC_MIN_OBSERVE_SIZE;
+  response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
   response.response_buffer = &response_buffer;
 
   int num = 0;

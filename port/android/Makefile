@@ -110,6 +110,7 @@ JAVA ?= 1
 export INTROSPECTION ?= 1
 export IDD ?= 1
 export ETAG ?= 0
+export JSON_ENCODER ?= 0
 
 ROOT_DIR = ../..
 SWIG_DIR = $(ROOT_DIR)/swig
@@ -149,6 +150,9 @@ SRC_UTIL:=$(filter-out %_mem_trace.c,$(wildcard ../../util/*.c))
 else
 SRC_UTIL:=$(wildcard ../../util/*.c)
 endif
+ifeq ($(JSON_ENCODER),1)
+SRC_UTIL+=$(wildcard ../../util/jsmn/*.c)
+endif
 SRC_COMMON:=${CBOR} ${CTIMESTAMP} ${SRC_PORT_COMMON} ${SRC_UTIL}
 SRC_API:=$(wildcard ../../api/*.c)
 ifneq ($(INTROSPECTION),1)
@@ -156,6 +160,9 @@ SRC_API:=$(filter-out %oc_introspection.c,${SRC_API})
 endif
 ifneq ($(ETAG),1)
 SRC_API:=$(filter-out %oc_etag.c,${SRC_API})
+endif
+ifneq ($(JSON_ENCODER),1)
+SRC_API:=$(filter-out %oc_rep_decode_json.c %oc_rep_encode_json.c,${SRC_API})
 endif
 SRC:=${SRC_API} $(wildcard ../../messaging/coap/*.c ../../port/android/*.c)
 SRC_CLIENT:=$(wildcard ../../api/client/*.c)
@@ -197,7 +204,9 @@ else
 OBJ_CLOUD =
 endif
 OBJ_CLIENT_SERVER=$(addprefix ${OBJDIR}/client_server/,$(notdir $(SRC:.c=.o) $(SRC_CLIENT:.c=.o)))
-VPATH=../../api/:../../api/client/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:../../port/common/:../../port/common/posix/:../../util/:
+VPATH=../../api/:../../api/client/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:
+VPATH+=../../port/common/:../../port/common/posix/:
+VPATH+=../../util/:../../util/jsmn/:
 VPATH+=../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -llog
 
@@ -293,6 +302,10 @@ endif
 
 ifeq ($(ETAG),1)
 	EXTRA_CFLAGS += -DOC_ETAG
+endif
+
+ifeq ($(JSON_ENCODER),1)
+	EXTRA_CFLAGS += -DOC_JSON_ENCODER
 endif
 
 CFLAGS += $(EXTRA_CFLAGS)

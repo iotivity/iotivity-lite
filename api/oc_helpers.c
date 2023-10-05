@@ -176,6 +176,9 @@ bool
 oc_string_is_cstr_equal(const oc_string_t *str1, const char *str2,
                         size_t str2_len)
 {
+  if (str1 == NULL || oc_string(*str1) == NULL) {
+    return str2 == NULL;
+  }
   return oc_string_view_is_equal(oc_string_view2(str1),
                                  oc_string_view(str2, str2_len));
 }
