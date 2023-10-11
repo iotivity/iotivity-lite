@@ -1227,6 +1227,13 @@ oc_send_discovery_request(oc_message_t *message)
                WSAGetLastError());
         goto done;
       }
+      DWORD ttl = OC_IPV4_MULTICAST_TTL;
+      if (setsockopt(dev->server4_sock, IPPROTO_IP, IP_MULTICAST_TTL,
+                     (char *)&ttl, sizeof(DWORD)) == -1) {
+        OC_ERR("setting socket option for default IP_MULTICAST_TTL: %d",
+               WSAGetLastError());
+        goto done;
+      }
       message->endpoint.interface_index = ifaddr->if_index;
       memcpy(message->endpoint.addr_local.ipv4.address,
              &addr->sin_addr.S_un.S_addr, 4);
