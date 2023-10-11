@@ -1047,11 +1047,11 @@ static int
 oc_rep_encode_tagged_string(CborEncoder *encoder, CborTag tag,
                             const std::string &key, const std::string &value)
 {
-  oc_rep_encoder_convert_offset_to_ptr(encoder);
+  oc_rep_encoder_convert_offset_to_ptr(oc_rep_global_encoder(), encoder);
   int err = cbor_encode_text_string(encoder, key.c_str(), key.length());
   err |= cbor_encode_tag(encoder, tag);
   err |= cbor_encode_text_string(encoder, value.c_str(), value.length());
-  oc_rep_encoder_convert_ptr_to_offset(encoder);
+  oc_rep_encoder_convert_ptr_to_offset(oc_rep_global_encoder(), encoder);
   return err;
 }
 

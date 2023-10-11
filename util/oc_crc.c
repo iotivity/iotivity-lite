@@ -18,7 +18,7 @@
 
 #include "util/oc_features.h"
 
-#ifdef OC_HAS_FEATURE_CRC64
+#ifdef OC_HAS_FEATURE_CRC_ENCODER
 
 #include "util/oc_crc_internal.h"
 
@@ -43,13 +43,12 @@ crc64_update(uint64_t crc, uint8_t byte)
 }
 
 uint64_t
-oc_crc64(const uint8_t *buffer, size_t size)
+oc_crc64(uint64_t crc, const uint8_t *buffer, size_t size)
 {
-  uint64_t crc = 0;
   for (size_t i = 0; i < size; i++) {
     crc = crc64_update(crc, buffer[i]);
   }
   return crc;
 }
 
-#endif /* OC_HAS_FEATURE_CRC64 */
+#endif /* OC_HAS_FEATURE_CRC_ENCODER */

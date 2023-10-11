@@ -1333,7 +1333,7 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
 
   bool bad_request = false;
   bool entity_too_large = false;
-  if (payload_len > 0 && oc_rep_decoder_set_type_by_content_format(cf)) {
+  if (payload_len > 0 && oc_rep_decoder_set_by_content_format(cf)) {
     /* Attempt to parse request payload using tinyCBOR via oc_rep helper
      * functions. The result of this parse is a tree of oc_rep_t structures
      * which will reflect the schema of the payload.

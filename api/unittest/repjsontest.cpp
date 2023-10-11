@@ -1218,8 +1218,6 @@ public:
 
     oc_rep_encoder_set_type(OC_REP_CBOR_ENCODER);
     oc_rep_decoder_set_type(OC_REP_CBOR_DECODER);
-
-    oc_log_set_level(OC_LOG_LEVEL_INFO);
   }
 };
 

@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright 2023 plgd.dev s.r.o, All Rights Reserved.
+ * Copyright (c) 2023 plgd.dev s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,32 @@
  *
  ****************************************************************************/
 
-#include "api/oc_rep_internal.h"
-#include "oc_runtime_internal.h"
-#include "port/oc_random.h"
-#include "port/oc_clock.h"
+#ifndef OC_REP_ENCODE_CRC_INTERNAL_H
+#define OC_REP_ENCODE_CRC_INTERNAL_H
 
-#ifndef OC_DYNAMIC_ALLOCATION
-#include "port/oc_allocator_internal.h"
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#include "util/oc_features.h"
 
-void
-oc_runtime_init(void)
-{
-  oc_random_init();
-  oc_clock_init();
-#ifndef OC_DYNAMIC_ALLOCATION
-  oc_allocator_mutex_init();
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#ifdef OC_HAS_FEATURE_CRC_ENCODER
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#include "api/oc_rep_encode_internal.h"
+
+#define OC_CRC_REP_FALSE (0x0)
+#define OC_CRC_REP_TRUE (0x1)
+
+#define OC_CRC_OPEN_CONTAINER (0x0)
+#define OC_CRC_CLOSE_CONTAINER (0x1)
+
+/** Return an initialized CRC encoder. */
+oc_rep_encoder_implementation_t oc_rep_crc_encoder(void);
+
+#ifdef __cplusplus
 }
+#endif
 
-void
-oc_runtime_shutdown(void)
-{
-#ifndef OC_DYNAMIC_ALLOCATION
-  oc_allocator_mutex_destroy();
-#endif /* !OC_DYNAMIC_ALLOCATION */
-  oc_random_destroy();
-}
+#endif /* OC_HAS_FEATURE_CRC_ENCODER */
+
+#endif /* OC_REP_ENCODE_CRC_INTERNAL_H */

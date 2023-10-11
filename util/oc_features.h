@@ -63,7 +63,7 @@
 #endif /* OC_ETAG && OC_SERVER */
 
 #ifdef OC_HAS_FEATURE_ETAG
-#define OC_HAS_FEATURE_CRC64
+#define OC_HAS_FEATURE_CRC_ENCODER
 #endif /* OC_HAS_FEATURE_ETAG */
 
 #endif /* OC_FEATURES_H */

@@ -20,6 +20,7 @@
 #include "api/cloud/oc_cloud_internal.h"
 #include "api/cloud/oc_cloud_manager_internal.h"
 #include "api/cloud/oc_cloud_store_internal.h"
+#include "api/oc_rep_internal.h"
 #include "oc_api.h"
 #include "oc_rep.h"
 #include "port/oc_log_internal.h"

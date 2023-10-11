@@ -16,14 +16,9 @@
  *
  ******************************************************************/
 
-#include "util/oc_features.h"
-
-#ifdef OC_JSON_ENCODER
-
 #include "encoder/TestEncoderBuffer.h"
 
 #include "api/oc_rep_encode_internal.h"
-#include "api/oc_rep_encode_json_internal.h"
 #include "api/oc_rep_decode_internal.h"
 #include "oc_rep.h"
 #include "port/oc_log_internal.h"
@@ -36,42 +31,42 @@
 #include <string>
 #include <vector>
 
-class TestJsonRepEncodeWithRealloc : public testing::Test {
+class TestCborRepEncodeWithRealloc : public testing::Test {
 public:
   static void SetUpTestCase()
   {
     TestEncoderBuffer::StoreDefaults();
-    TestJsonRepEncodeWithRealloc::encoder =
-      std::make_unique<TestEncoderBuffer>(OC_REP_JSON_ENCODER);
-    ASSERT_EQ(OC_REP_JSON_ENCODER, oc_rep_encoder_get_type());
+    TestCborRepEncodeWithRealloc::encoder =
+      std::make_unique<TestEncoderBuffer>(OC_REP_CBOR_ENCODER);
+    ASSERT_EQ(OC_REP_CBOR_ENCODER, oc_rep_encoder_get_type());
   }
 
   static void TearDownTestCase()
   {
-    TestJsonRepEncodeWithRealloc::encoder.reset();
+    TestCborRepEncodeWithRealloc::encoder.reset();
     TestEncoderBuffer::RestoreDefaults();
   }
 
   static void SetRepBuffer(size_t size = 1024, size_t max_size = 1024)
   {
-    TestJsonRepEncodeWithRealloc::encoder->SetRepBuffer(size, max_size);
+    TestCborRepEncodeWithRealloc::encoder->SetRepBuffer(size, max_size);
   }
 
   static oc::oc_rep_unique_ptr ParsePayload()
   {
-    return TestJsonRepEncodeWithRealloc::encoder->ParsePayload();
+    return TestCborRepEncodeWithRealloc::encoder->ParsePayload();
   }
 
-  static void Shrink() { TestJsonRepEncodeWithRealloc::encoder->Shrink(); }
+  static void Shrink() { TestCborRepEncodeWithRealloc::encoder->Shrink(); }
 
   static std::unique_ptr<TestEncoderBuffer> encoder;
 };
 
-std::unique_ptr<TestEncoderBuffer> TestJsonRepEncodeWithRealloc::encoder{
+std::unique_ptr<TestEncoderBuffer> TestCborRepEncodeWithRealloc::encoder{
   nullptr
 };
 
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeRaw)
+TEST_F(TestCborRepEncodeWithRealloc, EncodeRaw)
 {
   std::vector<uint8_t> in{ '\0' };
   SetRepBuffer(0, 0);
@@ -95,170 +90,98 @@ TEST_F(TestJsonRepEncodeWithRealloc, EncodeRaw)
   EXPECT_EQ(CborErrorOutOfMemory, oc_rep_get_cbor_errno());
 }
 
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeNull)
+TEST_F(TestCborRepEncodeWithRealloc, EncodeNull)
 {
-  /* null */
-  size_t kNullRepSize = 4;
-  SetRepBuffer(1, kNullRepSize);
+  SetRepBuffer(1, 1);
   ASSERT_EQ(CborNoError, oc_rep_encode_null(oc_rep_get_encoder()));
   EXPECT_EQ(CborErrorOutOfMemory, oc_rep_encode_null(oc_rep_get_encoder()));
 
-  SetRepBuffer(1, 8 * kNullRepSize);
+  SetRepBuffer(1, 8);
   for (size_t i = 0; i < 8; ++i) {
     ASSERT_EQ(CborNoError, oc_rep_encode_null(oc_rep_get_encoder()));
   }
-  EXPECT_EQ(8 * kNullRepSize, oc_rep_get_encoded_payload_size());
+  EXPECT_EQ(8, oc_rep_get_encoded_payload_size());
   EXPECT_EQ(CborErrorOutOfMemory, oc_rep_encode_null(oc_rep_get_encoder()));
 }
 
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeNull_InvalidNullMapKey)
+TEST_F(TestCborRepEncodeWithRealloc, EncodeBool)
 {
-  SetRepBuffer();
-  CborEncoder map{};
-  ASSERT_EQ(CborNoError, oc_rep_encoder_create_map(oc_rep_get_encoder(), &map,
-                                                   CborIndefiniteLength));
-  // null cannot be used as a map key
-  EXPECT_EQ(CborErrorImproperValue, oc_rep_encode_null(&map));
-}
-
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeBool)
-{
-  /* true */
-  constexpr size_t kTrueRepSize = 4;
-  /* false */
-  constexpr size_t kFalseRepSize = 5;
-
-  SetRepBuffer(1, kFalseRepSize);
+  SetRepBuffer(1, 1);
   ASSERT_EQ(CborNoError, oc_rep_encode_boolean(oc_rep_get_encoder(), false));
   EXPECT_EQ(CborErrorOutOfMemory,
             oc_rep_encode_boolean(oc_rep_get_encoder(), true));
 
   // 4 * true + 4 * false
-  SetRepBuffer(1, 4 * kTrueRepSize + 4 * kFalseRepSize);
+  SetRepBuffer(1, 8);
   for (size_t i = 0; i < 8; ++i) {
     ASSERT_EQ(CborNoError,
               oc_rep_encode_boolean(oc_rep_get_encoder(), i % 2 == 0));
   }
-  ASSERT_EQ(4 * kTrueRepSize + 4 * kFalseRepSize,
-            oc_rep_get_encoded_payload_size());
+  ASSERT_EQ(8, oc_rep_get_encoded_payload_size());
   EXPECT_EQ(CborErrorOutOfMemory,
             oc_rep_encode_boolean(oc_rep_get_encoder(), false));
 }
 
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeBool_InvalidBoolMapKey)
-{
-  SetRepBuffer();
-  CborEncoder map{};
-  ASSERT_EQ(CborNoError, oc_rep_encoder_create_map(oc_rep_get_encoder(), &map,
-                                                   CborIndefiniteLength));
-  // bool cannot be used as a map key
-  EXPECT_EQ(CborErrorImproperValue, oc_rep_encode_boolean(&map, true));
-}
-
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeInt)
+TEST_F(TestCborRepEncodeWithRealloc, EncodeInt)
 {
   SetRepBuffer(1, 1);
   EXPECT_EQ(CborErrorOutOfMemory,
-            oc_rep_encode_int(oc_rep_get_encoder(), OC_REP_JSON_INT_MAX));
+            oc_rep_encode_int(oc_rep_get_encoder(), INT64_MAX));
 
-  /* 2^52 (9007199254740992) -> 16 digits */
-  SetRepBuffer(1, 16);
-  ASSERT_EQ(CborNoError,
-            oc_rep_encode_int(oc_rep_get_encoder(), OC_REP_JSON_INT_MAX));
-  ASSERT_EQ(16, oc_rep_get_encoded_payload_size());
+  SetRepBuffer(1, 9);
+  ASSERT_EQ(CborNoError, oc_rep_encode_int(oc_rep_get_encoder(), INT64_MAX));
+  ASSERT_EQ(9, oc_rep_get_encoded_payload_size());
   EXPECT_EQ(CborErrorOutOfMemory,
-            oc_rep_encode_int(oc_rep_get_encoder(), OC_REP_JSON_INT_MAX));
+            oc_rep_encode_int(oc_rep_get_encoder(), INT64_MAX));
 }
 
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeInt_InvalidIntMapKey)
-{
-  SetRepBuffer();
-  CborEncoder map{};
-  ASSERT_EQ(CborNoError, oc_rep_encoder_create_map(oc_rep_get_encoder(), &map,
-                                                   CborIndefiniteLength));
-  // int cannot be used as a map key
-  EXPECT_EQ(CborErrorImproperValue, oc_rep_encode_int(&map, 1));
-}
-
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeInt_InvalidIntValue)
-{
-  SetRepBuffer();
-  EXPECT_EQ(CborErrorDataTooLarge,
-            oc_rep_encode_int(oc_rep_get_encoder(), OC_REP_JSON_INT_MAX + 1));
-  EXPECT_EQ(CborErrorDataTooLarge,
-            oc_rep_encode_int(oc_rep_get_encoder(), OC_REP_JSON_INT_MIN - 1));
-}
-
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeUint)
+TEST_F(TestCborRepEncodeWithRealloc, EncodeUint)
 {
   SetRepBuffer(1, 1);
   EXPECT_EQ(CborErrorOutOfMemory,
-            oc_rep_encode_uint(oc_rep_get_encoder(), OC_REP_JSON_UINT_MAX));
+            oc_rep_encode_uint(oc_rep_get_encoder(), UINT64_MAX));
 
-  /* 2^52 (9007199254740992) -> 16 digits */
-  SetRepBuffer(1, 16);
-  ASSERT_EQ(CborNoError,
-            oc_rep_encode_uint(oc_rep_get_encoder(), OC_REP_JSON_UINT_MAX));
-  ASSERT_EQ(16, oc_rep_get_encoded_payload_size());
+  SetRepBuffer(1, 9);
+  ASSERT_EQ(CborNoError, oc_rep_encode_uint(oc_rep_get_encoder(), UINT64_MAX));
+  ASSERT_EQ(9, oc_rep_get_encoded_payload_size());
   EXPECT_EQ(CborErrorOutOfMemory,
-            oc_rep_encode_uint(oc_rep_get_encoder(), OC_REP_JSON_UINT_MAX));
+            oc_rep_encode_uint(oc_rep_get_encoder(), UINT64_MAX));
 }
 
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeUint_InvalidUintMapKey)
-{
-  SetRepBuffer();
-  CborEncoder map{};
-  ASSERT_EQ(CborNoError, oc_rep_encoder_create_map(oc_rep_get_encoder(), &map,
-                                                   CborIndefiniteLength));
-  // uint cannot be used as a map key
-  EXPECT_EQ(CborErrorImproperValue, oc_rep_encode_uint(&map, 1));
-}
-
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeUint_InvalidUintValue)
-{
-  SetRepBuffer();
-  EXPECT_EQ(CborErrorDataTooLarge,
-            oc_rep_encode_uint(oc_rep_get_encoder(), OC_REP_JSON_UINT_MAX + 1));
-}
-
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeFloat_UnsupportedType)
+TEST_F(TestCborRepEncodeWithRealloc, EncodeFloat)
 {
   float val = 0;
-  SetRepBuffer();
-  EXPECT_EQ(
-    CborErrorUnsupportedType,
-    oc_rep_encode_floating_point(oc_rep_get_encoder(), CborFloatType, &val));
+  SetRepBuffer(1, 1);
+  EXPECT_EQ(CborErrorOutOfMemory, oc_rep_encode_floating_point(
+                                    oc_rep_get_encoder(), CborFloatType, &val));
+
+  SetRepBuffer(1, 5);
+  val = std::numeric_limits<float>::max();
+  ASSERT_EQ(CborNoError, oc_rep_encode_floating_point(oc_rep_get_encoder(),
+                                                      CborFloatType, &val));
+  ASSERT_EQ(5, oc_rep_get_encoded_payload_size());
+  EXPECT_EQ(CborErrorOutOfMemory, oc_rep_encode_floating_point(
+                                    oc_rep_get_encoder(), CborFloatType, &val));
 }
 
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeDouble)
+TEST_F(TestCborRepEncodeWithRealloc, EncodeDouble)
 {
   SetRepBuffer(1, 1);
   EXPECT_EQ(CborErrorOutOfMemory,
             oc_rep_encode_double(oc_rep_get_encoder(),
                                  std::numeric_limits<double>::max()));
 
-  /* 1.79769e+308 */
-  SetRepBuffer(1, 316);
+  SetRepBuffer(1, 9);
   ASSERT_EQ(CborNoError,
             oc_rep_encode_double(oc_rep_get_encoder(),
                                  std::numeric_limits<double>::max()));
-  ASSERT_EQ(316, oc_rep_get_encoded_payload_size());
+  ASSERT_EQ(9, oc_rep_get_encoded_payload_size());
   EXPECT_EQ(CborErrorOutOfMemory,
             oc_rep_encode_double(oc_rep_get_encoder(),
                                  std::numeric_limits<double>::max()));
 }
 
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeDouble_InvalidDoubleMapKey)
-{
-  SetRepBuffer();
-  CborEncoder map{};
-  ASSERT_EQ(CborNoError, oc_rep_encoder_create_map(oc_rep_get_encoder(), &map,
-                                                   CborIndefiniteLength));
-  // double cannot be used as a map key
-  EXPECT_EQ(CborErrorImproperValue, oc_rep_encode_double(&map, 0.0));
-}
-
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeTextString)
+TEST_F(TestCborRepEncodeWithRealloc, EncodeTextString)
 {
   SetRepBuffer(1, 1);
   std::string str = "test";
@@ -266,31 +189,33 @@ TEST_F(TestJsonRepEncodeWithRealloc, EncodeTextString)
     CborErrorOutOfMemory,
     oc_rep_encode_text_string(oc_rep_get_encoder(), str.c_str(), str.length()));
 
+  SetRepBuffer(1, 17);
   str = "this is 16 chars";
-  // "\"this is 16 chars\""
-  SetRepBuffer(1, 18);
   ASSERT_EQ(CborNoError, oc_rep_encode_text_string(oc_rep_get_encoder(),
                                                    str.c_str(), str.length()));
-  ASSERT_EQ(18, oc_rep_get_encoded_payload_size());
+  ASSERT_EQ(17, oc_rep_get_encoded_payload_size());
 
-  // no additional char should fit
   str = "c";
   EXPECT_EQ(
     CborErrorOutOfMemory,
     oc_rep_encode_text_string(oc_rep_get_encoder(), str.c_str(), str.length()));
 }
 
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeByteString_UnsupportedType)
+TEST_F(TestCborRepEncodeWithRealloc, EncodeByteString)
 {
+  SetRepBuffer(1, 1);
   std::vector<uint8_t> bstr = { 0x42, 0x0,  0x42, 0x0,  0x42, 0x0,  0x42, 0x42,
                                 0x0,  0x42, 0x0,  0x42, 0x0,  0x42, 0x42, 0x0 };
-  SetRepBuffer();
   EXPECT_EQ(
-    CborErrorUnsupportedType,
+    CborErrorOutOfMemory,
     oc_rep_encode_byte_string(oc_rep_get_encoder(), bstr.data(), bstr.size()));
+
+  SetRepBuffer(1, 20);
+  EXPECT_EQ(CborNoError, oc_rep_encode_byte_string(oc_rep_get_encoder(),
+                                                   bstr.data(), bstr.size()));
 }
 
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeArray)
+TEST_F(TestCborRepEncodeWithRealloc, EncodeArray)
 {
   SetRepBuffer(1, 1);
   CborEncoder array{};
@@ -308,39 +233,23 @@ TEST_F(TestJsonRepEncodeWithRealloc, EncodeArray)
   EXPECT_EQ(CborErrorOutOfMemory,
             oc_rep_encoder_close_container(oc_rep_get_encoder(), &array));
 
-  // [true]
-  SetRepBuffer(1, 6);
+  SetRepBuffer(1, 3);
   array = {};
   ASSERT_EQ(CborNoError, oc_rep_encoder_create_array(
                            oc_rep_get_encoder(), &array, CborIndefiniteLength));
   ASSERT_EQ(CborNoError, oc_rep_encode_boolean(&array, true));
   ASSERT_EQ(CborNoError,
             oc_rep_encoder_close_container(oc_rep_get_encoder(), &array));
-  ASSERT_EQ(6, oc_rep_get_encoded_payload_size());
+  ASSERT_EQ(3, oc_rep_get_encoded_payload_size());
 }
 
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeArray_InvalidArrayMapKey)
+TEST_F(TestCborRepEncodeWithRealloc, EncodeMap)
 {
-  SetRepBuffer();
-  CborEncoder map{};
-  ASSERT_EQ(CborNoError, oc_rep_encoder_create_map(oc_rep_get_encoder(), &map,
-                                                   CborIndefiniteLength));
-  // array cannot be used as a map key
-  CborEncoder array{};
-  EXPECT_EQ(CborErrorImproperValue,
-            oc_rep_encoder_create_array(&map, &array, CborIndefiniteLength));
-}
-
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeMap)
-{
-  std::string key = "key";
-  SetRepBuffer(1, 7);
+  SetRepBuffer(1, 1);
   CborEncoder map{};
   CborEncoder inner_map{};
   ASSERT_EQ(CborNoError, oc_rep_encoder_create_map(oc_rep_get_encoder(), &map,
                                                    CborIndefiniteLength));
-  ASSERT_EQ(CborNoError,
-            oc_rep_encode_text_string(&map, key.c_str(), key.length()));
   EXPECT_EQ(CborErrorOutOfMemory,
             oc_rep_encoder_create_map(&map, &inner_map, CborIndefiniteLength));
 
@@ -351,7 +260,8 @@ TEST_F(TestJsonRepEncodeWithRealloc, EncodeMap)
   EXPECT_EQ(CborErrorOutOfMemory,
             oc_rep_encoder_close_container(oc_rep_get_encoder(), &map));
 
-  SetRepBuffer(1, 12);
+  std::string key = "key";
+  SetRepBuffer(1, 7);
   map = {};
   ASSERT_EQ(CborNoError, oc_rep_encoder_create_map(oc_rep_get_encoder(), &map,
                                                    CborIndefiniteLength));
@@ -360,26 +270,14 @@ TEST_F(TestJsonRepEncodeWithRealloc, EncodeMap)
   ASSERT_EQ(CborNoError, oc_rep_encode_boolean(&map, true));
   ASSERT_EQ(CborNoError,
             oc_rep_encoder_close_container(oc_rep_get_encoder(), &map));
-  ASSERT_EQ(12, oc_rep_get_encoded_payload_size());
+  ASSERT_EQ(7, oc_rep_get_encoded_payload_size());
 
   auto rep = ParsePayload();
   ASSERT_NE(nullptr, rep.get());
   OC_DBG("payload: %s", oc::RepPool::GetJson(rep.get(), true).data());
 }
 
-TEST_F(TestJsonRepEncodeWithRealloc, EncodeMap_InvalidObjectMapKey)
-{
-  SetRepBuffer();
-  CborEncoder map{};
-  ASSERT_EQ(CborNoError, oc_rep_encoder_create_map(oc_rep_get_encoder(), &map,
-                                                   CborIndefiniteLength));
-  // array cannot be used as a map key
-  CborEncoder inner_map{};
-  EXPECT_EQ(CborErrorImproperValue,
-            oc_rep_encoder_create_map(&map, &inner_map, CborIndefiniteLength));
-}
-
-TEST_F(TestJsonRepEncodeWithRealloc, EncodedPayloadRealloc)
+TEST_F(TestCborRepEncodeWithRealloc, EncodedPayloadRealloc)
 {
   SetRepBuffer(1, 1024);
 
@@ -393,14 +291,12 @@ TEST_F(TestJsonRepEncodeWithRealloc, EncodedPayloadRealloc)
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_set_int(root, int, -1);
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_rep_set_uint(root, uint, OC_REP_JSON_UINT_MAX);
+  oc_rep_set_uint(root, uint, -1);
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
-#if 0  
   std::vector<uint8_t> byte_string = { 0x00, 0x01, 0x02, 0x03, 0x04, 0x05 };
   oc_rep_set_byte_string(root, byte_string_key, byte_string.data(),
                          byte_string.size());
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
-#endif
   std::vector<int> fib = { 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, 89 };
   oc_rep_set_key(oc_rep_object(root), "fibonacci");
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -423,7 +319,7 @@ TEST_F(TestJsonRepEncodeWithRealloc, EncodedPayloadRealloc)
   ASSERT_NE(nullptr, rep.get());
   OC_DBG("payload: %s", oc::RepPool::GetJson(rep.get(), true).data());
   size_t payload_size = oc_rep_get_encoded_payload_size();
-  EXPECT_EQ(176, payload_size);
+  EXPECT_EQ(156, payload_size);
 #ifdef OC_DYNAMIC_ALLOCATION
   EXPECT_GT(oc_rep_get_encoder_buffer_size(), payload_size);
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -432,5 +328,3 @@ TEST_F(TestJsonRepEncodeWithRealloc, EncodedPayloadRealloc)
   EXPECT_EQ(oc_rep_get_encoder_buffer_size(), payload_size);
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
-
-#endif /* OC_JSON_ENCODER */

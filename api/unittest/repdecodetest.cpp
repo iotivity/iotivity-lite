@@ -35,7 +35,7 @@ TEST_F(TestRepDecode, SetTypeByContentFormat)
   for (int i = 0; i < APPLICATION_NOT_DEFINED; ++i) {
     auto cf = static_cast<oc_content_format_t>(i);
     if (is_accepted_format(cf)) {
-      EXPECT_TRUE(oc_rep_decoder_set_type_by_content_format(cf));
+      EXPECT_TRUE(oc_rep_decoder_set_by_content_format(cf));
       oc_rep_decoder_type_t exp_type = OC_REP_CBOR_DECODER;
 #ifdef OC_JSON_ENCODER
       if (cf == APPLICATION_JSON || cf == APPLICATION_TD_JSON) {
@@ -45,12 +45,11 @@ TEST_F(TestRepDecode, SetTypeByContentFormat)
       EXPECT_EQ(exp_type, oc_rep_decoder_get_type());
       continue;
     }
-    EXPECT_FALSE(oc_rep_decoder_set_type_by_content_format(cf))
+    EXPECT_FALSE(oc_rep_decoder_set_by_content_format(cf))
       << "unexpected valid decoder for cf: " << cf;
   }
 
-  EXPECT_TRUE(
-    oc_rep_decoder_set_type_by_content_format(APPLICATION_NOT_DEFINED));
+  EXPECT_TRUE(oc_rep_decoder_set_by_content_format(APPLICATION_NOT_DEFINED));
   EXPECT_EQ(OC_REP_CBOR_DECODER, oc_rep_decoder_get_type());
 }
 

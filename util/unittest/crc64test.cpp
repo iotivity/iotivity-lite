@@ -44,7 +44,7 @@ TEST(TestCRC, CRC64)
 
   for (auto &input : inputs) {
     EXPECT_EQ(input.crc,
-              oc_crc64((uint8_t *)&input.input[0], input.input.size()));
+              oc_crc64(0, (uint8_t *)&input.input[0], input.input.size()));
   }
 }
 

@@ -31,10 +31,10 @@
 
 #include <assert.h>
 
-static struct oc_memb *g_rep_objects;
+static struct oc_memb *g_rep_objects = NULL;
 CborEncoder root_map;
 CborEncoder links_array;
-int g_err;
+int g_err = CborNoError;
 
 void
 oc_rep_set_pool(struct oc_memb *rep_objects_pool)
@@ -46,7 +46,7 @@ void
 oc_rep_new_v1(uint8_t *payload, size_t size)
 {
   g_err = CborNoError;
-  oc_rep_buffer_init(payload, size);
+  oc_rep_encoder_buffer_init(oc_rep_global_encoder(), payload, size);
 }
 
 void
@@ -62,7 +62,8 @@ void
 oc_rep_new_realloc_v1(uint8_t **payload, size_t size, size_t max_size)
 {
   g_err = CborNoError;
-  oc_rep_buffer_realloc_init(payload, size, max_size);
+  oc_rep_encoder_buffer_realloc_init(oc_rep_global_encoder(), payload, size,
+                                     max_size);
 }
 
 void
