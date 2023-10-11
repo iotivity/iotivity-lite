@@ -28,6 +28,7 @@
 #include <cbor.h>
 #endif /* OC_RES_BATCH_SUPPORT */
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -86,9 +87,10 @@ void oc_process_baseline_interface_with_filter(
   OC_NONNULL(1);
 
 /** Setup response for the request */
-void oc_send_response_internal(oc_request_t *request, oc_status_t response_code,
+bool oc_send_response_internal(oc_request_t *request, oc_status_t response_code,
                                oc_content_format_t content_format,
-                               size_t response_length, bool trigger_cb);
+                               size_t response_length, bool trigger_cb)
+  OC_NONNULL();
 
 #ifdef __cplusplus
 }

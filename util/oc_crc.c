@@ -16,9 +16,14 @@
  *
  ******************************************************************/
 
-#include "util/oc_crc_internal.h"
+#include "util/oc_features.h"
 
 #ifdef OC_HAS_FEATURE_CRC64
+
+#include "util/oc_crc_internal.h"
+
+#include <stddef.h>
+#include <stdint.h>
 
 // ECMA-182, reflected form polynomial
 #define CRC64_POLYNOMIAL (0xC96C5795D7870F42ULL)

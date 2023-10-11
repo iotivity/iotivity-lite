@@ -1666,13 +1666,13 @@ bool oc_get_diagnostic_message(const oc_client_response_t *response,
  * `oc_send_response(request, OC_IGNORE)` since it does not attempt to fill the
  * response buffer before sending the response.
  *
- * @param[in] request the request being responded to
+ * @param[in] request the request being responded to (cannot be NULL)
  *
  * @see oc_request_callback_t
  * @see oc_send_response
  */
 OC_API
-void oc_ignore_request(oc_request_t *request);
+void oc_ignore_request(oc_request_t *request) OC_NONNULL();
 
 /**
  * Respond to an incoming request asynchronously.
@@ -1710,16 +1710,17 @@ void oc_ignore_request(oc_request_t *request);
  * }
  * ```
  * @param[in] request the request that will be responded to as a separate
- *                    response
+ *                    response (cannot be NULL)
  * @param[in] response instance of an internal struct that is used to track the
- *                     state of the separate response.
+ *                     state of the separate response. (cannot be NULL)
  *
  * @see oc_set_separate_response_buffer
  * @see oc_send_separate_response
  */
 OC_API
 void oc_indicate_separate_response(oc_request_t *request,
-                                   oc_separate_response_t *response);
+                                   oc_separate_response_t *response)
+  OC_NONNULL();
 
 /**
  * Set a response buffer for holding the response payload.
@@ -1729,13 +1730,15 @@ void oc_indicate_separate_response(oc_request_t *request,
  * initial response.
  *
  * @param[in] handle instance of the oc_separate_response_t that was passed to
- *                   the oc_indicate_separate_response() function
+ *                   the oc_indicate_separate_response() function (cannot be
+ * NULL)
  *
  * @see oc_indicate_separate_response
  * @see oc_send_separate_response
  */
 OC_API
-void oc_set_separate_response_buffer(oc_separate_response_t *handle);
+void oc_set_separate_response_buffer(oc_separate_response_t *handle)
+  OC_NONNULL();
 
 /**
  * Called to send the deferred response to a GET, PUT, POST or DELETE request.
@@ -1754,7 +1757,7 @@ void oc_set_separate_response_buffer(oc_separate_response_t *handle);
  */
 OC_API
 void oc_send_separate_response(oc_separate_response_t *handle,
-                               oc_status_t response_code);
+                               oc_status_t response_code) OC_NONNULL();
 
 /**
  * Notify all observers of a change to a given resource's property

@@ -625,8 +625,8 @@ oc_get_next_collection_with_link(const oc_resource_t *resource,
 typedef struct oc_handle_collection_request_result_t
 {
   bool ok;
-  int ecode;
-  int pcode;
+  coap_status_t ecode;
+  coap_status_t pcode;
 } oc_handle_collection_request_result_t;
 
 static bool
@@ -752,8 +752,8 @@ static oc_handle_collection_request_result_t
 oc_handle_collection_baseline_request(oc_method_t method, oc_request_t *request)
 {
   oc_collection_t *collection = (oc_collection_t *)request->resource;
-  int ecode = oc_status_code(OC_STATUS_OK);
-  int pcode = oc_status_code(OC_STATUS_BAD_REQUEST);
+  coap_status_t ecode = oc_status_code_unsafe(OC_STATUS_OK);
+  coap_status_t pcode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST);
   if (method == OC_PUT || method == OC_POST) {
     if (collection->res.set_properties.cb.set_props == NULL) {
       OC_ERR("internal collection error: set properties callback not set");
@@ -791,7 +791,7 @@ oc_handle_collection_baseline_request(oc_method_t method, oc_request_t *request)
         collection->res.get_properties.user_data);
     }
     oc_rep_end_root_object();
-    pcode = ecode = oc_status_code(OC_STATUS_OK);
+    pcode = ecode = oc_status_code_unsafe(OC_STATUS_OK);
   }
 
   oc_handle_collection_request_result_t result = {
@@ -894,8 +894,8 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
                                    const oc_resource_t *notify_resource)
 {
   assert(request != NULL);
-  int ecode = oc_status_code(OC_STATUS_OK);
-  int pcode = oc_status_code(OC_STATUS_BAD_REQUEST);
+  coap_status_t ecode = oc_status_code_unsafe(OC_STATUS_OK);
+  coap_status_t pcode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST);
   CborEncoder encoder;
   CborEncoder prev_link;
   oc_request_t rest_request;
@@ -945,7 +945,7 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
         pay = pay->next;
       }
       if (href == NULL || oc_string_len(*href) == 0) {
-        ecode = oc_status_code(OC_STATUS_BAD_REQUEST);
+        ecode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST);
         goto processed_request;
       }
     process_request:
@@ -980,7 +980,7 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
 #ifdef OC_SECURITY
             if (request->origin != NULL &&
                 !oc_sec_check_acl(method, link->resource, request->origin)) {
-              response_buffer.code = oc_status_code(OC_STATUS_FORBIDDEN);
+              response_buffer.code = oc_status_code_unsafe(OC_STATUS_FORBIDDEN);
             } else
 #endif /* OC_SECURITY */
             {
@@ -992,8 +992,8 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
                       NULL)) {
                   oc_handle_collection_request_result_t res = {
                     .ok = false,
-                    .ecode = oc_status_code(OC_STATUS_OK),
-                    .pcode = oc_status_code(OC_STATUS_BAD_REQUEST),
+                    .ecode = oc_status_code_unsafe(OC_STATUS_OK),
+                    .pcode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST),
                   };
                   return res;
                 }
@@ -1043,16 +1043,16 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
               }
             }
             if (method_not_found) {
-              ecode = oc_status_code(OC_STATUS_METHOD_NOT_ALLOWED);
+              ecode = oc_status_code_unsafe(OC_STATUS_METHOD_NOT_ALLOWED);
               memcpy(&links_array, &prev_link, sizeof(CborEncoder));
               goto next;
             } else {
               if ((method == OC_PUT || method == OC_POST) &&
                   response_buffer.code <
-                    oc_status_code(OC_STATUS_BAD_REQUEST)) {
+                    oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
               }
               if (response_buffer.code <
-                  oc_status_code(OC_STATUS_BAD_REQUEST)) {
+                  oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
                 pcode = response_buffer.code;
               } else {
                 ecode = response_buffer.code;
@@ -1076,7 +1076,7 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
       }
     } break;
     default:
-      ecode = oc_status_code(OC_STATUS_BAD_REQUEST);
+      ecode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST);
       goto processed_request;
     }
     rep = rep->next;
@@ -1098,15 +1098,15 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
                              oc_interface_mask_t iface_mask,
                              const oc_resource_t *notify_resource)
 {
-  int ecode = oc_status_code(OC_STATUS_OK);
-  int pcode = oc_status_code(OC_STATUS_BAD_REQUEST);
+  coap_status_t ecode = oc_status_code_unsafe(OC_STATUS_OK);
+  coap_status_t pcode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST);
   switch (iface_mask) {
 #ifdef OC_COLLECTIONS_IF_CREATE
   case OC_IF_CREATE:
     if (oc_handle_collection_create_request(method, request)) {
-      pcode = ecode = oc_status_code(OC_STATUS_OK);
+      pcode = ecode = oc_status_code_unsafe(OC_STATUS_OK);
     } else {
-      pcode = ecode = oc_status_code(OC_STATUS_BAD_REQUEST);
+      pcode = ecode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST);
     }
     break;
 #endif /* OC_COLLECTIONS_IF_CREATE */
@@ -1122,7 +1122,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
   }
   case OC_IF_LL:
     oc_handle_collection_linked_list_request(request);
-    pcode = ecode = oc_status_code(OC_STATUS_OK);
+    pcode = ecode = oc_status_code_unsafe(OC_STATUS_OK);
     break;
   case OC_IF_B: {
     oc_handle_collection_request_result_t res =
@@ -1149,8 +1149,8 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
   }
 
   oc_status_t code = OC_STATUS_BAD_REQUEST;
-  if (ecode < oc_status_code(OC_STATUS_BAD_REQUEST) &&
-      pcode < oc_status_code(OC_STATUS_BAD_REQUEST)) {
+  if (ecode < oc_status_code_unsafe(OC_STATUS_BAD_REQUEST) &&
+      pcode < oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
     switch (method) {
     case OC_GET:
       code = OC_STATUS_OK;
@@ -1173,8 +1173,9 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
   oc_send_response_internal(request, code, APPLICATION_VND_OCF_CBOR, size,
                             true);
 
+  coap_status_t status_code = oc_status_code_unsafe(code);
   if ((method == OC_PUT || method == OC_POST) &&
-      oc_status_code(code) < oc_status_code(OC_STATUS_BAD_REQUEST)) {
+      status_code < oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
     if (iface_mask == OC_IF_CREATE) {
       coap_notify_collection_observers(
         collection, request->response->response_buffer, iface_mask);
