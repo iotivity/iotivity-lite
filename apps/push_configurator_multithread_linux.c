@@ -129,66 +129,66 @@ create_notification_selector(void)
   if (!is_resource_found())
     return;
 
-  if (oc_init_post(PUSHCONFIG_RESOURCE_PATH, &originserver_ep,
-                   "if=oic.if.create",
-                   &cb_create_notification_selector_response, LOW_QOS, NULL)) {
-    oc_string_t pushtarget_ep_str;
-    oc_string_t pushtarget_str;
-
-    oc_rep_begin_root_object();
-
-    oc_rep_open_array(root, rt);
-    oc_rep_add_text_string(rt, "oic.r.notificationselector");
-    oc_rep_add_text_string(rt, "oic.r.pushproxy");
-    oc_rep_close_array(root, rt);
-
-    oc_rep_open_array(root, if);
-    oc_rep_add_text_string(if, "oic.if.rw");
-    oc_rep_add_text_string(if, "oic.if.baseline");
-    oc_rep_close_array(root, if);
-
-    oc_rep_open_object(root, p);
-    oc_rep_set_uint(p, bm, 3);
-    oc_rep_close_object(root, p);
-
-    /* ----- begin of "rep" ----- */
-    oc_rep_open_object(root, rep);
-
-    /* phref (optinal) */
-    oc_rep_set_text_string(rep, phref, push_rsc_uri);
-
-    /* prt (optinal) */
-    oc_rep_open_array(rep, prt);
-    oc_rep_add_text_string(prt, resource_rt);
-    oc_rep_close_array(rep, prt);
-
-    /* pushtarget */
-    oc_endpoint_to_string(&targetserver_ep, &pushtarget_ep_str);
-    OC_PRINTF("target server's ep: %s \n", oc_string(pushtarget_ep_str));
-    oc_concat_strings(&pushtarget_str, oc_string(pushtarget_ep_str), recv_path);
-    OC_PRINTF("targetpath: %s \n", oc_string(pushtarget_str));
-    oc_rep_set_text_string(rep, pushtarget, oc_string(pushtarget_str));
-
-    /* pushqif */
-    oc_rep_set_text_string(rep, pushqif, "oic.if.rw");
-
-    /* sourcert */
-    oc_rep_open_array(rep, sourcert);
-    oc_rep_add_text_string(sourcert, "oic.r.pushpayload");
-    oc_rep_close_array(rep, sourcert);
-
-    /* state */
-    /* ----- end of "rep" ----- */
-    oc_rep_close_object(root, rep);
-
-    oc_rep_end_root_object();
-
-    oc_free_string(&pushtarget_ep_str);
-    oc_free_string(&pushtarget_str);
-  } else {
+  if (!oc_init_post(PUSHCONFIG_RESOURCE_PATH, &originserver_ep,
+                    "if=oic.if.create",
+                    &cb_create_notification_selector_response, LOW_QOS, NULL)) {
     OC_PRINTF("could not initiate oc_init_post()\n");
     return;
   }
+  oc_rep_begin_root_object();
+
+  oc_rep_open_array(root, rt);
+  oc_rep_add_text_string(rt, "oic.r.notificationselector");
+  oc_rep_add_text_string(rt, "oic.r.pushproxy");
+  oc_rep_close_array(root, rt);
+
+  oc_rep_open_array(root, if);
+  oc_rep_add_text_string(if, "oic.if.rw");
+  oc_rep_add_text_string(if, "oic.if.baseline");
+  oc_rep_close_array(root, if);
+
+  oc_rep_open_object(root, p);
+  oc_rep_set_uint(p, bm, 3);
+  oc_rep_close_object(root, p);
+
+  /* ----- begin of "rep" ----- */
+  oc_rep_open_object(root, rep);
+
+  /* phref (optinal) */
+  oc_rep_set_text_string(rep, phref, push_rsc_uri);
+
+  /* prt (optinal) */
+  oc_rep_open_array(rep, prt);
+  oc_rep_add_text_string(prt, resource_rt);
+  oc_rep_close_array(rep, prt);
+
+  /* pushtarget */
+  oc_string_t pushtarget_ep_str;
+  if (oc_endpoint_to_string(&targetserver_ep, &pushtarget_ep_str) != 0) {
+    OC_PRINTF("error converting target server endpoint to string\n");
+    return;
+  }
+  OC_PRINTF("target server's ep: %s \n", oc_string(pushtarget_ep_str));
+  oc_string_t pushtarget_str;
+  oc_concat_strings(&pushtarget_str, oc_string(pushtarget_ep_str), recv_path);
+  OC_PRINTF("targetpath: %s \n", oc_string(pushtarget_str));
+  oc_rep_set_text_string(rep, pushtarget, oc_string(pushtarget_str));
+  oc_free_string(&pushtarget_str);
+  oc_free_string(&pushtarget_ep_str);
+
+  /* pushqif */
+  oc_rep_set_text_string(rep, pushqif, "oic.if.rw");
+
+  /* sourcert */
+  oc_rep_open_array(rep, sourcert);
+  oc_rep_add_text_string(sourcert, "oic.r.pushpayload");
+  oc_rep_close_array(rep, sourcert);
+
+  /* state */
+  /* ----- end of "rep" ----- */
+  oc_rep_close_object(root, rep);
+
+  oc_rep_end_root_object();
 
   if (!oc_do_post()) {
     OC_PRINTF("oc_do_post() failed\n");

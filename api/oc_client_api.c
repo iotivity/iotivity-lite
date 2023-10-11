@@ -31,6 +31,7 @@
 #include "oc_api.h"
 #include "oc_message_internal.h"
 #include "oc_ri_internal.h"
+#include "util/oc_secure_string_internal.h"
 
 #ifdef OC_TCP
 #include "messaging/coap/coap_signal.h"
@@ -52,94 +53,117 @@ typedef struct oc_dispatch_context_t
 // a global variable
 static oc_dispatch_context_t g_dispatch = { NULL, NULL };
 
-static coap_packet_t g_request[1];
+typedef struct oc_dispatch_request_t
+{
+  coap_packet_t packet;
 #ifdef OC_BLOCK_WISE
-static oc_blockwise_state_t *g_request_buffer = NULL;
+  oc_blockwise_state_t *buffer;
 #endif /* OC_BLOCK_WISE */
+} oc_dispatch_request_t;
+
+static oc_dispatch_request_t g_request;
 
 #ifdef OC_OSCORE
 static oc_message_t *g_multicast_update = NULL;
 #endif /* OC_OSCORE */
 
 static bool
-dispatch_coap_request(void)
+dispatch_coap_request_set_payload(oc_dispatch_request_t *request,
+                                  const oc_dispatch_context_t *dispatch)
 {
   int payload_size = oc_rep_get_encoded_payload_size();
 
-  if ((g_dispatch.client_cb->method == OC_PUT ||
-       g_dispatch.client_cb->method == OC_POST) &&
+  if ((dispatch->client_cb->method == OC_PUT ||
+       dispatch->client_cb->method == OC_POST) &&
       payload_size > 0) {
 
 #ifdef OC_BLOCK_WISE
-    g_request_buffer->payload_size = (uint32_t)payload_size;
+    request->buffer->payload_size = (uint32_t)payload_size;
     uint32_t block_size;
+    if (
 #ifdef OC_TCP
-    if ((g_dispatch.transaction->message->endpoint.flags & TCP) == 0 &&
-        payload_size > OC_BLOCK_SIZE) {
-#else  /* OC_TCP */
-    if ((long)payload_size > OC_BLOCK_SIZE) {
-#endif /* !OC_TCP */
+      (dispatch->transaction->message->endpoint.flags & TCP) == 0 &&
+#endif /* OC_TCP */
+      (long)payload_size > OC_BLOCK_SIZE) {
       void *payload = oc_blockwise_dispatch_block(
-        g_request_buffer, 0, (uint32_t)OC_BLOCK_SIZE, &block_size);
+        request->buffer, 0, (uint32_t)OC_BLOCK_SIZE, &block_size);
       if (payload) {
-        coap_set_payload(g_request, payload, block_size);
-        coap_options_set_block1(g_request, 0, 1, (uint16_t)block_size, 0);
-        coap_options_set_size1(g_request, (uint32_t)payload_size);
-        g_request->type = COAP_TYPE_CON;
-        g_dispatch.client_cb->qos = HIGH_QOS;
+        coap_set_payload(&request->packet, payload, block_size);
+        coap_options_set_block1(&request->packet, 0, 1, (uint16_t)block_size,
+                                0);
+        coap_options_set_size1(&request->packet, (uint32_t)payload_size);
+        request->packet.type = COAP_TYPE_CON;
+        dispatch->client_cb->qos = HIGH_QOS;
       }
     } else {
-      coap_set_payload(g_request, g_request_buffer->buffer,
+      coap_set_payload(&request->packet, request->buffer->buffer,
                        (uint32_t)payload_size);
-      g_request_buffer->ref_count = 0;
+      request->buffer->ref_count = 0;
     }
 #else  /* OC_BLOCK_WISE */
-    coap_set_payload(
-      g_request, g_dispatch.transaction->message->data + COAP_MAX_HEADER_SIZE,
-      (uint32_t)payload_size);
+    coap_set_payload(&request->packet,
+                     dispatch->transaction->message->data +
+                       COAP_MAX_HEADER_SIZE,
+                     (uint32_t)payload_size);
 #endif /* !OC_BLOCK_WISE */
   }
 
   if (payload_size > 0) {
+    oc_content_format_t cf;
+    if (!oc_rep_encoder_get_content_format(&cf)) {
+      return false;
+    }
 #ifdef OC_SPEC_VER_OIC
-    if (g_dispatch.client_cb->endpoint.version == OIC_VER_1_1_0) {
-      coap_options_set_content_format(g_request, APPLICATION_CBOR);
-    } else
+    if (dispatch->client_cb->endpoint.version == OIC_VER_1_1_0 &&
+        cf == APPLICATION_VND_OCF_CBOR) {
+      cf = APPLICATION_CBOR;
+    }
 #endif /* OC_SPEC_VER_OIC */
-    {
-      coap_options_set_content_format(g_request,
-                                      oc_rep_encoder_get_content_format());
-    }
+
+    coap_options_set_content_format(&request->packet, cf);
   }
+  return true;
+}
 
+static bool
+dispatch_coap_request(void)
+{
   bool success = false;
-  g_dispatch.transaction->message->length = coap_serialize_message(
-    g_request, g_dispatch.transaction->message->data, oc_message_buffer_size());
-  if (g_dispatch.transaction->message->length > 0) {
-    coap_send_transaction(g_dispatch.transaction);
-
-    if (g_dispatch.client_cb->observe_seq == OC_COAP_OPTION_OBSERVE_NOT_SET) {
-      if (g_dispatch.client_cb->qos == LOW_QOS) {
-        oc_set_delayed_callback(g_dispatch.client_cb,
-                                &oc_client_cb_remove_async, OC_NON_LIFETIME);
-      } else {
-        oc_set_delayed_callback(g_dispatch.client_cb,
-                                &oc_client_cb_remove_async,
-                                OC_EXCHANGE_LIFETIME);
-      }
-    }
-
-    success = true;
-  } else {
+  if (!dispatch_coap_request_set_payload(&g_request, &g_dispatch)) {
     coap_clear_transaction(g_dispatch.transaction);
     oc_client_cb_free(g_dispatch.client_cb);
+    goto dispatch_coap_request_exit;
   }
 
-#ifdef OC_BLOCK_WISE
-  if (g_request_buffer && g_request_buffer->ref_count == 0) {
-    oc_blockwise_free_request_buffer(g_request_buffer);
+  g_dispatch.transaction->message->length = coap_serialize_message(
+    &g_request.packet, g_dispatch.transaction->message->data,
+    oc_message_buffer_size());
+  if (g_dispatch.transaction->message->length == 0) {
+    coap_clear_transaction(g_dispatch.transaction);
+    oc_client_cb_free(g_dispatch.client_cb);
+    goto dispatch_coap_request_exit;
   }
-  g_request_buffer = NULL;
+
+  coap_send_transaction(g_dispatch.transaction);
+
+  if (g_dispatch.client_cb->observe_seq == OC_COAP_OPTION_OBSERVE_NOT_SET) {
+    if (g_dispatch.client_cb->qos == LOW_QOS) {
+      oc_set_delayed_callback(g_dispatch.client_cb, &oc_client_cb_remove_async,
+                              OC_NON_LIFETIME);
+    } else {
+      oc_set_delayed_callback(g_dispatch.client_cb, &oc_client_cb_remove_async,
+                              OC_EXCHANGE_LIFETIME);
+    }
+  }
+
+  success = true;
+
+dispatch_coap_request_exit:
+#ifdef OC_BLOCK_WISE
+  if (g_request.buffer != NULL && g_request.buffer->ref_count == 0) {
+    oc_blockwise_free_request_buffer(g_request.buffer);
+  }
+  g_request.buffer = NULL;
 #endif /* OC_BLOCK_WISE */
 
   g_dispatch.transaction = NULL;
@@ -171,66 +195,70 @@ prepare_coap_request(oc_client_cb_t *cb, coap_configure_request_fn_t configure,
 
 #ifdef OC_BLOCK_WISE
   if (cb->method == OC_PUT || cb->method == OC_POST) {
-    g_request_buffer = oc_blockwise_alloc_request_buffer(
+    g_request.buffer = oc_blockwise_alloc_request_buffer(
       oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, &cb->endpoint,
       cb->method, OC_BLOCKWISE_CLIENT, (uint32_t)OC_MIN_APP_DATA_SIZE);
-    if (!g_request_buffer) {
+    if (!g_request.buffer) {
       OC_ERR("global request_buffer is NULL");
       return false;
     }
 #ifdef OC_DYNAMIC_ALLOCATION
 #ifdef OC_APP_DATA_BUFFER_POOL
-    if (g_request_buffer->block) {
-      oc_rep_new_v1(g_request_buffer->buffer, g_request_buffer->buffer_size);
+    if (g_request.buffer->block) {
+      oc_rep_new_v1(g_request.buffer->buffer, g_request.buffer->buffer_size);
     } else
 #endif
     {
-      oc_rep_new_realloc_v1(&g_request_buffer->buffer,
-                            g_request_buffer->buffer_size,
+      oc_rep_new_realloc_v1(&g_request.buffer->buffer,
+                            g_request.buffer->buffer_size,
                             OC_MAX_APP_DATA_SIZE);
     }
 #else  /* OC_DYNAMIC_ALLOCATION */
-    oc_rep_new_v1(g_request_buffer->buffer, OC_MIN_APP_DATA_SIZE);
+    oc_rep_new_v1(g_request.buffer->buffer, OC_MIN_APP_DATA_SIZE);
 #endif /* !OC_DYNAMIC_ALLOCATION */
-    g_request_buffer->mid = cb->mid;
-    g_request_buffer->client_cb = cb;
+    g_request.buffer->mid = cb->mid;
+    g_request.buffer->client_cb = cb;
   }
 #endif /* OC_BLOCK_WISE */
 
 #ifdef OC_TCP
   if (cb->endpoint.flags & TCP) {
-    coap_tcp_init_message(g_request, (uint8_t)cb->method);
+    coap_tcp_init_message(&g_request.packet, (uint8_t)cb->method);
   } else
 #endif /* OC_TCP */
   {
-    coap_udp_init_message(g_request, type, (uint8_t)cb->method, cb->mid);
+    coap_udp_init_message(&g_request.packet, type, (uint8_t)cb->method,
+                          cb->mid);
   }
 
+  oc_content_format_t cf;
+  if (!oc_rep_encoder_get_content_format(&cf)) {
+    return false;
+  }
 #ifdef OC_SPEC_VER_OIC
-  if (cb->endpoint.version == OIC_VER_1_1_0) {
-    coap_options_set_accept(g_request, APPLICATION_CBOR);
-  } else
-#endif /* OC_SPEC_VER_OIC */
-  {
-    coap_options_set_accept(g_request, oc_rep_encoder_get_content_format());
+  if (cb->endpoint.version == OIC_VER_1_1_0 && cf == APPLICATION_VND_OCF_CBOR) {
+    cf = APPLICATION_CBOR;
   }
+#endif /* OC_SPEC_VER_OIC */
 
-  coap_set_token(g_request, cb->token, cb->token_len);
+  coap_options_set_accept(&g_request.packet, cf);
 
-  coap_options_set_uri_path(g_request, oc_string(cb->uri),
+  coap_set_token(&g_request.packet, cb->token, cb->token_len);
+
+  coap_options_set_uri_path(&g_request.packet, oc_string(cb->uri),
                             oc_string_len(cb->uri));
 
   if (cb->observe_seq != OC_COAP_OPTION_OBSERVE_NOT_SET) {
-    coap_options_set_observe(g_request, cb->observe_seq);
+    coap_options_set_observe(&g_request.packet, cb->observe_seq);
   }
 
   if (oc_string_len(cb->query) > 0) {
-    coap_options_set_uri_query(g_request, oc_string(cb->query),
+    coap_options_set_uri_query(&g_request.packet, oc_string(cb->query),
                                oc_string_len(cb->query));
   }
 
   if (configure != NULL) {
-    configure(g_request, configure_data);
+    configure(&g_request.packet, configure_data);
   }
 
   g_dispatch.client_cb = cb;
@@ -268,16 +296,18 @@ oc_do_multicast_update(void)
   if (payload_size <= 0) {
     goto do_multicast_update_error;
   }
-  coap_set_payload(g_request, g_multicast_update->data + COAP_MAX_HEADER_SIZE,
+  coap_set_payload(&g_request.packet,
+                   g_multicast_update->data + COAP_MAX_HEADER_SIZE,
                    (uint32_t)payload_size);
 
-  if (payload_size > 0) {
-    coap_options_set_content_format(g_request,
-                                    oc_rep_encoder_get_content_format());
+  oc_content_format_t cf;
+  if (!oc_rep_encoder_get_content_format(&cf)) {
+    goto do_multicast_update_error;
   }
+  coap_options_set_content_format(&g_request.packet, cf);
 
   g_multicast_update->length = coap_serialize_message(
-    g_request, g_multicast_update->data, oc_message_buffer_size());
+    &g_request.packet, g_multicast_update->data, oc_message_buffer_size());
   if (g_multicast_update->length <= 0) {
     goto do_multicast_update_error;
   }
@@ -316,17 +346,19 @@ oc_init_multicast_update(const char *uri, const char *query)
 
   oc_rep_new_v1(g_multicast_update->data + COAP_MAX_HEADER_SIZE, OC_BLOCK_SIZE);
 
-  coap_udp_init_message(g_request, type, OC_POST, coap_get_mid());
+  coap_udp_init_message(&g_request.packet, type, OC_POST, coap_get_mid());
 
-  coap_options_set_accept(g_request, APPLICATION_VND_OCF_CBOR);
+  coap_options_set_accept(&g_request.packet, APPLICATION_VND_OCF_CBOR);
 
-  g_request->token_len = sizeof(g_request->token);
-  oc_random_buffer(g_request->token, g_request->token_len);
+  g_request.packet.token_len = sizeof(g_request.packet.token);
+  oc_random_buffer(g_request.packet.token, g_request.packet.token_len);
 
-  coap_options_set_uri_path(g_request, uri, strlen(uri));
+  coap_options_set_uri_path(&g_request.packet, uri,
+                            oc_strnlen(uri, OC_MAX_STRING_LENGTH));
 
   if (query) {
-    coap_options_set_uri_query(g_request, query, strlen(query));
+    coap_options_set_uri_query(&g_request.packet, query,
+                               oc_strnlen(query, OC_MAX_STRING_LENGTH));
   }
 
   return true;

@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright 2023 plgd.dev s.r.o, All Rights Reserved.
+ * Copyright (c) 2023 plgd.dev s.r.o.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -16,30 +16,12 @@
  *
  ****************************************************************************/
 
-#include "api/oc_rep_internal.h"
-#include "oc_runtime_internal.h"
-#include "port/oc_random.h"
-#include "port/oc_clock.h"
+#include "api/oc_rep_encode_cbor_internal.h"
 
-#ifndef OC_DYNAMIC_ALLOCATION
-#include "port/oc_allocator_internal.h"
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#include <cbor.h>
 
-void
-oc_runtime_init(void)
+oc_rep_encoder_implementation_t
+oc_rep_cbor_encoder(void)
 {
-  oc_random_init();
-  oc_clock_init();
-#ifndef OC_DYNAMIC_ALLOCATION
-  oc_allocator_mutex_init();
-#endif /* !OC_DYNAMIC_ALLOCATION */
-}
-
-void
-oc_runtime_shutdown(void)
-{
-#ifndef OC_DYNAMIC_ALLOCATION
-  oc_allocator_mutex_destroy();
-#endif /* !OC_DYNAMIC_ALLOCATION */
-  oc_random_destroy();
+  return (oc_rep_encoder_implementation_t)OC_REP_CBOR_ENCODER_INIT;
 }

@@ -34,6 +34,18 @@ typedef enum json_types_t {
   MapType = 1 << 3,
 } json_types_t;
 
+static size_t
+rep_json_get_buffer_size(const CborEncoder *encoder, const uint8_t *buffer)
+{
+  return (size_t)(encoder->data.ptr - buffer);
+}
+
+static size_t
+rep_json_get_extra_bytes_needed(const CborEncoder *encoder)
+{
+  return encoder->end != NULL ? 0 : (size_t)encoder->data.bytes_needed;
+}
+
 static bool
 rep_json_would_overflow(CborEncoder *encoder, size_t len)
 {
@@ -42,16 +54,6 @@ rep_json_would_overflow(CborEncoder *encoder, size_t len)
     remaining ? (ptrdiff_t)encoder->data.ptr : encoder->data.bytes_needed;
   remaining -= (ptrdiff_t)len;
   return remaining < 0;
-}
-
-static void
-rep_json_advance_ptr(CborEncoder *encoder, size_t n)
-{
-  if (encoder->end != NULL) {
-    encoder->data.ptr += n;
-  } else {
-    encoder->data.bytes_needed += (ptrdiff_t)n;
-  }
 }
 
 static CborError
@@ -64,7 +66,7 @@ rep_json_append_to_buffer(CborEncoder *encoder, const void *data, size_t len)
       encoder->data.bytes_needed = 0;
     }
 
-    rep_json_advance_ptr(encoder, len);
+    encoder->data.bytes_needed += (ptrdiff_t)len;
     return CborErrorOutOfMemory;
   }
 
@@ -316,11 +318,12 @@ rep_json_encoder_close_container(CborEncoder *encoder,
   return rep_json_append_to_buffer(encoder, break_byte, 1);
 }
 
-oc_rep_encoder_t
+oc_rep_encoder_implementation_t
 oc_rep_json_encoder(void)
 {
-  return (oc_rep_encoder_t){
-    .type = OC_REP_JSON_ENCODER,
+  return (oc_rep_encoder_implementation_t){
+    .get_buffer_size = &rep_json_get_buffer_size,
+    .get_extra_bytes_needed = &rep_json_get_extra_bytes_needed,
 
     .encode_null = &rep_json_encode_null,
     .encode_boolean = &rep_json_encode_boolean,

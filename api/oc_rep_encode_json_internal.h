@@ -33,8 +33,8 @@ extern "C" {
 #define OC_REP_JSON_INT_MIN ~(1LL << 52)
 #define OC_REP_JSON_UINT_MAX (1ULL << 53)
 
-/** Return an initialized JSON encoder. */
-oc_rep_encoder_t oc_rep_json_encoder(void);
+/** Return JSON encoder implementation. */
+oc_rep_encoder_implementation_t oc_rep_json_encoder(void);
 
 #ifdef __cplusplus
 }

@@ -24,16 +24,6 @@
 #include "api/oc_rep_decode_json_internal.h"
 #endif /* OC_JSON_ENCODER */
 
-typedef CborError (*oc_rep_parse_payload_t)(const uint8_t *payload,
-                                            size_t payload_size,
-                                            oc_rep_t **out_rep);
-
-typedef struct
-{
-  oc_rep_decoder_type_t type;
-  oc_rep_parse_payload_t parse;
-} oc_rep_decoder_t;
-
 static int oc_rep_parse_cbor(const uint8_t *payload, size_t payload_size,
                              oc_rep_t **out_rep);
 
@@ -515,20 +505,28 @@ oc_rep_parse_cbor(const uint8_t *payload, size_t payload_size,
   return CborNoError;
 }
 
-void
-oc_rep_decoder_set_type(oc_rep_decoder_type_t decoder_type)
+oc_rep_decoder_t
+oc_rep_decoder(oc_rep_decoder_type_t type)
 {
-  g_rep_decoder.type = decoder_type;
-  if (g_rep_decoder.type == OC_REP_CBOR_DECODER) {
-    g_rep_decoder.parse = &oc_rep_parse_cbor;
-    return;
-  }
+  oc_rep_decoder_t decoder = {
+    .type = OC_REP_CBOR_DECODER,
+    .parse = &oc_rep_parse_cbor,
+  };
 #ifdef OC_JSON_ENCODER
-  if (g_rep_decoder.type == OC_REP_JSON_DECODER) {
-    g_rep_decoder.parse = &oc_rep_parse_json;
-    return;
+  if (type == OC_REP_JSON_DECODER) {
+    decoder.type = OC_REP_JSON_DECODER;
+    decoder.parse = &oc_rep_parse_json;
   }
+#else  /* !OC_JSON_ENCODER */
+  (void)type;
 #endif /* OC_JSON_ENCODER */
+  return decoder;
+}
+
+void
+oc_rep_decoder_set_type(oc_rep_decoder_type_t type)
+{
+  g_rep_decoder = oc_rep_decoder(type);
 }
 
 oc_rep_decoder_type_t
@@ -538,7 +536,7 @@ oc_rep_decoder_get_type(void)
 }
 
 bool
-oc_rep_decoder_set_type_by_content_format(oc_content_format_t content_format)
+oc_rep_decoder_set_by_content_format(oc_content_format_t content_format)
 {
   if (content_format == APPLICATION_CBOR ||
       content_format == APPLICATION_VND_OCF_CBOR ||

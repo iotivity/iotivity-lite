@@ -911,6 +911,11 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         list(APPEND TEST_LINK_LIBS Threads::Threads)
     endif()
 
+    try_compile(HAVE_FLOAT16 ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/tools/test_float16.c)
+    if(HAVE_FLOAT16)
+        list(APPEND TEST_COMPILE_DEFINITIONS "HAVE_FLOAT16")
+    endif()
+
     # Disable clang-tidy for gtest
     oc_disable_clang_tidy()
 
@@ -980,7 +985,7 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
     file(GLOB COMMONTEST_SRC tests/gtest/*.cpp tests/gtest/tls/*.cpp)
 
     # Unit tests
-    file(GLOB APITEST_SRC api/unittest/*.cpp api/client/unittest/*.cpp)
+    file(GLOB APITEST_SRC api/unittest/*.cpp api/unittest/encoder/*.cpp api/client/unittest/*.cpp)
     set(apitest_files)
     if (OC_INTROSPECTION_ENABLED AND OC_IDD_API_ENABLED)
         set(apitest_files ${PROJECT_SOURCE_DIR}/api/unittest/introspectiontest_IDD.cbor)

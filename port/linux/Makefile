@@ -56,9 +56,12 @@ COMMON_TEST_SRC_FILES := $(wildcard $(COMMON_TEST_DIR)/*.cpp $(COMMON_TEST_TLS_D
 COMMON_TEST_OBJ_FILES := $(patsubst $(COMMON_TEST_DIR)/%.cpp,$(COMMON_TEST_OBJ_DIR)/%.o,$(COMMON_TEST_SRC_FILES))
 COMMON_TEST_OBJ_FILES := $(patsubst $(COMMON_TEST_TLS_DIR)/%.cpp,$(COMMON_TEST_OBJ_DIR)/%.o, $(COMMON_TEST_OBJ_FILES))
 API_TEST_DIR = $(ROOT_DIR)/api/unittest
+API_TEST_ENCODER_DIR = $(ROOT_DIR)/api/unittest/encoder
 API_TEST_OBJ_DIR = $(API_TEST_DIR)/obj
-API_TEST_SRC_FILES := $(wildcard $(API_TEST_DIR)/*.cpp)
+API_TEST_ENCODER_OBJ_DIR = $(API_TEST_DIR)/encoder/obj
+API_TEST_SRC_FILES := $(wildcard $(API_TEST_DIR)/*.cpp $(API_TEST_ENCODER_DIR)/*.cpp)
 API_TEST_OBJ_FILES := $(patsubst $(API_TEST_DIR)/%.cpp,$(API_TEST_OBJ_DIR)/%.o,$(API_TEST_SRC_FILES))
+API_TEST_OBJ_FILES := $(patsubst $(API_TEST_ENCODER_DIR)/%.cpp,$(API_TEST_ENCODER_OBJ_DIR)/%.o,$(API_TEST_OBJ_FILES))
 SECURITY_TEST_DIR = $(ROOT_DIR)/security/unittest
 SECURITY_TEST_OBJ_DIR = $(SECURITY_TEST_DIR)/obj
 SECURITY_TEST_SRC_FILES := $(wildcard $(SECURITY_TEST_DIR)/*.cpp)
@@ -374,6 +377,10 @@ $(API_TEST_OBJ_DIR)/%.o: $(API_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -c $< -o $@
 
+$(API_TEST_ENCODER_OBJ_DIR)/%.o: $(API_TEST_ENCODER_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -c $< -o $@
+
 apitest: $(API_TEST_OBJ_FILES) $(COMMON_TEST_OBJ_FILES) libiotivity-lite-client-server.a | $(GTEST)
 	$(CXX) $^ -o $@ $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -L$(OUT_DIR) -L$(GTEST_DIR)/make -l:gtest_main.a -liotivity-lite-client-server -lpthread
 
@@ -674,7 +681,7 @@ endif
 
 clean:
 	rm -rf obj $(PC) $(CONSTRAINED_LIBS) $(COMMON_TEST_OBJ_FILES) $(API_TEST_OBJ_FILES) $(SECURITY_TEST_OBJ_FILES) $(PLATFORM_TEST_OBJ_FILES) $(MESSAGING_TEST_OBJ_FILES) $(UNIT_TESTS) $(STORAGE_TEST_DIR) $(CLOUD_TEST_OBJ_FILES) $(CLOUD_TEST_STORAGE_DIR) $(RD_CLIENT_TEST_OBJ_FILES)
-	rm -rf $(COMMON_TEST_OBJ_DIR)/*.gcda $(COMMON_TEST_TLS_OBJ_DIR)/*.gcda  $(API_TEST_OBJ_DIR)/*.gcda $(SECURITY_TEST_OBJ_DIR)/*.gcda $(PLATFORM_TEST_OBJ_DIR)/*.gcda $(MESSAGING_TEST_OBJ_DIR)/*.gcda
+	rm -rf $(COMMON_TEST_OBJ_DIR)/*.gcda $(COMMON_TEST_TLS_OBJ_DIR)/*.gcda $(API_TEST_OBJ_DIR)/*.gcda $(API_TEST_ENCODER_OBJ_DIR)/*.gcda $(SECURITY_TEST_OBJ_DIR)/*.gcda $(PLATFORM_TEST_OBJ_DIR)/*.gcda $(MESSAGING_TEST_OBJ_DIR)/*.gcda
 	rm -rf pki_certs smart_home_server_linux_IDD.cbor server_certification_tests_IDD.cbor client_certification_tests_IDD.cbor server_rules_IDD.cbor cloud_proxy_IDD.cbor
 
 cleanall: clean

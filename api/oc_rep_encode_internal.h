@@ -32,7 +32,25 @@
 extern "C" {
 #endif
 
-/** Encoding interface */
+typedef struct
+{
+  uint8_t *ptr;
+  size_t size;
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  size_t max_size;
+  uint8_t **pptr;
+  bool enable_realloc;
+#endif /* OC_DYNAMIC_ALLOCATION */
+} oc_rep_encoder_buffer_t;
+
+/** Rep encoder interface */
+typedef size_t (*oc_get_buffer_size_t)(const CborEncoder *encoder,
+                                       const uint8_t *buffer) OC_NONNULL();
+
+typedef size_t (*oc_get_extra_bytes_needed_t)(const CborEncoder *encoder)
+  OC_NONNULL();
+
 typedef CborError (*oc_rep_encode_null_t)(CborEncoder *encoder) OC_NONNULL();
 
 typedef CborError (*oc_rep_encode_boolean_t)(CborEncoder *encoder, bool value)
@@ -70,9 +88,10 @@ typedef CborError (*oc_rep_encoder_create_map_t)(CborEncoder *encoder,
 typedef CborError (*oc_rep_encoder_close_container_t)(
   CborEncoder *encoder, const CborEncoder *containerEncoder) OC_NONNULL();
 
-typedef struct oc_rep_encoder_t
+typedef struct oc_rep_encoder_implementation_t
 {
-  oc_rep_encoder_type_t type;
+  oc_get_buffer_size_t get_buffer_size;
+  oc_get_extra_bytes_needed_t get_extra_bytes_needed;
 
   oc_rep_encode_null_t encode_null;
   oc_rep_encode_boolean_t encode_boolean;
@@ -85,10 +104,33 @@ typedef struct oc_rep_encoder_t
   oc_rep_encoder_create_array_t create_array;
   oc_rep_encoder_create_map_t create_map;
   oc_rep_encoder_close_container_t close_container;
+} oc_rep_encoder_implementation_t;
+
+typedef struct oc_rep_encoder_t
+{
+  oc_rep_encoder_type_t type;
+  oc_rep_encoder_implementation_t impl;
+  oc_rep_encoder_buffer_t buffer;
+  CborEncoder ctx;
 } oc_rep_encoder_t;
 
-/** Return an initialized CBOR encoder. */
-oc_rep_encoder_t oc_rep_cbor_encoder(void);
+/** Return pointer to the global encoder */
+oc_rep_encoder_t *oc_rep_global_encoder(void) OC_RETURNS_NONNULL;
+
+typedef struct oc_rep_encoder_reset_t
+{
+  oc_rep_encoder_t encoder;
+  CborEncoder root_map_ctx;
+  CborEncoder links_array_ctx;
+} oc_rep_encoder_reset_t;
+
+/** Set global encoder and return the previous */
+oc_rep_encoder_reset_t oc_rep_global_encoder_reset(
+  const oc_rep_encoder_reset_t *reset);
+
+/** Get encoder. */
+oc_rep_encoder_t oc_rep_encoder(oc_rep_encoder_type_t type,
+                                oc_rep_encoder_buffer_t buffer);
 
 /**
  * @brief Initialize global encoder buffer.
@@ -96,13 +138,17 @@ oc_rep_encoder_t oc_rep_cbor_encoder(void);
  * @note the pointer to the buffer directly isn't stored directly, instead
  * an offset is stored to allow reallocation.
  *
- * @param buffer buffer used by the global encoder (cannot be NULL)
+ * @param encoder encoder (cannot be NULL)
+ * @param buffer buffer used by the global encoder
  * @param size size of the buffer
  */
-void oc_rep_buffer_init(uint8_t *buffer, size_t size);
+void oc_rep_encoder_buffer_init(oc_rep_encoder_t *encoder, uint8_t *buffer,
+                                size_t size) OC_NONNULL(1);
+
+#ifdef OC_DYNAMIC_ALLOCATION
 
 /**
- * @brief Initialize global encoder buffer and enable buffer reallocation.
+ * @brief Initialize encoder buffer and enable buffer reallocation.
  *
  * If the buffer is too small then the buffer will be enlarged using the realloc
  * syscall. The size of the buffer cannot exceed the maximal allowed size.
@@ -110,23 +156,38 @@ void oc_rep_buffer_init(uint8_t *buffer, size_t size);
  * @note the pointer to the buffer directly isn't stored directly, instead
  * an offset is stored to allow reallocation.
  *
- * @param buffer pointer buffer used by the global encoder (cannot be NULL)
+ * @param encoder encoder (cannot be NULL)
+ * @param buffer pointer buffer used by the global encoder
  * @param size size of the buffer
  * @param max_size maximal allowed size of the buffer
  */
-void oc_rep_buffer_realloc_init(uint8_t **buffer, size_t size, size_t max_size);
+void oc_rep_encoder_buffer_realloc_init(oc_rep_encoder_t *encoder,
+                                        uint8_t **buffer, size_t size,
+                                        size_t max_size) OC_NONNULL(1);
+
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+/** @brief Get the size of the encoded data. */
+int oc_rep_encoder_payload_size(oc_rep_encoder_t *encoder) OC_NONNULL();
+
+#ifdef OC_DYNAMIC_ALLOCATION
+/** @brief Shrink encoder buffer to the payload size */
+bool oc_rep_encoder_shrink_buffer(oc_rep_encoder_t *encoder) OC_NONNULL();
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 /**
  * @brief Recalcute the pointer to the buffer and the pointer to the end of the
  * buffer to be offsets from the global buffer.
  */
-CborEncoder *oc_rep_encoder_convert_ptr_to_offset(CborEncoder *encoder);
+void oc_rep_encoder_convert_ptr_to_offset(const oc_rep_encoder_t *encoder,
+                                          CborEncoder *subEncoder) OC_NONNULL();
 
 /**
  * @brief Recalcute from relative offsets to pointer to buffer usable by cbor
  * library.
  */
-CborEncoder *oc_rep_encoder_convert_offset_to_ptr(CborEncoder *encoder);
+void oc_rep_encoder_convert_offset_to_ptr(const oc_rep_encoder_t *encoder,
+                                          CborEncoder *subEncoder) OC_NONNULL();
 
 /**
  * @brief Set the encoder type to encode the response payload according to the
@@ -137,8 +198,73 @@ CborEncoder *oc_rep_encoder_convert_offset_to_ptr(CborEncoder *encoder);
  */
 bool oc_rep_encoder_set_type_by_accept(oc_content_format_t accept);
 
-/** Get content format of the global encoder */
-oc_content_format_t oc_rep_encoder_get_content_format(void);
+/** @brief Get content format of the global encoder */
+bool oc_rep_encoder_get_content_format(oc_content_format_t *format)
+  OC_NONNULL();
+
+/** @brief Write raw data to encoder */
+int oc_rep_encoder_write_raw(oc_rep_encoder_t *encoder, const uint8_t *data,
+                             size_t len) OC_NONNULL(1);
+
+/** @brief Write null representation to encoder */
+CborError oc_rep_encoder_write_null(oc_rep_encoder_t *encoder,
+                                    CborEncoder *subEncoder) OC_NONNULL();
+
+/** @brief Write boolean representation to encoder */
+CborError oc_rep_encoder_write_boolean(oc_rep_encoder_t *encoder,
+                                       CborEncoder *subEncoder, bool value)
+  OC_NONNULL();
+
+/** @brief Write integer representation to encoder */
+CborError oc_rep_encoder_write_int(oc_rep_encoder_t *encoder,
+                                   CborEncoder *subEncoder, int64_t value)
+  OC_NONNULL();
+
+/** @brief Write unsigned integer representation to encoder */
+CborError oc_rep_encoder_write_uint(oc_rep_encoder_t *encoder,
+                                    CborEncoder *subEncoder, uint64_t value)
+  OC_NONNULL();
+
+/** @brief Write double representation to encoder */
+CborError oc_rep_encoder_write_floating_point(oc_rep_encoder_t *encoder,
+                                              CborEncoder *subEncoder,
+                                              CborType fpType,
+                                              const void *value) OC_NONNULL();
+
+/** @brief Write double representation to encoder */
+CborError oc_rep_encoder_write_double(oc_rep_encoder_t *encoder,
+                                      CborEncoder *subEncoder, double value)
+  OC_NONNULL();
+
+/** @brief Write byte string representation to encoder */
+CborError oc_rep_encoder_write_text_string(oc_rep_encoder_t *encoder,
+                                           CborEncoder *subEncoder,
+                                           const char *string, size_t length)
+  OC_NONNULL(1, 2);
+
+/** @brief Write byte string representation to encoder */
+CborError oc_rep_encoder_write_byte_string(oc_rep_encoder_t *encoder,
+                                           CborEncoder *subEncoder,
+                                           const uint8_t *string, size_t length)
+  OC_NONNULL(1, 2);
+
+/** @brief Write representation of opening an array to encoder */
+CborError oc_rep_encoder_write_array_open(oc_rep_encoder_t *encoder,
+                                          CborEncoder *subEncoder,
+                                          CborEncoder *arrayEncoder,
+                                          size_t length) OC_NONNULL();
+
+/** @brief Write representation of opening a map to encoder */
+CborError oc_rep_encoder_write_map_open(oc_rep_encoder_t *encoder,
+                                        CborEncoder *subEncoder,
+                                        CborEncoder *mapEncoder, size_t length)
+  OC_NONNULL();
+
+/** @brief Write representation of closing a container to encoder */
+CborError oc_rep_encoder_write_container_close(oc_rep_encoder_t *encoder,
+                                               CborEncoder *subEncoder,
+                                               CborEncoder *containerEncoder)
+  OC_NONNULL();
 
 #ifdef __cplusplus
 }

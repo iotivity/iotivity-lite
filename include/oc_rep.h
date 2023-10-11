@@ -1628,15 +1628,18 @@ typedef enum oc_rep_encoder_type_t {
 #ifdef OC_JSON_ENCODER
   OC_REP_JSON_ENCODER = 1,
 #endif /* OC_JSON_ENCODER */
+#ifdef OC_HAS_FEATURE_CRC_ENCODER
+  OC_REP_CRC_ENCODER = 2,
+#endif /* OC_HAS_FEATURE_CRC_ENCODER */
 } oc_rep_encoder_type_t;
 
 /**
- * @brief Set the encoder type used to encode the response payloads.
+ * @brief Set the global encoder used to encode the response payloads.
  *
- * @param encoder_type encoder type
+ * @param type encoder type
  */
 OC_API
-void oc_rep_encoder_set_type(oc_rep_encoder_type_t encoder_type);
+void oc_rep_encoder_set_type(oc_rep_encoder_type_t type);
 
 /**
  * @brief Get the encoder type used to encode the response payloads.

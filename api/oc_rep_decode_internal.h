@@ -34,12 +34,26 @@ typedef enum oc_rep_decoder_type_t {
 #endif /* OC_JSON_ENCODER */
 } oc_rep_decoder_type_t;
 
+/** Parse payload to oc_rep_t */
+typedef CborError (*oc_rep_parse_payload_t)(const uint8_t *payload,
+                                            size_t payload_size,
+                                            oc_rep_t **out_rep);
+
+typedef struct
+{
+  oc_rep_decoder_type_t type;
+  oc_rep_parse_payload_t parse;
+} oc_rep_decoder_t;
+
+/** Get decoder. */
+oc_rep_decoder_t oc_rep_decoder(oc_rep_decoder_type_t type);
+
 /**
- * @brief Set the decoder type to decode the request payload to oc_rep_t.
+ * @brief Set the global decoder used to decode the request payload to oc_rep_t.
  *
- * @param decoder_type decoder
+ * @param type decoder type
  */
-void oc_rep_decoder_set_type(oc_rep_decoder_type_t decoder_type);
+void oc_rep_decoder_set_type(oc_rep_decoder_type_t type);
 
 /**
  * @brief Get the decoder type to decode the request payload to oc_rep_t.
@@ -56,8 +70,7 @@ oc_rep_decoder_type_t oc_rep_decoder_get_type(void);
  * @return true if the decoder type was set
  * @return false otherwise
  */
-bool oc_rep_decoder_set_type_by_content_format(
-  oc_content_format_t content_format);
+bool oc_rep_decoder_set_by_content_format(oc_content_format_t content_format);
 
 #ifdef __cplusplus
 }

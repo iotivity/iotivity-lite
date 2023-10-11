@@ -21,7 +21,7 @@
 
 #include "util/oc_features.h"
 
-#ifdef OC_HAS_FEATURE_CRC64
+#ifdef OC_HAS_FEATURE_CRC_ENCODER
 
 #include "util/oc_compiler.h"
 #include <stddef.h>
@@ -34,17 +34,19 @@ extern "C" {
 /**
  * @brief Calculate CRC64 for a buffer of data.
  *
- * @param buffer The buffer of data to calculate CRC64 for (cannot be NULL);
+ * @param crc The initial CRC64 value (use 0 to start a new CRC64 calculation).
+ * @param buffer The buffer of data to calculate CRC64 for (cannot be NULL).
  * @param size The size of the buffer of data to calculate CRC64 for.
  *
  * @return The CRC64 value.
  */
-uint64_t oc_crc64(const uint8_t *buffer, size_t size) OC_NONNULL();
+uint64_t oc_crc64(uint64_t crc, const uint8_t *buffer, size_t size)
+  OC_NONNULL();
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* OC_HAS_FEATURE_CRC64 */
+#endif /* OC_HAS_FEATURE_CRC_ENCODER */
 
 #endif /* OC_CRC_INTERNAL_H */
