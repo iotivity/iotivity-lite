@@ -27,6 +27,8 @@ typedef uint64_t oc_clock_time_t;
 
 /* Maximum wait time for select function */
 #define SELECT_TIMEOUT_SEC (1)
+/* Time-to-live value of outgoing multicast packets */
+#define OC_IPV4_MULTICAST_TTL (1)
 
 /* Add support for passing network up/down events to the app */
 #define OC_NETWORK_MONITOR

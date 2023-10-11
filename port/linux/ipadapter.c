@@ -1181,6 +1181,12 @@ send_ipv4_discovery_request(oc_message_t *message,
     OC_ERR("setting socket option for default IP_MULTICAST_IF: %d", (int)errno);
     return SEND_DISCOVERY_ERROR;
   }
+  int ttl = OC_IPV4_MULTICAST_TTL;
+  if (setsockopt(server_sock, IPPROTO_IP, IP_MULTICAST_TTL, &ttl,
+                 sizeof(int)) == -1) {
+    OC_ERR("setting socket option for default IP_MULTICAST_TTL: %d", errno);
+    return SEND_DISCOVERY_ERROR;
+  }
   unsigned if_index = if_nametoindex(interface->ifa_name);
   if (if_index == 0) {
     OC_ERR("could not get interface index for %s (error: %d)",

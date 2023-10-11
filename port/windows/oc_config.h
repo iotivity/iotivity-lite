@@ -22,6 +22,9 @@ typedef uint64_t oc_clock_time_t;
 /* jitter added to response to some multicast requests */
 #define OC_MULTICAST_RESPONSE_JITTER_MS (2000)
 
+/* Time-to-live value of outgoing multicast packets */
+#define OC_IPV4_MULTICAST_TTL (1)
+
 /* Security Layer */
 /* Max inactivity timeout before tearing down DTLS connection */
 #define OC_DTLS_INACTIVITY_TIMEOUT (300)
