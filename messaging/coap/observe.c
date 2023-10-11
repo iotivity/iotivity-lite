@@ -1009,12 +1009,12 @@ coap_fill_response(oc_response_t *response, oc_resource_t *resource,
     resource->get_handler.cb(&request, iface_mask,
                              resource->get_handler.user_data);
   } else {
-    response->response_buffer->code = OC_IGNORE;
+    response->response_buffer->code = CLEAR_TRANSACTION;
   }
 #ifdef OC_DYNAMIC_ALLOCATION
   response->response_buffer->buffer_size = oc_rep_get_encoded_payload_size();
 #endif /* OC_DYNAMIC_ALLOCATION */
-  if (response->response_buffer->code == OC_IGNORE) {
+  if (response->response_buffer->code == CLEAR_TRANSACTION) {
     COAP_DBG("resource request ignored");
     return false;
   }
@@ -1315,7 +1315,7 @@ observe_batch_set_response_buffer(coap_batch_observer_t *batch_obs,
   COAP_DBG("sending data with size %d", size_after);
   response_buffer->content_format = APPLICATION_VND_OCF_CBOR;
   response_buffer->response_length = size_after;
-  response_buffer->code = oc_status_code(OC_STATUS_OK);
+  response_buffer->code = oc_status_code_unsafe(OC_STATUS_OK);
 #ifdef OC_HAS_FEATURE_ETAG
   uint64_t etag =
     oc_ri_get_batch_etag(obs->resource, &obs->endpoint, obs->endpoint.device);

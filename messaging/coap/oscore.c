@@ -19,6 +19,7 @@
 #ifdef OC_SECURITY
 #ifdef OC_OSCORE
 
+#include "api/oc_ri_internal.h"
 #include "api/oc_message_internal.h"
 #include "oscore.h"
 #include "coap.h"
@@ -149,11 +150,11 @@ oscore_get_outer_code(const coap_packet_t *packet)
   } else {
     /* Responses */
     if (observe) {
-      return oc_status_code(OC_STATUS_OK);
+      return oc_status_code_unsafe(OC_STATUS_OK);
     }
   }
 
-  return oc_status_code(OC_STATUS_CHANGED);
+  return oc_status_code_unsafe(OC_STATUS_CHANGED);
 }
 
 int

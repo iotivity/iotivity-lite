@@ -19,12 +19,13 @@
 #ifndef OC_CRC_INTERNAL_H
 #define OC_CRC_INTERNAL_H
 
-#include "util/oc_compiler.h"
 #include "util/oc_features.h"
-#include <stddef.h>
-#include <stdint.h>
 
 #ifdef OC_HAS_FEATURE_CRC64
+
+#include "util/oc_compiler.h"
+#include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

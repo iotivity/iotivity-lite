@@ -66,7 +66,7 @@ typedef struct oc_response_buffer_s
   uint8_t *buffer;
   size_t buffer_size;
   size_t response_length;
-  int code;
+  coap_status_t code;
   oc_content_format_t content_format;
 #ifdef OC_HAS_FEATURE_ETAG
   oc_coap_etag_t etag;
@@ -88,6 +88,9 @@ void oc_ri_init(void);
  * @brief shut down the resource implementation handler
  */
 void oc_ri_shutdown(void);
+
+/** Unchecked conversion from a non-error oc_status_t to coap_status_t */
+coap_status_t oc_status_code_unsafe(oc_status_t key);
 
 #ifdef OC_HAS_FEATURE_ETAG
 

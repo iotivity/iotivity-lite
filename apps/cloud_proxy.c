@@ -1025,20 +1025,16 @@ is_vertical(char *resource_type)
 STATIC void
 get_local_resource_response(oc_client_response_t *data)
 {
-  oc_rep_t *value_list = NULL;
-  oc_separate_response_t *delay_response;
-
-  delay_response = data->user_data;
-
   OC_PRINTF(" <== get_local_resource_response: \n");
   OC_PRINTF(" RESPONSE: ");
+  oc_rep_t *value_list = NULL;
   oc_parse_rep(data->_payload, (int)data->_payload_len, &value_list);
   print_rep(value_list, false);
   free(value_list);
 
+  oc_separate_response_t *delay_response = data->user_data;
   memcpy(delay_response->buffer, data->_payload, (int)data->_payload_len);
   delay_response->len = data->_payload_len;
-
   oc_send_separate_response(delay_response, data->code);
 
   // delete the allocated memory in get_resource
@@ -1097,23 +1093,19 @@ get_resource(oc_request_t *request, oc_interface_mask_t interfaces,
 STATIC void
 post_local_resource_response(oc_client_response_t *data)
 {
-  oc_rep_t *value_list = NULL;
-  oc_separate_response_t *delay_response;
-
-  delay_response = data->user_data;
-
   OC_PRINTF(" <== post_local_resource_response: \n");
   OC_PRINTF(" RESPONSE: ");
+  oc_rep_t *value_list = NULL;
   oc_parse_rep(data->_payload, (int)data->_payload_len, &value_list);
   print_rep(value_list, false);
   free(value_list);
 
+  oc_separate_response_t *delay_response = data->user_data;
   memcpy(delay_response->buffer, data->_payload, (int)data->_payload_len);
   delay_response->len = data->_payload_len;
-
   oc_send_separate_response(delay_response, data->code);
 
-  // delete the allocated memory in get_resource
+  // delete the allocated memory in post_resource
   free(delay_response);
 }
 
@@ -1198,23 +1190,19 @@ post_resource(oc_request_t *request, oc_interface_mask_t interfaces,
 STATIC void
 delete_local_resource_response(oc_client_response_t *data)
 {
-  oc_rep_t *value_list = NULL;
-  oc_separate_response_t *delay_response;
-
-  delay_response = data->user_data;
-
   OC_PRINTF(" <== delete_local_resource_response: \n");
   OC_PRINTF(" RESPONSE: ");
+  oc_rep_t *value_list = NULL;
   oc_parse_rep(data->_payload, (int)data->_payload_len, &value_list);
   print_rep(value_list, false);
   free(value_list);
 
+  oc_separate_response_t *delay_response = data->user_data;
   memcpy(delay_response->buffer, data->_payload, (int)data->_payload_len);
   delay_response->len = data->_payload_len;
-
   oc_send_separate_response(delay_response, data->code);
 
-  // delete the allocated memory in get_resource
+  // delete the allocated memory in delete_resource
   // free(delay_response);
 }
 

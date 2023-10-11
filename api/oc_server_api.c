@@ -132,20 +132,39 @@ oc_trigger_send_response_callback(oc_request_t *request,
   g_oc_send_response_cb(request, response_code);
 }
 
-void
+/** CoAP codes properly handled by the messaging layer */
+static bool
+is_valid_coap_status_code(coap_status_t code)
+{
+  return (code >= COAP_NO_ERROR && code < MEMORY_ALLOCATION_ERROR) ||
+         code == CLEAR_TRANSACTION;
+}
+
+bool
 oc_send_response_internal(oc_request_t *request, oc_status_t response_code,
                           oc_content_format_t content_format,
                           size_t response_length, bool trigger_cb)
 {
-  if (!request) {
-    return;
+  int status_code = oc_status_code(response_code);
+  if (status_code < 0) {
+    request->response->response_buffer->code = CLEAR_TRANSACTION;
+    return false;
   }
   request->response->response_buffer->content_format = content_format;
   request->response->response_buffer->response_length = response_length;
-  request->response->response_buffer->code = oc_status_code(response_code);
+  request->response->response_buffer->code = (coap_status_t)status_code;
   if (trigger_cb) {
     oc_trigger_send_response_callback(request, response_code);
+    if (!is_valid_coap_status_code(request->response->response_buffer->code)) {
+      OC_ERR(
+        "could not send response: invalid response code(%d) set by external "
+        "callback",
+        (int)request->response->response_buffer->code);
+      request->response->response_buffer->code = CLEAR_TRANSACTION;
+      return false;
+    }
   }
+  return true;
 }
 
 void
@@ -168,8 +187,10 @@ oc_send_response_with_callback(oc_request_t *request, oc_status_t response_code,
     content_format = APPLICATION_CBOR;
   }
 #endif /* OC_SPEC_VER_OIC */
-  oc_send_response_internal(request, response_code, content_format,
-                            response_length(), trigger_cb);
+  if (!oc_send_response_internal(request, response_code, content_format,
+                                 response_length(), trigger_cb)) {
+    OC_ERR("could not send response: invalid response code");
+  }
 }
 
 void
@@ -181,7 +202,8 @@ oc_send_response(oc_request_t *request, oc_status_t response_code)
 void
 oc_ignore_request(oc_request_t *request)
 {
-  request->response->response_buffer->code = OC_IGNORE;
+  // oc_status_code(OC_IGNORE) = CLEAR_TRANSACTION
+  request->response->response_buffer->code = CLEAR_TRANSACTION;
 }
 
 void
@@ -416,10 +438,15 @@ oc_send_response_raw(oc_request_t *request, const uint8_t *payload, size_t size,
                      oc_content_format_t content_format,
                      oc_status_t response_code)
 {
+  int status_code = oc_status_code(response_code);
+  if (status_code < 0) {
+    OC_ERR("invalid response code(%d)", (int)response_code);
+    return;
+  }
   request->response->response_buffer->content_format = content_format;
   memcpy(request->response->response_buffer->buffer, payload, size);
   request->response->response_buffer->response_length = size;
-  request->response->response_buffer->code = oc_status_code(response_code);
+  request->response->response_buffer->code = (coap_status_t)status_code;
 }
 
 void
@@ -765,10 +792,31 @@ handle_separate_response_request(coap_separate_t *request,
                                        (uint8_t)response_buffer->code);
 }
 
+static void
+separate_response_clear(oc_separate_response_t *handle)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(handle->buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
+  coap_separate_t *cur = oc_list_head(handle->requests);
+  while (cur != NULL) {
+    coap_separate_t *next = cur->next;
+    coap_separate_clear(handle, cur);
+    cur = next;
+  }
+}
+
 void
 oc_send_separate_response(oc_separate_response_t *handle,
                           oc_status_t response_code)
 {
+  int code = oc_status_code(response_code);
+  if (code < 0) {
+    OC_ERR("cannot send separate response: invalid response code(%d)",
+           (int)response_code);
+    separate_response_clear(handle);
+    return;
+  }
   oc_response_buffer_t response_buffer;
   response_buffer.buffer = handle->buffer;
   if (handle->len != 0) {
@@ -777,7 +825,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
     response_buffer.response_length = response_length();
   }
 
-  response_buffer.code = oc_status_code(response_code);
+  response_buffer.code = (coap_status_t)code;
   response_buffer.content_format = APPLICATION_VND_OCF_CBOR;
 
   coap_separate_t *cur = oc_list_head(handle->requests);
