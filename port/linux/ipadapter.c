@@ -592,6 +592,9 @@ process_interface_change_event(void)
                 if (dev == NULL) {
                   continue;
                 }
+                if (dev->mcast4_sock < 0) {
+                  continue;
+                }
                 success = oc_netsocket_add_sock_to_ipv4_mcast_group(
                             dev->mcast4_sock, RTA_DATA(attr), ifa->ifa_index) &&
                           success;
@@ -603,6 +606,9 @@ process_interface_change_event(void)
                 for (size_t i = 0; i < num_devices; i++) {
                   const ip_context_t *dev = oc_get_ip_context_for_device(i);
                   if (dev == NULL) {
+                    continue;
+                  }
+                  if (dev->mcast_sock < 0) {
                     continue;
                   }
                   success = oc_netsocket_add_sock_to_ipv6_mcast_group(
