@@ -164,7 +164,8 @@ oc_core_shutdown(void)
 }
 
 void
-oc_core_encode_interfaces_mask(CborEncoder *parent, unsigned iface_mask)
+oc_core_encode_interfaces_mask(CborEncoder *parent, unsigned iface_mask,
+                               bool include_private)
 {
   oc_rep_set_key((parent), "if");
   oc_rep_start_array((parent), if);
@@ -201,6 +202,13 @@ oc_core_encode_interfaces_mask(CborEncoder *parent, unsigned iface_mask)
   if ((iface_mask & OC_IF_STARTUP_REVERT) != 0) {
     oc_rep_add_text_string(if, OC_IF_STARTUP_REVERT_STR);
   }
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+  if (include_private && (iface_mask & PLGD_IF_ETAG) != 0) {
+    oc_rep_add_text_string(if, PLGD_IF_ETAG_STR);
+  }
+#else  /* OC_HAS_FEATURE_ETAG_INTERFACE */
+  (void)include_private;
+#endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
   oc_rep_end_array((parent), if);
 }
 

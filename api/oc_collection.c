@@ -518,7 +518,7 @@ oc_handle_collection_create_request(oc_method_t method, oc_request_t *request)
                               oc_string_len(new_res->resource->uri));
     oc_rep_set_string_array(root, rt, new_res->resource->types);
     oc_core_encode_interfaces_mask(oc_rep_object(root),
-                                   new_res->resource->interfaces);
+                                   new_res->resource->interfaces, false);
     oc_rep_set_object(root, p);
     oc_rep_set_uint(p, bm, (uint8_t)(bm & ~(OC_PERIODIC | OC_SECURE)));
     oc_rep_close_object(root, p);
@@ -676,7 +676,8 @@ collection_encode_links(const oc_collection_t *collection,
     oc_rep_set_text_string_v1(links, href, oc_string(link->resource->uri),
                               oc_string_len(link->resource->uri));
     oc_rep_set_string_array(links, rt, link->resource->types);
-    oc_core_encode_interfaces_mask(oc_rep_object(links), link->interfaces);
+    oc_core_encode_interfaces_mask(oc_rep_object(links), link->interfaces,
+                                   false);
     oc_rep_set_string_array(links, rel, link->rel);
     oc_rep_set_int(links, ins, link->ins);
     oc_link_params_t *p = (oc_link_params_t *)oc_list_head(link->params);
@@ -814,7 +815,8 @@ oc_handle_collection_linked_list_request(oc_request_t *request)
       oc_rep_set_text_string_v1(links, href, oc_string(link->resource->uri),
                                 oc_string_len(link->resource->uri));
       oc_rep_set_string_array(links, rt, link->resource->types);
-      oc_core_encode_interfaces_mask(oc_rep_object(links), link->interfaces);
+      oc_core_encode_interfaces_mask(oc_rep_object(links), link->interfaces,
+                                     false);
       oc_rep_set_string_array(links, rel, link->rel);
       oc_rep_set_int(links, ins, link->ins);
       oc_link_params_t *p = (oc_link_params_t *)oc_list_head(link->params);

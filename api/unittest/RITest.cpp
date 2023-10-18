@@ -41,11 +41,55 @@ protected:
   }
 };
 
-TEST_F(TestOcRi, GetInterfaceMask_P)
+TEST_F(TestOcRi, StatusCodeToCoapCode)
 {
-  EXPECT_EQ(0, oc_ri_get_interface_mask("", 0));
+  for (int i = OC_STATUS_OK; i < __NUM_OC_STATUS_CODES__; ++i) {
+    EXPECT_EQ(oc_status_code_unsafe(static_cast<oc_status_t>(i)),
+              oc_status_code(static_cast<oc_status_t>(i)));
+  }
 
-  std::vector<oc_interface_mask_t> all_interfaces{
+  // OC_IGNORE is a special value that translates to CLEAR_TRANSACTION
+  // others return -1
+  for (int i = __NUM_OC_STATUS_CODES__; i < OC_CANCELLED; ++i) {
+    if (i == OC_IGNORE) {
+      EXPECT_EQ(CLEAR_TRANSACTION, oc_status_code(OC_IGNORE));
+      continue;
+    }
+    EXPECT_EQ(-1, oc_status_code(static_cast<oc_status_t>(i)));
+  }
+}
+
+TEST_F(TestOcRi, StatusCodeToStr)
+{
+  for (int i = OC_STATUS_OK; i < __NUM_OC_STATUS_CODES__; ++i) {
+    std::string str = oc_status_to_str(static_cast<oc_status_t>(i));
+    EXPECT_FALSE(str.empty());
+  }
+  for (int i = __NUM_OC_STATUS_CODES__; i < OC_CANCELLED; ++i) {
+    std::string str = oc_status_to_str(static_cast<oc_status_t>(i));
+    EXPECT_TRUE(str.empty());
+  }
+}
+
+TEST_F(TestOcRi, MethodToStr)
+{
+  for (int i = OC_GET; i <= OC_FETCH; ++i) {
+    std::string str = oc_method_to_str(static_cast<oc_method_t>(i));
+    EXPECT_FALSE(str.empty());
+  }
+
+  std::string str = oc_method_to_str(static_cast<oc_method_t>(0));
+  EXPECT_TRUE(str.empty());
+  str = oc_method_to_str(std::numeric_limits<oc_method_t>::min());
+  EXPECT_TRUE(str.empty());
+  str = oc_method_to_str(std::numeric_limits<oc_method_t>::max());
+  EXPECT_TRUE(str.empty());
+}
+
+static std::vector<oc_interface_mask_t>
+getAllInterfaces()
+{
+  return {
     OC_IF_BASELINE,
     OC_IF_LL,
     OC_IF_B,
@@ -57,8 +101,16 @@ TEST_F(TestOcRi, GetInterfaceMask_P)
     OC_IF_W,
     OC_IF_STARTUP,
     OC_IF_STARTUP_REVERT,
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+    PLGD_IF_ETAG,
+#endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
   };
-  std::vector<std::string> all_interface_strs{
+}
+
+static std::vector<std::string>
+getAllInterfaceStrings()
+{
+  return {
     OC_IF_BASELINE_STR,
     OC_IF_LL_STR,
     OC_IF_B_STR,
@@ -70,7 +122,18 @@ TEST_F(TestOcRi, GetInterfaceMask_P)
     OC_IF_W_STR,
     OC_IF_STARTUP_STR,
     OC_IF_STARTUP_REVERT_STR,
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+    PLGD_IF_ETAG_STR,
+#endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
   };
+}
+
+TEST_F(TestOcRi, GetInterfaceMask_P)
+{
+  EXPECT_EQ(0, oc_ri_get_interface_mask("", 0));
+
+  std::vector<oc_interface_mask_t> all_interfaces{ getAllInterfaces() };
+  std::vector<std::string> all_interface_strs{ getAllInterfaceStrings() };
   ASSERT_EQ(all_interfaces.size(), all_interface_strs.size());
 
   for (size_t i = 0; i < all_interface_strs.size(); ++i) {
@@ -78,6 +141,65 @@ TEST_F(TestOcRi, GetInterfaceMask_P)
       all_interface_strs[i].c_str(), all_interface_strs[i].length());
     EXPECT_EQ(all_interfaces[i], ifm);
   }
+}
+
+TEST_F(TestOcRi, InterfaceSupportsMethod)
+{
+  // read-only -> GET
+  std::vector<oc_interface_mask_t> readOnlyInterfaces{
+    OC_IF_LL,
+    OC_IF_S,
+    OC_IF_R,
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+    PLGD_IF_ETAG,
+#endif
+  };
+
+  for (auto ifm : readOnlyInterfaces) {
+    EXPECT_TRUE(oc_ri_interface_supports_method(ifm, OC_GET));
+    EXPECT_FALSE(oc_ri_interface_supports_method(ifm, OC_POST));
+    EXPECT_FALSE(oc_ri_interface_supports_method(ifm, OC_PUT));
+    EXPECT_FALSE(oc_ri_interface_supports_method(ifm, OC_DELETE));
+  }
+
+  // write-only -> POST/PUT/DELETE
+  std::vector<oc_interface_mask_t> writeOnlyInterfaces{ OC_IF_W };
+  for (auto ifm : writeOnlyInterfaces) {
+    EXPECT_FALSE(oc_ri_interface_supports_method(ifm, OC_GET));
+    EXPECT_TRUE(oc_ri_interface_supports_method(ifm, OC_POST));
+    EXPECT_TRUE(oc_ri_interface_supports_method(ifm, OC_PUT));
+    EXPECT_TRUE(oc_ri_interface_supports_method(ifm, OC_DELETE));
+  }
+
+  // create -> GET/POST/PUT
+  std::vector<oc_interface_mask_t> createInterfaces{ OC_IF_CREATE };
+  for (auto ifm : createInterfaces) {
+    EXPECT_TRUE(oc_ri_interface_supports_method(ifm, OC_GET));
+    EXPECT_TRUE(oc_ri_interface_supports_method(ifm, OC_POST));
+    EXPECT_TRUE(oc_ri_interface_supports_method(ifm, OC_PUT));
+    EXPECT_FALSE(oc_ri_interface_supports_method(ifm, OC_DELETE));
+  }
+
+  // read-write -> GET/POST/PUT/DELETE
+  std::vector<oc_interface_mask_t> readWriteInterfaces{
+    OC_IF_RW, OC_IF_B,       OC_IF_BASELINE,
+    OC_IF_A,  OC_IF_STARTUP, OC_IF_STARTUP_REVERT,
+  };
+  for (auto ifm : readWriteInterfaces) {
+    EXPECT_TRUE(oc_ri_interface_supports_method(ifm, OC_GET));
+    EXPECT_TRUE(oc_ri_interface_supports_method(ifm, OC_POST));
+    EXPECT_TRUE(oc_ri_interface_supports_method(ifm, OC_PUT));
+    EXPECT_TRUE(oc_ri_interface_supports_method(ifm, OC_DELETE));
+  }
+}
+
+TEST_F(TestOcRi, InterfaceSupportsMethod_F)
+{
+  auto invalid = static_cast<oc_interface_mask_t>(0);
+  EXPECT_FALSE(oc_ri_interface_supports_method(invalid, OC_GET));
+  EXPECT_FALSE(oc_ri_interface_supports_method(invalid, OC_POST));
+  EXPECT_FALSE(oc_ri_interface_supports_method(invalid, OC_PUT));
+  EXPECT_FALSE(oc_ri_interface_supports_method(invalid, OC_DELETE));
 }
 
 static oc_event_callback_retval_t
@@ -116,8 +238,8 @@ TEST_F(TestOcRi, RiTimedCallbacksFilter_P)
   thing_t b = a;
   oc_ri_add_timed_event_callback_seconds(&a, test_timed_callback, 0);
   oc_ri_remove_timed_event_callback(&b, test_timed_callback);
-  // comparison by pointer address will fail to match the data, so the callback
-  // won't be removed
+  // comparison by pointer address will fail to match the data, so the
+  // callback won't be removed
   EXPECT_TRUE(oc_ri_has_timed_event_callback(&a, test_timed_callback, false));
 
   auto match_by_value_filter = [](const void *cb_data,

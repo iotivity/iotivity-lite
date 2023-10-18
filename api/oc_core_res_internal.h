@@ -71,9 +71,10 @@ oc_device_info_t *oc_core_add_new_device(oc_add_new_device_t cfg);
  *
  * @param parent the cbor encoder (cannot be NULL)
  * @param iface_mask the interfaces (as bit mask)
+ * @param include_private include private interfaces
  */
-void oc_core_encode_interfaces_mask(CborEncoder *parent, unsigned iface_mask)
-  OC_NONNULL();
+void oc_core_encode_interfaces_mask(CborEncoder *parent, unsigned iface_mask,
+                                    bool include_private) OC_NONNULL();
 
 /**
  * @brief store the uri as a string

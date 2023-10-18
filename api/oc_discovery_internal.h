@@ -34,20 +34,9 @@ extern "C" {
 
 #define OCF_RES_URI "/oic/res"
 #define OCF_RES_RT "oic.wk.res"
-#define OCF_RES_DEFAULT_IF (OC_IF_LL)
 
-enum {
-  OCF_RES_IF_MASK = OC_IF_BASELINE | OC_IF_LL
-#ifdef OC_RES_BATCH_SUPPORT
-                    | OC_IF_B
-#endif /* OC_RES_BATCH_SUPPORT */
-  ,
-  OCF_RES_PROPERTIES_MASK = OC_DISCOVERABLE
-#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
-                            | OC_OBSERVABLE
-#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
-  ,
-};
+#define OCF_RES_PROP_SDUUID "sduuid"
+#define OCF_RES_PROP_SDNAME "sdname"
 
 #define OCF_RES_QUERY_SDUUID "sduuid"
 

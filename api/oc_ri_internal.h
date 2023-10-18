@@ -45,6 +45,9 @@ extern "C" {
 #define OC_IF_W_STR "oic.if.w"
 #define OC_IF_STARTUP_STR "oic.if.startup"
 #define OC_IF_STARTUP_REVERT_STR "oic.if.startup.revert"
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+#define PLGD_IF_ETAG_STR "x.plgd.if.etag"
+#endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
 
 // number of resources with a single instance on the whole platform
 #define OC_NUM_CORE_PLATFORM_RESOURCES (OCF_CON)
@@ -89,8 +92,12 @@ void oc_ri_init(void);
  */
 void oc_ri_shutdown(void);
 
-/** Unchecked conversion from a non-error oc_status_t to coap_status_t */
+/** @brief Unchecked conversion from a non-error oc_status_t to coap_status_t */
 coap_status_t oc_status_code_unsafe(oc_status_t key);
+
+/** @brief Check if given method is supported by the interface */
+bool oc_ri_interface_supports_method(oc_interface_mask_t iface,
+                                     oc_method_t method);
 
 #ifdef OC_HAS_FEATURE_ETAG
 

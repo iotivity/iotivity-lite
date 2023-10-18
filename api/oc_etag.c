@@ -20,8 +20,14 @@
 
 #ifdef OC_HAS_FEATURE_ETAG
 
+#include "api/oc_discovery_internal.h"
 #include "api/oc_etag_internal.h"
+#include "api/oc_helpers_internal.h"
+#include "api/oc_rep_decode_internal.h"
+#include "api/oc_rep_encode_internal.h"
+#include "api/oc_rep_internal.h"
 #include "api/oc_resource_internal.h"
+#include "api/oc_ri_internal.h"
 #include "messaging/coap/coap_options.h"
 #include "oc_base64.h"
 #include "oc_core_res.h"
@@ -31,9 +37,15 @@
 #include "port/oc_log_internal.h"
 #include "port/oc_random.h"
 #include "util/oc_macros_internal.h"
+#include "util/oc_mmem_internal.h"
+
+#ifdef OC_SECURITY
+#include "oc_csr.h"
+#endif /* OC_SECURITY */
 
 #ifdef OC_STORAGE
 #include "api/oc_storage_internal.h"
+#include "util/oc_crc_internal.h"
 
 #ifdef OC_COLLECTIONS
 #include "api/oc_collection_internal.h"
@@ -43,6 +55,11 @@
 
 #include <inttypes.h>
 #include <stdint.h>
+#include <stdlib.h>
+
+#if defined(OC_STORAGE) && !defined(OC_HAS_FEATURE_CRC_ENCODER)
+#error "CRC encoder must be enabled to use the ETag feature with storage"
+#endif /* OC_STORAGE && !OC_HAS_FEATURE_CRC_ENCODER */
 
 static uint64_t g_etag = 0;
 
@@ -186,37 +203,74 @@ oc_etag_clear_storage(void)
   return success;
 }
 
+bool
+oc_etag_dump_ignore_resource(const char *uri, size_t uri_len)
+{
+#ifdef OC_WKCORE
+  if (uri_len == OC_CHAR_ARRAY_LEN(OC_WELLKNOWNCORE_URI) &&
+      memcmp(uri, OC_WELLKNOWNCORE_URI, uri_len) == 0) {
+    return true;
+  }
+#endif /* OC_WKCORE */
+#ifdef OC_SECURITY
+  if (uri_len == OC_CHAR_ARRAY_LEN(OCF_SEC_CSR_URI) &&
+      memcmp(uri, OCF_SEC_CSR_URI, uri_len) == 0) {
+    return true;
+  }
+#endif /* OC_SECURITY */
+  (void)uri;
+  (void)uri_len;
+  return false;
+}
+oc_resource_encode_status_t
+oc_etag_encode_resource_etag(CborEncoder *encoder, oc_resource_t *resource)
+{
+  oc_string_view_t uri = oc_string_view2(&resource->uri);
+  uint64_t etag = oc_resource_get_etag(resource);
+  if (etag == OC_ETAG_UNINITIALIZED) {
+    OC_DBG("skipping uninitialized etag for resource %s", uri.data);
+    return OC_RESOURCE_ENCODE_SKIPPED;
+  }
+
+  uint64_t crc64 = 0;
+  if (oc_resource_get_crc64(resource, &crc64) != OC_RESOURCE_CRC64_OK) {
+    OC_DBG("cannot calculate crc64 for device(%zu) resource(%s)",
+           resource->device, uri.data);
+    return OC_RESOURCE_ENCODE_SKIPPED;
+  }
+
+  CborError err = oc_rep_encode_text_string(encoder, uri.data, uri.length);
+  CborEncoder etag_map;
+  memset(&etag_map, 0, sizeof(etag_map));
+  err |= oc_rep_encoder_create_map(encoder, &etag_map, CborIndefiniteLength);
+  err |=
+    oc_rep_encode_text_string(&etag_map, "etag", OC_CHAR_ARRAY_LEN("etag"));
+  err |= oc_rep_encode_uint(&etag_map, etag);
+  err |= oc_rep_encode_text_string(&etag_map, "crc", OC_CHAR_ARRAY_LEN("crc"));
+  err |= oc_rep_encode_uint(&etag_map, crc64);
+  err |= oc_rep_encoder_close_container(encoder, &etag_map);
+
+  if (err != CborNoError) {
+    OC_ERR("failed to encode device(%zu) resource %s", resource->device,
+           uri.data);
+    g_err |= err;
+    return OC_RESOURCE_ENCODE_ERROR;
+  }
+  return OC_RESOURCE_ENCODE_OK;
+}
+
 static bool
 etag_iterate_encode_resource(oc_resource_t *resource, void *data)
 {
   (void)data;
-  OC_DBG("encoding resource [%zu:]%s", resource->device,
-         oc_string(resource->uri));
-  uint64_t etag = oc_resource_get_etag(resource);
-  if (etag == OC_ETAG_UNINITIALIZED) {
-    OC_DBG("skipping uninitialized etag for resource %s",
-           oc_string(resource->uri));
+  oc_string_view_t uri = oc_string_view2(&resource->uri);
+  OC_DBG("encoding resource [%zu:%s]", resource->device, uri.data);
+  if (oc_etag_dump_ignore_resource(uri.data, uri.length)) {
+    OC_DBG("skipping resource %s", uri.data);
     return true;
   }
-  CborError err =
-    oc_rep_encode_text_string(oc_rep_object(root), oc_string(resource->uri),
-                              oc_string_len(resource->uri));
-  CborEncoder etag_map;
-  memset(&etag_map, 0, sizeof(etag_map));
-  err |= oc_rep_encoder_create_map(oc_rep_object(root), &etag_map,
-                                   CborIndefiniteLength);
-  err |=
-    oc_rep_encode_text_string(&etag_map, "etag", OC_CHAR_ARRAY_LEN("etag"));
-  err |= oc_rep_encode_uint(&etag_map, etag);
-  err |= oc_rep_encoder_close_container(oc_rep_object(root), &etag_map);
-
-  if (err != CborNoError) {
-    OC_ERR("failed to encode device(%zu) resource %s", resource->device,
-           oc_string(resource->uri));
-    g_err |= err;
-    return false;
-  }
-  return true;
+  return oc_etag_encode_resource_etag(oc_rep_object(root), resource) !=
+         OC_RESOURCE_ENCODE_ERROR;
 }
 
 static int
@@ -255,6 +309,43 @@ oc_etag_dump(void)
   return success;
 }
 
+bool
+oc_etag_decode_resource_etag(oc_resource_t *resource, const oc_rep_t *rep,
+                             uint64_t *etag)
+{
+  int64_t etag_store = 0;
+  if (!oc_rep_get_int(rep, "etag", &etag_store) ||
+      etag_store == OC_ETAG_UNINITIALIZED) {
+    OC_DBG("etag missing or invalid for resource %zu:%s", resource->device,
+           oc_string(resource->uri));
+    return false;
+  }
+
+  int64_t crc64_store = 0;
+  if (!oc_rep_get_int(rep, "crc", &crc64_store)) {
+    OC_DBG("no checksum for resource %zu:%s", resource->device,
+           oc_string(resource->uri));
+    return false;
+  }
+
+  uint64_t crc64 = 0;
+  if (oc_resource_get_crc64(resource, &crc64) != OC_RESOURCE_CRC64_OK) {
+    OC_DBG("cannot calculate crc64 for resource %zu:%s", resource->device,
+           oc_string(resource->uri));
+    return false;
+  }
+
+  if ((uint64_t)crc64_store != crc64) {
+    OC_DBG("ignoring invalid checksum for resource %zu:%s: store (%" PRIu64
+           ") vs current(%" PRIu64 ")",
+           resource->device, oc_string(resource->uri), (uint64_t)crc64_store,
+           crc64);
+    return false;
+  }
+  *etag = (uint64_t)etag_store;
+  return true;
+}
+
 typedef struct etag_update_from_rep_data_t
 {
   const oc_rep_t *rep;
@@ -267,20 +358,21 @@ etag_iterate_update_resources_by_rep(oc_resource_t *resource, void *data)
   etag_update_from_rep_data_t *rep_data = (etag_update_from_rep_data_t *)data;
   oc_rep_t *res_rep;
   if (!oc_rep_get_object(rep_data->rep, oc_string(resource->uri), &res_rep)) {
-    OC_DBG("no representation for resource %s", oc_string(resource->uri));
+    OC_DBG("no representation for resource %zu:%s", resource->device,
+           oc_string(resource->uri));
     return true;
   }
 
-  int64_t etag = 0;
-  if (!oc_rep_get_int(res_rep, "etag", &etag) || etag < 0 ||
-      etag == OC_ETAG_UNINITIALIZED) {
-    OC_DBG("ignoring invalid etag for resource %s", oc_string(resource->uri));
+  uint64_t etag;
+  if (!oc_etag_decode_resource_etag(resource, res_rep, &etag)) {
+    OC_DBG("failed to decode etag for resource %zu:%s", resource->device,
+           oc_string(resource->uri));
     return true;
   }
 
-  oc_resource_set_etag(resource, (uint64_t)etag);
-  if ((uint64_t)etag > *rep_data->etag) {
-    *rep_data->etag = (uint64_t)etag;
+  oc_resource_set_etag(resource, etag);
+  if (etag > *rep_data->etag) {
+    *rep_data->etag = etag;
   }
   return true;
 }
@@ -320,7 +412,7 @@ oc_etag_load_from_storage(bool from_storage_only)
 {
   bool success = true;
   // load g_etag and resource etags from storage
-  uint64_t etag = oc_clock_time();
+  uint64_t etag = oc_etag_get();
   for (size_t i = 0; i < oc_core_get_num_devices(); ++i) {
     if (!from_storage_only) {
       // clear all etags
@@ -358,6 +450,188 @@ oc_etag_load_and_clear(void)
   return success;
 }
 
+static bool
+resource_get_payload_by_encoder(oc_rep_encoder_type_t type,
+                                oc_resource_t *resource,
+                                oc_interface_mask_t iface,
+                                oc_response_buffer_t *response_buffer,
+                                size_t buffer_max_size)
+{
+  oc_rep_encoder_set_type(type);
+
+  oc_request_t request;
+  memset(&request, 0, sizeof(request));
+  oc_response_t response;
+  memset(&response, 0, sizeof(response));
+  response.response_buffer = response_buffer;
+  request.response = &response;
+  request.resource = resource;
+  request.method = OC_GET;
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (buffer_max_size != 0) {
+    oc_rep_new_realloc_v1(&response_buffer->buffer,
+                          response_buffer->buffer_size, buffer_max_size);
+  } else {
+    oc_rep_new_v1(response_buffer->buffer, response_buffer->buffer_size);
+  }
+#else  /* OC_DYNAMIC_ALLOCATION */
+  (void)buffer_max_size;
+  oc_rep_new_v1(response_buffer->buffer, response_buffer->buffer_size);
+#endif /* !OC_DYNAMIC_ALLOCATION */
+
+#if defined(OC_SERVER) && defined(OC_COLLECTIONS)
+  if (oc_check_if_collection(resource)) {
+    if (!oc_handle_collection_request(OC_GET, &request, iface, NULL)) {
+      OC_ERR("cannot calculate crc64 for device(%zu) resource(%s): failed to "
+             "handle collection request",
+             resource->device, oc_string(resource->uri));
+      return false;
+    }
+    return true;
+  }
+#endif /* OC_SERVER && OC_COLLECTIONS */
+  resource->get_handler.cb(&request, iface, resource->get_handler.user_data);
+  return true;
+}
+
+#if OC_DBG_IS_ENABLED
+
+static void
+resource_print_payload(oc_resource_t *resource, oc_interface_mask_t iface)
+{
+  // GCOVR_EXCL_START
+#ifdef OC_DYNAMIC_ALLOCATION
+  uint8_t *buffer = calloc(1, OC_MIN_APP_DATA_SIZE);
+  if (buffer == NULL) {
+    return;
+  }
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  uint8_t buffer[OC_MIN_APP_DATA_SIZE] = { 0 };
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+  oc_response_buffer_t response_buffer;
+  memset(&response_buffer, 0, sizeof(response_buffer));
+  response_buffer.buffer = buffer;
+  response_buffer.buffer_size = OC_MIN_APP_DATA_SIZE;
+
+  if (!resource_get_payload_by_encoder(OC_REP_CBOR_ENCODER, resource, iface,
+                                       &response_buffer,
+                                       OC_MAX_APP_DATA_SIZE)) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
+    return;
+  }
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  // might have been reallocated by the handler
+  buffer = response_buffer.buffer;
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  size_t avail_bytes = oc_mmem_available_size(BYTE_POOL);
+  if (avail_bytes < response_buffer.response_length) {
+    OC_DBG("not enough memory to print payload of resource(%s)",
+           oc_string(resource->uri));
+    return;
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+  oc_rep_decoder_t decoder = oc_rep_decoder(OC_REP_CBOR_DECODER);
+  OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
+  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
+  oc_rep_t *rep = NULL;
+  if (CborNoError != decoder.parse(response_buffer.buffer,
+                                   response_buffer.response_length, &rep)) {
+    oc_rep_set_pool(prev_rep_objects);
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
+    return;
+  }
+#ifdef OC_DYNAMIC_ALLOCATION
+  size_t json_size = oc_rep_to_json(rep, NULL, 0, true);
+  char *json = (char *)malloc(json_size + 1);
+  oc_rep_to_json(rep, json, json_size + 1, true);
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  char json[4096] = { 0 };
+  oc_rep_to_json(rep, json, OC_ARRAY_SIZE(json), true);
+#endif /* OC_DYNAMIC_ALLOCATION */
+  OC_DBG("Resource(%s) payload: %s", oc_string(resource->uri), json);
+  oc_free_rep(rep);
+  oc_rep_set_pool(prev_rep_objects);
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(json);
+  free(buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
+  // GCOVR_EXCL_STOP
+}
+
+#endif /* OC_DBG_IS_ENABLED */
+
+oc_resource_crc64_status_t
+oc_resource_get_crc64(oc_resource_t *resource, uint64_t *crc64)
+{
+  assert(resource != NULL);
+  assert(crc64 != NULL);
+
+  bool is_collection = false;
+#if defined(OC_SERVER) && defined(OC_COLLECTIONS)
+  if (oc_check_if_collection(resource)) {
+    is_collection = true;
+  }
+#endif /* OC_SERVER && OC_COLLECTIONS */
+
+  if (!is_collection && resource->get_handler.cb == NULL) {
+    OC_ERR("cannot calculate crc64 for device(%zu) resource(%s): get handler "
+           "not available",
+           resource->device, oc_string(resource->uri));
+    return OC_RESOURCE_CRC64_ERROR;
+  }
+
+  oc_rep_encoder_reset_t prevEncoder = oc_rep_global_encoder_reset(NULL);
+
+  oc_interface_mask_t iface = OC_IF_BASELINE;
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+  if (oc_resource_supports_interface(resource, PLGD_IF_ETAG)) {
+    iface = PLGD_IF_ETAG;
+  }
+#endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
+
+#if OC_DBG_IS_ENABLED
+  resource_print_payload(resource, iface);
+#endif /* OC_DBG_IS_ENABLED */
+
+  uint8_t buffer[sizeof(*crc64)] = { 0 };
+  oc_response_buffer_t response_buffer;
+  memset(&response_buffer, 0, sizeof(response_buffer));
+  response_buffer.buffer = buffer;
+  response_buffer.buffer_size = OC_ARRAY_SIZE(buffer);
+  if (!resource_get_payload_by_encoder(OC_REP_CRC_ENCODER, resource, iface,
+                                       &response_buffer, 0)) {
+    return OC_RESOURCE_CRC64_ERROR;
+  }
+
+  int payload_size = oc_rep_get_encoded_payload_size();
+  if (payload_size == 0) {
+    OC_DBG("ignoring empty payload for device(%zu) resource(%s)",
+           resource->device, oc_string(resource->uri));
+    oc_rep_global_encoder_reset(&prevEncoder);
+    return OC_RESOURCE_CRC64_NO_PAYLOAD;
+  }
+
+  if (payload_size != sizeof(*crc64)) {
+    OC_ERR("cannot calculate crc64 for device(%zu) resource(%s): failed to "
+           "encode payload",
+           resource->device, oc_string(resource->uri));
+    oc_rep_global_encoder_reset(&prevEncoder);
+    return -1;
+  }
+  memcpy(crc64, buffer, sizeof(*crc64));
+
+  oc_rep_global_encoder_reset(&prevEncoder);
+  return OC_RESOURCE_CRC64_OK;
+}
+
 #endif /* OC_STORAGE */
 
 void
@@ -365,8 +639,8 @@ oc_resource_set_etag(oc_resource_t *resource, uint64_t etag)
 {
   assert(resource != NULL);
   resource->etag = etag;
-  OC_DBG("oc_etag: set resource %s etag to %" PRIu64, oc_string(resource->uri),
-         etag);
+  OC_DBG("oc_etag: set resource %zu:%s etag to %" PRIu64, resource->device,
+         oc_string(resource->uri), etag);
 }
 
 uint64_t

@@ -412,21 +412,23 @@ dev_time_encode_property_last_synced_time(plgd_time_t pt, int flags)
 }
 
 int
-plgd_time_encode(plgd_time_t pt, oc_interface_mask_t iface_mask, int flags)
+plgd_time_encode(plgd_time_t pt, oc_interface_mask_t iface, int flags)
 {
-  if ((iface_mask & PLGD_TIME_IF_MASK) != iface_mask) {
-    OC_ERR("cannot encode plgd-time: invalid interface(%d)", (int)iface_mask);
+  const oc_resource_t *r = oc_core_get_resource_by_index(PLGD_TIME, 0);
+  if (r == NULL) {
+    OC_ERR("cannot encode plgd-time: resource does not exist");
+    return -1;
+  }
+  if (!oc_resource_supports_interface(r, iface)) {
+    OC_ERR("cannot encode plgd-time: invalid interface(%d)", (int)iface);
     return -1;
   }
 
   oc_rep_start_root_object();
-  if ((iface_mask & OC_IF_BASELINE) != 0) {
+  if (iface == OC_IF_BASELINE) {
     // baseline properties
-    const oc_resource_t *r = oc_core_get_resource_by_index(PLGD_TIME, 0);
-    if (r != NULL) {
-      oc_process_baseline_interface_with_filter(
-        oc_rep_object(root), r, dev_time_property_filter, &flags);
-    }
+    oc_process_baseline_interface_with_filter(oc_rep_object(root), r,
+                                              dev_time_property_filter, &flags);
   }
 
   bool to_storage = (flags & PLGD_TIME_ENCODE_FLAG_TO_STORAGE) != 0;
@@ -566,18 +568,23 @@ plgd_time_resource_post(oc_request_t *request, oc_interface_mask_t iface_mask,
 }
 
 static void
-plgd_time_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
+plgd_time_resource_get(oc_request_t *request, oc_interface_mask_t iface,
                        void *data)
 {
   (void)data;
 
   int flags = 0;
 #ifdef OC_SECURITY
-  if ((request->origin->flags & SECURED) != 0) {
+  if (request->origin != NULL && (request->origin->flags & SECURED) != 0) {
     flags |= PLGD_TIME_ENCODE_FLAG_SECURE;
   }
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+  if (request->origin == NULL && iface == PLGD_IF_ETAG) {
+    flags |= PLGD_TIME_ENCODE_FLAG_SECURE;
+  }
+#endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
 #endif /* OC_SECURITY */
-  if (plgd_time_encode(g_oc_plgd_time, iface_mask, flags) != 0) {
+  if (plgd_time_encode(g_oc_plgd_time, iface, flags) != 0) {
     OC_ERR("cannot encode plgd-time resource");
     oc_send_response_with_callback(request, OC_STATUS_INTERNAL_SERVER_ERROR,
                                    true);
@@ -591,10 +598,17 @@ void
 plgd_time_create_resource(void)
 {
   OC_DBG("plgd-time: create resource");
+  int interfaces = (OC_IF_BASELINE | OC_IF_RW);
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+  interfaces |= PLGD_IF_ETAG;
+#endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
+  oc_interface_mask_t default_interface = OC_IF_RW;
+  assert((interfaces & default_interface) == default_interface);
+  int properties = OC_DISCOVERABLE | OC_OBSERVABLE;
+
   oc_core_populate_resource(PLGD_TIME, /*device*/ 0, PLGD_TIME_URI,
-                            PLGD_TIME_IF_MASK, PLGD_TIME_DEFAULT_IF,
-                            OC_DISCOVERABLE | OC_OBSERVABLE,
-                            plgd_time_resource_get,
+                            (oc_interface_mask_t)interfaces, default_interface,
+                            properties, plgd_time_resource_get,
                             /*put*/ NULL, plgd_time_resource_post,
                             /*delete*/ NULL, 1, PLGD_TIME_RT);
 }

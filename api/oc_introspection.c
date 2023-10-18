@@ -16,31 +16,38 @@
  *
  ****************************************************************************/
 
-#include "oc_config.h"
+#include "util/oc_features.h"
 
 #ifdef OC_INTROSPECTION
 
 #include "api/oc_core_res_internal.h"
 #include "api/oc_endpoint_internal.h"
 #include "api/oc_introspection_internal.h"
+#include "api/oc_rep_encode_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_server_api_internal.h"
 #include "api/oc_storage_internal.h"
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
-#include "oc_config.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_introspection.h"
 #include "port/oc_log_internal.h"
+#include "port/oc_storage_internal.h"
 #include "util/oc_macros_internal.h"
 
-#include <inttypes.h>
-#include <stdio.h>
+#ifdef OC_HAS_FEATURE_CRC_ENCODER
+#include "port/oc_storage_internal.h"
+#include "util/oc_crc_internal.h"
+#endif /* OC_HAS_FEATURE_CRC_ENCODER */
 
 #ifndef OC_IDD_API
 #include "server_introspection.dat.h"
 #else /* OC_IDD_API */
+
+#include <errno.h>
+#include <inttypes.h>
+#include <stdio.h>
 
 #ifndef OC_STORAGE
 #error Preprocessor macro OC_IDD_API is defined but OC_STORAGE is not defined \
@@ -76,6 +83,9 @@ oc_introspection_get_data(size_t device, uint8_t *buffer, size_t buffer_size)
     OC_ERR("cannot get introspection data: failed to generate tag");
     return -1;
   }
+  if (buffer == NULL) {
+    return oc_storage_size(idd_tag);
+  }
   long ret = oc_storage_read(idd_tag, buffer, buffer_size);
   if (ret < 0) {
     OC_ERR("cannot get introspection data: failed to read data(error=%ld)",
@@ -85,6 +95,9 @@ oc_introspection_get_data(size_t device, uint8_t *buffer, size_t buffer_size)
   return ret;
 #else  /* !OC_IDD_API */
   (void)device;
+  if (buffer == NULL) {
+    return introspection_data_size;
+  }
   if (introspection_data_size < buffer_size) {
     memcpy(buffer, introspection_data, introspection_data_size);
     return introspection_data_size;
@@ -95,16 +108,11 @@ oc_introspection_get_data(size_t device, uint8_t *buffer, size_t buffer_size)
 }
 
 static void
-oc_core_introspection_data_handler(oc_request_t *request,
-                                   oc_interface_mask_t iface_mask, void *data)
+introspection_data_handler_cbor(oc_request_t *request)
 {
-  (void)iface_mask;
-  (void)data;
-
-  OC_DBG("in oc_core_introspection_data_handler");
   long IDD_size = oc_introspection_get_data(
     request->resource->device, request->response->response_buffer->buffer,
-    OC_MAX_APP_DATA_SIZE);
+    request->response->response_buffer->buffer_size);
   if (IDD_size < 0) {
     OC_ERR(
       "oc_core_introspection_data_handler: failed to get introspection data");
@@ -114,6 +122,81 @@ oc_core_introspection_data_handler(oc_request_t *request,
   }
   oc_send_response_internal(request, OC_STATUS_OK, APPLICATION_VND_OCF_CBOR,
                             IDD_size, true);
+}
+
+#ifdef OC_HAS_FEATURE_CRC_ENCODER
+static void
+introspection_data_handler_crc(oc_request_t *request)
+{
+  uint64_t crc = 0;
+#ifdef OC_IDD_API
+  char idd_tag[OC_STORAGE_SVR_TAG_MAX];
+  if (oc_storage_gen_svr_tag(OC_INTROSPECTION_WK_STORE_NAME,
+                             request->resource->device, idd_tag,
+                             sizeof(idd_tag)) < 0) {
+    OC_ERR("cannot encode introspection data: failed to generate tag");
+    return;
+  }
+  long ret = oc_storage_size(idd_tag);
+  if (ret == -ENOENT || ret == 0) {
+    OC_DBG("no introspection data");
+    return;
+  }
+  if (ret < 0) {
+    OC_ERR(
+      "cannot encode introspection data: failed to get data size(error=%ld)",
+      ret);
+    return;
+  }
+  uint8_t idd_data[ret];
+  memset(idd_data, 0, (size_t)ret);
+  ret = oc_storage_read(idd_tag, idd_data, (size_t)ret);
+  if (ret < 0) {
+    OC_ERR("cannot encode introspection data: failed to read data(error=%ld)",
+           ret);
+    return;
+  }
+  crc = oc_crc64(0, idd_data, (size_t)ret);
+#else  /* !OC_IDD_API */
+  crc = oc_crc64(0, introspection_data, introspection_data_size);
+#endif /* OC_IDD_API */
+  if (oc_rep_encoder_write_uint(oc_rep_global_encoder(), oc_rep_get_encoder(),
+                                crc) != CborNoError) {
+    OC_ERR("cannot encode introspection data: failed to encode data");
+  }
+
+  request->response->response_buffer->response_length = sizeof(crc);
+  request->response->response_buffer->code = CONTENT_2_05;
+}
+
+#endif /* OC_HAS_FEATURE_CRC_ENCODER */
+
+static void
+oc_core_introspection_data_handler(oc_request_t *request,
+                                   oc_interface_mask_t iface_mask, void *data)
+{
+  (void)iface_mask;
+  (void)data;
+
+  OC_DBG("in oc_core_introspection_data_handler");
+  oc_rep_encoder_type_t et = oc_rep_encoder_get_type();
+  if (et == OC_REP_CBOR_ENCODER) {
+    introspection_data_handler_cbor(request);
+    return;
+  }
+
+#ifdef OC_HAS_FEATURE_CRC_ENCODER
+  if (et == OC_REP_CRC_ENCODER) {
+    introspection_data_handler_crc(request);
+    return;
+  }
+#endif /* OC_HAS_FEATURE_CRC_ENCODER */
+
+  OC_DBG("oc_core_introspection_data_handler: cannot encode introspection data "
+         "by encoder %d",
+         et);
+  oc_send_response_internal(request, OC_IGNORE, APPLICATION_VND_OCF_CBOR, 0,
+                            false);
 }
 
 bool
@@ -162,9 +245,14 @@ oc_core_introspection_wk_handler(oc_request_t *request,
 {
   (void)data;
 
-  int if_index = (request->origin) ? (int)request->origin->interface_index : -1;
+  int if_index =
+    (request->origin != NULL) ? (int)request->origin->interface_index : -1;
+#ifdef OC_IPV4
   transport_flags flags =
-    (request->origin && (request->origin->flags & IPV6)) ? IPV6 : IPV4;
+    (request->origin != NULL && (request->origin->flags & IPV6)) ? IPV6 : IPV4;
+#else  /* !OC_IPV4 */
+  transport_flags flags = IPV6;
+#endif /* OC_IPV4 */
   oc_string_t uri;
   memset(&uri, 0, sizeof(oc_string_t));
   if (!oc_introspection_wk_get_uri(request->resource->device, if_index, flags,

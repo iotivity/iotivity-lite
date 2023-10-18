@@ -399,7 +399,7 @@ oc_process_baseline_interface_with_filter(
       &resource->types);
   }
   if (filter == NULL || filter(OC_BASELINE_PROP_IF, filter_data)) {
-    oc_core_encode_interfaces_mask(object, resource->interfaces);
+    oc_core_encode_interfaces_mask(object, resource->interfaces, false);
   }
   if (filter == NULL || filter(OC_BASELINE_PROP_TAG_LOCN, filter_data)) {
     resource_encode_tag_locn(object, resource->tag_locn);

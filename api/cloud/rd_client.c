@@ -43,7 +43,8 @@ _add_resource_payload(CborEncoder *parent, oc_resource_t *resource,
   oc_rep_start_object(parent, links);
   oc_rep_set_text_string(links, href, oc_string(resource->uri));
   oc_rep_set_string_array(links, rt, resource->types);
-  oc_core_encode_interfaces_mask(oc_rep_object(links), resource->interfaces);
+  oc_core_encode_interfaces_mask(oc_rep_object(links), resource->interfaces,
+                                 false);
   if (rel)
     oc_rep_set_text_string(links, rel, rel);
   oc_rep_set_int(links, ins, ins);
