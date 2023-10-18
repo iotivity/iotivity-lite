@@ -92,8 +92,8 @@ oc_storage_reset(void)
   return 0;
 }
 
-long
-oc_storage_read(const char *store, uint8_t *buf, size_t size)
+static int
+storage_open(const char *store, FILE **fp)
 {
   if (g_store_path_len == 0) {
     return -ENOENT;
@@ -107,9 +107,43 @@ oc_storage_read(const char *store, uint8_t *buf, size_t size)
   memcpy(g_store_path + g_store_path_len, store, store_len);
   g_store_path[g_store_path_len + store_len] = '\0';
 
-  FILE *fp = fopen(g_store_path, "rb");
-  if (fp == NULL) {
+  FILE *file = fopen(g_store_path, "rb");
+  if (file == NULL) {
     return -EINVAL;
+  }
+  *fp = file;
+  return 0;
+}
+
+long
+oc_storage_size(const char *store)
+{
+  FILE *fp = NULL;
+  int ret = storage_open(store, &fp);
+  if (ret != 0) {
+    return ret;
+  }
+
+  if (fseek(fp, 0, SEEK_END) != 0) {
+    fclose(fp);
+    return -errno;
+  }
+  long fsize = ftell(fp);
+  if (fsize < 0) {
+    fclose(fp);
+    return -errno;
+  }
+  fclose(fp);
+  return fsize;
+}
+
+long
+oc_storage_read(const char *store, uint8_t *buf, size_t size)
+{
+  FILE *fp = NULL;
+  int ret = storage_open(store, &fp);
+  if (ret != 0) {
+    return ret;
   }
 
   if (fseek(fp, 0, SEEK_END) != 0) {

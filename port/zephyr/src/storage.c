@@ -290,6 +290,12 @@ find_key(const char *store)
   return NULL;
 }
 
+long
+oc_storage_size(const char *store)
+{
+  return -1;
+}
+
 /*
  * store should contains the memory position to read.
  * The value should be multiple of the flash sector size.

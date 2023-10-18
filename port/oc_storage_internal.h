@@ -19,6 +19,8 @@
 #ifndef OC_PORT_STORAGE_INTERNAL_H
 #define OC_PORT_STORAGE_INTERNAL_H
 
+#include "util/oc_compiler.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -43,6 +45,15 @@ int oc_storage_reset(void);
  * @return false otherwise
  */
 bool oc_storage_path(char *buffer, size_t buffer_size);
+
+/**
+ * @brief get size (in bytes) of the data written to store
+ *
+ * @param store the path to be read (cannot be NULL)
+ * @return <0 on failure
+ * @return >=0 size of the store
+ */
+long oc_storage_size(const char *store) OC_NONNULL();
 
 #ifdef __cplusplus
 }
