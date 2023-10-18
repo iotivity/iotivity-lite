@@ -36,6 +36,14 @@ CborEncoder root_map;
 CborEncoder links_array;
 int g_err = CborNoError;
 
+struct oc_memb *
+oc_rep_reset_pool(struct oc_memb *pool)
+{
+  struct oc_memb *prev_pool = g_rep_objects;
+  g_rep_objects = pool;
+  return prev_pool;
+}
+
 void
 oc_rep_set_pool(struct oc_memb *rep_objects_pool)
 {

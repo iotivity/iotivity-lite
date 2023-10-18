@@ -20,6 +20,8 @@
 
 #ifdef OC_STORAGE
 
+#include "api/oc_rep_decode_internal.h"
+#include "api/oc_rep_internal.h"
 #include "oc_storage_internal.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_log_internal.h"
@@ -120,10 +122,11 @@ oc_storage_data_load(const char *name, size_t device,
   long ret = oc_storage_read(svr_tag, buf.buffer, buf.size);
   if (ret < 0) {
     OC_DBG("cannot load from %s from store: read error(%ld)", name, ret);
-    goto error;
+    oc_storage_free_buffer(buf);
+    return -1;
   }
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-  oc_rep_set_pool(&rep_objects);
+  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
   oc_rep_t *rep = NULL;
   if (oc_parse_rep(buf.buffer, (int)ret, &rep) != 0) {
     OC_ERR("cannot load from %s from store: cannot parse representation", name);
@@ -131,17 +134,42 @@ oc_storage_data_load(const char *name, size_t device,
   }
   if (rep != NULL && decode(rep, device, decode_data) != 0) {
     OC_ERR("cannot load from %s from store: cannot decode data", name);
-    oc_free_rep(rep);
     goto error;
   }
   oc_free_rep(rep);
+  oc_rep_set_pool(prev_rep_objects);
   oc_storage_free_buffer(buf);
   return ret;
 
 error:
+  oc_free_rep(rep);
+  oc_rep_set_pool(prev_rep_objects);
   oc_storage_free_buffer(buf);
   return -1;
 }
+
+#if OC_DBG_IS_ENABLED
+
+static void
+storage_print_data(const uint8_t *buf, size_t size)
+{
+  oc_rep_decoder_t decoder = oc_rep_decoder(OC_REP_CBOR_DECODER);
+  OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
+  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
+  oc_rep_t *rep = NULL;
+  if (CborNoError != decoder.parse(buf, size, &rep)) {
+    return;
+  }
+  size_t json_size = oc_rep_to_json(rep, NULL, 0, true);
+  char *json = (char *)malloc(json_size + 1);
+  oc_rep_to_json(rep, json, json_size + 1, true);
+  OC_DBG("payload %s", json);
+  free(json);
+  oc_free_rep(rep);
+  oc_rep_set_pool(prev_rep_objects);
+}
+
+#endif /* OC_DBG_IS_ENABLED */
 
 long
 oc_storage_data_save(const char *name, size_t device,
@@ -174,7 +202,11 @@ oc_storage_data_save(const char *name, size_t device,
     OC_ERR("cannot dump %s to storage: invalid payload", name);
     goto error;
   }
+#if OC_DBG_IS_ENABLED
   OC_DBG("oc_storage: encoded %s size %d", name, size);
+  storage_print_data(sb.buffer, size);
+#endif /* OC_DBG_IS_ENABLED */
+
   char svr_tag[OC_STORAGE_SVR_TAG_MAX];
   if (oc_storage_gen_svr_tag(name, device, svr_tag, sizeof(svr_tag)) < 0) {
     OC_ERR("cannot dump %s to storage: cannot generate svr tag", name);

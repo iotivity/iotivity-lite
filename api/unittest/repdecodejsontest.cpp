@@ -22,8 +22,8 @@
 
 #include "api/oc_rep_decode_json_internal.h"
 #include "api/oc_rep_encode_json_internal.h"
+#include "api/oc_rep_internal.h"
 #include "oc_helpers.h"
-#include "oc_rep.h"
 #include "port/oc_log_internal.h"
 #include "tests/gtest/RepPool.h"
 #include "tests/gtest/Utility.h"

@@ -137,6 +137,9 @@ uint64_t oc_discovery_get_batch_etag(const oc_endpoint_t *endpoint,
 
 #ifdef OC_WKCORE
 
+#define OC_WELLKNOWNCORE_URI "/.well-known/core"
+#define OC_WELLKNOWNCORE_RT "wk"
+
 void oc_create_wkcore_resource(size_t device);
 
 #endif /* OC_WKCORE */

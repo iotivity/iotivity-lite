@@ -21,6 +21,7 @@
 
 #include "oc_rep.h"
 #include "util/oc_compiler.h"
+#include "util/oc_memb.h"
 
 #include <stdbool.h>
 #include <stddef.h>
@@ -35,6 +36,36 @@ typedef enum oc_rep_error_t {
   OC_REP_ERROR_INTERNAL = -1,
   OC_REP_ERROR_OUT_OF_MEMORY = -2,
 } oc_rep_error_t;
+
+/** @brief Allocate a new oc_rep_t object */
+oc_rep_t *oc_alloc_rep(void);
+
+/** @brief Free an oc_rep_t object */
+void oc_free_rep(oc_rep_t *rep);
+
+/** @brief Set the object pool from which to allocate oc_rep_t objects
+ *
+ * @param rep_objects_pool object pool to use
+ *
+ * @note The rep pool is only used when dynamic memory allocation is disabled.
+ */
+void oc_rep_set_pool(struct oc_memb *rep_objects_pool);
+
+/** @brief Set the object pool from which to allocate oc_rep_t objects and
+ * return the previously set pool */
+struct oc_memb *oc_rep_reset_pool(struct oc_memb *pool);
+
+/**
+ * @brief Decode the payload into a oc_rep_t object using the global decoder.
+ *
+ * @param payload payload to decode
+ * @param payload_size size of payload
+ * @param[out] out_rep output parameter for the decoded object (must be freed
+ * with oc_free_rep)
+ * @return int
+ */
+int oc_parse_rep(const uint8_t *payload, size_t payload_size,
+                 oc_rep_t **out_rep);
 
 /**
  * @brief Check whether property matches by name.

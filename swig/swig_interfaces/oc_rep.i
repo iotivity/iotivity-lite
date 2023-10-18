@@ -20,6 +20,7 @@
 %{
 #include "oc_iotivity_lite_jni.h"
 
+#include "api/oc_rep_internal.h"
 #include "oc_api.h"
 #include "oc_rep.h"
 #include "oc_collection.h"
@@ -1132,7 +1133,9 @@ void clearCborErrno(void) {
 %}
 
 %ignore oc_rep_set_pool;
+%ignore oc_rep_reset_pool;
 %ignore oc_parse_rep;
+%ignore oc_alloc_rep;
 %ignore oc_free_rep;
 %ignore oc_rep_is_null;
 

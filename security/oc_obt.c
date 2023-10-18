@@ -29,6 +29,7 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #endif
 
 #include "api/oc_helpers_internal.h"
+#include "api/oc_rep_internal.h"
 #include "oc_certs.h"
 #include "oc_core_res.h"
 #include "oc_csr.h"
@@ -317,7 +318,7 @@ oc_obt_load_state(void)
   }
 
   struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
-  oc_rep_set_pool(&rep_objects);
+  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
   oc_rep_t *rep = NULL;
   int err = oc_parse_rep(buf, ret, &rep);
   if (err != 0) {
@@ -377,6 +378,7 @@ oc_obt_load_state(void)
   }
 
   oc_free_rep(head);
+  oc_rep_set_pool(prev_rep_objects);
   free(buf);
 }
 #endif /* OC_PKI || OC_OSCORE */

@@ -21,6 +21,7 @@
 #include "api/oc_endpoint_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_resource_internal.h"
+#include "api/oc_rep_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_server_api_internal.h"
 #include "messaging/coap/oc_coap.h"
@@ -1261,9 +1262,11 @@ oc_wkcore_discovery_handler(oc_request_t *request,
 void
 oc_create_wkcore_resource(size_t device)
 {
-  oc_core_populate_resource(WELLKNOWNCORE, device, "/.well-known/core", 0, 0,
-                            OC_DISCOVERABLE, oc_wkcore_discovery_handler, 0, 0,
-                            0, 1, "wk");
+  oc_core_populate_resource(WELLKNOWNCORE, device, OC_WELLKNOWNCORE_URI,
+                            /*iface_mask*/ 0, /*default_interface*/ 0,
+                            OC_DISCOVERABLE, oc_wkcore_discovery_handler,
+                            /*put*/ NULL, /*post*/ NULL, /*delete*/ NULL, 1,
+                            OC_WELLKNOWNCORE_RT);
 }
 
 #endif /* OC_WKCORE */
@@ -1297,7 +1300,7 @@ oc_discovery_process_payload(const uint8_t *payload, size_t len,
   oc_interface_mask_t iface_mask = 0;
 
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-  oc_rep_set_pool(&rep_objects);
+  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
 
   oc_rep_t *p = NULL;
   int s = oc_parse_rep(payload, len, &p);
@@ -1456,6 +1459,7 @@ oc_discovery_process_payload(const uint8_t *payload, size_t len,
 
 done:
   oc_free_rep(p);
+  oc_rep_set_pool(prev_rep_objects);
 #ifdef OC_DNS_CACHE
   oc_dns_clear_cache();
 #endif /* OC_DNS_CACHE */
