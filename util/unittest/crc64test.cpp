@@ -18,7 +18,7 @@
 
 #include "util/oc_features.h"
 
-#ifdef OC_HAS_FEATURE_CRC64
+#ifdef OC_HAS_FEATURE_CRC_ENCODER
 
 #include "util/oc_crc_internal.h"
 
@@ -48,4 +48,4 @@ TEST(TestCRC, CRC64)
   }
 }
 
-#endif /* OC_HAS_FEATURE_CRC64 */
+#endif /* OC_HAS_FEATURE_CRC_ENCODER */

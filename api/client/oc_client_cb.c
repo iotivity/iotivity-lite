@@ -21,11 +21,11 @@
 
 #ifdef OC_CLIENT
 
-#include "oc_client_cb_internal.h"
-
+#include "api/client/oc_client_cb_internal.h"
 #include "api/oc_discovery_internal.h"
 #include "api/oc_event_callback_internal.h"
 #include "api/oc_helpers_internal.h"
+#include "api/oc_rep_internal.h"
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/coap_options.h"
 #include "oc_client_state.h"
@@ -465,7 +465,7 @@ oc_client_cb_invoke(const coap_packet_t *response, oc_client_cb_t *cb,
       }
     } else {
       OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-      oc_rep_set_pool(&rep_objects);
+      struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
       int err = 0;
       /* Do not parse an incoming payload when the Content-Format option
        * has not been set to the CBOR encoding.
@@ -483,6 +483,7 @@ oc_client_cb_invoke(const coap_packet_t *response, oc_client_cb_t *cb,
       if (client_response.payload) {
         oc_free_rep(client_response.payload);
       }
+      oc_rep_set_pool(prev_rep_objects);
     }
   } else {
     if (response->type == COAP_TYPE_ACK && response->code == 0) {

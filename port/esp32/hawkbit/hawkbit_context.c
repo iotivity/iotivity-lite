@@ -311,11 +311,11 @@ hawkbit_store_load(hawkbit_context_t *ctx)
   }
 
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-  oc_rep_set_pool(&rep_objects);
+  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
   oc_rep_t *rep = NULL;
   if (oc_parse_rep(buf, (size_t)ret, &rep) != 0) {
     APP_ERR("cannot parse representation");
-    oc_rep_set_pool(NULL);
+    oc_rep_set_pool(prev_rep_objects);
 #ifdef OC_DYNAMIC_ALLOCATION
     free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -325,7 +325,7 @@ hawkbit_store_load(hawkbit_context_t *ctx)
     ret = -1;
   }
   oc_free_rep(rep);
-  oc_rep_set_pool(NULL);
+  oc_rep_set_pool(prev_rep_objects);
 
 finish:
 #ifdef OC_DYNAMIC_ALLOCATION

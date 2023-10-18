@@ -22,6 +22,7 @@
 #include "api/oc_network_events_internal.h"
 #include "api/oc_rep_encode_internal.h"
 #include "api/oc_rep_decode_internal.h"
+#include "api/oc_rep_internal.h"
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/coap_internal.h"
 #include "messaging/coap/coap_options.h"
@@ -729,6 +730,12 @@ oc_ri_get_interface_mask(const char *iface, size_t iface_len)
       strncmp(iface, OC_IF_STARTUP_REVERT_STR, iface_len) == 0) {
     return OC_IF_STARTUP_REVERT;
   }
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+  if (OC_CHAR_ARRAY_LEN(PLGD_IF_ETAG_STR) == iface_len &&
+      strncmp(iface, PLGD_IF_ETAG_STR, iface_len) == 0) {
+    return PLGD_IF_ETAG;
+  }
+#endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
   return 0;
 }
 
@@ -744,6 +751,10 @@ does_interface_support_method(oc_interface_mask_t iface_mask,
   case OC_IF_LL:
   case OC_IF_S:
   case OC_IF_R:
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+  /* Special retrieve-only interface to calculate checksum for a resource */
+  case PLGD_IF_ETAG:
+#endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
     if (method != OC_GET)
       supported = false;
     break;
@@ -1329,7 +1340,7 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
 #endif /* OC_HAS_FEATURE_ETAG */
 
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-  oc_rep_set_pool(&rep_objects);
+  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
 
   bool bad_request = false;
   bool entity_too_large = false;
@@ -1575,6 +1586,7 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
      */
     oc_free_rep(request_obj.request_payload);
   }
+  oc_rep_set_pool(prev_rep_objects);
 
   bool success = false;
   if (forbidden) {

@@ -920,7 +920,7 @@ TEST_F(TestObt, DiscoverUnownedResources)
 {
   std::vector<std::string> devices;
   EXPECT_EQ(0, oc_obt_discover_unowned_devices(onDeviceDiscovered, &devices));
-  ApiHelper::poolEvents(5);
+  ApiHelper::poolEvents(3);
   for (const auto &device : devices) {
     OC_PRINTF("Discovered unowned device: %s\n", device.c_str());
   }

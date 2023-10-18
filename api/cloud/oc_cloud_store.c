@@ -26,7 +26,6 @@
 #include "oc_cloud_internal.h"
 #include "oc_cloud_log_internal.h"
 #include "oc_cloud_store_internal.h"
-#include "oc_rep.h"
 #include "port/oc_connectivity.h"
 
 #include <stdint.h>
@@ -302,14 +301,14 @@ cloud_store_load_internal(const char *store_name, oc_cloud_store_t *store)
   long size = oc_storage_read(store_name, buf, OC_MAX_APP_DATA_SIZE);
   if (size > 0) {
     OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-    oc_rep_set_pool(&rep_objects);
+    struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
     oc_rep_t *rep;
     if (oc_parse_rep(buf, (int)size, &rep) != 0) {
       OC_CLOUD_ERR("failed to parse cloud store buffer");
     }
     ret = cloud_store_decode(rep, store);
-    oc_rep_set_pool(&rep_objects); // Reset representation pool
     oc_free_rep(rep);
+    oc_rep_set_pool(prev_rep_objects);
   } else {
     cloud_store_initialize(store);
     ret = -2;

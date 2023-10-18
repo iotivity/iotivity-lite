@@ -1027,12 +1027,10 @@ get_local_resource_response(oc_client_response_t *data)
 {
   OC_PRINTF(" <== get_local_resource_response: \n");
   OC_PRINTF(" RESPONSE: ");
-  oc_rep_t *value_list = NULL;
-  oc_parse_rep(data->_payload, (int)data->_payload_len, &value_list);
-  print_rep(value_list, false);
-  free(value_list);
+  print_rep(data->payload, false);
 
-  oc_separate_response_t *delay_response = data->user_data;
+  oc_separate_response_t *delay_response =
+    (oc_separate_response_t *)data->user_data;
   memcpy(delay_response->buffer, data->_payload, (int)data->_payload_len);
   delay_response->len = data->_payload_len;
   oc_send_separate_response(delay_response, data->code);
@@ -1095,12 +1093,10 @@ post_local_resource_response(oc_client_response_t *data)
 {
   OC_PRINTF(" <== post_local_resource_response: \n");
   OC_PRINTF(" RESPONSE: ");
-  oc_rep_t *value_list = NULL;
-  oc_parse_rep(data->_payload, (int)data->_payload_len, &value_list);
-  print_rep(value_list, false);
-  free(value_list);
+  print_rep(data->payload, false);
 
-  oc_separate_response_t *delay_response = data->user_data;
+  oc_separate_response_t *delay_response =
+    (oc_separate_response_t *)data->user_data;
   memcpy(delay_response->buffer, data->_payload, (int)data->_payload_len);
   delay_response->len = data->_payload_len;
   oc_send_separate_response(delay_response, data->code);
@@ -1123,7 +1119,6 @@ post_resource(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)interfaces;
   (void)user_data;
 
-  oc_rep_t *value_list = NULL;
   char query_as_string[MAX_URI_LENGTH * 2] = "";
   char url[MAX_URI_LENGTH * 2];
   char local_url[MAX_URI_LENGTH * 2];
@@ -1153,12 +1148,7 @@ post_resource(oc_request_t *request, oc_interface_mask_t interfaces,
     oc_get_request_payload_raw(request, &payload, &len, &content_format);
   OC_PRINTF("      raw buffer ok: %s\n", btoa(berr));
 
-  int err = oc_parse_rep(payload, (int)len, &value_list);
-  OC_PRINTF("     REQUEST data: %d %d \n", (int)len, err);
-  print_rep(value_list, false);
-  free(value_list);
-
-  OC_PRINTF("     REQUEST 2222: \n");
+  OC_PRINTF("     REQUEST data: \n");
   print_rep(request->request_payload, false);
 
   oc_set_separate_response_buffer(delay_response);
@@ -1176,9 +1166,6 @@ post_resource(oc_request_t *request, oc_interface_mask_t interfaces,
     OC_PRINTF("Could not init POST request\n");
 
   OC_PRINTF("       DISPATCHED\n");
-
-  // clean up...
-  // free(payload);
 }
 
 /**
@@ -1192,12 +1179,10 @@ delete_local_resource_response(oc_client_response_t *data)
 {
   OC_PRINTF(" <== delete_local_resource_response: \n");
   OC_PRINTF(" RESPONSE: ");
-  oc_rep_t *value_list = NULL;
-  oc_parse_rep(data->_payload, (int)data->_payload_len, &value_list);
-  print_rep(value_list, false);
-  free(value_list);
+  print_rep(data->payload, false);
 
-  oc_separate_response_t *delay_response = data->user_data;
+  oc_separate_response_t *delay_response =
+    (oc_separate_response_t *)data->user_data;
   memcpy(delay_response->buffer, data->_payload, (int)data->_payload_len);
   delay_response->len = data->_payload_len;
   oc_send_separate_response(delay_response, data->code);

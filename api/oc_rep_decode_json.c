@@ -21,6 +21,7 @@
 #ifdef OC_JSON_ENCODER
 
 #include "api/oc_rep_decode_json_internal.h"
+#include "api/oc_rep_internal.h"
 #include "port/oc_log_internal.h"
 #include "util/jsmn/jsmn_internal.h"
 #include "util/oc_macros_internal.h"

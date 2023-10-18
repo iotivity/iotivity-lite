@@ -19,7 +19,7 @@
 #include "api/oc_con_resource_internal.h"
 #include "api/oc_rep_decode_internal.h"
 #include "api/oc_rep_encode_internal.h"
-#include "oc_rep.h"
+#include "api/oc_rep_internal.h"
 #include "port/oc_log_internal.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"

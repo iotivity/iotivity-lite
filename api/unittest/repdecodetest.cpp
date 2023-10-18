@@ -17,6 +17,7 @@
  ******************************************************************/
 
 #include "api/oc_rep_decode_internal.h"
+#include "api/oc_rep_internal.h"
 
 #include <gtest/gtest.h>
 

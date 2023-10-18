@@ -18,7 +18,7 @@
 
 #include "TestEncoderBuffer.h"
 
-#include "oc_rep.h"
+#include "api/oc_rep_internal.h"
 #include "port/oc_log_internal.h"
 
 #include <cstdlib>

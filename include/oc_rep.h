@@ -1202,15 +1202,6 @@ typedef struct oc_rep_s
   } value;
 } oc_rep_t;
 
-void oc_rep_set_pool(struct oc_memb *rep_objects_pool);
-
-int oc_parse_rep(const uint8_t *payload, size_t payload_size,
-                 oc_rep_t **value_list);
-
-void oc_free_rep(oc_rep_t *rep);
-
-oc_rep_t *oc_alloc_rep(void);
-
 /**
  * Check for a null value from an `oc_rep_t`
  *
