@@ -92,31 +92,61 @@ oc_storage_reset(void)
   return 0;
 }
 
-long
-oc_storage_read(const char *store, uint8_t *buf, size_t size)
+static int
+storage_open(const char *store, nvs_handle_t *handle)
 {
-  OC_DBG("oc_storage_read: %s", store);
   if (!g_path_set) {
     return -ENOENT;
   }
-  nvs_handle_t handle;
+
   esp_err_t err =
-    nvs_open_from_partition(NVS_PARTITION, g_store_path, NVS_READONLY, &handle);
+    nvs_open_from_partition(NVS_PARTITION, g_store_path, NVS_READWRITE, handle);
   if (err != ESP_OK) {
     OC_ERR("oc_storage_read cannot nvs_open_from_partition %s: %s", store,
            esp_err_to_name(err));
     return -EINVAL;
   }
+  return 0;
+}
 
-  err = nvs_get_blob(handle, store, buf, &size);
+long
+oc_storage_size(const char *store)
+{
+  nvs_handle_t handle;
+  int ret = storage_open(store, &handle);
+  if (ret < 0) {
+    return ret;
+  }
+
+  size_t required_size;
+  esp_err_t err = nvs_get_blob(handle, store, NULL, &required_size);
   if (err != ESP_OK) {
     OC_ERR("oc_storage_read cannot nvs_get_blob  %s: %s", store,
            esp_err_to_name(err));
     nvs_close(handle);
     return -EINVAL;
   }
-  // TODO: check for overflow of buffer
+  nvs_close(handle);
+  return (long)required_size;
+}
 
+long
+oc_storage_read(const char *store, uint8_t *buf, size_t size)
+{
+  OC_DBG("oc_storage_read: %s", store);
+  nvs_handle_t handle;
+  int ret = storage_open(store, &handle);
+  if (ret < 0) {
+    return ret;
+  }
+
+  esp_err_t err = nvs_get_blob(handle, store, buf, &size);
+  if (err != ESP_OK) {
+    OC_ERR("oc_storage_read cannot nvs_get_blob  %s: %s", store,
+           esp_err_to_name(err));
+    nvs_close(handle);
+    return -EINVAL;
+  }
   nvs_close(handle);
   return size;
 }

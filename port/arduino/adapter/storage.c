@@ -105,6 +105,12 @@ oc_storage_write(const char *store, const uint8_t *buf, size_t len)
 }
 
 long
+oc_storage_size(const char *store)
+{
+  return -1;
+}
+
+long
 oc_storage_read(const char *store, uint8_t *buf, size_t len)
 {
   size_t store_len = strlen(store);
