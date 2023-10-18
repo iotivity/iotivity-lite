@@ -59,6 +59,10 @@ oc_query_encode_interface(oc_interface_mask_t iface_mask)
     return OC_STRING_VIEW("if=" OC_IF_STARTUP_STR);
   case OC_IF_STARTUP_REVERT:
     return OC_STRING_VIEW("if=" OC_IF_STARTUP_REVERT_STR);
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+  case PLGD_IF_ETAG:
+    return OC_STRING_VIEW("if=" PLGD_IF_ETAG_STR);
+#endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
   default:
     break;
   }

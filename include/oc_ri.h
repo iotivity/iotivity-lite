@@ -167,17 +167,20 @@ typedef enum {
  *
  */
 typedef enum {
-  OC_IF_BASELINE = 1 << 1,       ///< oic.if.baseline
-  OC_IF_LL = 1 << 2,             ///< oic.if.ll
-  OC_IF_B = 1 << 3,              ///< oic.if.b
-  OC_IF_R = 1 << 4,              ///< oic.if.r
-  OC_IF_RW = 1 << 5,             ///< oic.if.rw
-  OC_IF_A = 1 << 6,              ///< oic.if.a
-  OC_IF_S = 1 << 7,              ///< oic.if.s
-  OC_IF_CREATE = 1 << 8,         ///< oic.if.create
-  OC_IF_W = 1 << 9,              ///< oic.if.w
-  OC_IF_STARTUP = 1 << 10,       ///< oic.if.startup
-  OC_IF_STARTUP_REVERT = 1 << 11 ///< oic.if.startup.revert
+  OC_IF_BASELINE = 1 << 1,        ///< oic.if.baseline
+  OC_IF_LL = 1 << 2,              ///< oic.if.ll
+  OC_IF_B = 1 << 3,               ///< oic.if.b
+  OC_IF_R = 1 << 4,               ///< oic.if.r
+  OC_IF_RW = 1 << 5,              ///< oic.if.rw
+  OC_IF_A = 1 << 6,               ///< oic.if.a
+  OC_IF_S = 1 << 7,               ///< oic.if.s
+  OC_IF_CREATE = 1 << 8,          ///< oic.if.create
+  OC_IF_W = 1 << 9,               ///< oic.if.w
+  OC_IF_STARTUP = 1 << 10,        ///< oic.if.startup
+  OC_IF_STARTUP_REVERT = 1 << 11, ///< oic.if.startup.revert
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+  PLGD_IF_ETAG = 1 << 12, ///< x.plgd.if.etag
+#endif                    /* OC_HAS_FEATURE_ETAG_INTERFACE */
 } oc_interface_mask_t;
 
 typedef enum {
@@ -496,7 +499,7 @@ int oc_coap_status_to_status(coap_status_t status);
  *
  * @param[in] key key the application level key of the code
  * @return CoAP status code in const char *
- * @return Empty string for an invalid log level value
+ * @return Empty string for an invalid status value
  */
 OC_API
 const char *oc_status_to_str(oc_status_t key);
@@ -505,7 +508,7 @@ const char *oc_status_to_str(oc_status_t key);
  * @brief Convert method to string. It is thread safe.
  *
  * @return Method in const char *.
- * @return Empty string for an invalid log level value
+ * @return Empty string for an invalid method value
  */
 OC_API
 const char *oc_method_to_str(oc_method_t method);

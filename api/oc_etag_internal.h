@@ -120,6 +120,48 @@ bool oc_etag_load_from_storage(bool from_storage_only);
 /** Dump ETags of given device to persisent storage. */
 bool oc_etag_dump_for_device(size_t device);
 
+/** Do not dump resource with given URI to storage. */
+bool oc_etag_dump_ignore_resource(const char *uri, size_t uri_len) OC_NONNULL();
+
+typedef enum {
+  OC_RESOURCE_CRC64_OK = 0, ///< resource has a payload and crc64 is calculated
+  OC_RESOURCE_CRC64_NO_PAYLOAD = 1, ///< resource has no payload
+
+  OC_RESOURCE_CRC64_ERROR = -1, ///< error occured
+} oc_resource_crc64_status_t;
+
+/** Calculate crc64 checksum for given resource */
+oc_resource_crc64_status_t oc_resource_get_crc64(oc_resource_t *resource,
+                                                 uint64_t *crc64) OC_NONNULL();
+
+typedef enum {
+  OC_RESOURCE_ENCODE_OK = 0,
+  OC_RESOURCE_ENCODE_SKIPPED = 1,
+
+  OC_RESOURCE_ENCODE_ERROR = -1,
+} oc_resource_encode_status_t;
+
+/** @brief Encode resource ETag
+ *
+ *  Format:
+ *   "${resource-uri}": {
+ *     "etag": ${resource->etag}
+ *     "crc": ${crc64 checksum of the resource payload}
+ *   }
+ *
+ * @param encoder encoder (cannot be NULL)
+ * @param resource resource to encode (cannot be NULL)
+ * @return OC_RESOURCE_ENCODE_OK if resource was encoded
+ * @return OC_RESOURCE_ENCODE_SKIPPED if resource encoding was skipped
+ * @return OC_RESOURCE_ENCODE_ERROR if error occured
+ */
+oc_resource_encode_status_t oc_etag_encode_resource_etag(
+  CborEncoder *encoder, oc_resource_t *resource) OC_NONNULL();
+
+/** Decode resource ETag */
+bool oc_etag_decode_resource_etag(oc_resource_t *resource, const oc_rep_t *rep,
+                                  uint64_t *etag) OC_NONNULL();
+
 #endif /* OC_STORAGE */
 
 #ifdef __cplusplus

@@ -47,9 +47,12 @@ extern "C" {
  * @param buffer_size size of the buffer
  * @return long size of the introspection data
  * @return -1 on error
+ *
+ * @note if buffer is NULL, the function will return the size of the
+ * introspection data
  */
 long oc_introspection_get_data(size_t device, uint8_t *buffer,
-                               size_t buffer_size) OC_NONNULL();
+                               size_t buffer_size);
 
 /**
  * @brief Find endpoint from given device with the given transport flags and

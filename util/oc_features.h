@@ -62,8 +62,9 @@
 
 #endif /* OC_ETAG && OC_SERVER */
 
-#ifdef OC_HAS_FEATURE_ETAG
+#if defined(OC_HAS_FEATURE_ETAG) && defined(OC_STORAGE)
 #define OC_HAS_FEATURE_CRC_ENCODER
-#endif /* OC_HAS_FEATURE_ETAG */
+#define OC_HAS_FEATURE_ETAG_INTERFACE
+#endif /* OC_HAS_FEATURE_ETAG && OC_STORAGE */
 
 #endif /* OC_FEATURES_H */

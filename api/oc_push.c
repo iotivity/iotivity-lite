@@ -2407,7 +2407,8 @@ push_update(oc_ns_t *ns_instance)
   oc_rep_close_array(root, rt);
 
   /* if */
-  oc_core_encode_interfaces_mask(oc_rep_object(root), src_rsc->interfaces);
+  oc_core_encode_interfaces_mask(oc_rep_object(root), src_rsc->interfaces,
+                                 false);
 
   /* build rep object */
   src_rsc->payload_builder();
@@ -2518,8 +2519,8 @@ OC_PROCESS_THREAD(oc_push_process, ev, data)
         oc_rep_close_array(root, rt);
 
         /* if */
-        oc_core_encode_interfaces_mask(oc_rep_object(root),
-                                       src_rsc->interfaces);
+        oc_core_encode_interfaces_mask(oc_rep_object(root), src_rsc->interfaces,
+                                       false);
 
         src_rsc->payload_builder();
 

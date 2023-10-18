@@ -496,7 +496,7 @@ static const char *method_strs[] = {
 const char *
 oc_method_to_str(oc_method_t method)
 {
-  if (method < 0 || method >= OC_ARRAY_SIZE(method_strs)) {
+  if (method <= 0 || method >= OC_ARRAY_SIZE(method_strs)) {
     return method_strs[0];
   }
   return method_strs[method];
@@ -685,87 +685,65 @@ oc_ri_free_resource_properties(oc_resource_t *resource)
 oc_interface_mask_t
 oc_ri_get_interface_mask(const char *iface, size_t iface_len)
 {
-  if (OC_CHAR_ARRAY_LEN(OC_IF_BASELINE_STR) == iface_len &&
-      strncmp(iface, OC_IF_BASELINE_STR, iface_len) == 0) {
-    return OC_IF_BASELINE;
-  }
-  if (OC_CHAR_ARRAY_LEN(OC_IF_LL_STR) == iface_len &&
-      strncmp(iface, OC_IF_LL_STR, iface_len) == 0) {
-    return OC_IF_LL;
-  }
-  if (OC_CHAR_ARRAY_LEN(OC_IF_B_STR) == iface_len &&
-      strncmp(iface, OC_IF_B_STR, iface_len) == 0) {
-    return OC_IF_B;
-  }
-  if (OC_CHAR_ARRAY_LEN(OC_IF_R_STR) == iface_len &&
-      strncmp(iface, OC_IF_R_STR, iface_len) == 0) {
-    return OC_IF_R;
-  }
-  if (OC_CHAR_ARRAY_LEN(OC_IF_RW_STR) == iface_len &&
-      strncmp(iface, OC_IF_RW_STR, iface_len) == 0) {
-    return OC_IF_RW;
-  }
-  if (OC_CHAR_ARRAY_LEN(OC_IF_A_STR) == iface_len &&
-      strncmp(iface, OC_IF_A_STR, iface_len) == 0) {
-    return OC_IF_A;
-  }
-  if (OC_CHAR_ARRAY_LEN(OC_IF_S_STR) == iface_len &&
-      strncmp(iface, OC_IF_S_STR, iface_len) == 0) {
-    return OC_IF_S;
-  }
-  if (OC_CHAR_ARRAY_LEN(OC_IF_CREATE_STR) == iface_len &&
-      strncmp(iface, OC_IF_CREATE_STR, iface_len) == 0) {
-    return OC_IF_CREATE;
-  }
-  if (OC_CHAR_ARRAY_LEN(OC_IF_W_STR) == iface_len &&
-      strncmp(iface, OC_IF_W_STR, iface_len) == 0) {
-    return OC_IF_W;
-  }
-  if (OC_CHAR_ARRAY_LEN(OC_IF_STARTUP_STR) == iface_len &&
-      strncmp(iface, OC_IF_STARTUP_STR, iface_len) == 0) {
-    return OC_IF_STARTUP;
-  }
-  if (OC_CHAR_ARRAY_LEN(OC_IF_STARTUP_REVERT_STR) == iface_len &&
-      strncmp(iface, OC_IF_STARTUP_REVERT_STR, iface_len) == 0) {
-    return OC_IF_STARTUP_REVERT;
+  struct
+  {
+    oc_interface_mask_t mask;
+    oc_string_view_t str;
+  } iface_to_strs[] = {
+    { OC_IF_BASELINE, OC_STRING_VIEW(OC_IF_BASELINE_STR) },
+    { OC_IF_LL, OC_STRING_VIEW(OC_IF_LL_STR) },
+    { OC_IF_B, OC_STRING_VIEW(OC_IF_B_STR) },
+    { OC_IF_R, OC_STRING_VIEW(OC_IF_R_STR) },
+    { OC_IF_RW, OC_STRING_VIEW(OC_IF_RW_STR) },
+    { OC_IF_A, OC_STRING_VIEW(OC_IF_A_STR) },
+    { OC_IF_S, OC_STRING_VIEW(OC_IF_S_STR) },
+    { OC_IF_CREATE, OC_STRING_VIEW(OC_IF_CREATE_STR) },
+    { OC_IF_W, OC_STRING_VIEW(OC_IF_W_STR) },
+    { OC_IF_STARTUP, OC_STRING_VIEW(OC_IF_STARTUP_STR) },
+    { OC_IF_STARTUP_REVERT, OC_STRING_VIEW(OC_IF_STARTUP_REVERT_STR) },
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+    { PLGD_IF_ETAG, OC_STRING_VIEW(PLGD_IF_ETAG_STR) },
+#endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
+  };
+
+  for (size_t i = 0; i < OC_ARRAY_SIZE(iface_to_strs); ++i) {
+    if (iface_len == iface_to_strs[i].str.length &&
+        strncmp(iface, iface_to_strs[i].str.data, iface_len) == 0) {
+      return iface_to_strs[i].mask;
+    }
   }
   return 0;
 }
 
-static bool
-does_interface_support_method(oc_interface_mask_t iface_mask,
-                              oc_method_t method)
+bool
+oc_ri_interface_supports_method(oc_interface_mask_t iface, oc_method_t method)
 {
-  bool supported = true;
-  switch (iface_mask) {
-  /* Per section 7.5.3 of the OCF Core spec, the following three interfaces
-   * are RETRIEVE-only.
-   */
+  /* Supported operations are defined in section 7.5.3 of the OCF Core spec */
+  switch (iface) {
+  /* The following interfaces are RETRIEVE-only: */
   case OC_IF_LL:
   case OC_IF_S:
   case OC_IF_R:
-    if (method != OC_GET)
-      supported = false;
-    break;
-  /* Per section 7.5.3 of the OCF Core spec, the following three interfaces
-   * support RETRIEVE, UPDATE.
-   * TODO: Refine logic below after adding logic that identifies
-   * and handles CREATE requests using PUT/POST.
-   */
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+  case PLGD_IF_ETAG:
+#endif
+    return method == OC_GET;
+  /* The following interafaces are UPDATE(WRITE)-only: */
+  case OC_IF_W:
+    return method == OC_PUT || method == OC_POST || method == OC_DELETE;
+  /* The CREATE interface supports GET/PUT/POST: */
+  case OC_IF_CREATE:
+    return method == OC_GET || method == OC_PUT || method == OC_POST;
+  /* The following interfaces support RETRIEVE and UPDATE: */
   case OC_IF_RW:
   case OC_IF_B:
   case OC_IF_BASELINE:
-  case OC_IF_CREATE:
-  /* Per section 7.5.3 of the OCF Core spec, the following interface
-   * supports CREATE, RETRIEVE and UPDATE.
-   */
   case OC_IF_A:
   case OC_IF_STARTUP:
   case OC_IF_STARTUP_REVERT:
-  case OC_IF_W:
-    break;
+    return true;
   }
-  return supported;
+  return false;
 }
 
 #ifdef OC_SECURITY
@@ -1413,7 +1391,7 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
      * If not, return a 4.00 response.
      */
     if (((iface_mask & ~cur_resource->interfaces) != 0) ||
-        !does_interface_support_method(iface_mask, method)) {
+        !oc_ri_interface_supports_method(iface_mask, method)) {
       forbidden = true;
       bad_request = true;
 #ifdef OC_SECURITY

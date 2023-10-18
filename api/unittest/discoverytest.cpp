@@ -678,12 +678,12 @@ parseBaselinePayload(const oc_rep_t *payload)
   char *str;
   size_t str_len;
   // sduuid: string
-  if (oc_rep_get_string(rep, "sduuid", &str, &str_len)) {
+  if (oc_rep_get_string(rep, OCF_RES_PROP_SDUUID, &str, &str_len)) {
     data.sduuid = std::string(str, str_len);
   }
 
   // sdname: string
-  if (oc_rep_get_string(rep, "sdname", &str, &str_len)) {
+  if (oc_rep_get_string(rep, OCF_RES_PROP_SDNAME, &str, &str_len)) {
     data.sdname = std::string(str, str_len);
   }
 

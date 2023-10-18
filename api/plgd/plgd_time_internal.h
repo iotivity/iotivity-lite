@@ -41,8 +41,6 @@ extern "C" {
 
 #define PLGD_TIME_URI "/x.plgd.dev/time"
 #define PLGD_TIME_RT "x.plgd.dev.time"
-#define PLGD_TIME_IF_MASK (OC_IF_RW | OC_IF_BASELINE)
-#define PLGD_TIME_DEFAULT_IF (OC_IF_RW)
 #define PLGD_TIME_STORE_NAME "plgd_time"
 
 #define PLGD_TIME_PROP_TIME "time"
@@ -105,12 +103,12 @@ typedef enum plgd_time_encode_flag_t {
  * @brief Encode plgd time properties to the global encoder.
  *
  * @param pt plgd time to encode
- * @param iface_mask encoding interface
+ * @param iface encoding interface
  * @param flags mask of encoding flags
  * @return 0 on success
  * @return -1 on error
  */
-int plgd_time_encode(plgd_time_t pt, oc_interface_mask_t iface_mask, int flags);
+int plgd_time_encode(plgd_time_t pt, oc_interface_mask_t iface, int flags);
 
 /**
  * @brief Decode representation to output structure.

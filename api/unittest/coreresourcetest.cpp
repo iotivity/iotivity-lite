@@ -114,13 +114,15 @@ TEST_F(TestCoreResource, CoreGetResourceV1_P)
 }
 
 static void
-encodeInterfaces(unsigned iface_mask, std::vector<std::string> iface_strs = {})
+encodeInterfaces(unsigned iface_mask, std::vector<std::string> iface_strs = {},
+                 bool includePrivate = false)
 {
   oc::RepPool pool{};
 
   oc_rep_start_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  oc_core_encode_interfaces_mask(oc_rep_object(root), iface_mask);
+  oc_core_encode_interfaces_mask(oc_rep_object(root), iface_mask,
+                                 includePrivate);
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_end_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -158,7 +160,12 @@ encodeInterfaces(unsigned iface_mask, std::vector<std::string> iface_strs = {})
 
 TEST_F(TestCoreResource, EncodeInterfaces_P)
 {
-  encodeInterfaces(0);
+  bool includePrivateInterfaces = false;
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+  includePrivateInterfaces = true;
+#endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
+
+  encodeInterfaces(0, {}, includePrivateInterfaces);
 
   std::vector<unsigned> all_ifs{
     OC_IF_BASELINE,
@@ -172,6 +179,9 @@ TEST_F(TestCoreResource, EncodeInterfaces_P)
     OC_IF_W,
     OC_IF_STARTUP,
     OC_IF_STARTUP_REVERT,
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+    PLGD_IF_ETAG,
+#endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
   };
 
   std::vector<std::string> all_ifstrs{
@@ -186,16 +196,19 @@ TEST_F(TestCoreResource, EncodeInterfaces_P)
     OC_IF_W_STR,
     OC_IF_STARTUP_STR,
     OC_IF_STARTUP_REVERT_STR,
+#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
+    PLGD_IF_ETAG_STR,
+#endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
   };
   ASSERT_EQ(all_ifs.size(), all_ifstrs.size());
 
   unsigned all_ifs_mask = 0;
   for (size_t i = 0; i < all_ifs.size(); ++i) {
-    encodeInterfaces(all_ifs[i], { all_ifstrs[i] });
+    encodeInterfaces(all_ifs[i], { all_ifstrs[i] }, includePrivateInterfaces);
     all_ifs_mask |= all_ifs[i];
   }
 
-  encodeInterfaces(all_ifs_mask, all_ifstrs);
+  encodeInterfaces(all_ifs_mask, all_ifstrs, includePrivateInterfaces);
 }
 
 class TestCoreResourceWithDevice : public testing::Test {
