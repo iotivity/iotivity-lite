@@ -50,25 +50,6 @@ jobs:
         #  }
 
     steps:
-      - name: Update MinGW to 10.2
-        if: ${{ matrix.config.platform == 'mingw' }}
-        run: |
-          for($i=0; ; $i++) {
-            choco upgrade mingw --version=10.2.0 --force
-            if (!$?) {
-              if ($i -le 3) {
-                continue
-              }
-              throw "choco upgrade mingw failed"
-            }
-            break
-          }
-          $gcc_version = &gcc -v 2>&1 | Out-String
-          $gcc_version
-          if ($gcc_version -NotMatch 'gcc version 10.2.0') {
-            throw "invalid gcc version detected"
-          }
-
       - name: Checkout repository
         uses: actions/checkout@v4
         with:

@@ -8,6 +8,9 @@ function(oc_add_app_executable)
 
     add_executable(${OC_ADD_APP_EXECUTABLE_TARGET} ${OC_ADD_APP_EXECUTABLE_SOURCES})
     target_compile_options(${OC_ADD_APP_EXECUTABLE_TARGET} PRIVATE ${PRIVATE_COMPILE_OPTIONS})
+    if(MINGW)
+        target_compile_definitions(${OC_ADD_APP_EXECUTABLE_TARGET} PRIVATE "__USE_MINGW_ANSI_STDIO=(1)")
+    endif()
     target_link_libraries(${OC_ADD_APP_EXECUTABLE_TARGET} PUBLIC ${OC_ADD_APP_EXECUTABLE_DEPENDENCIES})
 
     set(TARGET_STORAGE_FOLDER ${PROJECT_BINARY_DIR}/${OC_ADD_APP_EXECUTABLE_TARGET}_creds)
