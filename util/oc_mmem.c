@@ -70,6 +70,20 @@ static unsigned int g_mmem_avail_doubles = OC_DOUBLES_POOL_SIZE;
 OC_LIST(g_mmem_doubles_list);
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+static uint8_t
+memm_type_size(oc_mmem_pool_t pool_type)
+{
+  switch (pool_type) {
+  case BYTE_POOL:
+    return sizeof(unsigned char);
+  case INT_POOL:
+    return sizeof(int64_t);
+  case DOUBLE_POOL:
+    return sizeof(double);
+  }
+  return 0;
+}
+
 size_t
 _oc_mmem_alloc(
 #ifdef OC_MEMORY_TRACE
@@ -82,15 +96,14 @@ _oc_mmem_alloc(
     return 0;
   }
 
-  size_t bytes_allocated = 0;
-
+  const uint8_t type_size = memm_type_size(pool_type);
+  size_t bytes_allocated = size * type_size;
+#ifdef OC_DYNAMIC_ALLOCATION
+  m->ptr = malloc(size * type_size);
+  m->size = size;
+#else  /* !OC_DYNAMIC_ALLOCATION */
   switch (pool_type) {
   case BYTE_POOL:
-    bytes_allocated += size * sizeof(uint8_t);
-#ifdef OC_DYNAMIC_ALLOCATION
-    m->ptr = malloc(size);
-    m->size = size;
-#else  /* !OC_DYNAMIC_ALLOCATION */
     if (g_mmem_avail_bytes < size) {
       OC_WRN("byte pool exhausted");
       return 0;
@@ -99,14 +112,8 @@ _oc_mmem_alloc(
     m->ptr = &g_mmem_bytes[OC_BYTES_POOL_SIZE - g_mmem_avail_bytes];
     m->size = size;
     g_mmem_avail_bytes -= size;
-#endif /* OC_DYNAMIC_ALLOCATION */
     break;
   case INT_POOL:
-    bytes_allocated += size * sizeof(int64_t);
-#ifdef OC_DYNAMIC_ALLOCATION
-    m->ptr = malloc(size * sizeof(int64_t));
-    m->size = size;
-#else  /* OC_DYNAMIC_ALLOCATION */
     if (g_mmem_avail_ints < size) {
       OC_WRN("int pool exhausted");
       return 0;
@@ -115,14 +122,8 @@ _oc_mmem_alloc(
     m->ptr = &g_mmem_ints[OC_INTS_POOL_SIZE - g_mmem_avail_ints];
     m->size = size;
     g_mmem_avail_ints -= size;
-#endif /* !OC_DYNAMIC_ALLOCATION */
     break;
   case DOUBLE_POOL:
-    bytes_allocated += size * sizeof(double);
-#ifdef OC_DYNAMIC_ALLOCATION
-    m->ptr = malloc(size * sizeof(double));
-    m->size = size;
-#else  /* OC_DYNAMIC_ALLOCATION */
     if (g_mmem_avail_doubles < size) {
       OC_WRN("double pool exhausted");
       return 0;
@@ -131,11 +132,9 @@ _oc_mmem_alloc(
     m->ptr = &g_mmem_doubles[OC_DOUBLES_POOL_SIZE - g_mmem_avail_doubles];
     m->size = size;
     g_mmem_avail_doubles -= size;
-#endif /* !OC_DYNAMIC_ALLOCATION */
-    break;
-  default:
     break;
   }
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_MEMORY_TRACE
   oc_mem_trace_add_pace(func, bytes_allocated, MEM_TRACE_ALLOC, m->ptr);
@@ -156,18 +155,12 @@ _oc_mmem_free(
     return;
   }
 
+#if defined(OC_MEMORY_TRAC) || !defined(OC_DYNAMIC_ALLOCATION)
+  const uint8_t type_size = memm_type_size(pool_type);
+#endif /* OC_MEMORY_TRACE || !OC_DYNAMIC_ALLOCATION */
+
 #ifdef OC_MEMORY_TRACE
-  unsigned int bytes_freed = m->size;
-  switch (pool_type) {
-  case INT_POOL:
-    bytes_freed *= sizeof(int64_t);
-    break;
-  case DOUBLE_POOL:
-    bytes_freed *= sizeof(double);
-    break;
-  default:
-    break;
-  }
+  unsigned int bytes_freed = m->size * type_size;
   oc_mem_trace_add_pace(func, bytes_freed, MEM_TRACE_FREE, m->ptr);
 #endif /* OC_MEMORY_TRACE */
 
@@ -178,26 +171,37 @@ _oc_mmem_free(
     switch (pool_type) {
     case BYTE_POOL:
       memmove(m->ptr, m->next->ptr,
-              &g_mmem_bytes[OC_BYTES_POOL_SIZE - g_mmem_avail_bytes] -
-                (unsigned char *)m->next->ptr);
+              (&g_mmem_bytes[OC_BYTES_POOL_SIZE - g_mmem_avail_bytes] -
+               (unsigned char *)m->next->ptr) *
+                type_size);
 
       break;
     case INT_POOL:
       memmove(m->ptr, m->next->ptr,
-              &g_mmem_ints[OC_INTS_POOL_SIZE - g_mmem_avail_ints] -
-                (int64_t *)m->next->ptr);
+              (&g_mmem_ints[OC_INTS_POOL_SIZE - g_mmem_avail_ints] -
+               (int64_t *)m->next->ptr) *
+                type_size);
       break;
     case DOUBLE_POOL:
       memmove(m->ptr, m->next->ptr,
-              &g_mmem_doubles[OC_DOUBLES_POOL_SIZE - g_mmem_avail_doubles] -
-                (double *)m->next->ptr);
-      break;
-    default:
-      return;
+              (&g_mmem_doubles[OC_DOUBLES_POOL_SIZE - g_mmem_avail_doubles] -
+               (double *)m->next->ptr) *
+                type_size);
       break;
     }
     for (n = m->next; n != NULL; n = n->next) {
-      n->ptr = (void *)((char *)n->ptr - m->size);
+      if (pool_type == BYTE_POOL) {
+        n->ptr = (void *)((unsigned char *)n->ptr - m->size);
+        continue;
+      }
+      if (pool_type == INT_POOL) {
+        n->ptr = (void *)((int64_t *)n->ptr - m->size);
+        continue;
+      }
+      if (pool_type == DOUBLE_POOL) {
+        n->ptr = (void *)((double *)n->ptr - m->size);
+        continue;
+      }
     }
   }
 
@@ -221,6 +225,25 @@ _oc_mmem_free(
   m->size = 0;
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
+
+#ifndef OC_DYNAMIC_ALLOCATION
+
+size_t
+oc_mmem_available_size(oc_mmem_pool_t pool_type)
+{
+  if (pool_type == BYTE_POOL) {
+    return g_mmem_avail_bytes;
+  }
+  if (pool_type == INT_POOL) {
+    return g_mmem_avail_ints;
+  }
+  if (pool_type == DOUBLE_POOL) {
+    return g_mmem_avail_doubles;
+  }
+  return 0;
+}
+
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
 void
 oc_mmem_init(void)

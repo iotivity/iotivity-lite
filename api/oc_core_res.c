@@ -452,7 +452,7 @@ oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
   switch (iface_mask) {
   case OC_IF_BASELINE:
     oc_process_baseline_interface(request->resource);
-  /* fall through */
+    OC_FALLTHROUGH;
   case OC_IF_R: {
     oc_rep_set_text_string(root, pi, pi);
     oc_rep_set_text_string(root, mnmn, oc_string(g_oc_platform_info.mfg_name));
@@ -745,8 +745,8 @@ oc_core_get_resource_type_by_uri(const char *uri, size_t uri_len)
   }
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 #ifdef OC_WKCORE
-  if (core_is_resource_uri(uri, uri_len, "/.well-known/core",
-                           OC_CHAR_ARRAY_LEN("/.well-known/core"))) {
+  if (core_is_resource_uri(uri, uri_len, OC_WELLKNOWNCORE_URI,
+                           OC_CHAR_ARRAY_LEN(OC_WELLKNOWNCORE_URI))) {
     return WELLKNOWNCORE;
   }
 #endif /* OC_WKCORE */

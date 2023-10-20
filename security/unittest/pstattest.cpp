@@ -112,7 +112,7 @@ public:
 
 TEST_F(TestPstat, Copy)
 {
-  oc_sec_pstat_t ps1;
+  oc_sec_pstat_t ps1{};
   ps1.s = OC_DOS_SRESET;
   ps1.p = true;
   ps1.isop = true;

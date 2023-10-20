@@ -184,13 +184,26 @@ oc_oscore_AEAD_nonce(const uint8_t *id, uint8_t id_len, const uint8_t *piv,
   /* Set (up-to) the last 5 bytes to the Partial IV */
   memcpy(nonce + (nonce_len - piv_len), piv, piv_len);
   /* Set (up-to) nonce length - 6 bytes to the Sender ID */
-  memcpy(nonce + (nonce_len - 5 - id_len), id, id_len);
+  if (id_len > 0) {
+    memcpy(nonce + (nonce_len - 5 - id_len), id, id_len);
+  }
   /* Set the 1st byte to the size of the Sender ID */
   nonce[0] = (uint8_t)id_len;
   /* XOR with the Common IV */
   for (int i = 0; i < nonce_len; i++) {
     nonce[i] = nonce[i] ^ civ[i];
   }
+}
+
+static CborError
+oscore_encode_byte_string(CborEncoder *encoder, const uint8_t *string,
+                          size_t length)
+{
+  if (string == NULL) {
+    // we need a non-NULL pointer otherwise UBSAN detects an issue
+    return cbor_encode_byte_string(encoder, (const uint8_t *)"", 0);
+  }
+  return cbor_encode_byte_string(encoder, string, length);
 }
 
 int
@@ -223,11 +236,11 @@ oc_oscore_compose_AAD(const uint8_t *kid, uint8_t kid_len, const uint8_t *piv,
   err |= cbor_encode_int(&alg, 10);
   err |= cbor_encoder_close_container(&a, &alg);
   /* request_kid: set in requests */
-  err |= cbor_encode_byte_string(&a, kid, kid_len);
+  err |= oscore_encode_byte_string(&a, kid, kid_len);
   /* request_piv: set in requests and notification responses */
-  err |= cbor_encode_byte_string(&a, piv, piv_len);
+  err |= oscore_encode_byte_string(&a, piv, piv_len);
   /* options: Class I options, none defined */
-  err |= cbor_encode_byte_string(&a, NULL, 0);
+  err |= oscore_encode_byte_string(&a, NULL, 0);
   err |= cbor_encoder_close_container(&e, &a);
 
   if (err != CborNoError) {
@@ -246,9 +259,9 @@ oc_oscore_compose_AAD(const uint8_t *kid, uint8_t kid_len, const uint8_t *piv,
   /* "Encrypt0" for a COSE_Encrypt0 message */
   err |= cbor_encode_text_string(&a, "Encrypt0", 8);
   /* No protected arrtibutes: so empty map (RFC 8152 Section 5.3) */
-  err |= cbor_encode_byte_string(&a, NULL, 0);
+  err |= oscore_encode_byte_string(&a, NULL, 0);
   /* external_aad: encode aad_array as a bstr */
-  err |= cbor_encode_byte_string(&a, aad_array, aad_array_len);
+  err |= oscore_encode_byte_string(&a, aad_array, aad_array_len);
   err |= cbor_encoder_close_container(&e, &a);
 
   if (err != CborNoError) {

@@ -392,7 +392,9 @@ oc_sec_check_acl_on_get(const oc_resource_t *resource, bool is_otm)
 #ifdef OC_WKCORE
   /* if enabled also the .well-known/core will be granted access, since this
    * also a discovery resource. */
-  if (uri_len == 17 && memcmp(uri, "/.well-known/core", 17) == 0) {
+  if (uri_len == OC_CHAR_ARRAY_LEN(OC_WELLKNOWNCORE_URI) &&
+      memcmp(uri, OC_WELLKNOWNCORE_URI,
+             OC_CHAR_ARRAY_LEN(OC_WELLKNOWNCORE_URI)) == 0) {
     return true;
   }
 #endif /* OC_WKCORE */

@@ -107,6 +107,11 @@ void _oc_mmem_free(
 #endif
   struct oc_mmem *m, oc_mmem_pool_t pool_type);
 
+#ifndef OC_DYNAMIC_ALLOCATION
+/** Return the available allocation size for given pool */
+size_t oc_mmem_available_size(oc_mmem_pool_t pool_type);
+#endif /* !OC_DYNAMIC_ALLOCATION */
+
 #ifdef __cplusplus
 }
 #endif

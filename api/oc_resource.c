@@ -36,6 +36,14 @@ oc_resource_is_initialized(const oc_resource_t *resource)
   return oc_string(resource->uri) != NULL;
 }
 
+bool
+oc_resource_supports_interface(const oc_resource_t *resource,
+                               oc_interface_mask_t iface)
+{
+  assert(resource != NULL);
+  return (resource->interfaces & iface) == iface;
+}
+
 void
 oc_resources_iterate_platform(oc_resource_iterate_fn_t fn, void *data)
 {

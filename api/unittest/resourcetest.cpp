@@ -121,6 +121,16 @@ TEST_F(TestResource, SetSecureMcast)
 
 #endif /* OC_OSCORE */
 
+TEST_F(TestResource, SupportsInterface)
+{
+  oc_resource_t res{};
+  res.interfaces = static_cast<oc_interface_mask_t>(OC_IF_BASELINE | OC_IF_R);
+
+  EXPECT_TRUE(oc_resource_supports_interface(&res, OC_IF_BASELINE));
+  EXPECT_TRUE(oc_resource_supports_interface(&res, OC_IF_R));
+  EXPECT_FALSE(oc_resource_supports_interface(&res, OC_IF_RW));
+}
+
 struct DynamicResourceData
 {
   int power;

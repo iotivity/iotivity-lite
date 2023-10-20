@@ -134,8 +134,6 @@ static size_t
 oc_rep_to_json_format(const oc_rep_t *rep, char *buf, size_t buf_size,
                       int tab_depth, bool pretty_print)
 {
-  (void)buf;
-  (void)buf_size;
   size_t num_char_printed = 0;
   size_t total_char_printed = 0;
   while (rep != NULL) {

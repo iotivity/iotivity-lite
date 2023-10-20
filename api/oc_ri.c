@@ -310,7 +310,6 @@ oc_status_code_unsafe(oc_status_t key)
 int
 oc_status_code(oc_status_t key)
 {
-  assert(key >= 0);
   if (key >= __NUM_OC_STATUS_CODES__) {
     if (OC_IGNORE == key) {
       return CLEAR_TRANSACTION;
@@ -730,12 +729,6 @@ oc_ri_get_interface_mask(const char *iface, size_t iface_len)
       strncmp(iface, OC_IF_STARTUP_REVERT_STR, iface_len) == 0) {
     return OC_IF_STARTUP_REVERT;
   }
-#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
-  if (OC_CHAR_ARRAY_LEN(PLGD_IF_ETAG_STR) == iface_len &&
-      strncmp(iface, PLGD_IF_ETAG_STR, iface_len) == 0) {
-    return PLGD_IF_ETAG;
-  }
-#endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
   return 0;
 }
 
@@ -751,10 +744,6 @@ does_interface_support_method(oc_interface_mask_t iface_mask,
   case OC_IF_LL:
   case OC_IF_S:
   case OC_IF_R:
-#ifdef OC_HAS_FEATURE_ETAG_INTERFACE
-  /* Special retrieve-only interface to calculate checksum for a resource */
-  case PLGD_IF_ETAG:
-#endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
     if (method != OC_GET)
       supported = false;
     break;
@@ -1131,6 +1120,7 @@ ri_invoke_coap_entity_set_response_etag(
   uint8_t etag_len = ctx->response_obj->response_buffer->etag.length;
 #ifdef OC_BLOCK_WISE
   if (ctx->response_obj->response_buffer->response_length > 0) {
+    assert(*ctx->response_state != NULL);
     oc_blockwise_response_state_t *bw_response_buffer =
       (oc_blockwise_response_state_t *)*ctx->response_state;
     memcpy(&bw_response_buffer->etag.value[0], &etag[0], etag_len);
@@ -1344,22 +1334,29 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
 
   bool bad_request = false;
   bool entity_too_large = false;
-  if (payload_len > 0 && oc_rep_decoder_set_by_content_format(cf)) {
-    /* Attempt to parse request payload using tinyCBOR via oc_rep helper
-     * functions. The result of this parse is a tree of oc_rep_t structures
-     * which will reflect the schema of the payload.
-     * Any failures while parsing the payload is viewed as an erroneous
-     * request and results in a 4.00 response being sent.
-     */
-    int parse_error =
-      oc_parse_rep(payload, payload_len, &request_obj.request_payload);
-    if (parse_error != 0) {
-      OC_WRN("ocri: error parsing request payload; tinyCBOR error code:  %d",
-             parse_error);
-      if (parse_error == CborErrorUnexpectedEOF) {
-        entity_too_large = true;
-      }
+  if (payload_len > 0) {
+    if (!oc_rep_decoder_set_by_content_format(cf)) {
+      OC_WRN("ocri: unsupported content format (%d)", (int)cf);
       bad_request = true;
+    }
+
+    if (!bad_request) {
+      /* Attempt to parse request payload using tinyCBOR via oc_rep helper
+       * functions. The result of this parse is a tree of oc_rep_t structures
+       * which will reflect the schema of the payload.
+       * Any failures while parsing the payload is viewed as an erroneous
+       * request and results in a 4.00 response being sent.
+       */
+      int parse_error =
+        oc_parse_rep(payload, payload_len, &request_obj.request_payload);
+      if (parse_error != 0) {
+        OC_WRN("ocri: error parsing request payload; tinyCBOR error code:  %d",
+               parse_error);
+        if (parse_error == CborErrorUnexpectedEOF) {
+          entity_too_large = true;
+        }
+        bad_request = true;
+      }
     }
   }
 

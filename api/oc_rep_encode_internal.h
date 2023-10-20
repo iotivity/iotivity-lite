@@ -72,7 +72,7 @@ typedef CborError (*oc_rep_encode_double_t)(CborEncoder *encoder, double value)
 
 typedef CborError (*oc_rep_encode_text_string_t)(CborEncoder *encoder,
                                                  const char *string,
-                                                 size_t length) OC_NONNULL();
+                                                 size_t length) OC_NONNULL(1);
 
 typedef CborError (*oc_rep_encode_byte_string_t)(CborEncoder *encoder,
                                                  const uint8_t *string,
@@ -85,6 +85,7 @@ typedef CborError (*oc_rep_encoder_create_array_t)(CborEncoder *encoder,
 typedef CborError (*oc_rep_encoder_create_map_t)(CborEncoder *encoder,
                                                  CborEncoder *mapEncoder,
                                                  size_t length) OC_NONNULL();
+
 typedef CborError (*oc_rep_encoder_close_container_t)(
   CborEncoder *encoder, const CborEncoder *containerEncoder) OC_NONNULL();
 
@@ -167,8 +168,11 @@ void oc_rep_encoder_buffer_realloc_init(oc_rep_encoder_t *encoder,
 
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-/** @brief Get the size of the encoded data. */
+/** @brief Get the size of the encoded data in the payload buffer. */
 int oc_rep_encoder_payload_size(oc_rep_encoder_t *encoder) OC_NONNULL();
+
+/** @brief Get the number of unwritten bytes in the payload buffer. */
+long oc_rep_encoder_remaining_size(oc_rep_encoder_t *encoder) OC_NONNULL();
 
 #ifdef OC_DYNAMIC_ALLOCATION
 /** @brief Shrink encoder buffer to the payload size */

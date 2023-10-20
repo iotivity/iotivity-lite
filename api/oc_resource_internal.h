@@ -38,6 +38,17 @@ extern "C" {
 bool oc_resource_is_initialized(const oc_resource_t *resource) OC_NONNULL();
 
 /**
+ * @brief Check if resource supports given interface.
+ *
+ * @param resource resource to check (cannot be NULL)
+ * @param iface interface to check
+ * @return true resource supports given interface
+ * @return false resource does not support given interface
+ */
+bool oc_resource_supports_interface(const oc_resource_t *resource,
+                                    oc_interface_mask_t iface) OC_NONNULL();
+
+/**
  * @brief Callback invoked for each resource iterated by oc_resources_iterate.
  *
  * @param resource resource to process

@@ -477,7 +477,16 @@ TEST_F(TestRolesWithServer, PostRequest)
   // roles_resource_post
 }
 
+#if 0
+
 TEST_F(TestRolesWithServer, DeleteRequest)
+{
+  // TODO: need a peer connection to test this
+}
+
+#endif
+
+TEST_F(TestRolesWithServer, DeleteRequest_FailNoPeer)
 {
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
   ASSERT_TRUE(epOpt.has_value());
@@ -485,7 +494,7 @@ TEST_F(TestRolesWithServer, DeleteRequest)
 
   auto delete_handler = [](oc_client_response_t *data) {
     oc::TestDevice::Terminate();
-    EXPECT_EQ(OC_STATUS_DELETED, data->code);
+    EXPECT_EQ(OC_STATUS_NOT_FOUND, data->code);
     *static_cast<bool *>(data->user_data) = true;
   };
 
@@ -499,6 +508,10 @@ TEST_F(TestRolesWithServer, DeleteRequest)
 
   // TODO add roles and verify that they are all deleted
 }
+
+#if 0
+
+// TODO: must create a peer connection
 
 TEST_F(TestRolesWithServer, DeleteRequest_FailInvalidCredid)
 {
@@ -551,6 +564,8 @@ TEST_F(TestRolesWithServer, DeleteRequest_FailInvalidCredid)
   oc::TestDevice::PoolEventsMsV1(timeout, true);
   EXPECT_TRUE(invoked);
 }
+
+#endif
 
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 

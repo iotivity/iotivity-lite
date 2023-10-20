@@ -313,15 +313,18 @@ oc_resource_tag_locn(oc_resource_t *resource, oc_locn_t locn)
 }
 
 static void
-resource_encode_name(const char *name)
+resource_encode_name(CborEncoder *object, const char *name, size_t name_len)
 {
   if (name != NULL) {
-    oc_rep_set_text_string(root, n, name);
+    g_err |= oc_rep_object_set_text_string(
+      object, OC_BASELINE_PROP_NAME, OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_NAME),
+      name, name_len);
   }
 }
 
 static void
-resource_encode_tag_pos_desc(oc_pos_description_t tag_pos_desc)
+resource_encode_tag_pos_desc(CborEncoder *object,
+                             oc_pos_description_t tag_pos_desc)
 {
   if (tag_pos_desc == 0) {
     return;
@@ -331,13 +334,13 @@ resource_encode_tag_pos_desc(oc_pos_description_t tag_pos_desc)
     return;
   }
   /* tag-pos-desc will be handled as a string */
-  // clang-format off
-  oc_rep_set_text_string(root, tag-pos-desc, desc);
-  // clang-format on
+  g_err |= oc_rep_object_set_text_string(
+    object, OC_BASELINE_PROP_TAG_POS_DESC,
+    OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_TAG_POS_DESC), desc, strlen(desc));
 }
 
 static void
-resource_encode_tag_func_desc(oc_enum_t tag_func_desc)
+resource_encode_tag_func_desc(CborEncoder *object, oc_enum_t tag_func_desc)
 {
   if (tag_func_desc == 0) {
     return;
@@ -346,14 +349,14 @@ resource_encode_tag_func_desc(oc_enum_t tag_func_desc)
   if (func == NULL) {
     return;
   }
-  /* tag-pos-desc will be handled as a string */
-  // clang-format off
-  oc_rep_set_text_string(root, tag-func-desc, func);
-  // clang-format on
+  /* tag-func-desc will be handled as a string */
+  g_err |= oc_rep_object_set_text_string(
+    object, OC_BASELINE_PROP_FUNC_DESC,
+    OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_FUNC_DESC), func, strlen(func));
 }
 
 static void
-resource_encode_tag_locn(oc_locn_t tag_locn)
+resource_encode_tag_locn(CborEncoder *object, oc_locn_t tag_locn)
 {
   if (tag_locn == 0) {
     return;
@@ -362,56 +365,61 @@ resource_encode_tag_locn(oc_locn_t tag_locn)
   if (locn == NULL) {
     return;
   }
-  // clang-format off
-  oc_rep_set_text_string(root, tag-locn, locn);
-  // clang-format on
+  /* tag-locn will be handled as a string */
+  g_err |= oc_rep_object_set_text_string(
+    object, OC_BASELINE_PROP_TAG_LOCN,
+    OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_TAG_LOCN), locn, strlen(locn));
 }
 
 static void
-resource_encode_tag_pos_rel(const double pos[3])
+resource_encode_tag_pos_rel(CborEncoder *object, const double pos[3])
 {
   if (pos[0] != 0 || pos[1] != 0 || pos[2] != 0) {
-    oc_rep_set_key(oc_rep_object(root), "tag-pos-rel");
-    oc_rep_start_array(oc_rep_object(root), tag_pos_rel);
+    oc_rep_set_key(object, "tag-pos-rel");
+    oc_rep_start_array(object, tag_pos_rel);
     oc_rep_add_double(tag_pos_rel, pos[0]);
     oc_rep_add_double(tag_pos_rel, pos[1]);
     oc_rep_add_double(tag_pos_rel, pos[2]);
-    oc_rep_end_array(oc_rep_object(root), tag_pos_rel);
+    oc_rep_end_array(object, tag_pos_rel);
   }
 }
 
 void
 oc_process_baseline_interface_with_filter(
-  const oc_resource_t *resource,
+  CborEncoder *object, const oc_resource_t *resource,
   oc_process_baseline_interface_filter_fn_t filter, void *filter_data)
 {
   if (filter == NULL || filter(OC_BASELINE_PROP_NAME, filter_data)) {
-    resource_encode_name(oc_string(resource->name));
+    resource_encode_name(object, oc_string(resource->name),
+                         oc_string_len(resource->name));
   }
   if (filter == NULL || filter(OC_BASELINE_PROP_RT, filter_data)) {
-    oc_rep_set_string_array(root, rt, resource->types);
+    g_err |= oc_rep_object_set_string_array(
+      object, OC_BASELINE_PROP_RT, OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_RT),
+      &resource->types);
   }
   if (filter == NULL || filter(OC_BASELINE_PROP_IF, filter_data)) {
-    oc_core_encode_interfaces_mask(oc_rep_object(root), resource->interfaces);
+    oc_core_encode_interfaces_mask(object, resource->interfaces);
   }
   if (filter == NULL || filter(OC_BASELINE_PROP_TAG_LOCN, filter_data)) {
-    resource_encode_tag_locn(resource->tag_locn);
+    resource_encode_tag_locn(object, resource->tag_locn);
   }
   if (filter == NULL || filter(OC_BASELINE_PROP_TAG_POS_REL, filter_data)) {
-    resource_encode_tag_pos_rel(resource->tag_pos_rel);
+    resource_encode_tag_pos_rel(object, resource->tag_pos_rel);
   }
   if (filter == NULL || filter(OC_BASELINE_PROP_TAG_POS_DESC, filter_data)) {
-    resource_encode_tag_pos_desc(resource->tag_pos_desc);
+    resource_encode_tag_pos_desc(object, resource->tag_pos_desc);
   }
   if (filter == NULL || filter(OC_BASELINE_PROP_FUNC_DESC, filter_data)) {
-    resource_encode_tag_func_desc(resource->tag_func_desc);
+    resource_encode_tag_func_desc(object, resource->tag_func_desc);
   }
 }
 
 void
 oc_process_baseline_interface(const oc_resource_t *resource)
 {
-  oc_process_baseline_interface_with_filter(resource, NULL, NULL);
+  oc_process_baseline_interface_with_filter(oc_rep_object(root), resource, NULL,
+                                            NULL);
 }
 
 #ifdef OC_SERVER

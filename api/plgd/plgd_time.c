@@ -424,8 +424,8 @@ plgd_time_encode(plgd_time_t pt, oc_interface_mask_t iface_mask, int flags)
     // baseline properties
     const oc_resource_t *r = oc_core_get_resource_by_index(PLGD_TIME, 0);
     if (r != NULL) {
-      oc_process_baseline_interface_with_filter(r, dev_time_property_filter,
-                                                &flags);
+      oc_process_baseline_interface_with_filter(
+        oc_rep_object(root), r, dev_time_property_filter, &flags);
     }
   }
 
