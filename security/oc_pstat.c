@@ -420,9 +420,6 @@ pstat_state_error:
 oc_sec_pstat_t *
 oc_sec_get_pstat(size_t device)
 {
-#if OC_DBG_IS_ENABLED
-  print_pstat_dos(&g_pstat[device]);
-#endif /* OC_DBG_IS_ENABLED */
   return &g_pstat[device];
 }
 

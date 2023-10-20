@@ -24,6 +24,7 @@
 #include "api/oc_endpoint_internal.h"
 #include "api/oc_rep_internal.h"
 #include "api/oc_ri_internal.h"
+#include "api/oc_runtime_internal.h"
 #include "api/plgd/plgd_time_internal.h"
 #include "oc_acl.h"
 #include "oc_core_res.h"
@@ -73,8 +74,9 @@ public:
     ASSERT_EQ(0, oc_storage_config(testStorage.c_str()));
 
     oc_network_event_handler_mutex_init();
-    oc_clock_init();
+    oc_runtime_init();
     oc_core_init();
+    plgd_time_create_resource();
     plgd_time_configure(
       /*use_in_mbedtls*/ true,
       /*set_system_time*/ nullptr,
@@ -84,6 +86,7 @@ public:
   static void TearDownTestCase()
   {
     oc_core_shutdown();
+    oc_runtime_shutdown();
     oc_network_event_handler_mutex_destroy();
 
     for (const auto &entry : std::filesystem::directory_iterator(testStorage)) {

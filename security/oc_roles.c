@@ -290,13 +290,13 @@ static void
 oc_sec_encode_roles(const oc_tls_peer_t *client, size_t device,
                     oc_interface_mask_t iface_mask)
 {
-  oc_sec_cred_t *cr = oc_sec_roles_get(client);
   oc_rep_start_root_object();
   if ((iface_mask & OC_IF_BASELINE) != 0) {
     oc_process_baseline_interface(
       oc_core_get_resource_by_index(OCF_SEC_ROLES, device));
   }
   oc_rep_set_array(root, roles);
+  oc_sec_cred_t *cr = client != NULL ? oc_sec_roles_get(client) : NULL;
   while (cr != NULL) {
     oc_rep_object_array_start_item(roles);
     /* credid */
@@ -370,6 +370,11 @@ roles_resource_delete(oc_request_t *request, oc_interface_mask_t iface_mask,
   (void)iface_mask;
   (void)data;
   const oc_tls_peer_t *client = oc_tls_get_peer(request->origin);
+  if (client == NULL) {
+    OC_ERR("cannot delete roles credential: invalid client");
+    oc_send_response_with_callback(request, OC_STATUS_NOT_FOUND, true);
+    return;
+  }
   const char *query_param = NULL;
   int ret = oc_get_query_value_v1(request, "credid",
                                   OC_CHAR_ARRAY_LEN("credid"), &query_param);

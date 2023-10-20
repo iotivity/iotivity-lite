@@ -288,6 +288,43 @@ CborError oc_rep_encoder_close_container(CborEncoder *encoder,
  */
 #define oc_rep_array(name) &name##_array
 
+/** Add an integer `value` to the cbor `object` under the `key` name */
+CborError oc_rep_object_set_null(CborEncoder *object, const char *key,
+                                 size_t key_len) OC_NONNULL();
+
+/** Add an boolean `value` to the cbor `object` under the `key` name */
+CborError oc_rep_object_set_boolean(CborEncoder *object, const char *key,
+                                    size_t key_len, bool value) OC_NONNULL();
+
+/** Add an integer `value` to the cbor `object` under the `key` name */
+CborError oc_rep_object_set_int(CborEncoder *object, const char *key,
+                                size_t key_len, int64_t value) OC_NONNULL();
+
+/** Add an unsigned integer `value` to the cbor `object` under the `key` name */
+CborError oc_rep_object_set_uint(CborEncoder *object, const char *key,
+                                 size_t key_len, uint64_t value) OC_NONNULL();
+
+/** Add a double `value` to the cbor `object` under the `key` name */
+CborError oc_rep_object_set_double(CborEncoder *object, const char *key,
+                                   size_t key_len, double value) OC_NONNULL();
+
+/** Add an string `value` to the cbor `object` under the `key` name */
+CborError oc_rep_object_set_text_string(CborEncoder *object, const char *key,
+                                        size_t key_len, const char *value,
+                                        size_t length) OC_NONNULL(1, 2);
+
+/** Add an byte array `value` to the cbor `object` under the `key` name */
+CborError oc_rep_object_set_byte_string(CborEncoder *object, const char *key,
+                                        size_t key_len, const uint8_t *value,
+                                        size_t length) OC_NONNULL();
+
+/** Add a string array using an oc_string_array_t as `values` to the cbor
+ * `object` under the `key` name. */
+CborError oc_rep_object_set_string_array(CborEncoder *object, const char *key,
+                                         size_t key_len,
+                                         const oc_string_array_t *array)
+  OC_NONNULL();
+
 /**
  * Add a double `value` to the cbor `object` under the `key` name
  * Example:
@@ -306,10 +343,8 @@ CborError oc_rep_encoder_close_container(CborEncoder *encoder,
  * ~~~
  */
 #define oc_rep_set_double(object, key, value)                                  \
-  do {                                                                         \
-    g_err |= oc_rep_encode_text_string(&object##_map, #key, sizeof(#key) - 1); \
-    g_err |= oc_rep_encode_double(&object##_map, value);                       \
-  } while (0)
+  g_err |=                                                                     \
+    oc_rep_object_set_double(&object##_map, #key, sizeof(#key) - 1, value)
 
 /**
  * Add an integer `value` to the cbor `object` under the `key` name
@@ -331,10 +366,7 @@ CborError oc_rep_encoder_close_container(CborEncoder *encoder,
  * @see oc_rep_get_int
  */
 #define oc_rep_set_int(object, key, value)                                     \
-  do {                                                                         \
-    g_err |= oc_rep_encode_text_string(&object##_map, #key, sizeof(#key) - 1); \
-    g_err |= oc_rep_encode_int(&object##_map, value);                          \
-  } while (0)
+  g_err |= oc_rep_object_set_int(&object##_map, #key, sizeof(#key) - 1, value)
 
 /**
  * Add an unsigned integer `value` to the cbor `object` under the `key` name
@@ -358,10 +390,7 @@ CborError oc_rep_encoder_close_container(CborEncoder *encoder,
  * value.
  */
 #define oc_rep_set_uint(object, key, value)                                    \
-  do {                                                                         \
-    g_err |= oc_rep_encode_text_string(&object##_map, #key, sizeof(#key) - 1); \
-    g_err |= oc_rep_encode_uint(&object##_map, value);                         \
-  } while (0)
+  g_err |= oc_rep_object_set_uint(&object##_map, #key, sizeof(#key) - 1, value)
 
 /**
  * Add an boolean `value` to the cbor `object` under the `key` name
@@ -383,19 +412,14 @@ CborError oc_rep_encoder_close_container(CborEncoder *encoder,
  * @see oc_rep_get_bool
  */
 #define oc_rep_set_boolean(object, key, value)                                 \
-  do {                                                                         \
-    g_err |= oc_rep_encode_text_string(&object##_map, #key, sizeof(#key) - 1); \
-    g_err |= oc_rep_encode_boolean(&object##_map, value);                      \
-  } while (0)
+  g_err |=                                                                     \
+    oc_rep_object_set_boolean(&object##_map, #key, sizeof(#key) - 1, value)
 
 /** Alternative to oc_rep_set_text_string in case we know the length of the
 value */
 #define oc_rep_set_text_string_v1(object, key, value, value_len)               \
-  do {                                                                         \
-    g_err |= oc_rep_encode_text_string(&object##_map, #key, sizeof(#key) - 1); \
-    g_err |= oc_rep_encode_text_string(                                        \
-      &object##_map, (value) == NULL ? "" : (value), (value_len));             \
-  } while (0)
+  g_err |= oc_rep_object_set_text_string(&object##_map, #key,                  \
+                                         sizeof(#key) - 1, value, value_len)
 
 /**
  * Add an string `value` to the cbor `object` under the `key` name
@@ -440,10 +464,8 @@ value */
  * ~~~
  */
 #define oc_rep_set_byte_string(object, key, value, length)                     \
-  do {                                                                         \
-    g_err |= oc_rep_encode_text_string(&object##_map, #key, sizeof(#key) - 1); \
-    g_err |= oc_rep_encode_byte_string(&object##_map, value, length);          \
-  } while (0)
+  g_err |= oc_rep_object_set_byte_string(&object##_map, #key,                  \
+                                         sizeof(#key) - 1, value, length)
 
 /**
  * Add an null `value` to the cbor `object` under the `key` name
@@ -465,10 +487,7 @@ value */
  * @see oc_rep_is_null
  */
 #define oc_rep_set_null(object, key)                                           \
-  do {                                                                         \
-    g_err |= oc_rep_encode_text_string(&object##_map, #key, sizeof(#key) - 1); \
-    g_err |= oc_rep_encode_null(&object##_map);                                \
-  } while (0)
+  g_err |= oc_rep_object_set_null(&object##_map, #key, sizeof(#key) - 1)
 
 /**
  * This macro has been replaced with oc_rep_begin_array
@@ -1092,8 +1111,7 @@ the value */
 
 /**
  * Add a string array using an oc_string_array_t as `values` to the cbor
- * `object`
- * under the `key` name.
+ * `object` under the `key` name.
  *
  * Example:
  *
@@ -1138,23 +1156,8 @@ the value */
  * @see oc_string_array_add_item
  */
 #define oc_rep_set_string_array(object, key, values)                           \
-  do {                                                                         \
-    g_err |= oc_rep_encode_text_string(&object##_map, #key, sizeof(#key) - 1); \
-    CborEncoder key##_value_array;                                             \
-    memset(&key##_value_array, 0, sizeof(key##_value_array));                  \
-    g_err |= oc_rep_encoder_create_array(&object##_map, &key##_value_array,    \
-                                         CborIndefiniteLength);                \
-    int i;                                                                     \
-    for (i = 0; i < (int)oc_string_array_get_allocated_size(values); i++) {    \
-      if (oc_string_array_get_item_size(values, i) > 0) {                      \
-        g_err |= oc_rep_encode_text_string(                                    \
-          &key##_value_array, oc_string_array_get_item(values, i),             \
-          oc_string_array_get_item_size(values, i));                           \
-      }                                                                        \
-    }                                                                          \
-    g_err |=                                                                   \
-      oc_rep_encoder_close_container(&object##_map, &key##_value_array);       \
-  } while (0)
+  g_err |= oc_rep_object_set_string_array(&object##_map, #key,                 \
+                                          sizeof(#key) - 1, &(values))
 
 /**
  * Called after any `oc_rep_set_*`, `oc_rep_start_*`, `oc_rep_begin_*`,
@@ -1299,7 +1302,7 @@ bool oc_rep_get_double(const oc_rep_t *rep, const char *key, double *value);
  * ~~~{.c}
  *     char* byte_string_out = NULL;
  *     size_t str_len;
- *     if( true == oc_rep_get_byte_string(rep, "byte_string_key",
+ *     if (oc_rep_get_byte_string(rep, "byte_string_key",
  * &byte_string_out, &str_len)) {
  *         // byte_string_out can be used
  *     }
@@ -1427,19 +1430,19 @@ bool oc_rep_get_double_array(const oc_rep_t *rep, const char *key,
  *
  * Example:
  * ~~~{.c}
- *     oc_string_array_t barray_out;
- *     size_t barray_len;
- *     if( true == oc_rep_get_byte_string_array(rep,
- *                                              "barray",
- *                                              &barray_out,
- *                                              &barray_len)) {
- *         for (size_t i = 0; i < barray_len); i++) {
- *             char* value = oc_byte_string_array_get_item(barray_out, i);
- *             size_t value_len =oc_byte_string_array_get_item_size(barray_out,
- * i);
- *             // access the individual byte string
- *         }
- *     }
+ *      oc_string_array_t barray_out;
+ *      size_t barray_len;
+ *       if (oc_rep_get_byte_string_array(rep, "barray", &barray_out,
+ *                                       &barray_len)) {
+ *        for (size_t i = 0; i < barray_len)
+ *          ; i++)
+ *        {
+ *          const char *value = oc_byte_string_array_get_item(barray_out, i);
+ *          size_t value_len =
+ *            oc_byte_string_array_get_item_size(barray_out, i);
+ *          // access the individual byte string
+ *        }
+ *      }
  * ~~~
  *
  * @param rep oc_rep_t to byte string array value from
@@ -1455,7 +1458,7 @@ bool oc_rep_get_double_array(const oc_rep_t *rep, const char *key,
  */
 OC_API
 bool oc_rep_get_byte_string_array(const oc_rep_t *rep, const char *key,
-                                  oc_string_array_t *value, size_t *size);
+                                  oc_byte_string_array_t *value, size_t *size);
 
 /**
  * Read a string array value from an `oc_rep_t`

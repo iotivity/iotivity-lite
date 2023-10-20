@@ -761,7 +761,7 @@ oc_handle_collection_baseline_request(oc_method_t method, oc_request_t *request)
       return result;
     }
     bool ok = collection->res.set_properties.cb.set_props(
-      (oc_resource_t *)collection, request->request_payload,
+      &collection->res, request->request_payload,
       collection->res.set_properties.user_data);
     if (!ok) {
       OC_ERR("set properties callback failed");
@@ -785,9 +785,9 @@ oc_handle_collection_baseline_request(oc_method_t method, oc_request_t *request)
     collection_encode_links(collection, request);
 
     /* custom properties */
-    if (collection->res.get_properties.cb.get_props) {
+    if (collection->res.get_properties.cb.get_props != NULL) {
       collection->res.get_properties.cb.get_props(
-        (oc_resource_t *)collection, OC_IF_BASELINE,
+        &collection->res, OC_IF_BASELINE,
         collection->res.get_properties.user_data);
     }
     oc_rep_end_root_object();

@@ -26,6 +26,7 @@
 #include "port/oc_connectivity.h"
 #include "port/oc_log_internal.h"
 #include "port/oc_storage.h"
+#include "util/oc_macros_internal.h"
 
 #include <stdio.h>
 
@@ -107,21 +108,27 @@ oc_storage_data_load(const char *name, size_t device,
   assert(decode != NULL);
   char svr_tag[OC_STORAGE_SVR_TAG_MAX];
   if (oc_storage_gen_svr_tag(name, device, svr_tag, sizeof(svr_tag)) < 0) {
-    OC_ERR("cannot load from %s from store: cannot generate svr tag", name);
+    OC_ERR("cannot load from \"%s\" from store: cannot generate svr tag", name);
     return -1;
   }
 
   oc_storage_buffer_t buf = oc_storage_get_buffer(OC_MAX_APP_DATA_SIZE);
 #ifndef OC_APP_DATA_STORAGE_BUFFER
   if (buf.buffer == NULL) {
-    OC_ERR("cannot load from %s from store: cannot allocate buffer", name);
+    OC_ERR("cannot load from \"%s\" from store: cannot allocate buffer", name);
     return -1;
   }
 #endif /* !OC_APP_DATA_STORAGE_BUFFER */
 
   long ret = oc_storage_read(svr_tag, buf.buffer, buf.size);
-  if (ret < 0) {
-    OC_DBG("cannot load from %s from store: read error(%ld)", name, ret);
+  if (ret <= 0) {
+#if OC_DBG_IS_ENABLED
+    if (ret < 0) {
+      OC_DBG("cannot load from \"%s\" from store: read error(%ld)", name, ret);
+    } else {
+      OC_DBG("cannot load from \"%s\" from store: no data", name);
+    }
+#endif /* OC_DBG_IS_ENABLED */
     oc_storage_free_buffer(buf);
     return -1;
   }
@@ -129,11 +136,12 @@ oc_storage_data_load(const char *name, size_t device,
   struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
   oc_rep_t *rep = NULL;
   if (oc_parse_rep(buf.buffer, (int)ret, &rep) != 0) {
-    OC_ERR("cannot load from %s from store: cannot parse representation", name);
+    OC_ERR("cannot load from \"%s\" from store: cannot parse representation",
+           name);
     goto error;
   }
   if (rep != NULL && decode(rep, device, decode_data) != 0) {
-    OC_ERR("cannot load from %s from store: cannot decode data", name);
+    OC_ERR("cannot load from \"%s\" from store: cannot decode data", name);
     goto error;
   }
   oc_free_rep(rep);
@@ -153,6 +161,10 @@ error:
 static void
 storage_print_data(const uint8_t *buf, size_t size)
 {
+  // GCOVR_EXCL_START
+  if (size == 0) {
+    return;
+  }
   oc_rep_decoder_t decoder = oc_rep_decoder(OC_REP_CBOR_DECODER);
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
   struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
@@ -160,13 +172,21 @@ storage_print_data(const uint8_t *buf, size_t size)
   if (CborNoError != decoder.parse(buf, size, &rep)) {
     return;
   }
+#ifdef OC_DYNAMIC_ALLOCATION
   size_t json_size = oc_rep_to_json(rep, NULL, 0, true);
   char *json = (char *)malloc(json_size + 1);
   oc_rep_to_json(rep, json, json_size + 1, true);
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  char json[4096] = { 0 };
+  oc_rep_to_json(rep, json, OC_ARRAY_SIZE(json), true);
+#endif /* OC_DYNAMIC_ALLOCATION */
   OC_DBG("payload %s", json);
+#ifdef OC_DYNAMIC_ALLOCATION
   free(json);
+#endif /* OC_DYNAMIC_ALLOCATION */
   oc_free_rep(rep);
   oc_rep_set_pool(prev_rep_objects);
+  // GCOVR_EXCL_STOP
 }
 
 #endif /* OC_DBG_IS_ENABLED */
@@ -180,7 +200,7 @@ oc_storage_data_save(const char *name, size_t device,
   oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MIN_APP_DATA_SIZE);
 #ifndef OC_APP_DATA_STORAGE_BUFFER
   if (sb.buffer == NULL) {
-    OC_ERR("cannot dump %s to storage: cannot allocate buffer", name);
+    OC_ERR("cannot dump \"%s\" to storage: cannot allocate buffer", name);
     return -1;
   }
   oc_rep_new_realloc_v1(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
@@ -190,7 +210,7 @@ oc_storage_data_save(const char *name, size_t device,
 
   if (encode(device, encode_data) != 0 ||
       oc_rep_get_cbor_errno() != CborNoError) {
-    OC_ERR("cannot dump %s to storage: cannot encode data", name);
+    OC_ERR("cannot dump \"%s\" to storage: cannot encode data", name);
     goto error;
   }
 #ifndef OC_APP_DATA_STORAGE_BUFFER
@@ -199,17 +219,17 @@ oc_storage_data_save(const char *name, size_t device,
 #endif /* !OC_APP_DATA_STORAGE_BUFFER */
   int size = oc_rep_get_encoded_payload_size();
   if (size < 0) {
-    OC_ERR("cannot dump %s to storage: invalid payload", name);
+    OC_ERR("cannot dump \"%s\" to storage: invalid payload", name);
     goto error;
   }
 #if OC_DBG_IS_ENABLED
-  OC_DBG("oc_storage: encoded %s size %d", name, size);
+  OC_DBG("oc_storage: encoded \"%s\" size %d", name, size);
   storage_print_data(sb.buffer, size);
 #endif /* OC_DBG_IS_ENABLED */
 
   char svr_tag[OC_STORAGE_SVR_TAG_MAX];
   if (oc_storage_gen_svr_tag(name, device, svr_tag, sizeof(svr_tag)) < 0) {
-    OC_ERR("cannot dump %s to storage: cannot generate svr tag", name);
+    OC_ERR("cannot dump \"%s\" to storage: cannot generate svr tag", name);
     goto error;
   }
   long ret = oc_storage_write(svr_tag, sb.buffer, size);
@@ -226,7 +246,7 @@ oc_storage_data_clear(const char *name, size_t device)
 {
   char svr_tag[OC_STORAGE_SVR_TAG_MAX];
   if (oc_storage_gen_svr_tag(name, device, svr_tag, sizeof(svr_tag)) < 0) {
-    OC_ERR("cannot clear %s from store: cannot generate svr tag", name);
+    OC_ERR("cannot clear \"%s\" from store: cannot generate svr tag", name);
     return false;
   }
   return oc_storage_write(svr_tag, (const uint8_t *)"", 0) == 0;

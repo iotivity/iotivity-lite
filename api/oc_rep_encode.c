@@ -135,8 +135,8 @@ rep_buffer_realloc(oc_rep_encoder_t *encoder, size_t needed)
   }
   if (encoder->buffer.size + needed > encoder->buffer.max_size) {
     OC_WRN("Insufficient memory: Increase OC_MAX_APP_DATA_SIZE to accomodate a "
-           "larger payload(+%d)",
-           (int)needed);
+           "larger payload(+%zu)",
+           needed);
     return CborErrorOutOfMemory;
   }
 
@@ -332,8 +332,8 @@ oc_rep_encoder_payload_size(oc_rep_encoder_t *encoder)
   oc_rep_encoder_convert_ptr_to_offset(encoder, &encoder->ctx);
   if (g_err == CborErrorOutOfMemory) {
     OC_WRN("Insufficient memory: Increase OC_MAX_APP_DATA_SIZE to "
-           "accomodate a larger payload(+%d)",
-           (int)needed);
+           "accomodate a larger payload(+%zu)",
+           needed);
     (void)needed;
   }
   if (g_err != CborNoError) {
@@ -348,18 +348,27 @@ oc_rep_get_encoded_payload_size(void)
   return oc_rep_encoder_payload_size(&g_rep_encoder);
 }
 
+long
+oc_rep_encoder_remaining_size(oc_rep_encoder_t *encoder)
+{
+  if (encoder->ctx.end == NULL) {
+    OC_WRN("encoder has not set end pointer.");
+    return -1;
+  }
+  assert(encoder->buffer.size >= (size_t)encoder->ctx.data.ptr);
+  return (long)(encoder->buffer.size - (size_t)encoder->ctx.data.ptr);
+}
+
 CborError
 oc_rep_encoder_write_raw(oc_rep_encoder_t *encoder, const uint8_t *data,
                          size_t len)
 {
-  if (encoder->ctx.end == NULL) {
-    OC_WRN("encoder has not set end pointer.");
+  long remaining = oc_rep_encoder_remaining_size(encoder);
+  if (remaining < 0) {
     return CborErrorInternalError;
   }
+  if ((size_t)remaining < len) {
 #ifdef OC_DYNAMIC_ALLOCATION
-  size_t remaining = encoder->buffer.size - (size_t)encoder->ctx.data.ptr;
-  if (remaining < len) {
-    size_t needed = len - remaining;
     if (!encoder->buffer.enable_realloc) {
       OC_WRN(
         "Insufficient memory: Reallocation of the encoder buffer disabled");
@@ -367,24 +376,22 @@ oc_rep_encoder_write_raw(oc_rep_encoder_t *encoder, const uint8_t *data,
     }
     CborEncoder prevEncoder;
     memcpy(&prevEncoder, &encoder->ctx, sizeof(prevEncoder));
+    size_t needed = len - remaining;
     CborError err = rep_buffer_realloc(encoder, needed);
     if (err != CborNoError) {
       return err;
     }
     memcpy(&encoder->ctx, &prevEncoder, sizeof(prevEncoder));
-  }
 #else  /* OC_DYNAMIC_ALLOCATION */
-  intptr_t needed =
-    (intptr_t)encoder->ctx.end - (intptr_t)encoder->ctx.data.ptr;
-  if (needed < (intptr_t)len) {
     OC_WRN("Insufficient memory: Increase OC_MAX_APP_DATA_SIZE to "
-           "accomodate a larger payload(+%d)",
-           (int)needed);
+           "accomodate a larger payload(+%zu)",
+           len - remaining);
     return CborErrorOutOfMemory;
-  }
 #endif /* !OC_DYNAMIC_ALLOCATION */
+  }
   oc_rep_encoder_convert_offset_to_ptr(encoder, &encoder->ctx);
   memcpy(encoder->ctx.data.ptr, data, len);
+  // TODO: this is not correct for crc encoder, add write raw interface function
   encoder->ctx.data.ptr = encoder->ctx.data.ptr + len;
   oc_rep_encoder_convert_ptr_to_offset(encoder, &encoder->ctx);
   return CborNoError;
@@ -877,4 +884,91 @@ oc_rep_encoder_close_container(CborEncoder *subEncoder,
 {
   return oc_rep_encoder_write_container_close(&g_rep_encoder, subEncoder,
                                               containerEncoder);
+}
+
+/* oc_rep_object interface */
+
+CborError
+oc_rep_object_set_null(CborEncoder *object, const char *key, size_t key_len)
+{
+  CborError err = oc_rep_encode_text_string(object, key, key_len);
+  err |= oc_rep_encode_null(object);
+  return err;
+}
+
+CborError
+oc_rep_object_set_boolean(CborEncoder *object, const char *key, size_t key_len,
+                          bool value)
+{
+  CborError err = oc_rep_encode_text_string(object, key, key_len);
+  err |= oc_rep_encode_boolean(object, value);
+  return err;
+}
+
+CborError
+oc_rep_object_set_int(CborEncoder *object, const char *key, size_t key_len,
+                      int64_t value)
+{
+  CborError err = oc_rep_encode_text_string(object, key, key_len);
+  err |= oc_rep_encode_int(object, value);
+  return err;
+}
+
+CborError
+oc_rep_object_set_uint(CborEncoder *object, const char *key, size_t key_len,
+                       uint64_t value)
+{
+  CborError err = oc_rep_encode_text_string(object, key, key_len);
+  err |= oc_rep_encode_uint(object, value);
+  return err;
+}
+
+CborError
+oc_rep_object_set_double(CborEncoder *object, const char *key, size_t key_len,
+                         double value)
+{
+  CborError err = oc_rep_encode_text_string(object, key, key_len);
+  err |= oc_rep_encode_double(object, value);
+  return err;
+}
+
+CborError
+oc_rep_object_set_text_string(CborEncoder *object, const char *key,
+                              size_t key_len, const char *value,
+                              size_t value_len)
+{
+  CborError err = oc_rep_encode_text_string(object, key, key_len);
+  err |=
+    oc_rep_encode_text_string(object, value == NULL ? "" : value, value_len);
+  return err;
+}
+
+CborError
+oc_rep_object_set_byte_string(CborEncoder *object, const char *key,
+                              size_t key_len, const uint8_t *value,
+                              size_t length)
+{
+  CborError err = oc_rep_encode_text_string(object, key, key_len);
+  err |= oc_rep_encode_byte_string(object, value, length);
+  return err;
+}
+
+CborError
+oc_rep_object_set_string_array(CborEncoder *object, const char *key,
+                               size_t key_len, const oc_string_array_t *array)
+{
+  CborError err = oc_rep_encode_text_string(object, key, key_len);
+  CborEncoder arrayEncoder;
+  memset(&arrayEncoder, 0, sizeof(arrayEncoder));
+  err |=
+    oc_rep_encoder_create_array(object, &arrayEncoder, CborIndefiniteLength);
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(*array); ++i) {
+    size_t item_len = oc_string_array_get_item_size(*array, i);
+    if (item_len > 0) {
+      err |= oc_rep_encode_text_string(
+        &arrayEncoder, oc_string_array_get_item(*array, i), item_len);
+    }
+  }
+  err |= oc_rep_encoder_close_container(object, &arrayEncoder);
+  return err;
 }

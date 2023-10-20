@@ -270,7 +270,7 @@ csr_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
   (void)data;
 
   size_t device = request->resource->device;
-  unsigned char csr[512];
+  unsigned char csr[512] = { 0 };
   int ret = oc_sec_csr_generate(device, oc_sec_certs_md_signature_algorithm(),
                                 csr, sizeof(csr));
   if (ret != 0) {
