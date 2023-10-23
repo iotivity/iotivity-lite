@@ -109,7 +109,7 @@ oc_filter_out_ep_for_resource(const oc_endpoint_t *ep,
 #endif
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
   if (((oc_sec_get_pstat(device_index))->s == OC_DOS_RFOTM) &&
-      (resource->properties & OC_ACCESS_IN_RFOTM)) {
+      (resource->properties & OC_ACCESS_IN_RFOTM) != 0) {
     return false;
   }
 #else  /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
@@ -122,15 +122,12 @@ oc_filter_out_ep_for_resource(const oc_endpoint_t *ep,
    *  through which this request arrived. This is achieved by checking if the
    *  interface index matches.
    */
-  if ((((resource->properties & OC_SECURE) != 0
+  return (((resource->properties & OC_SECURE) != 0
 #ifdef OC_SECURITY
-        || owned_for_SVRs
+           || owned_for_SVRs
 #endif /* OC_SECURITY */
-        ) &&
-       (ep->flags & SECURED) == 0)) {
-    return true;
-  }
-  return false;
+           ) &&
+          (ep->flags & SECURED) == 0);
 }
 
 static void

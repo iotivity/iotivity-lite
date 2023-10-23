@@ -1705,7 +1705,7 @@ main(int argc, char *argv[])
   oc_storage_config("./cloud_server_creds/");
 #endif /* OC_STORAGE */
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
-  oc_set_max_app_data_size(8 * 1024 + num_resources * 200);
+  oc_set_max_app_data_size(8 * 1024 + num_resources * 512);
   oc_set_min_app_data_size(512);
 #if defined(OC_SECURITY) && defined(OC_PKI)
   oc_sec_certs_md_set_algorithms_allowed(
