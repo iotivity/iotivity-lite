@@ -78,12 +78,32 @@ clf_add_line_to_buffer(const char *line)
 
 #endif /* OC_WKCORE */
 
+static bool
+ep_origin_flags_and_interface_match(const oc_endpoint_t *origin,
+                                    const oc_endpoint_t *ep)
+{
+  if (origin->interface_index != 0 &&
+      origin->interface_index != ep->interface_index) {
+    return false;
+  }
+  if (((origin->flags & IPV4) != 0 && (ep->flags & IPV6) != 0) ||
+      ((origin->flags & IPV6) != 0 && (ep->flags & IPV4) != 0)) {
+    return false;
+  }
+  return true;
+}
+
 bool
 oc_filter_out_ep_for_resource(const oc_endpoint_t *ep,
                               const oc_resource_t *resource,
                               const oc_endpoint_t *request_origin,
                               size_t device_index, bool owned_for_SVRs)
 {
+  if (request_origin != NULL &&
+      !ep_origin_flags_and_interface_match(request_origin, ep)) {
+    return true;
+  }
+
 #ifndef OC_SECURITY
   (void)owned_for_SVRs;
 #endif
@@ -102,19 +122,12 @@ oc_filter_out_ep_for_resource(const oc_endpoint_t *ep,
    *  through which this request arrived. This is achieved by checking if the
    *  interface index matches.
    */
-  if (((resource->properties & OC_SECURE
+  if ((((resource->properties & OC_SECURE) != 0
 #ifdef OC_SECURITY
         || owned_for_SVRs
 #endif /* OC_SECURITY */
         ) &&
-       !(ep->flags & SECURED)) ||
-      (request_origin && request_origin->interface_index != 0 &&
-       request_origin->interface_index != ep->interface_index)) {
-    return true;
-  }
-  if (request_origin &&
-      (((request_origin->flags & IPV4) && (ep->flags & IPV6)) ||
-       ((request_origin->flags & IPV6) && (ep->flags & IPV4)))) {
+       (ep->flags & SECURED) == 0)) {
     return true;
   }
   return false;
