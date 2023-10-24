@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(iotivity-lite VERSION 2.2.5)
+project(iotivity-lite VERSION 2.2.5.10)
 
 include(GNUInstallDirs) # Installation directories for `install` command and pkgconfig file
 
