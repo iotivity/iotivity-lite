@@ -22,7 +22,7 @@
 #include "port/oc_network_event_handler_internal.h"
 
 #ifdef OC_TCP
-#include "messaging/coap/coap_signal.h"
+#include "messaging/coap/signal_internal.h"
 #endif /* OC_TCP */
 
 #include <gtest/gtest.h>

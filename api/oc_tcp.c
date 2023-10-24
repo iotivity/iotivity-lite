@@ -20,14 +20,14 @@
 
 #ifdef OC_TCP
 #include <assert.h>
-#include "messaging/coap/coap.h"
+#include "messaging/coap/coap_internal.h"
 #include "oc_endpoint.h"
 #include "port/oc_connectivity.h"
 #include "oc_tcp_internal.h"
 #ifdef OC_SECURITY
 #include <mbedtls/ssl.h>
 #ifdef OC_OSCORE
-#include "messaging/coap/oscore.h"
+#include "messaging/coap/oscore_internal.h"
 #endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 

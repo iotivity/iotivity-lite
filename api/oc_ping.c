@@ -22,7 +22,7 @@
 
 #include "api/client/oc_client_cb_internal.h"
 #include "api/oc_ping_internal.h"
-#include "messaging/coap/coap_signal.h"
+#include "messaging/coap/signal_internal.h"
 #include "oc_api.h"
 #include "oc_client_state.h"
 #include "oc_ri.h"

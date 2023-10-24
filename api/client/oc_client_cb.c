@@ -28,19 +28,19 @@
 #include "api/oc_ping_internal.h"
 #include "api/oc_rep_internal.h"
 #include "api/oc_ri_internal.h"
-#include "messaging/coap/coap_options.h"
+#include "messaging/coap/options_internal.h"
 #include "oc_client_state.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
 #include "util/oc_macros_internal.h"
 
 #ifdef OC_TCP
-#include "messaging/coap/coap_signal.h"
+#include "messaging/coap/signal_internal.h"
 #endif /* OC_TCP */
 
 #ifdef OC_SECURITY
 #ifdef OC_OSCORE
-#include "messaging/coap/oscore.h"
+#include "messaging/coap/oscore_internal.h"
 #endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 

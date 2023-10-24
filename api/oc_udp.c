@@ -18,12 +18,12 @@
 
 #include "oc_endpoint.h"
 #include "oc_udp_internal.h"
-#include "messaging/coap/coap.h"
+#include "messaging/coap/coap_internal.h"
 #include "port/oc_connectivity.h"
 #ifdef OC_SECURITY
 #include <mbedtls/ssl.h>
 #ifdef OC_OSCORE
-#include "messaging/coap/oscore.h"
+#include "messaging/coap/oscore_internal.h"
 #endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 

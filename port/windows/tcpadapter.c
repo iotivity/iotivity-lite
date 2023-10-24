@@ -25,7 +25,7 @@
 #include "port/oc_log_internal.h"
 #include "util/oc_memb.h"
 #include "ipcontext.h"
-#include "messaging/coap/coap.h"
+#include "messaging/coap/coap_internal.h"
 #include "mutex.h"
 #include "network_addresses.h"
 #include "oc_endpoint.h"

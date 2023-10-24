@@ -22,7 +22,7 @@
 
 #include "api/oc_blockwise_internal.h"
 #include "api/oc_helpers_internal.h"
-#include "messaging/coap/coap.h"
+#include "messaging/coap/coap_internal.h"
 #include "oc_endpoint.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_log_internal.h"

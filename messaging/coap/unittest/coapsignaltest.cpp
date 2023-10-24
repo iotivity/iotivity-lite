@@ -16,8 +16,8 @@
  *
  ******************************************************************/
 
-#include "coap.h"
-#include "coap_signal.h"
+#include "coap_internal.h"
+#include "signal_internal.h"
 #include "oc_api.h"
 #include "oc_endpoint.h"
 

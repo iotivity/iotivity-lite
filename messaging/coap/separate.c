@@ -53,9 +53,9 @@
 
 #include "api/oc_message_internal.h"
 #include "messaging/coap/coap_internal.h"
-#include "messaging/coap/coap_log.h"
-#include "messaging/coap/separate.h"
-#include "messaging/coap/transactions.h"
+#include "messaging/coap/log_internal.h"
+#include "messaging/coap/separate_internal.h"
+#include "messaging/coap/transactions_internal.h"
 #include "oc_buffer.h"
 #include "util/oc_memb.h"
 #include <stdio.h>

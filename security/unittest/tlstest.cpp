@@ -23,7 +23,7 @@
 #include "api/oc_message_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_runtime_internal.h"
-#include "messaging/coap/coap_signal.h"
+#include "messaging/coap/signal_internal.h"
 #include "oc_api.h"
 #include "oc_endpoint.h"
 #include "oc_signal_event_loop.h"

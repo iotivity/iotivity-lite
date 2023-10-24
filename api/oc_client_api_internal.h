@@ -19,7 +19,7 @@
 #ifndef OC_CLIENT_API_INTERNAL_H
 #define OC_CLIENT_API_INTERNAL_H
 
-#include "messaging/coap/coap.h"
+#include "messaging/coap/coap_internal.h"
 #include "oc_client_state.h"
 #include "oc_ri.h"
 #include "util/oc_compiler.h"

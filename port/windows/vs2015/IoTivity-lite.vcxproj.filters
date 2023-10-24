@@ -47,7 +47,7 @@
     <ClCompile Include="..\..\..\messaging\coap\coap.c">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\messaging\coap\coap_options.c">
+    <ClCompile Include="..\..\..\messaging\coap\options.c">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\deps\mbedtls\library\ctr_drbg.c">
@@ -443,7 +443,7 @@
     <ClCompile Include="..\tcpadapter.c">
       <Filter>Port</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\messaging\coap\coap_signal.c">
+    <ClCompile Include="..\..\..\messaging\coap\signal.c">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="..\network_addresses.c">
@@ -505,13 +505,13 @@
     <ClInclude Include="..\..\..\messaging\coap\conf.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\messaging\coap\coap.h">
+    <ClInclude Include="..\..\..\messaging\coap\coap_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\messaging\coap\constants.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\messaging\coap\engine.h">
+    <ClInclude Include="..\..\..\messaging\coap\engine_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\util\pt\lc.h">
@@ -523,7 +523,7 @@
     <ClInclude Include="..\..\..\util\pt\lc-switch.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\messaging\coap\observe.h">
+    <ClInclude Include="..\..\..\messaging\coap\observe_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_api.h">
@@ -604,10 +604,10 @@
     <ClInclude Include="..\..\..\util\pt\pt-sem.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\messaging\coap\separate.h">
+    <ClInclude Include="..\..\..\messaging\coap\separate_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\messaging\coap\transactions.h">
+    <ClInclude Include="..\..\..\messaging\coap\transactions_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_introspection.h">
@@ -766,7 +766,7 @@
     <ClInclude Include="..\tcpadapter.h">
       <Filter>Port</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\messaging\coap\coap_signal.h">
+    <ClInclude Include="..\..\..\messaging\coap\signal_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\network_addresses.h">

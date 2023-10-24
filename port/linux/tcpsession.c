@@ -25,7 +25,7 @@
 #include "api/oc_tcp_internal.h"
 #include "ipadapter.h"
 #include "ipcontext.h"
-#include "messaging/coap/coap.h"
+#include "messaging/coap/coap_internal.h"
 #include "oc_buffer.h"
 #include "oc_endpoint.h"
 #include "oc_session_events.h"

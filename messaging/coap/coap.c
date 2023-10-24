@@ -47,21 +47,21 @@
  * This file is part of the Contiki operating system.
  */
 
-#include "coap.h"
 #include "coap_internal.h"
-#include "coap_log.h"
-#include "coap_options.h"
+#include "coap_internal.h"
+#include "log_internal.h"
+#include "options_internal.h"
 #include "oc_ri.h"
-#include "transactions.h"
+#include "transactions_internal.h"
 #include "port/oc_connectivity.h"
 #include "util/oc_macros_internal.h"
 
 #ifdef OC_OSCORE
-#include "oscore.h"
+#include "oscore_internal.h"
 #endif /* OC_OSCORE */
 
 #ifdef OC_TCP
-#include "coap_signal.h"
+#include "signal_internal.h"
 #endif /* OC_TCP */
 
 #ifdef OC_SECURITY

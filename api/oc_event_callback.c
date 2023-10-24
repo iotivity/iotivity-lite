@@ -28,7 +28,7 @@
 #include "util/oc_process.h"
 
 #ifdef OC_SERVER
-#include "messaging/coap/observe.h"
+#include "messaging/coap/observe_internal.h"
 #endif /* OC_SERVER */
 
 #include <assert.h>

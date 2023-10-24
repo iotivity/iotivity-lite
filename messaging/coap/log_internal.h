@@ -16,8 +16,8 @@
  *
  ******************************************************************/
 
-#ifndef COAP_LOG_H
-#define COAP_LOG_H
+#ifndef COAP_LOG_INTERNAL_H
+#define COAP_LOG_INTERNAL_H
 
 #include "port/oc_log_internal.h"
 
@@ -101,4 +101,4 @@ extern "C" {
 }
 #endif
 
-#endif /* COAP_LOG_H */
+#endif /* COAP_LOG_INTERNAL_H */

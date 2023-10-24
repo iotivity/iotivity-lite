@@ -25,16 +25,16 @@
 #include "api/oc_discovery_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_rep_encode_internal.h"
-#include "messaging/coap/coap.h"
-#include "messaging/coap/coap_options.h"
-#include "messaging/coap/transactions.h"
+#include "messaging/coap/coap_internal.h"
+#include "messaging/coap/options_internal.h"
+#include "messaging/coap/transactions_internal.h"
 #include "oc_api.h"
 #include "oc_message_internal.h"
 #include "oc_ri_internal.h"
 #include "util/oc_secure_string_internal.h"
 
 #ifdef OC_TCP
-#include "messaging/coap/coap_signal.h"
+#include "messaging/coap/signal_internal.h"
 #endif /* OC_TCP */
 
 #ifdef OC_SECURITY

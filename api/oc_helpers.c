@@ -16,7 +16,7 @@
  *
  ****************************************************************************/
 
-#include "messaging/coap/coap.h"
+#include "messaging/coap/coap_internal.h"
 #include "oc_helpers.h"
 #include "oc_helpers_internal.h"
 #include "port/oc_assert.h"

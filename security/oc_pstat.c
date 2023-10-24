@@ -21,7 +21,7 @@
 #include "api/oc_main_internal.h"
 #include "api/oc_message_buffer_internal.h"
 #include "messaging/coap/coap_internal.h"
-#include "messaging/coap/observe.h"
+#include "messaging/coap/observe_internal.h"
 #include "oc_acl_internal.h"
 #include "oc_ael.h"
 #include "oc_api.h"

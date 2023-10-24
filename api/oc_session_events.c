@@ -34,7 +34,7 @@
 #include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
 #if defined(OC_SERVER)
-#include "messaging/coap/observe.h"
+#include "messaging/coap/observe_internal.h"
 #endif /* OC_SERVER */
 
 #ifdef OC_SESSION_EVENTS
