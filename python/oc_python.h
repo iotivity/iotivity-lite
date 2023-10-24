@@ -86,20 +86,8 @@ OC_API
 void inform_resource_python(const char *anchor, const char *uri,
                             const char *types, const char *interfaces);
 
-/**
- * function to print the returned cbor as JSON
- */
-OC_API
-void print_rep(const oc_rep_t *rep, bool pretty_print);
-
 OC_API
 char *get_response_payload(void);
-
-/**
- * function to save the returned cbor as JSON
- */
-OC_API
-void save_rep(const oc_rep_t *rep, bool pretty_print);
 
 /**
  * function to call the callback for diplomats to python.
@@ -179,9 +167,6 @@ OC_API
 void py_retrieve_acl2(const char *uuid);
 
 OC_API
-void display_cred_rsrc(const oc_sec_creds_t *creds);
-
-OC_API
 void retrieve_cred_rsrc_cb(oc_sec_creds_t *creds, void *data);
 
 OC_API
@@ -257,10 +242,6 @@ void provision_oscore_contexts_cb(int status, void *data);
 
 OC_API
 void py_provision_pairwise_credentials(const char *uuid1, const char *uuid2);
-
-OC_API
-void provision_authcrypt_wildcard_ace_cb(const oc_uuid_t *uuid, int status,
-                                         void *data);
 
 OC_API
 void py_provision_ace_cloud_access(const char *uuid);
