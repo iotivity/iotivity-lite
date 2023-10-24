@@ -28,7 +28,7 @@
 
 #ifdef OC_SECURITY
 #ifdef OC_OSCORE
-#include "security/oc_oscore.h"
+#include "security/oc_oscore_internal.h"
 #endif /* OC_OSCORE */
 #include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */

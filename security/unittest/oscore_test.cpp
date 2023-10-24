@@ -26,9 +26,9 @@
 #include "messaging/coap/oscore_internal.h"
 #include "oc_helpers.h"
 #include "port/oc_network_event_handler_internal.h"
-#include "security/oc_oscore.h"
-#include "security/oc_oscore_context.h"
-#include "security/oc_oscore_crypto.h"
+#include "security/oc_oscore_internal.h"
+#include "security/oc_oscore_context_internal.h"
+#include "security/oc_oscore_crypto_internal.h"
 
 #include <array>
 #include <cstdlib>

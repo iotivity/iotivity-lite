@@ -41,7 +41,7 @@
 #include "util/oc_secure_string_internal.h"
 
 #ifdef OC_OSCORE
-#include "oc_oscore_context.h"
+#include "oc_oscore_context_internal.h"
 #include <ctype.h>
 #endif /* OC_OSCORE */
 #ifdef OC_PKI

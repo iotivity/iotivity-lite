@@ -799,10 +799,10 @@
     <ClInclude Include="..\..\..\include\oc_etags.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_ael.h">
+    <ClInclude Include="..\..\..\security\oc_ael_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\security\oc_audit.h">
+    <ClInclude Include="..\..\..\security\oc_audit_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\security\oc_sdi_internal.h">

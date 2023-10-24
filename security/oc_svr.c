@@ -20,7 +20,7 @@
 
 #include "api/oc_core_res_internal.h"
 #include "oc_acl_internal.h"
-#include "oc_ael.h"
+#include "oc_ael_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"

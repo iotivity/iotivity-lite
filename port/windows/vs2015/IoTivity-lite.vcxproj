@@ -272,8 +272,8 @@
     <ClInclude Include="..\..\..\messaging\coap\separate_internal.h" />
     <ClInclude Include="..\..\..\messaging\coap\transactions_internal.h" />
     <ClInclude Include="..\..\..\security\oc_acl_internal.h" />
-    <ClInclude Include="..\..\..\security\oc_ael.h" />
-    <ClInclude Include="..\..\..\security\oc_audit.h" />
+    <ClInclude Include="..\..\..\security\oc_ael_internal.h" />
+    <ClInclude Include="..\..\..\security\oc_audit_internal.h" />
     <ClInclude Include="..\..\..\security\oc_certs_internal.h" />
     <ClInclude Include="..\..\..\security\oc_cred_internal.h" />
     <ClInclude Include="..\..\..\security\oc_csr_internal.h" />

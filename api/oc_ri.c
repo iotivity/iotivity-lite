@@ -79,12 +79,12 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_acl_internal.h"
-#include "security/oc_audit.h"
+#include "security/oc_audit_internal.h"
 #include "security/oc_pstat_internal.h"
 #include "security/oc_roles_internal.h"
 #include "security/oc_tls_internal.h"
 #ifdef OC_OSCORE
-#include "security/oc_oscore.h"
+#include "security/oc_oscore_internal.h"
 #endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 

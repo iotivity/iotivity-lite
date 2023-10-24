@@ -17,10 +17,12 @@
  *
  ****************************************************************************/
 
-#ifndef OC_AUDIT_H
-#define OC_AUDIT_H
+#ifndef OC_AUDIT_INTERNAL_H
+#define OC_AUDIT_INTERNAL_H
 
 #include "oc_config.h"
+
+#ifdef OC_SECURITY
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,4 +36,6 @@ void oc_audit_log(size_t device, const char *aeid, const char *message,
 }
 #endif
 
-#endif /* OC_AUDIT_H */
+#endif /* OC_SECURITY */
+
+#endif /* OC_AUDIT_INTERNAL_H */

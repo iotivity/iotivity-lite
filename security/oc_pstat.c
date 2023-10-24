@@ -23,7 +23,7 @@
 #include "messaging/coap/coap_internal.h"
 #include "messaging/coap/observe_internal.h"
 #include "oc_acl_internal.h"
-#include "oc_ael.h"
+#include "oc_ael_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"

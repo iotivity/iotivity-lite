@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#ifndef OC_ACL_H
-#define OC_ACL_H
+#ifndef OC_ACL_INTERNAL_H
+#define OC_ACL_INTERNAL_H
 
 #include "oc_acl.h"
 #include "oc_ri.h"
@@ -77,4 +77,4 @@ oc_sec_ace_t *oc_sec_acl_find_subject(oc_sec_ace_t *start,
 }
 #endif
 
-#endif /* OC_ACL_H */
+#endif /* OC_ACL_INTERNAL_H */

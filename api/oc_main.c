@@ -40,7 +40,7 @@
 #ifdef OC_SECURITY
 #include "oc_store.h"
 #include "security/oc_acl_internal.h"
-#include "security/oc_ael.h"
+#include "security/oc_ael_internal.h"
 #include "security/oc_cred_internal.h"
 #include "security/oc_doxm_internal.h"
 #include "security/oc_pstat_internal.h"
