@@ -2415,8 +2415,8 @@ void oc_close_session(const oc_endpoint_t *endpoint);
  * @param timeout_seconds timeout for the ping
  * @param handler the response handler
  * @param user_data the user data to be conveyed to the response handler
- * @return true
- * @return false
+ * @return true on success
+ * @return false otherwise
  */
 OC_API
 bool oc_send_ping(bool custody, const oc_endpoint_t *endpoint,

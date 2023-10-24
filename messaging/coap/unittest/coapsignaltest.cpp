@@ -58,7 +58,8 @@ public:
     oc_main_init(&handler);
     oc_endpoint_t *ep = oc_connectivity_get_endpoints(kDeviceID);
     while (ep) {
-      if ((ep->flags & TCP) && !(ep->flags & SECURED) && (ep->flags & IPV4)) {
+      if ((ep->flags & TCP) != 0 && (ep->flags & SECURED) == 0 &&
+          (ep->flags & IPV4) != 0) {
         break;
       }
       ep = ep->next;
@@ -74,29 +75,39 @@ public:
 
 TEST_F(TestCoapSignal, coap_send_csm_message_P)
 {
-  int ret =
-    coap_send_csm_message(&_target_ep, static_cast<uint32_t>(OC_PDU_SIZE), 1);
-  EXPECT_EQ(1, ret);
+  EXPECT_TRUE(
+    coap_send_csm_message(&_target_ep, static_cast<uint32_t>(OC_PDU_SIZE), 1));
 }
 
-TEST_F(TestCoapSignal, coap_send_csm_message_N)
+TEST_F(TestCoapSignal, coap_send_csm_message_F)
 {
-  int ret =
-    coap_send_csm_message(nullptr, static_cast<uint32_t>(OC_PDU_SIZE), 0);
-  EXPECT_NE(1, ret);
+#ifdef OC_BLOCK_WISE
+  // invalid blockwise-transfer option value
+  EXPECT_FALSE(
+    coap_send_csm_message(&_target_ep, static_cast<uint32_t>(OC_PDU_SIZE), 42));
+#endif /* OC_BLOCK_WISE */
 }
 
 TEST_F(TestCoapSignal, coap_send_ping_message_P)
 {
   std::array<uint8_t, 4> token = { 0x01, 0x02, 0x03, 0x04 };
-  int ret = coap_send_ping_message(&_target_ep, 1, token.data(), token.size());
-  EXPECT_EQ(1, ret);
+  EXPECT_TRUE(
+    coap_send_ping_message(&_target_ep, 1, token.data(), token.size()));
 }
 
-TEST_F(TestCoapSignal, coap_send_ping_message_N)
+TEST_F(TestCoapSignal, coap_send_ping_message_F)
 {
-  int ret = coap_send_ping_message(nullptr, 0, nullptr, 0);
-  EXPECT_NE(1, ret);
+  // empty token
+  EXPECT_FALSE(coap_send_ping_message(&_target_ep, 0, nullptr, 0));
+
+  // not-TCP endpoint
+  oc_endpoint_t ep{};
+  std::array<uint8_t, 4> token = { 0x01, 0x02, 0x03, 0x04 };
+  EXPECT_FALSE(coap_send_ping_message(&ep, 0, token.data(), token.size()));
+
+  // custody option is not 0 or 1
+  EXPECT_FALSE(
+    coap_send_ping_message(&_target_ep, 42, token.data(), token.size()));
 }
 
 TEST_F(TestCoapSignal, coap_send_pong_message_P)
@@ -106,71 +117,112 @@ TEST_F(TestCoapSignal, coap_send_pong_message_P)
   coap_tcp_init_message(&packet, PING_7_02);
   coap_set_token(&packet, token.data(), token.size());
   ASSERT_TRUE(coap_signal_set_custody(&packet, 1));
+  EXPECT_TRUE(coap_send_pong_message(&_target_ep, &packet));
 
-  int ret = coap_send_pong_message(&_target_ep, &packet);
-  EXPECT_EQ(1, ret);
+  coap_packet_t packet2 = {};
+  coap_tcp_init_message(&packet2, PING_7_02);
+  coap_set_token(&packet2, token.data(), token.size());
+  EXPECT_TRUE(coap_send_pong_message(&_target_ep, &packet2));
 }
 
-TEST_F(TestCoapSignal, coap_send_pong_message_N)
+TEST_F(TestCoapSignal, coap_send_pong_message_F)
 {
-  int ret = coap_send_pong_message(nullptr, nullptr);
-  EXPECT_NE(1, ret);
+  std::array<uint8_t, 4> token = { 0x01, 0x02, 0x03, 0x04 };
+  coap_packet_t packet = {};
+  coap_tcp_init_message(&packet, PING_7_02);
+  coap_set_token(&packet, token.data(), token.size());
+  coap_signal_set_custody(&packet, 1);
+  // manually change custody to invalid value
+  packet.custody = 42;
+
+  EXPECT_FALSE(coap_send_pong_message(&_target_ep, &packet));
 }
 
 TEST_F(TestCoapSignal, coap_send_release_message_P)
 {
   std::string addr = "coap+tcp://127.0.0.1:5683";
   uint32_t hold_off = 10;
-  int ret = coap_send_release_message(&_target_ep, addr.c_str(),
-                                      addr.length() + 1, hold_off);
-  EXPECT_EQ(1, ret);
-}
+  EXPECT_TRUE(coap_send_release_message(&_target_ep, addr.c_str(),
+                                        addr.length() + 1, hold_off));
 
-TEST_F(TestCoapSignal, coap_send_release_message_N)
-{
-  int ret = coap_send_release_message(nullptr, nullptr, 0, 0);
-  EXPECT_NE(1, ret);
+  // empty alt_addr is valid
+  EXPECT_TRUE(coap_send_release_message(&_target_ep, nullptr, 0, hold_off));
+
+  // empty hold_off is valid
+  EXPECT_TRUE(
+    coap_send_release_message(&_target_ep, addr.c_str(), addr.length() + 1, 0));
 }
 
 TEST_F(TestCoapSignal, coap_send_abort_message_P)
 {
   uint16_t opt = 10;
   std::string msg = "Abort!";
+  EXPECT_TRUE(
+    coap_send_abort_message(&_target_ep, opt, msg.c_str(), msg.length() + 1));
 
-  int ret =
-    coap_send_abort_message(&_target_ep, opt, msg.c_str(), msg.length() + 1);
-  EXPECT_EQ(1, ret);
-}
+  // empty diagnostic is valid
+  EXPECT_TRUE(coap_send_abort_message(&_target_ep, opt, nullptr, 0));
 
-TEST_F(TestCoapSignal, coap_send_abort_message_N)
-{
-  int ret = coap_send_abort_message(nullptr, 0, nullptr, 0);
-  EXPECT_NE(1, ret);
+  // empty opt is valid
+  EXPECT_TRUE(
+    coap_send_abort_message(&_target_ep, 0, msg.c_str(), msg.length() + 1));
 }
 
 TEST_F(TestCoapSignal, coap_check_signal_message_P)
 {
-  coap_packet_t packet{};
-  ASSERT_NO_THROW(coap_tcp_init_message(&packet, CSM_7_01));
-
-  int ret = coap_check_signal_message(&packet);
-  EXPECT_EQ(1, ret);
+  EXPECT_TRUE(coap_check_signal_message(CSM_7_01));
+  EXPECT_TRUE(coap_check_signal_message(PING_7_02));
+  EXPECT_TRUE(coap_check_signal_message(PONG_7_03));
+  EXPECT_TRUE(coap_check_signal_message(RELEASE_7_04));
+  EXPECT_TRUE(coap_check_signal_message(ABORT_7_05));
 }
 
 TEST_F(TestCoapSignal, coap_check_signal_message_N)
 {
-  coap_packet_t packet{};
-  ASSERT_NO_THROW(coap_tcp_init_message(&packet, COAP_GET));
+  EXPECT_FALSE(coap_check_signal_message(COAP_GET));
+  EXPECT_FALSE(coap_check_signal_message(COAP_POST));
+  EXPECT_FALSE(coap_check_signal_message(COAP_PUT));
+  EXPECT_FALSE(coap_check_signal_message(COAP_DELETE));
 
-  int ret = coap_check_signal_message(&packet);
-  EXPECT_EQ(0, ret);
-} /*
-   * @API: coap_signal_get_max_msg_size()
-   * @Description: Tries to get max message size for signal packet
-   * @PassCondition: Should get max message size
-   * @PreCondition: set max message size option
-   * @PostCondition: N/A
-   */
+  EXPECT_FALSE(coap_check_signal_message(CREATED_2_01));
+  EXPECT_FALSE(coap_check_signal_message(DELETED_2_02));
+  EXPECT_FALSE(coap_check_signal_message(VALID_2_03));
+  EXPECT_FALSE(coap_check_signal_message(CHANGED_2_04));
+  EXPECT_FALSE(coap_check_signal_message(CONTENT_2_05));
+  EXPECT_FALSE(coap_check_signal_message(CONTINUE_2_31));
+
+  EXPECT_FALSE(coap_check_signal_message(BAD_REQUEST_4_00));
+  EXPECT_FALSE(coap_check_signal_message(UNAUTHORIZED_4_01));
+  EXPECT_FALSE(coap_check_signal_message(BAD_OPTION_4_02));
+  EXPECT_FALSE(coap_check_signal_message(FORBIDDEN_4_03));
+  EXPECT_FALSE(coap_check_signal_message(NOT_FOUND_4_04));
+  EXPECT_FALSE(coap_check_signal_message(METHOD_NOT_ALLOWED_4_05));
+  EXPECT_FALSE(coap_check_signal_message(NOT_ACCEPTABLE_4_06));
+  EXPECT_FALSE(coap_check_signal_message(PRECONDITION_FAILED_4_12));
+  EXPECT_FALSE(coap_check_signal_message(REQUEST_ENTITY_TOO_LARGE_4_13));
+  EXPECT_FALSE(coap_check_signal_message(UNSUPPORTED_MEDIA_TYPE_4_15));
+
+  EXPECT_FALSE(coap_check_signal_message(INTERNAL_SERVER_ERROR_5_00));
+  EXPECT_FALSE(coap_check_signal_message(NOT_IMPLEMENTED_5_01));
+  EXPECT_FALSE(coap_check_signal_message(BAD_GATEWAY_5_02));
+  EXPECT_FALSE(coap_check_signal_message(SERVICE_UNAVAILABLE_5_03));
+  EXPECT_FALSE(coap_check_signal_message(GATEWAY_TIMEOUT_5_04));
+  EXPECT_FALSE(coap_check_signal_message(PROXYING_NOT_SUPPORTED_5_05));
+
+  EXPECT_FALSE(coap_check_signal_message(MEMORY_ALLOCATION_ERROR));
+  EXPECT_FALSE(coap_check_signal_message(PACKET_SERIALIZATION_ERROR));
+  EXPECT_FALSE(coap_check_signal_message(CLEAR_TRANSACTION));
+  EXPECT_FALSE(coap_check_signal_message(EMPTY_ACK_RESPONSE));
+  EXPECT_FALSE(coap_check_signal_message(CLOSE_ALL_TLS_SESSIONS));
+}
+
+/*
+ * @API: coap_signal_get_max_msg_size()
+ * @Description: Tries to get max message size for signal packet
+ * @PassCondition: Should get max message size
+ * @PreCondition: set max message size option
+ * @PostCondition: N/A
+ */
 TEST_F(TestCoapSignal, SignalGetMaxMsgSizeTest_P)
 {
   coap_packet_t packet{};
@@ -195,6 +247,10 @@ TEST_F(TestCoapSignal, SignalGetMaxMsgSizeTest_N)
   coap_packet_t packet{};
   uint32_t size = 0;
   ASSERT_FALSE(coap_signal_get_max_msg_size(&packet, &size));
+
+  coap_packet_t packet2{};
+  coap_tcp_init_message(&packet2, CSM_7_01);
+  ASSERT_FALSE(coap_signal_get_max_msg_size(&packet2, &size));
 }
 
 /*
@@ -262,6 +318,10 @@ TEST_F(TestCoapSignal, SignalGetBertTest_N)
   coap_packet_t packet{};
   uint8_t flag = 0;
   ASSERT_FALSE(coap_signal_get_blockwise_transfer(&packet, &flag));
+
+  coap_packet_t packet2{};
+  coap_tcp_init_message(&packet2, CSM_7_01);
+  ASSERT_FALSE(coap_signal_get_blockwise_transfer(&packet2, &flag));
 }
 
 /*
@@ -296,6 +356,10 @@ TEST_F(TestCoapSignal, SignalSetBertTest_N)
   coap_packet_t packet{};
   uint8_t blockwise_transfer = 1;
   ASSERT_FALSE(coap_signal_set_blockwise_transfer(&packet, blockwise_transfer));
+
+  coap_packet_t packet2{};
+  coap_tcp_init_message(&packet2, CSM_7_01);
+  ASSERT_FALSE(coap_signal_set_blockwise_transfer(&packet2, 42));
 }
 
 /*
@@ -329,6 +393,14 @@ TEST_F(TestCoapSignal, SignalGetCustodyTest_N)
   coap_packet_t packet{};
   uint8_t flag = 0;
   ASSERT_FALSE(coap_signal_get_custody(&packet, &flag));
+
+  coap_packet_t packet2{};
+  coap_tcp_init_message(&packet2, PING_7_02);
+  ASSERT_FALSE(coap_signal_get_custody(&packet2, &flag));
+
+  coap_packet_t packet3{};
+  coap_tcp_init_message(&packet3, PONG_7_03);
+  ASSERT_FALSE(coap_signal_get_custody(&packet3, &flag));
 }
 
 /*
@@ -345,7 +417,6 @@ TEST_F(TestCoapSignal, SignalSetCustodyTest_P)
 
   uint8_t custody = 1;
   ASSERT_TRUE(coap_signal_set_custody(&packet, custody));
-
   uint8_t actual = 0;
   ASSERT_TRUE(coap_signal_get_custody(&packet, &actual));
   ASSERT_EQ(custody, actual);
@@ -363,6 +434,14 @@ TEST_F(TestCoapSignal, SignalSetCustodyTest_N)
   coap_packet_t packet{};
   uint8_t custody = 1;
   ASSERT_FALSE(coap_signal_set_custody(&packet, custody));
+
+  coap_packet_t packet2{};
+  coap_tcp_init_message(&packet2, PING_7_02);
+  ASSERT_FALSE(coap_signal_set_custody(&packet2, 42));
+
+  coap_packet_t packet3{};
+  coap_tcp_init_message(&packet3, PONG_7_03);
+  ASSERT_FALSE(coap_signal_set_custody(&packet3, 42));
 }
 
 /*
@@ -396,9 +475,12 @@ TEST_F(TestCoapSignal, SignalGetAltAddrTest_P)
 TEST_F(TestCoapSignal, SignalGetAltAddrTest_N)
 {
   coap_packet_t packet{};
-  size_t isFailure = coap_signal_get_alt_addr(&packet, nullptr);
+  const char *addr = nullptr;
+  ASSERT_EQ(0, coap_signal_get_alt_addr(&packet, &addr));
 
-  ASSERT_EQ(isFailure, 0);
+  coap_packet_t packet2{};
+  coap_tcp_init_message(&packet2, RELEASE_7_04);
+  ASSERT_EQ(0, coap_signal_get_alt_addr(&packet2, &addr));
 }
 
 /*
@@ -434,9 +516,11 @@ TEST_F(TestCoapSignal, SignalSetAltAddrTest_P)
 TEST_F(TestCoapSignal, SignalSetAltAddrTest_N)
 {
   coap_packet_t packet{};
-  size_t isFailure = coap_signal_set_alt_addr(&packet, nullptr, 0);
+  ASSERT_EQ(0, coap_signal_set_alt_addr(&packet, nullptr, 0));
 
-  ASSERT_EQ(isFailure, 0);
+  coap_packet_t packet2{};
+  coap_tcp_init_message(&packet2, RELEASE_7_04);
+  ASSERT_EQ(0, coap_signal_set_alt_addr(&packet2, nullptr, 0));
 }
 
 /*
@@ -470,6 +554,10 @@ TEST_F(TestCoapSignal, SignalGetHoldOffTest_N)
   coap_packet_t packet{};
   uint32_t time_seconds;
   ASSERT_FALSE(coap_signal_get_hold_off(&packet, &time_seconds));
+
+  coap_packet_t packet2{};
+  coap_tcp_init_message(&packet2, RELEASE_7_04);
+  ASSERT_FALSE(coap_signal_get_hold_off(&packet2, &time_seconds));
 }
 
 /*
@@ -538,6 +626,10 @@ TEST_F(TestCoapSignal, SignalGetBadCsmTest_N)
   coap_packet_t packet{};
   uint16_t opt;
   ASSERT_FALSE(coap_signal_get_bad_csm(&packet, &opt));
+
+  coap_packet_t packet2{};
+  coap_tcp_init_message(&packet2, ABORT_7_05);
+  ASSERT_FALSE(coap_signal_get_bad_csm(&packet2, &opt));
 }
 
 /*

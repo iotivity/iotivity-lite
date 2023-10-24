@@ -148,10 +148,6 @@ bool oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
                                       oc_endpoint_t *endpoint, void *user_data)
   OC_NONNULL(1, 2);
 
-#ifdef OC_TCP
-oc_event_callback_retval_t oc_remove_ping_handler_async(void *data);
-#endif /* OC_TCP */
-
 #ifdef __cplusplus
 }
 #endif

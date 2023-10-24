@@ -120,7 +120,14 @@ GCOVR_OPTS=()
 # use awk for float comparison
 if awk "BEGIN {exit !(${GCOVR_VERSION} >= 5.0)}"; then
 	echo "gcovr v5.0+ detected"
-	GCOVR_OPTS+=("--exclude-lines-by-pattern" ".*(assert|OC_LOG|OC_TRACE|OC_DBG|OC_INFO|OC_TRACE|OC_WRN|OC_ERR|OC_LOGipaddr|OC_LOGipaddr_local|OC_LOGbytes|OC_PRINTipaddr|OC_PRINTipaddr_local|SNPRINTFbytes)\(.*")
+	pattern=".*("
+	pattern+="assert|OC_LOG|OC_LOG_WITH_COMPONENT|OC_TRACE|OC_DBG|OC_INFO|OC_TRACE|OC_WRN|OC_ERR|OC_LOGipaddr|OC_LOGipaddr_local|OC_LOGbytes|OC_PRINTipaddr|OC_PRINTipaddr_local|SNPRINTFbytes"
+	pattern+="|OC_PRINTipaddr|OC_PRINTipaddr_local|SNPRINTFbytes"
+	pattern+="|OC_LOG|OC_LOG_WITH_COMPONENT|OC_TRACE|OC_DBG|OC_INFO|OC_NOTE|OC_WRN|OC_ERR|OC_LOGipaddr|OC_LOGipaddr_local|OC_LOGbytes"
+	pattern+="|COAP_ERR|COAP_WRN|COAP_NOTE|COAP_INFO|COAP_DBG|COAP_TRACE"
+	pattern+="|OC_CLOUD_ERR|OC_CLOUD_WRN|OC_CLOUD_NOTE|OC_CLOUD_INFO|OC_CLOUD_DBG|OC_CLOUD_TRACE"
+	pattern+=")\(.*"
+	GCOVR_OPTS+=("--exclude-lines-by-pattern" pattern)
 fi
 
 gcovr --verbose --root .. \

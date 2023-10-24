@@ -116,11 +116,16 @@ typedef enum {
   COAP_TYPE_CON, /* confirmables */
   COAP_TYPE_NON, /* non-confirmables */
   COAP_TYPE_ACK, /* acknowledgements */
-  COAP_TYPE_RST  /* reset */
+  COAP_TYPE_RST, /* reset */
 } coap_message_type_t;
 
 /* CoAP request method codes */
-typedef enum { COAP_GET = 1, COAP_POST, COAP_PUT, COAP_DELETE } coap_method_t;
+typedef enum {
+  COAP_GET = 1,
+  COAP_POST,
+  COAP_PUT,
+  COAP_DELETE,
+} coap_method_t;
 
 /* CoAP response codes */
 typedef enum {
@@ -157,6 +162,15 @@ typedef enum {
   CLEAR_TRANSACTION,
   EMPTY_ACK_RESPONSE,
   CLOSE_ALL_TLS_SESSIONS, /* DEPRECATED - NOT USED ANY MORE */
+
+  /* Reserved for TCP signal messages  */
+  /*
+    CSM_7_01 = 225,
+    PING_7_02 = 226,
+    PONG_7_03 = 227,
+    RELEASE_7_04 = 228,
+    ABORT_7_05 = 229,
+  */
 } coap_status_t;
 
 /* CoAP header option numbers */

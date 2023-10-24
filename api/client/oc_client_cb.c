@@ -25,12 +25,14 @@
 #include "api/oc_discovery_internal.h"
 #include "api/oc_event_callback_internal.h"
 #include "api/oc_helpers_internal.h"
+#include "api/oc_ping_internal.h"
 #include "api/oc_rep_internal.h"
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/coap_options.h"
 #include "oc_client_state.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
+#include "util/oc_macros_internal.h"
 
 #ifdef OC_TCP
 #include "messaging/coap/coap_signal.h"
@@ -226,6 +228,16 @@ oc_client_cb_free(oc_client_cb_t *cb)
   oc_client_cb_dealloc(cb);
 }
 
+#ifdef OC_TCP
+static bool
+client_cb_is_ping_response(const oc_client_cb_t *cb)
+{
+  return ((oc_string_len(cb->uri) == OC_CHAR_ARRAY_LEN(OC_PING_URI)) &&
+          (memcmp(oc_string(cb->uri), OC_PING_URI,
+                  OC_CHAR_ARRAY_LEN(OC_PING_URI)) == 0));
+}
+#endif /* OC_TCP */
+
 static void
 client_cb_notify_with_code(oc_client_cb_t *cb, oc_status_t code)
 {
@@ -246,8 +258,7 @@ client_cb_notify_with_code(oc_client_cb_t *cb, oc_status_t code)
   handler(&client_response);
 
 #ifdef OC_TCP
-  if ((oc_string_len(cb->uri) == 5) &&
-      (memcmp((const char *)oc_string(cb->uri), "/ping", 5) == 0)) {
+  if (client_cb_is_ping_response(cb)) {
     oc_ri_remove_timed_event_callback(cb, oc_remove_ping_handler_async);
   }
 #endif /* OC_TCP */
@@ -497,9 +508,7 @@ oc_client_cb_invoke(const coap_packet_t *response, oc_client_cb_t *cb,
   }
 
 #ifdef OC_TCP
-  if (response->code == PONG_7_03 ||
-      (oc_string_len(cb->uri) == 5 &&
-       memcmp(oc_string(cb->uri), "/ping", 5) == 0)) {
+  if (response->code == PONG_7_03 || client_cb_is_ping_response(cb)) {
     oc_ri_remove_timed_event_callback(cb, oc_remove_ping_handler_async);
   }
 #endif /* OC_TCP */

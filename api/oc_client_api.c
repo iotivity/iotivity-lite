@@ -616,48 +616,6 @@ oc_stop_observe(const char *uri, const oc_endpoint_t *endpoint)
   return dispatch_coap_request();
 }
 
-#ifdef OC_TCP
-oc_event_callback_retval_t
-oc_remove_ping_handler_async(void *data)
-{
-  oc_client_cb_t *cb = (oc_client_cb_t *)data;
-
-  oc_client_response_t timeout_response;
-  timeout_response.code = OC_PING_TIMEOUT;
-  timeout_response.endpoint = &cb->endpoint;
-  timeout_response.user_data = cb->user_data;
-  cb->handler.response(&timeout_response);
-
-  return oc_client_cb_remove_async(cb);
-}
-
-bool
-oc_send_ping(bool custody, const oc_endpoint_t *endpoint,
-             uint16_t timeout_seconds, oc_response_handler_t handler,
-             void *user_data)
-{
-  oc_client_handler_t client_handler = {
-    .response = handler,
-    .discovery = NULL,
-    .discovery_all = NULL,
-  };
-
-  oc_client_cb_t *cb = oc_ri_alloc_client_cb(
-    "/ping", endpoint, 0, NULL, client_handler, LOW_QOS, user_data);
-  if (!cb)
-    return false;
-
-  if (!coap_send_ping_message(endpoint, custody ? 1 : 0, cb->token,
-                              cb->token_len)) {
-    oc_client_cb_free(cb);
-    return false;
-  }
-
-  oc_set_delayed_callback(cb, oc_remove_ping_handler_async, timeout_seconds);
-  return true;
-}
-#endif /* OC_TCP */
-
 #ifdef OC_IPV4
 static oc_client_cb_t *
 oc_do_ipv4_discovery(const char *query, oc_client_handler_t handler,
