@@ -197,7 +197,8 @@ inform_resource_python(const char *anchor, const char *uri, const char *types,
   }
 }
 
-void
+/** function to print the returned cbor as JSON */
+static void
 print_rep(const oc_rep_t *rep, bool pretty_print)
 {
   char *json;
@@ -216,7 +217,8 @@ get_response_payload(void)
   return response_payload;
 }
 
-void
+/** function to save the returned cbor as JSON */
+static void
 save_rep(const oc_rep_t *rep, bool pretty_print)
 {
   size_t json_size;
@@ -870,7 +872,7 @@ py_retrieve_acl2(const char *uuid)
   otb_mutex_unlock(app_sync_lock);
 }
 
-void
+static void
 display_cred_rsrc(const oc_sec_creds_t *creds)
 {
   if (creds) {
@@ -1248,22 +1250,6 @@ py_provision_pairwise_credentials(const char *uuid1, const char *uuid2)
     OC_PRINTF("[C]\nERROR issuing request to provision credentials\n");
   }
   otb_mutex_unlock(app_sync_lock);
-}
-
-void
-provision_authcrypt_wildcard_ace_cb(const oc_uuid_t *uuid, int status,
-                                    void *data)
-{
-  (void)data;
-  char di[OC_UUID_LEN];
-  oc_uuid_to_str(uuid, di, OC_ARRAY_SIZE(di));
-
-  if (status >= 0) {
-    OC_PRINTF("[C]\nSuccessfully provisioned auth-crypt * ACE to device %s\n",
-              di);
-  } else {
-    OC_PRINTF("[C]\nERROR provisioning ACE to device %s\n", di);
-  }
 }
 
 static void
