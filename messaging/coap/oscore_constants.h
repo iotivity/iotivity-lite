@@ -16,8 +16,8 @@
  *
  ******************************************************************/
 
-#ifndef OSCORE_CONSTANTS_H
-#define OSCORE_CONSTANTS_H
+#ifndef COAP_OSCORE_CONSTANTS_H
+#define COAP_OSCORE_CONSTANTS_H
 
 #define OSCORE_AEAD_NONCE_LEN (13) /* Nonce length for AES-CCM-16-64-128 */
 #define OSCORE_PIV_LEN (5)         /* Partial IV length */
@@ -47,4 +47,4 @@
 #define OSCORE_FLAGS_KIDCTX_BITMASK 0x10
 #define OSCORE_FLAGS_KID_BITMASK 0x08
 
-#endif /* OSCORE_CONSTANTS_H */
+#endif /* COAP_OSCORE_CONSTANTS_H */

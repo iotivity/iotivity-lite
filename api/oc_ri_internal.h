@@ -20,7 +20,7 @@
 #define OC_RI_INTERNAL_H
 
 #include "messaging/coap/oc_coap.h"
-#include "messaging/coap/engine.h"
+#include "messaging/coap/engine_internal.h"
 #include "oc_config.h"
 #include "oc_endpoint.h"
 #include "oc_ri.h"

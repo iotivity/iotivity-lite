@@ -18,10 +18,10 @@
 
 #include "api/oc_helpers_internal.h"
 #include "api/oc_message_internal.h"
-#include "coap_log.h"
-#include "coap_signal.h"
-#include "coap.h"
-#include "transactions.h"
+#include "log_internal.h"
+#include "signal_internal.h"
+#include "coap_internal.h"
+#include "transactions_internal.h"
 #include <string.h>
 
 #ifdef OC_TCP
@@ -202,7 +202,7 @@ coap_signal_handle_message(const coap_packet_t *packet,
       return COAP_SIGNAL_DONE;
     }
     if (state == CSM_NONE) {
-      coap_send_csm_message(endpoint, OC_PDU_SIZE, 0);
+      coap_send_csm_message(endpoint, (uint32_t)OC_PDU_SIZE, 0);
     }
     oc_tcp_update_csm_state(endpoint, CSM_DONE);
     return COAP_SIGNAL_DONE;

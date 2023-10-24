@@ -47,13 +47,13 @@
  * This file is part of the Contiki operating system.
  */
 
-#ifndef ENGINE_H
-#define ENGINE_H
+#ifndef COAP_ENGINE_INTERNAL_H
+#define COAP_ENGINE_INTERNAL_H
 
-#include "coap.h"
+#include "coap_internal.h"
 #include "oc_config.h"
 #include "port/oc_connectivity.h"
-#include "transactions.h"
+#include "transactions_internal.h"
 #include "util/oc_compiler.h"
 #include "util/oc_process.h"
 
@@ -170,4 +170,4 @@ void oc_request_history_init(void);
 }
 #endif
 
-#endif /* ENGINE_H */
+#endif /* COAP_ENGINE_INTERNAL_H */

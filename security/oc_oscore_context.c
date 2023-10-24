@@ -18,7 +18,7 @@
 
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
 #include "oc_oscore_context.h"
-#include "messaging/coap/transactions.h"
+#include "messaging/coap/transactions_internal.h"
 #include "oc_api.h"
 #include "oc_client_state.h"
 #include "oc_cred.h"

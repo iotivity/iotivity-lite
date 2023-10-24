@@ -21,11 +21,11 @@
 
 #include "api/oc_message_internal.h"
 #include "api/oc_ri_internal.h"
-#include "oscore.h"
-#include "coap.h"
-#include "coap_log.h"
-#include "coap_options.h"
-#include "coap_signal.h"
+#include "oscore_internal.h"
+#include "coap_internal.h"
+#include "log_internal.h"
+#include "options_internal.h"
+#include "signal_internal.h"
 #include "oc_ri.h"
 #include <stdint.h>
 

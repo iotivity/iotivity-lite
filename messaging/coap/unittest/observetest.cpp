@@ -17,8 +17,8 @@
  ***************************************************************************/
 
 #include "api/oc_helpers_internal.h"
-#include "messaging/coap/observe.h"
-#include "messaging/coap/transactions.h"
+#include "messaging/coap/observe_internal.h"
+#include "messaging/coap/transactions_internal.h"
 #include "oc_core_res.h"
 #include "oc_ri.h"
 #include "port/oc_allocator_internal.h"

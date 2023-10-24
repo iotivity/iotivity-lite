@@ -47,14 +47,14 @@
  * This file is part of the Contiki operating system.
  */
 
-#ifndef OBSERVE_H
-#define OBSERVE_H
+#ifndef COAP_OBSERVE_INTERNAL_H
+#define COAP_OBSERVE_INTERNAL_H
 
 #include "api/oc_ri_internal.h"
-#include "coap.h"
+#include "coap_internal.h"
 #include "oc_endpoint.h"
 #include "oc_ri.h"
-#include "transactions.h"
+#include "transactions_internal.h"
 #include "util/oc_compiler.h"
 #include "util/oc_list.h"
 
@@ -258,4 +258,4 @@ void coap_observe_counter_reset(void);
 }
 #endif
 
-#endif /* OBSERVE_H */
+#endif /* COAP_OBSERVE_INTERNAL_H */

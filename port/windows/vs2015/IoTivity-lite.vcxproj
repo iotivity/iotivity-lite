@@ -262,15 +262,15 @@
     <ClInclude Include="..\..\..\include\oc_swupdate.h" />
     <ClInclude Include="..\..\..\include\oc_uuid.h" />
     <ClInclude Include="..\..\..\include\server_introspection.dat.h" />
-    <ClInclude Include="..\..\..\messaging\coap\coap.h" />
-    <ClInclude Include="..\..\..\messaging\coap\coap_signal.h" />
+    <ClInclude Include="..\..\..\messaging\coap\coap_internal.h" />
+    <ClInclude Include="..\..\..\messaging\coap\signal_internal.h" />
     <ClInclude Include="..\..\..\messaging\coap\conf.h" />
     <ClInclude Include="..\..\..\messaging\coap\constants.h" />
-    <ClInclude Include="..\..\..\messaging\coap\engine.h" />
-    <ClInclude Include="..\..\..\messaging\coap\observe.h" />
+    <ClInclude Include="..\..\..\messaging\coap\engine_internal.h" />
+    <ClInclude Include="..\..\..\messaging\coap\observe_internal.h" />
     <ClInclude Include="..\..\..\messaging\coap\oc_coap.h" />
-    <ClInclude Include="..\..\..\messaging\coap\separate.h" />
-    <ClInclude Include="..\..\..\messaging\coap\transactions.h" />
+    <ClInclude Include="..\..\..\messaging\coap\separate_internal.h" />
+    <ClInclude Include="..\..\..\messaging\coap\transactions_internal.h" />
     <ClInclude Include="..\..\..\security\oc_acl_internal.h" />
     <ClInclude Include="..\..\..\security\oc_ael.h" />
     <ClInclude Include="..\..\..\security\oc_audit.h" />
@@ -435,11 +435,11 @@
     <ClCompile Include="..\..\..\deps\tinycbor\src\cborencoder_close_container_checked.c" />
     <ClCompile Include="..\..\..\deps\tinycbor\src\cborparser.c" />
     <ClCompile Include="..\..\..\messaging\coap\coap.c" />
-    <ClCompile Include="..\..\..\messaging\coap\coap_options.c" />
-    <ClCompile Include="..\..\..\messaging\coap\coap_signal.c" />
     <ClCompile Include="..\..\..\messaging\coap\engine.c" />
+    <ClCompile Include="..\..\..\messaging\coap\options.c" />
     <ClCompile Include="..\..\..\messaging\coap\observe.c" />
     <ClCompile Include="..\..\..\messaging\coap\separate.c" />
+    <ClCompile Include="..\..\..\messaging\coap\signal.c" />
     <ClCompile Include="..\..\..\messaging\coap\transactions.c" />
     <ClCompile Include="..\..\..\security\oc_acl.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>

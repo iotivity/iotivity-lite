@@ -53,11 +53,11 @@
 #include "api/oc_message_internal.h"
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/coap_internal.h"
-#include "messaging/coap/coap_log.h"
-#include "messaging/coap/coap_options.h"
-#include "messaging/coap/engine.h"
-#include "messaging/coap/observe.h"
-#include "messaging/coap/transactions.h"
+#include "messaging/coap/log_internal.h"
+#include "messaging/coap/options_internal.h"
+#include "messaging/coap/engine_internal.h"
+#include "messaging/coap/observe_internal.h"
+#include "messaging/coap/transactions_internal.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
 #include "util/oc_macros_internal.h"
@@ -78,7 +78,7 @@
 #endif /* OC_CLIENT */
 
 #ifdef OC_TCP
-#include "coap_signal.h"
+#include "signal_internal.h"
 #endif
 
 #include <assert.h>

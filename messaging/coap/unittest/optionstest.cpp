@@ -16,8 +16,8 @@
  *
  ***************************************************************************/
 
-#include "messaging/coap/coap.h"
-#include "messaging/coap/coap_options.h"
+#include "messaging/coap/coap_internal.h"
+#include "messaging/coap/options_internal.h"
 #include "tests/gtest/Device.h"
 
 #include <cstring>

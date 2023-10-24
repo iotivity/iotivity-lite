@@ -16,11 +16,11 @@
  *
  ****************************************************************************/
 
-#ifndef COAP_SIGNAL_H
-#define COAP_SIGNAL_H
+#ifndef COAP_SIGNAL_INTERNAL_H
+#define COAP_SIGNAL_INTERNAL_H
 
 #include "oc_endpoint.h"
-#include "messaging/coap/coap.h"
+#include "messaging/coap/coap_internal.h"
 #include "util/oc_compiler.h"
 
 #include <stdbool.h>
@@ -142,4 +142,4 @@ bool coap_signal_set_bad_csm(coap_packet_t *packet, uint16_t opt) OC_NONNULL();
 }
 #endif
 
-#endif /* COAP_SIGNAL_H */
+#endif /* COAP_SIGNAL_INTERNAL_H */

@@ -24,7 +24,7 @@
 #include "oc_api.h"
 #include "oc_clock_util.h"
 #include "oc_core_res.h"
-#include "messaging/coap/engine.h"
+#include "messaging/coap/engine_internal.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 #include "plgd/plgd_time.h"

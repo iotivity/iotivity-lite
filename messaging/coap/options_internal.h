@@ -48,10 +48,10 @@
  * This file is part of the Contiki operating system.
  */
 
-#ifndef COAP_OPTIONS_H
-#define COAP_OPTIONS_H
+#ifndef COAP_OPTIONS_INTERNAL_H
+#define COAP_OPTIONS_INTERNAL_H
 
-#include "messaging/coap/coap.h"
+#include "messaging/coap/coap_internal.h"
 #include "oc_config.h"
 #include "oc_ri.h"
 #include "util/oc_compiler.h"
@@ -424,4 +424,4 @@ void coap_options_set_observe(coap_packet_t *packet, int32_t observe)
 }
 #endif
 
-#endif /* COAP_OPTIONS_H */
+#endif /* COAP_OPTIONS_INTERNAL_H */

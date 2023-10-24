@@ -19,7 +19,7 @@
 #include "api/oc_query_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_ri_internal.h"
-#include "messaging/coap/coap_options.h"
+#include "messaging/coap/options_internal.h"
 #include "oc_api.h"
 #include "oc_ri.h"
 #include "util/oc_secure_string_internal.h"

@@ -26,7 +26,7 @@
 #include "api/oc_introspection_internal.h"
 #include "api/oc_resource_internal.h"
 #include "api/oc_ri_internal.h"
-#include "messaging/coap/coap_options.h"
+#include "messaging/coap/options_internal.h"
 #include "oc_api.h"
 #include "oc_base64.h"
 #include "oc_config.h"

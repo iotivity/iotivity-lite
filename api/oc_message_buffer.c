@@ -19,7 +19,7 @@
 #include "api/oc_events_internal.h"
 #include "api/oc_message_buffer_internal.h"
 #include "api/oc_message_internal.h"
-#include "messaging/coap/engine.h"
+#include "messaging/coap/engine_internal.h"
 #include "oc_signal_event_loop.h"
 #include "oc_buffer.h"
 #include "port/oc_connectivity.h"

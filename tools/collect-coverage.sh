@@ -127,7 +127,7 @@ if awk "BEGIN {exit !(${GCOVR_VERSION} >= 5.0)}"; then
 	pattern+="|COAP_ERR|COAP_WRN|COAP_NOTE|COAP_INFO|COAP_DBG|COAP_TRACE"
 	pattern+="|OC_CLOUD_ERR|OC_CLOUD_WRN|OC_CLOUD_NOTE|OC_CLOUD_INFO|OC_CLOUD_DBG|OC_CLOUD_TRACE"
 	pattern+=")\(.*"
-	GCOVR_OPTS+=("--exclude-lines-by-pattern" pattern)
+	GCOVR_OPTS+=("--exclude-lines-by-pattern" "${pattern}")
 fi
 
 gcovr --verbose --root .. \
@@ -135,5 +135,4 @@ gcovr --verbose --root .. \
 	--gcov-executable "${GCOV}" \
 	--exclude-unreachable-branches \
 	${GCOVR_OPTS[@]} \
-	--json --output "${OUTPUT}" \
-	--verbose
+	--json --output "${OUTPUT}"

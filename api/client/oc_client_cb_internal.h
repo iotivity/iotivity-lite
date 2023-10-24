@@ -20,7 +20,7 @@
 #ifndef OC_CLIENT_CB_INTERNAL_H
 #define OC_CLIENT_CB_INTERNAL_H
 
-#include "messaging/coap/coap.h"
+#include "messaging/coap/coap_internal.h"
 #include "oc_client_state.h"
 #include "oc_endpoint.h"
 #include "oc_ri.h"

@@ -16,10 +16,10 @@
  *
  ******************************************************************/
 
-#ifndef OSCORE_H
-#define OSCORE_H
+#ifndef COAP_OSCORE_INTERNAL_H
+#define COAP_OSCORE_INTERNAL_H
 
-#include "coap.h"
+#include "coap_internal.h"
 #include "constants.h"
 #include "oscore_constants.h"
 #include "port/oc_connectivity.h"
@@ -59,4 +59,4 @@ size_t oscore_serialize_plaintext(coap_packet_t *packet, uint8_t *buffer,
 }
 #endif
 
-#endif /* OSCORE_H */
+#endif /* COAP_OSCORE_INTERNAL_H */

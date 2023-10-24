@@ -48,8 +48,8 @@
  * This file is part of the Contiki operating system.
  */
 
-#include "coap_log.h"
-#include "coap_options.h"
+#include "log_internal.h"
+#include "options_internal.h"
 #include "messaging/coap/constants.h"
 #include "util/oc_macros_internal.h"
 

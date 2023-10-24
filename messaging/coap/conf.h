@@ -47,8 +47,8 @@
  * This file is part of the Contiki operating system.
  */
 
-#ifndef CONF_H
-#define CONF_H
+#ifndef COAP_CONF_H
+#define COAP_CONF_H
 
 #include "constants.h"
 #include "oc_config.h"
@@ -101,4 +101,4 @@ extern "C" {
 }
 #endif
 
-#endif /* CONF_H */
+#endif /* COAP_CONF_H */

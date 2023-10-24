@@ -47,13 +47,13 @@
  * This file is part of the Contiki operating system.
  */
 
-#ifndef SEPARATE_H
-#define SEPARATE_H
+#ifndef COAP_SEPARATE_INTERNAL_H
+#define COAP_SEPARATE_INTERNAL_H
 
-#include "coap.h"
+#include "coap_internal.h"
 #include "oc_coap.h"
 #include "oc_ri.h"
-#include "transactions.h"
+#include "transactions_internal.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -101,4 +101,4 @@ void coap_separate_clear(oc_separate_response_t *separate_response,
 }
 #endif
 
-#endif /* SEPARATE_H */
+#endif /* COAP_SEPARATE_INTERNAL_H */
