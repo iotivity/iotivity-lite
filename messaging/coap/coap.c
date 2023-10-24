@@ -507,7 +507,7 @@ coap_serialize_options(coap_packet_t *packet, uint8_t *option_array, bool inner,
 #endif /* OC_DBG_IS_ENABLED */
 
 #ifdef OC_TCP
-  if (coap_check_signal_message(packet)) {
+  if (coap_check_signal_message(packet->code)) {
     return coap_serialize_signal_options(packet, option_array);
   }
 #endif /* OC_TCP */
@@ -904,7 +904,7 @@ coap_oscore_parse_option(coap_packet_t *packet, uint8_t *current_option,
   (void)oscore;
 
 #ifdef OC_TCP
-  if (coap_check_signal_message(packet)) {
+  if (coap_check_signal_message(packet->code)) {
     return coap_parse_signal_options(packet, option_number, current_option,
                                      option_length, inner);
   }

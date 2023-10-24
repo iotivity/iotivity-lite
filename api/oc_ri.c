@@ -90,6 +90,7 @@
 
 #ifdef OC_TCP
 #include "api/oc_session_events_internal.h"
+#include "messaging/coap/coap_signal.h"
 #endif /* OC_TCP */
 
 #include <assert.h>
@@ -330,6 +331,11 @@ oc_coap_status_to_status(coap_status_t status)
       return i;
     }
   }
+#ifdef OC_TCP
+  if ((uint8_t)status == PONG_7_03) {
+    return OC_STATUS_OK;
+  }
+#endif /* OC_TCP */
   OC_WRN("oc_coap_status_to_status: invalid coap status code %d", (int)status);
   return -1;
 }

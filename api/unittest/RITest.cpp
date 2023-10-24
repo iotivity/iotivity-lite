@@ -21,18 +21,25 @@
 #include "api/oc_runtime_internal.h"
 #include "port/oc_network_event_handler_internal.h"
 
+#ifdef OC_TCP
+#include "messaging/coap/coap_signal.h"
+#endif /* OC_TCP */
+
 #include <gtest/gtest.h>
+#include <limits>
+#include <set>
 #include <string>
 #include <vector>
 
 class TestOcRi : public testing::Test {
-protected:
+public:
   void SetUp() override
   {
     oc_network_event_handler_mutex_init();
     oc_runtime_init();
     oc_ri_init();
   }
+
   void TearDown() override
   {
     oc_ri_shutdown();
@@ -56,6 +63,61 @@ TEST_F(TestOcRi, StatusCodeToCoapCode)
       continue;
     }
     EXPECT_EQ(-1, oc_status_code(static_cast<oc_status_t>(i)));
+  }
+}
+
+TEST_F(TestOcRi, CoapCodeToStatusCode)
+{
+  std::vector<coap_status_t> coapCodes{
+    CREATED_2_01,
+    DELETED_2_02,
+    VALID_2_03,
+    CHANGED_2_04,
+    CONTENT_2_05,
+
+    BAD_REQUEST_4_00,
+    UNAUTHORIZED_4_01,
+    BAD_OPTION_4_02,
+    FORBIDDEN_4_03,
+    NOT_FOUND_4_04,
+    METHOD_NOT_ALLOWED_4_05,
+    NOT_ACCEPTABLE_4_06,
+    REQUEST_ENTITY_TOO_LARGE_4_13,
+
+    INTERNAL_SERVER_ERROR_5_00,
+    NOT_IMPLEMENTED_5_01,
+    BAD_GATEWAY_5_02,
+    SERVICE_UNAVAILABLE_5_03,
+    GATEWAY_TIMEOUT_5_04,
+    PROXYING_NOT_SUPPORTED_5_05,
+
+#ifdef OC_TCP
+    static_cast<coap_status_t>(PONG_7_03),
+#endif /* OC_TCP */
+  };
+
+  for (auto coapCode : coapCodes) {
+    EXPECT_NE(-1, oc_coap_status_to_status(coapCode));
+  }
+}
+
+TEST_F(TestOcRi, CoapCodeToStatusCode_F)
+{
+  std::vector<coap_status_t> coapCodesWithoutConversion{
+    COAP_NO_ERROR,
+    CONTINUE_2_31,
+    PRECONDITION_FAILED_4_12,
+
+#ifdef OC_TCP
+    static_cast<coap_status_t>(CSM_7_01),
+    static_cast<coap_status_t>(PING_7_02),
+    static_cast<coap_status_t>(RELEASE_7_04),
+    static_cast<coap_status_t>(ABORT_7_05),
+#endif /* OC_TCP */
+  };
+
+  for (auto coapCode : coapCodesWithoutConversion) {
+    EXPECT_EQ(-1, oc_coap_status_to_status(coapCode));
   }
 }
 

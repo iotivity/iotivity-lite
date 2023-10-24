@@ -18,6 +18,7 @@
 
 #include <util/oc_mmem_internal.h>
 
+#include <cstdint>
 #include <gtest/gtest.h>
 
 class TestMemoryPool : public testing::Test {

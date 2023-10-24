@@ -21,6 +21,8 @@
 
 #include "oc_endpoint.h"
 #include "messaging/coap/coap.h"
+#include "util/oc_compiler.h"
+
 #include <stdbool.h>
 
 #ifdef __cplusplus
@@ -29,13 +31,13 @@ extern "C" {
 
 #ifdef OC_TCP
 
-/* CoAP signal codes */
+/* CoAP signal codes (RFC8323) */
 typedef enum {
-  CSM_7_01 = 225,
-  PING_7_02 = 226,
-  PONG_7_03 = 227,
-  RELEASE_7_04 = 228,
-  ABORT_7_05 = 229
+  CSM_7_01 = 225,     ///< Capabilities and Settings Message
+  PING_7_02 = 226,    ///< Ping Message
+  PONG_7_03 = 227,    ///< Pong Message
+  RELEASE_7_04 = 228, ///< Release Message
+  ABORT_7_05 = 229    ///< Abort Message
 } coap_signal_code_t;
 
 /* CoAP signal option numbers */
@@ -48,39 +50,91 @@ typedef enum {
   COAP_SIGNAL_OPTION_BAD_CSM = 2,            /* 0-2 B */
 } coap_signal_option_t;
 
-int coap_send_csm_message(const oc_endpoint_t *endpoint,
-                          uint32_t max_message_size,
-                          uint8_t blockwise_transfer_option);
-int coap_send_ping_message(const oc_endpoint_t *endpoint,
-                           uint8_t custody_option, const uint8_t *token,
-                           uint8_t token_len);
-int coap_send_pong_message(const oc_endpoint_t *endpoint,
-                           const coap_packet_t *packet);
-int coap_send_release_message(const oc_endpoint_t *endpoint,
-                              const char *alt_addr, size_t alt_addr_len,
-                              uint32_t hold_off);
-int coap_send_abort_message(const oc_endpoint_t *endpoint, uint16_t opt,
-                            const char *diagnostic, size_t diagnostic_len);
-bool coap_check_signal_message(const coap_packet_t *packet);
-int handle_coap_signal_message(const coap_packet_t *packet,
-                               const oc_endpoint_t *endpoint);
+/** @brief Check if response code is one of the signal codes */
+bool coap_check_signal_message(uint8_t code);
 
-bool coap_signal_get_max_msg_size(const coap_packet_t *packet, uint32_t *size);
-bool coap_signal_set_max_msg_size(coap_packet_t *packet, uint32_t size);
+typedef enum {
+  COAP_SIGNAL_DONE = 0,
+  COAP_SIGNAL_CONTINUE = 1,
+} coap_signal_result_t;
+
+/** @brief Process signal message packet */
+coap_signal_result_t coap_signal_handle_message(const coap_packet_t *packet,
+                                                const oc_endpoint_t *endpoint)
+  OC_NONNULL();
+
+/** @brief Send PING message */
+bool coap_send_ping_message(const oc_endpoint_t *endpoint,
+                            uint8_t custody_option, const uint8_t *token,
+                            uint8_t token_len) OC_NONNULL(1);
+
+/** @brief Send PONG message */
+bool coap_send_pong_message(const oc_endpoint_t *endpoint,
+                            const coap_packet_t *packet) OC_NONNULL();
+
+/** @brief Send CSM message */
+bool coap_send_csm_message(const oc_endpoint_t *endpoint,
+                           uint32_t max_message_size,
+                           uint8_t blockwise_transfer_option) OC_NONNULL();
+
+/** @brief Send RELEASE message */
+bool coap_send_release_message(const oc_endpoint_t *endpoint,
+                               const char *alt_addr, size_t alt_addr_len,
+                               uint32_t hold_off) OC_NONNULL(1);
+
+/** @brief Send ABORT message */
+bool coap_send_abort_message(const oc_endpoint_t *endpoint, uint16_t opt,
+                             const char *diagnostic, size_t diagnostic_len)
+  OC_NONNULL(1);
+
+/** @brief Get the COAP_SIGNAL_OPTION_MAX_MSG_SIZE option */
+bool coap_signal_get_max_msg_size(const coap_packet_t *packet, uint32_t *size)
+  OC_NONNULL();
+
+/** @brief Set the COAP_SIGNAL_OPTION_MAX_MSG_SIZE option */
+bool coap_signal_set_max_msg_size(coap_packet_t *packet, uint32_t size)
+  OC_NONNULL();
+
+/** @brief Get the COAP_SIGNAL_OPTION_MAX_MSG_SIZE option */
 bool coap_signal_get_blockwise_transfer(const coap_packet_t *packet,
-                                        uint8_t *blockwise_transfer);
+                                        uint8_t *blockwise_transfer)
+  OC_NONNULL();
+
+/** @brief Set the COAP_SIGNAL_OPTION_MAX_MSG_SIZE option */
 bool coap_signal_set_blockwise_transfer(coap_packet_t *packet,
-                                        uint8_t blockwise_transfer);
-bool coap_signal_get_custody(const coap_packet_t *packet, uint8_t *custody);
-bool coap_signal_set_custody(coap_packet_t *packet, uint8_t custody);
-size_t coap_signal_get_alt_addr(const coap_packet_t *packet, const char **addr);
+                                        uint8_t blockwise_transfer)
+  OC_NONNULL();
+
+/** @brief Get the COAP_SIGNAL_OPTION_CUSTODY option */
+bool coap_signal_get_custody(const coap_packet_t *packet, uint8_t *custody)
+  OC_NONNULL();
+
+/** @brief Set the COAP_SIGNAL_OPTION_CUSTODY option */
+bool coap_signal_set_custody(coap_packet_t *packet, uint8_t custody)
+  OC_NONNULL();
+
+/** @brief Get the COAP_SIGNAL_OPTION_ALT_ADDR option */
+size_t coap_signal_get_alt_addr(const coap_packet_t *packet, const char **addr)
+  OC_NONNULL();
+
+/** @brief Set the COAP_SIGNAL_OPTION_ALT_ADDR option */
 size_t coap_signal_set_alt_addr(coap_packet_t *packet, const char *addr,
-                                size_t addr_len);
+                                size_t addr_len) OC_NONNULL(1);
+
+/** @brief Get the COAP_SIGNAL_OPTION_HOLD_OFF option */
 bool coap_signal_get_hold_off(const coap_packet_t *packet,
-                              uint32_t *time_seconds);
-bool coap_signal_set_hold_off(coap_packet_t *packet, uint32_t time_seconds);
-bool coap_signal_get_bad_csm(const coap_packet_t *packet, uint16_t *opt);
-bool coap_signal_set_bad_csm(coap_packet_t *packet, uint16_t opt);
+                              uint32_t *time_seconds) OC_NONNULL();
+
+/** @brief Set the COAP_SIGNAL_OPTION_HOLD_OFF option */
+bool coap_signal_set_hold_off(coap_packet_t *packet, uint32_t time_seconds)
+  OC_NONNULL();
+
+/** @brief Get the COAP_SIGNAL_OPTION_BAD_CSM option */
+bool coap_signal_get_bad_csm(const coap_packet_t *packet, uint16_t *opt)
+  OC_NONNULL();
+
+/** @brief Set the COAP_SIGNAL_OPTION_BAD_CSM option */
+bool coap_signal_set_bad_csm(coap_packet_t *packet, uint16_t opt) OC_NONNULL();
 
 #endif /* OC_TCP */
 
