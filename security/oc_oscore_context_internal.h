@@ -16,8 +16,8 @@
  *
  ******************************************************************/
 
-#ifndef OC_OSCORE_CONTEXT_H
-#define OC_OSCORE_CONTEXT_H
+#ifndef OC_OSCORE_CONTEXT_INTERNAL_H
+#define OC_OSCORE_CONTEXT_INTERNAL_H
 
 #include "messaging/coap/oscore_constants.h"
 #include "oc_helpers.h"
@@ -87,4 +87,4 @@ oc_oscore_context_t *oc_oscore_find_group_context(void);
 }
 #endif
 
-#endif /* OC_OSCORE_CONTEXT_H */
+#endif /* OC_OSCORE_CONTEXT_INTERNAL_H */

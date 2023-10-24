@@ -24,7 +24,7 @@
 #include <strings.h>
 #endif
 
-#include "oc_ael.h"
+#include "oc_ael_internal.h"
 #include "oc_api.h"
 #include "oc_clock_util.h"
 #include "oc_core_res.h"

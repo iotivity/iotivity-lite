@@ -16,8 +16,8 @@
  *
  ******************************************************************/
 
-#ifndef OC_OSCORE_CRYPTO_H
-#define OC_OSCORE_CRYPTO_H
+#ifndef OC_OSCORE_CRYPTO_INTERNAL_H
+#define OC_OSCORE_CRYPTO_INTERNAL_H
 
 #include <inttypes.h>
 #include <stddef.h>
@@ -52,4 +52,4 @@ int oc_oscore_encrypt(uint8_t *plaintext, size_t plaintext_len, size_t tag_len,
 }
 #endif
 
-#endif /* OC_OSCORE_CRYPTO_H */
+#endif /* OC_OSCORE_CRYPTO_INTERNAL_H */

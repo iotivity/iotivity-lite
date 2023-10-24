@@ -16,13 +16,16 @@
  *
  ****************************************************************************/
 
-#ifndef OC_AEL_H
-#define OC_AEL_H
-
-#include <stdbool.h>
+#ifndef OC_AEL_INTERNAL_H
+#define OC_AEL_INTERNAL_H
 
 #include "oc_config.h"
+
+#ifdef OC_SECURITY
+
 #include "oc_core_res.h"
+
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -60,10 +63,10 @@ typedef enum {
 
 typedef enum {
   OC_SEC_AEL_PRIORITYFILTER_CRIT = 0,
-  OC_SEC_AEL_PRIORITYFILTER_ERR,
-  OC_SEC_AEL_PRIORITYFILTER_WARN,
-  OC_SEC_AEL_PRIORITYFILTER_INFO,
-  OC_SEC_AEL_PRIORITYFILTER_DEBUG,
+  OC_SEC_AEL_PRIORITYFILTER_ERR = 1,
+  OC_SEC_AEL_PRIORITYFILTER_WARN = 2,
+  OC_SEC_AEL_PRIORITYFILTER_INFO = 3,
+  OC_SEC_AEL_PRIORITYFILTER_DEBUG = 4,
   OC_SEC_AEL_PRIORITYFILTER_DEFAULT = OC_SEC_AEL_PRIORITYFILTER_DEBUG,
 } oc_sec_ael_priorityfilter_t;
 
@@ -74,7 +77,7 @@ typedef enum {
 
 typedef enum {
   OC_SEC_AEL_UNIT_BYTE = 0,
-  OC_SEC_AEL_UNIT_KBYTE,
+  OC_SEC_AEL_UNIT_KBYTE = 1,
   OC_SEC_AEL_UNIT_DEFAULT = OC_SEC_AEL_UNIT_BYTE,
 } oc_sec_ael_unit_t;
 
@@ -109,4 +112,6 @@ bool oc_sec_ael_decode(size_t device, const oc_rep_t *rep, bool from_storage);
 }
 #endif
 
-#endif /* OC_AEL_H */
+#endif /* OC_SECURITY */
+
+#endif /* OC_AEL_INTERNAL_H */

@@ -19,8 +19,8 @@
 
 #ifdef OC_SECURITY
 
-#include "oc_audit.h"
-#include "oc_ael.h"
+#include "oc_audit_internal.h"
+#include "oc_ael_internal.h"
 #include "port/oc_log_internal.h"
 #include <stdbool.h>
 #include <stdlib.h>

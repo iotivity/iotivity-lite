@@ -20,7 +20,7 @@
 
 #include "oc_helpers.h"
 #include "port/oc_random.h"
-#include "security/oc_oscore_crypto.h"
+#include "security/oc_oscore_crypto_internal.h"
 #include "security/oc_tls_internal.h"
 
 #include <array>

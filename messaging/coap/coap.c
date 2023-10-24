@@ -65,7 +65,7 @@
 #endif /* OC_TCP */
 
 #ifdef OC_SECURITY
-#include "security/oc_audit.h"
+#include "security/oc_audit_internal.h"
 #include "security/oc_tls_internal.h"
 #endif /* OC_SECURITY */
 

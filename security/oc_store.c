@@ -22,7 +22,7 @@
 #include "api/oc_rep_internal.h"
 #include "api/oc_storage_internal.h"
 #include "oc_acl_internal.h"
-#include "oc_ael.h"
+#include "oc_ael_internal.h"
 #include "oc_certs.h"
 #include "oc_core_res.h"
 #include "oc_cred_internal.h"

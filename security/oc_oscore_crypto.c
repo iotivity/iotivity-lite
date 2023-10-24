@@ -18,7 +18,7 @@
 
 #if defined(OC_SECURITY) && defined(OC_OSCORE)
 
-#include "oc_oscore_crypto.h"
+#include "oc_oscore_crypto_internal.h"
 #include "mbedtls/ccm.h"
 #include "mbedtls/md.h"
 #include "messaging/coap/oscore_constants.h"

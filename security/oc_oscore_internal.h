@@ -16,8 +16,8 @@
  *
  ******************************************************************/
 
-#ifndef OC_OSCORE_H
-#define OC_OSCORE_H
+#ifndef OC_OSCORE_INTERNAL_H
+#define OC_OSCORE_INTERNAL_H
 
 #include "port/oc_connectivity.h"
 #include "security/oc_cred_internal.h"
@@ -34,4 +34,4 @@ OC_PROCESS_NAME(oc_oscore_handler);
 }
 #endif
 
-#endif /* OC_OSCORE_H */
+#endif /* OC_OSCORE_INTERNAL_H */
