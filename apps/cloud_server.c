@@ -30,6 +30,10 @@
 #include "util/oc_features.h"
 #include "util/oc_process.h"
 
+#ifdef OC_HAS_FEATURE_ETAG
+#include "oc_etag.h"
+#endif /* OC_HAS_FEATURE_ETAG */
+
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 #include "plgd/plgd_time.h"
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
@@ -1738,6 +1742,10 @@ main(int argc, char *argv[])
   }
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 
+#ifdef OC_HAS_FEATURE_ETAG
+  oc_etag_load_and_clear();
+#endif /* OC_HAS_FEATURE_ETAG */
+
   run_loop();
 
   for (size_t i = 0; i < g_num_devices; ++i) {
@@ -1746,6 +1754,11 @@ main(int argc, char *argv[])
       oc_cloud_manager_stop(ctx);
     }
   }
+
+#ifdef OC_HAS_FEATURE_ETAG
+  oc_etag_dump();
+#endif /* OC_HAS_FEATURE_ETAG */
+
   oc_main_shutdown();
   deinit();
   return 0;
