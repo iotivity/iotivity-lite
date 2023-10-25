@@ -43,6 +43,19 @@ void oc_mbedtls_init(void);
  */
 int oc_sec_self_own(size_t device);
 
+/**
+ * @brief Reverts self-onboarding.
+ *
+ * @note This function only reverts all operations performed by oc_sec_self_own,
+ * it does not clean-up everything that was done after self-onboarding. To do
+ * that the device must be reset.
+ *
+ * @see oc_pstat_reset_device
+ *
+ * @param device device index
+ */
+void oc_sec_self_disown(size_t device);
+
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 
 /**

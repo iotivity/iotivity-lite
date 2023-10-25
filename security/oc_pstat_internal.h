@@ -20,6 +20,7 @@
 #define OC_PSTAT_INTERNAL_H
 
 #include "oc_ri.h"
+#include "util/oc_compiler.h"
 
 #include <stddef.h>
 #include <stdbool.h>
@@ -67,7 +68,16 @@ void oc_sec_encode_pstat(size_t device, oc_interface_mask_t iface_mask,
 oc_sec_pstat_t *oc_sec_get_pstat(size_t device);
 void oc_sec_pstat_default(size_t device);
 void oc_sec_pstat_copy(oc_sec_pstat_t *dst, const oc_sec_pstat_t *src);
-void oc_sec_pstat_clear(oc_sec_pstat_t *pstat);
+
+/**
+ * @brief Reset pstat to default values.
+ *
+ * @param pstat the pstat to reset (cannot be NULL)
+ * @param resetToDefault use values set by reset operation as the default
+ * (otherwise all values are set to 0)
+ */
+void oc_sec_pstat_clear(oc_sec_pstat_t *pstat, bool resetToDefault)
+  OC_NONNULL();
 
 void get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
                void *data);
@@ -80,6 +90,19 @@ void oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm);
 oc_dpmtype_t oc_sec_pstat_current_mode(size_t device);
 
 #endif /* OC_SOFTWARE_UPDATE */
+
+#define OC_PSTAT_DOS_ID_FLAG(id) (1 << (id))
+
+/**
+ * @brief Check if device is in one of the DOS states.
+ *
+ * @param device device index
+ * @param dos_mask mask of DOS states to check (created by OR-ing values from
+ * OC_PSTAT_DOS_ID_FLAG(oc_dostype_t))
+ * @return true if device is in one of the DOS states
+ * @return false otherwise
+ */
+bool oc_sec_pstat_is_in_dos_state(size_t device, unsigned dos_mask);
 
 /**
  * @brief Reset all devices in RFOTM state for shutdown.
