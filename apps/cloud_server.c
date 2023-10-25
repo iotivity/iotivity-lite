@@ -1723,7 +1723,7 @@ main(int argc, char *argv[])
   }
 
   for (size_t i = 0; i < g_num_devices; ++i) {
-    oc_cloud_context_t *ctx = oc_cloud_get_context(0);
+    oc_cloud_context_t *ctx = oc_cloud_get_context(i);
     if (ctx) {
       oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
       if (cis) {
@@ -1741,7 +1741,7 @@ main(int argc, char *argv[])
   run_loop();
 
   for (size_t i = 0; i < g_num_devices; ++i) {
-    oc_cloud_context_t *ctx = oc_cloud_get_context(0);
+    oc_cloud_context_t *ctx = oc_cloud_get_context(i);
     if (ctx) {
       oc_cloud_manager_stop(ctx);
     }
