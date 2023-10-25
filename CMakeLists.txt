@@ -1218,14 +1218,13 @@ install(DIRECTORY include/
 
 if (OC_INTROSPECTION_ENABLED)
     if (OC_IDD_API_ENABLED)
-        install(FILES include/oc_introspection.h
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
-        )
+        set(INTROSPECTION_HEADERS include/oc_introspection.h)
     else()
-        install(FILES include/server_introspection.dat.h
-            DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
-        )
+        set(INTROSPECTION_HEADERS include/server_introspection.dat.h)
     endif()
+    install(FILES ${INTROSPECTION_HEADERS}
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
+    )
 endif()
 
 if (PLGD_DEV_TIME_ENABLED)
@@ -1242,25 +1241,31 @@ if(OC_ETAG_ENABLED)
     )
 endif()
 
-install(DIRECTORY ${PROJECT_SOURCE_DIR}/port
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
-    FILES_MATCHING
-    PATTERN "*.h"
-    PATTERN "*_internal.h" EXCLUDE
-)
 install(FILES ${PORT_INCLUDE_DIR}/oc_config.h
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
 )
-install(DIRECTORY util
-    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
-    FILES_MATCHING PATTERN "*.h"
-    PATTERN "*_internal.h" EXCLUDE
-)
-install(DIRECTORY messaging/coap/
+
+file(GLOB HEADERS_COAP ${PROJECT_SOURCE_DIR}/messaging/coap/*.h)
+list(FILTER HEADERS_COAP EXCLUDE REGEX ".*_internal\\.h$")
+install(FILES ${HEADERS_COAP}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/messaging/coap COMPONENT dev
-    FILES_MATCHING PATTERN "*.h"
-    PATTERN "unittest" EXCLUDE
-    PATTERN "*_internal.h" EXCLUDE
+)
+
+file(GLOB HEADERS_PORT ${PROJECT_SOURCE_DIR}/port/*.h)
+list(FILTER HEADERS_PORT EXCLUDE REGEX ".*_internal\\.h$")
+install(FILES ${HEADERS_PORT}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/port COMPONENT dev
+)
+
+file(GLOB HEADERS_UTIL ${PROJECT_SOURCE_DIR}/util/*.h)
+list(FILTER HEADERS_UTIL EXCLUDE REGEX ".*_internal\\.h$")
+install(FILES ${HEADERS_UTIL}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/util COMPONENT dev
+)
+file(GLOB HEADERS_UTIL_PT ${PROJECT_SOURCE_DIR}/util/pt/*.h)
+list(FILTER HEADERS_UTIL_PT EXCLUDE REGEX ".*_internal\\.h$")
+install(FILES ${HEADERS_UTIL_PT}
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/util/pt COMPONENT dev
 )
 
 # ####### Code formatting ########
