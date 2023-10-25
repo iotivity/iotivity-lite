@@ -18,7 +18,6 @@
 
 #ifdef OC_SECURITY
 
-#include "oc_security_internal.h"
 #include "oc_acl.h"
 #include "oc_core_res.h"
 #include "oc_cred.h"
@@ -26,8 +25,12 @@
 #include "oc_store.h"
 #include "oc_uuid.h"
 #include "port/oc_log_internal.h"
+#include "security/oc_acl_internal.h"
+#include "security/oc_ael_internal.h"
+#include "security/oc_cred_internal.h"
 #include "security/oc_doxm_internal.h"
 #include "security/oc_pstat_internal.h"
+#include "security/oc_security_internal.h"
 #include "security/oc_sdi_internal.h"
 #include "util/oc_features.h"
 
@@ -113,6 +116,21 @@ oc_sec_self_own(size_t device)
   oc_sec_dump_sdi(device);
 
   return 0;
+}
+
+void
+oc_sec_self_disown(size_t device)
+{
+  oc_sec_sdi_default(device);
+
+  oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
+  oc_sec_pstat_clear(ps, true);
+  oc_sec_dump_pstat(device);
+
+  oc_sec_cred_default(device);
+  oc_sec_doxm_default(device);
+  oc_sec_ael_default(device);
+  oc_sec_acl_default(device);
 }
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME

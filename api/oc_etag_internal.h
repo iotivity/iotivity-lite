@@ -86,7 +86,10 @@ void oc_etag_iterate_incremental_updates_query(
 
 #ifdef OC_STORAGE
 
+/// per device storage of ETag data of all resources
 #define OC_ETAG_STORE_NAME "etag"
+/// single storage for ETag data of platform resources
+#define OC_ETAG_PLATFORM_STORE_NAME "etag_platform"
 
 /** Truncate all ETag stores. */
 bool oc_etag_clear_storage(void);
@@ -163,6 +166,18 @@ bool oc_etag_decode_resource_etag(oc_resource_t *resource, const oc_rep_t *rep,
                                   uint64_t *etag) OC_NONNULL();
 
 #endif /* OC_STORAGE */
+
+#ifdef OC_SECURITY
+
+/** @brief Reinitialize all ETags on device reset.
+ *
+ * This function is called when the device is reset. It should reset all ETags.
+ *
+ * @param device device being reset
+ */
+void oc_etag_on_reset(size_t device);
+
+#endif /* OC_SECURITY */
 
 #ifdef __cplusplus
 }

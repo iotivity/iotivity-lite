@@ -49,6 +49,7 @@
 
 #ifdef OC_SECURITY
 #include "oc_csr.h"
+#include "security/oc_security_internal.h"
 #endif /* OC_SECURITY */
 
 #ifdef OC_STORAGE
@@ -405,8 +406,29 @@ public:
 #endif // OC_STORAGE
   }
 
+#ifdef OC_SECURITY
+  static void selfOnboard()
+  {
+    oc_sec_self_own(kDeviceID1);
+#ifdef OC_DYNAMIC_ALLOCATION
+    oc_sec_self_own(kDeviceID2);
+#endif /* OC_DYNAMIC_ALLOCATION */
+  }
+
+  static void selfOffboard()
+  {
+    oc_sec_self_disown(kDeviceID1);
+#ifdef OC_DYNAMIC_ALLOCATION
+    oc_sec_self_disown(kDeviceID2);
+#endif /* OC_DYNAMIC_ALLOCATION */
+  }
+#endif /* OC_SECURITY */
+
   void TearDown() override
   {
+#ifdef OC_SECURITY
+    selfOffboard();
+#endif /* OC_SECURITY */
 #ifdef OC_STORAGE
     oc_etag_clear_storage();
 #endif // OC_STORAGE
@@ -566,22 +588,26 @@ setAllETags(uint64_t etag)
 }
 
 static bool
-isETagStorageEmpty()
+isETagStorageEmpty(size_t device, bool platform = false)
 {
-  for (size_t i = 0; i < oc_core_get_num_devices(); ++i) {
-    long ret = oc_storage_data_load(
-      OC_ETAG_STORE_NAME, i, [](const oc_rep_t *, size_t, void *) { return 0; },
-      nullptr);
-    if (ret > 0) {
-      OC_ERR("storage for device %zu is not empty", i);
-      return false;
-    }
+  std::string store =
+    platform ? OC_ETAG_PLATFORM_STORE_NAME : OC_ETAG_STORE_NAME;
+
+  long ret = oc_storage_data_load(
+    store.c_str(), device, [](const oc_rep_t *, size_t, void *) { return 0; },
+    nullptr);
+  if (ret > 0) {
+    return false;
   }
   return true;
 }
 
 TEST_F(TestETagWithServer, DumpAndLoad)
 {
+#ifdef OC_SECURITY
+  selfOnboard();
+#endif /* OC_SECURITY */
+
 #ifdef OC_COLLECTIONS
   auto col1 = oc::NewCollection("col1", "/col1", kDeviceID1);
   ASSERT_NE(nullptr, col1);
@@ -641,11 +667,14 @@ TEST_F(TestETagWithServer, DumpAndLoad)
       }
     }
 
-    EXPECT_EQ(1337, oc_resource_get_etag(resource));
+    EXPECT_EQ(1337, oc_resource_get_etag(resource))
+      << "unexpected ETag for resource " << oc_string(resource->uri);
   });
 
   // storage should be empty
-  EXPECT_TRUE(isETagStorageEmpty());
+  for (size_t i = 0; i < oc_core_get_num_devices(); ++i) {
+    EXPECT_TRUE(isETagStorageEmpty(i));
+  }
 
   // clean-up
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -655,8 +684,100 @@ TEST_F(TestETagWithServer, DumpAndLoad)
 #endif // OC_DYNAMIC_ALLOCATION
 }
 
+#ifdef OC_SECURITY
+
+static bool
+isPlatformResourceURI(const std::string &uri)
+{
+  return uri == "/oic/p" || uri == PLGD_TIME_URI;
+}
+
+// if device is not in RFNOP state then ETag data of resources associated with
+// the device should not be loaded
+TEST_F(TestETagWithServer, IgnoreDataIfDeviceNotInRFNOP)
+{
+  // set all etags to 1337
+  setAllETags(1337);
+  // store etags to the storage
+  EXPECT_TRUE(oc_etag_dump());
+
+  // clear all etags
+  setAllETags(0);
+  // load etags from the storage and clear the storage
+  EXPECT_TRUE(oc_etag_load_and_clear());
+
+  oc::IterateAllResources([](const oc_resource_t *resource) {
+    if (oc_etag_dump_ignore_resource(oc_string(resource->uri),
+                                     oc_string_len(resource->uri))) {
+      return;
+    }
+    std::string resource_uri = oc_string(resource->uri);
+    // platform resources are not associated with any device, so the data should
+    // loaded
+    if (isPlatformResourceURI(resource_uri)) {
+      return;
+    }
+
+    // all other resources are associated with devices not in RFOTM state, so
+    // the data should not be loaded
+    EXPECT_NE(1337, oc_resource_get_etag(resource)) << "unexpected ETag for "
+                                                       "resource "
+                                                    << resource_uri;
+  });
+}
+
+// reset device should reset etags of all non-platform resources and truncate
+// storage of non-platform ETag data
+TEST_F(TestETagWithServer, OnReset)
+{
+  // set all etags to 1337
+  setAllETags(1337);
+  // store etags to the storage
+  EXPECT_TRUE(oc_etag_dump());
+
+  for (size_t i = 0; i < oc_core_get_num_devices(); ++i) {
+    size_t deviceID = oc_core_get_num_devices() - i - 1;
+    oc_reset_device_v1(deviceID, true);
+    for (size_t j = 0; j < deviceID; ++j) {
+      EXPECT_FALSE(isETagStorageEmpty(j));
+    }
+    EXPECT_TRUE(isETagStorageEmpty(deviceID));
+    // platform resources storage should not be cleared
+    EXPECT_FALSE(isETagStorageEmpty(0, true));
+
+    oc::IterateAllResources([deviceID](const oc_resource_t *resource) {
+      if (oc_etag_dump_ignore_resource(oc_string(resource->uri),
+                                       oc_string_len(resource->uri))) {
+        return;
+      }
+      std::string resource_uri = oc_string(resource->uri);
+      if (isPlatformResourceURI(resource_uri)) {
+        EXPECT_EQ(1337, oc_resource_get_etag(resource))
+          << "unexpected ETag for resource " << resource_uri;
+        return;
+      }
+      if (resource->device >= deviceID) {
+        EXPECT_NE(1337, oc_resource_get_etag(resource))
+          << "unexpected ETag for resource " << resource_uri;
+        return;
+      }
+      EXPECT_EQ(1337, oc_resource_get_etag(resource))
+        << "unexpected ETag for resource " << resource_uri;
+    });
+  }
+
+  // small time to process events/messages generated by the reset
+  oc::TestDevice::PoolEventsMsV1(10ms);
+}
+
+#endif /* OC_SECURITY */
+
 TEST_F(TestETagWithServer, SkipDumpOfEmptyETags)
 {
+#ifdef OC_SECURITY
+  selfOnboard();
+#endif /* OC_SECURITY */
+
   // set all etags to 0
   setAllETags(OC_ETAG_UNINITIALIZED);
   // no etags should be stored
@@ -666,7 +787,8 @@ TEST_F(TestETagWithServer, SkipDumpOfEmptyETags)
   uint64_t max_etag = oc_etag_global();
   EXPECT_TRUE(oc_etag_load_from_storage(false));
   oc::IterateAllResources([&max_etag](const oc_resource_t *resource) {
-    EXPECT_LT(max_etag, oc_resource_get_etag(resource));
+    EXPECT_LT(max_etag, oc_resource_get_etag(resource))
+      << "unexpected ETag for resource " << oc_string(resource->uri);
   });
 }
 
@@ -686,16 +808,23 @@ encodeResourceETag(CborEncoder *encoder, const std::string &uri, int64_t etag)
 
 TEST_F(TestETagWithServer, IgnoreInvalidStorageData)
 {
+#ifdef OC_SECURITY
+  selfOnboard();
+#endif /* OC_SECURITY */
+
   constexpr uint64_t kETag = 1337;
   // set all etags to 1337
   setAllETags(kETag);
 
-#ifdef OC_DYNAMIC_ALLOCATION
   auto empty_storage = [](size_t, void *) {
     oc_rep_start_root_object();
     oc_rep_end_root_object();
     return 0;
   };
+  // put {} to the storage of platform resources so we can ignore it
+  ASSERT_LT(0, oc_storage_data_save(OC_ETAG_PLATFORM_STORE_NAME, 0,
+                                    empty_storage, nullptr));
+#ifdef OC_DYNAMIC_ALLOCATION
   // put {} to the storage of the second device so we can ignore it
   ASSERT_LT(0, oc_storage_data_save(OC_ETAG_STORE_NAME, kDeviceID2,
                                     empty_storage, nullptr));
@@ -800,6 +929,10 @@ TEST_F(TestETagWithServer, ClearStorage)
   plgd_time_set_time(oc_clock_time());
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 
+#ifdef OC_SECURITY
+  selfOnboard();
+#endif /* OC_SECURITY */
+
   // set all etags to 1337
   setAllETags(1337);
   // store etags to the storage
@@ -811,8 +944,10 @@ TEST_F(TestETagWithServer, ClearStorage)
 
   oc::IterateAllResources([](const oc_resource_t *resource) {
     // nor 0 nor 1337
-    EXPECT_NE(0, oc_resource_get_etag(resource));
-    EXPECT_NE(1337, oc_resource_get_etag(resource));
+    EXPECT_NE(0, oc_resource_get_etag(resource))
+      << "zero etag for resource " << oc_string(resource->uri);
+    EXPECT_NE(1337, oc_resource_get_etag(resource))
+      << "etag 1337 for resource " << oc_string(resource->uri);
   });
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME

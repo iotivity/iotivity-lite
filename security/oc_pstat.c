@@ -49,6 +49,10 @@
 #include "api/oc_swupdate_internal.h"
 #endif /* OC_SOFTWARE_UPDATE */
 
+#ifdef OC_HAS_FEATURE_ETAG
+#include "api/oc_etag_internal.h"
+#endif /* OC_HAS_FEATURE_ETAG */
+
 #include <assert.h>
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -267,7 +271,7 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
 {
   OC_DBG("oc_pstat: Entering pstat_handle_state");
   switch (ps->s) {
-  case OC_DOS_RESET: {
+  case OC_DOS_RESET:
     // reset is in progress
     if (g_pstat[device].reset_in_progress) {
       OC_DBG("oc_pstat: reset in progress");
@@ -317,12 +321,16 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     }
 #endif /* OC_PKI */
     oc_sec_sp_default(device);
+#ifdef OC_HAS_FEATURE_ETAG
+    oc_etag_on_reset(device);
+#endif /* OC_HAS_FEATURE_ETAG */
+
 #ifdef OC_SERVER
     coap_remove_observers_on_dos_change(device, true);
 #endif /* OC_SERVER */
     ps->p = false;
-  }
-  /* fall through */
+
+    OC_FALLTHROUGH;
   case OC_DOS_RFOTM: {
     ps->p = true;
     ps->s = OC_DOS_RFOTM;
@@ -429,6 +437,12 @@ oc_sec_is_operational(size_t device)
   return g_pstat[device].isop;
 }
 
+bool
+oc_sec_pstat_is_in_dos_state(size_t device, unsigned dos_mask)
+{
+  return (OC_PSTAT_DOS_ID_FLAG(g_pstat[device].s) & dos_mask) != 0;
+}
+
 void
 oc_sec_pstat_default(size_t device)
 {
@@ -459,10 +473,17 @@ oc_sec_pstat_copy(oc_sec_pstat_t *dst, const oc_sec_pstat_t *src)
 }
 
 void
-oc_sec_pstat_clear(oc_sec_pstat_t *ps)
+oc_sec_pstat_clear(oc_sec_pstat_t *ps, bool resetToDefault)
 {
   assert(ps != NULL);
   memset(ps, 0, sizeof(*ps));
+
+  if (resetToDefault) {
+    ps->cm = 2;
+    ps->om = 3;
+    ps->sm = 4;
+    ps->s = OC_DOS_RFOTM;
+  }
 }
 
 void

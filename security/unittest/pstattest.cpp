@@ -128,7 +128,7 @@ TEST_F(TestPstat, Copy)
   oc_sec_pstat_copy(&ps1, &ps1);
   ExpectEqual(ps2, ps1);
 
-  oc_sec_pstat_clear(&ps1);
+  oc_sec_pstat_clear(&ps1, false);
   EXPECT_FALSE(IsEqual(ps1, ps2));
 }
 
@@ -139,7 +139,7 @@ TEST_F(TestPstat, DumpAndLoad)
 
   oc_sec_pstat_t def{};
   oc_sec_pstat_copy(&def, oc_sec_get_pstat(0));
-  oc_sec_pstat_clear(oc_sec_get_pstat(0));
+  oc_sec_pstat_clear(oc_sec_get_pstat(0), false);
   EXPECT_FALSE(IsEqual(def, *oc_sec_get_pstat(0)));
 
   // load values from storage
