@@ -689,7 +689,11 @@ TEST_F(TestETagWithServer, DumpAndLoad)
 static bool
 isPlatformResourceURI(const std::string &uri)
 {
-  return uri == "/oic/p" || uri == PLGD_TIME_URI;
+  return uri == "/oic/p"
+#ifdef OC_HAS_FEATURE_PLGD_TIME
+         || uri == PLGD_TIME_URI
+#endif /* OC_HAS_FEATURE_PLGD_TIME */
+    ;
 }
 
 // if device is not in RFNOP state then ETag data of resources associated with

@@ -559,20 +559,16 @@ resource_get_payload_by_encoder(oc_rep_encoder_type_t type,
   return true;
 }
 
-#if OC_DBG_IS_ENABLED
+#if defined(OC_DYNAMIC_ALLOCATION) && OC_DBG_IS_ENABLED
 
 static void
 resource_print_payload(oc_resource_t *resource, oc_interface_mask_t iface)
 {
   // GCOVR_EXCL_START
-#ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buffer = calloc(1, OC_MIN_APP_DATA_SIZE);
   if (buffer == NULL) {
     return;
   }
-#else  /* !OC_DYNAMIC_ALLOCATION */
-  uint8_t buffer[OC_MIN_APP_DATA_SIZE] = { 0 };
-#endif /* OC_DYNAMIC_ALLOCATION */
 
   oc_response_buffer_t response_buffer;
   memset(&response_buffer, 0, sizeof(response_buffer));
@@ -582,23 +578,12 @@ resource_print_payload(oc_resource_t *resource, oc_interface_mask_t iface)
   if (!resource_get_payload_by_encoder(OC_REP_CBOR_ENCODER, resource, iface,
                                        &response_buffer,
                                        OC_MAX_APP_DATA_SIZE)) {
-#ifdef OC_DYNAMIC_ALLOCATION
     free(buffer);
-#endif /* OC_DYNAMIC_ALLOCATION */
     return;
   }
 
-#ifdef OC_DYNAMIC_ALLOCATION
   // might have been reallocated by the handler
   buffer = response_buffer.buffer;
-#else  /* !OC_DYNAMIC_ALLOCATION */
-  size_t avail_bytes = oc_mmem_available_size(BYTE_POOL);
-  if (avail_bytes < response_buffer.response_length) {
-    OC_DBG("not enough memory to print payload of resource(%s)",
-           oc_string(resource->uri));
-    return;
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
 
   oc_rep_decoder_t decoder = oc_rep_decoder(OC_REP_CBOR_DECODER);
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
@@ -607,26 +592,17 @@ resource_print_payload(oc_resource_t *resource, oc_interface_mask_t iface)
   if (CborNoError != decoder.parse(response_buffer.buffer,
                                    response_buffer.response_length, &rep)) {
     oc_rep_set_pool(prev_rep_objects);
-#ifdef OC_DYNAMIC_ALLOCATION
     free(buffer);
-#endif /* OC_DYNAMIC_ALLOCATION */
     return;
   }
-#ifdef OC_DYNAMIC_ALLOCATION
   size_t json_size = oc_rep_to_json(rep, NULL, 0, true);
   char *json = (char *)malloc(json_size + 1);
   oc_rep_to_json(rep, json, json_size + 1, true);
-#else  /* !OC_DYNAMIC_ALLOCATION */
-  char json[4096] = { 0 };
-  oc_rep_to_json(rep, json, OC_ARRAY_SIZE(json), true);
-#endif /* OC_DYNAMIC_ALLOCATION */
   OC_DBG("Resource(%s) payload: %s", oc_string(resource->uri), json);
   oc_free_rep(rep);
   oc_rep_set_pool(prev_rep_objects);
-#ifdef OC_DYNAMIC_ALLOCATION
   free(json);
   free(buffer);
-#endif /* OC_DYNAMIC_ALLOCATION */
   // GCOVR_EXCL_STOP
 }
 
@@ -661,9 +637,9 @@ oc_resource_get_crc64(oc_resource_t *resource, uint64_t *crc64)
   }
 #endif /* OC_HAS_FEATURE_ETAG_INTERFACE */
 
-#if OC_DBG_IS_ENABLED
+#if defined(OC_DYNAMIC_ALLOCATION) && OC_DBG_IS_ENABLED
   resource_print_payload(resource, iface);
-#endif /* OC_DBG_IS_ENABLED */
+#endif /* OC_DYNAMIC_ALLOCATION && OC_DBG_IS_ENABLED */
 
   uint8_t buffer[sizeof(*crc64)] = { 0 };
   oc_response_buffer_t response_buffer;

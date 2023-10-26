@@ -202,12 +202,38 @@ uint16_t coap_get_mid(void);
 void coap_udp_init_message(coap_packet_t *packet, coap_message_type_t type,
                            uint8_t code, uint16_t mid) OC_NONNULL();
 
+/**
+ * @brief Check CoAP packet header size against limits
+ *
+ * @param header_size header size of the CoAP packet
+ * @param buffer_size size of the buffer storing the CoAP packet (if 0, no check
+ * is performed)
+ * @return true if header size is within limit
+ * @return false otherwise
+ */
+bool coap_check_header_size(size_t header_size, size_t buffer_size);
+
+typedef struct
+{
+  size_t size;
+#ifdef OC_TCP
+  size_t extended_length;
+  uint8_t length;
+  uint8_t num_extended_length_bytes;
+#endif /* OC_TCP */
+  uint8_t token_location;
+} coap_calculate_header_size_result_t;
+
+coap_calculate_header_size_result_t coap_calculate_header_size(
+  const coap_packet_t *packet, bool inner, bool outer, bool oscore,
+  size_t token_len) OC_NONNULL();
+
 size_t coap_serialize_message(coap_packet_t *packet, uint8_t *buffer,
-                              size_t buffer_size);
+                              size_t buffer_size) OC_NONNULL();
 
 size_t coap_oscore_serialize_message(coap_packet_t *packet, uint8_t *buffer,
                                      size_t buffer_size, bool inner, bool outer,
-                                     bool oscore);
+                                     bool oscore) OC_NONNULL();
 
 void coap_send_message(oc_message_t *message) OC_NONNULL();
 
@@ -249,7 +275,7 @@ coap_status_t coap_udp_parse_message(coap_packet_t *request, uint8_t *data,
 int coap_set_status_code(coap_packet_t *packet, unsigned int code) OC_NONNULL();
 
 int coap_set_token(coap_packet_t *packet, const uint8_t *token,
-                   size_t token_len) OC_NONNULL();
+                   size_t token_len) OC_NONNULL(1);
 
 uint32_t coap_get_payload(const coap_packet_t *packet, const uint8_t **payload)
   OC_NONNULL();

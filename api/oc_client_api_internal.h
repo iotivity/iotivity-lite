@@ -19,6 +19,7 @@
 #ifndef OC_CLIENT_API_INTERNAL_H
 #define OC_CLIENT_API_INTERNAL_H
 
+#include "api/oc_helpers_internal.h"
 #include "messaging/coap/coap_internal.h"
 #include "oc_client_state.h"
 #include "oc_ri.h"
@@ -39,6 +40,17 @@ oc_client_cb_t *oc_do_request(
   const char *query, uint16_t timeout_seconds, oc_response_handler_t handler,
   oc_qos_t qos, void *user_data, coap_configure_request_fn_t configure_request,
   const void *configure_request_data) OC_NONNULL(2, 3);
+
+/** @brief Initialize CoAP request packet */
+void oc_request_init_packet(coap_packet_t *packet, bool is_tcp,
+                            coap_message_type_t type, oc_method_t method,
+                            uint16_t mid) OC_NONNULL();
+
+/** @brief Set common CoAP request packet options */
+void oc_request_set_packet_options(coap_packet_t *packet,
+                                   oc_content_format_t accept,
+                                   oc_string_view_t uri, int32_t observe_seq,
+                                   oc_string_view_t query) OC_NONNULL(1);
 
 /** @brief Prepare an OC_POST or an OC_PUT request */
 bool oc_init_async_request(oc_method_t method, const char *uri,

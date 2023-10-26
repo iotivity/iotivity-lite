@@ -49,6 +49,10 @@
 #include <inttypes.h>
 #include <stdio.h>
 
+#ifdef OC_DYNAMIC_ALLOCATION
+#include <stdlib.h>
+#endif /* OC_DYNAMIC_ALLOCATION */
+
 #ifndef OC_STORAGE
 #error Preprocessor macro OC_IDD_API is defined but OC_STORAGE is not defined \
 check oc_config.h and make sure OC_STORAGE is defined if OC_IDD_API is defined.
@@ -137,6 +141,8 @@ introspection_data_handler_crc(oc_request_t *request)
     OC_ERR("cannot encode introspection data: failed to generate tag");
     return;
   }
+
+#ifdef OC_DYNAMIC_ALLOCATION
   long ret = oc_storage_size(idd_tag);
   if (ret == -ENOENT || ret == 0) {
     OC_DBG("no introspection data");
@@ -148,15 +154,22 @@ introspection_data_handler_crc(oc_request_t *request)
       ret);
     return;
   }
-  uint8_t idd_data[ret];
-  memset(idd_data, 0, (size_t)ret);
+
+  uint8_t *idd_data = calloc(1, (size_t)ret);
   ret = oc_storage_read(idd_tag, idd_data, (size_t)ret);
-  if (ret < 0) {
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  uint8_t idd_data[4096] = { 0 };
+  long ret = oc_storage_read(idd_tag, idd_data, OC_ARRAY_SIZE(idd_data));
+#endif /* OC_DYNAMIC_ALLOCATION */
+  if (ret <= 0) {
     OC_ERR("cannot encode introspection data: failed to read data(error=%ld)",
            ret);
     return;
   }
   crc = oc_crc64(0, idd_data, (size_t)ret);
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(idd_data);
+#endif /* OC_DYNAMIC_ALLOCATION */
 #else  /* !OC_IDD_API */
   crc = oc_crc64(0, introspection_data, introspection_data_size);
 #endif /* OC_IDD_API */

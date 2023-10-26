@@ -19,10 +19,13 @@
 
 #ifndef OC_SECURITY
 
+#include "api/client/oc_client_cb_internal.h"
+#include "messaging/coap/transactions_internal.h"
 #include "oc_api.h"
 #include "oc_cloud_access.h"
 #include "oc_cloud_internal.h"
 #include "oc_endpoint.h"
+#include "tests/gtest/Device.h"
 #include "tests/gtest/Endpoint.h"
 
 #include <gtest/gtest.h>
@@ -50,7 +53,6 @@ public:
     // no-op for tests
   }
 
-protected:
   static void SetUpTestCase()
   {
     s_handler.init = &appInit;
@@ -62,7 +64,15 @@ protected:
   }
 
   static void TearDownTestCase() { oc_main_shutdown(); }
+
+  void TearDown() override
+  {
+    oc::TestDevice::DropOutgoingMessages();
+    coap_free_all_transactions();
+    oc_client_cbs_shutdown();
+  }
 };
+
 oc_handler_t TestCloudAccess::s_handler;
 oc_endpoint_t TestCloudAccess::s_endpoint;
 

@@ -21,48 +21,91 @@
 
 #include <array>
 #include <cstdlib>
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
+#include <string>
 
-constexpr const char UUID[] = "12345678123412341234123456789012";
+constexpr const char UUID[] = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
+constexpr const char UUID2[] = "XYZabcdefghijklmnopqrstuvwxyz012";
 
 using uuid_buffer_t = std::array<char, OC_UUID_LEN>;
 
-TEST(UUIDGeneration, StrToUUIDTest_P)
+TEST(UUID, StrToUUIDTest_P)
+{
+  oc_uuid_t uuid{};
+  oc_uuid_t uuidTemp = uuid;
+  oc_str_to_uuid(UUID, &uuid);
+  EXPECT_NE(0, memcmp(uuid.id, uuidTemp.id, OC_UUID_ID_SIZE));
+
+  oc_uuid_t uuid2{};
+  oc_uuid_t uuid2Temp = uuid2;
+  oc_str_to_uuid(UUID2, &uuid2);
+  EXPECT_NE(0, memcmp(uuid2.id, uuid2Temp.id, OC_UUID_ID_SIZE));
+}
+
+TEST(UUID, StrToUUIDTest_F)
 {
   oc_uuid_t uuid{};
   memset(&uuid, 0, sizeof(oc_uuid_t));
   oc_uuid_t uuidTemp = uuid;
-  oc_str_to_uuid(UUID, &uuid);
-  EXPECT_NE(uuid.id, uuidTemp.id);
+  oc_str_to_uuid(nullptr, &uuid);
+  EXPECT_EQ(0, memcmp(uuid.id, uuidTemp.id, OC_UUID_ID_SIZE));
+}
+
+TEST(UUID, UUIDToStr_F)
+{
+  uuid_buffer_t wc{};
+  oc_uuid_to_str(nullptr, wc.data(), wc.size());
+
+  oc_uuid_t uuid{};
+  std::array<char, OC_UUID_LEN - 1> too_small{};
+  oc_uuid_to_str(&uuid, too_small.data(), too_small.size());
 }
 
 TEST(UUIDGeneration, WildcardStrToUUID)
 {
-  const char *u = "*";
+  std::string u = "*";
   oc_uuid_t uuid{};
-  oc_str_to_uuid(u, &uuid);
+  oc_str_to_uuid(u.c_str(), &uuid);
   oc_uuid_t wc{};
   wc.id[0] = '*';
   EXPECT_EQ(memcmp(wc.id, uuid.id, OC_UUID_ID_SIZE), 0);
 }
 
-TEST(UUIDGeneration, WildcardUUIDToStr)
+TEST(UUID, WildcardUUIDToStr)
 {
-  const char *u = "*";
+  std::string u = "*";
   uuid_buffer_t wc{};
   oc_uuid_t uuid{};
   uuid.id[0] = '*';
   oc_uuid_to_str(&uuid, wc.data(), wc.size());
-  EXPECT_EQ(strlen(u), strlen(wc.data()));
-  EXPECT_STREQ(u, wc.data());
+  EXPECT_STREQ(u.c_str(), wc.data());
 }
 
-TEST(UUIDGeneration, NonWildcardUUID)
+TEST(UUID, WildcardUUIDToStrV1)
 {
-  const char *u = "2af07d57-b2e3-4120-9292-f9fef16b41d7";
+  std::string u = "*";
+  std::array<char, 2> wc{};
+  oc_uuid_t uuid{};
+  uuid.id[0] = '*';
+  EXPECT_EQ(1, oc_uuid_to_str_v1(&uuid, wc.data(), wc.size()));
+  EXPECT_STREQ(u.c_str(), wc.data());
+}
+
+TEST(UUID, WildcardUUIDToStrV1_F)
+{
+  std::string u = "*";
+  std::array<char, 1> too_small{};
+  oc_uuid_t uuid{};
+  uuid.id[0] = '*';
+  EXPECT_EQ(-1, oc_uuid_to_str_v1(&uuid, too_small.data(), too_small.size()));
+}
+
+TEST(UUID, NonWildcardUUID)
+{
+  std::string u = "2af07d57-b2e3-4120-9292-f9fef16b41d7";
   uuid_buffer_t nonwc{};
   oc_uuid_t uuid{};
-  oc_str_to_uuid(u, &uuid);
+  oc_str_to_uuid(u.c_str(), &uuid);
 
   EXPECT_EQ('*', uuid.id[0]);
   EXPECT_EQ(0xf0, uuid.id[1]);
@@ -82,8 +125,20 @@ TEST(UUIDGeneration, NonWildcardUUID)
   EXPECT_EQ(0xd7, uuid.id[15]);
 
   oc_uuid_to_str(&uuid, nonwc.data(), nonwc.size());
-  EXPECT_EQ(strlen(u), strlen(nonwc.data()));
-  EXPECT_STREQ(u, nonwc.data());
+  EXPECT_EQ(u.length(), strlen(nonwc.data()));
+  EXPECT_STREQ(u.c_str(), nonwc.data());
+}
+
+TEST(UUID, UUIDToStrV1_F)
+{
+  oc_uuid_t uuid{};
+  oc_str_to_uuid(UUID, &uuid);
+
+  std::vector<char> too_small{};
+  for (int i = 1; i < OC_UUID_LEN; i++) {
+    too_small.resize(i);
+    EXPECT_EQ(-1, oc_uuid_to_str_v1(&uuid, too_small.data(), too_small.size()));
+  }
 }
 
 /*

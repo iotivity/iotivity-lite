@@ -17,6 +17,7 @@
  ****************************************************************************/
 
 #include "oc_uuid.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_random.h"
 #include "util/oc_macros_internal.h"
 #include "util/oc_secure_string_internal.h"
@@ -88,34 +89,60 @@ oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
   }
 }
 
-void
-oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, size_t buflen)
+int
+oc_uuid_to_str_v1(const oc_uuid_t *uuid, char *buffer, size_t buflen)
 {
-  if (buflen < OC_UUID_LEN || !uuid) {
-    return;
-  }
   if (uuid->id[0] == '*') {
     uint8_t zeros[OC_ARRAY_SIZE(uuid->id) - 1] = { 0 };
     if (memcmp(&uuid->id[1], zeros, OC_ARRAY_SIZE(zeros)) == 0) {
+      if (buflen < 2) {
+        OC_ERR("cannot encode uuid to string: buffer too small");
+        return -1;
+      }
       memset(buffer, 0, buflen);
       buffer[0] = '*';
       buffer[1] = '\0';
-      return;
+      return 1;
     }
   }
-  for (size_t i = 0, j = 0; i < OC_ARRAY_SIZE(uuid->id); ++i) {
+  int j = 0;
+  for (size_t i = 0; i < OC_ARRAY_SIZE(uuid->id); ++i) {
     switch (i) {
     case 4:
     case 6:
     case 8:
-    case 10:
-      snprintf(&buffer[j], 2, "-");
-      j++;
+    case 10: {
+      int len = snprintf(&buffer[j], buflen, "-");
+      if (len < 0 || (size_t)len >= buflen) {
+        OC_ERR("cannot encode uuid to string: buffer too small");
+        return -1;
+      }
+      j += len;
+      buflen -= (size_t)len;
       break;
     }
-    snprintf(&buffer[j], 3, "%02x", uuid->id[i]);
-    j += 2;
+    }
+    int len = snprintf(&buffer[j], buflen, "%02x", uuid->id[i]);
+    if (len < 0 || (size_t)len >= buflen) {
+      OC_ERR("cannot encode uuid to string: buffer too small");
+      return -1;
+    }
+    j += len;
+    buflen -= (size_t)len;
   }
+  return j;
+}
+
+void
+oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, size_t buflen)
+{
+  if (buflen < OC_UUID_LEN || uuid == NULL) {
+    OC_ERR("oc_uuid_to_str: invalid inputs (buffer=%s, uuid=%s)",
+           buflen < OC_UUID_LEN ? "too small" : "ok",
+           uuid == NULL ? "null" : "ok");
+    return;
+  }
+  oc_uuid_to_str_v1(uuid, buffer, buflen);
 }
 
 void

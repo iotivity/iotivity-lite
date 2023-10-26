@@ -55,7 +55,8 @@ extern "C" {
 #ifndef OC_CLOUD_NOTE
 #if OC_NOTE_IS_ENABLED
 #define OC_CLOUD_NOTE(...)                                                     \
-  OC_LOG_WITH_COMPONENT(OC_LOG_LEVEL_NOTE, OC_LOG_COMPONENT_CLOUD, __VA_ARGS__)
+  OC_LOG_WITH_COMPONENT(OC_LOG_LEVEL_NOTICE, OC_LOG_COMPONENT_CLOUD,           \
+                        __VA_ARGS__)
 #else /* !OC_NOTE_IS_ENABLED */
 #define OC_CLOUD_NOTE(...)
 #endif /* OC_NOTE_IS_ENABLED */
@@ -64,7 +65,8 @@ extern "C" {
 #ifndef OC_CLOUD_WRN
 #if OC_WRN_IS_ENABLED
 #define OC_CLOUD_WRN(...)                                                      \
-  OC_LOG_WITH_COMPONENT(OC_LOG_LEVEL_WARN, OC_LOG_COMPONENT_CLOUD, __VA_ARGS__)
+  OC_LOG_WITH_COMPONENT(OC_LOG_LEVEL_WARNING, OC_LOG_COMPONENT_CLOUD,          \
+                        __VA_ARGS__)
 #else /* !OC_WRN_IS_ENABLED */
 #define OC_CLOUD_WRN(...)
 #endif /* OC_WRN_IS_ENABLED */

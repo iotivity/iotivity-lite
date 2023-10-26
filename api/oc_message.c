@@ -44,29 +44,29 @@ message_deallocate(oc_message_t *message, struct oc_memb *pool)
 #if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
   free(message->data);
 #endif /* OC_DYNAMIC_ALLOCATION && !OC_INOUT_BUFFER_SIZE */
-#ifndef OC_DYNAMIC_ALLOCATION
+#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
   oc_allocator_mutex_lock();
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
   oc_memb_free(pool, message);
-#ifndef OC_DYNAMIC_ALLOCATION
+#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
   oc_allocator_mutex_unlock();
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
 }
 
 static oc_message_t *
 message_allocate_with_size(struct oc_memb *pool, size_t size)
 {
-#ifndef OC_DYNAMIC_ALLOCATION
+#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
   oc_allocator_mutex_lock();
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
   oc_message_t *message = (oc_message_t *)oc_memb_alloc(pool);
-#ifndef OC_DYNAMIC_ALLOCATION
+#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
   oc_allocator_mutex_unlock();
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
   if (message == NULL) {
-#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_SIZE)
+#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
     OC_WRN("buffer: No free TX/RX buffers!");
-#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_SIZE */
+#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
     return NULL;
   }
 #if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
@@ -88,9 +88,9 @@ message_allocate_with_size(struct oc_memb *pool, size_t size)
 #ifdef OC_SECURITY
   message->encrypted = 0;
 #endif /* OC_SECURITY */
-#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_SIZE)
+#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
   OC_DBG("buffer: Allocated TX/RX buffer; num free: %d", oc_memb_numfree(pool));
-#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_SIZE */
+#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
   OC_DBG("buffer: allocated message(%p) from pool(%p)", (void *)message,
          (void *)pool);
   return message;
@@ -201,7 +201,7 @@ oc_message_unref(oc_message_t *message)
   message_deallocate(message, pool);
   OC_DBG("buffer: deallocated message(%p) from pool(%p)", (void *)message,
          (void *)pool);
-#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_SIZE)
+#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
   OC_DBG("buffer: freed TX/RX buffer; num free: %d", oc_memb_numfree(pool));
-#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_SIZE */
+#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
 }
