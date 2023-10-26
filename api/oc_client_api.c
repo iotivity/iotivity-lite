@@ -172,25 +172,57 @@ dispatch_coap_request_exit:
   return success;
 }
 
+void
+oc_request_init_packet(coap_packet_t *packet, bool is_tcp,
+                       coap_message_type_t type, oc_method_t method,
+                       uint16_t mid)
+{
+#ifdef OC_TCP
+  if (is_tcp) {
+    coap_tcp_init_message(packet, (uint8_t)method);
+    return;
+  }
+#else  /* !OC_TCP */
+  (void)is_tcp;
+#endif /* OC_TCP */
+
+  coap_udp_init_message(packet, type, (uint8_t)method, mid);
+}
+
+void
+oc_request_set_packet_options(coap_packet_t *packet, oc_content_format_t accept,
+                              oc_string_view_t uri, int32_t observe_seq,
+                              oc_string_view_t query)
+{
+  coap_options_set_accept(packet, accept);
+
+  coap_options_set_uri_path(packet, uri.data, uri.length);
+
+  if (observe_seq != OC_COAP_OPTION_OBSERVE_NOT_SET) {
+    coap_options_set_observe(packet, observe_seq);
+  }
+
+  if (query.length > 0) {
+    coap_options_set_uri_query(packet, query.data, query.length);
+  }
+}
+
 static bool
 prepare_coap_request(oc_client_cb_t *cb, coap_configure_request_fn_t configure,
                      const void *configure_data)
 {
   coap_message_type_t type = COAP_TYPE_NON;
-
   if (cb->qos == HIGH_QOS) {
     type = COAP_TYPE_CON;
   }
 
   coap_transaction_t *transaction =
     coap_new_transaction(cb->mid, cb->token, cb->token_len, &cb->endpoint);
-
   if (transaction == NULL) {
     return false;
   }
 
-  g_dispatch.transaction = transaction;
-  oc_rep_new_v1(g_dispatch.transaction->message->data + COAP_MAX_HEADER_SIZE,
+  oc_rep_new_v1(transaction->message->data + COAP_MAX_HEADER_SIZE,
                 OC_BLOCK_SIZE);
 
 #ifdef OC_BLOCK_WISE
@@ -198,8 +230,9 @@ prepare_coap_request(oc_client_cb_t *cb, coap_configure_request_fn_t configure,
     g_request.buffer = oc_blockwise_alloc_request_buffer(
       oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, &cb->endpoint,
       cb->method, OC_BLOCKWISE_CLIENT, (uint32_t)OC_MIN_APP_DATA_SIZE);
-    if (!g_request.buffer) {
+    if (g_request.buffer == NULL) {
       OC_ERR("global request_buffer is NULL");
+      coap_clear_transaction(transaction);
       return false;
     }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -221,18 +254,9 @@ prepare_coap_request(oc_client_cb_t *cb, coap_configure_request_fn_t configure,
   }
 #endif /* OC_BLOCK_WISE */
 
-#ifdef OC_TCP
-  if (cb->endpoint.flags & TCP) {
-    coap_tcp_init_message(&g_request.packet, (uint8_t)cb->method);
-  } else
-#endif /* OC_TCP */
-  {
-    coap_udp_init_message(&g_request.packet, type, (uint8_t)cb->method,
-                          cb->mid);
-  }
-
   oc_content_format_t cf;
   if (!oc_rep_encoder_get_content_format(&cf)) {
+    coap_clear_transaction(transaction);
     return false;
   }
 #ifdef OC_SPEC_VER_OIC
@@ -241,26 +265,17 @@ prepare_coap_request(oc_client_cb_t *cb, coap_configure_request_fn_t configure,
   }
 #endif /* OC_SPEC_VER_OIC */
 
-  coap_options_set_accept(&g_request.packet, cf);
-
+  oc_request_init_packet(&g_request.packet, (cb->endpoint.flags & TCP) != 0,
+                         type, cb->method, cb->mid);
+  oc_request_set_packet_options(&g_request.packet, cf,
+                                oc_string_view2(&cb->uri), cb->observe_seq,
+                                oc_string_view2(&cb->query));
   coap_set_token(&g_request.packet, cb->token, cb->token_len);
-
-  coap_options_set_uri_path(&g_request.packet, oc_string(cb->uri),
-                            oc_string_len(cb->uri));
-
-  if (cb->observe_seq != OC_COAP_OPTION_OBSERVE_NOT_SET) {
-    coap_options_set_observe(&g_request.packet, cb->observe_seq);
-  }
-
-  if (oc_string_len(cb->query) > 0) {
-    coap_options_set_uri_query(&g_request.packet, oc_string(cb->query),
-                               oc_string_len(cb->query));
-  }
-
   if (configure != NULL) {
     configure(&g_request.packet, configure_data);
   }
 
+  g_dispatch.transaction = transaction;
   g_dispatch.client_cb = cb;
 
   return true;

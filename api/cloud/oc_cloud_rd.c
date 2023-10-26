@@ -18,6 +18,7 @@
 #ifdef OC_CLOUD
 
 #include "api/oc_link_internal.h"
+#include "api/oc_ri_internal.h"
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
 #include "oc_cloud_log_internal.h"
@@ -109,7 +110,7 @@ rd_link_remove_by_resource(oc_link_t **head, const oc_resource_t *res)
 }
 
 static void
-publish_resources_handler(oc_client_response_t *data)
+cloud_publish_resources_handler(oc_client_response_t *data)
 {
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
   OC_CLOUD_DBG("publish resources handler(%d)", data->code);
@@ -122,43 +123,56 @@ publish_resources_handler(oc_client_response_t *data)
   }
 
   oc_rep_t *link = NULL;
-  if (oc_rep_get_object_array(data->payload, OC_RSRVD_LINKS, &link)) {
-    while (link != NULL) {
-      char *href = NULL;
-      size_t href_size = 0;
-      int64_t instance_id = -1;
-      if (oc_rep_get_string(link->value.object, OC_RSRVD_HREF, &href,
-                            &href_size) &&
-          oc_rep_get_int(link->value.object, OC_RSRVD_INSTANCEID,
-                         &instance_id)) {
-        oc_link_t *l =
-          rd_link_find_by_href(ctx->rd_publish_resources, href, href_size);
-        if (l) {
-          l->ins = instance_id;
-          rd_link_remove(&ctx->rd_publish_resources, l);
-          rd_link_add(&ctx->rd_published_resources, l);
-        }
-      }
-      link = link->next;
+  if (!oc_rep_get_object_array(data->payload, OC_RSRVD_LINKS, &link)) {
+    return;
+  }
+  for (; link != NULL; link = link->next) {
+    char *href = NULL;
+    size_t href_size = 0;
+    if (!oc_rep_get_string(link->value.object, OC_RSRVD_HREF, &href,
+                           &href_size)) {
+      OC_CLOUD_DBG("link skipped: no href");
+      continue;
     }
+    int64_t instance_id = -1;
+    if (!oc_rep_get_int(link->value.object, OC_RSRVD_INSTANCEID,
+                        &instance_id)) {
+      OC_CLOUD_DBG("link skipped: no instanceID");
+      continue;
+    }
+    oc_link_t *l =
+      rd_link_find_by_href(ctx->rd_publish_resources, href, href_size);
+    if (l == NULL) {
+      OC_CLOUD_DBG("link(%s) skipped: not found", href);
+      continue;
+    }
+    l->ins = instance_id;
+    rd_link_remove(&ctx->rd_publish_resources, l);
+    OC_CLOUD_DBG("link(href=%s,ins=%" PRId64 ") published", href, instance_id);
+    rd_link_add(&ctx->rd_published_resources, l);
   }
 }
 
 static void
-publish_resources(oc_cloud_context_t *ctx)
+cloud_publish_resources(oc_cloud_context_t *ctx)
 {
 #ifdef OC_SECURITY
-  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(ctx->device);
-  if (pstat->s != OC_DOS_RFNOP) {
+  if (!oc_sec_pstat_is_in_dos_state(ctx->device,
+                                    OC_PSTAT_DOS_ID_FLAG(OC_DOS_RFNOP))) {
+    OC_CLOUD_DBG("cannot publish resource links when not in RFNOP");
     return;
   }
 #endif /* OC_SECURITY */
   if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
+    OC_CLOUD_DBG("cannot publish resource links when not logged in");
     return;
   }
 
-  rd_publish(ctx->cloud_ep, ctx->rd_publish_resources, ctx->device,
-             ctx->time_to_live, publish_resources_handler, LOW_QOS, ctx);
+  if (!rd_publish(ctx->rd_publish_resources, ctx->cloud_ep, ctx->device,
+                  ctx->time_to_live, cloud_publish_resources_handler, LOW_QOS,
+                  ctx)) {
+    OC_CLOUD_ERR("cannot send publish resource links request");
+  }
 }
 
 int
@@ -186,8 +200,11 @@ oc_cloud_add_resource(oc_resource_t *res)
   }
 
   oc_link_t *link = oc_new_link(res);
+  if (link == NULL) {
+    return -1;
+  }
   rd_link_add(&ctx->rd_publish_resources, link);
-  publish_resources(ctx);
+  cloud_publish_resources(ctx);
   return 0;
 }
 
@@ -205,23 +222,37 @@ publish_published_resources(void *data)
 {
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
   move_published_to_publish_resources(ctx);
-  publish_resources(ctx);
+  cloud_publish_resources(ctx);
   return OC_EVENT_CONTINUE;
 }
+
+static void cloud_delete_resources(oc_cloud_context_t *ctx);
 
 static void
 delete_resources_handler(oc_client_response_t *data)
 {
   OC_CLOUD_DBG("delete resources handler(%d)", data->code);
-  (void)data;
+  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
+  if (ctx->rd_delete_resources == NULL) {
+    return;
+  }
+  if (oc_status_is_internal_code(data->code)) {
+    OC_CLOUD_ERR("unpublishing of remaining resource links skipped for "
+                 "internal response code(%d)",
+                 (int)data->code);
+    return;
+  }
+  cloud_delete_resources(ctx);
 }
 
 static void
-delete_resources(oc_cloud_context_t *ctx)
+cloud_delete_resources(oc_cloud_context_t *ctx)
 {
+  assert(ctx->rd_delete_resources != NULL);
 #ifdef OC_SECURITY
-  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(ctx->device);
-  if (pstat->s != OC_DOS_RFNOP) {
+  if (!oc_sec_pstat_is_in_dos_state(ctx->device,
+                                    OC_PSTAT_DOS_ID_FLAG(OC_DOS_RFNOP))) {
+    OC_CLOUD_DBG("cannot unpublish resource links when not in RFNOP");
     return;
   }
 #endif /* OC_SECURITY */
@@ -230,16 +261,24 @@ delete_resources(oc_cloud_context_t *ctx)
     return;
   }
 
-  if (ctx->rd_delete_resources == NULL) {
+  rd_links_partition_t partition;
+  memset(&partition, 0, sizeof(rd_links_partition_t));
+  if (rd_delete(ctx->rd_delete_resources, ctx->cloud_ep, ctx->device,
+                delete_resources_handler, LOW_QOS, ctx,
+                &partition) == RD_DELETE_ERROR) {
+    OC_CLOUD_ERR("unpublishing of resource links failed");
     return;
   }
 
-  if (!rd_delete(ctx->cloud_ep, ctx->rd_delete_resources, ctx->device,
-                 delete_resources_handler, LOW_QOS, ctx)) {
-    OC_CLOUD_ERR("cannot send unpublish resource links request");
-    return;
+#if OC_DBG_IS_ENABLED
+  for (const oc_link_t *link = partition.not_deleted; link != NULL;
+       link = link->next) {
+    OC_CLOUD_DBG("link(href=%s, ins=%" PRId64 ") not unpublished",
+                 oc_string(link->resource->uri), link->ins);
   }
-  rd_link_free(&ctx->rd_delete_resources);
+#endif /* OC_DBG_IS_ENABLED */
+  ctx->rd_delete_resources = partition.not_deleted;
+  rd_link_free(&partition.deleted);
 }
 
 void
@@ -254,9 +293,12 @@ cloud_rd_manager_status_changed(oc_cloud_context_t *ctx)
     return;
   }
   if (ctx->rd_publish_resources != NULL) {
-    publish_resources(ctx);
+    cloud_publish_resources(ctx);
   }
-  delete_resources(ctx);
+  if (ctx->rd_delete_resources != NULL) {
+    cloud_delete_resources(ctx);
+  }
+
   oc_remove_delayed_callback(ctx, publish_published_resources);
   if (ctx->time_to_live != RD_PUBLISH_TTL_UNLIMITED) {
     oc_set_delayed_callback(ctx, publish_published_resources, ONE_HOUR);
@@ -316,7 +358,7 @@ oc_cloud_delete_resource(oc_resource_t *res)
       published->resource = NULL;
     }
     rd_link_add(&ctx->rd_delete_resources, published);
-    delete_resources(ctx);
+    cloud_delete_resources(ctx);
   }
 }
 
@@ -324,12 +366,15 @@ int
 oc_cloud_publish_resources(size_t device)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(device);
-  if (ctx) {
-    publish_published_resources(ctx);
-    delete_resources(ctx);
-    return 0;
+  if (ctx == NULL) {
+    OC_ERR("cannot publish resource: invalid device(%zu)", device);
+    return -1;
   }
-  return -1;
+  publish_published_resources(ctx);
+  if (ctx->rd_delete_resources != NULL) {
+    cloud_delete_resources(ctx);
+  }
+  return 0;
 }
 
 #else  /* OC_CLOUD*/

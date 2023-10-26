@@ -66,7 +66,7 @@ oc_query_encode_interface(oc_interface_mask_t iface_mask)
   default:
     break;
   }
-  return OC_STRING_VIEW_NULL();
+  return OC_STRING_VIEW_NULL;
 }
 
 #endif /* OC_SERVER */

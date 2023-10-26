@@ -50,20 +50,6 @@ using namespace std::chrono_literals;
 
 static constexpr size_t kBlockSize = 16;
 
-static void
-dropOutgoingMessages()
-{
-  OC_PROCESS_NAME(oc_message_buffer_handler);
-  oc_process_drop(
-    &oc_message_buffer_handler,
-    [](oc_process_event_t, oc_process_data_t data, const void *) {
-      auto *message = static_cast<oc_message_t *>(data);
-      oc_message_unref(message);
-      return true;
-    },
-    nullptr);
-}
-
 class TestMessagingBlockwise : public testing::Test {
 public:
   static void SetUpTestCase()
@@ -780,7 +766,7 @@ TEST_F(TestMessagingBlockwiseWithServer, BlockwiseRequest_FailInvalidMessage)
 
   // clean-up
   // invalid message generates an error response that we want to drop
-  dropOutgoingMessages();
+  oc::TestDevice::DropOutgoingMessages();
 
   oc_message_unref(msg);
 }

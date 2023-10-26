@@ -27,6 +27,7 @@
 #include "util/oc_features.h"
 
 #ifdef _WIN32
+#include <WinSock2.h>
 #include <windows.h>
 #else /* !_WIN32 */
 #include <pthread.h>
@@ -165,6 +166,10 @@ public:
   static bool StartServer();
   static void StopServer();
   static void Terminate() { device.Terminate(); }
+  static void DropOutgoingMessages();
+#ifdef OC_CLIENT
+  static void CloseSessions(size_t device);
+#endif /* OC_CLIENT */
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
   static void ConfigurePlgdTime(bool useInMbedTLS);

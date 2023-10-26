@@ -35,6 +35,7 @@
 #include "util/oc_macros_internal.h"
 
 #ifdef OC_TCP
+#include "api/oc_ping_internal.h"
 #include "messaging/coap/signal_internal.h"
 #endif /* OC_TCP */
 
@@ -189,6 +190,9 @@ client_cb_remove_from_lists(const oc_client_cb_t *cb)
   oc_ri_remove_timed_event_callback(cb, &oc_client_cb_remove_async);
   oc_ri_remove_timed_event_callback(
     cb, &oc_client_cb_remove_with_notify_timeout_async);
+#ifdef OC_TCP
+  oc_ri_remove_timed_event_callback(cb, &oc_remove_ping_handler_async);
+#endif /* OC_TCP */
   oc_list_remove(g_client_cbs, cb);
 }
 
@@ -213,6 +217,12 @@ oc_client_cb_dealloc(oc_client_cb_t *cb)
            cb, oc_client_cb_remove_with_notify_timeout_async) ||
          !oc_ri_has_timed_event_callback(
            cb, oc_client_cb_remove_with_notify_timeout_async, false));
+#ifdef OC_TCP
+  assert(
+    oc_timed_event_callback_is_currently_processed(
+      cb, oc_remove_ping_handler_async) ||
+    !oc_ri_has_timed_event_callback(cb, oc_remove_ping_handler_async, false));
+#endif /* OC_TCP */
 #ifdef OC_BLOCK_WISE
   oc_blockwise_scrub_buffers_for_client_cb(cb);
 #endif /* OC_BLOCK_WISE */
@@ -259,7 +269,7 @@ client_cb_notify_with_code(oc_client_cb_t *cb, oc_status_t code)
 
 #ifdef OC_TCP
   if (client_cb_is_ping_response(cb)) {
-    oc_ri_remove_timed_event_callback(cb, oc_remove_ping_handler_async);
+    oc_ri_remove_timed_event_callback(cb, &oc_remove_ping_handler_async);
   }
 #endif /* OC_TCP */
 
@@ -509,7 +519,7 @@ oc_client_cb_invoke(const coap_packet_t *response, oc_client_cb_t *cb,
 
 #ifdef OC_TCP
   if (response->code == PONG_7_03 || client_cb_is_ping_response(cb)) {
-    oc_ri_remove_timed_event_callback(cb, oc_remove_ping_handler_async);
+    oc_ri_remove_timed_event_callback(cb, &oc_remove_ping_handler_async);
   }
 #endif /* OC_TCP */
 
@@ -543,7 +553,7 @@ client_cb_free_all(void)
 {
   oc_client_cb_t *cb = oc_list_pop(g_client_cbs);
   while (cb != NULL) {
-    oc_client_cb_dealloc(cb);
+    oc_client_cb_free(cb);
     cb = oc_list_pop(g_client_cbs);
   }
 }

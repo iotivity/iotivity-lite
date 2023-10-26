@@ -20,12 +20,14 @@
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 
+#include "api/client/oc_client_cb_internal.h"
 #include "api/oc_core_res_internal.h"
 #include "api/oc_endpoint_internal.h"
 #include "api/oc_rep_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_runtime_internal.h"
 #include "api/plgd/plgd_time_internal.h"
+#include "messaging/coap/transactions_internal.h"
 #include "oc_acl.h"
 #include "oc_core_res.h"
 #include "oc_network_monitor.h"
@@ -277,6 +279,12 @@ public:
 
   void TearDown() override
   {
+    oc::TestDevice::DropOutgoingMessages();
+    coap_free_all_transactions();
+    oc_client_cbs_shutdown();
+    oc::TestDevice::CloseSessions(kDeviceID);
+    // wait for asynchronous closing of sessions to finish
+    oc::TestDevice::PoolEventsMsV1(10ms);
     oc::TestDevice::ClearSystemTime();
   }
 

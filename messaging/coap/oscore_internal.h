@@ -23,6 +23,7 @@
 #include "constants.h"
 #include "oscore_constants.h"
 #include "port/oc_connectivity.h"
+#include "util/oc_compiler.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -51,9 +52,9 @@ coap_status_t oscore_parse_inner_message(uint8_t *data, size_t data_len,
 coap_status_t oscore_parse_outer_message(oc_message_t *msg,
                                          coap_packet_t *packet);
 size_t oscore_serialize_message(coap_packet_t *packet, uint8_t *buffer,
-                                size_t buffer_size);
+                                size_t buffer_size) OC_NONNULL();
 size_t oscore_serialize_plaintext(coap_packet_t *packet, uint8_t *buffer,
-                                  size_t buffer_size);
+                                  size_t buffer_size) OC_NONNULL();
 
 #ifdef __cplusplus
 }

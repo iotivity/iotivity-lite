@@ -189,15 +189,20 @@ public:
                                   const oc_endpoint_t *endpoint, size_t device,
                                   bool is_batch = false)
   {
+#ifdef OC_RES_BATCH_SUPPORT
     if (is_batch) {
       assertETag(etag, oc_discovery_get_batch_etag(endpoint, device));
-    } else {
-      const oc_resource_t *discovery =
-        oc_core_get_resource_by_index(OCF_RES, device);
-      assertResourceETag(etag, discovery);
+      return;
     }
+#else  /* !OC_RES_BATCH_SUPPORT */
+    (void)is_batch;
+#endif /* OC_RES_BATCH_SUPPORT */
+    const oc_resource_t *discovery =
+      oc_core_get_resource_by_index(OCF_RES, device);
+    assertResourceETag(etag, discovery);
   }
 
+#ifdef OC_RES_BATCH_SUPPORT
   static void assertBatchETag(oc_coap_etag_t etag, size_t device,
                               const DiscoveryBatchData &bd)
   {
@@ -215,6 +220,7 @@ public:
     }
     assertETag(etag, max_etag);
   }
+#endif /* OC_RES_BATCH_SUPPORT */
 
 #endif /* OC_HAS_FEATURE_ETAG */
 };

@@ -25,6 +25,7 @@
 #include "oc_clock_util.h"
 #include "oc_core_res.h"
 #include "messaging/coap/engine_internal.h"
+#include "util/oc_process.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 #include "plgd/plgd_time.h"
@@ -35,6 +36,8 @@
 #include <gtest/gtest.h>
 #include <optional>
 #include <vector>
+
+OC_PROCESS_NAME(oc_message_buffer_handler);
 
 namespace oc {
 
@@ -316,6 +319,30 @@ TestDevice::StopServer()
   }
   ResetServerDevices();
 }
+
+void
+TestDevice::DropOutgoingMessages()
+{
+  oc_process_drop(
+    &oc_message_buffer_handler,
+    [](oc_process_event_t, oc_process_data_t data, const void *) {
+      auto *message = static_cast<oc_message_t *>(data);
+      oc_message_unref(message);
+      return true;
+    },
+    nullptr);
+}
+
+#ifdef OC_CLIENT
+void
+TestDevice::CloseSessions(size_t device)
+{
+  for (auto *ep = oc_connectivity_get_endpoints(device); ep != nullptr;
+       ep = ep->next) {
+    oc_close_session(ep);
+  }
+}
+#endif /* OC_CLIENT */
 
 #ifdef OC_SERVER
 

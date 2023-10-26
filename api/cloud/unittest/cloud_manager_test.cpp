@@ -21,6 +21,7 @@
 #include "api/cloud/oc_cloud_manager_internal.h"
 #include "api/cloud/oc_cloud_store_internal.h"
 #include "api/oc_rep_internal.h"
+#include "messaging/coap/transactions_internal.h"
 #include "oc_api.h"
 #include "oc_rep.h"
 #include "port/oc_log_internal.h"
@@ -39,6 +40,8 @@ public:
 
   void SetUp() override
   {
+    ASSERT_TRUE(oc::TestDevice::StartServer());
+
     memset(&m_context, 0, sizeof(m_context));
 #define UID "501"
     oc_new_string(&m_context.store.uid, UID, strlen(UID));
@@ -50,19 +53,19 @@ public:
     oc_new_string(&m_context.store.access_token, TOKEN, strlen(TOKEN));
 #define RTOKEN "refresh_token"
     oc_new_string(&m_context.store.refresh_token, RTOKEN, strlen(RTOKEN));
-
-    ASSERT_TRUE(oc::TestDevice::StartServer());
   }
 
   void TearDown() override
   {
-    oc::TestDevice::StopServer();
-
     oc_free_string(&m_context.store.refresh_token);
     oc_free_string(&m_context.store.access_token);
     oc_free_string(&m_context.store.ci_server);
     oc_free_endpoint(m_context.cloud_ep);
     oc_free_string(&m_context.store.uid);
+
+    coap_free_all_transactions();
+    oc::TestDevice::DropOutgoingMessages();
+    oc::TestDevice::StopServer();
   }
 };
 

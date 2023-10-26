@@ -87,17 +87,31 @@ void oc_str_to_uuid(const char *str, oc_uuid_t *uuid) OC_NONNULL(2);
  * oc_uuid_t device_uuid = { { 0 } };
  * oc_gen_uuid(&device_uuid);
  * char uuid_str[OC_UUID_LEN] = { 0 };
- * oc_uuid_to_str(&device_uuid, uuid_str, OC_UUID_LEN);
+ * oc_uuid_to_str_v1(&device_uuid, uuid_str, OC_UUID_LEN);
  * ```
  *
- * @param[in] uuid A oc_uuid_t to convert to a string
+ * @param uuid A oc_uuid_t to convert to a string (cannot be NULL)
  * @param[out] buffer A char array that will hold the string representation of
- * the UUID
- * @param [in] buflen The size of the input buffer.
- *                    Recommend always using OC_UUID_LEN for buflen.
+ * the UUID (cannot be NULL)
+ * @param buflen The size of the input buffer.
+ *               It is recommended to always use OC_UUID_LEN for buflen.
+ *
+ * @return -1 if the buffer is too small to hold the UUID string.
+ * @return >0 The number of characters written to the buffer, not including the
+ * terminating null character.
+ */
+OC_API
+int oc_uuid_to_str_v1(const oc_uuid_t *uuid, char *buffer, size_t buflen)
+  OC_NONNULL();
+
+/**
+ * Convert the 128 bit oc_uuid_t to a string representation.
+ *
+ * @see oc_uuid_to_str_v1
  */
 OC_API
 void oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, size_t buflen);
+
 /**
  * Generate a random Universally Unique IDentifier (UUID)
  *

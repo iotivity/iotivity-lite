@@ -135,7 +135,10 @@ jobs:
               -D BUILD_TESTING=${{ matrix.config.build_testing }}
               -D OC_CLOUD_ENABLED=ON
               -D OC_COLLECTIONS_IF_CREATE_ENABLED=ON
+              -D OC_PUSH_ENABLED=ON
               -D OC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON
+              -D PLGD_DEV_TIME_ENABLED=ON
+              -D OC_ETAG_ENABLED=ON
               -D OC_DEBUG_ENABLED=ON
               -G Ninja
               -D CMAKE_MAKE_PROGRAM=${ninja_program}

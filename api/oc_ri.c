@@ -308,19 +308,24 @@ oc_status_code_unsafe(oc_status_t key)
   return oc_coap_status_codes[key];
 }
 
+bool
+oc_status_is_internal_code(oc_status_t code)
+{
+  return code >= __NUM_OC_STATUS_CODES__;
+}
+
 int
 oc_status_code(oc_status_t key)
 {
-  if (key >= __NUM_OC_STATUS_CODES__) {
-    if (OC_IGNORE == key) {
-      return CLEAR_TRANSACTION;
-    }
-    OC_WRN("oc_status_code: invalid status code %d", (int)key);
-    return -1;
+  if (!oc_status_is_internal_code(key)) {
+    return oc_status_code_unsafe(key);
   }
 
-  // int cast is safe: no status code is larger than INT_MAX
-  return oc_status_code_unsafe(key);
+  if (OC_IGNORE == key) {
+    return CLEAR_TRANSACTION;
+  }
+  OC_WRN("oc_status_code: invalid status code %d", (int)key);
+  return -1;
 }
 
 int
@@ -1054,15 +1059,19 @@ uint64_t
 oc_ri_get_batch_etag(const oc_resource_t *resource,
                      const oc_endpoint_t *endpoint, size_t device)
 {
+#ifdef OC_RES_BATCH_SUPPORT
   if (oc_core_get_resource_by_index(OCF_RES, device) == resource) {
     return oc_discovery_get_batch_etag(endpoint, device);
   }
+#endif /* OC_RES_BATCH_SUPPORT */
 #ifdef OC_COLLECTIONS
   if (oc_check_if_collection(resource)) {
     return oc_collection_get_batch_etag((const oc_collection_t *)resource);
   }
 #endif /* OC_COLLECTIONS */
-
+  (void)resource;
+  (void)endpoint;
+  (void)device;
   OC_DBG("custom batch etag");
   return OC_ETAG_UNINITIALIZED;
 }

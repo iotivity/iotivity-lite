@@ -1116,7 +1116,7 @@ discovery_encode(const oc_request_t *request, oc_interface_mask_t iface)
     oc_rep_end_object(oc_rep_array(root), props);
     oc_rep_end_array(oc_rep_get_encoder(), root);
     return matches > 0 ? OC_STATUS_OK : OC_STATUS_NOT_MODIFIED;
-  } break;
+  }
   default:
     break;
   }
@@ -1147,7 +1147,10 @@ discovery_resource_get(oc_request_t *request, oc_interface_mask_t iface,
   }
 #endif /* OC_SECURITY */
 
-  oc_status_t code = discovery_encode(request, iface);
+  int code = discovery_encode(request, iface);
+  if (code < 0) {
+    code = OC_IGNORE;
+  }
   int response_length = oc_rep_get_encoded_payload_size();
   bool has_data = (code == OC_STATUS_OK);
   send_response(request, APPLICATION_VND_OCF_CBOR, !has_data, code,

@@ -40,10 +40,14 @@ extern "C" {
  * disabled. Since all known cases are allocated by oc_memb pool with static
  * allocation, we ifdef out the mutexes when dynamic allocation is disabled.
  *
+ * Special case is when OC_INOUT_BUFFER_POOL is defined, then oc_message_t is
+ * allocated from a pool even if dynamic allocation is enabled. In this case the
+ * mutex is also needed.
+ *
  * @{
  */
 
-#ifndef OC_DYNAMIC_ALLOCATION
+#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
 
 /** @brief initialize the allocator mutex */
 void oc_allocator_mutex_init(void);
@@ -57,7 +61,7 @@ void oc_allocator_mutex_unlock(void);
 /** @brief destroy the network event handler mutex */
 void oc_allocator_mutex_destroy(void);
 
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
 
 /** @} */
 

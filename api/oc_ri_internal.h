@@ -148,6 +148,9 @@ bool oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
                                       oc_endpoint_t *endpoint, void *user_data)
   OC_NONNULL(1, 2);
 
+/** Check if the value is an internal oc_status_t code */
+bool oc_status_is_internal_code(oc_status_t code);
+
 #ifdef __cplusplus
 }
 #endif

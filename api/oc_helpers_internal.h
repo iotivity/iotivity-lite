@@ -57,7 +57,7 @@ typedef struct oc_string_view_t
   }
 
 /** Create empty oc_string_view_t. */
-#define OC_STRING_VIEW_NULL()                                                  \
+#define OC_STRING_VIEW_NULL                                                    \
   oc_string_view_t                                                             \
   {                                                                            \
     NULL, 0,                                                                   \
@@ -72,7 +72,7 @@ typedef struct oc_string_view_t
   }
 
 /** Create empty oc_string_view_t. */
-#define OC_STRING_VIEW_NULL()                                                  \
+#define OC_STRING_VIEW_NULL                                                    \
   (oc_string_view_t)                                                           \
   {                                                                            \
     .data = NULL, .length = 0,                                                 \

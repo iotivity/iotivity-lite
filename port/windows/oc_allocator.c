@@ -19,7 +19,7 @@
 #include "mutex.h"
 #include "port/oc_allocator_internal.h"
 
-#ifndef OC_DYNAMIC_ALLOCATION
+#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
 
 static mutex_t g_allocator_mutex;
 
@@ -47,4 +47,4 @@ oc_allocator_mutex_destroy(void)
   mutex_destroy(&g_allocator_mutex);
 }
 
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */

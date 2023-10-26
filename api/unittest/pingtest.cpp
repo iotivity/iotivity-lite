@@ -22,6 +22,7 @@
 
 #include "api/client/oc_client_cb_internal.h"
 #include "api/oc_event_callback_internal.h"
+#include "messaging/coap/transactions_internal.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
 #include "oc_endpoint.h"
@@ -41,22 +42,10 @@ public:
 
   static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 
-  static void dropOutgoingMessages()
-  {
-    OC_PROCESS_NAME(oc_message_buffer_handler);
-    oc_process_drop(
-      &oc_message_buffer_handler,
-      [](oc_process_event_t, oc_process_data_t data, const void *) {
-        auto *message = static_cast<oc_message_t *>(data);
-        oc_message_unref(message);
-        return true;
-      },
-      nullptr);
-  }
-
   void TearDown() override
   {
-    dropOutgoingMessages();
+    oc::TestDevice::DropOutgoingMessages();
+    coap_free_all_transactions();
     oc_event_callbacks_shutdown();
     oc_client_cbs_shutdown();
   }
@@ -130,7 +119,7 @@ TEST_F(TestPingWithServer, PingTimeout)
     &invoked));
 
   // drop the outgoing ping message, so that the server does not respond
-  dropOutgoingMessages();
+  oc::TestDevice::DropOutgoingMessages();
 
   oc::TestDevice::PoolEventsMsV1(timeout, true);
   ASSERT_TRUE(invoked);
@@ -178,7 +167,7 @@ TEST_F(TestPingWithServer, Ping_FailResponseAllocation)
       nullptr));
 
     // free up requests allocation
-    dropOutgoingMessages();
+    oc::TestDevice::DropOutgoingMessages();
   }
   EXPECT_FALSE(oc_send_ping(
     false, &ep, timeout.count(),
