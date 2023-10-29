@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/client_multithread_linux.dir/client_multithread_linux.c.o -o client_multithread_linux  ../libiotivity-lite-client-static.a -lm ../deps/tinycbor/libtinycbor.a ../deps/mbedtls/library/libmbedtls.a ../deps/mbedtls/library/libmbedx509.a ../deps/mbedtls/library/libmbedcrypto.a 

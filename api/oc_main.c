@@ -513,6 +513,7 @@ oc_resize_drop_command(size_t device_count)
     oc_abort("Insufficient memory");
   }
 
+  g_drop_commands[device_count - 1] = false;
   return;
 }
 #endif /* OC_HAS_FEATURE_BRIDGE */

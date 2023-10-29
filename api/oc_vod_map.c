@@ -28,7 +28,7 @@
 
 /*
  * g_reset_index :
- * index of g_oc_device_info[] which is the value just before new VOD is added
+ * - it stores the index of g_oc_device_info[] where the first VOD was added
  */
 static size_t g_reset_index;
 
@@ -48,6 +48,14 @@ oc_vod_map_decode(oc_rep_t *rep, bool from_storage)
   // TODO use the from_storage param or drop it from the map_decode
   (void)from_storage;
   size_t len = 0;
+
+  /*
+   * todo4me <2023/8/14> This could make a bug because Devices array (g_oc_device_info[])
+   *                     can not be loaded now.
+   *                     so currently disable loading of `g_vod_mapping_list`
+   */
+  if (from_storage == false)
+    return true;
 
   while (rep != NULL) {
     len = oc_string_len(rep->name);
@@ -96,6 +104,10 @@ oc_vod_map_decode(oc_rep_t *rep, bool from_storage)
           return false;
         }
         vod->index = (size_t)temp;
+//        vod->is_removed = true;
+        /*
+         * TODO4ME <Oct 24, 2023> oc_vod_map_decode() : insert codes to restore `is_removed` value
+         */
         oc_list_add(g_vod_mapping_list.vods, vod);
         v = v->next;
       }
@@ -143,7 +155,13 @@ oc_vod_map_load(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
     oc_parse_rep(buf, (uint16_t)ret, &rep);
-    oc_vod_map_decode(rep, true);
+//    oc_vod_map_decode(rep, true);
+    /*
+     * todo4me <2023/8/14> This could make a bug because Devices (g_oc_device_info[])
+     *                     can not be loaded now.
+     *                     so, currently disable loading of `g_vod_mapping_list`
+     */
+    oc_vod_map_decode(rep, false);
     oc_free_rep(rep);
   }
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -247,7 +265,7 @@ oc_vod_map_reset(void)
 }
 
 size_t
-oc_vod_map_get_id_index(const uint8_t *vod_id, size_t vod_id_size,
+oc_vod_map_get_vod_index(const uint8_t *vod_id, size_t vod_id_size,
                         const char *econame)
 {
   oc_virtual_device_t *v = oc_list_head(g_vod_mapping_list.vods);
@@ -264,23 +282,23 @@ oc_vod_map_get_id_index(const uint8_t *vod_id, size_t vod_id_size,
 }
 
 size_t
-oc_vod_map_add_id(const uint8_t *vod_id, const size_t vod_id_size, const char *econame)
+oc_vod_map_add_mapping_entry(const uint8_t *vod_id, const size_t vod_id_size, const char *econame)
 {
   /*
-   * try to find this VOD is already in `g_vod_mapping_list.vods` or not
+   * try to find this VOD mapping entry is already in `g_vod_mapping_list.vods` or not
    */
-  size_t v_index = oc_vod_map_get_id_index(vod_id, vod_id_size, econame);
+  size_t v_index = oc_vod_map_get_vod_index(vod_id, vod_id_size, econame);
 
   /*
-   * if this vod is already in `g_vod_mapping_list.vods`,
-   * return corresponding index for g_oc_device_info[].
+   * if this vod mapping entry is already in `g_vod_mapping_list.vods`,
+   * return corresponding index of Device in g_oc_device_info[].
    */
   if (v_index != 0) {
     return v_index;
   }
 
   /*
-   * if this VOD has not been added to g_vod_mapping_list.vods,
+   * if this VOD mapping entry has not been added to `g_vod_mapping_list.vods`,
    * insert it to g_vod_mapping_list.vods.
    */
   oc_virtual_device_t *vod = (oc_virtual_device_t *)malloc(sizeof(oc_virtual_device_t));
@@ -288,15 +306,17 @@ oc_vod_map_add_id(const uint8_t *vod_id, const size_t vod_id_size, const char *e
   memcpy(vod->v_id, vod_id, vod_id_size);
   vod->v_id_size = vod_id_size;
   oc_new_string(&vod->econame, econame, strlen(econame));
+  vod->is_vod_online = false;
 
   /*
-   * save corresponding index of `g_oc_device_info[]` into `vod->index`
+   * save corresponding index of Device in `g_oc_device_info[]` into `vod->index`
+   * (this Device has not been added to g_oc_device_info[] yet.)
    */
   vod->index = g_vod_mapping_list.next_index;
 
   /*
-   * if this is the first VOD (`g_vod_list.vods` is empty)...
-   * add new VOD to `g_vod_mapping_list.vods` list
+   * if this is the first VOD mapping entry (`g_vod_list.vods` is empty)...
+   * add new VOD mapping entry to `g_vod_mapping_list.vods` list
    */
   oc_virtual_device_t *v = oc_list_head(g_vod_mapping_list.vods);
   if (v == NULL) {
@@ -304,9 +324,13 @@ oc_vod_map_add_id(const uint8_t *vod_id, const size_t vod_id_size, const char *e
     g_vod_mapping_list.next_index++;
   } else {
     /*
-     * if this is not the first VOD (`g_vod_mapping_list.vods` is not empty)..
-     * insert new VOD after `v` whose `index` is (g_vod_mapping_list.next_index - 1)
-     * therefore, `g_vod_mapping_list.vods` list is always sorted in the order of `oc_virtual_device_t.index`
+     * if this is not the first VOD mapping entry of `g_vod_mapping_list.vods` list (`g_vod_mapping_list.vods` is not empty)..
+     * Traverse g_vod_mapping_list.vods to find `v` whose index is (g_vod_mapping_list.next_index - 1),
+     * and insert new VOD mapping entry after `v`.
+     *
+     * After that, continue to increase `next_index` until no `v->index` matching `next_index` is found.
+     * After that, next_index will be updated
+     * And therefore,`g_vod_mapping_list.vods` list is always sorted in the order of `oc_virtual_device_t.index`...
      */
     while (v != NULL) {
       if ((g_vod_mapping_list.next_index == g_reset_index)
@@ -315,14 +339,18 @@ oc_vod_map_add_id(const uint8_t *vod_id, const size_t vod_id_size, const char *e
         if (g_vod_mapping_list.next_index == g_reset_index) {
          /*
           * if `next_index` points the first node of `oc_vod_mapping_list.vods`,
-          * insert new VOD the the start of the list.
+          * (v->index == (g_vod_mapping_list.next_index - 1)) can't be satisfied ever...
+          * because there is no VOD mapping entry pointing Device before the first VOD.
+          *
+          * therefore, insert new VOD mapping entry as the the first item in the list in this case.
           */
           oc_list_insert(g_vod_mapping_list.vods, NULL, vod);
           v = oc_list_head(g_vod_mapping_list.vods);
         } else {
          /*
           * if `next_index` points the middle node of `oc_vod_mapping_list.vods`,
-          * insert new VOD after `v`
+          * finds `v` whose index is (g_vod_mapping_list.next_index - 1).
+          * and insert new VOD mapping entry after `v`.
           */
           oc_list_insert(g_vod_mapping_list.vods, v, vod);
         }
@@ -330,9 +358,9 @@ oc_vod_map_add_id(const uint8_t *vod_id, const size_t vod_id_size, const char *e
         g_vod_mapping_list.next_index++;
 
         /*
-         * continue walking the vods list till an open next_index is found
+         * continue walking the vods mapping entry list till an open next_index is found
          *
-         * if the new VOD is inserted in the middle of `g_vod_mapping_list.vods` list,
+         * if the new VOD mapping entry is inserted in the middle of `g_vod_mapping_list.vods` list,
          * find next available index of `g_oc_device_info[]` and save index value
          * into the `g_vod_mapping_list.next_index`
          */
@@ -353,7 +381,7 @@ oc_vod_map_add_id(const uint8_t *vod_id, const size_t vod_id_size, const char *e
 }
 
 void
-oc_vod_map_remove_id(size_t device_index)
+oc_vod_map_remove_mapping_entry(size_t device_index)
 {
   oc_virtual_device_t *v = oc_list_head(g_vod_mapping_list.vods);
   while (v != NULL) {
@@ -373,6 +401,7 @@ oc_vod_map_remove_id(size_t device_index)
     }
     v = v->next;
   }
+
   oc_vod_map_dump();
 }
 
@@ -390,7 +419,7 @@ oc_vod_map_get_econame(oc_string_t *econame, size_t device_index)
 }
 
 oc_virtual_device_t *
-oc_vod_map_get_virtual_device(size_t device_index)
+oc_vod_map_get_mapping_entry(size_t device_index)
 {
   oc_virtual_device_t *v = oc_list_head(g_vod_mapping_list.vods);
   while (v != NULL) {
@@ -400,6 +429,13 @@ oc_vod_map_get_virtual_device(size_t device_index)
     v = v->next;
   }
   return NULL;
+}
+
+
+oc_virtual_device_t *
+oc_vod_map_get_mapping_list(void)
+{
+  return oc_list_head(g_vod_mapping_list.vods);
 }
 
 #endif /* OC_HAS_FEATURE_BRIDGE */

@@ -31,14 +31,29 @@
 extern "C" {
 #endif
 
-typedef struct oc_virtual_device_t
+
+/*
+ * internal struct that holds the values that build the `oic.r.vodlist`
+ * properties.
+ */
+typedef struct oc_vods_s
 {
-  struct oc_virtual_device_t *next;
+  struct oc_vods_s *next;
+  oc_string_t name;
+  oc_uuid_t di;
+  oc_string_t econame;
+} oc_vods_t;
+
+
+typedef struct oc_virtual_device_s
+{
+  struct oc_virtual_device_s *next;
   uint8_t *v_id;
   size_t v_id_size;
   oc_string_t econame;
-  size_t index; // index of `g_oc_device_info[]` where
-                // the corresponding Device is stored.
+  size_t index;         ///< index of `g_oc_device_info[]` where
+                        ///< the corresponding Device is stored.
+  bool is_vod_online;      ///< true: Device itself is still alive, but is removed from "oic.r.vodlist:vods"
 } oc_virtual_device_t;
 
 /**
@@ -128,6 +143,32 @@ size_t oc_bridge_add_virtual_device(
   oc_add_device_cb_t add_device_cb, void *data);
 
 /**
+ * @brief add new vodentry for an existing VOD to "oic.r.vodlist:vods".
+ *        This function is usually called after `oc_bridge_remove_virtual_device()`
+ *        is called.
+ *        This function DOES NOT add new Device to `g_oc_device_info[]`, but
+ *        just re-registre existing VOD to "oic.r.vodlist:vods" list.
+ *
+ * @param device_index
+ * @return 0: success, -1: failure
+ */
+OC_API
+int oc_bridge_add_virtual_device2(size_t device_index);
+
+/**
+ * @brief add new vodentry for an existing VOD to "oic.r.vodlist:vods".
+ *        This function is usually called after `oc_bridge_remove_virtual_device()`
+ *        is called.
+ *        This function DOES NOT add new Device to `g_oc_device_info[]`, but
+ *        just re-registre existing VOD to "oic.r.vodlist:vods" list.
+ *
+ * @param device_index
+ * @return 0: success, -1: failure
+ */
+OC_API
+int oc_bridge_add_vod(size_t device_index);
+
+/**
  * If the non-ocf device is no longer reachable this can be used to remove
  * the virtual device from the bridge device.
  *
@@ -195,8 +236,42 @@ size_t oc_bridge_get_virtual_device_index(const uint8_t *virtual_device_id,
  *    - NULL if no virtual device was found using the provided index
  */
 OC_API
-oc_virtual_device_t *oc_bridge_get_virtual_device_info(
+oc_virtual_device_t *oc_bridge_get_vod_mapping_info(
   size_t virtual_device_index);
+
+/**
+ * find VOD mapping entry which is corresponding to an item of "oic.r.vodlist:vods"
+ *
+ * @param vod an item of "oic.r.vodlist:vods"
+ *
+ * @return
+ *    - a pointer to the oc_virtual_device_t upon success
+ *    - NULL if no virtual device was found corresponding to the `vod`
+ */
+OC_API
+oc_virtual_device_t *oc_bridge_get_vod_mapping_info2(
+  oc_vods_t *vod);
+
+
+/**
+ * @brief return entry of "oic.r.vodlist:vods" list
+ * @param di Device id of the VOD to be returned
+ * @return VOD entry [oc_vods_t]
+ */
+OC_API
+oc_vods_t * oc_bridge_get_vod(oc_uuid_t di);
+
+
+/**
+ * return the list of current active VODs
+ * (`g_vods` list)
+ *
+ * @return
+ *  - head of `g_vods` list
+ */
+OC_API
+oc_vods_t * oc_bridge_get_vod_list(void);
+
 #ifdef __cplusplus
 }
 #endif

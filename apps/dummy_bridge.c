@@ -255,7 +255,7 @@ virtual_light_t *
 lookup_virtual_light(size_t device_index)
 {
   oc_virtual_device_t *virtual_device_info =
-    oc_bridge_get_virtual_device_info(device_index);
+      oc_bridge_get_vod_mapping_info(device_index);
   for (size_t i = 0; i < VOD_COUNT; ++i) {
     if (strncmp(virtual_lights[i].eco_system,
                 oc_string(virtual_device_info->econame), 32) == 0) {

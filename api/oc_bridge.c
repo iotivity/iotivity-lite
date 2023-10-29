@@ -22,7 +22,7 @@
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_core_res_internal.h"
-#include "oc_vod_map.h"
+#include <oc_vod_map.h>
 #include "port/oc_log_internal.h"
 #include "port/oc_assert.h"
 
@@ -34,6 +34,7 @@
  * internal struct that holds the values that build the `oic.r.vodlist`
  * properties.
  */
+#if 0
 typedef struct oc_vods_s
 {
   struct oc_vods_s *next;
@@ -41,6 +42,7 @@ typedef struct oc_vods_s
   oc_uuid_t di;
   oc_string_t econame;
 } oc_vods_t;
+#endif
 
 OC_LIST(g_vods);
 static oc_resource_t *g_vodlist_res;
@@ -86,6 +88,29 @@ add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
   memcpy(&vod->di, di, sizeof(oc_uuid_t));
   oc_new_string(&vod->econame, econame, strlen(econame));
 
+#if 0
+  /* find corresponding VOD mapping entry */
+  size_t device_index;
+  if (oc_core_get_device_index(vod->di , &device_index) < 0) {
+    char uuid[OC_UUID_LEN];
+    oc_uuid_to_str(&vod->di, uuid, OC_UUID_LEN);
+    OC_DBG("oc_bridge: failed to find Device whose ID is (%s)", uuid);
+  }
+
+  /* mark that this VOD is online */
+  oc_virtual_device_t *vod_mapping_item = oc_bridge_get_virtual_device_info(device_index);
+#endif
+
+  /* mark this vod is online... */
+  oc_virtual_device_t *vod_mapping_item = oc_bridge_get_vod_mapping_info2(vod);
+  if (vod_mapping_item) {
+    vod_mapping_item->is_vod_online = true;
+  } else {
+    char uuid[OC_UUID_LEN];
+    oc_uuid_to_str(&vod->di, uuid, OC_UUID_LEN);
+    OC_DBG("oc_bridge: failed to find Device whose ID is (%s)", uuid);
+  }
+
   oc_list_add(g_vods, vod);
 
   OC_DBG("oc_bridge: adding %s [%s] from oic.r.vodlist", name, econame);
@@ -101,11 +126,23 @@ remove_virtual_device_from_vods_list(const oc_uuid_t *di)
   oc_vods_t *vod_item = (oc_vods_t *)oc_list_head(g_vods);
   while (vod_item) {
     if (memcmp(&vod_item->di, di, 16) == 0) {
+
+      /* mark this vod is offline */
+      oc_virtual_device_t *vod_mapping_item = oc_bridge_get_vod_mapping_info2(vod_item);
+      if (vod_mapping_item) {
+        vod_mapping_item->is_vod_online = false;
+      } else {
+        char uuid[OC_UUID_LEN];
+        oc_uuid_to_str(&vod_item->di, uuid, OC_UUID_LEN);
+        OC_DBG("oc_bridge: failed to find Device whose ID is (%s)", uuid);
+      }
+
       oc_list_remove(g_vods, vod_item);
       OC_DBG("oc_bridge: removing %s [%s] from oic.r.vodlist",
              oc_string(vod_item->name), oc_string(vod_item->econame));
       oc_free_string(&vod_item->name);
       oc_free_string(&vod_item->econame);
+
       free(vod_item);
       break;
     }
@@ -283,7 +320,7 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
                              oc_add_device_cb_t add_device_cb, void *data)
 {
   /*
-   * add new VOD (identified by vod_id) to the proper position of
+   * add new VOD mapping entry (identified by vod_id) to the proper position of
    * `oc_vod_mapping_list_t.vods` list, and update
    * `g_vod_mapping_list.next_index`
    *
@@ -291,7 +328,7 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
    * will be stored.
    */
   size_t vd_index =
-    oc_vod_map_add_id(virtual_device_id, virtual_device_id_size, econame);
+    oc_vod_map_add_mapping_entry(virtual_device_id, virtual_device_id_size, econame);
 
   oc_add_new_device_t cfg = {
       .uri = uri,
@@ -332,14 +369,17 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
    * when the ownership of the bridge device changes.
    */
 #ifdef OC_SECURITY
-  if (oc_is_owned_device(g_vodlist_res->device) || oc_is_owned_device(vd_index)) {
+  /*
+   * fixme4me <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later..
+   */
+//  if (oc_is_owned_device(g_vodlist_res->device) || oc_is_owned_device(vd_index)) {
     oc_connectivity_ports_t ports;
     memset(&ports, 0, sizeof(ports));
     if (oc_connectivity_init(vd_index, ports) < 0) {
       oc_abort("error initializing connectivity for device");
     }
     OC_DBG("oc_bridge: init connectivity for virtual device %zd", vd_index);
-  }
+//  }
 #else
   oc_connectivity_ports_t ports;
   memset(&ports, 0, sizeof(ports));
@@ -351,14 +391,85 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
   oc_device_bind_resource_type(vd_index, "oic.d.virtual");
 
 #ifdef OC_SECURITY
-  if (oc_is_owned_device(vd_index)) {
+  /*
+   * fixme4me <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later...
+   */
+//  if (oc_is_owned_device(vd_index)) {
     add_virtual_device_to_vods_list(name, oc_core_get_device_id(vd_index),
                                     econame);
     oc_notify_observers(g_vodlist_res);
-  }
+//  }
 #endif // OC_SECURITY
   return vd_index;
 }
+
+
+/*
+ * DONE4ME <Oct 24, 2023> new_function() : add new function that add vod to "oic.r.vodlist:vods" only
+ */
+/*
+ * @brief add new vodentry for an existing VOD to "oic.r.vodlist:vods".
+ *        This function is usually called after `oc_bridge_remove_virtual_device()`
+ *        is called.
+ *        This function DOES NOT add new Device to `g_oc_device_info[]`, but
+ *        just re-registre existing VOD to "oic.r.vodlist:vods" list.
+ *
+ * @param device_index
+ * @return 0: success, -1: failure
+ */
+int
+oc_bridge_add_vod(size_t device_index)
+{
+  oc_device_info_t *device;
+  oc_virtual_device_t *vod_mapping_item;
+
+  if (!(vod_mapping_item = oc_bridge_get_vod_mapping_info(device_index))) {
+    OC_ERR("oc_bridge: failed to find VOD mapping entry which is corresponding to the Device (device index: %d)", device_index);
+    return -1;
+  }
+
+  if (!(device = oc_core_get_device_info(device_index))) {
+    OC_ERR("oc_bridge: failed to find Device whose index is %d", device_index);
+    return -1;
+  }
+
+#ifdef OC_SECURITY
+  /*
+   * fixme4me <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later..
+   */
+//  if (oc_is_owned_device(g_vodlist_res->device) || oc_is_owned_device(device_index)) {
+    oc_connectivity_ports_t ports;
+    memset(&ports, 0, sizeof(ports));
+    if (oc_connectivity_init(device_index, ports) < 0) {
+      oc_abort("error initializing connectivity for device");
+    }
+    OC_DBG("oc_bridge: init connectivity for virtual device %zd", device_index);
+//  }
+#else
+  oc_connectivity_ports_t ports;
+  memset(&ports, 0, sizeof(ports));
+  if (oc_connectivity_init(device_index, ports) < 0) {
+    oc_abort("error initializing connectivity for device");
+  }
+#endif /* OC_SECURITY */
+
+
+#ifdef OC_SECURITY
+
+  /*
+   * fixme4me <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later...
+   */
+//  if (oc_is_owned_device(device_index)) {
+    add_virtual_device_to_vods_list(oc_string(device->name), oc_core_get_device_id(device_index),
+                                    oc_string(vod_mapping_item->econame));
+    oc_notify_observers(g_vodlist_res);
+//  }
+#endif // OC_SECURITY
+
+    return 0;
+}
+
+
 
 int
 oc_bridge_remove_virtual_device(size_t device_index)
@@ -371,6 +482,7 @@ oc_bridge_remove_virtual_device(size_t device_index)
   return -1;
 }
 
+
 int
 oc_bridge_delete_virtual_device(size_t device_index)
 {
@@ -382,7 +494,7 @@ oc_bridge_delete_virtual_device(size_t device_index)
     oc_uuid_t nil_uuid = { { 0 } };
     oc_set_immutable_device_identifier(device_index, &nil_uuid);
     oc_core_remove_device_at_index(device_index);
-    oc_vod_map_remove_id(device_index);
+    oc_vod_map_remove_mapping_entry(device_index);
     return 0;
   }
   return -1;
@@ -393,14 +505,61 @@ oc_bridge_get_virtual_device_index(const uint8_t *virtual_device_id,
                                    size_t virtual_device_id_size,
                                    const char *econame)
 {
-  return oc_vod_map_get_id_index(virtual_device_id, virtual_device_id_size,
+  return oc_vod_map_get_vod_index(virtual_device_id, virtual_device_id_size,
                                  econame);
 }
 
 oc_virtual_device_t *
-oc_bridge_get_virtual_device_info(size_t virtual_device_index)
+oc_bridge_get_vod_mapping_info(size_t virtual_device_index)
 {
-  return oc_vod_map_get_virtual_device(virtual_device_index);
+  return oc_vod_map_get_mapping_entry(virtual_device_index);
 }
+
+oc_virtual_device_t *
+oc_bridge_get_vod_mapping_info2(oc_vods_t *vod)
+{
+  /* find corresponding VOD mapping entry */
+  size_t device_index;
+  if (oc_core_get_device_index(vod->di , &device_index) < 0) {
+    char uuid[OC_UUID_LEN];
+    oc_uuid_to_str(&vod->di, uuid, OC_UUID_LEN);
+    OC_ERR("oc_bridge: failed to find Device whose ID is (%s)", uuid);
+    return NULL;
+  }
+
+  return oc_vod_map_get_mapping_entry(device_index);
+}
+
+
+/*
+ * @brief return entry of "oic.r.vodlist:vods" list
+ * @param di Device id of the VOD to be returned
+ * @return VOD entry [oc_vods_t]
+ */
+oc_vods_t *
+oc_bridge_get_vod(oc_uuid_t di)
+{
+  oc_vods_t *item;
+
+  item = (oc_vods_t *)oc_list_head(g_vods);
+
+  while (item) {
+    if (!oc_uuid_is_equal(item->di, di)) {
+      return item;
+    }
+    item = item->next;
+  }
+
+  return NULL;
+}
+
+
+
+oc_vods_t *
+oc_bridge_get_vod_list(void)
+{
+  return oc_list_head(g_vods);
+}
+
 
 #endif /* OC_HAS_FEATURE_BRIDGE */

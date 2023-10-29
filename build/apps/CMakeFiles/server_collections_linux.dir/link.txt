@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/server_collections_linux.dir/server_collections_linux.c.o -o server_collections_linux  ../libiotivity-lite-server-static.a -lm ../deps/tinycbor/libtinycbor.a ../deps/mbedtls/library/libmbedtls.a ../deps/mbedtls/library/libmbedx509.a ../deps/mbedtls/library/libmbedcrypto.a 

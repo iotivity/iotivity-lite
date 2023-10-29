@@ -543,6 +543,29 @@ oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len, size_t device)
   return NULL;
 }
 
+oc_resource_t *
+oc_ri_get_app_resource_by_device(size_t device, bool reset)
+{
+  static oc_resource_t *rsc;
+  oc_resource_t *found;
+
+  if (reset) {
+    rsc = oc_ri_get_app_resources();
+  }
+
+  while (rsc) {
+    if (rsc->device == device) {
+      found = rsc;
+      rsc = rsc->next;
+      return found;
+    }
+
+    rsc = rsc->next;
+  }
+
+  return NULL;
+}
+
 static void
 oc_ri_delete_all_app_resources(void)
 {

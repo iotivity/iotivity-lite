@@ -94,7 +94,8 @@ void oc_sec_ael_init(void);
  * modifiedbyme <2023/7/25> add func proto : oc_sec_ael_new_device()
  */
 #ifdef OC_HAS_FEATURE_BRIDGE
-void oc_sec_ael_new_device(void);
+void oc_sec_ael_new_device(size_t device_index, bool need_realloc);
+void oc_sec_ael_free_device(size_t index);
 #endif /* OC_HAS_FEATURE_BRIDGE */
 
 void oc_sec_ael_free(void);

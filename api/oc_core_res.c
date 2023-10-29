@@ -17,6 +17,10 @@
  ****************************************************************************/
 
 #include "oc_core_res.h"
+#ifdef OC_HAS_FEATURE_BRIDGE
+#include "security/oc_svr_internal.h"
+#include "security/oc_ael.h"
+#endif
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
 #include "oc_core_res_internal.h"
@@ -653,9 +657,13 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
   if (g_device_count == (device_count+1)) {
     /* realloc memory and populate SVR Resources
      * only if new Device is attached to the end of `g_oc_device_info[]` */
-    oc_sec_svr_create_new_device();
+    oc_sec_svr_create_new_device(device_count, true);
+  } else {
+    oc_sec_svr_create_new_device(device_count, false);
   }
-
+  /*
+   * todo4me <2023/8/13> resume here...!!!
+   */
   oc_sec_svr_init_new_device(device_count);
 #endif
 
@@ -700,7 +708,8 @@ oc_core_remove_device_at_index(size_t index)
    */
   oc_reset_device(index);
   oc_sec_sdi_clear(oc_sec_sdi_get(index));
-  oc_sec_ael_reset(index);
+//  oc_sec_ael_reset(index);
+  oc_sec_ael_free_device(index);
   oc_sec_cred_clear(index, NULL, NULL);
   oc_sec_acl_clear(index, NULL, NULL);
 #endif /* OC_SECURITY */
@@ -922,6 +931,22 @@ oc_core_get_device_info(size_t device)
   }
   return &g_oc_device_info[device];
 }
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+int
+oc_core_get_device_index(oc_uuid_t di, size_t *device)
+{
+  for (size_t i = 0; i<g_device_count; i++)
+  {
+    if (oc_uuid_is_equal(g_oc_device_info[i].di, di)) {
+      *device = i;
+      return 0;
+    }
+  }
+
+  return -1;
+}
+#endif
 
 oc_platform_info_t *
 oc_core_get_platform_info(void)

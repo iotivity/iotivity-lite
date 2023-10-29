@@ -46,7 +46,7 @@ extern "C" {
 typedef struct oc_vod_mapping_list_s
 {
   OC_LIST_STRUCT(vods);
-  size_t next_index; // index of g_oc_device_info[]
+  size_t next_index;        ///< index of g_oc_device_info[]. new VOD will be added to this position
 } oc_vod_mapping_list_t;
 
 /*
@@ -84,12 +84,12 @@ void oc_vod_map_reset(void);
  * @return index of the vod
  * @return 0 if not found
  */
-size_t oc_vod_map_get_id_index(const uint8_t *vod_id, size_t vod_id_size,
+size_t oc_vod_map_get_vod_index(const uint8_t *vod_id, size_t vod_id_size,
                                const char *econame);
 
 /**
  *
- * @brief add new VOD (identified by vod_id) to the proper position of
+ * @brief add new VOD mapping entry (identified by vod_id) to the proper position of
  *        `g_vod_mapping_list.vods` list,
  *        and update `g_vod_mapping_list.next_index`.
  *        finally, write updated vod_map file.
@@ -102,7 +102,7 @@ size_t oc_vod_map_get_id_index(const uint8_t *vod_id, size_t vod_id_size,
  *
  * @return index of just added vod (index of `g_oc_device_info[]`)
  */
-size_t oc_vod_map_add_id(const uint8_t *vod_id, const size_t vod_id_size,
+size_t oc_vod_map_add_mapping_entry(const uint8_t *vod_id, const size_t vod_id_size,
                          const char *econame);
 
 /*
@@ -111,14 +111,29 @@ size_t oc_vod_map_add_id(const uint8_t *vod_id, const size_t vod_id_size,
  * can be reused.  The virtual device associated
  * with this index should
  */
-void oc_vod_map_remove_id(size_t device_index);
+void oc_vod_map_remove_mapping_entry(size_t device_index);
 
 /*
  * Walk the vodmap and return the econame at the given index
  */
 void oc_vod_map_get_econame(oc_string_t *econame, size_t device_index);
 
-oc_virtual_device_t *oc_vod_map_get_virtual_device(size_t device_index);
+/**
+ * @brief retrieve oc_virtual_device_t entry mapped to `device_index`
+ * @param device_index device index
+ * @return
+ *    - oc_virtual_device_t *
+ *    - NULL on error
+ */
+oc_virtual_device_t *oc_vod_map_get_mapping_entry(size_t device_index);
+
+/**
+ * @brief retrieve list of all oc_virtual_device_t instances
+ *
+ * @return head of g_vod_mapping_list.vods
+ */
+oc_virtual_device_t * oc_vod_map_get_mapping_list(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -20,6 +20,7 @@
 #define OC_SVR_INTERNAL_H
 
 #include "util/oc_features.h"
+#include <stdbool.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -38,8 +39,13 @@ void oc_sec_svr_create(void);
  * @brief add SVR for the Device which is added dynamically.
  *        new Device should be added to `g_oc_device_info[]`
  *        before calling this function.
+ *
+ * @param[in] device_index index of `g_oc_device_info[]` where new Device is
+ *            stored
+ * @param[in] need_realloc indicates whether reallocation of memory for SVR is
+ *            needed or not
  */
-void oc_sec_svr_create_new_device(void);
+void oc_sec_svr_create_new_device(size_t device_index, bool need_realloc);
 
 /**
  * @brief update SVR with stored values,

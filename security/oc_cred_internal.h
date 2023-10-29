@@ -71,9 +71,14 @@ void oc_sec_cred_init(void);
 /**
  * @brief increase existing memory for cred for all Devices
  * by the size of `oc_sec_creds_t`
+ *
+ * @param[in] device_index index of `g_oc_device_info[]` where new Device is
+ *            stored
+ * @param[in] need_realloc indicates whether reallocation of memory for SVR is
+ *            needed or not*
  */
 #ifdef OC_HAS_FEATURE_BRIDGE
-void oc_sec_cred_new_device(void);
+void oc_sec_cred_new_device(size_t device_index, bool need_realloc);
 #endif /* OC_HAS_FEATURE_BRIDGE */
 
 void oc_sec_cred_free(void);

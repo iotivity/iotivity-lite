@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/onboarding_tool.dir/obtmain.c.o -o onboarding_tool  ../libiotivity-lite-client-static.a -lm ../deps/tinycbor/libtinycbor.a ../deps/mbedtls/library/libmbedtls.a ../deps/mbedtls/library/libmbedx509.a ../deps/mbedtls/library/libmbedcrypto.a 

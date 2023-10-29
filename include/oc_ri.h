@@ -560,6 +560,17 @@ oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len,
                                              size_t device);
 
 /**
+ * @brief return a resource which belongs to the device whenever it is called
+ *
+ * @param device the device index
+ * @param reset (reset == 1): search from the beginning of the list,
+ *              (reset == 0): resume search from the next of the last found item.
+ * @return non-NULL found resource
+ * @return NULL no more resource or end of list
+ */
+oc_resource_t *oc_ri_get_app_resource_by_device(size_t device, bool reset);
+
+/**
  * @brief retrieve list of resources
  *
  * @return oc_resource_t* the resource list

@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/simpleserver-resourcedefaults.dir/simpleserver-resourcedefaults.c.o -o simpleserver-resourcedefaults  ../libiotivity-lite-server-static.a -lm ../deps/tinycbor/libtinycbor.a ../deps/mbedtls/library/libmbedtls.a ../deps/mbedtls/library/libmbedx509.a ../deps/mbedtls/library/libmbedcrypto.a 

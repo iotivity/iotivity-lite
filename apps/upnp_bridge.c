@@ -540,7 +540,7 @@ void discover_devices(void) {
 
 void display_summary(void) {
     for (size_t vd_index = 0; vd_index < 100; ++vd_index) {
-        oc_virtual_device_t *virtual_device = oc_bridge_get_virtual_device_info(vd_index);
+        oc_virtual_device_t *virtual_device = oc_bridge_get_vod_mapping_info(vd_index);
         if (virtual_device) {
             PRINT("\nvd_index: %d\n", virtual_device->index);
             PRINT("econame: %s\n", virtual_device->econame.ptr);

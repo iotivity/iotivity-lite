@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/temp_sensor.dir/temp_sensor_client_linux.c.o -o temp_sensor  ../libiotivity-lite-client-static.a -lm ../deps/tinycbor/libtinycbor.a ../deps/mbedtls/library/libmbedtls.a ../deps/mbedtls/library/libmbedx509.a ../deps/mbedtls/library/libmbedcrypto.a 

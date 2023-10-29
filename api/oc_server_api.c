@@ -640,6 +640,9 @@ oc_resource_set_request_handler(oc_resource_t *resource, oc_method_t method,
  * modifiedbyme <2023/7/17> add func : oc_resource_set_date_remover(){}
  */
 #ifdef OC_HAS_FEATURE_BRIDGE
+/*
+ * fixme4me <Oct 30, 2023> enclosing_method() : rename this function (date -> data)
+ */
 void
 oc_resource_set_date_remover(oc_resource_t *resource, oc_remove_resource_cb_t callback)
 {

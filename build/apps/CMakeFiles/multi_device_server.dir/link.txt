@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/multi_device_server.dir/multi_device_server_linux.c.o -o multi_device_server  ../libiotivity-lite-server-static.a -lm ../deps/tinycbor/libtinycbor.a ../deps/mbedtls/library/libmbedtls.a ../deps/mbedtls/library/libmbedx509.a ../deps/mbedtls/library/libmbedcrypto.a 

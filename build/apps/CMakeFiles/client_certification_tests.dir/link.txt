@@ -1,1 +1,0 @@
-/usr/bin/cc CMakeFiles/client_certification_tests.dir/client_certification_tests.c.o -o client_certification_tests  ../libiotivity-lite-client-server-static.a -lm ../deps/tinycbor/libtinycbor.a ../deps/mbedtls/library/libmbedtls.a ../deps/mbedtls/library/libmbedx509.a ../deps/mbedtls/library/libmbedcrypto.a 
