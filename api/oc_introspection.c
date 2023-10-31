@@ -164,6 +164,9 @@ introspection_data_handler_crc(oc_request_t *request)
   if (ret <= 0) {
     OC_ERR("cannot encode introspection data: failed to read data(error=%ld)",
            ret);
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(idd_data);
+#endif /* OC_DYNAMIC_ALLOCATION */
     return;
   }
   crc = oc_crc64(0, idd_data, (size_t)ret);

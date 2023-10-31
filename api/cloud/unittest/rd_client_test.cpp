@@ -422,10 +422,10 @@ TEST_F(TestRDClient, DeleteIterateLinks_PartialBuffer)
   buffer.resize(query.length() + 1);
 
   std::vector<oc_link_t *> deleted{};
-  int count = 0;
+  int invoke_count = 0;
   oc_link_t *to_delete = link_p;
   oc_link_t *not_deleted = nullptr;
-  while (count < 2) {
+  while (invoke_count < 2) {
     rd_links_partition_t partition{};
     rd_delete_result_t result = rd_delete_fill_and_send_single_packet(
       to_delete, &s_endpoint, OC_STRING_VIEW("id"), &buffer[0], buffer.size(),
@@ -435,8 +435,8 @@ TEST_F(TestRDClient, DeleteIterateLinks_PartialBuffer)
         // allow first packet to be sent
         return (*count == 1);
       },
-      &count, &partition);
-    if (count == 2) {
+      &invoke_count, &partition);
+    if (invoke_count == 2) {
       ASSERT_EQ(RD_DELETE_ERROR, result);
       break;
     }

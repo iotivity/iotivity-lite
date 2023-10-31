@@ -19,6 +19,7 @@
 #include "api/oc_core_res_internal.h"
 #include "api/oc_main_internal.h"
 #include "api/oc_message_internal.h"
+#include "api/oc_platform_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_server_api_internal.h"
 #include "messaging/coap/options_internal.h"
@@ -84,10 +85,7 @@ int
 oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb,
                  void *data)
 {
-  if (!oc_core_init_platform(mfg_name, init_platform_cb, data)) {
-    return -1;
-  }
-  return 0;
+  return oc_platform_init(mfg_name, init_platform_cb, data) == NULL ? -1 : 0;
 }
 
 static int

@@ -121,7 +121,7 @@ oc_set_string(oc_string_t *dst, const char *str, size_t str_len)
 {
   assert(dst != NULL);
 
-  if (str == NULL || str_len == 0) {
+  if (str == NULL) {
     oc_free_string(dst);
     memset(dst, 0, sizeof(*dst));
     return;
@@ -191,12 +191,11 @@ oc_copy_string(oc_string_t *dst, const oc_string_t *src)
     return;
   }
 
-  oc_free_string(dst);
-  if (src == NULL || oc_string(*src) == NULL) {
-    memset(dst, 0, sizeof(*dst));
+  if (src == NULL) {
+    oc_set_string(dst, NULL, 0);
     return;
   }
-  oc_new_string(dst, oc_string(*src), oc_string_len(*src));
+  oc_set_string(dst, oc_string(*src), oc_string_len(*src));
 }
 
 void
