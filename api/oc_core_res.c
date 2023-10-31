@@ -17,6 +17,7 @@
  ****************************************************************************/
 
 #include "api/oc_con_resource_internal.h"
+#include "api/oc_platform_internal.h"
 #include "messaging/coap/oc_coap.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -81,12 +82,6 @@ static oc_resource_t g_core_resources[OC_NUM_CORE_PLATFORM_RESOURCES +
                                        OC_MAX_NUM_DEVICES)] = { 0 };
 static oc_device_info_t g_oc_device_info[OC_MAX_NUM_DEVICES] = { 0 };
 #endif /* !OC_DYNAMIC_ALLOCATION */
-static oc_platform_info_t g_oc_platform_info = {
-  .pi = { { 0 } },
-  .mfg_name = { 0 },
-  .init_platform_cb = NULL,
-  .data = NULL,
-};
 
 static int g_res_latency = 0;
 static OC_ATOMIC_UINT32_T g_device_count = 0;
@@ -111,12 +106,6 @@ oc_core_init(void)
 }
 
 static void
-oc_core_free_platform_info_properties(void)
-{
-  oc_free_string(&(g_oc_platform_info.mfg_name));
-}
-
-static void
 oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
 {
   if (oc_device_info_item) {
@@ -129,7 +118,7 @@ oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
 void
 oc_core_shutdown(void)
 {
-  oc_core_free_platform_info_properties();
+  oc_platform_deinit();
 
   uint32_t device_count = OC_ATOMIC_LOAD32(g_device_count);
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -447,73 +436,27 @@ oc_device_bind_resource_type(size_t device, const char *type)
   oc_device_bind_rt(device, type);
 }
 
-static void
-oc_core_platform_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
-                         void *data)
-{
-  (void)data;
-  oc_rep_start_root_object();
-
-  char pi[OC_UUID_LEN];
-  oc_uuid_to_str(&g_oc_platform_info.pi, pi, OC_UUID_LEN);
-
-  switch (iface_mask) {
-  case OC_IF_BASELINE:
-    oc_process_baseline_interface(request->resource);
-    OC_FALLTHROUGH;
-  case OC_IF_R: {
-    oc_rep_set_text_string(root, pi, pi);
-    oc_rep_set_text_string(root, mnmn, oc_string(g_oc_platform_info.mfg_name));
-    if (g_oc_platform_info.init_platform_cb) {
-      g_oc_platform_info.init_platform_cb(g_oc_platform_info.data);
-    }
-  } break;
-  default:
-    break;
-  }
-
-  oc_rep_end_root_object();
-  oc_send_response_with_callback(request, OC_STATUS_OK, true);
-}
-
-oc_platform_info_t *
-oc_core_init_platform(const char *mfg_name, oc_core_init_platform_cb_t init_cb,
-                      void *data)
-{
-  if (g_oc_platform_info.mfg_name.size > 0) {
-    return &g_oc_platform_info;
-  }
-
-  /* Populating resource object */
-  int properties = OC_DISCOVERABLE;
-#ifdef OC_CLOUD
-  properties |= OC_OBSERVABLE;
-#endif /* OC_CLOUD */
-  oc_core_populate_resource(OCF_P, 0, "oic/p", OC_IF_R | OC_IF_BASELINE,
-                            OC_IF_R, properties, oc_core_platform_handler, 0, 0,
-                            0, 1, "oic.wk.p");
-
-  oc_gen_uuid(&g_oc_platform_info.pi);
-
-  oc_new_string(&g_oc_platform_info.mfg_name, mfg_name, strlen(mfg_name));
-  g_oc_platform_info.init_platform_cb = init_cb;
-  g_oc_platform_info.data = data;
-
-  return &g_oc_platform_info;
-}
-
 void
 oc_store_uri(const char *s_uri, oc_string_t *d_uri)
 {
-  size_t s_len = strlen(s_uri);
-  if (s_uri[0] != '/') {
-    oc_alloc_string(d_uri, s_len + 2);
-    memcpy(oc_string(*d_uri) + 1, s_uri, s_len);
-    (oc_string(*d_uri))[0] = '/';
-    (oc_string(*d_uri))[s_len + 1] = '\0';
-  } else {
-    oc_new_string(d_uri, s_uri, s_len);
+  size_t s_len = oc_strnlen(s_uri, OC_MAX_STRING_LENGTH);
+  if (s_len >= OC_MAX_STRING_LENGTH) {
+    OC_ERR("Invalid URI");
+    return;
   }
+
+  if (s_uri[0] == '/') {
+    oc_set_string(d_uri, s_uri, s_len);
+    return;
+  }
+
+  oc_string_t uri;
+  oc_alloc_string(&uri, s_len + 2);
+  memcpy(oc_string(uri) + 1, s_uri, s_len);
+  (oc_string(uri))[0] = '/';
+  (oc_string(uri))[s_len + 1] = '\0';
+  oc_new_string(d_uri, oc_string(uri), oc_string_len(uri));
+  oc_free_string(&uri);
 }
 
 static oc_resource_t *
@@ -561,7 +504,9 @@ oc_core_populate_resource(int core_resource, size_t device_index,
 {
   oc_resource_t *r =
     core_get_resource_memory_by_index(core_resource, device_index);
-  if (!r) {
+  if (r == NULL) {
+    OC_ERR("Could not find resource(type:%d device:%zu)", core_resource,
+           device_index);
     return;
   }
   r->device = device_index;
@@ -603,12 +548,6 @@ oc_core_get_device_info(size_t device)
   return &g_oc_device_info[device];
 }
 
-oc_platform_info_t *
-oc_core_get_platform_info(void)
-{
-  return &g_oc_platform_info;
-}
-
 #ifdef OC_SECURITY
 bool
 oc_core_is_SVR(const oc_resource_t *resource, size_t device)
@@ -632,6 +571,17 @@ oc_core_is_SVR(const oc_resource_t *resource, size_t device)
 }
 #endif /* OC_SECURITY */
 
+static bool
+core_is_platform_resource(const oc_resource_t *resource)
+{
+  for (size_t i = 0; i < OCF_CON; ++i) {
+    if (resource == &g_core_resources[i]) {
+      return true;
+    }
+  }
+  return false;
+}
+
 bool
 oc_core_is_vertical_resource(const oc_resource_t *resource, size_t device)
 {
@@ -639,10 +589,8 @@ oc_core_is_vertical_resource(const oc_resource_t *resource, size_t device)
     return false;
   }
 
-  for (size_t i = 0; i < OCF_CON; ++i) {
-    if (resource == &g_core_resources[i]) {
-      return true;
-    }
+  if (core_is_platform_resource(resource)) {
+    return true;
   }
 
   if (!device_is_valid(device)) {
@@ -668,10 +616,8 @@ oc_core_is_DCR(const oc_resource_t *resource, size_t device)
     return false;
   }
 
-  for (size_t i = 0; i < OCF_CON; ++i) {
-    if (resource == &g_core_resources[i]) {
-      return true;
-    }
+  if (core_is_platform_resource(resource)) {
+    return true;
   }
 
   if (!device_is_valid(device)) {
@@ -719,8 +665,8 @@ core_is_resource_uri(const char *uri, size_t uri_len, const char *r_uri,
 int
 oc_core_get_resource_type_by_uri(const char *uri, size_t uri_len)
 {
-  if (core_is_resource_uri(uri, uri_len, "/oic/p",
-                           OC_CHAR_ARRAY_LEN("/oic/p"))) {
+  if (core_is_resource_uri(uri, uri_len, OCF_PLATFORM_URI,
+                           OC_CHAR_ARRAY_LEN(OCF_PLATFORM_URI))) {
     return OCF_P;
   }
   if (core_is_resource_uri(uri, uri_len, OCF_D_URI,

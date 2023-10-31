@@ -40,9 +40,6 @@ TEST(Helpers, SetStrings)
 
   oc_set_string(&oc_str, nullptr, 1);
   EXPECT_EQ(nullptr, oc_string(oc_str));
-
-  oc_set_string(&oc_str, "NULL", 0);
-  EXPECT_EQ(nullptr, oc_string(oc_str));
 }
 
 TEST(Helpers, CopyStrings)

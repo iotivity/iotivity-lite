@@ -879,7 +879,8 @@ TEST_F(TestSWUpdateWithServer, PostRequestEmptyPackageURL)
   oc_swupdate_action_t post_action{ OC_SWUPDATE_IDLE };
   auto post_payload = [&post_purl, &post_action]() {
     oc_rep_start_root_object();
-    oc_rep_set_text_string(root, purl, post_purl.c_str());
+    oc_rep_set_text_string_v1(root, purl, post_purl.c_str(),
+                              post_purl.length());
     oc_rep_set_text_string(root, swupdateaction,
                            oc_swupdate_action_to_str(post_action));
     oc_rep_set_text_string(root, updatetime, "none");

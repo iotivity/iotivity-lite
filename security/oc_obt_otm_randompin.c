@@ -21,6 +21,8 @@
 #error "ERROR: Please rebuild with OC_DYNAMIC_ALLOCATION"
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
+#include "api/oc_discovery_internal.h"
+#include "api/oc_platform_internal.h"
 #include "oc_core_res.h"
 #include "oc_csr.h"
 #include "oc_obt.h"
@@ -165,16 +167,19 @@ obt_rdp_12(oc_client_response_t *data)
     oc_rep_object_array_end_item(resources);
 
     oc_rep_object_array_start_item(resources);
-    oc_rep_set_text_string(resources, href, "/oic/p");
+    oc_rep_set_text_string_v1(resources, href, OCF_PLATFORM_URI,
+                              OC_CHAR_ARRAY_LEN(OCF_PLATFORM_URI));
     oc_rep_object_array_end_item(resources);
 
     oc_rep_object_array_start_item(resources);
-    oc_rep_set_text_string(resources, href, "/oic/res");
+    oc_rep_set_text_string_v1(resources, href, OCF_RES_URI,
+                              OC_CHAR_ARRAY_LEN(OCF_RES_URI));
     oc_rep_object_array_end_item(resources);
 
     if (o->sdi) {
       oc_rep_object_array_start_item(resources);
-      oc_rep_set_text_string(resources, href, OCF_SEC_SDI_URI);
+      oc_rep_set_text_string_v1(resources, href, OCF_SEC_SDI_URI,
+                                OC_CHAR_ARRAY_LEN(OCF_SEC_SDI_URI));
       oc_rep_object_array_end_item(resources);
     }
 

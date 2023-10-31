@@ -39,10 +39,9 @@
 
 using namespace std::chrono_literals;
 
+static const std::string kDeviceName{ "Table Lamp" };
 static const std::string kDeviceURI{ "/oic/d" };
 static const std::string kDeviceType{ "oic.d.light" };
-static const std::string kDeviceName{ "Table Lamp" };
-static const std::string kManufacturerName{ "Samsung" };
 static const std::string kOCFSpecVersion{ "ocf.1.0.0" };
 static const std::string kOCFDataModelVersion{ "ocf.res.1.0.0" };
 
@@ -51,7 +50,7 @@ static constexpr std::string_view kDevice1Name{ "Test Device 1" };
 static constexpr std::string_view kDevice2Name{ "Test Device 2" };
 
 class TestCoreResource : public testing::Test {
-protected:
+public:
   void SetUp() override
   {
     oc_network_event_handler_mutex_init();
@@ -59,6 +58,7 @@ protected:
     oc_ri_init();
     oc_core_init();
   }
+
   void TearDown() override
   {
 #ifdef OC_HAS_FEATURE_PUSH
@@ -70,21 +70,6 @@ protected:
     oc_network_event_handler_mutex_destroy();
   }
 };
-
-TEST_F(TestCoreResource, InitPlatform_P)
-{
-  int oc_platform_info =
-    oc_init_platform(kManufacturerName.c_str(), nullptr, nullptr);
-  EXPECT_EQ(0, oc_platform_info);
-}
-
-TEST_F(TestCoreResource, CoreInitPlatform_P)
-{
-  const oc_platform_info_t *oc_platform_info =
-    oc_core_init_platform(kManufacturerName.c_str(), nullptr, nullptr);
-  EXPECT_EQ(kManufacturerName.length(),
-            oc_string_len(oc_platform_info->mfg_name));
-}
 
 TEST_F(TestCoreResource, CoreDevice_P)
 {
@@ -99,18 +84,6 @@ TEST_F(TestCoreResource, CoreDevice_P)
   size_t numcoredevice = oc_core_get_num_devices();
   EXPECT_EQ(1, numcoredevice);
   oc_connectivity_shutdown(kDevice1ID);
-}
-
-TEST_F(TestCoreResource, CoreGetResourceV1_P)
-{
-  oc_core_init_platform(kManufacturerName.c_str(), nullptr, nullptr);
-
-  std::string uri = "/oic/p";
-  oc_resource_t *res =
-    oc_core_get_resource_by_uri_v1(uri.c_str(), uri.length(), kDevice1ID);
-
-  ASSERT_NE(nullptr, res);
-  EXPECT_EQ(uri.length(), oc_string_len(res->uri));
 }
 
 static void
