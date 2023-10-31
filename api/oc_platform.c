@@ -21,8 +21,10 @@
 #include "api/oc_platform_internal.h"
 #include "api/oc_ri_internal.h"
 #include "oc_api.h"
+#include "oc_build_info.h"
 #include "util/oc_compiler.h"
 #include "util/oc_secure_string_internal.h"
+#include "util/oc_macros_internal.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -35,8 +37,8 @@ static struct
   bool initialized;
 } g_platform;
 
-static void
-platform_encode(oc_resource_t *resource, oc_interface_mask_t iface)
+static int
+platform_encode(const oc_resource_t *resource, oc_interface_mask_t iface)
 {
   oc_rep_start_root_object();
 
@@ -49,11 +51,13 @@ platform_encode(oc_resource_t *resource, oc_interface_mask_t iface)
   oc_rep_set_text_string_v1(root, pi, pi, pi_len);
   oc_rep_set_text_string_v1(root, mnmn, oc_string(g_platform.info.mfg_name),
                             oc_string_len(g_platform.info.mfg_name));
+  oc_rep_set_int(root, x.org.iotivity.version, IOTIVITY_LITE_VERSION);
   if (g_platform.info.init_platform_cb != NULL) {
     g_platform.info.init_platform_cb(g_platform.info.data);
   }
 
   oc_rep_end_root_object();
+  return oc_rep_get_cbor_errno();
 }
 
 static void
@@ -61,7 +65,11 @@ platform_resource_get(oc_request_t *request, oc_interface_mask_t iface,
                       void *data)
 {
   (void)data;
-  platform_encode(request->resource, iface);
+  CborError err = platform_encode(request->resource, iface);
+  if (err != CborNoError) {
+    OC_ERR("encoding platform resource failed(error=%d)", (int)err);
+    return;
+  }
   oc_send_response_with_callback(request, OC_STATUS_OK, true);
 }
 
