@@ -33,6 +33,7 @@
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
 #include "tests/gtest/Resource.h"
+#include "util/oc_features.h"
 #include "util/oc_macros_internal.h"
 
 #include <array>
@@ -298,29 +299,54 @@ TEST_F(TestSdiWithServer, PostRequest)
   oc_free_string(&sdi_new.name);
 }
 
-TEST_F(TestSdiWithServer, PutRequest_FailMethodNotSupported)
+#else /* !OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+
+TEST_F(TestSdiWithServer, GetRequest_FailMethodNotAuthorized)
 {
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
   ASSERT_TRUE(epOpt.has_value());
   auto ep = std::move(*epOpt);
-
-  auto encode_payload = []() {
-    oc_sec_sdi_t sdi_new{};
-    oc_sec_sdi_encode_with_resource(&sdi_new, /*sdi_res*/ nullptr,
-                                    static_cast<oc_interface_mask_t>(0));
-  };
-  oc::testNotSupportedMethod(OC_PUT, &ep, OCF_SEC_SDI_URI, encode_payload);
+  oc::testNotSupportedMethod(OC_GET, &ep, OCF_SEC_SDI_URI, nullptr,
+                             OC_STATUS_UNAUTHORIZED);
 }
 
-TEST_F(TestSdiWithServer, DeleteRequest_FailMethodNotSupported)
+TEST_F(TestSdiWithServer, PostRequest_FailMethodNotAuthorized)
 {
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
   ASSERT_TRUE(epOpt.has_value());
   auto ep = std::move(*epOpt);
-  oc::testNotSupportedMethod(OC_DELETE, &ep, OCF_SEC_SDI_URI);
+  oc::testNotSupportedMethod(OC_POST, &ep, OCF_SEC_SDI_URI, nullptr,
+                             OC_STATUS_UNAUTHORIZED);
 }
 
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+
+TEST_F(TestSdiWithServer, PutRequest_Fail)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+  oc_status_t error_code = OC_STATUS_METHOD_NOT_ALLOWED;
+#else  /* !OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  oc_status_t error_code = OC_STATUS_UNAUTHORIZED;
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  oc::testNotSupportedMethod(OC_PUT, &ep, OCF_SEC_SDI_URI, nullptr, error_code);
+}
+
+TEST_F(TestSdiWithServer, DeleteRequest_Fail)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+  oc_status_t error_code = OC_STATUS_METHOD_NOT_ALLOWED;
+#else  /* !OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  oc_status_t error_code = OC_STATUS_UNAUTHORIZED;
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  oc::testNotSupportedMethod(OC_DELETE, &ep, OCF_SEC_SDI_URI, nullptr,
+                             error_code);
+}
 
 TEST_F(TestSdiWithServer, Copy)
 {
