@@ -288,8 +288,6 @@ TEST_F(TestSecurityProfile, EncodeAndDecodeForDevice)
   expectEqual(*oc_sec_sp_get(kDeviceID), profile_copy);
 }
 
-#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
-
 class TestSecurityProfileWithServer : public testing::Test {
 public:
   static void SetUpTestCase()
@@ -313,6 +311,8 @@ public:
     oc_sec_sp_default(kDeviceID);
   }
 };
+
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
 
 TEST_F(TestSecurityProfileWithServer, GetRequest)
 {
@@ -414,25 +414,53 @@ TEST_F(TestSecurityProfileWithServer, PostRequest_FailInvalidData)
   ASSERT_TRUE(invoked);
 }
 
-TEST_F(TestSecurityProfileWithServer, PutRequest_FailMethodNotSupported)
+#else /* !OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+
+TEST_F(TestSecurityProfileWithServer, GetRequest_FailMethodNotAuthorized)
 {
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
   ASSERT_TRUE(epOpt.has_value());
   auto ep = std::move(*epOpt);
-  auto encode_payload = []() {
-    encodePayload(OC_SP_BASELINE | OC_SP_BLACK, OC_SP_BLACK);
-  };
-  oc::testNotSupportedMethod(OC_PUT, &ep, OCF_SEC_SP_URI, encode_payload);
+  oc::testNotSupportedMethod(OC_GET, &ep, OCF_SEC_SP_URI, nullptr,
+                             OC_STATUS_UNAUTHORIZED);
 }
 
-TEST_F(TestSecurityProfileWithServer, DeleteRequest_FailMethodNotSupported)
+TEST_F(TestSecurityProfileWithServer, PostRequest_FailMethodNotAuthorized)
 {
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
   ASSERT_TRUE(epOpt.has_value());
   auto ep = std::move(*epOpt);
-  oc::testNotSupportedMethod(OC_DELETE, &ep, OCF_SEC_SP_URI);
+  oc::testNotSupportedMethod(OC_POST, &ep, OCF_SEC_SP_URI, nullptr,
+                             OC_STATUS_UNAUTHORIZED);
 }
 
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM  */
+
+TEST_F(TestSecurityProfileWithServer, PutRequest_Fail)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+  oc_status_t error_code = OC_STATUS_METHOD_NOT_ALLOWED;
+#else  /* !OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  oc_status_t error_code = OC_STATUS_UNAUTHORIZED;
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  oc::testNotSupportedMethod(OC_PUT, &ep, OCF_SEC_SP_URI, nullptr, error_code);
+}
+
+TEST_F(TestSecurityProfileWithServer, DeleteRequest_Fail)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+  oc_status_t error_code = OC_STATUS_METHOD_NOT_ALLOWED;
+#else  /* !OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  oc_status_t error_code = OC_STATUS_UNAUTHORIZED;
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  oc::testNotSupportedMethod(OC_DELETE, &ep, OCF_SEC_SP_URI, nullptr,
+                             error_code);
+}
 
 #endif /* OC_SECURITY */

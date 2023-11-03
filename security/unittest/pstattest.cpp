@@ -30,6 +30,9 @@
 #include "port/oc_storage_internal.h"
 #include "security/oc_pstat_internal.h"
 #include "security/oc_svr_internal.h"
+#include "tests/gtest/Device.h"
+#include "tests/gtest/Resource.h"
+#include "util/oc_features.h"
 
 #ifdef OC_SOFTWARE_UPDATE
 #include "api/oc_swupdate_internal.h"
@@ -145,6 +148,69 @@ TEST_F(TestPstat, DumpAndLoad)
   // load values from storage
   oc_sec_load_pstat(0);
   EXPECT_TRUE(IsEqual(def, *oc_sec_get_pstat(0)));
+}
+
+static constexpr size_t kDeviceID{ 0 };
+
+class TestPstatWithServer : public testing::Test {
+public:
+  static void SetUpTestCase()
+  {
+    ASSERT_TRUE(oc::TestDevice::StartServer());
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+    ASSERT_TRUE(
+      oc::SetAccessInRFOTM(OCF_SEC_PSTAT, kDeviceID, true,
+                           OC_PERM_RETRIEVE | OC_PERM_UPDATE | OC_PERM_DELETE));
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  }
+
+  static void TearDownTestCase()
+  {
+    oc::TestDevice::StopServer();
+  }
+};
+
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+
+#else /* !OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+
+TEST_F(TestPstatWithServer, PostRequest_FailMethodNotAuthorized)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+  oc::testNotSupportedMethod(OC_POST, &ep, "/oic/sec/pstat", nullptr,
+                             OC_STATUS_UNAUTHORIZED);
+}
+
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+
+TEST_F(TestPstatWithServer, PutRequest_Fail)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+  oc_status_t error_code = OC_STATUS_METHOD_NOT_ALLOWED;
+#else  /* !OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  oc_status_t error_code = OC_STATUS_UNAUTHORIZED;
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  oc::testNotSupportedMethod(OC_PUT, &ep, "/oic/sec/pstat", nullptr,
+                             error_code);
+}
+
+TEST_F(TestPstatWithServer, DeleteRequest_Fail)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+  oc_status_t error_code = OC_STATUS_METHOD_NOT_ALLOWED;
+#else  /* !OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  oc_status_t error_code = OC_STATUS_UNAUTHORIZED;
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  oc::testNotSupportedMethod(OC_DELETE, &ep, "/oic/sec/pstat", nullptr,
+                             error_code);
 }
 
 #endif /* OC_SECURITY */

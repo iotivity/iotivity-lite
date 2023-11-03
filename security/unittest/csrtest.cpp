@@ -285,7 +285,7 @@ TEST_F(TestCSRWithDevice, RegenerateDeviceKeypair)
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
 
-TEST_F(TestCSRWithDevice, Resource)
+TEST_F(TestCSRWithDevice, GetResourceBaseline)
 {
   // biggest supported hash and elliptic curve to get the largest CSR payload
   oc_sec_certs_md_set_signature_algorithm(MBEDTLS_MD_SHA384);

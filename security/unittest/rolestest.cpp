@@ -469,6 +469,8 @@ TEST_F(TestRolesWithServer, GetRequest)
   EXPECT_TRUE(invoked);
 }
 
+#if 0
+
 TEST_F(TestRolesWithServer, PostRequest)
 {
   // TODO: need communication API to send POST request, connecting device to
@@ -477,7 +479,6 @@ TEST_F(TestRolesWithServer, PostRequest)
   // roles_resource_post
 }
 
-#if 0
 
 TEST_F(TestRolesWithServer, DeleteRequest)
 {
@@ -567,9 +568,38 @@ TEST_F(TestRolesWithServer, DeleteRequest_FailInvalidCredid)
 
 #endif
 
+#else /* !OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+
+TEST_F(TestRolesWithServer, GetRequest_FailMethodNotAuthorized)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+  oc::testNotSupportedMethod(OC_GET, &ep, OCF_SEC_ROLES_URI, nullptr,
+                             OC_STATUS_UNAUTHORIZED);
+}
+
+TEST_F(TestRolesWithServer, PostRequest_FailMethodNotAuthorized)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+  oc::testNotSupportedMethod(OC_POST, &ep, OCF_SEC_ROLES_URI, nullptr,
+                             OC_STATUS_UNAUTHORIZED);
+}
+
+TEST_F(TestRolesWithServer, DeleteRequest_FailMethodNotAuthorized)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+  oc::testNotSupportedMethod(OC_DELETE, &ep, OCF_SEC_ROLES_URI, nullptr,
+                             OC_STATUS_UNAUTHORIZED);
+}
+
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 
-TEST_F(TestRolesWithServer, PutRequest_FailMethodNotSupported)
+TEST_F(TestRolesWithServer, PutRequest_Fail)
 {
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
   ASSERT_TRUE(epOpt.has_value());
