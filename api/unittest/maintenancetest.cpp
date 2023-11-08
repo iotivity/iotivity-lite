@@ -28,6 +28,10 @@
 #include "tests/gtest/RepPool.h"
 #include "tests/gtest/Resource.h"
 
+#ifdef OC_SECURITY
+#include "security/oc_pstat_internal.h"
+#endif /* OC_SECURITY */
+
 #include <gtest/gtest.h>
 #include <string>
 
@@ -55,12 +59,8 @@ TEST_F(TestMaintenance, IsMaintenanceURI_P)
 
 class TestMaintenanceWithServer : public testing::Test {
 public:
-  static void SetUpTestCase()
+  static void setupDevice()
   {
-    // TODO rm
-    oc_log_set_level(OC_LOG_LEVEL_DEBUG);
-
-    ASSERT_TRUE(oc::TestDevice::StartServer());
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
     ASSERT_TRUE(
       oc::SetAccessInRFOTM(OCF_MNT, kDeviceID, true,
@@ -68,11 +68,15 @@ public:
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
 
+  static void SetUpTestCase()
+  {
+    ASSERT_TRUE(oc::TestDevice::StartServer());
+    setupDevice();
+  }
+
   static void TearDownTestCase()
   {
     oc::TestDevice::StopServer();
-
-    oc_log_set_level(OC_LOG_LEVEL_INFO);
   }
 };
 
@@ -96,6 +100,8 @@ TEST_F(TestMaintenanceWithServer, CoreGetResourceV1_P)
   ASSERT_NE(nullptr, res);
   EXPECT_EQ(uri.length(), oc_string_len(res->uri));
 }
+
+#if !defined(OC_SECURITY) || defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM)
 
 struct mntBaseData
 {
@@ -151,8 +157,115 @@ TEST_F(TestMaintenanceWithServer, GetRequestBaseline)
 
 TEST_F(TestMaintenanceWithServer, PostRequest)
 {
-  // TODO
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  auto post_handler = [](oc_client_response_t *data) {
+    oc::TestDevice::Terminate();
+    ASSERT_EQ(OC_STATUS_CHANGED, data->code);
+    *static_cast<bool *>(data->user_data) = true;
+    OC_DBG("POST payload: %s",
+           oc::RepPool::GetJson(data->payload, true).data());
+  };
+
+#if defined(OC_SECURITY) && defined(OC_TEST)
+  oc_pstat_set_reset_delay_ms(100);
+#endif /* OC_SECURITY && OC_TEST */
+
+  bool invoked = false;
+  ASSERT_TRUE(
+    oc_init_post(OCF_MNT_URI, &ep, nullptr, post_handler, HIGH_QOS, &invoked));
+  oc_rep_start_root_object();
+  oc_rep_set_boolean(root, fr, true);
+  oc_rep_end_root_object();
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_post_with_timeout(timeout.count()));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  EXPECT_TRUE(invoked);
+
+#ifdef OC_SECURITY
+  ASSERT_TRUE(oc_reset_in_progress(kDeviceID));
+
+// wait for the device to handle the factory reset
+#ifdef OC_TEST
+  oc::TestDevice::PoolEventsMsV1(100ms, true);
+#else  /* !OC_TEST */
+  oc::TestDevice::PoolEventsMs(OC_PSTAT_RESET_DELAY_MS, true);
+#endif /* OC_TEST */
+  ASSERT_FALSE(oc_reset_in_progress(kDeviceID));
+
+  setupDevice();
+#endif /* OC_SECURITY */
 }
+
+template<typename Fn>
+static void
+postRequestFail(Fn encodeFn)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  auto post_handler = [](oc_client_response_t *data) {
+    oc::TestDevice::Terminate();
+    ASSERT_EQ(OC_STATUS_BAD_REQUEST, data->code);
+    *static_cast<bool *>(data->user_data) = true;
+    OC_DBG("POST payload: %s",
+           oc::RepPool::GetJson(data->payload, true).data());
+  };
+
+  bool invoked = false;
+  ASSERT_TRUE(
+    oc_init_post(OCF_MNT_URI, &ep, nullptr, post_handler, HIGH_QOS, &invoked));
+
+  encodeFn();
+
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_post_with_timeout(timeout.count()));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  EXPECT_TRUE(invoked);
+}
+
+TEST_F(TestMaintenanceWithServer, PostRequest_FailResetFalse)
+{
+  postRequestFail([] {
+    oc_rep_start_root_object();
+    oc_rep_set_boolean(root, fr, false);
+    oc_rep_end_root_object();
+  });
+}
+
+TEST_F(TestMaintenanceWithServer, PostRequest_FailInvalidPayload)
+{
+  postRequestFail([] {
+    oc_rep_start_root_object();
+    oc_rep_set_text_string(root, factory, "reset");
+    oc_rep_end_root_object();
+  });
+}
+
+#else /* OC_SECURITY && !OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+
+TEST_F(TestMaintenanceWithServer, GetRequest_FailMethodNotSupported)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+  oc::testNotSupportedMethod(OC_GET, &ep, OCF_MNT_URI, nullptr,
+                             OC_STATUS_UNAUTHORIZED);
+}
+
+TEST_F(TestMaintenanceWithServer, PostRequest_FailMethodNotSupported)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+  oc::testNotSupportedMethod(OC_POST, &ep, OCF_MNT_URI, nullptr,
+                             OC_STATUS_UNAUTHORIZED);
+}
+
+#endif /* !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 
 TEST_F(TestMaintenanceWithServer, PutRequest_FailMethodNotSupported)
 {

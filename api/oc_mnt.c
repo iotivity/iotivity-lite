@@ -60,7 +60,8 @@ mnt_resource_get(oc_request_t *request, oc_interface_mask_t iface, void *data)
 }
 
 static void
-post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+mnt_resource_post(oc_request_t *request, oc_interface_mask_t iface_mask,
+                  void *data)
 {
   (void)iface_mask;
   (void)data;
@@ -70,12 +71,13 @@ post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   if (oc_rep_get_bool(request->request_payload, "fr", &fr) && fr) {
 #ifdef OC_SECURITY
     success = oc_reset_device_v1(request->resource->device, false);
-#else  /* OC_SECURITY */
+#else  /* !OC_SECURITY */
     success = true;
-#endif /* !OC_SECURITY */
+#endif /* OC_SECURITY */
   }
 
   if (!success) {
+    OC_ERR("oc_mnt: invalid POST request");
     oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
     return;
   }
@@ -84,13 +86,15 @@ post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   oc_rep_new_realloc_v1(&request->response->response_buffer->buffer,
                         request->response->response_buffer->buffer_size,
                         OC_MAX_APP_DATA_SIZE);
-#else  /* OC_DYNAMIC_ALLOCATION */
+#else  /* !OC_DYNAMIC_ALLOCATION */
   oc_rep_new_v1(request->response->response_buffer->buffer,
                 request->response->response_buffer->buffer_size);
-#endif /* !OC_DYNAMIC_ALLOCATION */
-  oc_rep_start_root_object();
-  oc_rep_set_boolean(root, fr, false);
-  oc_rep_end_root_object();
+#endif /* OC_DYNAMIC_ALLOCATION */
+  int err = mnt_encode(request->resource, iface_mask);
+  if (err != CborNoError) {
+    OC_ERR("encoding maintenance resource failed(error=%d)", (int)err);
+    return;
+  }
 #ifdef OC_DYNAMIC_ALLOCATION
   request->response->response_buffer->buffer =
     oc_rep_shrink_encoder_buf(request->response->response_buffer->buffer);
@@ -108,7 +112,7 @@ oc_create_maintenance_resource(size_t device)
   int properties = OC_SECURE | OC_DISCOVERABLE;
   oc_core_populate_resource(OCF_MNT, device, OCF_MNT_URI, interfaces,
                             default_interface, properties, mnt_resource_get,
-                            /*put*/ NULL, post_mnt, /*delete*/ NULL, 1,
+                            /*put*/ NULL, mnt_resource_post, /*delete*/ NULL, 1,
                             OCF_MNT_RT);
 }
 
