@@ -22,6 +22,7 @@
 
 #include "api/oc_core_res_internal.h"
 #include "api/oc_mnt_internal.h"
+#include "api/oc_resource_internal.h"
 #include "api/oc_ri_internal.h"
 #include "oc_core_res.h"
 #include "oc_ri.h"
@@ -34,22 +35,27 @@
 
 #include <stdio.h>
 
+static int
+mnt_encode(const oc_resource_t *resource, oc_interface_mask_t iface)
+{
+  oc_rep_start_root_object();
+  if (iface == OC_IF_BASELINE) {
+    oc_process_baseline_interface(resource);
+  }
+  oc_rep_set_boolean(root, fr, false);
+  oc_rep_end_root_object();
+  return oc_rep_get_cbor_errno();
+}
+
 static void
-get_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+mnt_resource_get(oc_request_t *request, oc_interface_mask_t iface, void *data)
 {
   (void)data;
-  oc_rep_start_root_object();
-  switch (iface_mask) {
-  case OC_IF_BASELINE:
-    oc_process_baseline_interface(request->resource);
-    OC_FALLTHROUGH;
-  case OC_IF_RW:
-    oc_rep_set_boolean(root, fr, false);
-    break;
-  default:
-    break;
+  CborError err = mnt_encode(request->resource, iface);
+  if (err != CborNoError) {
+    OC_ERR("encoding maintenance resource failed(error=%d)", (int)err);
+    return;
   }
-  oc_rep_end_root_object();
   oc_send_response_with_callback(request, OC_STATUS_OK, true);
 }
 
@@ -69,35 +75,47 @@ post_mnt(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
 #endif /* !OC_SECURITY */
   }
 
-  if (success) {
-#ifdef OC_DYNAMIC_ALLOCATION
-    oc_rep_new_realloc_v1(&request->response->response_buffer->buffer,
-                          request->response->response_buffer->buffer_size,
-                          OC_MAX_APP_DATA_SIZE);
-#else  /* OC_DYNAMIC_ALLOCATION */
-    oc_rep_new_v1(request->response->response_buffer->buffer,
-                  request->response->response_buffer->buffer_size);
-#endif /* !OC_DYNAMIC_ALLOCATION */
-    oc_rep_start_root_object();
-    oc_rep_set_boolean(root, fr, false);
-    oc_rep_end_root_object();
-#ifdef OC_DYNAMIC_ALLOCATION
-    request->response->response_buffer->buffer =
-      oc_rep_shrink_encoder_buf(request->response->response_buffer->buffer);
-#endif /* OC_DYNAMIC_ALLOCATION */
-    oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
-  } else {
+  if (!success) {
     oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
+    return;
   }
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  oc_rep_new_realloc_v1(&request->response->response_buffer->buffer,
+                        request->response->response_buffer->buffer_size,
+                        OC_MAX_APP_DATA_SIZE);
+#else  /* OC_DYNAMIC_ALLOCATION */
+  oc_rep_new_v1(request->response->response_buffer->buffer,
+                request->response->response_buffer->buffer_size);
+#endif /* !OC_DYNAMIC_ALLOCATION */
+  oc_rep_start_root_object();
+  oc_rep_set_boolean(root, fr, false);
+  oc_rep_end_root_object();
+#ifdef OC_DYNAMIC_ALLOCATION
+  request->response->response_buffer->buffer =
+    oc_rep_shrink_encoder_buf(request->response->response_buffer->buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
+  oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
 }
 
 void
 oc_create_maintenance_resource(size_t device)
 {
   OC_DBG("oc_mnt: Initializing maintenance resource");
-
-  oc_core_populate_resource(
-    OCF_MNT, device, "oic/mnt", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-    OC_SECURE | OC_DISCOVERABLE, get_mnt, 0, post_mnt, 0, 1, "oic.wk.mnt");
+  int interfaces = OC_IF_RW | OC_IF_BASELINE;
+  oc_interface_mask_t default_interface = OC_IF_RW;
+  assert((interfaces & default_interface) == default_interface);
+  int properties = OC_SECURE | OC_DISCOVERABLE;
+  oc_core_populate_resource(OCF_MNT, device, OCF_MNT_URI, interfaces,
+                            default_interface, properties, mnt_resource_get,
+                            /*put*/ NULL, post_mnt, /*delete*/ NULL, 1,
+                            OCF_MNT_RT);
 }
+
+bool
+oc_is_maintenance_resource_uri(oc_string_view_t uri)
+{
+  return oc_resource_match_uri(OC_STRING_VIEW(OCF_MNT_URI), uri);
+}
+
 #endif /* OC_MNT */

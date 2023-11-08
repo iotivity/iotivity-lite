@@ -703,8 +703,7 @@ oc_core_get_resource_type_by_uri(const char *uri, size_t uri_len)
   }
 #endif /* OC_WKCORE */
 #ifdef OC_MNT
-  if (core_is_resource_uri(uri, uri_len, "/oic/mnt",
-                           OC_CHAR_ARRAY_LEN("/oic/mnt"))) {
+  if (oc_is_maintenance_resource_uri(oc_string_view(uri, uri_len))) {
     return OCF_MNT;
   }
 #endif /* OC_MNT */

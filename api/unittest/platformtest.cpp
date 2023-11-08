@@ -23,6 +23,7 @@
 #include "oc_build_info.h"
 #include "oc_rep.h"
 #include "oc_uuid.h"
+#include "port/oc_log_internal.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
