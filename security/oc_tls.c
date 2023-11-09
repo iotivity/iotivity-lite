@@ -3020,6 +3020,13 @@ oc_tls_recv_message(oc_message_t *message)
          u, message->length, (void *)peer);
 #endif /* OC_DBG_IS_ENABLED */
 
+  // Set the interface index from the incoming message if the network interface
+  // is not set in the peer. This case occurs when the connection is initialized
+  // by IoTivity-Lite (oc_tls_init_connection). Example: Cloud Manager
+  if (peer->endpoint.interface_index == 0) {
+    peer->endpoint.interface_index = message->endpoint.interface_index;
+  }
+
   oc_list_add(peer->recv_q, message);
   peer->timestamp = oc_clock_time_monotonic();
   oc_tls_handler_schedule_read(peer);
