@@ -45,6 +45,31 @@ oc_resource_supports_interface(const oc_resource_t *resource,
 }
 
 bool
+oc_resource_get_method_handler(const oc_resource_t *resource,
+                               oc_method_t method,
+                               oc_request_handler_t *handler)
+{
+  assert(resource != NULL);
+  if (method == OC_GET) {
+    *handler = resource->get_handler;
+    return true;
+  }
+  if (method == OC_POST) {
+    *handler = resource->post_handler;
+    return true;
+  }
+  if (method == OC_PUT) {
+    *handler = resource->put_handler;
+    return true;
+  }
+  if (method == OC_DELETE) {
+    *handler = resource->delete_handler;
+    return true;
+  }
+  return false;
+}
+
+bool
 oc_resource_match_uri(oc_string_view_t canonicalURI, oc_string_view_t uri)
 {
   assert(canonicalURI.data != NULL);

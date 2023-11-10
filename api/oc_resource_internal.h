@@ -60,6 +60,19 @@ bool oc_resource_supports_interface(const oc_resource_t *resource,
                                     oc_interface_mask_t iface) OC_NONNULL();
 
 /**
+ * @brief Get resource request handler for given method.
+ *
+ * @param resource resource to get request handler for (cannot be NULL)
+ * @param method method to get
+ * @param[out] handler request handler for given method (cannot be NULL)
+ * @return true request handler found
+ * @return false request handler not found
+ */
+bool oc_resource_get_method_handler(const oc_resource_t *resource,
+                                    oc_method_t method,
+                                    oc_request_handler_t *handler) OC_NONNULL();
+
+/**
  * @brief Callback invoked for each resource iterated by oc_resources_iterate.
  *
  * @param resource resource to process

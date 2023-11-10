@@ -119,8 +119,9 @@ parseMnt(const oc_rep_t *rep, mntBaseData &mntData)
   return true;
 }
 
+template<oc_status_t CODE = OC_STATUS_OK>
 static void
-getRequestWithQuery(const std::string &query)
+getRequestWithQuery(const std::string &query = "")
 {
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
   ASSERT_TRUE(epOpt.has_value());
@@ -128,9 +129,12 @@ getRequestWithQuery(const std::string &query)
 
   auto get_handler = [](oc_client_response_t *data) {
     oc::TestDevice::Terminate();
-    EXPECT_EQ(OC_STATUS_OK, data->code);
+    EXPECT_EQ(CODE, data->code);
     *static_cast<bool *>(data->user_data) = true;
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload, true).data());
+    if (data->code != OC_STATUS_OK) {
+      return;
+    }
     mntBaseData mntData{};
     EXPECT_TRUE(parseMnt(data->payload, mntData));
     EXPECT_FALSE(mntData.factoryReset);
@@ -147,7 +151,7 @@ getRequestWithQuery(const std::string &query)
 
 TEST_F(TestMaintenanceWithServer, GetRequest)
 {
-  getRequestWithQuery("");
+  getRequestWithQuery();
 }
 
 TEST_F(TestMaintenanceWithServer, GetRequestBaseline)
@@ -199,9 +203,9 @@ TEST_F(TestMaintenanceWithServer, PostRequest)
 #endif /* OC_SECURITY */
 }
 
-template<typename Fn>
+template<typename Fn, oc_status_t CODE = OC_STATUS_BAD_REQUEST>
 static void
-postRequestFail(Fn encodeFn)
+postRequestFail(const std::string &query, Fn encodeFn)
 {
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
   ASSERT_TRUE(epOpt.has_value());
@@ -209,15 +213,15 @@ postRequestFail(Fn encodeFn)
 
   auto post_handler = [](oc_client_response_t *data) {
     oc::TestDevice::Terminate();
-    ASSERT_EQ(OC_STATUS_BAD_REQUEST, data->code);
+    ASSERT_EQ(CODE, data->code);
     *static_cast<bool *>(data->user_data) = true;
     OC_DBG("POST payload: %s",
            oc::RepPool::GetJson(data->payload, true).data());
   };
 
   bool invoked = false;
-  ASSERT_TRUE(
-    oc_init_post(OCF_MNT_URI, &ep, nullptr, post_handler, HIGH_QOS, &invoked));
+  ASSERT_TRUE(oc_init_post(OCF_MNT_URI, &ep, query.c_str(), post_handler,
+                           HIGH_QOS, &invoked));
 
   encodeFn();
 
@@ -229,7 +233,7 @@ postRequestFail(Fn encodeFn)
 
 TEST_F(TestMaintenanceWithServer, PostRequest_FailResetFalse)
 {
-  postRequestFail([] {
+  postRequestFail("", [] {
     oc_rep_start_root_object();
     oc_rep_set_boolean(root, fr, false);
     oc_rep_end_root_object();
@@ -238,7 +242,7 @@ TEST_F(TestMaintenanceWithServer, PostRequest_FailResetFalse)
 
 TEST_F(TestMaintenanceWithServer, PostRequest_FailInvalidPayload)
 {
-  postRequestFail([] {
+  postRequestFail("", [] {
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, factory, "reset");
     oc_rep_end_root_object();
@@ -292,5 +296,82 @@ TEST_F(TestMaintenanceWithServer, DeleteRequest_FailMethodNotSupported)
 #endif /* OC_SECURITY */
   oc::testNotSupportedMethod(OC_DELETE, &ep, OCF_MNT_URI, nullptr, code);
 }
+
+#if !defined(OC_SECURITY) || defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM)
+
+#if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_APP_DATA_BUFFER_SIZE)
+
+class TestMaintenanceWithConstrainedServer : public testing::Test {
+public:
+  static void setupDevice()
+  {
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+    ASSERT_TRUE(
+      oc::SetAccessInRFOTM(OCF_MNT, kDeviceID, true,
+                           OC_PERM_RETRIEVE | OC_PERM_UPDATE | OC_PERM_DELETE));
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  }
+
+  static void SetUpTestCase()
+  {
+    // 30 is enough to encode the non-baseline interface payload, but not the
+    // baseline interface payload
+    defaultAppSize = static_cast<size_t>(oc_get_max_app_data_size());
+    oc_set_max_app_data_size(30);
+
+    ASSERT_TRUE(oc::TestDevice::StartServer());
+    setupDevice();
+  }
+
+  static void TearDownTestCase()
+  {
+    oc::TestDevice::StopServer();
+    oc_set_max_app_data_size(defaultAppSize);
+  }
+
+private:
+  static size_t defaultAppSize;
+};
+
+size_t TestMaintenanceWithConstrainedServer::defaultAppSize{};
+
+TEST_F(TestMaintenanceWithConstrainedServer,
+       GetRequestBaseline_FailCannotEncodePayload)
+{
+  getRequestWithQuery<OC_STATUS_INTERNAL_SERVER_ERROR>(
+    "if=" OC_IF_BASELINE_STR);
+}
+
+TEST_F(TestMaintenanceWithConstrainedServer,
+       PostRequest_FailCannotEncodePayload)
+{
+#if defined(OC_SECURITY) && defined(OC_TEST)
+  oc_pstat_set_reset_delay_ms(0);
+#endif /* OC_SECURITY && OC_TEST */
+
+  auto encode = [] {
+    oc_rep_start_root_object();
+    oc_rep_set_boolean(root, fr, true);
+    oc_rep_end_root_object();
+  };
+  postRequestFail<decltype(encode), OC_STATUS_INTERNAL_SERVER_ERROR>(
+    "if=" OC_IF_BASELINE_STR, encode);
+
+#ifdef OC_SECURITY
+// wait for the device to handle the factory reset
+#ifdef OC_TEST
+  oc::TestDevice::PoolEventsMsV1(0ms, true);
+#else  /* !OC_TEST */
+  oc::TestDevice::PoolEventsMs(OC_PSTAT_RESET_DELAY_MS, true);
+#endif /* OC_TEST */
+  ASSERT_FALSE(oc_reset_in_progress(kDeviceID));
+
+  setupDevice();
+#endif /* OC_SECURITY */
+}
+
+#endif // OC_DYNAMIC_ALLOCATION && !OC_APP_DATA_BUFFER_SIZE
+
+#endif /* !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 
 #endif /* OC_MNT */
