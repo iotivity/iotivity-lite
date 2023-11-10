@@ -64,9 +64,14 @@ void oc_notify_resource_changed_delayed_ms(oc_resource_t *resource,
  */
 #define OC_MAX_OCF_URI_SIZE ((sizeof(OC_SCHEME_OCF) - 1) + OC_UUID_LEN + 256)
 
-void oc_discovery_create_batch_for_resource(CborEncoder *links_array,
+#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
+
+/** @brief Encode GET batch payload for given resource */
+void oc_discovery_create_batch_for_resource(CborEncoder *encoder,
                                             oc_resource_t *resource,
                                             const oc_endpoint_t *endpoint);
+
+#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
 
 #endif /* OC_RES_BATCH_SUPPORT */
 

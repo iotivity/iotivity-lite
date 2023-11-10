@@ -53,8 +53,3 @@ TEST_F(TestRepDecode, SetTypeByContentFormat)
   EXPECT_TRUE(oc_rep_decoder_set_by_content_format(APPLICATION_NOT_DEFINED));
   EXPECT_EQ(OC_REP_CBOR_DECODER, oc_rep_decoder_get_type());
 }
-
-TEST_F(TestRepDecode, ParseFail)
-{
-  EXPECT_EQ(-1, oc_parse_rep(nullptr, 0, nullptr));
-}

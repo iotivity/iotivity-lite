@@ -93,18 +93,30 @@ bool oc_handle_collection_request(oc_method_t method, oc_request_t *request,
   OC_NONNULL(2);
 
 /**
+ * @brief Notifies observers of a collection.
+ *
+ * @param collection the collection
+ * @param discoveryBatchDispatch whether to schedule dispatch of batch
+ * notifications for discovery resource
+ */
+void oc_collection_notify_resource_changed(oc_collection_t *collection,
+                                           bool discoveryBatchDispatch)
+  OC_NONNULL();
+
+/**
  * @brief Remove link from a collection and notify observers.
  *
  * @param collection the collection to remove the link from
  * @param link the link to remove
  * @param notify whether to notify observers
- * @param batchDispatch whether to schedule dispatch of batch notifications
+ * @param discoveryBatchDispatch whether to schedule dispatch of batch
+ * notifications for discovery resource
  * @return true link was removed
  * @return false link was not removed
  */
 bool oc_collection_remove_link_and_notify(oc_resource_t *collection,
                                           const oc_link_t *link, bool notify,
-                                          bool batchDispatch);
+                                          bool discoveryBatchDispatch);
 
 #ifdef OC_COLLECTIONS_IF_CREATE
 

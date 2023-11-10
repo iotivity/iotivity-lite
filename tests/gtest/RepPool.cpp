@@ -60,9 +60,15 @@ oc_rep_unique_ptr
 RepPool::ParsePayload(const uint8_t *payload, size_t payload_len)
 {
   oc_rep_set_pool(&rep_objects_);
-  oc_rep_t *rep = nullptr;
-  EXPECT_EQ(CborNoError, oc_parse_rep(payload, payload_len, &rep));
-  return oc_rep_unique_ptr(rep, &oc_free_rep);
+  oc_rep_parse_result_t result{};
+  EXPECT_EQ(CborNoError, oc_rep_parse_payload(payload, payload_len, &result));
+  if (result.type == OC_REP_PARSE_RESULT_EMPTY_ARRAY) {
+    oc_rep_t *rep = oc_alloc_rep();
+    rep->type = OC_REP_ARRAY;
+    return oc_rep_unique_ptr(rep, &oc_free_rep);
+  }
+
+  return oc_rep_unique_ptr(result.rep, &oc_free_rep);
 }
 
 oc_rep_unique_ptr

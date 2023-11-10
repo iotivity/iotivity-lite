@@ -42,13 +42,7 @@ public:
 
   static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 
-  void TearDown() override
-  {
-    oc::TestDevice::DropOutgoingMessages();
-    coap_free_all_transactions();
-    oc_event_callbacks_shutdown();
-    oc_client_cbs_shutdown();
-  }
+  void TearDown() override { oc::TestDevice::Reset(); }
 };
 
 TEST_F(TestPingWithServer, Ping_InvalidInput)

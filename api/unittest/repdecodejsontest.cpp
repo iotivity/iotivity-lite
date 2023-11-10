@@ -55,19 +55,35 @@ private:
 };
 
 static int
-parseJsonToRep(const std::string &json, oc_rep_t **rep)
+parseJsonToRep(const std::string &json, oc_rep_parse_result_t *result)
 {
   auto jsonObj =
     oc::GetVector<uint8_t>(std::string("{\"json\": ") + json + "}", true);
-  return oc_rep_parse_json(jsonObj.data(), jsonObj.size(), rep);
+  return oc_rep_parse_json(jsonObj.data(), jsonObj.size(), result);
 }
 
 static oc::oc_rep_unique_ptr
 parseJson(const std::string &json)
 {
-  oc_rep_t *rep = nullptr;
-  EXPECT_EQ(CborNoError, parseJsonToRep(json, &rep));
-  return oc::oc_rep_unique_ptr(rep, &oc_free_rep);
+  oc_rep_parse_result_t result{};
+  EXPECT_EQ(CborNoError, parseJsonToRep(json, &result));
+  return oc::oc_rep_unique_ptr(result.rep, &oc_free_rep);
+}
+
+TEST_F(TestRepDecodeJson, DecodeEmpty)
+{
+  std::string emptyArray = "[]";
+  auto json = oc::GetVector<uint8_t>(emptyArray, true);
+  oc_rep_parse_result_t result{};
+  ASSERT_EQ(CborNoError, oc_rep_parse_json(json.data(), json.size(), &result));
+  EXPECT_EQ(OC_REP_PARSE_RESULT_EMPTY_ARRAY, result.type);
+
+  std::string emptyObject = "{}";
+  json = oc::GetVector<uint8_t>(emptyObject, true);
+  result = {};
+  ASSERT_EQ(CborNoError, oc_rep_parse_json(json.data(), json.size(), &result));
+  EXPECT_EQ(OC_REP_PARSE_RESULT_REP, result.type);
+  EXPECT_EQ(nullptr, result.rep);
 }
 
 TEST_F(TestRepDecodeJson, DecodeNull)
@@ -92,23 +108,23 @@ TEST_F(TestRepDecodeJson, DecodeBoolean)
 
 TEST_F(TestRepDecodeJson, Decode_InvalidPrimitive)
 {
-  oc_rep_t *rep = nullptr;
-  ASSERT_NE(CborNoError, parseJsonToRep("", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("n", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("nil", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("NULL", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("nnull", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("nulll", &rep));
+  oc_rep_parse_result_t result{};
+  ASSERT_NE(CborNoError, parseJsonToRep("", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("n", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("nil", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("NULL", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("nnull", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("nulll", &result));
 
-  ASSERT_NE(CborNoError, parseJsonToRep("t", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("TRUE", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("ttrue", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("truee", &rep));
+  ASSERT_NE(CborNoError, parseJsonToRep("t", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("TRUE", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("ttrue", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("truee", &result));
 
-  ASSERT_NE(CborNoError, parseJsonToRep("f", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("FALSE", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("ffalse", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("falsee", &rep));
+  ASSERT_NE(CborNoError, parseJsonToRep("f", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("FALSE", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("ffalse", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("falsee", &result));
 }
 
 TEST_F(TestRepDecodeJson, DecodeString)
@@ -119,6 +135,7 @@ TEST_F(TestRepDecodeJson, DecodeString)
   EXPECT_STREQ("Hello World", oc_string(jsonRep->value.string));
 }
 
+// {"json": []}
 // empty array is parsed as null
 TEST_F(TestRepDecodeJson, DecodeEmptyArray)
 {
@@ -128,6 +145,7 @@ TEST_F(TestRepDecodeJson, DecodeEmptyArray)
 }
 
 // arrays of nulls are not supported and are parsed as null
+// {"json": [null, null, null]}
 TEST_F(TestRepDecodeJson, DecodeNullArray)
 {
   auto jsonRep = parseJson("[null, null, null]");
@@ -137,13 +155,13 @@ TEST_F(TestRepDecodeJson, DecodeNullArray)
 
 TEST_F(TestRepDecodeJson, DecodeNullArray_InvalidValues)
 {
-  oc_rep_t *rep = nullptr;
-  ASSERT_NE(CborNoError, parseJsonToRep("[null, true]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[null, false]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[null, 123]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[null, \"string\"]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[null, {}]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[null, []]", &rep));
+  oc_rep_parse_result_t result{};
+  ASSERT_NE(CborNoError, parseJsonToRep("[null, true]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[null, false]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[null, 123]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[null, \"string\"]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[null, {}]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[null, []]", &result));
 }
 
 TEST_F(TestRepDecodeJson, DecodeBoolArray)
@@ -160,22 +178,22 @@ TEST_F(TestRepDecodeJson, DecodeBoolArray)
 
 TEST_F(TestRepDecodeJson, DecodeBoolArray_InvalidValues)
 {
-  oc_rep_t *rep = nullptr;
-  ASSERT_NE(CborNoError, parseJsonToRep("[t]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[true, TRUE]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[true, truy]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[TRUE, true]", &rep));
+  oc_rep_parse_result_t result{};
+  ASSERT_NE(CborNoError, parseJsonToRep("[t]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[true, TRUE]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[true, truy]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[TRUE, true]", &result));
 
-  ASSERT_NE(CborNoError, parseJsonToRep("[f]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[false, FALSE]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[false, falsy]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[FALSE, false]", &rep));
+  ASSERT_NE(CborNoError, parseJsonToRep("[f]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[false, FALSE]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[false, falsy]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[FALSE, false]", &result));
 
-  ASSERT_NE(CborNoError, parseJsonToRep("[true, null]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[true, 123]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[true, \"string\"]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[true, {}]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[true, []]", &rep));
+  ASSERT_NE(CborNoError, parseJsonToRep("[true, null]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[true, 123]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[true, \"string\"]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[true, {}]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[true, []]", &result));
 }
 
 TEST_F(TestRepDecodeJson, DecodeIntArray)
@@ -191,20 +209,20 @@ TEST_F(TestRepDecodeJson, DecodeIntArray)
 
 TEST_F(TestRepDecodeJson, DecodeIntArray_InvalidValues)
 {
-  oc_rep_t *rep = nullptr;
+  oc_rep_parse_result_t result{};
   std::string intTooLarge = std::to_string(INT64_MAX) + "0";
-  ASSERT_NE(CborNoError, parseJsonToRep("[" + intTooLarge + "]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[1, " + intTooLarge + "]", &rep));
+  ASSERT_NE(CborNoError, parseJsonToRep("[" + intTooLarge + "]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[1, " + intTooLarge + "]", &result));
 
   std::string intTooSmall = std::to_string(INT64_MIN) + "0";
-  ASSERT_NE(CborNoError, parseJsonToRep("[" + intTooSmall + "]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[1, " + intTooSmall + "]", &rep));
+  ASSERT_NE(CborNoError, parseJsonToRep("[" + intTooSmall + "]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[1, " + intTooSmall + "]", &result));
 
-  ASSERT_NE(CborNoError, parseJsonToRep("[1, null]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[1, true]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[1, \"string\"]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[1, {}]", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep("[1, []]", &rep));
+  ASSERT_NE(CborNoError, parseJsonToRep("[1, null]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[1, true]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[1, \"string\"]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[1, {}]", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep("[1, []]", &result));
 }
 
 TEST_F(TestRepDecodeJson, DecodeStringArray)
@@ -234,21 +252,21 @@ TEST_F(TestRepDecodeJson, DecodeStringArray_Truncate)
 
 TEST_F(TestRepDecodeJson, DecodeStringArray_InvalidValues)
 {
-  oc_rep_t *rep = nullptr;
-  ASSERT_NE(CborNoError, parseJsonToRep(R"(["str", null])", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep(R"(["str", true])", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep(R"(["str", 1])", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep(R"(["str", []])", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep(R"(["str", {}])", &rep));
+  oc_rep_parse_result_t result{};
+  ASSERT_NE(CborNoError, parseJsonToRep(R"(["str", null])", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep(R"(["str", true])", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep(R"(["str", 1])", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep(R"(["str", []])", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep(R"(["str", {}])", &result));
 }
 
 TEST_F(TestRepDecodeJson, DecodeArray_InvalidValues)
 {
   // arrays of arrays are not supported
-  oc_rep_t *rep = nullptr;
-  ASSERT_NE(CborNoError, parseJsonToRep(R"([[]])", &rep));
+  oc_rep_parse_result_t result{};
+  ASSERT_NE(CborNoError, parseJsonToRep(R"([[]])", &result));
   ASSERT_NE(CborNoError,
-            parseJsonToRep(R"([[true, false], [true, false]])", &rep));
+            parseJsonToRep(R"([[true, false], [true, false]])", &result));
 }
 
 TEST_F(TestRepDecodeJson, DecodeEmptyObject)
@@ -360,12 +378,12 @@ TEST_F(TestRepDecodeJson, DecodeObjectWithObjects)
 
 TEST_F(TestRepDecodeJson, DecodeObject_InvalidKey)
 {
-  oc_rep_t *rep = nullptr;
-  ASSERT_NE(CborNoError, parseJsonToRep(R"({null: null})", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep(R"({true: false})", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep(R"({1: 2})", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep(R"({[]: []})", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep(R"({{}: {}})", &rep));
+  oc_rep_parse_result_t result{};
+  ASSERT_NE(CborNoError, parseJsonToRep(R"({null: null})", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep(R"({true: false})", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep(R"({1: 2})", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep(R"({[]: []})", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep(R"({{}: {}})", &result));
 }
 
 TEST_F(TestRepDecodeJson, DecodeObjectArray)
@@ -420,21 +438,21 @@ TEST_F(TestRepDecodeJson, DecodeObjectArray)
 
 TEST_F(TestRepDecodeJson, DecodeObjectArray_InvalidValues)
 {
-  oc_rep_t *rep = nullptr;
-  ASSERT_NE(CborNoError, parseJsonToRep(R"([{}, null])", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep(R"([{}, true])", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep(R"([{}, 1])", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep(R"([{}, "str"])", &rep));
-  ASSERT_NE(CborNoError, parseJsonToRep(R"([{}, []])", &rep));
+  oc_rep_parse_result_t result{};
+  ASSERT_NE(CborNoError, parseJsonToRep(R"([{}, null])", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep(R"([{}, true])", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep(R"([{}, 1])", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep(R"([{}, "str"])", &result));
+  ASSERT_NE(CborNoError, parseJsonToRep(R"([{}, []])", &result));
 }
 
 TEST_F(TestRepDecodeJson, Decode_InvalidJson)
 {
-  oc_rep_t *rep = nullptr;
   std::string json = R"({"json":: )";
   auto jsonObj = oc::GetVector<uint8_t>(json, true);
+  oc_rep_parse_result_t result{};
   ASSERT_NE(CborNoError,
-            oc_rep_parse_json(jsonObj.data(), jsonObj.size(), &rep));
+            oc_rep_parse_json(jsonObj.data(), jsonObj.size(), &result));
 }
 
 #endif /* OC_JSON_ENCODER */

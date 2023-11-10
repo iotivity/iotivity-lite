@@ -279,9 +279,7 @@ public:
 
   void TearDown() override
   {
-    oc::TestDevice::DropOutgoingMessages();
-    coap_free_all_transactions();
-    oc_client_cbs_shutdown();
+    oc::TestDevice::Reset();
     oc::TestDevice::CloseSessions(kDeviceID);
     // wait for asynchronous closing of sessions to finish
     oc::TestDevice::PoolEventsMsV1(10ms);
@@ -849,6 +847,8 @@ public:
 
     oc::TestDevice::StopServer();
   }
+
+  void TearDown() override { oc::TestDevice::Reset(); }
 };
 
 TEST_F(TestMbedTLSPlgdTime, GetTimeUnsynchronized)

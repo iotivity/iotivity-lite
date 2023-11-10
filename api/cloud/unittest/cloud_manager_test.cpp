@@ -63,8 +63,7 @@ public:
     oc_free_endpoint(m_context.cloud_ep);
     oc_free_string(&m_context.store.uid);
 
-    coap_free_all_transactions();
-    oc::TestDevice::DropOutgoingMessages();
+    oc::TestDevice::Reset();
     oc::TestDevice::StopServer();
   }
 };

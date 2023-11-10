@@ -1085,11 +1085,9 @@ void jni_rep_rep_set_string_array(CborEncoder *object, const char* key, oc_strin
  * use case. It should only be called after calling oc_rep_end_root_object.
  */
 oc_rep_t * jni_rep_get_rep_from_root_object(void) {
-  oc_rep_t * rep = (oc_rep_t *)malloc(sizeof(oc_rep_t));
   const uint8_t *payload = oc_rep_get_encoder_buf();
   int payload_len = oc_rep_get_encoded_payload_size();
-  oc_parse_rep(payload, payload_len, &rep);
-  return rep;
+  return oc_parse_rep(payload, payload_len);
 }
 %}
 
@@ -1134,7 +1132,7 @@ void clearCborErrno(void) {
 
 %ignore oc_rep_set_pool;
 %ignore oc_rep_reset_pool;
-%ignore oc_parse_rep;
+%ignore oc_rep_parse_payload;
 %ignore oc_alloc_rep;
 %ignore oc_free_rep;
 %ignore oc_rep_is_null;

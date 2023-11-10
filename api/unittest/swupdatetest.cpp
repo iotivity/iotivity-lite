@@ -556,6 +556,8 @@ public:
   {
     oc_swupdate_clear(oc_swupdate_get(kDeviceID));
     TestSWUpdateImplementation::Clear();
+
+    oc::TestDevice::Reset();
   }
 };
 

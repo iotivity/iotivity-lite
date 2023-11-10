@@ -133,6 +133,7 @@ public:
       std::filesystem::remove_all(entry.path());
     }
 #endif /* OC_STORAGE */
+    oc::TestDevice::Reset();
   }
 
   oc_cloud_store_t m_store;

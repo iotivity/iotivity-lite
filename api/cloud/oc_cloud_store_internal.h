@@ -22,6 +22,7 @@
 #define OC_CLOUD_STORE_INTERNAL_H
 
 #include "oc_cloud.h"
+#include "util/oc_compiler.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +35,7 @@ extern "C" {
  * @return 0 on success
  * @return <0 on failure
  */
-int cloud_store_load(oc_cloud_store_t *store);
+int cloud_store_load(oc_cloud_store_t *store) OC_NONNULL(1);
 
 /**
  * @brief Save store data to storage

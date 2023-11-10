@@ -56,6 +56,7 @@ public:
 
   void TearDown() override
   {
+    oc::TestDevice::Reset();
     oc::TestDevice::StopServer();
     oc_sec_certs_default();
   }

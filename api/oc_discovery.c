@@ -38,6 +38,10 @@
 #include "oc_client_state.h"
 #endif /* OC_CLIENT */
 
+#ifdef OC_RES_BATCH_SUPPORT
+#include "api/oc_rep_encode_internal.h"
+#endif /* OC_RES_BATCH_SUPPORT */
+
 #ifdef OC_SECURITY
 #include "security/oc_pstat_internal.h"
 #include "security/oc_sdi_internal.h"
@@ -743,13 +747,25 @@ typedef bool (*discovery_process_batch_response_filter_t)(const oc_resource_t *,
 static bool
 discovery_process_batch_response(
   CborEncoder *encoder, oc_resource_t *resource, const oc_endpoint_t *endpoint,
-  discovery_process_batch_response_filter_t filter, void *filter_data)
+  discovery_process_batch_response_filter_t filter, void *filter_data,
+  bool is_notification)
 {
   if (resource == NULL ||
       !oc_discovery_resource_is_in_batch_response(resource, endpoint, true) ||
       (filter != NULL && !filter(resource, filter_data))) {
     return false;
   }
+
+#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
+  struct
+  {
+    CborEncoder global;
+    CborEncoder links;
+  } prev;
+  memcpy(&prev.links, encoder, sizeof(CborEncoder));
+  memcpy(&prev.global, oc_rep_get_encoder(), sizeof(CborEncoder));
+#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
+
   oc_request_t rest_request;
   memset(&rest_request, 0, sizeof(oc_request_t));
   oc_response_t response;
@@ -758,9 +774,8 @@ discovery_process_batch_response(
   memset(&response_buffer, 0, sizeof(oc_response_buffer_t));
   response.response_buffer = &response_buffer;
   rest_request.response = &response;
+  rest_request.resource = resource;
   rest_request.origin = endpoint;
-  rest_request.query = 0;
-  rest_request.query_len = 0;
   rest_request.method = OC_GET;
 
   oc_rep_start_object(encoder, links_obj);
@@ -779,13 +794,12 @@ discovery_process_batch_response(
   oc_rep_set_key_v1(oc_rep_object(links_obj), "rep", OC_CHAR_ARRAY_LEN("rep"));
   memcpy(oc_rep_get_encoder(), oc_rep_object(links_obj), sizeof(CborEncoder));
 
-  int size_before = oc_rep_get_encoded_payload_size();
-  rest_request.resource = resource;
-  response_buffer.code = 0;
-  response_buffer.response_length = 0;
-
+  // store only size because the buffer might get reallocated
+  int total_payload_start = oc_rep_get_encoded_payload_size();
+  bool is_collection = false;
 #if defined(OC_SERVER) && defined(OC_COLLECTIONS)
   if (oc_check_if_collection(resource)) {
+    is_collection = true;
     if (!oc_handle_collection_request(OC_GET, &rest_request,
                                       resource->default_interface, NULL)) {
       OC_WRN("failed to process batch response: failed to handle collection "
@@ -797,24 +811,53 @@ discovery_process_batch_response(
     resource->get_handler.cb(&rest_request, resource->default_interface,
                              resource->get_handler.user_data);
   }
+  int payload_size = -1;
+  int total_payload_end = oc_rep_get_encoded_payload_size();
+  if (total_payload_end != -1) {
+    payload_size = total_payload_end - total_payload_start;
+  }
 
-  int size_after = oc_rep_get_encoded_payload_size();
-  if (size_before == size_after) {
+#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
+  if (is_notification && response_buffer.code == CONTENT_2_05) {
+    const uint8_t *payload =
+      oc_rep_get_encoder_buf() + (ptrdiff_t)total_payload_start;
+    if (payload_size == 0 ||
+        (!is_collection && payload_size == 2 &&
+         oc_rep_encoded_payload_is_empty_object(oc_rep_encoder_get_type(),
+                                                payload, payload_size))) {
+      OC_DBG("ignoring empty resource(%s)", oc_string(resource->uri));
+      memcpy(encoder, &prev.links, sizeof(CborEncoder));
+      memcpy(oc_rep_get_encoder(), &prev.global, sizeof(CborEncoder));
+      return false;
+    }
+  }
+#else  /* !OC_DISCOVERY_RESOURCE_OBSERVABLE */
+  (void)is_notification;
+  (void)is_collection;
+#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
+
+  if (payload_size == 0) {
     oc_rep_start_root_object();
     oc_rep_end_root_object();
   }
+
   memcpy(oc_rep_object(links_obj), oc_rep_get_encoder(), sizeof(CborEncoder));
   oc_rep_end_object(encoder, links_obj);
   return true;
 }
 
+#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
+
 void
-oc_discovery_create_batch_for_resource(CborEncoder *links,
+oc_discovery_create_batch_for_resource(CborEncoder *encoder,
                                        oc_resource_t *resource,
                                        const oc_endpoint_t *endpoint)
 {
-  discovery_process_batch_response(links, resource, endpoint, NULL, NULL);
+  discovery_process_batch_response(encoder, resource, endpoint, NULL, NULL,
+                                   true);
 }
+
+#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
 
 typedef struct
 {
@@ -831,7 +874,7 @@ discovery_iterate_batch_response(oc_resource_t *resource, void *data)
   discovery_batch_response_data_t *brd =
     (discovery_batch_response_data_t *)data;
   if (discovery_process_batch_response(brd->links, resource, brd->endpoint,
-                                       brd->filter, brd->filter_data)) {
+                                       brd->filter, brd->filter_data, false)) {
     ++brd->matches;
   }
   return true;
@@ -1307,6 +1350,7 @@ oc_discovery_process_payload(const uint8_t *payload, size_t len,
     all = true;
   }
   oc_discovery_flags_t ret = OC_CONTINUE_DISCOVERY;
+  oc_rep_t *rep = NULL;
   oc_string_t *uri = NULL;
   oc_string_t *anchor = NULL;
   oc_string_array_t *types = NULL;
@@ -1314,26 +1358,27 @@ oc_discovery_process_payload(const uint8_t *payload, size_t len,
 
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
   struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
-
-  oc_rep_t *p = NULL;
-  int s = oc_parse_rep(payload, len, &p);
-  if (s != 0) {
+  oc_rep_parse_result_t result;
+  memset(&result, 0, sizeof(result));
+  int s = oc_rep_parse_payload(payload, len, &result);
+  if (s != CborNoError || result.type != OC_REP_PARSE_RESULT_REP) {
     OC_WRN("error parsing discovery response");
+    goto done;
   }
-  oc_rep_t *rep = p;
+  rep = result.rep;
   /*  While the oic.wk.res schema over the baseline interface provides for an
    *  array of objects, only one object is present and used in practice.
    *
-   *  If rep->value.object != NULL, it means the response was from the baseline
-   *  interface, and in that case make rep point to the properties of its first
-   *  object. It is traversed in the following loop to obtain a handle to its
-   *  array of links.
+   *  If rep->value.object != NULL, it means the response was from the
+   * baseline interface, and in that case make rep point to the properties of
+   * its first object. It is traversed in the following loop to obtain a
+   * handle to its array of links.
    */
-  if (rep != NULL && rep->value.object) {
+  if (rep != NULL && rep->value.object != NULL) {
     rep = rep->value.object;
   }
 
-  oc_rep_t *links = p;
+  oc_rep_t *links = result.rep;
   while (rep != NULL) {
     switch (rep->type) {
     /*  Ignore other oic.wk.res properties over here as they're known
@@ -1471,7 +1516,7 @@ oc_discovery_process_payload(const uint8_t *payload, size_t len,
   }
 
 done:
-  oc_free_rep(p);
+  oc_free_rep(result.rep);
   oc_rep_set_pool(prev_rep_objects);
 #ifdef OC_DNS_CACHE
   oc_dns_clear_cache();

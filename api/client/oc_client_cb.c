@@ -492,7 +492,12 @@ oc_client_cb_invoke(const coap_packet_t *response, oc_client_cb_t *cb,
        * has not been set to the CBOR encoding.
        */
       if (cf == APPLICATION_CBOR || cf == APPLICATION_VND_OCF_CBOR) {
-        err = oc_parse_rep(payload, payload_len, &client_response.payload);
+        oc_rep_parse_result_t parse_result;
+        memset(&parse_result, 0, sizeof(oc_rep_parse_result_t));
+        err = oc_rep_parse_payload(payload, payload_len, &parse_result);
+        if (err == 0) {
+          client_response.payload = parse_result.rep;
+        }
       }
       if (err == 0) {
         oc_response_handler_t handler =

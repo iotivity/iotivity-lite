@@ -167,6 +167,7 @@ public:
   static void StopServer();
   static void Terminate() { device.Terminate(); }
   static void DropOutgoingMessages();
+  static void Reset();
 #ifdef OC_CLIENT
   static void CloseSessions(size_t device);
 #endif /* OC_CLIENT */
@@ -194,8 +195,10 @@ public:
 
   static oc_resource_t *GetDynamicResource(size_t device, size_t index);
 
-  static void ClearDynamicResource(size_t device, size_t index, bool doDelete);
-  static bool ClearDynamicResource(oc_resource_t *resource, bool doDelete);
+  static void ClearDynamicResource(size_t device, size_t index,
+                                   bool doDelete = true);
+  static bool ClearDynamicResource(oc_resource_t *resource,
+                                   bool doDelete = true);
   static void ClearDynamicResources();
 #endif /* OC_SERVER */
 

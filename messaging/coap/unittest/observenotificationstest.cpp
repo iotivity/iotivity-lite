@@ -27,6 +27,7 @@
 #include "messaging/coap/observe_internal.h"
 #include "messaging/coap/options_internal.h"
 #include "messaging/coap/transactions_internal.h"
+#include "oc_acl.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
 #include "oc_core_res.h"
@@ -36,6 +37,11 @@
 #include "tests/gtest/coap/TCPClient.h"
 #include "tests/gtest/RepPool.h"
 #include "tests/gtest/Resource.h"
+
+#ifdef OC_COLLECTIONS
+#include "api/oc_collection_internal.h"
+#include "tests/gtest/Collection.h"
+#endif // OC_COLLECTIONS
 
 #ifdef OC_SECURITY
 #include "security/oc_security_internal.h"
@@ -53,7 +59,13 @@ using namespace oc::coap;
 static constexpr size_t kDeviceID{ 0 };
 
 constexpr std::string_view kDynamicURI1 = "/dyn/empty";
-constexpr std::string_view kDynamicURI2 = "/dyn/nonempty";
+
+#ifdef OC_COLLECTIONS
+constexpr std::string_view powerSwitchRT = "oic.d.power";
+
+constexpr std::string_view kCollectionURI1 = "/empty";
+constexpr std::string_view kColDynamicURI1 = "/empty/1";
+#endif // OC_COLLECTIONS
 
 class TestObservationWithServer : public testing::Test {
 public:
@@ -62,17 +74,25 @@ public:
     ASSERT_TRUE(oc::TestDevice::StartServer());
 
     addDynamicResources();
+
+#ifdef OC_COLLECTIONS
+    addCollections();
+#endif // OC_COLLECTIONS
   }
 
-  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
+  static void TearDownTestCase()
+  {
+    oc::TestDevice::StopServer();
+  }
+
+  void SetUp() override
+  {
+    coap_observe_counter_reset();
+  }
 
   void TearDown() override
   {
-#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-    coap_free_all_discovery_batch_observers();
-#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
-    coap_free_all_observers();
-    coap_observe_counter_reset();
+    oc::TestDevice::Reset();
   }
 
   static void onGetEmptyResource(oc_request_t *request, oc_interface_mask_t,
@@ -83,22 +103,67 @@ public:
     oc_send_response(request, OC_STATUS_OK);
   }
 
-  static void onGetResource(oc_request_t *request, oc_interface_mask_t, void *)
+  static void addDynamicResources();
+
+#ifdef OC_COLLECTIONS
+  static void addCollections();
+#endif // OC_COLLECTIONS
+
+  static coap_packet_t getPacket(oc_message_t *msg)
   {
-    oc_rep_start_root_object();
-    oc_rep_set_boolean(root, content, true);
-    oc_rep_end_root_object();
-    oc_send_response(request, OC_STATUS_OK);
+    coap_packet_t packet;
+    EXPECT_EQ(COAP_NO_ERROR,
+              coap_tcp_parse_message(&packet, msg->data, msg->length, false));
+    return packet;
   }
 
-  static void addDynamicResources();
+  static void printObservation(const coap_packet_t &packet, int32_t observe)
+  {
+    (void)packet;
+    (void)observe;
+#if OC_DBG_IS_ENABLED
+    const uint8_t *payload = nullptr;
+    size_t payload_len = coap_get_payload(&packet, &payload);
+
+    oc::RepPool pool{};
+    oc::oc_rep_unique_ptr rep{ nullptr, nullptr };
+    if (payload_len > 0) {
+      rep = pool.ParsePayload(payload, payload_len);
+    }
+    OC_DBG("OBSERVE(%d) payload: %s", observe,
+           oc::RepPool::GetJson(rep.get(), true).data());
+#endif // OC_DBG_IS_ENABLED
+  }
+
+  static void assertObservation(const coap_packet_t &packet, coap_status_t code,
+                                const message::token_t &token,
+                                bool is_observable, int32_t observe)
+  {
+    ASSERT_EQ(code, packet.code);
+    ASSERT_EQ(token.size(), packet.token_len);
+    ASSERT_EQ(0, memcmp(&token[0], packet.token, token.size()));
+    int32_t pkt_observe;
+    ASSERT_EQ(is_observable, coap_options_get_observe(&packet, &pkt_observe));
+    printObservation(packet, pkt_observe);
+    if (is_observable) {
+      ASSERT_EQ(observe, pkt_observe);
+    }
+  }
+
+  static void assertObservation(oc_message_t *msg, coap_status_t code,
+                                const message::token_t &token,
+                                bool is_observable, int32_t observe)
+  {
+    auto packet = getPacket(msg);
+    assertObservation(packet, code, token, is_observable, observe);
+  }
 };
 
 void
 TestObservationWithServer::addDynamicResources()
 {
 #ifndef OC_DYNAMIC_ALLOCATION
-  static_assert(OC_MAX_APP_RESOURCES > 2, "OC_MAX_APP_RESOURCES > 2");
+  static_assert(OC_MAX_APP_RESOURCES >= 1, "OC_MAX_APP_RESOURCES >= 1");
 #endif // OC_DYNAMIC_ALLOCATION
 
   oc::DynamicResourceHandler handlers1{};
@@ -110,51 +175,30 @@ TestObservationWithServer::addDynamicResources()
   oc_resource_t *res1 =
     oc::TestDevice::AddDynamicResource(dynResource1, kDeviceID);
   ASSERT_NE(nullptr, res1);
-#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
-  ASSERT_TRUE(oc::SetAccessInRFOTM(res1, true, OC_PERM_RETRIEVE));
-#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
-
-  oc::DynamicResourceHandler handlers2{};
-  handlers2.onGet = onGetResource;
-  auto dynResource2 = oc::makeDynamicResourceToAdd(
-    "Dynamic Resource 2", std::string(kDynamicURI2),
-    { "oic.d.dynamic", "oic.d.test" }, { OC_IF_BASELINE, OC_IF_R }, handlers2,
-    OC_OBSERVABLE);
-  oc_resource_t *res2 =
-    oc::TestDevice::AddDynamicResource(dynResource2, kDeviceID);
-  ASSERT_NE(nullptr, res2);
-#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
-  ASSERT_TRUE(oc::SetAccessInRFOTM(res1, true, OC_PERM_RETRIEVE));
-#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 }
 
-static coap_packet_t
-getPacket(oc_message_t *msg)
+#ifdef OC_COLLECTIONS
+
+void
+TestObservationWithServer::addCollections()
 {
-  coap_packet_t packet;
-  EXPECT_EQ(COAP_NO_ERROR,
-            coap_tcp_parse_message(&packet, msg->data, msg->length, false));
-  return packet;
+  auto col = oc::NewCollection("col", kCollectionURI1, kDeviceID, "oic.wk.col");
+  ASSERT_NE(nullptr, col.get());
+#ifdef OC_SECURITY
+  oc_resource_make_public(&col->res);
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+  oc_resource_set_access_in_RFOTM(&col->res, true, OC_PERM_RETRIEVE);
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+#endif /* OC_SECURITY */
+  oc_resource_set_discoverable(&col->res, true);
+  oc_resource_set_observable(&col->res, true);
+  oc_collection_add_supported_rt(&col->res, powerSwitchRT.data());
+  oc_collection_add_mandatory_rt(&col->res, powerSwitchRT.data());
+  ASSERT_TRUE(oc_add_collection_v1(&col->res));
+  col.release();
 }
 
-static void
-printObservation(const coap_packet_t &packet, int32_t observe)
-{
-  (void)packet;
-  (void)observe;
-#if OC_DBG_IS_ENABLED
-  const uint8_t *payload = nullptr;
-  size_t payload_len = coap_get_payload(&packet, &payload);
-
-  oc::RepPool pool{};
-  oc::oc_rep_unique_ptr rep{ nullptr, nullptr };
-  if (payload_len > 0) {
-    rep = pool.ParsePayload(payload, payload_len);
-  }
-  OC_DBG("OBSERVE(%d) payload: %s", observe,
-         oc::RepPool::GetJson(rep.get(), true).data());
-#endif // OC_DBG_IS_ENABLED
-}
+#endif // OC_COLLECTIONS
 
 TEST_F(TestObservationWithServer, ObserveDeviceName)
 {
@@ -189,30 +233,17 @@ TEST_F(TestObservationWithServer, ObserveDeviceName)
   // wait for response to observe registration
   auto msg = message::WaitForMessage(messages, 1s);
   ASSERT_NE(nullptr, msg.get());
-  auto packet = getPacket(msg.get());
-  ASSERT_EQ(CONTENT_2_05, packet.code);
-  ASSERT_EQ(token.size(), packet.token_len);
-  EXPECT_EQ(0, memcmp(&token[0], packet.token, token.size()));
-  int32_t observe;
-  ASSERT_EQ(is_observable, coap_options_get_observe(&packet, &observe));
-  printObservation(packet, observe);
-
+  assertObservation(msg.get(), CONTENT_2_05, token, is_observable,
+                    OC_COAP_OPTION_OBSERVE_REGISTER);
   if (is_observable) {
-    ASSERT_EQ(OC_COAP_OPTION_OBSERVE_REGISTER, observe);
-
     std::string deviceName{ "new test name" };
     oc_core_device_set_name(kDeviceID, deviceName.c_str(), deviceName.length());
     oc_notify_resource_changed(oc_core_get_resource_by_index(OCF_D, kDeviceID));
     // wait for first notification
     msg = message::WaitForMessage(messages, 1s);
     ASSERT_NE(nullptr, msg.get());
-    auto observation = getPacket(msg.get());
-    ASSERT_EQ(CONTENT_2_05, observation.code);
-    ASSERT_EQ(token.size(), packet.token_len);
-    EXPECT_EQ(0, memcmp(&token[0], packet.token, token.size()));
-    coap_options_get_observe(&observation, &observe);
-    ASSERT_EQ(2, observe);
-    printObservation(observation, observe);
+    assertObservation(msg.get(), CONTENT_2_05, token, is_observable,
+                      OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE);
   }
 
   client.Terminate();
@@ -227,6 +258,10 @@ TEST_F(TestObservationWithServer, ObserveDeviceName)
 
 TEST_F(TestObservationWithServer, ObserveEmptyResource)
 {
+  auto *res = oc_ri_get_app_resource_by_uri(kDynamicURI1.data(),
+                                            kDynamicURI1.size(), kDeviceID);
+  ASSERT_NE(nullptr, res);
+
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID, TCP, SECURED);
   ASSERT_TRUE(epOpt.has_value());
   auto ep = std::move(*epOpt);
@@ -249,39 +284,19 @@ TEST_F(TestObservationWithServer, ObserveEmptyResource)
   });
 
   // wait for response to observe registration
-  auto msg = message::WaitForMessage(messages, 1s);
+  auto msg = message::WaitForMessage(messages, 100s);
   ASSERT_NE(nullptr, msg.get());
-  auto packet = getPacket(msg.get());
-  ASSERT_EQ(CONTENT_2_05, packet.code);
-  ASSERT_EQ(token.size(), packet.token_len);
-  EXPECT_EQ(0, memcmp(&token[0], packet.token, token.size()));
-  int32_t observe;
-  ASSERT_TRUE(coap_options_get_observe(&packet, &observe));
-  ASSERT_EQ(OC_COAP_OPTION_OBSERVE_REGISTER, observe);
-  printObservation(packet, observe);
+  assertObservation(msg.get(), CONTENT_2_05, token, true,
+                    OC_COAP_OPTION_OBSERVE_REGISTER);
 
 #ifdef OC_SECURITY
   // must be in RFNOP to send obsevations
   oc_sec_self_own(kDeviceID);
 #endif // OC_SECURITY
 
-  auto *res = oc_ri_get_app_resource_by_uri(kDynamicURI1.data(),
-                                            kDynamicURI1.size(), kDeviceID);
-  ASSERT_NE(nullptr, res);
   oc_notify_resource_changed(res);
-  // wait for first notification
-  msg = message::WaitForMessage(messages, 1s);
-  ASSERT_NE(nullptr, msg.get());
-  auto observation = getPacket(msg.get());
-  ASSERT_EQ(CONTENT_2_05, observation.code);
-  ASSERT_EQ(token.size(), packet.token_len);
-  EXPECT_EQ(0, memcmp(&token[0], packet.token, token.size()));
-  coap_options_get_observe(&observation, &observe);
-  ASSERT_EQ(2, observe);
-  printObservation(observation, observe);
-  const uint8_t *payload = nullptr;
-  size_t payload_len = coap_get_payload(&packet, &payload);
-  ASSERT_EQ(0, payload_len);
+  msg = message::WaitForMessage(messages, 300ms);
+  ASSERT_EQ(nullptr, msg.get());
 
   client.Terminate();
   workerThread.join();
@@ -290,6 +305,120 @@ TEST_F(TestObservationWithServer, ObserveEmptyResource)
   oc_sec_self_disown(kDeviceID);
 #endif // OC_SECURITY
 }
+
+#ifdef OC_COLLECTIONS
+
+TEST_F(TestObservationWithServer, ObserveEmptyCollection)
+{
+  oc_collection_t *col = oc_get_collection_by_uri(
+    kCollectionURI1.data(), kCollectionURI1.size(), kDeviceID);
+  ASSERT_NE(nullptr, col);
+
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID, TCP, SECURED);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  message::SyncQueue messages{};
+  TCPClient client([&messages](message::oc_message_unique_ptr &&msg) {
+    messages.Push(std::move(msg));
+    oc::TestDevice::Terminate();
+  });
+  message::token_t token{ 0x01, 0x03, 0x03, 0x07, 0x04, 0x02 };
+  std::thread workerThread([&ep, &client, &token]() {
+    ASSERT_TRUE(client.Connect(&ep));
+
+    auto message = message::tcp::RegisterObserve(
+      token, std::string(kCollectionURI1), "", &ep);
+    ASSERT_NE(nullptr, message.get());
+    ASSERT_TRUE(client.Send(message->data, message->length));
+
+    client.Run();
+  });
+
+  // wait for response to observe registration
+  auto msg = message::WaitForMessage(messages, 1s);
+  ASSERT_NE(nullptr, msg.get());
+  assertObservation(msg.get(), CONTENT_2_05, token, true,
+                    OC_COAP_OPTION_OBSERVE_REGISTER);
+
+  oc_collection_notify_resource_changed(col, false);
+  msg = message::WaitForMessage(messages, 1s);
+  ASSERT_NE(nullptr, msg.get());
+  assertObservation(msg.get(), CONTENT_2_05, token, true,
+                    OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE);
+
+  client.Terminate();
+  workerThread.join();
+}
+
+TEST_F(TestObservationWithServer, ObserveCollectionOnDelete)
+{
+  oc_collection_t *col = oc_get_collection_by_uri(
+    kCollectionURI1.data(), kCollectionURI1.size(), kDeviceID);
+  ASSERT_NE(nullptr, col);
+
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID, TCP, SECURED);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  message::SyncQueue messages{};
+  TCPClient client([&messages](message::oc_message_unique_ptr &&msg) {
+    messages.Push(std::move(msg));
+    oc::TestDevice::Terminate();
+  });
+  message::token_t token{ 0x01, 0x03, 0x03, 0x07, 0x04, 0x02 };
+  std::thread workerThread([&ep, &client, &token]() {
+    ASSERT_TRUE(client.Connect(&ep));
+
+    auto message = message::tcp::RegisterObserve(
+      token, std::string(kCollectionURI1), "", &ep);
+    ASSERT_NE(nullptr, message.get());
+    ASSERT_TRUE(client.Send(message->data, message->length));
+
+    client.Run();
+  });
+
+  // wait for response to observe registration
+  auto msg = message::WaitForMessage(messages, 1s);
+  ASSERT_NE(nullptr, msg.get());
+  assertObservation(msg.get(), CONTENT_2_05, token, true,
+                    OC_COAP_OPTION_OBSERVE_REGISTER);
+
+  // add resource
+  oc::DynamicResourceHandler handlers{};
+  handlers.onGet = onGetEmptyResource;
+  auto dr = oc::makeDynamicResourceToAdd(
+    "Collection Resource 2", std::string(kColDynamicURI1),
+    { std::string(powerSwitchRT), "oic.d.test" }, { OC_IF_BASELINE, OC_IF_R },
+    handlers);
+  oc_resource_t *res = oc::TestDevice::AddDynamicResource(dr, kDeviceID);
+  ASSERT_NE(nullptr, res);
+  oc_link_t *link = oc_new_link(res);
+  ASSERT_NE(link, nullptr);
+  oc_collection_add_link(&col->res, link);
+
+  msg = message::WaitForMessage(messages, 1s);
+  ASSERT_NE(nullptr, msg.get());
+  assertObservation(msg.get(), CONTENT_2_05, token, true,
+                    OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE);
+
+  // remove resource
+  oc::TestDevice::ClearDynamicResource(res);
+  msg = message::WaitForMessage(messages, 1s);
+  ASSERT_NE(nullptr, msg.get());
+  assertObservation(msg.get(), CONTENT_2_05, token, true,
+                    OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE + 1);
+
+  client.Terminate();
+  workerThread.join();
+}
+
+TEST_F(TestObservationWithServer, BatchObserveCollectionWithEmptyResource)
+{
+  // TODO: batch observation over collections are not implemented yet
+}
+
+#endif // OC_COLLECTIONS
 
 #endif // !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
 

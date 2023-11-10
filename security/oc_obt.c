@@ -323,16 +323,14 @@ oc_obt_load_state(void)
 
   struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
   struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
-  oc_rep_t *rep = NULL;
-  int err = oc_parse_rep(buf, ret, &rep);
-  if (err != 0) {
-    oc_free_rep(rep);
+  oc_rep_t *parsed_rep = oc_parse_rep(buf, (size_t)ret);
+  if (parsed_rep == NULL) {
+    oc_rep_set_pool(prev_rep_objects);
     free(buf);
     return;
   }
 
-  oc_rep_t *head = rep;
-  while (rep != NULL) {
+  for (oc_rep_t *rep = parsed_rep; rep != NULL; rep = rep->next) {
     switch (rep->type) {
 #ifdef OC_PKI
     case OC_REP_INT:
@@ -378,10 +376,9 @@ oc_obt_load_state(void)
     default:
       break;
     }
-    rep = rep->next;
   }
 
-  oc_free_rep(head);
+  oc_free_rep(parsed_rep);
   oc_rep_set_pool(prev_rep_objects);
   free(buf);
 }

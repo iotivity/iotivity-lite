@@ -55,17 +55,41 @@ void oc_rep_set_pool(struct oc_memb *rep_objects_pool);
  * return the previously set pool */
 struct oc_memb *oc_rep_reset_pool(struct oc_memb *pool);
 
+typedef enum {
+  OC_REP_PARSE_RESULT_REP,
+  OC_REP_PARSE_RESULT_EMPTY_ARRAY,
+} oc_rep_parse_result_type_t;
+
+typedef struct
+{
+  oc_rep_parse_result_type_t type;
+  oc_rep_t *rep;
+} oc_rep_parse_result_t;
+
 /**
  * @brief Decode the payload into a oc_rep_t object using the global decoder.
  *
  * @param payload payload to decode
  * @param payload_size size of payload
- * @param[out] out_rep output parameter for the decoded object (must be freed
- * with oc_free_rep)
- * @return int
+ * @param[out] result output parameter for the decoded object (if result->type
+ * is OC_REP_PARSE_RESULT_REP then result->rep must be freed with oc_free_rep,
+ * cannot be NULL)
+ * @return CborNoError on success
  */
-int oc_parse_rep(const uint8_t *payload, size_t payload_size,
-                 oc_rep_t **out_rep);
+int oc_rep_parse_payload(const uint8_t *payload, size_t payload_size,
+                         oc_rep_parse_result_t *result) OC_NONNULL(3);
+
+/** Convenience wrapper over oc_rep_parse_payload */
+oc_rep_t *oc_parse_rep(const uint8_t *payload, size_t payload_size);
+
+/**
+ * @brief Get the size of the cbor encoded data.
+ *
+ * @param truncateEmpty truncate empty objects ("{}") to zero size
+ * @return size of the cbor encoded data
+ * @return -1 on error
+ */
+int oc_rep_get_encoded_payload_size_v1(bool truncateEmpty);
 
 /**
  * @brief Check whether property matches by name.

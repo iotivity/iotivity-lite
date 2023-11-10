@@ -506,6 +506,11 @@ public:
 #endif // OC_SERVER && OC_COLLECTIONS
   }
 
+  void TearDown() override
+  {
+    oc::TestDevice::Reset();
+  }
+
 #if defined(OC_SERVER) && defined(OC_COLLECTIONS)
   static Switches switches_;
 #endif // OC_SERVER && OC_COLLECTIONS

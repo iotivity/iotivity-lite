@@ -33,6 +33,8 @@ public:
 
   static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 
+  void TearDown() override { oc::TestDevice::Reset(); }
+
   static oc_resource_t *findResource(oc_link_t *head, const oc_resource_t *res)
   {
     for (oc_link_t *l = head; l; l = l->next) {

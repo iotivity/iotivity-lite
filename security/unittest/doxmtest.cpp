@@ -197,10 +197,7 @@ public:
     oc_set_select_oxms_cb(nullptr, nullptr);
     oc_set_random_pin_callback(nullptr, nullptr);
     oc_ownership_status_free_all_cbs();
-    oc::TestDevice::DropOutgoingMessages();
-    coap_free_all_transactions();
-    oc_client_cbs_shutdown_multicasts();
-    oc_client_cbs_shutdown();
+    oc::TestDevice::Reset();
   }
 };
 
