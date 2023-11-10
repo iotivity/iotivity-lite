@@ -273,8 +273,7 @@ cloud_delete_resources(oc_cloud_context_t *ctx)
 #if OC_DBG_IS_ENABLED
   for (const oc_link_t *link = partition.not_deleted; link != NULL;
        link = link->next) {
-    OC_CLOUD_DBG("link(href=%s, ins=%" PRId64 ") not unpublished",
-                 oc_string(link->resource->uri), link->ins);
+    OC_CLOUD_DBG("link(ins=%" PRId64 ") not unpublished", link->ins);
   }
 #endif /* OC_DBG_IS_ENABLED */
   ctx->rd_delete_resources = partition.not_deleted;
@@ -354,7 +353,7 @@ oc_cloud_delete_resource(oc_resource_t *res)
 #endif /* OC_SECURITY */
 
   if (published != NULL) {
-    if (published->resource) {
+    if (published->resource != NULL) {
       published->resource = NULL;
     }
     rd_link_add(&ctx->rd_delete_resources, published);
