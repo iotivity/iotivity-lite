@@ -185,6 +185,8 @@ oc_send_response_with_callback(oc_request_t *request, oc_status_t response_code,
     content_format = APPLICATION_CBOR;
   }
 #endif /* OC_SPEC_VER_OIC */
+  // method == OC_GET and response_code == OC_STATUS_OK nepouzit response_length
+  // ale poslat payload length skutocny
   if (!oc_send_response_internal(request, response_code, content_format,
                                  response_length(), trigger_cb)) {
     OC_ERR("could not send response: invalid response code");

@@ -131,6 +131,61 @@ TEST_F(TestResource, SupportsInterface)
   EXPECT_FALSE(oc_resource_supports_interface(&res, OC_IF_RW));
 }
 
+TEST_F(TestResource, GetMethodHandler)
+{
+  oc_resource_t res{};
+  auto getCB = [](oc_request_t *, oc_interface_mask_t, void *) {
+    // no-op;
+  };
+  char getData;
+  res.get_handler.cb = getCB;
+  res.get_handler.user_data = &getData;
+
+  auto postCB = [](oc_request_t *, oc_interface_mask_t, void *) {
+    // no-op;
+  };
+  char postData;
+  res.post_handler.cb = postCB;
+  res.post_handler.user_data = &postData;
+
+  auto putCB = [](oc_request_t *, oc_interface_mask_t, void *) {
+    // no-op;
+  };
+  char putData;
+  res.put_handler.cb = putCB;
+  res.put_handler.user_data = &putData;
+
+  auto deleteCB = [](oc_request_t *, oc_interface_mask_t, void *) {
+    // no-op;
+  };
+  char deleteData;
+  res.delete_handler.cb = deleteCB;
+  res.delete_handler.user_data = &deleteData;
+
+  oc_request_handler_t handler;
+  EXPECT_TRUE(oc_resource_get_method_handler(&res, OC_GET, &handler));
+  EXPECT_EQ(getCB, handler.cb);
+  EXPECT_EQ(&getData, handler.user_data);
+
+  handler = {};
+  EXPECT_TRUE(oc_resource_get_method_handler(&res, OC_POST, &handler));
+  EXPECT_EQ(postCB, handler.cb);
+  EXPECT_EQ(&postData, handler.user_data);
+
+  handler = {};
+  EXPECT_TRUE(oc_resource_get_method_handler(&res, OC_PUT, &handler));
+  EXPECT_EQ(putCB, handler.cb);
+  EXPECT_EQ(&putData, handler.user_data);
+
+  handler = {};
+  EXPECT_TRUE(oc_resource_get_method_handler(&res, OC_DELETE, &handler));
+  EXPECT_EQ(deleteCB, handler.cb);
+  EXPECT_EQ(&deleteData, handler.user_data);
+
+  handler = {};
+  EXPECT_FALSE(oc_resource_get_method_handler(&res, OC_FETCH, &handler));
+}
+
 TEST_F(TestResource, MatchURI_F)
 {
   auto resourceURI = OC_STRING_VIEW("/test");

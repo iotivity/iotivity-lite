@@ -53,7 +53,9 @@ mnt_resource_get(oc_request_t *request, oc_interface_mask_t iface, void *data)
   (void)data;
   CborError err = mnt_encode(request->resource, iface);
   if (err != CborNoError) {
-    OC_ERR("encoding maintenance resource failed(error=%d)", (int)err);
+    OC_ERR("oc_mnt: encoding of resource payload failed(error=%d)", (int)err);
+    oc_send_response_with_callback(request, OC_STATUS_INTERNAL_SERVER_ERROR,
+                                   true);
     return;
   }
   oc_send_response_with_callback(request, OC_STATUS_OK, true);
@@ -92,7 +94,9 @@ mnt_resource_post(oc_request_t *request, oc_interface_mask_t iface_mask,
 #endif /* OC_DYNAMIC_ALLOCATION */
   int err = mnt_encode(request->resource, iface_mask);
   if (err != CborNoError) {
-    OC_ERR("encoding maintenance resource failed(error=%d)", (int)err);
+    OC_ERR("oc_mnt: encoding resource payload failed(error=%d)", (int)err);
+    oc_send_response_with_callback(request, OC_STATUS_INTERNAL_SERVER_ERROR,
+                                   true);
     return;
   }
 #ifdef OC_DYNAMIC_ALLOCATION

@@ -23,6 +23,7 @@
 #include "api/oc_endpoint_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_link_internal.h"
+#include "api/oc_resource_internal.h"
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/observe_internal.h"
 #include "oc_api.h"
@@ -890,44 +891,166 @@ oc_handle_collection_linked_list_request(oc_request_t *request)
   oc_rep_end_links_array();
 }
 
+static bool
+collection_invoke_handler(const oc_collection_t *collection,
+                          oc_resource_t *resource, oc_request_t *request)
+{
+  oc_interface_mask_t iface = resource->default_interface;
+  if (resource == &collection->res) {
+    iface = OC_IF_BASELINE;
+  }
+
+  oc_request_handler_t handler;
+  if (!oc_resource_get_method_handler(resource, request->method, &handler) ||
+      handler.cb == NULL) {
+    return false;
+  }
+  handler.cb(request, iface, handler.user_data);
+  return true;
+}
+
+static oc_handle_collection_request_result_t
+collection_batch_request_process_links(const oc_collection_t *collection,
+                                       oc_method_t method,
+                                       oc_request_t *request,
+                                       const oc_string_t *href,
+                                       oc_rep_t *payload,
+                                       const oc_resource_t *notify_resource)
+{
+  coap_status_t ecode = oc_status_code_unsafe(OC_STATUS_OK);
+  coap_status_t pcode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST);
+
+  oc_response_t response;
+  memset(&response, 0, sizeof(oc_response_t));
+  oc_response_buffer_t response_buffer;
+  memset(&response_buffer, 0, sizeof(oc_response_buffer_t));
+  oc_request_t rest_request;
+  memset(&rest_request, 0, sizeof(oc_request_t));
+  response.response_buffer = &response_buffer;
+  rest_request.response = &response;
+  rest_request.origin = request->origin;
+  rest_request.method = method;
+  bool get_delete = method == OC_GET || method == OC_DELETE;
+  if (!get_delete) {
+    rest_request.request_payload = payload;
+  }
+
+  CborEncoder prev_link;
+  for (oc_link_t *link = (oc_link_t *)oc_list_head(collection->links);
+       link != NULL; link = link->next) {
+    if (link->resource == NULL ||
+        (notify_resource != NULL && link->resource != notify_resource)) {
+      continue;
+    }
+    if (!oc_filter_resource_by_rt(link->resource, request)) {
+      continue;
+    }
+    if (!get_delete && href != NULL && oc_string_len(*href) > 0 &&
+        (oc_string_len(*href) != oc_string_len(link->resource->uri) ||
+         memcmp(oc_string(*href), oc_string(link->resource->uri),
+                oc_string_len(*href)) != 0)) {
+      continue;
+    }
+    memcpy(&prev_link, &links_array, sizeof(CborEncoder));
+    oc_rep_object_array_start_item(links);
+    rest_request.query = NULL;
+    rest_request.query_len = 0;
+
+    oc_rep_set_text_string_v1(links, href, oc_string(link->resource->uri),
+                              oc_string_len(link->resource->uri));
+    oc_rep_set_key(oc_rep_object(links), "rep");
+    memcpy(oc_rep_get_encoder(), oc_rep_object(links), sizeof(CborEncoder));
+
+    int size_before = oc_rep_get_encoded_payload_size();
+    rest_request.resource = link->resource;
+    response_buffer.code = 0;
+    response_buffer.response_length = 0;
+#ifdef OC_SECURITY
+    if (request->origin != NULL &&
+        !oc_sec_check_acl(method, link->resource, request->origin)) {
+      response_buffer.code = oc_status_code_unsafe(OC_STATUS_FORBIDDEN);
+    } else
+#endif /* OC_SECURITY */
+    {
+
+      if ((link->resource != (oc_resource_t *)collection) &&
+          oc_check_if_collection(link->resource)) {
+        request->resource = link->resource;
+        if (!oc_handle_collection_request(
+              method, request, link->resource->default_interface, NULL)) {
+          oc_handle_collection_request_result_t res = {
+            .ok = false,
+            .ecode = oc_status_code_unsafe(OC_STATUS_OK),
+            .pcode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST),
+          };
+          return res;
+        }
+        request->resource = (oc_resource_t *)collection;
+      } else {
+        if (!collection_invoke_handler(collection, link->resource,
+                                       &rest_request)) {
+          ecode = oc_status_code_unsafe(OC_STATUS_METHOD_NOT_ALLOWED);
+          memcpy(&links_array, &prev_link, sizeof(CborEncoder));
+          continue;
+        }
+      }
+    }
+
+    if ((method == OC_PUT || method == OC_POST) &&
+        response_buffer.code < oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
+    }
+    if (response_buffer.code < oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
+      pcode = response_buffer.code;
+    } else {
+      ecode = response_buffer.code;
+    }
+    int size_after = oc_rep_get_encoded_payload_size();
+    if (size_before == size_after) {
+      oc_rep_start_root_object();
+      oc_rep_end_root_object();
+    }
+    memcpy(&links_map, oc_rep_get_encoder(), sizeof(CborEncoder));
+    oc_rep_object_array_end_item(links);
+  }
+
+  return (oc_handle_collection_request_result_t){
+    .ok = true,
+    .ecode = ecode,
+    .pcode = pcode,
+  };
+}
+
 OC_NO_DISCARD_RETURN
 static oc_handle_collection_request_result_t
 oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
                                    const oc_resource_t *notify_resource)
 {
   assert(request != NULL);
-  coap_status_t ecode = oc_status_code_unsafe(OC_STATUS_OK);
-  coap_status_t pcode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST);
+
   CborEncoder encoder;
-  CborEncoder prev_link;
-  oc_request_t rest_request;
-  memset(&rest_request, 0, sizeof(oc_request_t));
-  oc_response_t response;
-  memset(&response, 0, sizeof(oc_response_t));
-  oc_response_buffer_t response_buffer;
-  memset(&response_buffer, 0, sizeof(oc_response_buffer_t));
-  bool method_not_found = false;
-  bool get_delete = false;
-  const oc_rep_t *rep = request->request_payload;
-  const oc_string_t *href = NULL;
-  const oc_collection_t *collection = (oc_collection_t *)request->resource;
-  oc_link_t *link = NULL;
-
-  response.response_buffer = &response_buffer;
-  rest_request.response = &response;
-  rest_request.origin = request->origin;
-  rest_request.method = method;
-
   oc_rep_start_links_array();
   memcpy(&encoder, oc_rep_get_encoder(), sizeof(CborEncoder));
-  if (method == OC_GET || method == OC_DELETE) {
-    get_delete = true;
-  }
 
+  bool get_delete = method == OC_GET || method == OC_DELETE;
   if (get_delete) {
-    goto process_request;
+    oc_handle_collection_request_result_t result =
+      collection_batch_request_process_links(
+        (oc_collection_t *)request->resource, method, request, /*href*/ NULL,
+        /*payload*/ NULL, notify_resource);
+    memcpy(oc_rep_get_encoder(), &encoder, sizeof(CborEncoder));
+    oc_rep_end_links_array();
+    return result;
   }
 
+  oc_handle_collection_request_result_t result = {
+    .ok = true,
+    .ecode = oc_status_code_unsafe(OC_STATUS_OK),
+    .pcode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST),
+  };
+
+  const oc_rep_t *rep = request->request_payload;
+  oc_rep_t *payload = NULL;
+  const oc_string_t *href = NULL;
   while (rep != NULL) {
     switch (rep->type) {
     case OC_REP_OBJECT: {
@@ -939,7 +1062,7 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
           href = &pay->value.string;
           break;
         case OC_REP_OBJECT:
-          rest_request.request_payload = pay->value.object;
+          payload = pay->value.object;
           break;
         default:
           break;
@@ -947,152 +1070,46 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
         pay = pay->next;
       }
       if (href == NULL || oc_string_len(*href) == 0) {
-        ecode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST);
+        result.ecode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST);
         goto processed_request;
       }
-    process_request:
-      link = (oc_link_t *)oc_list_head(collection->links);
-      while (link != NULL) {
-        if (link->resource &&
-            (!notify_resource == !(link->resource == notify_resource))) {
-          if (oc_filter_resource_by_rt(link->resource, request)) {
-            if (!get_delete && href && oc_string_len(*href) > 0 &&
-                (oc_string_len(*href) != oc_string_len(link->resource->uri) ||
-                 memcmp(oc_string(*href), oc_string(link->resource->uri),
-                        oc_string_len(*href)) != 0)) {
-              goto next;
-            }
-            memcpy(&prev_link, &links_array, sizeof(CborEncoder));
-            oc_rep_object_array_start_item(links);
-
-            rest_request.query = 0;
-            rest_request.query_len = 0;
-
-            oc_rep_set_text_string_v1(links, href,
-                                      oc_string(link->resource->uri),
-                                      oc_string_len(link->resource->uri));
-            oc_rep_set_key(oc_rep_object(links), "rep");
-            memcpy(oc_rep_get_encoder(), &links_map, sizeof(CborEncoder));
-
-            int size_before = oc_rep_get_encoded_payload_size();
-            rest_request.resource = link->resource;
-            response_buffer.code = 0;
-            response_buffer.response_length = 0;
-            method_not_found = false;
-#ifdef OC_SECURITY
-            if (request->origin != NULL &&
-                !oc_sec_check_acl(method, link->resource, request->origin)) {
-              response_buffer.code = oc_status_code_unsafe(OC_STATUS_FORBIDDEN);
-            } else
-#endif /* OC_SECURITY */
-            {
-              if ((link->resource != (oc_resource_t *)collection) &&
-                  oc_check_if_collection(link->resource)) {
-                request->resource = link->resource;
-                if (!oc_handle_collection_request(
-                      method, request, link->resource->default_interface,
-                      NULL)) {
-                  oc_handle_collection_request_result_t res = {
-                    .ok = false,
-                    .ecode = oc_status_code_unsafe(OC_STATUS_OK),
-                    .pcode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST),
-                  };
-                  return res;
-                }
-                request->resource = (oc_resource_t *)collection;
-              } else {
-                oc_interface_mask_t req_iface =
-                  link->resource->default_interface;
-                if (link->resource == (oc_resource_t *)collection) {
-                  req_iface = OC_IF_BASELINE;
-                }
-                switch (method) {
-                case OC_GET:
-                  if (link->resource->get_handler.cb)
-                    link->resource->get_handler.cb(
-                      &rest_request, req_iface,
-                      link->resource->get_handler.user_data);
-                  else
-                    method_not_found = true;
-                  break;
-                case OC_PUT:
-                  if (link->resource->put_handler.cb)
-                    link->resource->put_handler.cb(
-                      &rest_request, req_iface,
-                      link->resource->put_handler.user_data);
-                  else
-                    method_not_found = true;
-                  break;
-                case OC_POST:
-                  if (link->resource->post_handler.cb)
-                    link->resource->post_handler.cb(
-                      &rest_request, req_iface,
-                      link->resource->post_handler.user_data);
-                  else
-                    method_not_found = true;
-                  break;
-                case OC_DELETE:
-                  if (link->resource->delete_handler.cb)
-                    link->resource->delete_handler.cb(
-                      &rest_request, req_iface,
-                      link->resource->delete_handler.user_data);
-                  else
-                    method_not_found = true;
-                  break;
-                default:
-                  break;
-                }
-              }
-            }
-            if (method_not_found) {
-              ecode = oc_status_code_unsafe(OC_STATUS_METHOD_NOT_ALLOWED);
-              memcpy(&links_array, &prev_link, sizeof(CborEncoder));
-              goto next;
-            } else {
-              if ((method == OC_PUT || method == OC_POST) &&
-                  response_buffer.code <
-                    oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
-              }
-              if (response_buffer.code <
-                  oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
-                pcode = response_buffer.code;
-              } else {
-                ecode = response_buffer.code;
-              }
-              int size_after = oc_rep_get_encoded_payload_size();
-              if (size_before == size_after) {
-                oc_rep_start_root_object();
-                oc_rep_end_root_object();
-              }
-            }
-
-            memcpy(&links_map, oc_rep_get_encoder(), sizeof(CborEncoder));
-            oc_rep_object_array_end_item(links);
-          }
-        }
-      next:
-        link = link->next;
-      }
-      if (get_delete) {
+      result = collection_batch_request_process_links(
+        (oc_collection_t *)request->resource, method, request, href, payload,
+        notify_resource);
+      if (!result.ok) {
         goto processed_request;
       }
     } break;
     default:
-      ecode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST);
+      result.ecode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST);
       goto processed_request;
     }
     rep = rep->next;
   }
+
 processed_request:
   memcpy(oc_rep_get_encoder(), &encoder, sizeof(CborEncoder));
   oc_rep_end_links_array();
 
-  oc_handle_collection_request_result_t result = {
-    .ok = true,
-    .ecode = ecode,
-    .pcode = pcode,
-  };
   return result;
+}
+
+static oc_status_t
+collection_method_success_code(oc_method_t method, oc_interface_mask_t iface)
+{
+  if (method == OC_GET) {
+    return OC_STATUS_OK;
+  }
+  if (method == OC_POST || method == OC_PUT) {
+    if (iface == OC_IF_CREATE) {
+      return OC_STATUS_CREATED;
+    }
+    return OC_STATUS_CHANGED;
+  }
+  if (method == OC_DELETE) {
+    return OC_STATUS_DELETED;
+  }
+  return OC_STATUS_BAD_REQUEST;
 }
 
 bool
@@ -1153,24 +1170,7 @@ oc_handle_collection_request(oc_method_t method, oc_request_t *request,
   oc_status_t code = OC_STATUS_BAD_REQUEST;
   if (ecode < oc_status_code_unsafe(OC_STATUS_BAD_REQUEST) &&
       pcode < oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
-    switch (method) {
-    case OC_GET:
-      code = OC_STATUS_OK;
-      break;
-    case OC_POST:
-    case OC_PUT:
-      if (iface_mask == OC_IF_CREATE) {
-        code = OC_STATUS_CREATED;
-      } else {
-        code = OC_STATUS_CHANGED;
-      }
-      break;
-    case OC_DELETE:
-      code = OC_STATUS_DELETED;
-      break;
-    default:
-      break;
-    }
+    code = collection_method_success_code(method, iface_mask);
   }
   oc_send_response_internal(request, code, APPLICATION_VND_OCF_CBOR, size,
                             true);
