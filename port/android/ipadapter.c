@@ -29,6 +29,7 @@
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_network_monitor.h"
+#include "port/common/posix/oc_socket_internal.h"
 #include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_connectivity_internal.h"
@@ -1051,33 +1052,12 @@ oc_send_buffer(oc_message_t *message)
   OC_LOGipaddr(message->endpoint);
   OC_DBG("%s", "");
 
-  struct sockaddr_storage receiver;
-  memset(&receiver, 0, sizeof(struct sockaddr_storage));
-#ifdef OC_IPV4
-  if (message->endpoint.flags & IPV4) {
-    struct sockaddr_in *r = (struct sockaddr_in *)&receiver;
-    memcpy(&r->sin_addr.s_addr, message->endpoint.addr.ipv4.address,
-           sizeof(r->sin_addr.s_addr));
-    r->sin_family = AF_INET;
-    r->sin_port = htons(message->endpoint.addr.ipv4.port);
-  } else {
-#else
-  {
-#endif
-    struct sockaddr_in6 *r = (struct sockaddr_in6 *)&receiver;
-    memcpy(r->sin6_addr.s6_addr, message->endpoint.addr.ipv6.address,
-           sizeof(r->sin6_addr.s6_addr));
-    r->sin6_family = AF_INET6;
-    r->sin6_port = htons(message->endpoint.addr.ipv6.port);
-    r->sin6_scope_id = message->endpoint.addr.ipv6.scope;
-  }
-  int send_sock = -1;
-
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
-
-  if (!dev) {
+  if (dev == NULL) {
     return -1;
   }
+
+  struct sockaddr_storage receiver = oc_socket_get_address(&message->endpoint);
 
 #ifdef OC_TCP
   if (message->endpoint.flags & TCP) {
@@ -1085,6 +1065,7 @@ oc_send_buffer(oc_message_t *message)
   }
 #endif /* OC_TCP */
 
+  int send_sock = -1;
 #ifdef OC_SECURITY
   if (message->endpoint.flags & SECURED) {
 #ifdef OC_IPV4

@@ -23,6 +23,7 @@
 
 #ifdef OC_TCP
 
+#include "messaging/coap/constants.h"
 #include "port/oc_connectivity.h"
 #include "oc_endpoint.h"
 
@@ -30,7 +31,11 @@
 extern "C" {
 #endif
 
+#define OC_TCP_DEFAULT_RECEIVE_SIZE                                            \
+  (COAP_TCP_DEFAULT_HEADER_LEN + COAP_TCP_MAX_EXTENDED_LENGTH_LEN)
+
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+
 typedef struct oc_tcp_on_connect_event_s
 {
   struct oc_tcp_on_connect_data_s *next;
@@ -49,15 +54,31 @@ void oc_tcp_on_connect_event_free(oc_tcp_on_connect_event_t *event);
 
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
-/** @brief Check if the message is a valid CoAP/TLS header */
-bool oc_tcp_is_valid_header(const oc_message_t *message);
+/** @brief Check if data is a valid CoAP/TLS header */
+bool oc_tcp_is_valid_header(const uint8_t *data, size_t data_size, bool is_tls);
 
 /** @brief Check if the message is a valid for CoAP TCP */
-bool oc_tcp_is_valid_message(oc_message_t *message);
+bool oc_tcp_is_valid_message(oc_message_t *message) OC_NONNULL();
+
+/**
+ * @brief Read total length from TCP or TLS header
+ *
+ * @param data the data
+ * @param data_size size of the data
+ * @param is_tls true if the data is TLS
+ * @return long
+ */
+long oc_tcp_get_total_length_from_header(const uint8_t *data, size_t data_size,
+                                         bool is_tls);
+
+/** Convenience wrapper for oc_tcp_get_total_length_from_header */
+long oc_tcp_get_total_length_from_message_header(const oc_message_t *message)
+  OC_NONNULL();
 
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* OC_TCP */
+
 #endif /* OC_TCP_INTERNAL_H */

@@ -332,8 +332,7 @@ oc_oscore_recv_message(oc_message_t *message)
    * Dispatch oc_message_t to the CoAP layer
    */
 
-  if (oscore_is_oscore_message(message) >= 0 &&
-      !oscore_parse_message(message)) {
+  if (oscore_is_oscore_message(message) && !oscore_parse_message(message)) {
     goto oscore_recv_error;
   }
   OC_DBG("#################################");

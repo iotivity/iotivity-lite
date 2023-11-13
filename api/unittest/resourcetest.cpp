@@ -135,28 +135,28 @@ TEST_F(TestResource, GetMethodHandler)
 {
   oc_resource_t res{};
   auto getCB = [](oc_request_t *, oc_interface_mask_t, void *) {
-    // no-op;
+    // no-op
   };
   char getData;
   res.get_handler.cb = getCB;
   res.get_handler.user_data = &getData;
 
   auto postCB = [](oc_request_t *, oc_interface_mask_t, void *) {
-    // no-op;
+    // no-op
   };
   char postData;
   res.post_handler.cb = postCB;
   res.post_handler.user_data = &postData;
 
   auto putCB = [](oc_request_t *, oc_interface_mask_t, void *) {
-    // no-op;
+    // no-op
   };
   char putData;
   res.put_handler.cb = putCB;
   res.put_handler.user_data = &putData;
 
   auto deleteCB = [](oc_request_t *, oc_interface_mask_t, void *) {
-    // no-op;
+    // no-op
   };
   char deleteData;
   res.delete_handler.cb = deleteCB;

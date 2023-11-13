@@ -157,37 +157,43 @@ oscore_get_outer_code(const coap_packet_t *packet)
   return oc_status_code_unsafe(OC_STATUS_CHANGED);
 }
 
-int
-coap_get_header_oscore(coap_packet_t *packet, uint8_t **piv, uint8_t *piv_len,
-                       uint8_t **kid, uint8_t *kid_len, uint8_t **kid_ctx,
-                       uint8_t *kid_ctx_len)
+bool
+coap_get_header_oscore(const coap_packet_t *packet, const uint8_t **piv,
+                       uint8_t *piv_len, const uint8_t **kid, uint8_t *kid_len,
+                       const uint8_t **kid_ctx, uint8_t *kid_ctx_len)
 {
   if (!IS_OPTION(packet, COAP_OPTION_OSCORE)) {
-    return 0;
+    return false;
   }
 
   /* Partial IV */
-  if (piv) {
+  if (piv != NULL) {
     *piv = packet->piv;
+  }
+  if (piv_len != NULL) {
     *piv_len = packet->piv_len;
   }
 
   /* kid */
-  if (kid) {
+  if (kid != NULL) {
     *kid = packet->kid;
+  }
+  if (kid_len != NULL) {
     *kid_len = packet->kid_len;
   }
 
   /* kid context */
-  if (kid_ctx) {
+  if (kid_ctx != NULL) {
     *kid_ctx = packet->kid_ctx;
+  }
+  if (kid_ctx_len != NULL) {
     *kid_ctx_len = packet->kid_ctx_len;
   }
 
-  return 1;
+  return true;
 }
 
-int
+void
 coap_set_header_oscore(coap_packet_t *packet, const uint8_t *piv,
                        uint8_t piv_len, const uint8_t *kid, uint8_t kid_len,
                        const uint8_t *kid_ctx, uint8_t kid_ctx_len)
@@ -217,8 +223,6 @@ coap_set_header_oscore(coap_packet_t *packet, const uint8_t *piv,
   }
 
   SET_OPTION(packet, COAP_OPTION_OSCORE);
-
-  return 1;
 }
 
 int
@@ -426,19 +430,21 @@ oscore_parse_inner_message(uint8_t *data, size_t data_len,
   return COAP_NO_ERROR;
 }
 
-int
+bool
 oscore_is_oscore_message(const oc_message_t *msg)
 {
   const uint8_t *current_option = NULL;
 
   /* Determine exact location of the CoAP options in the packet buffer */
 #ifdef OC_TCP
-  if (msg->endpoint.flags & TCP) {
+  if ((msg->endpoint.flags & TCP) != 0) {
     /* Calculate CoAP_TCP header length */
     size_t message_length = 0;
     uint8_t num_extended_length_bytes = 0;
-    coap_tcp_parse_message_length(msg->data, &message_length,
-                                  &num_extended_length_bytes);
+    if (!coap_tcp_parse_message_length(msg->data, msg->length, &message_length,
+                                       &num_extended_length_bytes)) {
+      return false;
+    }
 
     current_option =
       msg->data + COAP_TCP_DEFAULT_HEADER_LEN + num_extended_length_bytes;
@@ -491,18 +497,15 @@ oscore_is_oscore_message(const oc_message_t *msg)
 
     option_number += option_delta;
 
-    switch (option_number) {
-    case COAP_OPTION_OSCORE:
+    if (option_number == COAP_OPTION_OSCORE) {
       /* Found the OSCORE option, return success */
-      return 0;
-    default:
-      break;
+      return true;
     }
 
     current_option += option_length;
   }
 
-  return -1;
+  return false;
 }
 
 coap_status_t
@@ -520,8 +523,10 @@ oscore_parse_outer_message(oc_message_t *msg, coap_packet_t *packet)
     /* parse header fields */
     size_t message_length = 0;
     uint8_t num_extended_length_bytes = 0;
-    coap_tcp_parse_message_length(msg->data, &message_length,
-                                  &num_extended_length_bytes);
+    if (!coap_tcp_parse_message_length(msg->data, msg->length, &message_length,
+                                       &num_extended_length_bytes)) {
+      return BAD_REQUEST_4_00;
+    }
 
     packet->type = COAP_TYPE_NON;
     packet->mid = 0;

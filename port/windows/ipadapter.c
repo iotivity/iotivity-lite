@@ -20,6 +20,7 @@
 
 #include "api/oc_network_events_internal.h"
 #include "api/oc_session_events_internal.h"
+#include "port/common/posix/oc_socket_internal.h"
 #include "port/oc_assert.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_connectivity_internal.h"
@@ -1126,35 +1127,21 @@ oc_send_buffer(oc_message_t *message)
   OC_DBG("Outgoing message of size %zd bytes to", message->length);
   OC_LOGipaddr(message->endpoint);
   OC_DBG("%s", "");
-  struct sockaddr_storage receiver;
-  memset(&receiver, 0, sizeof(receiver));
-#ifdef OC_IPV4
-  if (message->endpoint.flags & IPV4) {
-    struct sockaddr_in *r = (struct sockaddr_in *)&receiver;
-    memcpy(&r->sin_addr.s_addr, message->endpoint.addr.ipv4.address,
-           sizeof(r->sin_addr.s_addr));
-    r->sin_family = AF_INET;
-    r->sin_port = htons(message->endpoint.addr.ipv4.port);
-  } else {
-#else
-  {
-#endif
-    struct sockaddr_in6 *r = (struct sockaddr_in6 *)&receiver;
-    memcpy(r->sin6_addr.s6_addr, message->endpoint.addr.ipv6.address,
-           sizeof(r->sin6_addr.s6_addr));
-    r->sin6_family = AF_INET6;
-    r->sin6_port = htons(message->endpoint.addr.ipv6.port);
-    r->sin6_scope_id = message->endpoint.addr.ipv6.scope;
-  }
-  SOCKET send_sock = INVALID_SOCKET;
 
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
+  if (dev == NULL) {
+    return -1;
+  }
+
+  struct sockaddr_storage receiver = oc_socket_get_address(&message->endpoint);
+
 #ifdef OC_TCP
   if (message->endpoint.flags & TCP) {
     return oc_tcp_send_buffer(dev, message, &receiver);
   }
 #endif /* OC_TCP */
 
+  SOCKET send_sock = INVALID_SOCKET;
 #ifdef OC_SECURITY
   if (message->endpoint.flags & SECURED) {
 #ifdef OC_IPV4

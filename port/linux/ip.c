@@ -134,6 +134,7 @@ oc_ip_recv_msg(int sock, uint8_t *recv_buf, long recv_buf_size,
                oc_endpoint_t *endpoint, bool multicast)
 {
   struct sockaddr_storage client;
+  memset(&client, 0, sizeof(client));
   struct iovec iovec[1];
   struct msghdr msg;
   char msg_control[CMSG_LEN(sizeof(struct sockaddr_storage))];

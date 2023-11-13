@@ -664,16 +664,17 @@ collection_encode_mandatory_rts(const oc_collection_t *collection)
 }
 
 static bool
-collection_encode_links(const oc_collection_t *collection,
-                        const oc_request_t *request)
+collection_encode_links(CborEncoder *container, const oc_request_t *request)
 {
-  oc_rep_set_array(root, links);
-  for (const oc_link_t *link = (oc_link_t *)oc_list_head(collection->links);
+  const oc_collection_t *collection =
+    (const oc_collection_t *)request->resource;
+  for (const oc_link_t *link =
+         (const oc_link_t *)oc_list_head(collection->links);
        link != NULL; link = link->next) {
     if (!oc_filter_resource_by_rt(link->resource, request)) {
       continue;
     }
-    oc_rep_object_array_start_item(links);
+    oc_rep_begin_object(container, links);
     oc_rep_set_text_string_v1(links, href, oc_string(link->resource->uri),
                               oc_string_len(link->resource->uri));
     oc_rep_set_string_array(links, rt, link->resource->types);
@@ -743,9 +744,8 @@ collection_encode_links(const oc_collection_t *collection,
     }
     oc_rep_close_array(links, eps);
 
-    oc_rep_object_array_end_item(links);
+    oc_rep_end_object(container, links);
   }
-  oc_rep_close_array(root, links);
   return g_err == CborNoError;
 }
 
@@ -784,7 +784,9 @@ oc_handle_collection_baseline_request(oc_method_t method, oc_request_t *request)
     collection_encode_mandatory_rts(collection);
 
     /* links */
-    collection_encode_links(collection, request);
+    oc_rep_open_array(root, links);
+    collection_encode_links(oc_rep_array(links), request);
+    oc_rep_close_array(root, links);
 
     /* custom properties */
     if (collection->res.get_properties.cb.get_props != NULL) {
@@ -805,95 +807,16 @@ oc_handle_collection_baseline_request(oc_method_t method, oc_request_t *request)
 }
 
 static void
-oc_handle_collection_linked_list_request(oc_request_t *request)
+oc_handle_collection_linked_list_request(const oc_request_t *request)
 {
-  const oc_collection_t *collection = (oc_collection_t *)request->resource;
-  oc_link_t *link = (oc_link_t *)oc_list_head(collection->links);
   oc_rep_start_links_array();
-  while (link != NULL) {
-    if (oc_filter_resource_by_rt(link->resource, request)) {
-      oc_rep_object_array_start_item(links);
-      oc_rep_set_text_string_v1(links, href, oc_string(link->resource->uri),
-                                oc_string_len(link->resource->uri));
-      oc_rep_set_string_array(links, rt, link->resource->types);
-      oc_core_encode_interfaces_mask(oc_rep_object(links), link->interfaces,
-                                     false);
-      oc_rep_set_string_array(links, rel, link->rel);
-      oc_rep_set_int(links, ins, link->ins);
-      oc_link_params_t *p = (oc_link_params_t *)oc_list_head(link->params);
-      while (p) {
-        oc_rep_set_key_v1(oc_rep_object(links), oc_string(p->key),
-                          oc_string_len(p->key));
-        oc_rep_set_value_text_string_v1(links, oc_string(p->value),
-                                        oc_string_len(p->value));
-        p = p->next;
-      }
-      oc_rep_set_object(links, p);
-      oc_rep_set_uint(
-        p, bm,
-        (uint8_t)(link->resource->properties & ~(OC_PERIODIC | OC_SECURE)));
-      oc_rep_close_object(links, p);
-
-      // tag-pos-desc
-      if (link->resource->tag_pos_desc > 0) {
-        const char *desc =
-          oc_enum_pos_desc_to_str(link->resource->tag_pos_desc);
-        if (desc) {
-          // clang-format off
-          oc_rep_set_text_string(links, tag-pos-desc, desc);
-          // clang-format on
-        }
-      }
-
-      // tag-func-desc
-      if (link->resource->tag_func_desc > 0) {
-        const char *func = oc_enum_to_str(link->resource->tag_func_desc);
-        if (func) {
-          // clang-format off
-          oc_rep_set_text_string(links, tag-func-desc, func);
-          // clang-format on
-        }
-      }
-
-      // tag-pos-rel
-      const double *pos = link->resource->tag_pos_rel;
-      if (pos[0] != 0 || pos[1] != 0 || pos[2] != 0) {
-        oc_rep_set_key(oc_rep_object(links), "tag-pos-rel");
-        oc_rep_start_array(oc_rep_object(links), tag_pos_rel);
-        oc_rep_add_double(tag_pos_rel, pos[0]);
-        oc_rep_add_double(tag_pos_rel, pos[1]);
-        oc_rep_add_double(tag_pos_rel, pos[2]);
-        oc_rep_end_array(oc_rep_object(links), tag_pos_rel);
-      }
-
-      // eps
-      oc_rep_set_array(links, eps);
-      oc_endpoint_t *eps =
-        oc_connectivity_get_endpoints(link->resource->device);
-      for (; eps != NULL; eps = eps->next) {
-        if (oc_filter_out_ep_for_resource(eps, link->resource, request->origin,
-                                          link->resource->device, false)) {
-          continue;
-        }
-        oc_rep_object_array_start_item(eps);
-        oc_string64_t ep;
-        if (oc_endpoint_to_string64(eps, &ep)) {
-          oc_rep_set_text_string_v1(eps, ep, oc_string(ep), oc_string_len(ep));
-        }
-        oc_rep_object_array_end_item(eps);
-      }
-      oc_rep_close_array(links, eps);
-
-      oc_rep_object_array_end_item(links);
-    }
-    link = link->next;
-  }
+  collection_encode_links(oc_rep_array(links), request);
   oc_rep_end_links_array();
 }
 
 static bool
 collection_invoke_handler(const oc_collection_t *collection,
-                          oc_resource_t *resource, oc_request_t *request)
+                          const oc_resource_t *resource, oc_request_t *request)
 {
   oc_interface_mask_t iface = resource->default_interface;
   if (resource == &collection->res) {
@@ -935,7 +858,6 @@ collection_batch_request_process_links(const oc_collection_t *collection,
     rest_request.request_payload = payload;
   }
 
-  CborEncoder prev_link;
   for (oc_link_t *link = (oc_link_t *)oc_list_head(collection->links);
        link != NULL; link = link->next) {
     if (link->resource == NULL ||
@@ -951,6 +873,7 @@ collection_batch_request_process_links(const oc_collection_t *collection,
                 oc_string_len(*href)) != 0)) {
       continue;
     }
+    CborEncoder prev_link;
     memcpy(&prev_link, &links_array, sizeof(CborEncoder));
     oc_rep_object_array_start_item(links);
     rest_request.query = NULL;
@@ -991,14 +914,11 @@ collection_batch_request_process_links(const oc_collection_t *collection,
                                        &rest_request)) {
           ecode = oc_status_code_unsafe(OC_STATUS_METHOD_NOT_ALLOWED);
           memcpy(&links_array, &prev_link, sizeof(CborEncoder));
-          continue;
+          continue; // NOLINT(bugprone-terminating-continue)
         }
       }
     }
 
-    if ((method == OC_PUT || method == OC_POST) &&
-        response_buffer.code < oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
-    }
     if (response_buffer.code < oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
       pcode = response_buffer.code;
     } else {

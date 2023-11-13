@@ -195,7 +195,7 @@ public:
 #ifdef _WIN32
     InitializeCriticalSection(&s_mutex);
     InitializeConditionVariable(&s_cv);
-#else
+#else  /* !_WIN32 */
     if (pthread_mutex_init(&s_mutex, nullptr) != 0) {
       throw std::string("cannot initialize mutex");
     }
@@ -218,7 +218,7 @@ public:
 #ifndef _WIN32
     pthread_cond_destroy(&s_cv);
     pthread_mutex_destroy(&s_mutex);
-#endif /* _WIN32 */
+#endif /* !_WIN32 */
   }
 
   static void lock()

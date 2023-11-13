@@ -20,6 +20,7 @@
 #include "ipadapter.h"
 #include "ipcontext.h"
 #include "tcpsession.h"
+#include "port/common/posix/oc_fcntl_internal.h"
 #include "port/oc_assert.h"
 #include "port/oc_log_internal.h"
 #include <arpa/inet.h>
@@ -204,11 +205,11 @@ tcp_connectivity_init(ip_context_t *dev, oc_connectivity_ports_t ports)
     OC_ERR("Could not initialize connection pipe");
     return false;
   }
-  if (oc_set_fd_flags(dev->tcp.connect_pipe[0], O_NONBLOCK, 0) < 0) {
+  if (!oc_fcntl_set_nonblocking(dev->tcp.connect_pipe[0])) {
     OC_ERR("Could not set non-blocking connect_pipe[0]");
     return false;
   }
-  if (oc_set_fd_flags(dev->tcp.connect_pipe[1], O_NONBLOCK, 0) < 0) {
+  if (!oc_fcntl_set_nonblocking(dev->tcp.connect_pipe[1])) {
     OC_ERR("Could not set non-blocking connect_pipe[1]");
     return false;
   }

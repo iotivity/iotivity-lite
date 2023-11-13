@@ -130,7 +130,7 @@ Device::~Device()
 #ifndef _WIN32
   pthread_cond_destroy(&cv_);
   pthread_mutex_destroy(&mutex_);
-#endif /* _WIN32 */
+#endif /* !_WIN32 */
 }
 
 void
@@ -198,9 +198,6 @@ Device::Terminate()
 {
   OC_ATOMIC_STORE8(terminate_, 1);
   SignalEventLoop();
-#ifdef OC_REQUEST_HISTORY
-  oc_request_history_init();
-#endif /* OC_REQUEST_HISTORY */
 }
 
 void
@@ -235,6 +232,10 @@ Device::PoolEventsMs(uint64_t mseconds, bool addDelay)
     WaitForEvent(next_event);
     Unlock();
   }
+
+#ifdef OC_REQUEST_HISTORY
+  oc_request_history_init();
+#endif /* OC_REQUEST_HISTORY */
 
   oc_remove_delayed_callback(this, Device::QuitEvent);
 }

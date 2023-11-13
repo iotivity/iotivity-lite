@@ -293,9 +293,6 @@
     <ClCompile Include="..\..\..\messaging\coap\transactions.c">
       <Filter>Core</Filter>
     </ClCompile>
-    <ClCompile Include="..\oc_allocator.c">
-      <Filter>Port</Filter>
-    </ClCompile>
     <ClCompile Include="..\abort.c">
       <Filter>Port</Filter>
     </ClCompile>
@@ -303,6 +300,12 @@
       <Filter>Port</Filter>
     </ClCompile>
     <ClCompile Include="..\ipadapter.c">
+      <Filter>Port</Filter>
+    </ClCompile>
+    <ClCompile Include="..\oc_allocator.c">
+      <Filter>Port</Filter>
+    </ClCompile>
+    <ClCompile Include="..\oc_fcntl.c">
       <Filter>Port</Filter>
     </ClCompile>
     <ClCompile Include="..\random.c">
@@ -474,6 +477,18 @@
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="..\mutex.c">
+      <Filter>Port</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\port\common\oc_ip.c">
+      <Filter>Port</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\port\common\oc_tcp_socket.c">
+      <Filter>Port</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\port\common\posix\oc_allocator.c">
+      <Filter>Port</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\port\common\posix\oc_socket.c">
       <Filter>Port</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\deps\mbedtls\library\platform_util.c">

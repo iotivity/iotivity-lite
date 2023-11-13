@@ -87,19 +87,18 @@ oc_tcp_on_connect_event_free(oc_tcp_on_connect_event_t *event)
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
 bool
-oc_tcp_is_valid_header(const oc_message_t *message)
+oc_tcp_is_valid_header(const uint8_t *data, size_t data_size, bool is_tls)
 {
-  assert(message != NULL);
 #ifdef OC_SECURITY
-  if ((message->endpoint.flags & SECURED) != 0) {
-    if (message->length < 3) {
-      OC_ERR("TLS header too short: %lu", (long unsigned)message->length);
+  if (is_tls) {
+    if (data_size < 3) {
+      OC_ERR("TLS header too short: %zu", data_size);
       return false;
     }
     // Parse the header fields
-    uint8_t type = message->data[0];
-    uint8_t major_version = message->data[1];
-    uint8_t minor_version = message->data[2];
+    uint8_t type = data[0];
+    uint8_t major_version = data[1];
+    uint8_t minor_version = data[2];
     OC_DBG("TLS header: record type: %d, major %d, minor %d", type,
            major_version, minor_version);
     // Validate the header fields
@@ -134,9 +133,15 @@ oc_tcp_is_valid_header(const oc_message_t *message)
     }
     return true;
   }
+#else  /* !OC_SECURITY */
+  (void)is_tls;
 #endif /* OC_SECURITY */
-  int token_len = (COAP_HEADER_TOKEN_LEN_MASK & message->data[0]) >>
-                  COAP_HEADER_TOKEN_LEN_POSITION;
+  if (data_size < 1) {
+    OC_ERR("TCP header too short: %zu", data_size);
+    return false;
+  }
+  int token_len =
+    (COAP_HEADER_TOKEN_LEN_MASK & data[0]) >> COAP_HEADER_TOKEN_LEN_POSITION;
   if (token_len > COAP_TOKEN_LEN) {
     OC_ERR("invalid token length: %d", token_len);
     // Invalid token length
@@ -155,7 +160,7 @@ oc_tcp_is_valid_message(oc_message_t *message)
     return true;
   }
 #ifdef OC_OSCORE
-  if (oscore_is_oscore_message(message) >= 0) {
+  if (oscore_is_oscore_message(message)) {
     // it is oscore message
     return true;
   }
@@ -170,6 +175,36 @@ oc_tcp_is_valid_message(oc_message_t *message)
     return false;
   }
   return true;
+}
+
+long
+oc_tcp_get_total_length_from_message_header(const oc_message_t *message)
+{
+  return oc_tcp_get_total_length_from_header(
+    message->data, message->length, (message->endpoint.flags & SECURED) != 0);
+}
+
+long
+oc_tcp_get_total_length_from_header(const uint8_t *data, size_t data_size,
+                                    bool is_tls)
+{
+  if (!oc_tcp_is_valid_header(data, data_size, is_tls)) {
+    OC_ERR("invalid header");
+    return -1;
+  }
+
+#ifdef OC_SECURITY
+#define OC_TLS_HEADER_SIZE (5)
+  if (is_tls) {
+    if (data_size < OC_TLS_HEADER_SIZE) {
+      OC_ERR("TLS header too short: %zu", data_size);
+      return -1;
+    }
+    //[3][4] bytes in tls header are tls payload length
+    return OC_TLS_HEADER_SIZE + ((data[3] << 8) | data[4]);
+  }
+#endif /* OC_SECURITY */
+  return coap_tcp_get_packet_size(data, data_size);
 }
 
 #endif /* OC_TCP */

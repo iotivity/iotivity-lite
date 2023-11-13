@@ -207,8 +207,9 @@ bool oc_rep_encoder_get_content_format(oc_content_format_t *format)
   OC_NONNULL();
 
 /** @brief Write raw data to encoder */
-int oc_rep_encoder_write_raw(oc_rep_encoder_t *encoder, const uint8_t *data,
-                             size_t len) OC_NONNULL(1);
+CborError oc_rep_encoder_write_raw(oc_rep_encoder_t *encoder,
+                                   const uint8_t *data, size_t len)
+  OC_NONNULL(1);
 
 /** @brief Write null representation to encoder */
 CborError oc_rep_encoder_write_null(oc_rep_encoder_t *encoder,

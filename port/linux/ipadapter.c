@@ -27,6 +27,8 @@
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_network_monitor.h"
+#include "port/common/posix/oc_fcntl_internal.h"
+#include "port/common/posix/oc_socket_internal.h"
 #include "port/oc_assert.h"
 #include "port/oc_clock.h"
 #include "port/oc_connectivity.h"
@@ -997,32 +999,6 @@ network_event_thread(void *data)
   return NULL;
 }
 
-bool
-oc_get_socket_address(const oc_endpoint_t *endpoint,
-                      struct sockaddr_storage *addr)
-{
-  if (endpoint == NULL || addr == NULL) {
-    return false;
-  }
-#ifdef OC_IPV4
-  if ((endpoint->flags & IPV4) != 0) {
-    struct sockaddr_in *r = (struct sockaddr_in *)addr;
-    memcpy(&r->sin_addr.s_addr, endpoint->addr.ipv4.address,
-           sizeof(r->sin_addr.s_addr));
-    r->sin_family = AF_INET;
-    r->sin_port = htons(endpoint->addr.ipv4.port);
-    return true;
-  }
-#endif /* OC_IPV4 */
-  struct sockaddr_in6 *r = (struct sockaddr_in6 *)addr;
-  memcpy(r->sin6_addr.s6_addr, endpoint->addr.ipv6.address,
-         sizeof(r->sin6_addr.s6_addr));
-  r->sin6_family = AF_INET6;
-  r->sin6_port = htons(endpoint->addr.ipv6.port);
-  r->sin6_scope_id = endpoint->addr.ipv6.scope;
-  return true;
-}
-
 static int
 oc_send_buffer_internal(oc_message_t *message, bool create, bool queue)
 {
@@ -1030,17 +1006,12 @@ oc_send_buffer_internal(oc_message_t *message, bool create, bool queue)
   OC_LOGipaddr(message->endpoint);
   OC_DBG("%s", "");
 
-  struct sockaddr_storage receiver;
-  memset(&receiver, 0, sizeof(struct sockaddr_storage));
-  if (!oc_get_socket_address(&message->endpoint, &receiver)) {
-    OC_ERR("cannot retrieve socket address");
-    return -1;
-  }
-
   ip_context_t *dev = oc_get_ip_context_for_device(message->endpoint.device);
   if (dev == NULL) {
     return -1;
   }
+
+  struct sockaddr_storage receiver = oc_socket_get_address(&message->endpoint);
 
 #ifdef OC_TCP
   if ((message->endpoint.flags & TCP) != 0) {
@@ -1445,7 +1416,7 @@ initialize_ip_context(ip_context_t *dev, size_t device,
     OC_ERR("shutdown pipe: %d", errno);
     return false;
   }
-  if (oc_set_fd_flags(dev->shutdown_pipe[0], O_NONBLOCK, 0) < 0) {
+  if (!oc_fcntl_set_nonblocking(dev->shutdown_pipe[0])) {
     OC_ERR("Could not set non-block shutdown_pipe[0]");
     return false;
   }
@@ -1620,26 +1591,3 @@ oc_connectivity_end_session(const oc_endpoint_t *endpoint)
   }
 }
 #endif /* OC_TCP */
-
-int
-oc_set_fd_flags(int sockfd, int to_add, int to_remove)
-{
-  int old_flags = fcntl(sockfd, F_GETFL, 0);
-  if (old_flags < 0) {
-    return -1;
-  }
-
-  int flags = old_flags;
-  flags &= ~to_remove;
-  flags |= to_add;
-
-  if (flags == old_flags) {
-    return flags;
-  }
-
-  if (fcntl(sockfd, F_SETFL, flags) < 0) {
-    return -1;
-  }
-
-  return flags;
-}

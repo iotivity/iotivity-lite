@@ -83,7 +83,7 @@ public:
 #ifndef _WIN32
     pthread_cond_destroy(&cv);
     pthread_mutex_destroy(&mutex);
-#endif /* _WIN32 */
+#endif /* !_WIN32 */
   }
 
   void SetUp() override

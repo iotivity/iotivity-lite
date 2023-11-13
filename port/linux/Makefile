@@ -49,18 +49,24 @@ SECURITY_HEADERS = -I$(ROOT_DIR)/security \
                    -I$(MBEDTLS_DIR)/include
 MESSAGING_HEADERS = -I$(ROOT_DIR)/messaging/coap
 COMMON_TEST_DIR := $(ROOT_DIR)/tests/gtest
+COMMON_TEST_COAP_DIR := $(COMMON_TEST_DIR)/coap
 COMMON_TEST_TLS_DIR := $(COMMON_TEST_DIR)/tls
 COMMON_TEST_OBJ_DIR := $(COMMON_TEST_DIR)/obj
-COMMON_TEST_TLS_OBJ_DIR := $(COMMON_TEST_DIR)/tls/obj
-COMMON_TEST_SRC_FILES := $(wildcard $(COMMON_TEST_DIR)/*.cpp $(COMMON_TEST_TLS_DIR)/*.cpp)
+COMMON_TEST_COAP_OBJ_DIR := $(COMMON_TEST_COAP_DIR)/obj
+COMMON_TEST_TLS_OBJ_DIR := $(COMMON_TEST_TLS_DIR)/obj
+COMMON_TEST_SRC_FILES := $(wildcard $(COMMON_TEST_DIR)/*.cpp $(COMMON_TEST_COAP_DIR)/*.cpp $(COMMON_TEST_TLS_DIR)/*.cpp)
 COMMON_TEST_OBJ_FILES := $(patsubst $(COMMON_TEST_DIR)/%.cpp,$(COMMON_TEST_OBJ_DIR)/%.o,$(COMMON_TEST_SRC_FILES))
-COMMON_TEST_OBJ_FILES := $(patsubst $(COMMON_TEST_TLS_DIR)/%.cpp,$(COMMON_TEST_OBJ_DIR)/%.o, $(COMMON_TEST_OBJ_FILES))
+COMMON_TEST_OBJ_FILES := $(patsubst $(COMMON_TEST_COAP_DIR)/%.cpp,$(COMMON_TEST_COAP_OBJ_DIR)/%.o,$(COMMON_TEST_OBJ_FILES))
+COMMON_TEST_OBJ_FILES := $(patsubst $(COMMON_TEST_TLS_DIR)/%.cpp,$(COMMON_TEST_OBJ_DIR)/%.o,$(COMMON_TEST_OBJ_FILES))
 API_TEST_DIR = $(ROOT_DIR)/api/unittest
-API_TEST_ENCODER_DIR = $(ROOT_DIR)/api/unittest/encoder
+API_TEST_DISCOVERY_DIR = $(API_TEST_DIR)/discovery
+API_TEST_ENCODER_DIR = $(API_TEST_DIR)/encoder
 API_TEST_OBJ_DIR = $(API_TEST_DIR)/obj
-API_TEST_ENCODER_OBJ_DIR = $(API_TEST_DIR)/encoder/obj
-API_TEST_SRC_FILES := $(wildcard $(API_TEST_DIR)/*.cpp $(API_TEST_ENCODER_DIR)/*.cpp)
+API_TEST_DISCOVERY_OBJ_DIR = $(API_TEST_DISCOVERY_DIR)/obj
+API_TEST_ENCODER_OBJ_DIR = $(API_TEST_ENCODER_DIR)/obj
+API_TEST_SRC_FILES := $(wildcard $(API_TEST_DIR)/*.cpp $(API_TEST_DISCOVERY_DIR)/*.cpp $(API_TEST_ENCODER_DIR)/*.cpp)
 API_TEST_OBJ_FILES := $(patsubst $(API_TEST_DIR)/%.cpp,$(API_TEST_OBJ_DIR)/%.o,$(API_TEST_SRC_FILES))
+API_TEST_OBJ_FILES := $(patsubst $(API_TEST_DISCOVERY_DIR)/%.cpp,$(API_TEST_ENCODER_OBJ_DIR)/%.o,$(API_TEST_OBJ_FILES))
 API_TEST_OBJ_FILES := $(patsubst $(API_TEST_ENCODER_DIR)/%.cpp,$(API_TEST_ENCODER_OBJ_DIR)/%.o,$(API_TEST_OBJ_FILES))
 SECURITY_TEST_DIR = $(ROOT_DIR)/security/unittest
 SECURITY_TEST_OBJ_DIR = $(SECURITY_TEST_DIR)/obj
@@ -119,7 +125,6 @@ endif
 
 CTIMESTAMP+=../../api/c-timestamp/timestamp_compare.c ../../api/c-timestamp/timestamp_format.c ../../api/c-timestamp/timestamp_valid.c ../../api/c-timestamp/timestamp_parse.c
 
-SRC_PORT_COMMON:=$(wildcard ../../port/common/*.c) $(wildcard ../../port/common/posix/*.c)
 ifneq ($(MEMORY_TRACE),1)
 SRC_UTIL:=$(filter-out %_mem_trace.c,$(wildcard ../../util/*.c))
 else
@@ -128,7 +133,7 @@ endif
 ifeq ($(JSON_ENCODER),1)
 SRC_UTIL+=$(wildcard ../../util/jsmn/*.c)
 endif
-SRC_COMMON:=${CBOR} ${CTIMESTAMP} ${SRC_PORT_COMMON} ${SRC_UTIL}
+SRC_COMMON:=${CBOR} ${CTIMESTAMP} ${SRC_UTIL}
 SRC_API:=$(wildcard ../../api/*.c)
 ifneq ($(INTROSPECTION),1)
 SRC_API:=$(filter-out %oc_introspection.c,${SRC_API})
@@ -140,6 +145,7 @@ ifneq ($(JSON_ENCODER),1)
 SRC_API:=$(filter-out %oc_rep_decode_json.c %oc_rep_encode_json.c,${SRC_API})
 endif
 SRC:=${SRC_API} $(wildcard ../../messaging/coap/*.c ../../port/linux/*.c)
+SRC_PORT_COMMON:=$(wildcard ../../port/common/*.c ../../port/common/posix/*.c)
 SRC_CLIENT:=$(wildcard ../../api/client/*.c)
 SRC_CLOUD:=$(wildcard ../../api/cloud/*.c)
 
@@ -168,6 +174,7 @@ CFLAGS_CLOUD=-I../../api/cloud -DOC_CLIENT -DOC_SERVER
 CFLAGS=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -I../../deps/tinycbor/src -I../../api -std=gnu99 $(WARNING_FLAGS) #-Wl,-Map,client.map
 CXXFLAGS+=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-reorder-functions -fno-defer-pop -fno-strict-overflow -I./ -I../../include/ -I../../ -I../../deps/tinycbor/src $(WARNING_FLAGS) #-Wl,-Map,client.map
 OBJ_COMMON=$(addprefix obj/,$(notdir $(SRC_COMMON:.c=.o)))
+OBJ_PORT_COMMON=$(addprefix obj/port/,$(notdir $(SRC_PORT_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix obj/client/,$(notdir $(SRC:.c=.o) $(SRC_CLIENT:.c=.o)))
 OBJ_SERVER=$(addprefix obj/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o oc_obt_otm_cert.o oc_obt_otm_streamlined_onboarding.o oc_obt_certs.o,$(notdir $(SRC:.c=.o))))
 OBJ_CLOUD=$(addprefix obj/cloud/,$(notdir $(SRC_CLOUD:.c=.o)))
@@ -178,7 +185,6 @@ OBJ_PYTHON=$(addprefix obj/python/,$(notdir $(SRC_PYTHON:.c=.o)))
 # $(info    SRC_PYTHON is $(SRC_PYTHON))
 
 VPATH=../../api/:../../api/client/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:
-VPATH+=../../port/common/:../../port/common/posix/:
 VPATH+=../../python/:
 VPATH+=../../util/:../../util/jsmn/:
 VPATH+=../../deps/tinycbor/src/:../../deps/mbedtls/library:
@@ -369,11 +375,19 @@ $(COMMON_TEST_OBJ_DIR)/%.o: $(COMMON_TEST_DIR)/%.cpp
 	@mkdir -p ${@D}
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
 
+$(COMMON_TEST_COAP_OBJ_DIR)/%.o: $(COMMON_TEST_COAP_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
+
 $(COMMON_TEST_TLS_OBJ_DIR)/%.o: $(COMMON_TEST_TLS_DIR)/%.cpp
 	@mkdir -p ${@D}
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -I$(ROOT_DIR)/deps/tinycbor/src -c $< -o $@
 
 $(API_TEST_OBJ_DIR)/%.o: $(API_TEST_DIR)/%.cpp
+	@mkdir -p ${@D}
+	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -c $< -o $@
+
+$(API_TEST_DISCOVERY_OBJ_DIR)/%.o: $(API_TEST_DISCOVERY_DIR)/%.cpp
 	@mkdir -p ${@D}
 	$(CXX) $(GTEST_CPPFLAGS) $(TEST_CXXFLAGS) $(EXTRA_CFLAGS) $(HEADER_DIR) -c $< -o $@
 
@@ -423,9 +437,17 @@ copy_idd_files:
 	@cp ../../apps/server_rules_IDD.cbor .
 	@cp ../../apps/cloud_proxy_IDD.cbor .
 
-${SRC} ${SRC_COMMON} ${SRC_CLIENT}: $(MBEDTLS_PATCH_FILE)
+${SRC} ${SRC_COMMON} ${SRC_PORT_COMMON} ${SRC_CLIENT}: $(MBEDTLS_PATCH_FILE)
 
 obj/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS}
+
+obj/port/%.o: ../../port/common/%.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS}
+
+obj/port/%.o: ../../port/common/posix/%.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS}
 
@@ -455,27 +477,27 @@ obj/client/oc_introspection.o: ../../include/server_introspection.dat.h
 obj/client_server/oc_introspection.o: ../../include/server_introspection.dat.h
 endif
 
-libiotivity-lite-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
-	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
+libiotivity-lite-server.a: $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_SERVER)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_SERVER)
 
-libiotivity-lite-server.so: $(OBJ_COMMON) $(OBJ_SERVER)
-	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_SERVER) $(LIBS)
+libiotivity-lite-server.so: $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_SERVER)
+	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_SERVER) $(LIBS)
 
-libiotivity-lite-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
-	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT)
+libiotivity-lite-client.a: $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT)
 
-libiotivity-lite-client.so: $(OBJ_COMMON) $(OBJ_CLIENT)
-	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(LIBS)
+libiotivity-lite-client.so: $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT)
+	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT) $(LIBS)
 
-libiotivity-lite-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
-	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+libiotivity-lite-client-server.a: $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 
-libiotivity-lite-client-python.so: $(OBJ_COMMON) $(OBJ_CLIENT) $(OBJ_PYTHON)
-	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT) $(OBJ_PYTHON) $(LIBS)
+libiotivity-lite-client-python.so: $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT) $(OBJ_PYTHON)
+	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT) $(OBJ_PYTHON) $(LIBS)
 	cp $@ ../../python
 
-libiotivity-lite-client-server.so: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
-	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD) $(LIBS)
+libiotivity-lite-client-server.so: $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+	$(CC) -shared -o $@ $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD) $(LIBS)
 
 server: libiotivity-lite-server.a $(ROOT_DIR)/apps/server_linux.c
 	@mkdir -p $@_creds
@@ -658,7 +680,7 @@ iotivity-lite-client-server.pc: iotivity-lite-client-server.pc.in
 		-e 's,@extra_cflags@,-I$${includedir}/iotivity-lite/tinycbor $(EXTRA_CFLAGS),' \
 		-e 's,@extra_libs@,$(EXTRA_LIBS),'
 
-swig: $(CONSTRAINED_LIBS) $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+swig: $(CONSTRAINED_LIBS) $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	${MAKE} -C ${SWIG_DIR}
 
 ifneq ($(SECURE),0)

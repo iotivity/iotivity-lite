@@ -52,6 +52,41 @@ protected:
   }
 };
 
+TEST_F(TestOSCORE, GetHeader_F)
+{
+  coap_packet_t packet{};
+  EXPECT_FALSE(coap_get_header_oscore(&packet, nullptr, nullptr, nullptr,
+                                      nullptr, nullptr, nullptr));
+}
+
+TEST_F(TestOSCORE, GetHeader_P)
+{
+  coap_packet_t packet{};
+  std::array<uint8_t, 1> piv_in = { 0x01 };
+  std::array<uint8_t, 2> kid_in = { 0x02, 0x03 };
+  std::array<uint8_t, 3> kid_ctx_in = { 0x04, 0x05, 0x06 };
+  coap_set_header_oscore(&packet, &piv_in[0], piv_in.size(), &kid_in[0],
+                         kid_in.size(), &kid_ctx_in[0], kid_ctx_in.size());
+
+  EXPECT_TRUE(coap_get_header_oscore(&packet, nullptr, nullptr, nullptr,
+                                     nullptr, nullptr, nullptr));
+
+  const uint8_t *piv = nullptr;
+  uint8_t piv_len = 0;
+  const uint8_t *kid = nullptr;
+  uint8_t kid_len = 0;
+  const uint8_t *kid_ctx = nullptr;
+  uint8_t kid_ctx_len = 0;
+  ASSERT_TRUE(coap_get_header_oscore(&packet, &piv, &piv_len, &kid, &kid_len,
+                                     &kid_ctx, &kid_ctx_len));
+  EXPECT_EQ(piv_len, piv_in.size());
+  EXPECT_EQ(0, memcmp(piv, &piv_in[0], piv_len));
+  EXPECT_EQ(kid_len, kid_in.size());
+  EXPECT_EQ(0, memcmp(kid, &kid_in[0], kid_len));
+  EXPECT_EQ(kid_ctx_len, kid_ctx_in.size());
+  EXPECT_EQ(0, memcmp(kid_ctx, &kid_ctx_in[0], kid_ctx_len));
+}
+
 /* Test cases from RFC 8613 */
 
 /* C.1.  Test Vector 1: Key Derivation with Master Salt */

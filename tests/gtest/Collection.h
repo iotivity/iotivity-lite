@@ -39,12 +39,14 @@ using oc_collection_unique_ptr =
 
 class Collection {
 public:
+  using Links = std::unordered_map<std::string, oc::LinkData>;
+
   struct Data
   {
     std::optional<BaselineData> baseline;
     std::vector<std::string> rts;
     std::vector<std::string> rts_m;
-    std::unordered_map<std::string, LinkData> links;
+    Links links;
     std::unordered_map<std::string, const oc_rep_t *> properties;
   };
 
@@ -59,6 +61,7 @@ public:
   using BatchData = std::unordered_map<std::string, BatchItem>;
 
   static std::optional<Data> ParsePayload(const oc_rep_t *rep);
+  static std::optional<Links> ParseLinksPayload(const oc_rep_t *rep);
   static BatchData ParseBatchPayload(const oc_rep_t *rep);
 };
 

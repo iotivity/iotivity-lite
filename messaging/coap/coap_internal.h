@@ -286,9 +286,20 @@ size_t coap_set_option_header(unsigned int delta, size_t length,
                               uint8_t *buffer);
 
 #ifdef OC_TCP
+
+/** @brief Initialize a TCP message */
 void coap_tcp_init_message(coap_packet_t *packet, uint8_t code) OC_NONNULL();
 
-size_t coap_tcp_get_packet_size(const uint8_t *data) OC_NONNULL();
+/** @brief Encode the packet size into the header */
+void coap_tcp_set_header_length(coap_packet_t *packet,
+                                uint8_t num_extended_length_bytes, uint8_t len,
+                                size_t extended_len) OC_NONNULL();
+
+/** @brief Examine data as if it contains a valid CoAP TCP message header and
+ * extract the total message size
+ */
+long coap_tcp_get_packet_size(const uint8_t *data, size_t data_size)
+  OC_NONNULL();
 
 /**
  * @brief Parse TCP CoAP message
@@ -303,9 +314,23 @@ coap_status_t coap_tcp_parse_message(coap_packet_t *packet, uint8_t *data,
                                      size_t data_len, bool validate)
   OC_NONNULL();
 
-void coap_tcp_parse_message_length(const uint8_t *data, size_t *message_length,
+/**
+ * @brief Parse TCP CoAP message length
+ *
+ * @param data raw message data (cannot be NULL)
+ * @param data_size length of raw message data
+ * @param[out] message_length message length (cannot be NULL)
+ * @param[out] num_extended_length_bytes number of extended length bytes (cannot
+ * be NULL)
+ *
+ * @return true if parsing was successful
+ * @return false otherwise
+ */
+bool coap_tcp_parse_message_length(const uint8_t *data, size_t data_size,
+                                   size_t *message_length,
                                    uint8_t *num_extended_length_bytes)
   OC_NONNULL();
+
 #endif /* OC_TCP */
 
 #ifdef __cplusplus

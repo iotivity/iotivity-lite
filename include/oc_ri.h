@@ -336,7 +336,7 @@ struct oc_resource_s
   oc_request_handler_t put_handler;      ///< callback for PUT
   oc_request_handler_t post_handler;     ///< callback for POST
   oc_request_handler_t delete_handler;   ///< callback for DELETE
-#if defined(OC_COLLECTIONS)
+#ifdef OC_COLLECTIONS
   oc_properties_cb_t get_properties; ///< callback for get properties
   oc_properties_cb_t set_properties; ///< callback for set properties
 #endif
