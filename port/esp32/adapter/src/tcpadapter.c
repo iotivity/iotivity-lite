@@ -25,6 +25,8 @@
 #include "messaging/coap/coap_internal.h"
 #include "oc_endpoint.h"
 #include "oc_session_events.h"
+#include "port/common/oc_tcp_socket_internal.h"
+#include "port/common/posix/oc_fcntl_internal.h"
 #include "port/oc_assert.h"
 #include "port/oc_log_internal.h"
 #include "tcpadapter.h"
@@ -44,11 +46,6 @@
 #ifdef OC_TCP
 
 #define OC_TCP_LISTEN_BACKLOG 3
-
-#define TLS_HEADER_SIZE 5
-
-#define DEFAULT_RECEIVE_SIZE                                                   \
-  (COAP_TCP_DEFAULT_HEADER_LEN + COAP_TCP_MAX_EXTENDED_LENGTH_LEN)
 
 #define LIMIT_RETRY_CONNECT 5
 
@@ -296,21 +293,6 @@ get_ready_to_read_session(fd_set *setfds)
   return session;
 }
 
-static size_t
-get_total_length_from_header(oc_message_t *message, oc_endpoint_t *endpoint)
-{
-  size_t total_length = 0;
-  if (endpoint->flags & SECURED) {
-    //[3][4] bytes in tls header are tls payload length
-    total_length =
-      TLS_HEADER_SIZE + (size_t)((message->data[3] << 8) | message->data[4]);
-  } else {
-    total_length = coap_tcp_get_packet_size(message->data);
-  }
-
-  return total_length;
-}
-
 adapter_receive_state_t
 oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
 {
@@ -382,7 +364,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
 
   // receive message.
   size_t total_length = 0;
-  size_t want_read = DEFAULT_RECEIVE_SIZE;
+  size_t want_read = OC_TCP_DEFAULT_RECEIVE_SIZE;
   message->length = 0;
   do {
     int count =
@@ -412,12 +394,16 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
         message->encrypted = 1;
       }
 #endif /* OC_SECURITY */
-      if (!oc_tcp_is_valid_header(message)) {
-        OC_ERR("invalid header");
+
+      long length_from_header =
+        oc_tcp_get_total_length_from_message_header(message);
+      if (length_from_header < 0) {
+        OC_ERR("invalid message size in header");
         free_tcp_session(session);
         ret_with_code(ADAPTER_STATUS_ERROR);
       }
-      total_length = get_total_length_from_header(message, &session->endpoint);
+
+      total_length = (size_t)length_from_header;
       // check to avoid buffer overflow
       if (total_length > oc_message_buffer_size()) {
         OC_ERR(
@@ -471,68 +457,6 @@ get_session_socket(const oc_endpoint_t *endpoint)
 }
 
 static int
-connect_nonb(int sockfd, const struct sockaddr *r, int r_len, int nsec)
-{
-  int flags, n, error;
-  socklen_t len;
-  fd_set wset;
-  struct timeval tval;
-
-  flags = fcntl(sockfd, F_GETFL, 0);
-  if (flags < 0) {
-    return -1;
-  }
-
-  error = fcntl(sockfd, F_SETFL, flags | O_NONBLOCK);
-  if (error < 0) {
-    return -1;
-  }
-
-  error = 0;
-  if ((n = connect(sockfd, (struct sockaddr *)r, r_len)) < 0) {
-    if (errno != EINPROGRESS)
-      return -1;
-  }
-
-  /* Do whatever we want while the connect is taking place. */
-  if (n == 0) {
-    goto done; /* connect completed immediately */
-  }
-
-  FD_ZERO(&wset);
-  FD_SET(sockfd, &wset);
-  tval.tv_sec = nsec;
-  tval.tv_usec = 0;
-
-  if (select(sockfd + 1, NULL, &wset, NULL, nsec ? &tval : NULL) == 0) {
-    /* timeout */
-    errno = ETIMEDOUT;
-    return -1;
-  }
-
-  if (FD_ISSET(sockfd, &wset)) {
-    len = sizeof(error);
-    if (getsockopt(sockfd, SOL_SOCKET, SO_ERROR, &error, &len) < 0)
-      return -1; /* Solaris pending error */
-  } else {
-    OC_DBG("select error: sockfd not set");
-    return -1;
-  }
-
-done:
-  if (error < 0) {
-    errno = error;
-    return -1;
-  } else {
-    error = fcntl(sockfd, F_SETFL, flags); /* restore file status flags */
-    if (error < 0) {
-      return -1;
-    }
-  }
-  return 0;
-}
-
-static int
 initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
                      const struct sockaddr_storage *receiver)
 {
@@ -540,29 +464,13 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
   uint8_t retry_cnt = 0;
 
   while (retry_cnt < LIMIT_RETRY_CONNECT) {
-    if (endpoint->flags & IPV6) {
-      sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
-#ifdef OC_IPV4
-    } else if (endpoint->flags & IPV4) {
-      sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-#endif
-    }
-
-    if (sock < 0) {
-      OC_ERR("could not create socket for new TCP session");
-      return -1;
-    }
-
-    socklen_t receiver_size = sizeof(*receiver);
-    int ret = 0;
-    if ((ret = connect_nonb(sock, (struct sockaddr *)receiver, receiver_size,
-                            TCP_CONNECT_TIMEOUT)) == 0) {
+    sock =
+      oc_tcp_socket_connect_and_wait(endpoint, receiver, TCP_CONNECT_TIMEOUT);
+    if (sock >= 0) {
       break;
     }
-
-    close(sock);
     retry_cnt++;
-    OC_DBG("connect fail with %d. retry(%d)", ret, retry_cnt);
+    OC_DBG("connect failed, retry(%d)", retry_cnt);
   }
 
   if (retry_cnt >= LIMIT_RETRY_CONNECT) {

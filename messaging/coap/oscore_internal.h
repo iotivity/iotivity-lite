@@ -25,28 +25,38 @@
 #include "port/oc_connectivity.h"
 #include "util/oc_compiler.h"
 
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/** Set OSCORE option */
+void coap_set_header_oscore(coap_packet_t *packet, const uint8_t *piv,
+                            uint8_t piv_len, const uint8_t *kid,
+                            uint8_t kid_len, const uint8_t *kid_ctx,
+                            uint8_t kid_ctx_len) OC_NONNULL(1);
+
+/** Get OSCORE option */
+bool coap_get_header_oscore(const coap_packet_t *packet, const uint8_t **piv,
+                            uint8_t *piv_len, const uint8_t **kid,
+                            uint8_t *kid_len, const uint8_t **kid_ctx,
+                            uint8_t *kid_ctx_len) OC_NONNULL(1);
+
+/** Check if message is an OSCORE message */
+bool oscore_is_oscore_message(const oc_message_t *msg) OC_NONNULL();
 
 void oscore_send_error(const coap_packet_t *packet, uint8_t code,
                        const oc_endpoint_t *endpoint);
 int oscore_read_piv(const uint8_t *piv, uint8_t piv_len, uint64_t *ssn);
 int oscore_store_piv(uint64_t ssn, uint8_t *piv, uint8_t *piv_len);
 uint32_t oscore_get_outer_code(const coap_packet_t *packet);
-int oscore_is_oscore_message(const oc_message_t *msg);
 int coap_parse_oscore_option(coap_packet_t *packet,
                              const uint8_t *current_option,
                              size_t option_length);
 size_t coap_serialize_oscore_option(unsigned int *current_number,
                                     const coap_packet_t *packet,
                                     uint8_t *buffer);
-int coap_get_header_oscore(coap_packet_t *packet, uint8_t **piv,
-                           uint8_t *piv_len, uint8_t **kid, uint8_t *kid_len,
-                           uint8_t **kid_ctx, uint8_t *kid_ctx_len);
-int coap_set_header_oscore(coap_packet_t *packet, const uint8_t *piv,
-                           uint8_t piv_len, const uint8_t *kid, uint8_t kid_len,
-                           const uint8_t *kid_ctx, uint8_t kid_ctx_len);
 coap_status_t oscore_parse_inner_message(uint8_t *data, size_t data_len,
                                          coap_packet_t *packet);
 coap_status_t oscore_parse_outer_message(oc_message_t *msg,

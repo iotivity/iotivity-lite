@@ -471,7 +471,7 @@ file(GLOB COMMON_SRC
     ${PROJECT_SOURCE_DIR}/util/*.c
 )
 
-if(UNIX)
+if(UNIX OR WIN32)
     file(GLOB COMMON_POSIX_SRC
         ${PROJECT_SOURCE_DIR}/port/common/posix/*.c
     )
@@ -985,10 +985,10 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         list(APPEND OC_UNITTESTS ${OC_PACKAGE_ADD_TEST_TARGET})
     endmacro()
 
-    file(GLOB COMMONTEST_SRC tests/gtest/*.cpp tests/gtest/tls/*.cpp)
+    file(GLOB COMMONTEST_SRC tests/gtest/*.cpp tests/gtest/coap/*.cpp tests/gtest/tls/*.cpp)
 
     # Unit tests
-    file(GLOB APITEST_SRC api/unittest/*.cpp api/unittest/encoder/*.cpp api/client/unittest/*.cpp)
+    file(GLOB APITEST_SRC api/unittest/*.cpp api/unittest/discovery/*.cpp api/unittest/encoder/*.cpp api/client/unittest/*.cpp)
     set(apitest_files)
     if (OC_INTROSPECTION_ENABLED AND OC_IDD_API_ENABLED)
         set(apitest_files ${PROJECT_SOURCE_DIR}/api/unittest/introspectiontest_IDD.cbor)

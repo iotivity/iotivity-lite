@@ -28,6 +28,8 @@
 #include "api/oc_collection_internal.h"
 #endif /* OC_COLLECTIONS */
 
+#include <gtest/gtest.h>
+
 namespace oc {
 
 void
@@ -188,5 +190,25 @@ SetAccessInRFOTM(oc_core_resource_t index, size_t device, bool make_public,
 }
 
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+
+#ifdef OC_HAS_FEATURE_ETAG
+
+void
+AssertETag(oc_coap_etag_t etag1, uint64_t etag2)
+{
+  ASSERT_EQ(sizeof(etag2), etag1.length);
+  std::array<uint8_t, sizeof(etag2)> etag2_buf{};
+  memcpy(&etag2_buf[0], &etag2, etag2_buf.size());
+  ASSERT_EQ(0, memcmp(&etag1.value[0], &etag2_buf[0], etag1.length));
+}
+
+void
+AssertResourceETag(oc_coap_etag_t etag, const oc_resource_t *resource)
+{
+  ASSERT_NE(nullptr, resource);
+  AssertETag(etag, resource->etag);
+}
+
+#endif /* OC_HAS_FEATURE_ETAG */
 
 } // namespace oc

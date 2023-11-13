@@ -26,6 +26,22 @@
 
 namespace oc {
 
+std::optional<Collection::Links>
+Collection::ParseLinksPayload(const oc_rep_t *rep)
+{
+  Collection::Links links;
+  for (auto link = rep; link != nullptr; link = link->next) {
+    auto linkData = Link::ParsePayload(link->value.object);
+    if (linkData) {
+      links[linkData->href] = *linkData;
+    }
+  }
+  if (links.empty()) {
+    return std::nullopt;
+  }
+  return links;
+}
+
 std::optional<Collection::Data>
 Collection::ParsePayload(const oc_rep_t *rep)
 {

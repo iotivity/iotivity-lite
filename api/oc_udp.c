@@ -81,7 +81,7 @@ oc_udp_is_valid_message(oc_message_t *message)
     return true;
   }
 #ifdef OC_OSCORE
-  if (oscore_is_oscore_message(message) >= 0) {
+  if (oscore_is_oscore_message(message)) {
     // it is oscore message
     return true;
   }

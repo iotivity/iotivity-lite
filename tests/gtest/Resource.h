@@ -21,6 +21,10 @@
 #include "oc_ri.h"
 #include "util/oc_features.h"
 
+#ifdef OC_HAS_FEATURE_ETAG
+#include "messaging/coap/oc_coap.h"
+#endif /* OC_HAS_FEATURE_ETAG */
+
 #include <cstddef>
 #include <functional>
 #include <optional>
@@ -58,5 +62,11 @@ bool SetAccessInRFOTM(oc_core_resource_t index, size_t device, bool make_public,
                       unsigned permissions);
 
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+
+#ifdef OC_HAS_FEATURE_ETAG
+void AssertETag(oc_coap_etag_t etag1, uint64_t etag2);
+
+void AssertResourceETag(oc_coap_etag_t etag, const oc_resource_t *resource);
+#endif /* OC_HAS_FEATURE_ETAG */
 
 } // namespace oc

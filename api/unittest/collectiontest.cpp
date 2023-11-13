@@ -838,52 +838,11 @@ TEST_F(TestCollectionsWithServer, GetETagAfterLinkAddOrRemove)
 
 #if !defined(OC_SECURITY) || defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM)
 
-TEST_F(TestCollectionsWithServer, GetRequest_Baseline)
+static void
+checkLinks(oc::Collection::Links &links)
 {
-  makeTestResources();
-
-  auto col1 =
-    oc_get_collection_by_uri(col1URI.data(), col1URI.length(), kDeviceID);
-  ASSERT_NE(nullptr, col1);
-
-  // get insecure connection to the testing device
-  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
-  ASSERT_TRUE(epOpt.has_value());
-  auto ep = std::move(*epOpt);
-
-  auto get_handler = [](oc_client_response_t *data) {
-    oc::TestDevice::Terminate();
-    ASSERT_EQ(OC_STATUS_OK, data->code);
-#ifdef OC_HAS_FEATURE_ETAG
-    assertCollectionETag(data->etag, col1URI, data->endpoint->device);
-#endif /* OC_HAS_FEATURE_ETAG */
-    OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
-    auto cData = oc::Collection::ParsePayload(data->payload);
-    ASSERT_TRUE(cData.has_value());
-    *static_cast<oc::Collection::Data *>(data->user_data) =
-      std::move(cData.value());
-  };
-
-  oc::Collection::Data data{};
-  auto timeout = 1s;
-  ASSERT_TRUE(oc_do_get_with_timeout(oc_string(col1->res.uri), &ep,
-                                     "if=" OC_IF_BASELINE_STR, timeout.count(),
-                                     get_handler, HIGH_QOS, &data));
-  oc::TestDevice::PoolEventsMsV1(timeout, true);
-
-  EXPECT_STREQ(col1Name.data(), data.baseline->name.c_str());
-  ASSERT_EQ(1, data.baseline->rts.size());
-  EXPECT_STREQ(colRT.data(), data.baseline->rts[0].c_str());
-  ASSERT_EQ(3, data.baseline->ifs.size());
-
-  ASSERT_EQ(1, data.rts.size());
-  EXPECT_STREQ(switchRT.data(), data.rts[0].c_str());
-  ASSERT_EQ(1, data.rts_m.size());
-  EXPECT_STREQ(switchRT.data(), data.rts_m[0].c_str());
-
-  ASSERT_EQ(2, data.links.size());
-
-  const oc::LinkData &switchLink = data.links[switch1URI.data()];
+  ASSERT_EQ(2, links.size());
+  const oc::LinkData &switchLink = links[switch1URI.data()];
   EXPECT_STREQ(switch1URI.data(), switchLink.href.c_str());
   ASSERT_EQ(1, switchLink.rts.size());
   EXPECT_STREQ(switchRT.data(), switchLink.rts[0].c_str());
@@ -910,17 +869,87 @@ TEST_F(TestCollectionsWithServer, GetRequest_Baseline)
   EXPECT_EQ(switch1Pos[2], switchLink.tag_pos_rel[2]);
   EXPECT_FALSE(switchLink.eps.empty());
 
-  const oc::LinkData &colLink = data.links[col2URI.data()];
+  const oc::LinkData &colLink = links[col2URI.data()];
   EXPECT_STREQ(col2URI.data(), colLink.href.c_str());
+}
+
+TEST_F(TestCollectionsWithServer, GetRequest_Baseline)
+{
+  makeTestResources();
+
+  auto col1 =
+    oc_get_collection_by_uri(col1URI.data(), col1URI.length(), kDeviceID);
+  ASSERT_NE(nullptr, col1);
+
+  // get insecure connection to the testing device
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  auto get_handler = [](oc_client_response_t *data) {
+    oc::TestDevice::Terminate();
+    ASSERT_EQ(OC_STATUS_OK, data->code);
+#ifdef OC_HAS_FEATURE_ETAG
+    assertCollectionETag(data->etag, col1URI, data->endpoint->device);
+#endif /* OC_HAS_FEATURE_ETAG */
+    OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload, true).data());
+    auto cData = oc::Collection::ParsePayload(data->payload);
+    ASSERT_TRUE(cData.has_value());
+    *static_cast<oc::Collection::Data *>(data->user_data) =
+      std::move(cData.value());
+  };
+
+  oc::Collection::Data data{};
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_get_with_timeout(oc_string(col1->res.uri), &ep,
+                                     "if=" OC_IF_BASELINE_STR, timeout.count(),
+                                     get_handler, HIGH_QOS, &data));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+
+  EXPECT_STREQ(col1Name.data(), data.baseline->name.c_str());
+  ASSERT_EQ(1, data.baseline->rts.size());
+  EXPECT_STREQ(colRT.data(), data.baseline->rts[0].c_str());
+  ASSERT_EQ(3, data.baseline->ifs.size());
+
+  ASSERT_EQ(1, data.rts.size());
+  EXPECT_STREQ(switchRT.data(), data.rts[0].c_str());
+  ASSERT_EQ(1, data.rts_m.size());
+  EXPECT_STREQ(switchRT.data(), data.rts_m[0].c_str());
+
+  checkLinks(data.links);
 }
 
 TEST_F(TestCollectionsWithServer, GetRequest_LinkedList)
 {
-  /* TODO:
-   EXPECT_TRUE(
-     oc_do_get("/col", ep, "if=" OC_IF_LL_STR, get_handler, HIGH_QOS,
-     nullptr));
-  */
+  makeTestResources();
+
+  auto col1 =
+    oc_get_collection_by_uri(col1URI.data(), col1URI.length(), kDeviceID);
+  ASSERT_NE(nullptr, col1);
+
+  // get insecure connection to the testing device
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  auto get_handler = [](oc_client_response_t *data) {
+    oc::TestDevice::Terminate();
+    ASSERT_EQ(OC_STATUS_OK, data->code);
+    OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload, true).data());
+    auto cData = oc::Collection::ParseLinksPayload(data->payload);
+    ASSERT_TRUE(cData.has_value());
+    *static_cast<oc::Collection::Links *>(data->user_data) =
+      std::move(cData.value());
+  };
+
+  auto timeout = 1s;
+  oc::Collection::Links links{};
+  ASSERT_TRUE(oc_do_get_with_timeout(oc_string(col1->res.uri), &ep,
+                                     "if=" OC_IF_LL_STR, timeout.count(),
+                                     get_handler, LOW_QOS, &links));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+
+  checkLinks(links);
 }
 
 TEST_F(TestCollectionsWithServer, GetRequest_Batch)
@@ -944,7 +973,7 @@ TEST_F(TestCollectionsWithServer, GetRequest_Batch)
 
   auto get_handler = [](oc_client_response_t *data) {
     oc::TestDevice::Terminate();
-    OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
+    OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload, true).data());
     auto *bd = static_cast<batchData *>(data->user_data);
     bd->code = data->code;
 #ifndef OC_SECURITY

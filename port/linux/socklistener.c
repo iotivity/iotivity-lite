@@ -53,6 +53,7 @@ oc_sock_listener_get_port(const oc_sock_listener_t *server)
     return -1;
   }
   struct sockaddr_storage sockaddr;
+  memset(&sockaddr, 0, sizeof(sockaddr));
   socklen_t socklen = sizeof(sockaddr);
   if (getsockname(server->sock, (struct sockaddr *)&sockaddr, &socklen) == -1) {
     OC_ERR("obtaining socket information %d", errno);

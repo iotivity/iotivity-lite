@@ -18,6 +18,10 @@
 
 #define __USE_GNU
 
+#include "util/oc_features.h"
+
+#ifdef OC_TCP
+
 #include "api/oc_endpoint_internal.h"
 #include "api/oc_message_internal.h"
 #include "api/oc_network_events_internal.h"
@@ -29,12 +33,15 @@
 #include "oc_buffer.h"
 #include "oc_endpoint.h"
 #include "oc_session_events.h"
+#include "port/common/oc_tcp_socket_internal.h"
+#include "port/common/posix/oc_fcntl_internal.h"
+#include "port/common/posix/oc_socket_internal.h"
 #include "port/oc_assert.h"
 #include "port/oc_connectivity_internal.h"
 #include "tcpsession.h"
-#include "util/oc_features.h"
 #include "util/oc_macros_internal.h"
 #include "util/oc_memb.h"
+
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
@@ -43,13 +50,6 @@
 #include <net/if.h>
 #include <stdlib.h>
 #include <unistd.h>
-
-#ifdef OC_TCP
-
-#define TLS_HEADER_SIZE 5
-
-#define DEFAULT_RECEIVE_SIZE                                                   \
-  (COAP_TCP_DEFAULT_HEADER_LEN + COAP_TCP_MAX_EXTENDED_LENGTH_LEN)
 
 typedef struct tcp_session_t
 {
@@ -159,6 +159,7 @@ static long
 get_interface_index(int sock)
 {
   struct sockaddr_storage addr;
+  memset(&addr, 0, sizeof(addr));
   socklen_t socklen = sizeof(addr);
   if (getsockname(sock, (struct sockaddr *)&addr, &socklen) == -1) {
     OC_ERR("failed obtaining socket information %d", errno);
@@ -251,6 +252,7 @@ accept_new_session_locked(ip_context_t *dev, int fd, fd_set *setfds,
                           oc_endpoint_t *endpoint)
 {
   struct sockaddr_storage receive_from;
+  memset(&receive_from, 0, sizeof(receive_from));
   socklen_t receive_len = sizeof(receive_from);
 
   int new_socket = accept(fd, (struct sockaddr *)&receive_from, &receive_len);
@@ -319,18 +321,6 @@ free_session_for_device_locked(size_t device)
     }
     session = next;
   }
-}
-
-static size_t
-get_total_length_from_header(const oc_message_t *message,
-                             const oc_endpoint_t *endpoint)
-{
-  if ((endpoint->flags & SECURED) != 0) {
-    //[3][4] bytes in tls header are tls payload length
-    return TLS_HEADER_SIZE +
-           (size_t)((message->data[3] << 8) | message->data[4]);
-  }
-  return coap_tcp_get_packet_size(message->data);
 }
 
 static adapter_receive_state_t
@@ -405,7 +395,7 @@ tcp_session_receive_message_locked(tcp_session_t *session,
                                    oc_message_t *message)
 {
   size_t total_length = 0;
-  size_t want_read = DEFAULT_RECEIVE_SIZE;
+  size_t want_read = OC_TCP_DEFAULT_RECEIVE_SIZE;
   message->length = 0;
   do {
     ssize_t count =
@@ -437,12 +427,16 @@ tcp_session_receive_message_locked(tcp_session_t *session,
         message->encrypted = 1;
       }
 #endif /* OC_SECURITY */
-      if (!oc_tcp_is_valid_header(message)) {
-        OC_ERR("invalid header");
+
+      long length_from_header =
+        oc_tcp_get_total_length_from_message_header(message);
+      if (length_from_header < 0) {
+        OC_ERR("invalid message size in header");
         free_session_locked(session, true);
         return ADAPTER_STATUS_ERROR;
       }
-      total_length = get_total_length_from_header(message, &session->endpoint);
+
+      total_length = (size_t)length_from_header;
       // check to avoid buffer overflow
       if (total_length > oc_message_buffer_size()) {
         OC_ERR(
@@ -530,89 +524,6 @@ find_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
 }
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
-
-static int
-try_connect_nonblocking(int sockfd, const struct sockaddr *r, socklen_t r_len)
-{
-  if (oc_set_fd_flags(sockfd, O_NONBLOCK, 0) < 0) {
-    OC_ERR("cannot set non-blocking socket(%d)", sockfd);
-    return -1;
-  }
-
-  while (true) {
-    int n = connect(sockfd, r, r_len);
-    if (n == 0) {
-      return OC_TCP_SOCKET_STATE_CONNECTED;
-    } else if (n < 0) {
-      if (errno == EINPROGRESS || errno == EALREADY) {
-        return OC_TCP_SOCKET_STATE_CONNECTING;
-      }
-      if (errno == EINTR || errno == EAGAIN) {
-        continue;
-      }
-      OC_ERR("connect to socked(%d) failed with error: %d", sockfd, (int)errno);
-      return -1;
-    }
-  }
-}
-
-typedef struct
-{
-  tcp_session_t *session;
-  tcp_waiting_session_t *waiting_session;
-  bool created;
-} tcp_connect_result_t;
-
-typedef struct
-{
-  int socket;
-  int state;
-} tcp_connected_socket_t;
-
-static tcp_connected_socket_t
-tcp_create_connected_socket(const oc_endpoint_t *endpoint,
-                            const struct sockaddr_storage *receiver)
-{
-  tcp_connected_socket_t cs = {
-    .socket = -1,
-    .state = -1,
-  };
-  int sock = -1;
-  if ((endpoint->flags & IPV6) != 0) {
-    sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
-#ifdef OC_IPV4
-  } else if ((endpoint->flags & IPV4) != 0) {
-    sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-#endif
-  }
-
-  if (sock < 0) {
-    OC_ERR("could not create socket for TCP session");
-    return cs;
-  }
-
-  struct sockaddr_storage rc;
-  if (receiver == NULL) {
-    memset(&rc, 0, sizeof(struct sockaddr_storage));
-    if (!oc_get_socket_address(endpoint, &rc)) {
-      close(sock);
-      OC_ERR("cannot retrieve socket address");
-      return cs;
-    }
-    receiver = &rc;
-  }
-
-  socklen_t size = sizeof(*receiver);
-  int ret =
-    try_connect_nonblocking(sock, (const struct sockaddr *)receiver, size);
-  if (ret < 0) {
-    close(sock);
-    return cs;
-  }
-  cs.socket = sock;
-  cs.state = ret;
-  return cs;
-}
 
 static tcp_session_t *
 tcp_create_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
@@ -707,6 +618,13 @@ tcp_create_waiting_session_locked(int sock, ip_context_t *dev,
   return ws;
 }
 
+typedef struct
+{
+  tcp_session_t *session;
+  tcp_waiting_session_t *waiting_session;
+  bool created;
+} tcp_connect_result_t;
+
 static tcp_connect_result_t
 tcp_connect_locked(ip_context_t *dev, oc_endpoint_t *endpoint,
                    const struct sockaddr_storage *receiver,
@@ -732,25 +650,25 @@ tcp_connect_locked(ip_context_t *dev, oc_endpoint_t *endpoint,
     return res;
   }
 
-  tcp_connected_socket_t cs = tcp_create_connected_socket(endpoint, receiver);
+  oc_tcp_socket_t cs = oc_tcp_socket_connect(endpoint, receiver);
   if (cs.state == OC_TCP_SOCKET_STATE_CONNECTED) {
     OC_DBG("successfully initiated TCP connection");
-    s = tcp_create_session_locked(cs.socket, dev, endpoint, true);
+    s = tcp_create_session_locked(cs.fd, dev, endpoint, true);
     if (s != NULL) {
       res.created = true;
       return res;
     }
   } else if (cs.state == OC_TCP_SOCKET_STATE_CONNECTING) {
-    ws = tcp_create_waiting_session_locked(cs.socket, dev, endpoint,
-                                           on_tcp_connect, on_tcp_connect_data);
+    ws = tcp_create_waiting_session_locked(cs.fd, dev, endpoint, on_tcp_connect,
+                                           on_tcp_connect_data);
     if (ws != NULL) {
       res.waiting_session = ws;
       res.created = true;
       return res;
     }
   }
-  if (cs.socket >= 0) {
-    close(cs.socket);
+  if (cs.fd >= 0) {
+    close(cs.fd);
   }
   OC_ERR("cannot create session");
   return res;
@@ -1155,7 +1073,7 @@ tcp_try_connect_waiting_session_locked(tcp_waiting_session_t *ws, int *err)
     return false;
   }
 
-  if (oc_set_fd_flags(ws->sock, 0, O_NONBLOCK) < 0) {
+  if (!oc_fcntl_set_blocking(ws->sock)) {
     OC_ERR("cannot set blocking socket(%d)", ws->sock);
     return false;
   }
@@ -1232,11 +1150,11 @@ tcp_retry_waiting_session_locked(tcp_waiting_session_t *ws,
     ws->sock = -1;
   }
 
-  tcp_connected_socket_t cs = tcp_create_connected_socket(&ws->endpoint, NULL);
+  oc_tcp_socket_t cs = oc_tcp_socket_connect(&ws->endpoint, NULL);
   if (cs.state == OC_TCP_SOCKET_STATE_CONNECTED) {
     OC_DBG("successfully initiated TCP connection");
     tcp_session_t *s =
-      tcp_create_session_locked(cs.socket, ws->dev, &ws->endpoint, false);
+      tcp_create_session_locked(cs.fd, ws->dev, &ws->endpoint, false);
     if (s == NULL) {
       OC_ERR("cannot allocate ongoing TCP connection");
       return -1;
@@ -1252,7 +1170,7 @@ tcp_retry_waiting_session_locked(tcp_waiting_session_t *ws,
     ++ws->retry.count;
     ws->retry.start = now_mt;
     ws->retry.force = 0;
-    ws->sock = cs.socket;
+    ws->sock = cs.fd;
     tcp_waiting_session_set_socked_locked(&ws->dev->tcp, ws->sock);
     return OC_TCP_SOCKET_STATE_CONNECTING;
   }
@@ -1351,12 +1269,7 @@ oc_tcp_connect_to_endpoint(ip_context_t *dev, oc_endpoint_t *endpoint,
                            on_tcp_connect_t on_tcp_connect,
                            void *on_tcp_connect_data)
 {
-  struct sockaddr_storage receiver;
-  memset(&receiver, 0, sizeof(struct sockaddr_storage));
-  if (!oc_get_socket_address(endpoint, &receiver)) {
-    OC_ERR("cannot retrieve socket address");
-    return OC_TCP_SOCKET_ERROR;
-  }
+  struct sockaddr_storage receiver = oc_socket_get_address(endpoint);
   pthread_mutex_lock(&g_mutex);
   tcp_connect_result_t res = tcp_connect_locked(
     dev, endpoint, &receiver, on_tcp_connect, on_tcp_connect_data);
@@ -1388,4 +1301,5 @@ oc_tcp_connect(oc_endpoint_t *endpoint, on_tcp_connect_t on_tcp_connect,
 }
 
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+
 #endif /* OC_TCP */

@@ -21,6 +21,8 @@
 #include "api/oc_network_events_internal.h"
 #include "api/oc_session_events_internal.h"
 #include "api/oc_tcp_internal.h"
+#include "port/common/oc_tcp_socket_internal.h"
+#include "port/common/posix/oc_fcntl_internal.h"
 #include "port/oc_assert.h"
 #include "port/oc_log_internal.h"
 #include "util/oc_memb.h"
@@ -31,6 +33,7 @@
 #include "oc_endpoint.h"
 #include "oc_session_events.h"
 #include "tcpadapter.h"
+
 #include <assert.h>
 #include <fcntl.h>
 #include <stdlib.h>
@@ -38,11 +41,6 @@
 #ifdef OC_TCP
 
 #define OC_TCP_LISTEN_BACKLOG 3
-
-#define TLS_HEADER_SIZE 5
-
-#define DEFAULT_RECEIVE_SIZE                                                   \
-  (COAP_TCP_DEFAULT_HEADER_LEN + COAP_TCP_MAX_EXTENDED_LENGTH_LEN)
 
 #define LIMIT_RETRY_CONNECT 5
 
@@ -127,6 +125,7 @@ static long
 get_interface_index(SOCKET sock)
 {
   struct sockaddr_storage addr;
+  memset(&addr, 0, sizeof(addr));
   if (get_assigned_tcp_port(sock, &addr) == SOCKET_ERROR) {
     return SOCKET_ERROR;
   }
@@ -202,17 +201,6 @@ free_tcp_session_async_locked(tcp_session_t *session)
     OC_ERR("could not trigger signal event (%ld)\n", GetLastError());
   }
   OC_DBG("free TCP session async");
-}
-
-static int
-set_socket_block_mode(SOCKET sockfd, u_long nonblock)
-{
-  int error = ioctlsocket(sockfd, FIONBIO, &nonblock);
-  if (error == SOCKET_ERROR) {
-    OC_ERR("set socket as blocking(%lu) %d", nonblock, WSAGetLastError());
-    return SOCKET_ERROR;
-  }
-  return 0;
 }
 
 static int
@@ -325,21 +313,6 @@ find_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
   return session;
 }
 
-static size_t
-get_total_length_from_header(oc_message_t *message, oc_endpoint_t *endpoint)
-{
-  size_t total_length = 0;
-  if (endpoint->flags & SECURED) {
-    //[3][4] bytes in tls header are tls payload length
-    total_length =
-      TLS_HEADER_SIZE + (size_t)((message->data[3] << 8) | message->data[4]);
-  } else {
-    total_length = coap_tcp_get_packet_size(message->data);
-  }
-
-  return total_length;
-}
-
 void
 oc_tcp_end_session(const oc_endpoint_t *endpoint)
 {
@@ -364,54 +337,6 @@ get_session_socket_locked(oc_endpoint_t *endpoint)
   return sock;
 }
 
-static int
-connect_nonb(SOCKET sockfd, const struct sockaddr *r, int r_len, int nsec)
-{
-  if (set_socket_block_mode(sockfd, 1) == SOCKET_ERROR) {
-    return SOCKET_ERROR;
-  }
-
-  int n = connect(sockfd, (struct sockaddr *)r, r_len);
-  if (n == SOCKET_ERROR) {
-    if (WSAGetLastError() != WSAEWOULDBLOCK) {
-      OC_ERR("connect %d", WSAGetLastError());
-      return SOCKET_ERROR;
-    }
-  }
-
-  /* Do whatever we want while the connect is taking place. */
-  if (n == 0) {
-    return 0; /* connect completed immediately */
-  }
-
-  fd_set wset;
-  FD_ZERO(&wset);
-  FD_SET(sockfd, &wset);
-  struct timeval tval;
-  tval.tv_sec = nsec;
-  tval.tv_usec = 0;
-
-  if ((n = select((int)sockfd + 1, NULL, &wset, NULL, nsec ? &tval : NULL)) ==
-      0) {
-    /* timeout */
-    WSASetLastError(WSAETIMEDOUT);
-    OC_ERR("connect %d", WSAGetLastError());
-    return SOCKET_ERROR;
-  }
-  if (n == SOCKET_ERROR) {
-    return SOCKET_ERROR;
-  }
-
-  if (FD_ISSET(sockfd, &wset)) {
-    if (set_socket_block_mode(sockfd, 0) == SOCKET_ERROR) {
-      return SOCKET_ERROR;
-    }
-    return 0;
-  }
-  OC_DBG("select error: sockfd not set");
-  return SOCKET_ERROR;
-}
-
 static SOCKET
 initiate_new_session_locked(ip_context_t *dev, oc_endpoint_t *endpoint,
                             const struct sockaddr_storage *receiver)
@@ -420,30 +345,14 @@ initiate_new_session_locked(ip_context_t *dev, oc_endpoint_t *endpoint,
   uint8_t retry_cnt = 0;
 
   while (retry_cnt < LIMIT_RETRY_CONNECT) {
-    if (endpoint->flags & IPV6) {
-      sock = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
-#ifdef OC_IPV4
-    } else if (endpoint->flags & IPV4) {
-      sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-#endif
-    }
-
-    if (sock == INVALID_SOCKET) {
-      OC_ERR("could not create socket for new TCP session %d",
-             WSAGetLastError());
-      return sock;
-    }
-
-    socklen_t receiver_size = sizeof(*receiver);
-    int ret = 0;
-    if ((ret = connect_nonb(sock, (struct sockaddr *)receiver, receiver_size,
-                            TCP_CONNECT_TIMEOUT)) == 0) {
+    sock =
+      oc_tcp_socket_connect_and_wait(endpoint, receiver, TCP_CONNECT_TIMEOUT);
+    if (sock != INVALID_SOCKET) {
       break;
     }
 
-    closesocket(sock);
     retry_cnt++;
-    OC_DBG("connect fail with %d. retry(%d)", ret, retry_cnt);
+    OC_DBG("connect failed, retry(%d)", retry_cnt);
   }
 
   if (retry_cnt >= LIMIT_RETRY_CONNECT) {
@@ -517,7 +426,7 @@ static int
 recv_message_with_tcp_session(tcp_session_t *session, oc_message_t *message)
 {
   size_t total_length = 0;
-  size_t want_read = DEFAULT_RECEIVE_SIZE;
+  size_t want_read = OC_TCP_DEFAULT_RECEIVE_SIZE;
   message->length = 0;
   do {
     int count = recv(session->sock, (char *)message->data + message->length,
@@ -547,12 +456,16 @@ recv_message_with_tcp_session(tcp_session_t *session, oc_message_t *message)
         message->encrypted = 1;
       }
 #endif /* OC_SECURITY */
-      if (!oc_tcp_is_valid_header(message)) {
-        OC_ERR("invalid header");
+
+      long length_from_header =
+        oc_tcp_get_total_length_from_message_header(message);
+      if (length_from_header < 0) {
+        OC_ERR("invalid message size in header");
         free_tcp_session(session);
         return ADAPTER_STATUS_ERROR;
       }
-      total_length = get_total_length_from_header(message, &session->endpoint);
+
+      total_length = (size_t)length_from_header;
       // check to avoid buffer overflow
       if (total_length > oc_message_buffer_size()) {
         OC_ERR(

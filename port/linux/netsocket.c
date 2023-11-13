@@ -299,7 +299,7 @@ static int
 netsocket_create_ipv4(uint16_t port, bool multicast)
 {
   struct sockaddr_storage sockaddr;
-  memset(&sockaddr, 0, sizeof(struct sockaddr_storage));
+  memset(&sockaddr, 0, sizeof(sockaddr));
   struct sockaddr_in *sa = (struct sockaddr_in *)&sockaddr;
   sa->sin_family = AF_INET;
   sa->sin_addr.s_addr = INADDR_ANY;

@@ -40,6 +40,7 @@ public:
 
   oc_memb *GetRepObjectsPool() { return &rep_objects_; }
 
+  oc_rep_unique_ptr ParsePayload(const uint8_t *payload, size_t payload_len);
   /* convert global CborEncoder to oc_rep_t */
   oc_rep_unique_ptr ParsePayload();
 

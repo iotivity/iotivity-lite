@@ -144,7 +144,6 @@ endif
 
 CTIMESTAMP+=../../api/c-timestamp/timestamp_compare.c ../../api/c-timestamp/timestamp_format.c ../../api/c-timestamp/timestamp_valid.c ../../api/c-timestamp/timestamp_parse.c
 
-SRC_PORT_COMMON:=$(wildcard ../../port/common/*.c) $(wildcard ../../port/common/posix/*.c)
 ifneq ($(MEMORY_TRACE),1)
 SRC_UTIL:=$(filter-out %_mem_trace.c,$(wildcard ../../util/*.c))
 else
@@ -153,7 +152,7 @@ endif
 ifeq ($(JSON_ENCODER),1)
 SRC_UTIL+=$(wildcard ../../util/jsmn/*.c)
 endif
-SRC_COMMON:=${CBOR} ${CTIMESTAMP} ${SRC_PORT_COMMON} ${SRC_UTIL}
+SRC_COMMON:=${CBOR} ${CTIMESTAMP} ${SRC_UTIL}
 SRC_API:=$(wildcard ../../api/*.c)
 ifneq ($(INTROSPECTION),1)
 SRC_API:=$(filter-out %oc_introspection.c,${SRC_API})
@@ -165,6 +164,7 @@ ifneq ($(JSON_ENCODER),1)
 SRC_API:=$(filter-out %oc_rep_decode_json.c %oc_rep_encode_json.c,${SRC_API})
 endif
 SRC:=${SRC_API} $(wildcard ../../messaging/coap/*.c ../../port/android/*.c)
+SRC_PORT_COMMON:=$(wildcard ../../port/common/*.c ../../port/common/posix/*.c)
 SRC_CLIENT:=$(wildcard ../../api/client/*.c)
 SRC_CLOUD:=$(wildcard ../../api/cloud/*.c)
 
@@ -196,6 +196,7 @@ WARNING_FLAGS=-Wall -Wextra -Werror -Wno-error=deprecated-declarations -pedantic
 CFLAGS_CLOUD=-I../../api/cloud -DOC_CLIENT -DOC_SERVER
 CFLAGS?=-fPIC -fno-asynchronous-unwind-tables -fno-omit-frame-pointer -ffreestanding -Os -fno-stack-protector -ffunction-sections -fdata-sections -fno-strict-overflow -I./ -I../../include/ -I../../deps/tinycbor/src -I../../ -std=gnu99 $(WARNING_FLAGS) -DLONG_BIT=64 -D__ANDROID_MIN_SDK_VERSION__=${ANDROID_API}
 OBJ_COMMON=$(addprefix ${OBJDIR}/,$(notdir $(SRC_COMMON:.c=.o)))
+OBJ_PORT_COMMON=$(addprefix obj/port/,$(notdir $(SRC_PORT_COMMON:.c=.o)))
 OBJ_CLIENT=$(addprefix ${OBJDIR}/client/,$(notdir $(SRC:.c=.o) $(SRC_CLIENT:.c=.o)))
 OBJ_SERVER=$(addprefix ${OBJDIR}/server/,$(filter-out oc_obt.o oc_obt_otm_justworks.o oc_obt_otm_randompin.o oc_obt_otm_cert.o oc_obt_certs.o,$(notdir $(SRC:.c=.o))))
 ifeq ($(CLOUD),1)
@@ -205,7 +206,6 @@ OBJ_CLOUD =
 endif
 OBJ_CLIENT_SERVER=$(addprefix ${OBJDIR}/client_server/,$(notdir $(SRC:.c=.o) $(SRC_CLIENT:.c=.o)))
 VPATH=../../api/:../../api/client/:../../api/cloud/:../../api/c-timestamp:../../messaging/coap/:
-VPATH+=../../port/common/:../../port/common/posix/:
 VPATH+=../../util/:../../util/jsmn/:
 VPATH+=../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -llog
@@ -321,9 +321,17 @@ all: $(CONSTRAINED_LIBS) $(NATIVE_SAMPLES) $(SWIG)
 
 .PHONY: clean
 
-${SRC} ${SRC_COMMON} ${SRC_CLIENT}: $(MBEDTLS_PATCH_FILE)
+${SRC} ${SRC_COMMON} ${SRC_PORT_COMMON} ${SRC_CLIENT}: $(MBEDTLS_PATCH_FILE)
 
 ${OBJDIR}/%.o: %.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS}
+
+obj/port/%.o: ../../port/common/%.c
+	@mkdir -p ${@D}
+	${CC} -c -o $@ $< ${CFLAGS}
+
+obj/port/%.o: ../../port/common/posix/%.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS}
 
@@ -343,14 +351,14 @@ ${OBJDIR}/cloud/%.o: %.c
 	@mkdir -p ${@D}
 	${CC} -c -o $@ $< ${CFLAGS} ${CFLAGS_CLOUD}
 
-libiotivity-lite-server.a: $(OBJ_COMMON) $(OBJ_SERVER)
-	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_SERVER)
+libiotivity-lite-server.a: $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_SERVER)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_SERVER)
 
-libiotivity-lite-client.a: $(OBJ_COMMON) $(OBJ_CLIENT)
-	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT)
+libiotivity-lite-client.a: $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT)
 
-libiotivity-lite-client-server.a: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
-	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+libiotivity-lite-client-server.a: $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+	$(AR) -rcs $@ $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 
 server: libiotivity-lite-server.a
 	${CC} -o $@ ../../apps/server_linux.c libiotivity-lite-server.a -DOC_SERVER ${CFLAGS} ${LIBS}
@@ -406,7 +414,7 @@ server_multithread_linux: libiotivity-lite-server.a
 client_multithread_linux: libiotivity-lite-client.a
 	${CC} -o $@ ../../apps/client_multithread_linux.c libiotivity-lite-client.a -DOC_CLIENT ${CFLAGS}  ${LIBS}
 
-swig: $(OBJ_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
+swig: $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	${MAKE} -C ${SWIG_DIR}
 
 ifneq ($(SECURE),0)

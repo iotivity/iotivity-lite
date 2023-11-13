@@ -441,6 +441,10 @@
     <ClCompile Include="..\..\..\messaging\coap\separate.c" />
     <ClCompile Include="..\..\..\messaging\coap\signal.c" />
     <ClCompile Include="..\..\..\messaging\coap\transactions.c" />
+    <ClCompile Include="..\..\..\port\common\oc_ip.c" />
+    <ClCompile Include="..\..\..\port\common\oc_tcp_socket.c" />
+    <ClCompile Include="..\..\..\port\common\posix\oc_allocator.c" />
+    <ClCompile Include="..\..\..\port\common\posix\oc_socket.c" />
     <ClCompile Include="..\..\..\security\oc_acl.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
@@ -474,12 +478,13 @@
     <ClCompile Include="..\..\..\util\oc_mmem.c" />
     <ClCompile Include="..\..\..\util\oc_process.c" />
     <ClCompile Include="..\..\..\util\oc_timer.c" />
-    <ClCompile Include="..\oc_allocator.c" />
     <ClCompile Include="..\abort.c" />
     <ClCompile Include="..\clock.c" />
     <ClCompile Include="..\ipadapter.c" />
     <ClCompile Include="..\mutex.c" />
     <ClCompile Include="..\network_addresses.c" />
+    <ClCompile Include="..\oc_allocator.c" />
+    <ClCompile Include="..\oc_fcntl.c" />
     <ClCompile Include="..\random.c" />
     <ClCompile Include="..\storage.c" />
     <ClCompile Include="..\tcpadapter.c" />

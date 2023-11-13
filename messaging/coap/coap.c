@@ -1095,13 +1095,17 @@ coap_oscore_parse_options(coap_packet_t *packet, const uint8_t *data,
 
   return last_error;
 }
-/*---------------------------------------------------------------------------*/
+
 #ifdef OC_TCP
-static void
-coap_tcp_set_header_fields(coap_packet_t *packet,
+
+void
+coap_tcp_set_header_length(coap_packet_t *packet,
                            uint8_t num_extended_length_bytes, uint8_t len,
                            size_t extended_len)
 {
+  assert(packet != NULL);
+  assert(num_extended_length_bytes <= 4);
+
   packet->buffer[0] = 0x00;
   packet->buffer[0] |=
     COAP_TCP_HEADER_LEN_MASK & len << COAP_TCP_HEADER_LEN_POSITION;
@@ -1112,6 +1116,15 @@ coap_tcp_set_header_fields(coap_packet_t *packet,
     packet->buffer[i] =
       (uint8_t)(extended_len >> (8 * (num_extended_length_bytes - i)));
   }
+}
+
+static void
+coap_tcp_set_header_fields(coap_packet_t *packet,
+                           uint8_t num_extended_length_bytes, uint8_t len,
+                           size_t extended_len)
+{
+  coap_tcp_set_header_length(packet, num_extended_length_bytes, len,
+                             extended_len);
   packet->buffer[1 + num_extended_length_bytes] = packet->code;
 }
 
@@ -1167,37 +1180,47 @@ exit:
   COAP_DBG("-COAP_TCP header len field : %u Extended length : %zd ", *len,
            *extended_len);
 }
-/*---------------------------------------------------------------------------*/
-void
-coap_tcp_parse_message_length(const uint8_t *data, size_t *message_length,
+
+bool
+coap_tcp_parse_message_length(const uint8_t *data, size_t data_size,
+                              size_t *message_length,
                               uint8_t *num_extended_length_bytes)
 {
+  assert(data != NULL);
+  assert(data_size > 0);
   uint8_t tcp_len =
     (COAP_TCP_HEADER_LEN_MASK & data[0]) >> COAP_TCP_HEADER_LEN_POSITION;
 
-  *message_length = 0;
+  size_t length = 0;
+  uint8_t extended_bytes = 0;
   if (tcp_len < COAP_TCP_EXTENDED_LENGTH_1) {
-    *message_length = tcp_len;
+    length = tcp_len;
   } else {
-    uint8_t i = 1;
-    *num_extended_length_bytes =
-      (uint8_t)(1 << (tcp_len - COAP_TCP_EXTENDED_LENGTH_1));
-    for (i = 1; i <= *num_extended_length_bytes; i++) {
-      *message_length |= ((uint32_t)(0x000000FF & data[i])
-                          << (8 * (*num_extended_length_bytes - i)));
+    extended_bytes = (uint8_t)(1 << (tcp_len - COAP_TCP_EXTENDED_LENGTH_1));
+    if (data_size < ((size_t)extended_bytes + 1)) {
+      COAP_ERR("invalid TCP data");
+      return false;
+    }
+    for (uint8_t i = 1; i <= extended_bytes; ++i) {
+      length |=
+        ((uint32_t)(0x000000FF & data[i]) << (8 * (extended_bytes - i)));
     }
 
     if (COAP_TCP_EXTENDED_LENGTH_1 == tcp_len) {
-      *message_length += COAP_TCP_EXTENDED_LENGTH_1_DEFAULT_LEN;
+      length += COAP_TCP_EXTENDED_LENGTH_1_DEFAULT_LEN;
     } else if (COAP_TCP_EXTENDED_LENGTH_2 == tcp_len) {
-      *message_length += COAP_TCP_EXTENDED_LENGTH_2_DEFAULT_LEN;
-    } else if (COAP_TCP_EXTENDED_LENGTH_3 == tcp_len) {
-      *message_length += COAP_TCP_EXTENDED_LENGTH_3_DEFAULT_LEN;
+      length += COAP_TCP_EXTENDED_LENGTH_2_DEFAULT_LEN;
+    } else {
+      assert(COAP_TCP_EXTENDED_LENGTH_3 == tcp_len);
+      length += COAP_TCP_EXTENDED_LENGTH_3_DEFAULT_LEN;
     }
   }
 
-  COAP_DBG("message_length : %zd, num_extended_length_bytes : %u",
-           *message_length, *num_extended_length_bytes);
+  COAP_DBG("message_length : %zd, num_extended_length_bytes : %u", length,
+           extended_bytes);
+  *message_length = length;
+  *num_extended_length_bytes = extended_bytes;
+  return true;
 }
 #endif /* OC_TCP */
 
@@ -1483,22 +1506,23 @@ coap_udp_parse_message(coap_packet_t *packet, uint8_t *data, size_t data_len,
 }
 
 #ifdef OC_TCP
-size_t
-coap_tcp_get_packet_size(const uint8_t *data)
-{
-  size_t total_length = 0;
-  size_t message_length = 0;
 
+long
+coap_tcp_get_packet_size(const uint8_t *data, size_t data_size)
+{
+  size_t message_length = 0;
   uint8_t num_extended_length_bytes = 0;
-  coap_tcp_parse_message_length(data, &message_length,
-                                &num_extended_length_bytes);
+  if (!coap_tcp_parse_message_length(data, data_size, &message_length,
+                                     &num_extended_length_bytes)) {
+    return -1;
+  }
   uint8_t token_len =
     (COAP_HEADER_TOKEN_LEN_MASK & data[0]) >> COAP_HEADER_TOKEN_LEN_POSITION;
 
-  total_length = COAP_TCP_DEFAULT_HEADER_LEN + num_extended_length_bytes +
-                 token_len + message_length;
+  size_t total_length = COAP_TCP_DEFAULT_HEADER_LEN +
+                        num_extended_length_bytes + token_len + message_length;
 
-  return total_length;
+  return (long)total_length;
 }
 
 coap_status_t
@@ -1520,8 +1544,10 @@ coap_tcp_parse_message(coap_packet_t *packet, uint8_t *data, size_t data_len,
   /* parse header fields */
   size_t message_length = 0;
   uint8_t num_extended_length_bytes = 0;
-  coap_tcp_parse_message_length(data, &message_length,
-                                &num_extended_length_bytes);
+  if (!coap_tcp_parse_message_length(data, data_len, &message_length,
+                                     &num_extended_length_bytes)) {
+    return BAD_REQUEST_4_00;
+  }
 
   packet->type = COAP_TYPE_NON;
   packet->mid = 0;

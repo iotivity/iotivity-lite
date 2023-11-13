@@ -57,15 +57,21 @@ RepPool::Clear()
 }
 
 oc_rep_unique_ptr
+RepPool::ParsePayload(const uint8_t *payload, size_t payload_len)
+{
+  oc_rep_set_pool(&rep_objects_);
+  oc_rep_t *rep = nullptr;
+  EXPECT_EQ(CborNoError, oc_parse_rep(payload, payload_len, &rep));
+  return oc_rep_unique_ptr(rep, &oc_free_rep);
+}
+
+oc_rep_unique_ptr
 RepPool::ParsePayload()
 {
   const uint8_t *payload = oc_rep_get_encoder_buf();
   int payload_len = oc_rep_get_encoded_payload_size();
   EXPECT_NE(payload_len, -1);
-  oc_rep_set_pool(&rep_objects_);
-  oc_rep_t *rep = nullptr;
-  EXPECT_EQ(CborNoError, oc_parse_rep(payload, payload_len, &rep));
-  return oc_rep_unique_ptr(rep, &oc_free_rep);
+  return ParsePayload(payload, static_cast<size_t>(payload_len));
 }
 
 std::vector<char>
