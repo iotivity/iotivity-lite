@@ -23,27 +23,28 @@ jobs:
           token: ${{ secrets.GHCR_CLEANUP_PAT }}
   nightly-ghcr-cleanup:
     if: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' }}
-    name: Delete old images
+    name: Delete stale or untagged images
     runs-on: ubuntu-latest
     steps:
-      - name: Delete older than a month vnext images
-        uses: snok/container-retention-policy@v2
+      - name: Checkout local actions
+        uses: actions/checkout@v4
+      - name: Delete stale or untagged images (1)
+        id: run-1
+        continue-on-error: true
+        uses: ./.github/actions/cleanup-stale
         with:
-          image-names: cloud-server*, iotivity-lite*
-          cut-off: One month ago UTC
-          account-type: org
-          org-name: iotivity
-          filter-tags: vnext-*
-          skip-tags: vnext-pr*, master
           token: ${{ secrets.GHCR_CLEANUP_PAT }}
-      # Cannot enable clean-up of untagged images until issue#63 is fixed
-      # https://github.com/snok/container-retention-policy/issues/63
-      # - name: Delete untagged images older than a month
-      #   uses: snok/container-retention-policy@v2
-      #   with:
-      #     image-names: cloud-server*, iotivity-lite*
-      #     cut-off: One month ago UTC
-      #     account-type: org
-      #     org-name: iotivity
-      #     untagged-only: true
-      #     token: ${{ secrets.GHCR_CLEANUP_PAT }}
+      - name: Delete stale or untagged images (2)
+        id: run-2
+        if: ${{ steps.run-1.outcome == 'failure' }}
+        with:
+          token: ${{ secrets.GHCR_CLEANUP_PAT }}
+          delay: 60
+        continue-on-error: true
+        uses: ./.github/actions/cleanup-stale
+      - name: Delete stale or untagged images (3)
+        if: ${{ steps.run-2.outcome == 'failure' }}
+        uses: ./.github/actions/cleanup-stale
+        with:
+          token: ${{ secrets.GHCR_CLEANUP_PAT }}
+          delay: 60
