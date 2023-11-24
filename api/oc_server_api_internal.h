@@ -75,23 +75,6 @@ void oc_discovery_create_batch_for_resource(CborEncoder *encoder,
 
 #endif /* OC_RES_BATCH_SUPPORT */
 
-typedef bool (*oc_process_baseline_interface_filter_fn_t)(
-  const char *property_name, void *data);
-
-/**
- * @brief Encode baseline resource properties to encoder
- *
- * @param encoder encoder to encode properties to (cannot be NULL)
- * @param resource resource to encode (cannot be NULL)
- * @param filter property filtering function (if NULL then all properties are
- * accepted)
- * @param filter_data custom user data sent to the property filtering function
- */
-void oc_process_baseline_interface_with_filter(
-  CborEncoder *encoder, const oc_resource_t *resource,
-  oc_process_baseline_interface_filter_fn_t filter, void *filter_data)
-  OC_NONNULL(1, 2);
-
 /** Setup response for the request */
 bool oc_send_response_internal(oc_request_t *request, oc_status_t response_code,
                                oc_content_format_t content_format,

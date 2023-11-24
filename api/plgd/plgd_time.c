@@ -294,30 +294,21 @@ plgd_time_status_from_str(const char *str, size_t str_len)
 #ifdef OC_SECURITY
 
 static bool
-dev_time_property_is_accessible(const char *property_name, int flags)
+dev_time_property_is_accessible(oc_string_view_t property_name, int flags)
 {
   if ((flags & PLGD_TIME_ENCODE_FLAG_SECURE) != 0) {
     return true;
   }
 
-  size_t len = strlen(property_name);
   // insecure: allow access only to rt, if and time properties
-  struct
-  {
-    const char *name;
-    size_t name_len;
-  } public[] = {
-    { .name = PLGD_TIME_PROP_TIME,
-      .name_len = OC_CHAR_ARRAY_LEN(PLGD_TIME_PROP_TIME) },
-    { .name = OC_BASELINE_PROP_RT,
-      .name_len = OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_RT) },
-    { .name = OC_BASELINE_PROP_IF,
-      .name_len = OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_IF) },
+  oc_string_view_t public[] = {
+    OC_STRING_VIEW(PLGD_TIME_PROP_TIME),
+    OC_STRING_VIEW(OC_BASELINE_PROP_RT),
+    OC_STRING_VIEW(OC_BASELINE_PROP_IF),
   };
-
   for (size_t i = 0; i < OC_ARRAY_SIZE(public); ++i) {
-    if (len == public[i].name_len &&
-        memcmp(property_name, public[i].name, public[i].name_len) == 0) {
+    if (property_name.length == public[i].length &&
+        memcmp(property_name.data, public[i].data, public[i].length) == 0) {
       return true;
     }
   }
@@ -327,7 +318,7 @@ dev_time_property_is_accessible(const char *property_name, int flags)
 #endif /* OC_SECURITY */
 
 static bool
-dev_time_property_filter(const char *property_name, void *data)
+dev_time_property_filter(oc_string_view_t property_name, void *data)
 {
 #ifdef OC_SECURITY
   int flags = *(int *)data;
@@ -346,10 +337,9 @@ static int
 dev_time_encode_property_time(plgd_time_t pt, int flags)
 {
 #ifdef OC_SECURITY
-  if (!dev_time_property_is_accessible(PLGD_TIME_PROP_TIME, flags)) {
-    OC_DBG("plgd-time: cannot access property(%s)", PLGD_TIME_PROP_TIME);
-    return 0;
-  }
+  // just assert, since the property is public
+  assert(dev_time_property_is_accessible(OC_STRING_VIEW(PLGD_TIME_PROP_TIME),
+                                         flags));
 #else  /* !OC_SECURITY */
   (void)flags;
 #endif /* OC_SECURITY */
@@ -370,7 +360,8 @@ static void
 dev_time_encode_property_status(plgd_time_t pt, int flags)
 {
 #ifdef OC_SECURITY
-  if (!dev_time_property_is_accessible(PLGD_TIME_PROP_STATUS, flags)) {
+  if (!dev_time_property_is_accessible(OC_STRING_VIEW(PLGD_TIME_PROP_STATUS),
+                                       flags)) {
     OC_DBG("plgd-time: cannot access property(%s)", PLGD_TIME_PROP_STATUS);
     return;
   }
@@ -390,8 +381,8 @@ dev_time_encode_property_last_synced_time(plgd_time_t pt, int flags)
 {
 #ifdef OC_SECURITY
   if ((flags & PLGD_TIME_ENCODE_FLAG_TO_STORAGE) == 0 &&
-      !dev_time_property_is_accessible(PLGD_TIME_PROP_LAST_SYNCED_TIME,
-                                       flags)) {
+      !dev_time_property_is_accessible(
+        OC_STRING_VIEW(PLGD_TIME_PROP_LAST_SYNCED_TIME), flags)) {
     OC_DBG("plgd-time: cannot access property(%s)",
            PLGD_TIME_PROP_LAST_SYNCED_TIME);
     return 0;
@@ -427,8 +418,8 @@ plgd_time_encode(plgd_time_t pt, oc_interface_mask_t iface, int flags)
   oc_rep_start_root_object();
   if (iface == OC_IF_BASELINE) {
     // baseline properties
-    oc_process_baseline_interface_with_filter(oc_rep_object(root), r,
-                                              dev_time_property_filter, &flags);
+    oc_resource_encode_baseline_properties(oc_rep_object(root), r,
+                                           dev_time_property_filter, &flags);
   }
 
   bool to_storage = (flags & PLGD_TIME_ENCODE_FLAG_TO_STORAGE) != 0;

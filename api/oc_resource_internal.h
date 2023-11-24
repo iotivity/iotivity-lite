@@ -126,6 +126,32 @@ void oc_resources_iterate_collections(size_t device,
 
 #endif /* OC_SERVER */
 
+/** Check if the tag_pos_rel parts are empty */
+bool oc_tag_pos_rel_is_empty(double pos1, double pos2, double pos3);
+
+typedef bool (*oc_resource_properties_filter_fn_t)(
+  oc_string_view_t property_name, void *data);
+
+/**
+ * @brief Encode baseline resource properties to encoder
+ *
+ * @param encoder encoder to encode properties to (cannot be NULL)
+ * @param resource resource to encode (cannot be NULL)
+ * @param filter property filtering function (if NULL then all properties are
+ * accepted)
+ * @param filter_data custom user data sent to the property filtering function
+ */
+void oc_resource_encode_baseline_properties(
+  CborEncoder *encoder, const oc_resource_t *resource,
+  oc_resource_properties_filter_fn_t filter, void *filter_data)
+  OC_NONNULL(1, 2);
+
+/** @brief Encode tag-pos-desc, tag-func-desc, tag-locn and tag-pos-rel resource
+ * properties to encoder */
+void oc_resource_encode_tag_properties(CborEncoder *object,
+                                       const oc_resource_t *resource)
+  OC_NONNULL();
+
 #ifdef __cplusplus
 }
 #endif

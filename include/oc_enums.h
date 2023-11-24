@@ -28,6 +28,7 @@ extern "C" {
 #endif
 
 #include "oc_helpers.h"
+#include "util/oc_compiler.h"
 
 /**
  * @brief generic enum values for resources that convey string enums
@@ -225,10 +226,12 @@ const char *oc_enum_locn_to_str(oc_locn_t locn);
  * @brief convert a string to the location enum value
  *
  * @param locn_str the input string
- * @param oc_defined value to check if the conversion is successfull
+ * @param oc_defined value to check if the conversion is successfull (cannot be
+ * NULL)
  * @return oc_locn_t the location value
  */
-oc_locn_t oc_str_to_enum_locn(oc_string_t locn_str, bool *oc_defined);
+oc_locn_t oc_str_to_enum_locn(oc_string_t locn_str, bool *oc_defined)
+  OC_NONNULL(2);
 
 /**
  * @brief ACE permissions, as bitmap

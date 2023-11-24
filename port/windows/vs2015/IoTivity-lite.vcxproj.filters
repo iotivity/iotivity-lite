@@ -170,6 +170,9 @@
     <ClCompile Include="..\..\..\api\oc_network_events.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\util\oc_numeric.c">
+      <Filter>Core</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\util\oc_process.c">
       <Filter>Core</Filter>
     </ClCompile>
@@ -610,7 +613,13 @@
     <ClInclude Include="..\..\..\util\oc_mmem.h">
       <Filter>Core</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\util\oc_numeric_internal.h">
+      <Filter>Core</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\util\oc_process.h">
+      <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\util\oc_process_internal.h">
       <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\util\oc_timer_internal.h">

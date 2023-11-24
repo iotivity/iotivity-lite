@@ -696,36 +696,7 @@ collection_encode_links(CborEncoder *container, const oc_request_t *request)
       (uint8_t)(link->resource->properties & ~(OC_PERIODIC | OC_SECURE)));
     oc_rep_close_object(links, p);
 
-    // tag-pos-desc
-    if (link->resource->tag_pos_desc > 0) {
-      const char *desc = oc_enum_pos_desc_to_str(link->resource->tag_pos_desc);
-      if (desc) {
-        // clang-format off
-        oc_rep_set_text_string(links, tag-pos-desc, desc);
-        // clang-format on
-      }
-    }
-
-    // tag-func-desc
-    if (link->resource->tag_func_desc > 0) {
-      const char *func = oc_enum_to_str(link->resource->tag_func_desc);
-      if (func) {
-        // clang-format off
-        oc_rep_set_text_string(links, tag-func-desc, func);
-        // clang-format on
-      }
-    }
-
-    // tag-pos-rel
-    const double *pos = link->resource->tag_pos_rel;
-    if (pos[0] != 0 || pos[1] != 0 || pos[2] != 0) {
-      oc_rep_set_key(oc_rep_object(links), "tag-pos-rel");
-      oc_rep_start_array(oc_rep_object(links), tag_pos_rel);
-      oc_rep_add_double(tag_pos_rel, pos[0]);
-      oc_rep_add_double(tag_pos_rel, pos[1]);
-      oc_rep_add_double(tag_pos_rel, pos[2]);
-      oc_rep_end_array(oc_rep_object(links), tag_pos_rel);
-    }
+    oc_resource_encode_tag_properties(oc_rep_object(links), link->resource);
 
     // eps
     oc_rep_set_array(links, eps);

@@ -225,6 +225,23 @@ TEST_F(TestResource, MatchURI_P)
                                     oc_string_view(uri.c_str(), uri.length())));
 }
 
+TEST_F(TestResource, TagPolRelIsEmpty)
+{
+  oc_resource_t res{};
+  EXPECT_TRUE(oc_tag_pos_rel_is_empty(res.tag_pos_rel[0], res.tag_pos_rel[1],
+                                      res.tag_pos_rel[2]));
+
+  oc_resource_tag_pos_rel(&res, 1.0, 0, 0);
+  EXPECT_FALSE(oc_tag_pos_rel_is_empty(res.tag_pos_rel[0], res.tag_pos_rel[1],
+                                       res.tag_pos_rel[2]));
+  oc_resource_tag_pos_rel(&res, 0, 1.0, 0);
+  EXPECT_FALSE(oc_tag_pos_rel_is_empty(res.tag_pos_rel[0], res.tag_pos_rel[1],
+                                       res.tag_pos_rel[2]));
+  oc_resource_tag_pos_rel(&res, 0, 0, 1.0);
+  EXPECT_FALSE(oc_tag_pos_rel_is_empty(res.tag_pos_rel[0], res.tag_pos_rel[1],
+                                       res.tag_pos_rel[2]));
+}
+
 struct DynamicResourceData
 {
   int power;

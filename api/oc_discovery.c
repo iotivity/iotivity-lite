@@ -250,47 +250,7 @@ encode_resource(CborEncoder *links, const oc_resource_t *resource,
                                request->resource->device);
   }
 
-  // tag-pos-desc
-  if (resource->tag_pos_desc > 0) {
-    const char *desc = oc_enum_pos_desc_to_str(resource->tag_pos_desc);
-    if (desc) {
-      // clang-format off
-      oc_rep_set_text_string(link, tag-pos-desc, desc);
-      // clang-format on
-    }
-  }
-
-  // tag-func-desc
-  if (resource->tag_func_desc > 0) {
-    const char *func = oc_enum_to_str(resource->tag_func_desc);
-    if (func) {
-      // clang-format off
-      oc_rep_set_text_string(link, tag-func-desc, func);
-      // clang-format on
-    }
-  }
-
-  // tag-locn
-  if (resource->tag_locn > 0) {
-    const char *locn = oc_enum_locn_to_str(resource->tag_locn);
-    if (locn) {
-      // clang-format off
-      oc_rep_set_text_string(link, tag-locn, locn);
-      // clang-format on
-    }
-  }
-
-  // tag-pos-rel
-  const double *pos = resource->tag_pos_rel;
-  if (pos[0] != 0 || pos[1] != 0 || pos[2] != 0) {
-    oc_rep_set_key(oc_rep_object(link), "tag-pos-rel");
-    oc_rep_start_array(oc_rep_object(link), tag_pos_rel);
-    oc_rep_add_double(tag_pos_rel, pos[0]);
-    oc_rep_add_double(tag_pos_rel, pos[1]);
-    oc_rep_add_double(tag_pos_rel, pos[2]);
-    oc_rep_end_array(oc_rep_object(link), tag_pos_rel);
-  }
-
+  oc_resource_encode_tag_properties(oc_rep_object(link), resource);
   oc_rep_end_object(links, link);
   return true;
 }
@@ -1145,7 +1105,7 @@ discovery_encode(const oc_request_t *request, oc_interface_mask_t iface)
     size_t device = request->resource->device;
     oc_rep_begin_array(oc_rep_get_encoder(), root);
     oc_rep_begin_object(oc_rep_array(root), props);
-    oc_process_baseline_interface_with_filter(
+    oc_resource_encode_baseline_properties(
       oc_rep_object(props), oc_core_get_resource_by_index(OCF_RES, device),
       NULL, NULL);
 #ifdef OC_SECURITY
