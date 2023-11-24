@@ -42,9 +42,9 @@ public:
   static void SetUpTestCase()
   {
     (void)kTestMessagesPoolSize;
-#ifndef OC_DYNAMIC_ALLOCATION
+#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
     oc_allocator_mutex_init();
-#endif /* OC_DYNAMIC_ALLOCATION */
+#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX*/
     oc_memb_init(&oc_test_messages);
     oc_set_buffers_avail_cb(onIncomingBufferAvailable);
     oc_memb_set_buffers_avail_cb(&oc_test_messages, onTestBufferAvailable);
@@ -53,9 +53,9 @@ public:
   static void TearDownTestCase()
   {
     oc_set_buffers_avail_cb(nullptr);
-#ifndef OC_DYNAMIC_ALLOCATION
+#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
     oc_allocator_mutex_destroy();
-#endif /* OC_DYNAMIC_ALLOCATION */
+#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX */
   }
 
   void SetUp() override
@@ -275,6 +275,11 @@ testProcessMessagesByProcess()
   oc_ri_shutdown();
   oc_runtime_shutdown();
   oc_network_event_handler_mutex_destroy();
+
+#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
+  // reinit allocator mutex for other tests, TearDownCase will destroy it
+  oc_allocator_mutex_init();
+#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX */
 }
 
 TEST_F(TestMessage, RecvMessageByProcess)
@@ -296,5 +301,47 @@ TEST_F(TestMessage, TCPConnectByProcess)
 }
 
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+
+#ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
+
+TEST_F(TestMessage, MessageShrinkBuffer)
+{
+  auto message =
+    oc_message_unique_ptr(oc_allocate_message(), &oc_message_unref);
+  ASSERT_NE(nullptr, message.get());
+  message->length = message->size;
+  oc_message_shrink_buffer(message.get(), 0);
+  EXPECT_EQ(0, message->length);
+  EXPECT_EQ(0, oc_message_buffer_size(message.get()));
+  EXPECT_EQ(nullptr, message->data);
+
+  // increase size (not expected but should be handled)
+  oc_message_shrink_buffer(message.get(), 1);
+  EXPECT_EQ(0, message->length);
+  EXPECT_EQ(1, oc_message_buffer_size(message.get()));
+  EXPECT_NE(nullptr, message->data);
+  auto *data = message->data;
+
+  // duplicate shrink
+  oc_message_shrink_buffer(message.get(), 1);
+  EXPECT_EQ(0, message->length);
+  EXPECT_EQ(1, oc_message_buffer_size(message.get()));
+  EXPECT_EQ(data, message->data);
+}
+
+#endif /* OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
+
+TEST_F(TestMessage, MessageBufferSize)
+{
+  auto message =
+    oc_message_unique_ptr(oc_message_allocate_with_size(16), &oc_message_unref);
+  ASSERT_NE(nullptr, message.get());
+#ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
+  EXPECT_EQ(16, oc_message_buffer_size(message.get()));
+#else  /* !OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
+  EXPECT_EQ(oc_message_max_buffer_size(),
+            oc_message_buffer_size(message.get()));
+#endif /* OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
+}
 
 #endif /* OC_TEST */

@@ -19,6 +19,8 @@
 #ifndef OC_PORT_ALLOCATOR_INTERNAL_H
 #define OC_PORT_ALLOCATOR_INTERNAL_H
 
+#include "util/oc_features.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -47,7 +49,7 @@ extern "C" {
  * @{
  */
 
-#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
+#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
 
 /** @brief initialize the allocator mutex */
 void oc_allocator_mutex_init(void);
@@ -61,7 +63,7 @@ void oc_allocator_mutex_unlock(void);
 /** @brief destroy the network event handler mutex */
 void oc_allocator_mutex_destroy(void);
 
-#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
+#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX */
 
 /** @} */
 

@@ -241,7 +241,7 @@ TCPClient::ReceiveMessage()
     return msg;
   }
 
-  long size = Receive(msg->data, oc_message_buffer_size());
+  long size = Receive(msg->data, oc_message_buffer_size(msg.get()));
   if (size < 0) {
     msg.reset();
     return msg;

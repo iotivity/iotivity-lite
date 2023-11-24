@@ -448,8 +448,9 @@ send_cancellation_notification(const coap_observer_t *obs, uint8_t code)
     return;
   }
   notification.mid = transaction->mid;
-  transaction->message->length = coap_serialize_message(
-    &notification, transaction->message->data, oc_message_buffer_size());
+  transaction->message->length =
+    coap_serialize_message(&notification, transaction->message->data,
+                           oc_message_buffer_size(transaction->message));
   if (transaction->message->length > 0) {
     coap_send_transaction(transaction);
   } else {
@@ -769,8 +770,9 @@ coap_send_notification_internal(coap_send_notification_ctx_t ctx)
 
   ctx.obs->last_mid = transaction->mid;
   notification.mid = transaction->mid;
-  transaction->message->length = coap_serialize_message(
-    &notification, transaction->message->data, oc_message_buffer_size());
+  transaction->message->length =
+    coap_serialize_message(&notification, transaction->message->data,
+                           oc_message_buffer_size(transaction->message));
   if (transaction->message->length > 0) {
     coap_send_transaction(transaction);
   } else {

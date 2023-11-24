@@ -23,8 +23,11 @@
 #include "port/oc_connectivity.h"
 #include "port/oc_log_internal.h"
 #include "util/oc_atomic.h"
+#include "util/oc_features.h"
 #include "util/oc_macros_internal.h"
 #include "util/oc_memb.h"
+
+#include <assert.h>
 
 #ifdef OC_DYNAMIC_ALLOCATION
 #include <stdlib.h>
@@ -41,35 +44,35 @@ OC_MEMB(oc_outgoing_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 static void
 message_deallocate(oc_message_t *message, struct oc_memb *pool)
 {
-#if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
+#ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
   free(message->data);
-#endif /* OC_DYNAMIC_ALLOCATION && !OC_INOUT_BUFFER_SIZE */
-#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
+#endif /* OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
+#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
   oc_allocator_mutex_lock();
-#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
+#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX */
   oc_memb_free(pool, message);
-#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
+#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
   oc_allocator_mutex_unlock();
-#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
+#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX */
 }
 
 static oc_message_t *
 message_allocate_with_size(struct oc_memb *pool, size_t size)
 {
-#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
+#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
   oc_allocator_mutex_lock();
-#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
+#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX */
   oc_message_t *message = (oc_message_t *)oc_memb_alloc(pool);
-#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
+#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
   oc_allocator_mutex_unlock();
-#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
+#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX */
   if (message == NULL) {
-#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
+#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
     OC_WRN("buffer: No free TX/RX buffers!");
-#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
+#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX */
     return NULL;
   }
-#if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
+#ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
   message->data = (uint8_t *)malloc(size);
   if (message->data == NULL) {
     OC_ERR("Out of memory, cannot allocate message");
@@ -77,9 +80,10 @@ message_allocate_with_size(struct oc_memb *pool, size_t size)
     return NULL;
   }
   memset(message->data, 0, size);
-#else  /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_SIZE */
+  message->size = size;
+#else  /* !OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
   (void)size;
-#endif /* OC_DYNAMIC_ALLOCATION && !OC_INOUT_BUFFER_SIZE */
+#endif /* OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
   message->pool = pool;
   message->length = 0;
   message->next = 0;
@@ -88,9 +92,9 @@ message_allocate_with_size(struct oc_memb *pool, size_t size)
 #ifdef OC_SECURITY
   message->encrypted = 0;
 #endif /* OC_SECURITY */
-#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
+#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
   OC_DBG("buffer: Allocated TX/RX buffer; num free: %d", oc_memb_numfree(pool));
-#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
+#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX */
   OC_DBG("buffer: allocated message(%p) from pool(%p)", (void *)message,
          (void *)pool);
   return message;
@@ -99,15 +103,15 @@ message_allocate_with_size(struct oc_memb *pool, size_t size)
 static oc_message_t *
 message_allocate(struct oc_memb *pool)
 {
-#if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
+#ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
   return message_allocate_with_size(pool, OC_PDU_SIZE);
-#else  /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_SIZE */
+#else  /* !OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
   return message_allocate_with_size(pool, 0);
-#endif /* OC_DYNAMIC_ALLOCATION && !OC_INOUT_BUFFER_SIZE */
+#endif /* OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
 }
 
 size_t
-oc_message_buffer_size(void)
+oc_message_max_buffer_size(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
 #ifdef OC_INOUT_BUFFER_SIZE
@@ -118,6 +122,21 @@ oc_message_buffer_size(void)
 #else  /* !OC_DYNAMIC_ALLOCATION */
   return OC_ARRAY_SIZE(((oc_message_t *)(NULL))->data);
 #endif /* OC_DYNAMIC_ALLOCATION  */
+}
+
+size_t
+oc_message_buffer_size(const oc_message_t *message)
+{
+  assert(message != NULL);
+#ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
+  if (message->data == NULL) {
+    return 0;
+  }
+  return message->size;
+#else  /* !OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
+  (void)message;
+  return oc_message_max_buffer_size();
+#endif /* OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
 }
 
 oc_message_t *
@@ -201,7 +220,28 @@ oc_message_unref(oc_message_t *message)
   message_deallocate(message, pool);
   OC_DBG("buffer: deallocated message(%p) from pool(%p)", (void *)message,
          (void *)pool);
-#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
+#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
   OC_DBG("buffer: freed TX/RX buffer; num free: %d", oc_memb_numfree(pool));
-#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
+#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX*/
 }
+
+#ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
+void
+oc_message_shrink_buffer(oc_message_t *message, size_t size)
+{
+  size_t old_size = oc_message_buffer_size(message);
+  if (size == old_size) {
+    return;
+  }
+  uint8_t *new_data = (uint8_t *)realloc(message->data, size);
+  if (new_data == NULL && size > 0) {
+    OC_ERR("Out of memory, cannot shrink message buffer");
+    return;
+  }
+  message->data = new_data;
+  message->size = size;
+  if (message->length > size) {
+    message->length = size;
+  }
+}
+#endif /* OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */

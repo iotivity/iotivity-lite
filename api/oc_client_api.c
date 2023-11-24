@@ -138,7 +138,7 @@ dispatch_coap_request(void)
 
   g_dispatch.transaction->message->length = coap_serialize_message(
     &g_request.packet, g_dispatch.transaction->message->data,
-    oc_message_buffer_size());
+    oc_message_buffer_size(g_dispatch.transaction->message));
   if (g_dispatch.transaction->message->length == 0) {
     coap_clear_transaction(g_dispatch.transaction);
     oc_client_cb_free(g_dispatch.client_cb);
@@ -322,8 +322,9 @@ oc_do_multicast_update(void)
   }
   coap_options_set_content_format(&g_request.packet, cf);
 
-  g_multicast_update->length = coap_serialize_message(
-    &g_request.packet, g_multicast_update->data, oc_message_buffer_size());
+  g_multicast_update->length =
+    coap_serialize_message(&g_request.packet, g_multicast_update->data,
+                           oc_message_buffer_size(g_multicast_update));
   if (g_multicast_update->length <= 0) {
     goto do_multicast_update_error;
   }

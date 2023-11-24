@@ -48,16 +48,16 @@ public:
     WSADATA wsaData;
     WSAStartup(MAKEWORD(2, 2), &wsaData);
 #endif /* _WIN32 */
-#ifndef OC_DYNAMIC_ALLOCATION
+#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
     oc_allocator_mutex_init();
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX*/
   }
 
   static void TearDownTestCase()
   {
-#ifndef OC_DYNAMIC_ALLOCATION
+#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
     oc_allocator_mutex_destroy();
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX */
 #ifdef _WIN32
     WSACleanup();
 #endif /* _WIN32 */

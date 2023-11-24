@@ -405,10 +405,10 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
 
       total_length = (size_t)length_from_header;
       // check to avoid buffer overflow
-      if (total_length > oc_message_buffer_size()) {
+      if (total_length > oc_message_buffer_size(message)) {
         OC_ERR(
           "total receive length(%zu) is bigger than message buffer size(%zu)",
-          total_length, oc_message_buffer_size());
+          total_length, oc_message_buffer_size(message));
         free_tcp_session(session);
         ret_with_code(ADAPTER_STATUS_ERROR);
       }

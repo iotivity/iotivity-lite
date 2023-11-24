@@ -719,8 +719,8 @@ handle_separate_response_transaction(coap_transaction_t *t,
                                      uint8_t response_code)
 {
   coap_set_status_code(response, response_code);
-  t->message->length = coap_serialize_message(response, t->message->data,
-                                              oc_message_buffer_size());
+  t->message->length = coap_serialize_message(
+    response, t->message->data, oc_message_buffer_size(t->message));
   if (t->message->length <= 0) {
     coap_clear_transaction(t);
     return;

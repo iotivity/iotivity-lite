@@ -705,7 +705,7 @@ ssl_send(void *ctx, const unsigned char *buf, size_t len)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)ctx;
   peer->timestamp = oc_clock_time_monotonic();
-  size_t max_len = oc_message_buffer_size();
+  size_t max_len = oc_message_max_buffer_size();
   size_t send_len = (len < max_len) ? len : max_len;
   oc_message_t *message = oc_message_allocate_outgoing_with_size(send_len);
   if (message == NULL) {
@@ -2781,6 +2781,9 @@ tls_read_application_data_tcp(oc_tls_peer_t *peer)
           return;
         }
         want_read = total_length - peer->processed_recv_message->length;
+#ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
+        oc_message_shrink_buffer(peer->processed_recv_message, total_length);
+#endif /* OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
       }
       OC_DBG("oc_tls_tcp: mbedtls_ssl_read want read: %d", (int)want_read);
       int ret = mbedtls_ssl_read(&peer->ssl_ctx,
@@ -2889,8 +2892,8 @@ tls_read_application_data_udp(oc_tls_peer_t *peer)
   }
 #endif /* OC_INOUT_BUFFER_SIZE */
   memcpy(&message->endpoint, &peer->endpoint, sizeof(oc_endpoint_t));
-  int ret =
-    mbedtls_ssl_read(&peer->ssl_ctx, message->data, oc_message_buffer_size());
+  int ret = mbedtls_ssl_read(&peer->ssl_ctx, message->data,
+                             oc_message_buffer_size(message));
   if (ret <= 0) {
 #ifndef OC_INOUT_BUFFER_SIZE
     oc_message_unref(message);
@@ -2912,6 +2915,9 @@ tls_read_application_data_udp(oc_tls_peer_t *peer)
 
   message->length = ret;
   message->encrypted = 0;
+#ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
+  oc_message_shrink_buffer(message, message->length);
+#endif /* OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
   oc_message_t *msg = message;
 #ifdef OC_INOUT_BUFFER_SIZE
   msg = oc_allocate_message();

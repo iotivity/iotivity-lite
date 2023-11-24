@@ -20,6 +20,7 @@
 #define OC_MESSAGE_INTERNAL_H
 
 #include "port/oc_connectivity.h"
+#include "util/oc_features.h"
 
 #include <stddef.h>
 
@@ -58,14 +59,35 @@ oc_message_t *oc_message_allocate_outgoing(void);
 oc_message_t *oc_message_allocate_outgoing_with_size(size_t size);
 
 /**
- * @brief Get size of the message buffer
+ * @brief Get maximum size of the message buffer
  *
  * The size of the buffer depends on compilation options (it may be static or
  * dynamic and have differing sizes).
  *
  * @return size_t size of the message buffer
  */
-size_t oc_message_buffer_size(void);
+size_t oc_message_max_buffer_size(void);
+
+/**
+ * @brief Get size of the message buffer
+ *
+ * The size of the buffer depends on compilation options (it may be static or
+ * dynamic and have differing sizes).
+ *
+ * @param message the message to get the buffer size
+ * @return size_t size of the message buffer
+ */
+size_t oc_message_buffer_size(const oc_message_t *message) OC_NONNULL();
+
+#ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
+/**
+ * @brief Shrink the message buffer to the minimum size.
+ *
+ * @param message the message to shrink
+ * @param size the new size of the shrunk buffer
+ */
+void oc_message_shrink_buffer(oc_message_t *message, size_t size) OC_NONNULL();
+#endif /* OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
 
 #ifdef __cplusplus
 }

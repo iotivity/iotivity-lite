@@ -125,6 +125,9 @@ oc_network_receive_event(oc_message_t *message)
     oc_message_unref(message);
     return;
   }
+#ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
+  oc_message_shrink_buffer(message, message->length);
+#endif /* OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
   oc_network_event_handler_mutex_lock();
   oc_list_add(g_network_events, message);
   oc_network_event_handler_mutex_unlock();

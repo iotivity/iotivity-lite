@@ -117,7 +117,7 @@ typedef struct oc_message_s
   struct oc_message_s *next;
   struct oc_memb *pool;
   oc_endpoint_t endpoint;
-  size_t length;
+  size_t length; // length of the used part of the buffer
   OC_ATOMIC_UINT8_T ref_count;
 #ifdef OC_DYNAMIC_ALLOCATION
 #ifdef OC_INOUT_BUFFER_SIZE
@@ -134,6 +134,9 @@ typedef struct oc_message_s
 #ifdef OC_SECURITY
   uint8_t encrypted;
 #endif /* OC_SECURITY */
+#ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
+  size_t size; // size of the allocated buffer
+#endif         /* OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
 } oc_message_t;
 
 /**

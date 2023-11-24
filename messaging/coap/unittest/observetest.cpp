@@ -37,9 +37,9 @@ class TestObserver : public testing::Test {
 public:
   static void SetUpTestCase()
   {
-#ifndef OC_DYNAMIC_ALLOCATION
+#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
     oc_allocator_mutex_init();
-#endif /* !OC_DYNAMIC_ALLOCATION */
+#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX */
     oc_random_init();
   }
 

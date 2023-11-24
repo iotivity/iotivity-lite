@@ -843,7 +843,6 @@ receive:
   OC_LOGipaddr(message->endpoint);
   OC_DBG("%s", "");
 
-  // TODO: oc_message_shrink_buffer
   oc_network_receive_event(message);
   return 1;
 }
