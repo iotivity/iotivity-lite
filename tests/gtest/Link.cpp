@@ -72,6 +72,10 @@ Link::ParsePayload(const oc_rep_t *rep)
         ld.tag_func_desc = oc_string(rep->value.string);
         continue;
       }
+      if (std::string(oc_string(rep->name)) == "tag-locn") {
+        ld.tag_locn = oc_string(rep->value.string);
+        continue;
+      }
 
       ld.params.emplace_back(
         LinkParamData{ oc_string(rep->name), oc_string(rep->value.string) });
@@ -130,6 +134,7 @@ Link::ParsePayload(const oc_rep_t *rep)
         if (bm) {
           ld.bm = *bm;
         }
+        continue;
       }
     }
 

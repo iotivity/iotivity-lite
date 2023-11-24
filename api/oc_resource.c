@@ -16,18 +16,24 @@
  *
  ****************************************************************************/
 
+#include "api/oc_core_res_internal.h"
+#include "api/oc_enums_internal.h"
+#include "api/oc_ri_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_helpers.h"
 #include "oc_resource_internal.h"
 #include "oc_ri.h"
 #include "port/oc_log_internal.h"
+#include "util/oc_numeric_internal.h"
 
 #ifdef OC_COLLECTIONS
 #include "api/oc_collection_internal.h"
 #endif /* OC_COLLECTIONS */
 
 #include <assert.h>
+#include <float.h>
+#include <math.h>
 
 bool
 oc_resource_is_initialized(const oc_resource_t *resource)
@@ -177,4 +183,178 @@ oc_resources_iterate(size_t device, bool includePlatform, bool includeCore,
   (void)includeDynamic;
   (void)includeCollections;
 #endif /* OC_SERVER */
+}
+
+void
+oc_resource_tag_pos_desc(oc_resource_t *resource, oc_pos_description_t pos)
+{
+  resource->tag_pos_desc = pos;
+}
+
+void
+oc_resource_tag_pos_rel(oc_resource_t *resource, double x, double y, double z)
+{
+  resource->tag_pos_rel[0] = x;
+  resource->tag_pos_rel[1] = y;
+  resource->tag_pos_rel[2] = z;
+}
+
+bool
+oc_tag_pos_rel_is_empty(double pos1, double pos2, double pos3)
+{
+  return oc_double_is_zero(pos1) && oc_double_is_zero(pos2) &&
+         oc_double_is_zero(pos3);
+}
+
+void
+oc_resource_tag_func_desc(oc_resource_t *resource, oc_enum_t func)
+{
+  resource->tag_func_desc = func;
+}
+
+void
+oc_resource_tag_locn(oc_resource_t *resource, oc_locn_t locn)
+{
+  resource->tag_locn = locn;
+}
+
+static void
+resource_encode_name(CborEncoder *object, const char *name, size_t name_len)
+{
+  if (name == NULL) {
+    return;
+  }
+  g_err |= oc_rep_object_set_text_string(
+    object, OC_BASELINE_PROP_NAME, OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_NAME),
+    name, name_len);
+}
+
+static void
+resource_encode_tag_pos_desc(CborEncoder *object,
+                             oc_pos_description_t tag_pos_desc)
+{
+  oc_string_view_t desc = oc_enum_pos_desc_to_string_view(tag_pos_desc);
+  if (desc.data == NULL) {
+    return;
+  }
+  /* tag-pos-desc will be handled as a string */
+  g_err |= oc_rep_object_set_text_string(
+    object, OC_BASELINE_PROP_TAG_POS_DESC,
+    OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_TAG_POS_DESC), desc.data, desc.length);
+}
+
+static void
+resource_encode_tag_func_desc(CborEncoder *object, oc_enum_t tag_func_desc)
+{
+  oc_string_view_t func = oc_enum_to_string_view(tag_func_desc);
+  if (func.data == NULL) {
+    return;
+  }
+  /* tag-func-desc will be handled as a string */
+  g_err |= oc_rep_object_set_text_string(
+    object, OC_BASELINE_PROP_FUNC_DESC,
+    OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_FUNC_DESC), func.data, func.length);
+}
+
+static void
+resource_encode_tag_locn(CborEncoder *object, oc_locn_t tag_locn)
+{
+  oc_string_view_t locn = oc_enum_locn_to_string_view(tag_locn);
+  if (locn.data == NULL) {
+    return;
+  }
+  /* tag-locn will be handled as a string */
+  g_err |= oc_rep_object_set_text_string(
+    object, OC_BASELINE_PROP_TAG_LOCN,
+    OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_TAG_LOCN), locn.data, locn.length);
+}
+
+static void
+resource_encode_tag_pos_rel(CborEncoder *object, double pos1, double pos2,
+                            double pos3)
+{
+  if (oc_tag_pos_rel_is_empty(pos1, pos2, pos3)) {
+    return;
+  }
+  oc_rep_set_key(object, "tag-pos-rel");
+  oc_rep_start_array(object, tag_pos_rel);
+  oc_rep_add_double(tag_pos_rel, pos1);
+  oc_rep_add_double(tag_pos_rel, pos2);
+  oc_rep_add_double(tag_pos_rel, pos3);
+  oc_rep_end_array(object, tag_pos_rel);
+}
+
+void
+oc_resource_encode_baseline_properties(
+  CborEncoder *object, const oc_resource_t *resource,
+  oc_resource_properties_filter_fn_t filter, void *filter_data)
+{
+  if (filter == NULL ||
+      filter(OC_STRING_VIEW(OC_BASELINE_PROP_NAME), filter_data)) {
+    resource_encode_name(object, oc_string(resource->name),
+                         oc_string_len(resource->name));
+  }
+  if (filter == NULL ||
+      filter(OC_STRING_VIEW(OC_BASELINE_PROP_RT), filter_data)) {
+    g_err |= oc_rep_object_set_string_array(
+      object, OC_BASELINE_PROP_RT, OC_CHAR_ARRAY_LEN(OC_BASELINE_PROP_RT),
+      &resource->types);
+  }
+  if (filter == NULL ||
+      filter(OC_STRING_VIEW(OC_BASELINE_PROP_IF), filter_data)) {
+    oc_core_encode_interfaces_mask(object, resource->interfaces, false);
+  }
+  if (filter == NULL ||
+      filter(OC_STRING_VIEW(OC_BASELINE_PROP_TAG_LOCN), filter_data)) {
+    resource_encode_tag_locn(object, resource->tag_locn);
+  }
+  if (filter == NULL ||
+      filter(OC_STRING_VIEW(OC_BASELINE_PROP_TAG_POS_REL), filter_data)) {
+    resource_encode_tag_pos_rel(object, resource->tag_pos_rel[0],
+                                resource->tag_pos_rel[1],
+                                resource->tag_pos_rel[2]);
+  }
+  if (filter == NULL ||
+      filter(OC_STRING_VIEW(OC_BASELINE_PROP_TAG_POS_DESC), filter_data)) {
+    resource_encode_tag_pos_desc(object, resource->tag_pos_desc);
+  }
+  if (filter == NULL ||
+      filter(OC_STRING_VIEW(OC_BASELINE_PROP_FUNC_DESC), filter_data)) {
+    resource_encode_tag_func_desc(object, resource->tag_func_desc);
+  }
+}
+
+void
+oc_process_baseline_interface(const oc_resource_t *resource)
+{
+  oc_resource_encode_baseline_properties(oc_rep_object(root), resource, NULL,
+                                         NULL);
+}
+
+static bool
+resource_is_tag(oc_string_view_t property_name, void *data)
+{
+  (void)data;
+  oc_string_view_t tag_property[] = {
+    OC_STRING_VIEW(OC_BASELINE_PROP_TAG_LOCN),
+    OC_STRING_VIEW(OC_BASELINE_PROP_TAG_POS_REL),
+    OC_STRING_VIEW(OC_BASELINE_PROP_TAG_POS_DESC),
+    OC_STRING_VIEW(OC_BASELINE_PROP_FUNC_DESC),
+  };
+  for (size_t i = 0; i < OC_ARRAY_SIZE(tag_property); ++i) {
+    if (property_name.length == tag_property[i].length &&
+        memcmp(property_name.data, tag_property[i].data,
+               tag_property[i].length) == 0) {
+      return true;
+    }
+  }
+  return false;
+}
+
+void
+oc_resource_encode_tag_properties(CborEncoder *object,
+                                  const oc_resource_t *resource)
+{
+  oc_resource_encode_baseline_properties(object, resource, resource_is_tag,
+                                         NULL);
 }

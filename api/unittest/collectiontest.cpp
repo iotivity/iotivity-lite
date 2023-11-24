@@ -472,6 +472,7 @@ TestCollectionsWithServer::makeTestResources()
   oc_resource_tag_pos_rel(bswitch1, switch1Pos[0], switch1Pos[1],
                           switch1Pos[2]);
   oc_resource_tag_pos_desc(bswitch1, OC_POS_TOP);
+  oc_resource_tag_locn(bswitch1, OCF_LOCN_SPA);
   ASSERT_TRUE(oc_add_resource(bswitch1));
   resources.push_back(bswitch1);
 

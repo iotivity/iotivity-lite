@@ -47,6 +47,7 @@ struct LinkData
   int64_t ins;
   std::vector<LinkParamData> params;
   oc_resource_properties_t bm;
+  std::string tag_locn;
   std::string tag_pos_desc;
   std::string tag_func_desc;
   std::vector<double> tag_pos_rel;

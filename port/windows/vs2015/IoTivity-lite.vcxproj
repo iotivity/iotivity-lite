@@ -297,6 +297,7 @@
     <ClInclude Include="..\..\..\util\oc_mem_trace_internal.h" />
     <ClInclude Include="..\..\..\util\oc_memb.h" />
     <ClInclude Include="..\..\..\util\oc_mmem.h" />
+    <ClInclude Include="..\..\..\util\oc_numeric_internal.h" />
     <ClInclude Include="..\..\..\util\oc_process.h" />
     <ClInclude Include="..\..\..\util\oc_process_internal.h" />
     <ClInclude Include="..\..\..\util\oc_secure_string_internal.h" />
@@ -476,6 +477,7 @@
     <ClCompile Include="..\..\..\util\oc_list.c" />
     <ClCompile Include="..\..\..\util\oc_memb.c" />
     <ClCompile Include="..\..\..\util\oc_mmem.c" />
+    <ClCompile Include="..\..\..\util\oc_numeric.c" />
     <ClCompile Include="..\..\..\util\oc_process.c" />
     <ClCompile Include="..\..\..\util\oc_timer.c" />
     <ClCompile Include="..\abort.c" />

@@ -415,10 +415,8 @@ oc_rep_to_json(const oc_rep_t *rep, char *buf, size_t buf_size,
   assert(buf != NULL || buf_size == 0);
 
   size_t total_char_printed = 0;
-  bool object_array = false;
-  if (rep != NULL && oc_string_len(rep->name) == 0) {
-    object_array = rep->type == OC_REP_OBJECT;
-  }
+  bool object_array =
+    rep != NULL && oc_string_len(rep->name) == 0 && rep->type == OC_REP_OBJECT;
   size_t num_char_printed = snprintf(buf, buf_size, object_array ? "[" : "{");
   OC_JSON_UPDATE_BUFFER_AND_TOTAL;
   if (pretty_print) {
