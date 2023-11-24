@@ -19,7 +19,7 @@
 #include "port/oc_allocator_internal.h"
 #include "port/oc_assert.h"
 
-#if !defined(OC_DYNAMIC_ALLOCATION) || defined(OC_INOUT_BUFFER_POOL)
+#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
 
 #include <pthread.h>
 
@@ -57,4 +57,4 @@ oc_allocator_mutex_destroy(void)
   }
 }
 
-#endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
+#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX */

@@ -58,8 +58,8 @@ oscore_send_error(const coap_packet_t *packet, uint8_t code,
     coap_set_token(&msg, packet->token, packet->token_len);
   }
   coap_options_set_max_age(&msg, 0);
-  size_t len =
-    coap_serialize_message(&msg, message->data, oc_message_buffer_size());
+  size_t len = coap_serialize_message(&msg, message->data,
+                                      oc_message_buffer_size(message));
   if (len == 0) {
     oc_message_unref(message);
     return;

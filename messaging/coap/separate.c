@@ -144,8 +144,8 @@ coap_separate_accept(const coap_packet_t *request,
       coap_separate_clear(separate_response, separate_store);
       return false;
     }
-    message->length =
-      coap_serialize_message(&ack, message->data, oc_message_buffer_size());
+    message->length = coap_serialize_message(&ack, message->data,
+                                             oc_message_buffer_size(message));
     if (message->length == 0) {
       oc_message_unref(message);
       coap_separate_clear(separate_response, separate_store);

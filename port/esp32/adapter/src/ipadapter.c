@@ -877,16 +877,6 @@ network_event_thread(void *data)
       OC_DBG("interface index %d", message->endpoint.interface_index);
       OC_DBG("%s", "");
 
-#if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_SIZE)
-      void *tmp = realloc(
-        message->data,
-        message->length +
-          1); // +1 because coap_oscore_parse_options writes in some cases
-              // '\0' after the payload so we need a single additional space
-      if (tmp != NULL) {
-        message->data = tmp;
-      }
-#endif /* OC_DYNAMIC_ALLOCATION && OC_INOUT_BUFFER_SIZE */
       oc_network_receive_event(message);
     }
   }

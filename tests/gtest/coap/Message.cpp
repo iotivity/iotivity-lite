@@ -137,8 +137,8 @@ RegisterObserve(token_t token, const std::string &uri, const std::string &query,
     return message;
   }
   memcpy(&message->endpoint, endpoint, sizeof(oc_endpoint_t));
-  message->length =
-    coap_serialize_message(&pkt, message->data, oc_message_buffer_size());
+  message->length = coap_serialize_message(
+    &pkt, message->data, oc_message_buffer_size(message.get()));
 
   return message;
 }

@@ -438,10 +438,10 @@ tcp_session_receive_message_locked(tcp_session_t *session,
 
       total_length = (size_t)length_from_header;
       // check to avoid buffer overflow
-      if (total_length > oc_message_buffer_size()) {
+      if (total_length > oc_message_buffer_size(message)) {
         OC_ERR(
           "total receive length(%zu) is bigger than message buffer size(%zu)",
-          total_length, oc_message_buffer_size());
+          total_length, oc_message_buffer_size(message));
         free_session_locked(session, true);
         return ADAPTER_STATUS_ERROR;
       }

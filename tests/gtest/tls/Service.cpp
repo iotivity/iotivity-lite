@@ -51,7 +51,7 @@ void
 Service::ReadData()
 {
   std::vector<uint8_t> data{};
-  data.resize(oc_message_buffer_size());
+  data.resize(oc_message_max_buffer_size());
   long ret;
   do {
     ret = mbedtls_ssl_read(mbedtlsCtx_->GetSSLContext(), &data[0], data.size());

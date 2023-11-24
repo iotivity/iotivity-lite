@@ -467,10 +467,10 @@ recv_message_with_tcp_session(tcp_session_t *session, oc_message_t *message)
 
       total_length = (size_t)length_from_header;
       // check to avoid buffer overflow
-      if (total_length > oc_message_buffer_size()) {
+      if (total_length > oc_message_buffer_size(message)) {
         OC_ERR(
           "total receive length(%zu) is bigger than message buffer size(%zu)",
-          total_length, oc_message_buffer_size());
+          total_length, oc_message_buffer_size(message));
         free_tcp_session(session);
         return ADAPTER_STATUS_ERROR;
       }

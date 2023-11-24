@@ -149,8 +149,8 @@ coap_send_empty_response(coap_message_type_t type, uint16_t mid,
   if (token && token_len > 0) {
     coap_set_token(&packet, token, token_len);
   }
-  size_t len =
-    coap_serialize_message(&packet, message->data, oc_message_buffer_size());
+  size_t len = coap_serialize_message(&packet, message->data,
+                                      oc_message_buffer_size(message));
   if (len == 0) {
     oc_message_unref(message);
     return;
@@ -642,11 +642,12 @@ send_transaction:
            ctx->response->token_len);
     ctx->transaction->token_len = ctx->response->token_len;
   }
-  COAP_DBG(
-    "data buffer from:%p to:%p", (void *)ctx->transaction->message->data,
-    (void *)(ctx->transaction->message->data + oc_message_buffer_size()));
-  ctx->transaction->message->length = coap_serialize_message(
-    ctx->response, ctx->transaction->message->data, oc_message_buffer_size());
+  COAP_DBG("data buffer from:%p to:%p", (void *)ctx->transaction->message->data,
+           (void *)(ctx->transaction->message->data +
+                    oc_message_buffer_size(ctx->transaction->message)));
+  ctx->transaction->message->length =
+    coap_serialize_message(ctx->response, ctx->transaction->message->data,
+                           oc_message_buffer_size(ctx->transaction->message));
   if (ctx->transaction->message->length > 0) {
     coap_send_transaction(ctx->transaction);
   } else {

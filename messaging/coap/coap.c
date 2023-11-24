@@ -1021,17 +1021,7 @@ coap_oscore_parse_options(coap_packet_t *packet, const uint8_t *data,
       ++current_option;
       packet->payload = current_option;
       packet->payload_len = (uint32_t)(data_len - (packet->payload - data));
-
-      if (packet->transport_type == COAP_TRANSPORT_UDP &&
-          packet->payload_len > (uint32_t)OC_MAX_APP_DATA_SIZE) {
-        packet->payload_len = (uint32_t)OC_MAX_APP_DATA_SIZE;
-        /* null-terminate payload */
-      }
-      if (!validate) {
-        packet->payload[packet->payload_len] =
-          '\0'; // TODO: this writes after the payload, if the message was
-                // shrank so the allocation matches the message length this
-                // causes a memory corruption
+      if (!validate && packet->payload_len > 0) {
         COAP_DBG("Got payload:");
         COAP_LOGbytes(packet->payload, packet->payload_len);
       }

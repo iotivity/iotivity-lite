@@ -454,7 +454,7 @@ TEST_F(TestConnectivityWithServer, oc_tcp_update_csm_state_P)
   packet.payload = payload.data();
   packet.payload_len = payload.size();
   msg->length =
-    coap_serialize_message(&packet, msg->data, oc_message_buffer_size());
+    coap_serialize_message(&packet, msg->data, oc_message_buffer_size(msg));
 
   oc_send_buffer(msg);
   oc_message_unref(msg);
@@ -591,7 +591,7 @@ TEST_F(TestConnectivityWithServer, oc_tcp_send_buffer2)
   oc_message_t *msg = oc_allocate_message();
   memcpy(&msg->endpoint, &ep, sizeof(oc_endpoint_t));
   msg->length =
-    coap_serialize_message(&packet, msg->data, oc_message_buffer_size());
+    coap_serialize_message(&packet, msg->data, oc_message_buffer_size(msg));
 
   EXPECT_EQ(msg->length, oc_send_buffer2(msg, false));
   oc_message_unref(msg);
