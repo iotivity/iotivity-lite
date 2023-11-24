@@ -62,7 +62,7 @@ static void gen_cloud_tag(const char *name, size_t device, char *cloud_tag);
 int
 cloud_store_load(oc_cloud_store_t *store)
 {
-  char cloud_tag[CLOUD_TAG_MAX];
+  char cloud_tag[CLOUD_TAG_MAX] = { 0 };
   gen_cloud_tag(CLOUD_STORE_NAME, store->device, cloud_tag);
   return cloud_store_load_internal(cloud_tag, store);
 }
@@ -124,17 +124,14 @@ cloud_store_encode(const oc_cloud_store_t *store)
 static long
 cloud_store_dump_internal(const char *store_name, const oc_cloud_store_t *store)
 {
-  if (!store_name || !store) {
-    return -1;
-  }
-
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = malloc(OC_MIN_APP_DATA_SIZE);
-  if (!buf)
+  if (buf == NULL) {
     return -1;
+  }
   oc_rep_new_realloc_v1(&buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
 #else  /* OC_DYNAMIC_ALLOCATION */
-  uint8_t buf[OC_MIN_APP_DATA_SIZE];
+  uint8_t buf[OC_MIN_APP_DATA_SIZE] = { 0 };
   oc_rep_new_v1(buf, sizeof(buf));
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
@@ -158,7 +155,7 @@ cloud_store_dump_internal(const char *store_name, const oc_cloud_store_t *store)
 long
 cloud_store_dump(const oc_cloud_store_t *store)
 {
-  char cloud_tag[CLOUD_TAG_MAX];
+  char cloud_tag[CLOUD_TAG_MAX] = { 0 };
   gen_cloud_tag(CLOUD_STORE_NAME, store->device, cloud_tag);
   // Calling dump for cloud and access point info
   return cloud_store_dump_internal(cloud_tag, store);

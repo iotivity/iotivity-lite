@@ -130,7 +130,6 @@ TEST_F(TestJsonRepWithPool, OCRepSetGetEmpty)
   oc_rep_begin_root_object();
   oc_rep_end_root_object();
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
-
   auto rep = ParsePayload();
   EXPECT_EQ(nullptr, rep.get());
 
@@ -142,6 +141,45 @@ TEST_F(TestJsonRepWithPool, OCRepSetGetEmpty)
   rep = ParsePayload();
   ASSERT_NE(nullptr, rep.get());
   EXPECT_EQ(OC_REP_ARRAY, rep->type);
+}
+
+TEST_F(TestJsonRepWithPool, OCRepIsEmptyObject)
+{
+  oc_rep_start_root_object();
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  EXPECT_TRUE(oc_rep_encoded_payload_is_empty_object(
+    oc_rep_encoder_get_type(), oc_rep_get_encoder_buf(),
+    oc_rep_get_encoded_payload_size()));
+}
+
+TEST_F(TestJsonRepWithPool, OCRepIsEmptyObject_F)
+{
+  // "[]"
+  oc_rep_begin_links_array();
+  oc_rep_end_links_array();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  EXPECT_FALSE(oc_rep_encoded_payload_is_empty_object(
+    oc_rep_encoder_get_type(), oc_rep_get_encoder_buf(),
+    oc_rep_get_encoded_payload_size()));
+
+  ClearPool();
+  // "{a: 123}"
+  oc_rep_start_root_object();
+  oc_rep_set_int(root, a, 123);
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  EXPECT_FALSE(oc_rep_encoded_payload_is_empty_object(
+    oc_rep_encoder_get_type(), oc_rep_get_encoder_buf(),
+    oc_rep_get_encoded_payload_size()));
+
+  ClearPool();
+  // "{"
+  oc_rep_start_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  EXPECT_FALSE(oc_rep_encoded_payload_is_empty_object(
+    oc_rep_encoder_get_type(), oc_rep_get_encoder_buf(),
+    oc_rep_get_encoded_payload_size()));
 }
 
 TEST_F(TestJsonRepWithPool, OCRepSetGetNull)

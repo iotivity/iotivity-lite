@@ -344,13 +344,11 @@ sec_load_unique_ids_from_rep(oc_rep_t *rep, size_t device)
   oc_device_info_t *device_info = oc_core_get_device_info(device);
   for (; rep != NULL; rep = rep->next) {
     if (rep->type == OC_REP_STRING) {
-      if (oc_string_len(rep->name) == 2 &&
-          memcmp(oc_string(rep->name), "pi", 2) == 0) {
+      if (oc_rep_is_property(rep, "pi", OC_CHAR_ARRAY_LEN("pi"))) {
         oc_str_to_uuid(oc_string(rep->value.string), &platform_info->pi);
         continue;
       }
-      if (oc_string_len(rep->name) == 4 &&
-          memcmp(oc_string(rep->name), "piid", 4) == 0) {
+      if (oc_rep_is_property(rep, "piid", OC_CHAR_ARRAY_LEN("piid"))) {
         oc_str_to_uuid(oc_string(rep->value.string), &device_info->piid);
         continue;
       }

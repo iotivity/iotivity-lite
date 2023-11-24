@@ -86,6 +86,13 @@ calculateCrc(uint64_t crc, CborType type, const uint8_t *buffer, size_t size)
   return oc_crc64(crc, buffer, size);
 }
 
+TEST_F(TestCrcRepEncodeWithRealloc, PayloadIsEmptyObject_F)
+{
+  EXPECT_FALSE(oc_rep_encoded_payload_is_empty_object(
+    OC_REP_CRC_ENCODER, oc_rep_get_encoder_buf(),
+    oc_rep_get_encoded_payload_size()));
+}
+
 TEST_F(TestCrcRepEncodeWithRealloc, EncodeNull)
 {
   SetRepBuffer(1, 0);
