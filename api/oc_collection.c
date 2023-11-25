@@ -804,12 +804,10 @@ collection_invoke_handler(const oc_collection_t *collection,
 }
 
 static oc_handle_collection_request_result_t
-collection_batch_request_process_links(const oc_collection_t *collection,
-                                       oc_method_t method,
-                                       oc_request_t *request,
-                                       const oc_string_t *href,
-                                       oc_rep_t *payload,
-                                       const oc_resource_t *notify_resource)
+collection_batch_request_process_links(
+  CborEncoder *encoder, const oc_collection_t *collection, oc_method_t method,
+  oc_request_t *request, const oc_string_t *href, oc_rep_t *payload,
+  const oc_resource_t *notify_resource)
 {
   coap_status_t ecode = oc_status_code_unsafe(OC_STATUS_OK);
   coap_status_t pcode = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST);
@@ -844,16 +842,21 @@ collection_batch_request_process_links(const oc_collection_t *collection,
                 oc_string_len(*href)) != 0)) {
       continue;
     }
-    CborEncoder prev_link;
-    memcpy(&prev_link, &links_array, sizeof(CborEncoder));
-    oc_rep_object_array_start_item(links);
+    CborEncoder prev_encoder;
+    memcpy(&prev_encoder, encoder, sizeof(CborEncoder));
+    CborEncoder link_item;
+    memset(&link_item, 0, sizeof(link_item));
+    g_err |=
+      oc_rep_encoder_create_map(encoder, &link_item, CborIndefiniteLength);
+
     rest_request.query = NULL;
     rest_request.query_len = 0;
 
-    oc_rep_set_text_string_v1(links, href, oc_string(link->resource->uri),
-                              oc_string_len(link->resource->uri));
-    oc_rep_set_key(oc_rep_object(links), "rep");
-    memcpy(oc_rep_get_encoder(), oc_rep_object(links), sizeof(CborEncoder));
+    g_err |= oc_rep_object_set_text_string(
+      &link_item, "href", OC_CHAR_ARRAY_LEN("href"),
+      oc_string(link->resource->uri), oc_string_len(link->resource->uri));
+    oc_rep_set_key_v1(&link_item, "rep", OC_CHAR_ARRAY_LEN("rep"));
+    memcpy(oc_rep_get_encoder(), &link_item, sizeof(link_item));
 
     int size_before = oc_rep_get_encoded_payload_size();
     rest_request.resource = link->resource;
@@ -884,8 +887,8 @@ collection_batch_request_process_links(const oc_collection_t *collection,
         if (!collection_invoke_handler(collection, link->resource,
                                        &rest_request)) {
           ecode = oc_status_code_unsafe(OC_STATUS_METHOD_NOT_ALLOWED);
-          memcpy(&links_array, &prev_link, sizeof(CborEncoder));
-          continue; // NOLINT(bugprone-terminating-continue)
+          memcpy(encoder, &prev_encoder, sizeof(prev_encoder));
+          continue;
         }
       }
     }
@@ -900,8 +903,8 @@ collection_batch_request_process_links(const oc_collection_t *collection,
       oc_rep_start_root_object();
       oc_rep_end_root_object();
     }
-    memcpy(&links_map, oc_rep_get_encoder(), sizeof(CborEncoder));
-    oc_rep_object_array_end_item(links);
+    memcpy(&link_item, oc_rep_get_encoder(), sizeof(link_item));
+    g_err |= oc_rep_encoder_close_container(encoder, &link_item);
   }
 
   return (oc_handle_collection_request_result_t){
@@ -926,7 +929,8 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
   if (get_delete) {
     oc_handle_collection_request_result_t result =
       collection_batch_request_process_links(
-        (oc_collection_t *)request->resource, method, request, /*href*/ NULL,
+        oc_rep_array(links), (oc_collection_t *)request->resource, method,
+        request, /*href*/ NULL,
         /*payload*/ NULL, notify_resource);
     memcpy(oc_rep_get_encoder(), &encoder, sizeof(CborEncoder));
     oc_rep_end_links_array();
@@ -965,8 +969,8 @@ oc_handle_collection_batch_request(oc_method_t method, oc_request_t *request,
         goto processed_request;
       }
       result = collection_batch_request_process_links(
-        (oc_collection_t *)request->resource, method, request, href, payload,
-        notify_resource);
+        oc_rep_array(links), (oc_collection_t *)request->resource, method,
+        request, href, payload, notify_resource);
       if (!result.ok) {
         goto processed_request;
       }

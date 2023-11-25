@@ -340,9 +340,9 @@ dev_time_encode_property_time(plgd_time_t pt, int flags)
   // just assert, since the property is public
   assert(dev_time_property_is_accessible(OC_STRING_VIEW(PLGD_TIME_PROP_TIME),
                                          flags));
-#else  /* !OC_SECURITY */
-  (void)flags;
 #endif /* OC_SECURITY */
+  (void)flags;
+
   char time[64] = { 0 };
   if (dev_time_is_active(pt)) {
     oc_clock_time_t ct = dev_plgd_time(pt);
