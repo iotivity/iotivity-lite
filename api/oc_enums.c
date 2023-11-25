@@ -144,7 +144,7 @@ enum_is_valid_array_index(int index, size_t array_size)
 oc_string_view_t
 oc_enum_to_string_view(oc_enum_t val)
 {
-  int index = val - 1;
+  int index = (int)val - 1;
   if (enum_is_valid_array_index(index, OC_ARRAY_SIZE(oc_enums))) {
     const char *str = oc_enums[index];
     size_t len = oc_strnlen(str, OC_ENUMS_MAX_LEN);
@@ -177,7 +177,7 @@ oc_enum_from_str(const char *enum_str, size_t enum_strlen, oc_enum_t *val)
 oc_string_view_t
 oc_enum_pos_desc_to_string_view(oc_pos_description_t pos)
 {
-  int index = pos - 1;
+  int index = (int)pos - 1;
   if (enum_is_valid_array_index(index, OC_ARRAY_SIZE(oc_pos_desc))) {
     const char *str = oc_pos_desc[index];
     size_t len = oc_strnlen(str, OC_POS_DESC_MAX_LEN);
@@ -211,7 +211,7 @@ oc_enum_pos_desc_from_str(const char *pos_str, size_t pos_strlen,
 oc_string_view_t
 oc_enum_locn_to_string_view(oc_locn_t locn)
 {
-  int index = locn - 1;
+  int index = (int)locn - 1;
   if (enum_is_valid_array_index(index, OC_ARRAY_SIZE(oc_locns))) {
     const char *str = oc_locns[index];
     size_t len = oc_strnlen(str, OC_LOCNS_MAX_LEN);
