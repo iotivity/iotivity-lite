@@ -359,7 +359,6 @@ oc_parse_ipv6_address(const char *address, size_t len, oc_endpoint_t *endpoint)
     long i = (long)(addr_idx - 1);
     addr_idx = OC_IPV6_ADDRLEN - 1;
     while (i >= split) {
-      // clang-format off
       GCC_IGNORE_WARNING_START
       GCC_IGNORE_WARNING("-Wstringop-overflow")
       addr[addr_idx] = addr[i];
@@ -713,7 +712,8 @@ oc_endpoint_is_empty(const oc_endpoint_t *endpoint)
 {
   oc_endpoint_t empty;
   memset(&empty, 0, sizeof(oc_endpoint_t));
-  return memcmp(&empty, endpoint, sizeof(oc_endpoint_t)) == 0; // NOLINT(bugprone-suspicious-memory-comparison)
+  return memcmp(&empty, endpoint, sizeof(oc_endpoint_t)) ==
+         0; // NOLINT(bugprone-suspicious-memory-comparison)
 }
 
 void
