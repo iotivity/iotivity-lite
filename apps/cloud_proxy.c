@@ -147,6 +147,7 @@
 #include "oc_log.h"
 #include "oc_pki.h"
 #include "port/oc_clock.h"
+#include "util/oc_atomic.h"
 
 #ifdef OC_CLOUD
 #include "oc_cloud.h"
@@ -176,17 +177,17 @@
 /* linux specific code */
 #include <pthread.h>
 #ifndef NO_MAIN
-static pthread_mutex_t mutex;
-static pthread_cond_t cv;
+static pthread_mutex_t g_mutex;
+static pthread_cond_t g_cv;
 #endif /* NO_MAIN */
 #endif /* __linux__ */
 
 #ifdef WIN32
 /* windows specific code */
 #include <windows.h>
-static CONDITION_VARIABLE cv; /**< event loop variable */
-static CRITICAL_SECTION cs;   /**< event loop variable */
-#endif                        /* WIN32 */
+static CONDITION_VARIABLE g_cv; /**< event loop variable */
+static CRITICAL_SECTION g_cs;   /**< event loop variable */
+#endif                          /* WIN32 */
 
 #include <stdio.h> /* defines FILENAME_MAX */
 #ifdef WIN32
@@ -198,7 +199,9 @@ static CRITICAL_SECTION cs;   /**< event loop variable */
 #endif
 
 #define btoa(x) ((x) ? "true" : "false")
+#define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
 #define CHAR_ARRAY_LEN(x) (sizeof(x) - 1)
+#define MIN(x, y) ((x) < (y) ? (x) : (y))
 
 #define MAX_STRING 30         /**< max size of the strings. */
 #define MAX_PAYLOAD_STRING 65 /**< max size strings in the payload */
@@ -206,8 +209,8 @@ static CRITICAL_SECTION cs;   /**< event loop variable */
 /* Note: Magic numbers are derived from the resource definition, either from the
  * example or the definition.*/
 
-static volatile int quit = 0; /**< stop variable, used by handle_signal */
-#define MAX_URI_LENGTH (30)   /**< max size strings in the payload */
+static OC_ATOMIC_INT8_T g_quit = 0; /**< stop variable, used by handle_signal */
+#define MAX_URI_LENGTH (30)         /**< max size strings in the payload */
 
 #define MAX_DISCOVERED_SERVER                                                  \
   100 /**< amount of local devices that can be stored (during the program) */
@@ -287,25 +290,38 @@ print_rep(oc_rep_t *rep, bool pretty_print)
  * function to retrieve the udn from the cloud url
  *
  * @param url the input url
- * @param udn the udn parsed out from the input url
+ * @param[out] udn the udn parsed out from the input url
+ * @param udn_size the size of the udn buffer
  */
-STATIC void
-url_to_udn(const char *url, char *udn)
+STATIC bool
+url_to_udn(const char *url, char *udn, size_t udn_size)
 {
-  strcpy(udn, &url[1]);
+  if (udn_size < OC_UUID_LEN) {
+    return false;
+  }
+  strncpy(udn, &url[1], udn_size);
   udn[OC_UUID_LEN - 1] = '\0';
+  return true;
 }
 
 /**
  * function to retrieve the local url from the cloud url
  *
  * @param url the input url
- * @param local_url the local url withoug the udn prefix
+ * @param url_size the size of the input url buffer
+ * @param[out] local_url the local url withoug the udn prefix
+ * @param local_url_size the size of the local url buffer
  */
-STATIC void
-url_to_local_url(const char *url, char *local_url)
+STATIC bool
+url_to_local_url(const char *url, size_t url_size, char *local_url,
+                 size_t local_url_size)
 {
-  strcpy(local_url, &url[OC_UUID_LEN]);
+  if (url_size < OC_UUID_LEN) {
+    return false;
+  }
+  strncpy(local_url, &url[OC_UUID_LEN], local_url_size);
+  local_url[local_url_size - 1] = '\0';
+  return true;
 }
 
 /**
@@ -313,11 +329,13 @@ url_to_local_url(const char *url, char *local_url)
  *
  * @param anchor url with udn
  * @param[out] udn url without the anchor part
+ * @param udn_size the size of the udn buffer
  */
 STATIC void
-anchor_to_udn(const char *anchor, char *udn)
+anchor_to_udn(const char *anchor, char *udn, size_t udn_size)
 {
-  strcpy(udn, &anchor[6]);
+  strncpy(udn, &anchor[6], udn_size);
+  udn[udn_size - 1] = '\0';
 }
 
 /**
@@ -519,8 +537,6 @@ get_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
      The implementation always return everything that belongs to the resource.
      this implementation is not optimal, but is functionally correct and will
      pass CTT1.2.2 */
-  bool error_state = false;
-
   OC_PRINTF("-- Begin get_d2dserverlist: interface %d\n", interfaces);
   list_udn();
 
@@ -563,11 +579,8 @@ get_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
     break;
   }
   oc_rep_end_root_object();
-  if (error_state == false) {
-    oc_send_response(request, OC_STATUS_OK);
-  } else {
-    oc_send_response(request, OC_STATUS_BAD_OPTION);
-  }
+
+  oc_send_response(request, OC_STATUS_OK);
   OC_PRINTF("-- End get_d2dserverlist\n");
 }
 
@@ -725,7 +738,7 @@ post_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
   }
   /* if the input is ok, then process the input document and assign the global
    * variables */
-  if (error_state == false) {
+  if (!error_state) {
     /* set the response */
     OC_PRINTF("Set response \n");
     oc_rep_start_root_object();
@@ -804,7 +817,7 @@ delete_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
       error_state = false;
     }
   }
-  if (error_state == false) {
+  if (!error_state) {
     oc_send_response(request, OC_STATUS_OK);
   } else {
     oc_send_response(request, OC_STATUS_BAD_OPTION);
@@ -1053,30 +1066,50 @@ get_resource(oc_request_t *request, oc_interface_mask_t interfaces,
 {
   (void)interfaces;
   (void)user_data;
-  char query_as_string[MAX_URI_LENGTH * 2] = "";
-  char url[MAX_URI_LENGTH * 2];
-  char local_url[MAX_URI_LENGTH * 2];
-  char local_udn[OC_UUID_LEN * 2];
-  oc_endpoint_t *local_server;
 
-  oc_separate_response_t *delay_response = NULL;
-  delay_response = malloc(sizeof(oc_separate_response_t));
-  memset(delay_response, 0, sizeof(oc_separate_response_t));
-
-  strcpy(url, oc_string(request->resource->uri));
+  char url[MAX_URI_LENGTH * 2] = { 0 };
+  size_t url_len = oc_string_len(request->resource->uri);
+  if (url_len >= ARRAY_SIZE(url)) {
+    OC_PRINTF("ERROR: URI buffer too small");
+    return;
+  }
+  strncpy(url, oc_string(request->resource->uri), url_len);
+  url[url_len] = '\0';
   OC_PRINTF(" ==> get_resource %s", url);
-  url_to_udn(url, local_udn);
-  local_server = is_udn_listed(local_udn);
-  url_to_local_url(url, local_url);
+
+  char local_udn[OC_UUID_LEN * 2] = { 0 };
+  if (!url_to_udn(url, local_udn, ARRAY_SIZE(local_udn))) {
+    OC_PRINTF("ERROR: Could not extract udn from url");
+    return;
+  }
+  char local_url[MAX_URI_LENGTH * 2] = { 0 };
+  if (!url_to_local_url(url, ARRAY_SIZE(url), local_url,
+                        ARRAY_SIZE(local_url))) {
+    OC_PRINTF("ERROR: Could not extract local url from url");
+    return;
+  }
   OC_PRINTF("      local udn: %s\n", local_udn);
   OC_PRINTF("      local url: %s\n", local_url);
+
+  char query_as_string[MAX_URI_LENGTH * 2] = { 0 };
   if (request->query_len > 0) {
+    if (request->query_len >= ARRAY_SIZE(query_as_string)) {
+      OC_PRINTF("ERROR: Query buffer too small");
+      return;
+    }
     strncpy(query_as_string, request->query, request->query_len);
+    query_as_string[request->query_len] = '\0';
     OC_PRINTF("      query    : %s\n", query_as_string);
   }
 
+  oc_separate_response_t *delay_response =
+    malloc(sizeof(oc_separate_response_t));
+  memset(delay_response, 0, sizeof(oc_separate_response_t));
+
   oc_set_separate_response_buffer(delay_response);
   oc_indicate_separate_response(request, delay_response);
+
+  oc_endpoint_t *local_server = is_udn_listed(local_udn);
   oc_do_get(local_url, local_server, query_as_string,
             &get_local_resource_response, LOW_QOS, delay_response);
   OC_PRINTF("       DISPATCHED\n");
@@ -1119,31 +1152,44 @@ post_resource(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)interfaces;
   (void)user_data;
 
-  char query_as_string[MAX_URI_LENGTH * 2] = "";
-  char url[MAX_URI_LENGTH * 2];
-  char local_url[MAX_URI_LENGTH * 2];
-  char local_udn[OC_UUID_LEN * 2];
-  oc_endpoint_t *local_server;
-  const uint8_t *payload = NULL;
-  size_t len = 0;
-  oc_content_format_t content_format;
-
-  oc_separate_response_t *delay_response = NULL;
-  delay_response = malloc(sizeof(oc_separate_response_t));
-  memset(delay_response, 0, sizeof(oc_separate_response_t));
-
-  strcpy(url, oc_string(request->resource->uri));
+  char url[MAX_URI_LENGTH * 2] = { 0 };
+  size_t url_len = oc_string_len(request->resource->uri);
+  if (url_len >= ARRAY_SIZE(url)) {
+    OC_PRINTF("ERROR: URI buffer too small");
+    return;
+  }
+  strncpy(url, oc_string(request->resource->uri), url_len);
+  url[url_len] = '\0';
   OC_PRINTF(" ==> post_resource %s", url);
-  url_to_udn(url, local_udn);
-  local_server = is_udn_listed(local_udn);
-  url_to_local_url(url, local_url);
+
+  char local_udn[OC_UUID_LEN * 2] = { 0 };
+  if (!url_to_udn(url, local_udn, ARRAY_SIZE(local_udn))) {
+    OC_PRINTF("ERROR: Could not extract udn from url");
+    return;
+  }
+  char local_url[MAX_URI_LENGTH * 2] = { 0 };
+  if (!url_to_local_url(url, ARRAY_SIZE(url), local_url,
+                        ARRAY_SIZE(local_url))) {
+    OC_PRINTF("ERROR: Could not extract local url from url");
+    return;
+  }
   OC_PRINTF("      local udn: %s\n", local_udn);
   OC_PRINTF("      local url: %s\n", local_url);
+
+  char query_as_string[MAX_URI_LENGTH * 2] = { 0 };
   if (request->query_len > 0) {
+    if (request->query_len >= ARRAY_SIZE(query_as_string)) {
+      OC_PRINTF("ERROR: Query buffer too small");
+      return;
+    }
     strncpy(query_as_string, request->query, request->query_len);
+    query_as_string[request->query_len] = '\0';
     OC_PRINTF("      query    : %s\n", query_as_string);
   }
 
+  const uint8_t *payload = NULL;
+  size_t len = 0;
+  oc_content_format_t content_format;
   bool berr =
     oc_get_request_payload_raw(request, &payload, &len, &content_format);
   OC_PRINTF("      raw buffer ok: %s\n", btoa(berr));
@@ -1151,20 +1197,25 @@ post_resource(oc_request_t *request, oc_interface_mask_t interfaces,
   OC_PRINTF("     REQUEST data: \n");
   print_rep(request->request_payload, false);
 
+  oc_separate_response_t *delay_response =
+    malloc(sizeof(oc_separate_response_t));
+  memset(delay_response, 0, sizeof(oc_separate_response_t));
   oc_set_separate_response_buffer(delay_response);
   oc_indicate_separate_response(request, delay_response);
 
-  if (oc_init_post(local_url, local_server, query_as_string,
-                   &post_local_resource_response, LOW_QOS, delay_response)) {
-    // copy over the data
-    oc_rep_encode_raw(payload, len);
-    if (oc_do_post())
-      OC_PRINTF("Sent POST request\n");
-    else
-      OC_PRINTF("Could not send POST request\n");
-  } else
-    OC_PRINTF("Could not init POST request\n");
-
+  oc_endpoint_t *local_server = is_udn_listed(local_udn);
+  if (!oc_init_post(local_url, local_server, query_as_string,
+                    &post_local_resource_response, LOW_QOS, delay_response)) {
+    OC_PRINTF("ERROR: Could not init POST request\n");
+    return;
+  }
+  // copy over the data
+  oc_rep_encode_raw(payload, len);
+  if (!oc_do_post()) {
+    OC_PRINTF("ERROR: Could not send POST request\n");
+    return;
+  }
+  OC_PRINTF("Sent POST request\n");
   OC_PRINTF("       DISPATCHED\n");
 }
 
@@ -1205,33 +1256,58 @@ delete_resource(oc_request_t *request, oc_interface_mask_t interfaces,
 {
   (void)interfaces;
   (void)user_data;
-  char query_as_string[MAX_URI_LENGTH * 2] = "";
-  char url[MAX_URI_LENGTH * 2];
-  char local_url[MAX_URI_LENGTH * 2];
-  char local_udn[OC_UUID_LEN * 2];
-  oc_endpoint_t *local_server;
 
-  oc_separate_response_t *delay_response = NULL;
-  delay_response = malloc(sizeof(oc_separate_response_t));
-  memset(delay_response, 0, sizeof(oc_separate_response_t));
-
-  strcpy(url, oc_string(request->resource->uri));
+  char url[MAX_URI_LENGTH * 2] = { 0 };
+  size_t url_len = oc_string_len(request->resource->uri);
+  if (url_len >= ARRAY_SIZE(url)) {
+    OC_PRINTF("ERROR: URI buffer too small");
+    return;
+  }
+  strncpy(url, oc_string(request->resource->uri), url_len);
+  url[url_len] = '\0';
   OC_PRINTF(" ==> delete_resource %s", url);
-  url_to_udn(url, local_udn);
-  local_server = is_udn_listed(local_udn);
-  url_to_local_url(url, local_url);
+
+  char local_udn[OC_UUID_LEN * 2] = { 0 };
+  if (!url_to_udn(url, local_udn, ARRAY_SIZE(local_udn))) {
+    OC_PRINTF("ERROR: Could not extract udn from url");
+    return;
+  }
+  char local_url[MAX_URI_LENGTH * 2] = { 0 };
+  if (!url_to_local_url(url, ARRAY_SIZE(url), local_url,
+                        ARRAY_SIZE(local_url))) {
+    OC_PRINTF("ERROR: Could not extract local url from url");
+    return;
+  }
   OC_PRINTF("      local udn: %s\n", local_udn);
   OC_PRINTF("      local url: %s\n", local_url);
+
+  char query_as_string[MAX_URI_LENGTH * 2] = { 0 };
   if (request->query_len > 0) {
+    if (request->query_len >= ARRAY_SIZE(query_as_string)) {
+      OC_PRINTF("ERROR: Query buffer too small");
+      return;
+    }
     strncpy(query_as_string, request->query, request->query_len);
+    query_as_string[request->query_len] = '\0';
     OC_PRINTF("      query    : %s\n", query_as_string);
   }
 
+  oc_separate_response_t *delay_response =
+    malloc(sizeof(oc_separate_response_t));
+  memset(delay_response, 0, sizeof(oc_separate_response_t));
   oc_set_separate_response_buffer(delay_response);
   oc_indicate_separate_response(request, delay_response);
+  oc_endpoint_t *local_server = is_udn_listed(local_udn);
   oc_do_delete(local_url, local_server, query_as_string,
                &delete_local_resource_response, LOW_QOS, delay_response);
   OC_PRINTF("       DISPATCHED\n");
+}
+
+static void
+udn_to_di(const char *udn, char *di, size_t di_size)
+{
+  strncpy(di, udn, di_size);
+  di[di_size - 1] = '\0';
 }
 
 /**
@@ -1254,18 +1330,15 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
 {
   (void)bm;
   (void)more;
-  int i;
-  char url[MAX_URI_LENGTH];
-  char this_udn[200];
-  char d2d_udn[200] = "";
-  char udn_url[200];
-  int nr_resource_types = 0;
 
-  strcpy(d2d_udn, "");
+  char d2d_udn[200] = { 0 };
   if (user_data != NULL) {
-    strcpy(d2d_udn, (char *)user_data);
+    strncpy(d2d_udn, (char *)user_data, ARRAY_SIZE(d2d_udn) - 1);
+    d2d_udn[ARRAY_SIZE(d2d_udn) - 1] = '\0';
   }
-  anchor_to_udn(anchor, this_udn);
+
+  char this_udn[200] = { 0 };
+  anchor_to_udn(anchor, this_udn, ARRAY_SIZE(this_udn));
 
   bool is_added_current_device = false;
   if (strcmp(this_udn, d2d_udn) == 0) {
@@ -1275,7 +1348,8 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
 #ifdef PROXY_ALL_DISCOVERED_DEVICES
   // make sure that the discovered device is handled
   is_added_current_device = true;
-  strcpy(d2d_udn, this_udn);
+  strncpy(d2d_udn, this_udn, ARRAY_SIZE(d2d_udn) - 1);
+  d2d_udn[ARRAY_SIZE(d2d_udn) - 1] = '\0';
 #endif
 
   OC_PRINTF("  discovery: (cb) '%s' %d (this) '%s'\n", d2d_udn,
@@ -1285,152 +1359,159 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   size_t uri_len = strlen(uri);
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
 
-  nr_resource_types = (int)oc_string_array_get_allocated_size(types);
-
-  for (i = 0; i < nr_resource_types; i++) {
+  int nr_resource_types = (int)oc_string_array_get_allocated_size(types);
+  char url[MAX_URI_LENGTH];
+  char udn_url[200];
+  for (int i = 0; i < nr_resource_types; i++) {
     char *t = oc_string_array_get_item(types, i);
 
-    if (is_vertical(t)) {
-      OC_PRINTF("  discovery: To REGISTER resource type: %s\n", t);
-      OC_PRINTF("  discovery: Resource %s hosted at endpoints:\n", uri);
-      const oc_endpoint_t *ep = endpoint;
-      while (ep != NULL) {
-        char uuid[OC_UUID_LEN] = { 0 };
-        oc_uuid_to_str(&ep->di, uuid, OC_UUID_LEN);
+    if (!is_vertical(t)) {
+      continue;
+    }
+    OC_PRINTF("  discovery: To REGISTER resource type: %s\n", t);
+    OC_PRINTF("  discovery: Resource %s hosted at endpoints:\n", uri);
+    const oc_endpoint_t *ep = endpoint;
+    while (ep != NULL) {
+      char uuid[OC_UUID_LEN] = { 0 };
+      oc_uuid_to_str(&ep->di, uuid, OC_UUID_LEN);
 
-        OC_PRINTF("   di = %s\n", uuid);
-        OC_PRINTF("      ");
-        OC_PRINTipaddr(*ep);
-        OC_PRINTF("\n");
-        ep = ep->next;
-      }
+      OC_PRINTF("   di = %s\n", uuid);
+      OC_PRINTF("      ");
+      OC_PRINTipaddr(*ep);
+      OC_PRINTF("\n");
+      ep = ep->next;
+    }
 
-      // search for the secure endpoint, so that it can be stored
-      ep = endpoint; // start of the list
-      while ((ep != NULL) && !(ep->flags & SECURED)) {
-        ep = ep->next;
-      }
-      if (ep != NULL) {
-        OC_PRINTF("  discovery secure endpoint on UDN '%s' :\n", this_udn);
-        OC_PRINTF("    secure: ");
-        OC_PRINTipaddr(*ep);
-        OC_PRINTF("\n");
+    // search for the secure endpoint, so that it can be stored
+    ep = endpoint; // start of the list
+    while ((ep != NULL) && !(ep->flags & SECURED)) {
+      ep = ep->next;
+    }
+    if (ep != NULL) {
+      OC_PRINTF("  discovery secure endpoint on UDN '%s' :\n", this_udn);
+      OC_PRINTF("    secure: ");
+      OC_PRINTipaddr(*ep);
+      OC_PRINTF("\n");
+
+      /* update the end point, it might have changed*/
+      int index = is_udn_listed_index(this_udn);
+      if (index != -1) {
         // make a copy, so that we can store it in the array to find it back
         // later.
         oc_endpoint_t *copy = (oc_endpoint_t *)malloc(sizeof(oc_endpoint_t));
         oc_endpoint_copy(copy, ep);
-
-        /* update the end point, it might have changed*/
-        int index = is_udn_listed_index(this_udn);
-        if (index != -1) {
-          // add new server to the list
-          OC_PRINTF("  discovery: UPDATING UDN '%s'\n", this_udn);
-          /* free existing endpoint */
-          free(discovered_server[index]);
-          /* add the newly copied endpoint*/
-          discovered_server[index] = copy;
-        } else {
-          if (is_added_current_device) {
-            index = find_empty_slot();
-            if (index != -1) {
-              // add new server to the list
-              OC_PRINTF("  discovery: ADDING UDN '%s'\n", this_udn);
-              discovered_server[index] = copy;
-              strcpy(g_d2dserverlist_d2dserverlist[index].di, this_udn);
-            } else {
-              OC_PRINTF("  discovery: NO SPACE TO STORE: '%s'\n", this_udn);
-            }
+        // add new server to the list
+        OC_PRINTF("  discovery: UPDATING UDN '%s'\n", this_udn);
+        /* free existing endpoint */
+        free(discovered_server[index]);
+        /* add the newly copied endpoint*/
+        discovered_server[index] = copy;
+      } else {
+        if (is_added_current_device) {
+          index = find_empty_slot();
+          if (index != -1) {
+            // make a copy, so that we can store it in the array to find it back
+            // later.
+            oc_endpoint_t *copy =
+              (oc_endpoint_t *)malloc(sizeof(oc_endpoint_t));
+            oc_endpoint_copy(copy, ep);
+            // add new server to the list
+            OC_PRINTF("  discovery: ADDING UDN '%s'\n", this_udn);
+            discovered_server[index] = copy;
+            udn_to_di(this_udn, &g_d2dserverlist_d2dserverlist[index].di[0],
+                      ARRAY_SIZE(g_d2dserverlist_d2dserverlist[index].di));
+          } else {
+            OC_PRINTF("  discovery: NO SPACE TO STORE: '%s'\n", this_udn);
           }
         }
-      } /* ep is NULL */
+      }
+    } /* ep is NULL */
 
-      // make uri as url NULL terminated
-      strncpy(url, uri, uri_len);
-      url[uri_len] = '\0';
+    // make uri as url NULL terminated
+    strncpy(url, uri, uri_len);
+    url[uri_len] = '\0';
 
-      // make extended url with local UDN as prefix
-      strcpy(udn_url, "/");
-      strcat(udn_url, this_udn);
-      strcat(udn_url, url);
+    // make extended url with local UDN as prefix
+    strcpy(udn_url, "/");
+    strcat(udn_url, this_udn);
+    strcat(udn_url, url);
 
-      if (is_added_current_device) {
-        OC_PRINTF("   discovery: Register Resource with local path \"%s\"\n",
-                  udn_url);
-        oc_resource_t *new_resource =
-          oc_new_resource(udn_url, udn_url, nr_resource_types, 0);
-        for (int j = 0; j < nr_resource_types; j++) {
-          oc_resource_bind_resource_type(new_resource,
-                                         oc_string_array_get_item(types, j));
-        }
-        if (iface_mask & OC_IF_BASELINE) {
-          OC_PRINTF("   IF BASELINE\n");
-          oc_resource_bind_resource_interface(
-            new_resource, OC_IF_BASELINE); /* oic.if.baseline */
-        }
-        if (iface_mask & OC_IF_LL) {
-          OC_PRINTF("   IF LL\n");
-          oc_resource_bind_resource_interface(new_resource,
-                                              OC_IF_LL); /* oic.if.ll */
-          oc_resource_set_default_interface(new_resource, OC_IF_LL);
-        }
-        if (iface_mask & OC_IF_CREATE) {
-          OC_PRINTF("   IF CREATE\n");
-          oc_resource_bind_resource_interface(new_resource,
-                                              OC_IF_CREATE); /* oic.if.create */
-          // oc_resource_set_default_interface(new_resource, OC_IF_CREATE);
-        }
-        if (iface_mask & OC_IF_B) {
-          OC_PRINTF("   IF B\n");
-          oc_resource_bind_resource_interface(new_resource,
-                                              OC_IF_B); /* oic.if.b */
-          // oc_resource_set_default_interface(new_resource, OC_IF_B);
-        }
-        if (iface_mask & OC_IF_R) {
-          OC_PRINTF("   IF R\n");
-          oc_resource_bind_resource_interface(new_resource,
-                                              OC_IF_R); /* oic.if.r */
-          oc_resource_set_default_interface(new_resource, OC_IF_R);
-        }
-        if (iface_mask & OC_IF_RW) {
-          OC_PRINTF("   IF RW\n");
-          oc_resource_bind_resource_interface(new_resource,
-                                              OC_IF_RW); /* oic.if.rw */
-          oc_resource_set_default_interface(new_resource, OC_IF_RW);
-        }
-        if (iface_mask & OC_IF_A) {
-          OC_PRINTF("   IF A\n");
-          oc_resource_bind_resource_interface(new_resource,
-                                              OC_IF_A); /* oic.if.a */
-          oc_resource_set_default_interface(new_resource, OC_IF_A);
-        }
-        if (iface_mask & OC_IF_S) {
-          OC_PRINTF("   IF S\n");
-          oc_resource_bind_resource_interface(new_resource,
-                                              OC_IF_S); /* oic.if.S */
-          oc_resource_set_default_interface(new_resource, OC_IF_S);
-        }
+    if (is_added_current_device) {
+      OC_PRINTF("   discovery: Register Resource with local path \"%s\"\n",
+                udn_url);
+      oc_resource_t *new_resource =
+        oc_new_resource(udn_url, udn_url, nr_resource_types, 0);
+      for (int j = 0; j < nr_resource_types; j++) {
+        oc_resource_bind_resource_type(new_resource,
+                                       oc_string_array_get_item(types, j));
+      }
+      if (iface_mask & OC_IF_BASELINE) {
+        OC_PRINTF("   IF BASELINE\n");
+        oc_resource_bind_resource_interface(
+          new_resource, OC_IF_BASELINE); /* oic.if.baseline */
+      }
+      if (iface_mask & OC_IF_LL) {
+        OC_PRINTF("   IF LL\n");
+        oc_resource_bind_resource_interface(new_resource,
+                                            OC_IF_LL); /* oic.if.ll */
+        oc_resource_set_default_interface(new_resource, OC_IF_LL);
+      }
+      if (iface_mask & OC_IF_CREATE) {
+        OC_PRINTF("   IF CREATE\n");
+        oc_resource_bind_resource_interface(new_resource,
+                                            OC_IF_CREATE); /* oic.if.create */
+        // oc_resource_set_default_interface(new_resource, OC_IF_CREATE);
+      }
+      if (iface_mask & OC_IF_B) {
+        OC_PRINTF("   IF B\n");
+        oc_resource_bind_resource_interface(new_resource,
+                                            OC_IF_B); /* oic.if.b */
+        // oc_resource_set_default_interface(new_resource, OC_IF_B);
+      }
+      if (iface_mask & OC_IF_R) {
+        OC_PRINTF("   IF R\n");
+        oc_resource_bind_resource_interface(new_resource,
+                                            OC_IF_R); /* oic.if.r */
+        oc_resource_set_default_interface(new_resource, OC_IF_R);
+      }
+      if (iface_mask & OC_IF_RW) {
+        OC_PRINTF("   IF RW\n");
+        oc_resource_bind_resource_interface(new_resource,
+                                            OC_IF_RW); /* oic.if.rw */
+        oc_resource_set_default_interface(new_resource, OC_IF_RW);
+      }
+      if (iface_mask & OC_IF_A) {
+        OC_PRINTF("   IF A\n");
+        oc_resource_bind_resource_interface(new_resource,
+                                            OC_IF_A); /* oic.if.a */
+        oc_resource_set_default_interface(new_resource, OC_IF_A);
+      }
+      if (iface_mask & OC_IF_S) {
+        OC_PRINTF("   IF S\n");
+        oc_resource_bind_resource_interface(new_resource,
+                                            OC_IF_S); /* oic.if.S */
+        oc_resource_set_default_interface(new_resource, OC_IF_S);
+      }
 
-        /* set the generic callback for the new resource */
-        oc_resource_set_request_handler(new_resource, OC_DELETE,
-                                        delete_resource, NULL);
-        oc_resource_set_request_handler(new_resource, OC_GET, get_resource,
-                                        NULL);
-        oc_resource_set_request_handler(new_resource, OC_POST, post_resource,
-                                        NULL);
+      /* set the generic callback for the new resource */
+      oc_resource_set_request_handler(new_resource, OC_DELETE, delete_resource,
+                                      NULL);
+      oc_resource_set_request_handler(new_resource, OC_GET, get_resource, NULL);
+      oc_resource_set_request_handler(new_resource, OC_POST, post_resource,
+                                      NULL);
 
-        // set resource to not discoverable, so that it does listed in the proxy
-        // device
-        oc_resource_set_discoverable(new_resource, false);
-        // add the resource to the device
-        bool add_err = oc_add_resource(new_resource);
-        // add the resource to the cloud
-        int retval = oc_cloud_add_resource(new_resource);
-        OC_PRINTF("   discovery ADDED resource '%s' to cloud : %d\n",
-                  (char *)btoa(add_err), retval);
+      // set resource to not discoverable, so that it does listed in the proxy
+      // device
+      oc_resource_set_discoverable(new_resource, false);
+      // add the resource to the device
+      bool add_err = oc_add_resource(new_resource);
+      // add the resource to the cloud
+      int retval = oc_cloud_add_resource(new_resource);
+      OC_PRINTF("   discovery ADDED resource '%s' to cloud : %d\n",
+                (char *)btoa(add_err), retval);
 
-      } /* adding current device, e.g. add the resource to the cloud RD */
-    }   /* is vertical */
-  }     /* if loop */
+    } /* adding current device, e.g. add the resource to the cloud RD */
+  }   /* if loop */
   return OC_CONTINUE_DISCOVERY;
 }
 
@@ -1495,6 +1576,7 @@ issue_requests_all(void)
 #ifndef NO_MAIN
 
 #ifdef WIN32
+
 /**
  * signal the event loop (windows version)
  * wakes up the main function to handle the next callback
@@ -1502,21 +1584,10 @@ issue_requests_all(void)
 STATIC void
 signal_event_loop(void)
 {
-  WakeConditionVariable(&cv);
+  EnterCriticalSection(&g_cs);
+  WakeConditionVariable(&g_cv);
+  LeaveCriticalSection(&g_cs);
 }
-#endif /* WIN32 */
-
-#ifdef __linux__
-/**
- * signal the event loop (Linux)
- * wakes up the main function to handle the next callback
- */
-STATIC void
-signal_event_loop(void)
-{
-  pthread_cond_signal(&cv);
-}
-#endif /* __linux__ */
 
 /**
  * handle Ctrl-C
@@ -1526,9 +1597,43 @@ STATIC void
 handle_signal(int signal)
 {
   (void)signal;
-  quit = 1;
-  signal_event_loop();
+  OC_ATOMIC_STORE8(g_quit, 1);
+  WakeConditionVariable(&g_cv);
 }
+
+#endif /* WIN32 */
+
+#ifdef __linux__
+
+/**
+ * signal the event loop (Linux)
+ * wakes up the main function to handle the next callback
+ */
+STATIC void
+signal_event_loop(void)
+{
+  pthread_mutex_lock(&g_mutex);
+  pthread_cond_signal(&g_cv);
+  pthread_mutex_unlock(&g_mutex);
+}
+
+/**
+ * handle Ctrl-C
+ * @param signal the captured signal
+ */
+STATIC void
+handle_signal(int signal)
+{
+  (void)signal;
+  OC_ATOMIC_STORE8(g_quit, 1);
+  // TODO: rework loop to use polling, because we need to lock mutex to
+  // guarantee correct waking of the condition variable, but locking a mutex is
+  // not signal-async safe (and thus not safe to do in a signal handler). For
+  // now, this is a race condition.
+  pthread_cond_signal(&g_cv);
+}
+
+#endif /* __linux__ */
 
 #ifdef OC_CLOUD
 /**
@@ -1695,8 +1800,8 @@ init(void)
 {
 #ifdef WIN32
   /* windows specific */
-  InitializeCriticalSection(&cs);
-  InitializeConditionVariable(&cv);
+  InitializeCriticalSection(&g_cs);
+  InitializeConditionVariable(&g_cv);
   /* install Ctrl-C */
   signal(SIGINT, handle_signal);
 #endif /* WIN32 */
@@ -1709,7 +1814,7 @@ init(void)
   /* install Ctrl-C */
   sigaction(SIGINT, &sa, NULL);
 
-  int err = pthread_mutex_init(&mutex, NULL);
+  int err = pthread_mutex_init(&g_mutex, NULL);
   if (err != 0) {
     OC_PRINTF("pthread_mutex_init failed (error=%d)!\n", err);
     return false;
@@ -1718,21 +1823,21 @@ init(void)
   err = pthread_condattr_init(&attr);
   if (err != 0) {
     OC_PRINTF("pthread_condattr_init failed (error=%d)!\n", err);
-    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&g_mutex);
     return false;
   }
   err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
   if (err != 0) {
     OC_PRINTF("pthread_condattr_setclock failed (error=%d)!\n", err);
     pthread_condattr_destroy(&attr);
-    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&g_mutex);
     return false;
   }
-  err = pthread_cond_init(&cv, &attr);
+  err = pthread_cond_init(&g_cv, &attr);
   if (err != 0) {
     OC_PRINTF("pthread_cond_init failed (error=%d)!\n", err);
     pthread_condattr_destroy(&attr);
-    pthread_mutex_destroy(&mutex);
+    pthread_mutex_destroy(&g_mutex);
     return false;
   }
   pthread_condattr_destroy(&attr);
@@ -1744,8 +1849,8 @@ static void
 deinit(void)
 {
 #ifdef __linux__
-  pthread_cond_destroy(&cv);
-  pthread_mutex_destroy(&mutex);
+  pthread_cond_destroy(&g_cv);
+  pthread_mutex_destroy(&g_mutex);
 #endif /* __linux__ */
 }
 
@@ -1754,27 +1859,46 @@ run_loop(void)
 {
 #ifdef WIN32
   /* windows specific loop */
-  while (quit != 1) {
+  while (true) {
     oc_clock_time_t next_event_mt = oc_main_poll_v1();
+    EnterCriticalSection(&g_cs);
+    if (OC_ATOMIC_LOAD8(g_quit) == 1) {
+      LeaveCriticalSection(&g_cs);
+      break;
+    }
+    if (oc_main_needs_poll()) {
+      LeaveCriticalSection(&g_cs);
+      continue;
+    }
     if (next_event_mt == 0) {
-      SleepConditionVariableCS(&cv, &cs, INFINITE);
+      SleepConditionVariableCS(&g_cv, &g_cs, INFINITE);
     } else {
       oc_clock_time_t now_mt = oc_clock_time_monotonic();
       if (now_mt < next_event_mt) {
         SleepConditionVariableCS(
-          &cv, &cs, (DWORD)((next_event_mt - now_mt) * 1000 / OC_CLOCK_SECOND));
+          &g_cv, &g_cs,
+          (DWORD)((next_event_mt - now_mt) * 1000 / OC_CLOCK_SECOND));
       }
     }
+    LeaveCriticalSection(&g_cs);
   }
 #endif /* WIN32 */
 
 #ifdef __linux__
   /* linux specific loop */
-  while (quit != 1) {
+  while (true) {
     oc_clock_time_t next_event_mt = oc_main_poll_v1();
-    pthread_mutex_lock(&mutex);
+    pthread_mutex_lock(&g_mutex);
+    if (g_quit) {
+      pthread_mutex_unlock(&g_mutex);
+      break;
+    }
+    if (oc_main_needs_poll()) {
+      pthread_mutex_unlock(&g_mutex);
+      continue;
+    }
     if (next_event_mt == 0) {
-      pthread_cond_wait(&cv, &mutex);
+      pthread_cond_wait(&g_cv, &g_mutex);
     } else {
       struct timespec next_event = { 1, 0 };
       oc_clock_time_t next_event_cv;
@@ -1782,9 +1906,9 @@ run_loop(void)
                                            &next_event_cv)) {
         next_event = oc_clock_time_to_timespec(next_event_cv);
       }
-      pthread_cond_timedwait(&cv, &mutex, &next_event);
+      pthread_cond_timedwait(&g_cv, &g_mutex, &next_event);
     }
-    pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&g_mutex);
   }
 #endif /* __linux__ */
 }
