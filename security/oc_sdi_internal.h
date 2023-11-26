@@ -88,15 +88,12 @@ void oc_sec_sdi_clear(oc_sec_sdi_t *sdi);
  * @brief Encode sdi to global encoder
  *
  * @param sdi sdi to encode
- * @param sdi_res resource with baseline properties (only used when iface_mask
- * contains OC_IF_BASELINE)
- * @param iface_mask encoding interface
+ * @param sdi_res sdi resource (to encode baseline properties if provided)
  * @return 0 on success
  * @return <0 on error
  */
 int oc_sec_sdi_encode_with_resource(const oc_sec_sdi_t *sdi,
-                                    const oc_resource_t *sdi_res,
-                                    oc_interface_mask_t iface_mask);
+                                    const oc_resource_t *sdi_res);
 
 /**
  * @brief Convenience wrapper for oc_sec_sdi_encode_with_resource. Will encode

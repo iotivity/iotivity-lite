@@ -232,23 +232,23 @@ oc_sec_sdi_decode(size_t device, const oc_rep_t *rep, bool from_storage)
 
 int
 oc_sec_sdi_encode_with_resource(const oc_sec_sdi_t *sdi,
-                                const oc_resource_t *sdi_res,
-                                oc_interface_mask_t iface_mask)
+                                const oc_resource_t *sdi_res)
 {
   assert(oc_rep_get_cbor_errno() == CborNoError);
   assert(sdi != NULL);
 
   oc_rep_start_root_object();
-  if ((iface_mask & OC_IF_BASELINE) != 0) {
-    assert(sdi_res != NULL);
+  if (sdi_res != NULL) {
     oc_process_baseline_interface(sdi_res);
   }
 
-  char uuid[OC_UUID_LEN];
-  oc_uuid_to_str(&sdi->uuid, uuid, sizeof(uuid));
-  oc_rep_set_text_string(root, uuid, uuid);
+  char uuid[OC_UUID_LEN] = { 0 };
+  int uuid_len = oc_uuid_to_str_v1(&sdi->uuid, uuid, sizeof(uuid));
+  assert(uuid_len >= 0);
+  oc_rep_set_text_string_v1(root, uuid, uuid, (size_t)uuid_len);
 
-  oc_rep_set_text_string(root, name, oc_string(sdi->name));
+  oc_rep_set_text_string_v1(root, name, oc_string(sdi->name),
+                            oc_string_len(sdi->name));
 
   oc_rep_set_boolean(root, priv, sdi->priv);
 
@@ -265,7 +265,7 @@ oc_sec_sdi_encode(size_t device, oc_interface_mask_t iface_mask)
   if ((iface_mask & OC_IF_BASELINE) != 0) {
     sdi_res = oc_core_get_resource_by_index(OCF_SEC_SDI, device);
   }
-  return oc_sec_sdi_encode_with_resource(sdi, sdi_res, iface_mask);
+  return oc_sec_sdi_encode_with_resource(sdi, sdi_res);
 }
 
 oc_sec_sdi_t *

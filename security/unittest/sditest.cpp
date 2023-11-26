@@ -90,8 +90,7 @@ TEST_F(TestSdi, EncodeFail)
 
   oc_sec_sdi_t sdi{};
   createSdi(true, "test", sdi);
-  EXPECT_NE(
-    0, oc_sec_sdi_encode_with_resource(&sdi, nullptr, OCF_SEC_SDI_DEFAULT_IF));
+  EXPECT_NE(0, oc_sec_sdi_encode_with_resource(&sdi, nullptr));
 
   oc_free_string(&sdi.name);
 }
@@ -104,8 +103,7 @@ TEST_F(TestSdi, Encode)
 
   oc_sec_sdi_t sdi{};
   createSdi(true, "test", sdi);
-  EXPECT_EQ(
-    0, oc_sec_sdi_encode_with_resource(&sdi, nullptr, OCF_SEC_SDI_DEFAULT_IF));
+  EXPECT_EQ(0, oc_sec_sdi_encode_with_resource(&sdi, nullptr));
 
   oc_free_string(&sdi.name);
 }
@@ -182,8 +180,7 @@ TEST_F(TestSdi, Decode)
 
   oc_sec_sdi_t sdi{};
   createSdi(true, "test123", sdi);
-  EXPECT_EQ(
-    0, oc_sec_sdi_encode_with_resource(&sdi, nullptr, OCF_SEC_SDI_DEFAULT_IF));
+  EXPECT_EQ(0, oc_sec_sdi_encode_with_resource(&sdi, nullptr));
 
   auto rep = pool.ParsePayload();
   oc_sec_sdi_t sdi_parsed{};
@@ -291,8 +288,7 @@ TEST_F(TestSdiWithServer, PostRequest)
 
   oc_sec_sdi_t sdi_new{};
   TestSdi::createSdi(true, "new sdi name", sdi_new);
-  oc_sec_sdi_encode_with_resource(&sdi_new, /*sdi_res*/ nullptr,
-                                  static_cast<oc_interface_mask_t>(0));
+  oc_sec_sdi_encode_with_resource(&sdi_new, /*sdi_res*/ nullptr);
 
   auto timeout = 1s;
   EXPECT_TRUE(oc_do_post_with_timeout(timeout.count()));
