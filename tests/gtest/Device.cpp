@@ -334,6 +334,13 @@ TestDevice::DropOutgoingMessages()
     nullptr);
 }
 
+void
+TestDevice::Reset()
+{
+  DropOutgoingMessages();
+  oc_ri_reset();
+}
+
 #ifdef OC_CLIENT
 void
 TestDevice::CloseSessions(size_t device)

@@ -81,6 +81,11 @@ public:
     oc_set_con_write_cb(nullptr);
   }
 
+  void TearDown() override
+  {
+    oc::TestDevice::Reset();
+  }
+
   static ConResourceData decodePayload(const oc_rep_t *rep)
   {
     ConResourceData crd{};

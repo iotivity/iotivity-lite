@@ -78,6 +78,8 @@ public:
       oc_tls_remove_peer(&peer->endpoint);
     }
     peers_.clear();
+
+    oc::TestDevice::Reset();
   }
 
   oc_tls_peer_t *addPeer(const oc_endpoint_t *ep);

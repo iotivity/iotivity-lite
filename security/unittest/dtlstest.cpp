@@ -60,6 +60,8 @@ public:
     oc_tls_close_peers(nullptr, nullptr);
     oc_sec_pstat_t *pstat = oc_sec_get_pstat(kDeviceID);
     pstat->s = OC_DOS_RFNOP;
+
+    oc::TestDevice::Reset();
   }
 };
 

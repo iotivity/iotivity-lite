@@ -63,6 +63,8 @@ public:
 
   void SetUp() override { ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno()); }
 
+  void ClearPool() { pool_.Clear(); }
+
   oc_memb *GetRepObjectsPool() { return pool_.GetRepObjectsPool(); }
 
   oc::oc_rep_unique_ptr ParsePayload() { return pool_.ParsePayload(); }
@@ -88,10 +90,10 @@ TEST_F(TestJsonRepWithPool, OCRepInvalidFormat)
   auto invalid_json = oc::GetVector<uint8_t>("{42}");
   /* convert JsonEncoder to oc_rep_t */
   oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = nullptr;
-  ASSERT_NE(CborNoError,
-            oc_parse_rep(invalid_json.data(), invalid_json.size(), &rep));
-  ASSERT_EQ(nullptr, rep);
+  oc_rep_parse_result_t result{};
+  ASSERT_NE(CborNoError, oc_rep_parse_payload(invalid_json.data(),
+                                              invalid_json.size(), &result));
+  ASSERT_EQ(nullptr, result.rep);
 }
 
 TEST_F(TestJsonRepWithPool, OCRepInvalidArray)
@@ -117,9 +119,67 @@ TEST_F(TestJsonRepWithPool, OCRepInvalidArray)
   int payload_len = oc_rep_get_encoded_payload_size();
   ASSERT_NE(payload_len, -1);
   oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = nullptr;
-  ASSERT_NE(CborNoError, oc_parse_rep(payload, payload_len, &rep));
-  ASSERT_EQ(nullptr, rep);
+  oc_rep_parse_result_t result{};
+  ASSERT_NE(CborNoError, oc_rep_parse_payload(payload, payload_len, &result));
+  ASSERT_EQ(nullptr, result.rep);
+}
+
+TEST_F(TestJsonRepWithPool, OCRepSetGetEmpty)
+{
+  // "{}"
+  oc_rep_begin_root_object();
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  auto rep = ParsePayload();
+  EXPECT_EQ(nullptr, rep.get());
+
+  ClearPool();
+  // "[]"
+  oc_rep_begin_links_array();
+  oc_rep_end_links_array();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
+  EXPECT_EQ(OC_REP_ARRAY, rep->type);
+}
+
+TEST_F(TestJsonRepWithPool, OCRepIsEmptyObject)
+{
+  oc_rep_start_root_object();
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  EXPECT_TRUE(oc_rep_encoded_payload_is_empty_object(
+    oc_rep_encoder_get_type(), oc_rep_get_encoder_buf(),
+    oc_rep_get_encoded_payload_size()));
+}
+
+TEST_F(TestJsonRepWithPool, OCRepIsEmptyObject_F)
+{
+  // "[]"
+  oc_rep_begin_links_array();
+  oc_rep_end_links_array();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  EXPECT_FALSE(oc_rep_encoded_payload_is_empty_object(
+    oc_rep_encoder_get_type(), oc_rep_get_encoder_buf(),
+    oc_rep_get_encoded_payload_size()));
+
+  ClearPool();
+  // "{a: 123}"
+  oc_rep_start_root_object();
+  oc_rep_set_int(root, a, 123);
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  EXPECT_FALSE(oc_rep_encoded_payload_is_empty_object(
+    oc_rep_encoder_get_type(), oc_rep_get_encoder_buf(),
+    oc_rep_get_encoded_payload_size()));
+
+  ClearPool();
+  // "{"
+  oc_rep_start_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  EXPECT_FALSE(oc_rep_encoded_payload_is_empty_object(
+    oc_rep_encoder_get_type(), oc_rep_get_encoder_buf(),
+    oc_rep_get_encoded_payload_size()));
 }
 
 TEST_F(TestJsonRepWithPool, OCRepSetGetNull)
@@ -748,11 +808,11 @@ TEST_F(TestJsonRepWithPool, OCRepSetGetObject)
   CheckJson(rep.get(), pretty_json, true);
 }
 
-TEST_F(TestJsonRepWithPool, OCRepSetGetEmptyObjectArray)
+TEST_F(TestJsonRepWithPool, OCRepSetGetEmptyArray)
 {
   /*
     {
-      "emptyObj": null,
+      "emptyObj": [],
     }
   */
   /* add values to root object */
@@ -1218,6 +1278,11 @@ public:
 
     oc_rep_encoder_set_type(OC_REP_CBOR_ENCODER);
     oc_rep_decoder_set_type(OC_REP_CBOR_DECODER);
+  }
+
+  void TearDown() override
+  {
+    oc::TestDevice::Reset();
   }
 };
 

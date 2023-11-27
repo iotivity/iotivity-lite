@@ -716,6 +716,11 @@ public:
 #endif /* !OC_APP_DATA_BUFFER_SIZE */
   }
 
+  void TearDown() override
+  {
+    oc::TestDevice::Reset();
+  }
+
   static void onGet(oc_request_t *, oc_interface_mask_t, void *);
   static void onPost(oc_request_t *, oc_interface_mask_t, void *);
 

@@ -126,8 +126,8 @@ TestEncoderBuffer::ParsePayload()
   int payload_len = oc_rep_get_encoded_payload_size();
   EXPECT_NE(payload_len, -1);
   oc_rep_set_pool(&rep_objects_);
-  oc_rep_t *rep = nullptr;
+  oc_rep_parse_result_t result{};
   oc_rep_decoder_t decoder = oc_rep_decoder(*dt);
-  EXPECT_EQ(CborNoError, decoder.parse(payload, payload_len, &rep));
-  return oc::oc_rep_unique_ptr(rep, &oc_free_rep);
+  EXPECT_EQ(CborNoError, decoder.parse(payload, payload_len, &result));
+  return oc::oc_rep_unique_ptr(result.rep, &oc_free_rep);
 }

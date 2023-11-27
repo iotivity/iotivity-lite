@@ -82,15 +82,14 @@ struct oc_response_s
   oc_response_buffer_t *response_buffer;     ///< response buffer
 };
 
-/**
- * @brief initialize the resource implementation handler
- */
+/** @brief initialize the resource implementation handler */
 void oc_ri_init(void);
 
-/**
- * @brief shut down the resource implementation handler
- */
+/** @brief shut down the resource implementation handler */
 void oc_ri_shutdown(void);
+
+/** @brief reset observations and transactions */
+void oc_ri_reset(void);
 
 /** @brief Unchecked conversion from a non-error oc_status_t to coap_status_t */
 coap_status_t oc_status_code_unsafe(oc_status_t key);

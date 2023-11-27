@@ -25,7 +25,7 @@
 #endif /* OC_JSON_ENCODER */
 
 static int oc_rep_parse_cbor(const uint8_t *payload, size_t payload_size,
-                             oc_rep_t **out_rep);
+                             oc_rep_parse_result_t *result);
 
 static oc_rep_decoder_t g_rep_decoder = {
   .type = OC_REP_CBOR_DECODER,
@@ -447,8 +447,53 @@ rep_parse_object(CborValue *value, oc_rep_t **rep)
 }
 
 static int
+rep_parse_root_object(CborValue *map, oc_rep_t **rep)
+{
+  CborError err = CborNoError;
+  oc_rep_t **cur = rep;
+  while (err == CborNoError && cbor_value_is_valid(map)) {
+    err |= rep_parse_object(map, cur);
+    if (err != CborNoError) {
+      return err;
+    }
+    err |= cbor_value_advance(map);
+    assert(*cur != NULL);
+    cur = &(*cur)->next;
+  }
+  return err;
+}
+
+static int
+rep_parse_root_array(CborValue *array, oc_rep_t **rep)
+{
+  CborError err = CborNoError;
+  oc_rep_t **cur = rep;
+  while (err == CborNoError && cbor_value_is_valid(array)) {
+    *cur = oc_alloc_rep();
+    if (*cur == NULL) {
+      return CborErrorOutOfMemory;
+    }
+    (*cur)->type = OC_REP_OBJECT;
+    oc_rep_t **kv = &(*cur)->value.object;
+    CborValue cur_value;
+    err |= cbor_value_enter_container(array, &cur_value);
+    while (err == CborNoError && cbor_value_is_valid(&cur_value)) {
+      err |= rep_parse_object(&cur_value, kv);
+      err |= cbor_value_advance(&cur_value);
+      assert(*kv != NULL);
+      (*kv)->next = NULL;
+      kv = &(*kv)->next;
+    }
+    (*cur)->next = NULL;
+    cur = &(*cur)->next;
+    err |= cbor_value_advance(array);
+  }
+  return err;
+}
+
+static int
 oc_rep_parse_cbor(const uint8_t *payload, size_t payload_size,
-                  oc_rep_t **out_rep)
+                  oc_rep_parse_result_t *result)
 {
   CborParser parser;
   CborValue root_value;
@@ -457,52 +502,40 @@ oc_rep_parse_cbor(const uint8_t *payload, size_t payload_size,
   if (err != CborNoError) {
     return err;
   }
-  *out_rep = NULL;
+
+  oc_rep_t *rep = NULL;
   if (cbor_value_is_map(&root_value)) {
-    CborValue cur_value;
-    err = cbor_value_enter_container(&root_value, &cur_value);
-    oc_rep_t **cur = out_rep;
-    while (cbor_value_is_valid(&cur_value) && err == CborNoError) {
-      err |= rep_parse_object(&cur_value, cur);
-      if (err != CborNoError) {
-        return err;
-      }
-      err |= cbor_value_advance(&cur_value);
-      assert(*cur != NULL);
-      cur = &(*cur)->next;
-    }
-    return err;
-  }
-  if (cbor_value_is_array(&root_value)) {
     CborValue map;
     err = cbor_value_enter_container(&root_value, &map);
-    oc_rep_t **cur = out_rep;
-    while (cbor_value_is_valid(&map)) {
-      *cur = oc_alloc_rep();
-      if (*cur == NULL) {
-        return CborErrorOutOfMemory;
-      }
-      (*cur)->type = OC_REP_OBJECT;
-      oc_rep_t **kv = &(*cur)->value.object;
-      CborValue cur_value;
-      err |= cbor_value_enter_container(&map, &cur_value);
-      while (cbor_value_is_valid(&cur_value) && err == CborNoError) {
-        err |= rep_parse_object(&cur_value, kv);
-        err |= cbor_value_advance(&cur_value);
-        assert(*kv != NULL);
-        (*kv)->next = NULL;
-        kv = &(*kv)->next;
-      }
-      (*cur)->next = NULL;
-      cur = &(*cur)->next;
-      err |= cbor_value_advance(&map);
-      if (err != CborNoError) {
-        return err;
-      }
+    if (err == CborNoError && !cbor_value_is_valid(&map)) {
+      result->type = OC_REP_PARSE_RESULT_REP;
+      result->rep = NULL;
+      return CborNoError;
     }
-    return err;
+    err = rep_parse_root_object(&map, &rep);
+    goto done;
   }
-  return CborNoError;
+  if (cbor_value_is_array(&root_value)) {
+    CborValue array;
+    err = cbor_value_enter_container(&root_value, &array);
+    if (err == CborNoError && !cbor_value_is_valid(&array)) {
+      result->type = OC_REP_PARSE_RESULT_EMPTY_ARRAY;
+      return CborNoError;
+    }
+    err = rep_parse_root_array(&array, &rep);
+    goto done;
+  }
+
+  return CborErrorInternalError;
+
+done:
+  if (err == CborNoError) {
+    result->type = OC_REP_PARSE_RESULT_REP;
+    result->rep = rep;
+    return CborNoError;
+  }
+  oc_free_rep(rep);
+  return err;
 }
 
 oc_rep_decoder_t
@@ -555,10 +588,20 @@ oc_rep_decoder_set_by_content_format(oc_content_format_t content_format)
 }
 
 int
-oc_parse_rep(const uint8_t *payload, size_t payload_size, oc_rep_t **out_rep)
+oc_rep_parse_payload(const uint8_t *payload, size_t payload_size,
+                     oc_rep_parse_result_t *result)
 {
-  if (out_rep == NULL) {
-    return -1;
+  return g_rep_decoder.parse(payload, payload_size, result);
+}
+
+oc_rep_t *
+oc_parse_rep(const uint8_t *payload, size_t payload_size)
+{
+  oc_rep_parse_result_t result;
+  memset(&result, 0, sizeof(result));
+  if (oc_rep_parse_payload(payload, payload_size, &result) != CborNoError ||
+      result.type != OC_REP_PARSE_RESULT_REP) {
+    return NULL;
   }
-  return g_rep_decoder.parse(payload, payload_size, out_rep);
+  return result.rep;
 }

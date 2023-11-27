@@ -407,6 +407,8 @@ public:
 
   void TearDown() override
   {
+    oc::TestDevice::Reset();
+
     for (auto *resource : resources) {
       oc_delete_resource(resource);
     }

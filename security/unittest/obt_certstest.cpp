@@ -580,7 +580,11 @@ public:
     roles_.Add("user", "");
   }
 
-  void TearDown() override { oc::TestDevice::StopServer(); }
+  void TearDown() override
+  {
+    oc::TestDevice::Reset();
+    oc::TestDevice::StopServer();
+  }
 
   std::string uuid_{};
   oc::Roles roles_{};

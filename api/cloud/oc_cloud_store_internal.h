@@ -22,6 +22,7 @@
 #define OC_CLOUD_STORE_INTERNAL_H
 
 #include "oc_cloud.h"
+#include "util/oc_compiler.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,7 +35,7 @@ extern "C" {
  * @return 0 on success
  * @return <0 on failure
  */
-int cloud_store_load(oc_cloud_store_t *store);
+int cloud_store_load(oc_cloud_store_t *store) OC_NONNULL();
 
 /**
  * @brief Save store data to storage
@@ -43,7 +44,7 @@ int cloud_store_load(oc_cloud_store_t *store);
  * @return >=0 amount of bytes written to storage
  * @return <0 on failure
  */
-long cloud_store_dump(const oc_cloud_store_t *store);
+long cloud_store_dump(const oc_cloud_store_t *store) OC_NONNULL();
 
 /**
  * @brief Schedule delayed saving of store data to storage
@@ -53,21 +54,21 @@ long cloud_store_dump(const oc_cloud_store_t *store);
  * @warning You must ensure that the store pointer is still valid in the delayed
  * execution
  */
-void cloud_store_dump_async(const oc_cloud_store_t *store);
+void cloud_store_dump_async(const oc_cloud_store_t *store) OC_NONNULL();
 
 /**
  * @brief Set store data to default values
  *
  * @param store store
  */
-void cloud_store_initialize(oc_cloud_store_t *store);
+void cloud_store_initialize(oc_cloud_store_t *store) OC_NONNULL();
 
 /**
  * @brief Deallocate allocated data
  *
  * @param store store
  */
-void cloud_store_deinitialize(oc_cloud_store_t *store);
+void cloud_store_deinitialize(oc_cloud_store_t *store) OC_NONNULL();
 
 #ifdef __cplusplus
 }

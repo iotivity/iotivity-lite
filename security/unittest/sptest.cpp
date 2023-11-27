@@ -310,6 +310,11 @@ public:
   {
     oc_sec_sp_default(kDeviceID);
   }
+
+  void TearDown() override
+  {
+    oc::TestDevice::Reset();
+  }
 };
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM

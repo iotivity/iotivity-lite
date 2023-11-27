@@ -51,7 +51,10 @@
 #define OC_JSON_UPDATE_BUFFER_AND_TOTAL                                        \
   do {                                                                         \
     total_char_printed += num_char_printed;                                    \
-    if (num_char_printed < buf_size && buf != NULL) {                          \
+    if (buf == NULL) {                                                         \
+      break;                                                                   \
+    }                                                                          \
+    if (num_char_printed < buf_size) {                                         \
       buf += num_char_printed;                                                 \
       buf_size -= num_char_printed;                                            \
     } else {                                                                   \
@@ -401,8 +404,10 @@ oc_rep_to_json(const oc_rep_t *rep, char *buf, size_t buf_size,
                bool pretty_print)
 {
   size_t total_char_printed = 0;
-  bool object_array =
-    (rep && (rep->type == OC_REP_OBJECT) && (oc_string_len(rep->name) == 0));
+  bool object_array = false;
+  if (rep != NULL && oc_string_len(rep->name) == 0) {
+    object_array = rep->type == OC_REP_OBJECT;
+  }
   size_t num_char_printed = snprintf(buf, buf_size, object_array ? "[" : "{");
   OC_JSON_UPDATE_BUFFER_AND_TOTAL;
   if (pretty_print) {
@@ -410,8 +415,11 @@ oc_rep_to_json(const oc_rep_t *rep, char *buf, size_t buf_size,
     OC_JSON_UPDATE_BUFFER_AND_TOTAL;
   }
 
-  num_char_printed = oc_rep_to_json_format(rep, buf, buf_size, 0, pretty_print);
-  OC_JSON_UPDATE_BUFFER_AND_TOTAL;
+  if (!object_array || rep->value.object != NULL) {
+    num_char_printed =
+      oc_rep_to_json_format(rep, buf, buf_size, 0, pretty_print);
+    OC_JSON_UPDATE_BUFFER_AND_TOTAL;
+  }
 
   num_char_printed = snprintf(buf, buf_size, object_array ? "]" : "}");
   OC_JSON_UPDATE_BUFFER_AND_TOTAL;

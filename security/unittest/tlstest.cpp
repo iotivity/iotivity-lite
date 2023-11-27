@@ -108,6 +108,8 @@ public:
   static void SetUpTestCase() { ASSERT_TRUE(oc::TestDevice::StartServer()); }
 
   static void TearDownTestCase() { oc::TestDevice::StopServer(); }
+
+  void TearDown() override { oc::TestDevice::Reset(); }
 };
 
 static size_t

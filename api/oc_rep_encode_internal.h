@@ -166,18 +166,37 @@ void oc_rep_encoder_buffer_realloc_init(oc_rep_encoder_t *encoder,
                                         uint8_t **buffer, size_t size,
                                         size_t max_size) OC_NONNULL(1);
 
+/** @brief Shrink encoder buffer to the payload size */
+bool oc_rep_encoder_shrink_buffer(oc_rep_encoder_t *encoder) OC_NONNULL();
+
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-/** @brief Get the size of the encoded data in the payload buffer. */
-int oc_rep_encoder_payload_size(oc_rep_encoder_t *encoder) OC_NONNULL();
+/** @brief Get the size of the encoded data in the payload buffer.
+ *
+ * @param encoder encoder (cannot be NULL)
+ * @param truncateEmpty truncate empty objects
+ *
+ * @return >=0 the size of the encoded data in the payload
+ * @return -1 on error
+ */
+int oc_rep_encoder_payload_size(oc_rep_encoder_t *encoder, bool truncateEmpty)
+  OC_NONNULL();
+
+/**
+ * @brief Check if the encoded payload is an empty object ("{}").
+ *
+ * @param type encoder type of the payload
+ * @param payload pointer to the payload
+ * @param size size of the payload
+ * @return true if the payload is an empty object
+ * @return false otherwise
+ */
+bool oc_rep_encoded_payload_is_empty_object(oc_rep_encoder_type_t type,
+                                            const uint8_t *payload,
+                                            size_t size);
 
 /** @brief Get the number of unwritten bytes in the payload buffer. */
 long oc_rep_encoder_remaining_size(oc_rep_encoder_t *encoder) OC_NONNULL();
-
-#ifdef OC_DYNAMIC_ALLOCATION
-/** @brief Shrink encoder buffer to the payload size */
-bool oc_rep_encoder_shrink_buffer(oc_rep_encoder_t *encoder) OC_NONNULL();
-#endif /* OC_DYNAMIC_ALLOCATION */
 
 /**
  * @brief Recalcute the pointer to the buffer and the pointer to the end of the

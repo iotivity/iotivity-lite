@@ -168,6 +168,11 @@ public:
   {
     oc::TestDevice::StopServer();
   }
+
+  void TearDown() override
+  {
+    oc::TestDevice::Reset();
+  }
 };
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM

@@ -17,10 +17,10 @@
  ***************************************************************************/
 
 #include "api/oc_helpers_internal.h"
+#include "api/oc_ri_internal.h"
 #include "messaging/coap/observe_internal.h"
 #include "messaging/coap/transactions_internal.h"
 #include "oc_core_res.h"
-#include "oc_ri.h"
 #include "port/oc_allocator_internal.h"
 #include "port/oc_random.h"
 #include "tests/gtest/Device.h"
@@ -458,13 +458,7 @@ public:
 
   static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 
-  void SetUp() override
-  {
-#if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
-    coap_free_all_discovery_batch_observers();
-#endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
-    coap_free_all_observers();
-  }
+  void TearDown() override { oc::TestDevice::Reset(); }
 };
 
 TEST_F(TestObserverWithServer, ResourceIsObserved)

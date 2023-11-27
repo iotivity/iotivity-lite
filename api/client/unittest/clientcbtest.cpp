@@ -243,7 +243,7 @@ public:
     oc_client_cbs_init();
   }
 
-  void TearDown() override { oc_client_cbs_shutdown(); }
+  void TearDown() override { oc::TestDevice::Reset(); }
 };
 
 TEST_F(TestClientCBWithServer, RemoveAsync)

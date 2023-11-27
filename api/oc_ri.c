@@ -569,8 +569,9 @@ ri_delete_resource(oc_resource_t *resource, bool notify)
     oc_link_t *link = oc_get_link_by_uri(collection, oc_string(resource->uri),
                                          oc_string_len(resource->uri));
     if (link != NULL) {
-      if (oc_collection_remove_link_and_notify(&collection->res, link, notify,
-                                               /*batchDispatch*/ false)) {
+      if (oc_collection_remove_link_and_notify(
+            &collection->res, link, notify,
+            /*discoveryBatchDispatch*/ false)) {
 #if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
         needsBatchDispatch = true;
 #endif /* OC_RES_BATCH_SUPPORT && OC_DISCOVERY_RESOURCE_OBSERVABLE */
@@ -1246,8 +1247,9 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
   oc_method_t method = ctx->request->code;
 
   /* Initialize request/response objects to be sent up to the app layer. */
-  /* Postpone allocating response_state right after calling oc_parse_rep()
-   * in order to reduce peak memory in OC_BLOCK_WISE & OC_DYNAMIC_ALLOCATION
+  /* Postpone allocating response_state right after calling
+   * oc_rep_parse_payload() in order to reduce peak memory in OC_BLOCK_WISE &
+   * OC_DYNAMIC_ALLOCATION
    */
   oc_response_buffer_t response_buffer;
   memset(&response_buffer, 0, sizeof(response_buffer));
@@ -1341,9 +1343,12 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
        * Any failures while parsing the payload is viewed as an erroneous
        * request and results in a 4.00 response being sent.
        */
-      int parse_error =
-        oc_parse_rep(payload, payload_len, &request_obj.request_payload);
-      if (parse_error != 0) {
+      oc_rep_parse_result_t result;
+      memset(&result, 0, sizeof(result));
+      int parse_error = oc_rep_parse_payload(payload, payload_len, &result);
+      if (parse_error == CborNoError) {
+        request_obj.request_payload = result.rep;
+      } else {
         OC_WRN("ocri: error parsing request payload; tinyCBOR error code:  %d",
                parse_error);
         if (parse_error == CborErrorUnexpectedEOF) {
@@ -1669,7 +1674,7 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
 }
 
 void
-oc_ri_shutdown(void)
+oc_ri_reset(void)
 {
 #ifdef OC_SERVER
 #if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
@@ -1685,6 +1690,12 @@ oc_ri_shutdown(void)
 #ifdef OC_BLOCK_WISE
   oc_blockwise_free_all_buffers(true);
 #endif /* OC_BLOCK_WISE */
+}
+
+void
+oc_ri_shutdown(void)
+{
+  oc_ri_reset();
 
   while (oc_main_poll_v1() != 0) {
     // no-op

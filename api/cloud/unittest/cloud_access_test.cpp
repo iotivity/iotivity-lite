@@ -65,12 +65,7 @@ public:
 
   static void TearDownTestCase() { oc_main_shutdown(); }
 
-  void TearDown() override
-  {
-    oc::TestDevice::DropOutgoingMessages();
-    coap_free_all_transactions();
-    oc_client_cbs_shutdown();
-  }
+  void TearDown() override { oc::TestDevice::Reset(); }
 };
 
 oc_handler_t TestCloudAccess::s_handler;

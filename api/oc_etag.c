@@ -588,18 +588,19 @@ resource_print_payload(oc_resource_t *resource, oc_interface_mask_t iface)
   oc_rep_decoder_t decoder = oc_rep_decoder(OC_REP_CBOR_DECODER);
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
   struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
-  oc_rep_t *rep = NULL;
+  oc_rep_parse_result_t result;
+  memset(&result, 0, sizeof(result));
   if (CborNoError != decoder.parse(response_buffer.buffer,
-                                   response_buffer.response_length, &rep)) {
+                                   response_buffer.response_length, &result)) {
     oc_rep_set_pool(prev_rep_objects);
     free(buffer);
     return;
   }
-  size_t json_size = oc_rep_to_json(rep, NULL, 0, true);
+  size_t json_size = oc_rep_to_json(result.rep, NULL, 0, true);
   char *json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  oc_rep_to_json(result.rep, json, json_size + 1, true);
   OC_DBG("Resource(%s) payload: %s", oc_string(resource->uri), json);
-  oc_free_rep(rep);
+  oc_free_rep(result.rep);
   oc_rep_set_pool(prev_rep_objects);
   free(json);
   free(buffer);

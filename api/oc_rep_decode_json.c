@@ -29,9 +29,20 @@
 #include <errno.h>
 #include <stdlib.h>
 
+typedef enum {
+  REP_ROOT_TYPE_OBJECT,
+  REP_ROOT_TYPE_EMPTY_ARRAY,
+} rep_root_type_t;
+
 typedef struct
 {
-  oc_rep_t *root;
+  oc_rep_t *rep;
+  rep_root_type_t type;
+} rep_root_data_t;
+
+typedef struct
+{
+  rep_root_data_t root;
   oc_rep_t *previous;
   oc_rep_t *cur;
   int err;
@@ -46,26 +57,31 @@ json_parse_string_value(rep_data_t *data, const char *str, size_t len)
 }
 
 static bool
-json_set_rep(rep_data_t *data, oc_rep_value_type_t value_type)
+json_set_rep(rep_data_t *data, oc_rep_value_type_t value_type,
+             rep_root_type_t root_type)
 {
-  if (data->cur == NULL) {
-    data->cur = oc_alloc_rep();
-    if (data->cur == NULL) {
-      data->err = CborErrorOutOfMemory;
+  if (data->cur != NULL) {
+    if (data->cur->name.size == 0) {
+      data->err = CborErrorIllegalType;
       return false;
     }
-    if (data->root == NULL) {
-      data->root = data->cur;
-    }
-    if (data->previous != NULL) {
-      data->previous->next = data->cur;
-    }
-    data->previous = data->cur;
-  } else if (data->cur->name.size == 0) {
-    data->err = CborErrorIllegalType;
+    data->cur->type = value_type;
+    return true;
+  }
+  data->cur = oc_alloc_rep();
+  if (data->cur == NULL) {
+    data->err = CborErrorOutOfMemory;
     return false;
   }
   data->cur->type = value_type;
+  if (data->root.rep == NULL) {
+    data->root.rep = data->cur;
+    data->root.type = root_type;
+  }
+  if (data->previous != NULL) {
+    data->previous->next = data->cur;
+  }
+  data->previous = data->cur;
   return true;
 }
 
@@ -82,7 +98,7 @@ json_parse_string(rep_data_t *data, const char *str, size_t len)
     json_parse_string_value(data, str, len);
     return true;
   }
-  if (!json_set_rep(data, OC_REP_UNKNOWN_TYPE)) {
+  if (!json_set_rep(data, OC_REP_UNKNOWN_TYPE, REP_ROOT_TYPE_OBJECT)) {
     return false;
   }
   oc_new_string(&data->cur->name, str, len);
@@ -174,7 +190,10 @@ static bool
 json_parse_object(rep_data_t *data, const char *start, size_t len)
 {
   rep_data_t obj_data = {
-    .root = NULL,
+    .root = {
+      .rep = NULL,
+      .type = REP_ROOT_TYPE_OBJECT,
+    },
     .previous = NULL,
     .cur = NULL,
     .err = CborNoError,
@@ -183,24 +202,24 @@ json_parse_object(rep_data_t *data, const char *start, size_t len)
   jsmn_init(&parser);
   int r = jsmn_parse(&parser, start, len, json_parse_token, &obj_data);
   if (r < 0) {
-    oc_free_rep(obj_data.root);
+    oc_free_rep(obj_data.root.rep);
     data->err =
       obj_data.err != CborNoError ? obj_data.err : CborErrorUnexpectedEOF;
     return false;
   }
-  if (obj_data.root != NULL &&
+  if (obj_data.root.rep != NULL &&
       // must have a string key and a valid value
-      (oc_string(obj_data.root->name) == NULL ||
-       obj_data.root->type == OC_REP_UNKNOWN_TYPE)) {
-    oc_free_rep(obj_data.root);
+      (oc_string(obj_data.root.rep->name) == NULL ||
+       obj_data.root.rep->type == OC_REP_UNKNOWN_TYPE)) {
+    oc_free_rep(obj_data.root.rep);
     data->err = CborErrorIllegalType;
     return false;
   }
-  if (!json_set_rep(data, OC_REP_OBJECT)) {
-    oc_free_rep(obj_data.root);
+  if (!json_set_rep(data, OC_REP_OBJECT, REP_ROOT_TYPE_OBJECT)) {
+    oc_free_rep(obj_data.root.rep);
     return false;
   }
-  data->cur->value.object = obj_data.root;
+  data->cur->value.object = obj_data.root.rep;
   data->cur = NULL;
   return true;
 }
@@ -276,7 +295,7 @@ static bool
 json_parse_array_bool(rep_data_t *data, const char *start, size_t len,
                       size_t array_size)
 {
-  if (!json_set_rep(data, OC_REP_BOOL_ARRAY)) {
+  if (!json_set_rep(data, OC_REP_BOOL_ARRAY, REP_ROOT_TYPE_OBJECT)) {
     return false;
   }
   oc_new_bool_array(&data->cur->value.array, array_size);
@@ -317,7 +336,7 @@ static bool
 json_parse_array_int(rep_data_t *data, const char *start, size_t len,
                      size_t array_size)
 {
-  if (!json_set_rep(data, OC_REP_INT_ARRAY)) {
+  if (!json_set_rep(data, OC_REP_INT_ARRAY, REP_ROOT_TYPE_OBJECT)) {
     return false;
   }
   oc_new_int_array(&data->cur->value.array, array_size);
@@ -361,7 +380,7 @@ static bool
 json_parse_array_string(rep_data_t *data, const char *start, size_t len,
                         size_t array_size)
 {
-  if (!json_set_rep(data, OC_REP_STRING_ARRAY)) {
+  if (!json_set_rep(data, OC_REP_STRING_ARRAY, REP_ROOT_TYPE_OBJECT)) {
     return false;
   }
   oc_new_string_array(&data->cur->value.array, array_size);
@@ -400,7 +419,10 @@ json_parse_array_object(rep_data_t *data, const char *start, size_t len,
   jsmn_parser_t parser;
   jsmn_init(&parser);
   rep_data_t obj_data = {
-    .root = NULL,
+    .root = {
+      .rep = NULL,
+      .type = REP_ROOT_TYPE_OBJECT,
+    },  
     .cur = NULL,
     .previous = NULL,
     .err = CborNoError,
@@ -414,10 +436,10 @@ json_parse_array_object(rep_data_t *data, const char *start, size_t len,
     }
     return CborErrorUnexpectedEOF;
   }
-  if (!json_set_rep(data, OC_REP_OBJECT_ARRAY)) {
+  if (!json_set_rep(data, OC_REP_OBJECT_ARRAY, REP_ROOT_TYPE_OBJECT)) {
     return false;
   }
-  data->cur->value.object_array = obj_data.root;
+  data->cur->value.object_array = obj_data.root.rep;
   return true;
 }
 
@@ -459,7 +481,7 @@ json_parse_array(rep_data_t *data, const char *start, size_t len)
     value_parser_fn = json_parse_array_object;
     break;
   default:
-    if (!json_set_rep(data, OC_REP_NIL)) {
+    if (!json_set_rep(data, OC_REP_NIL, REP_ROOT_TYPE_EMPTY_ARRAY)) {
       return false;
     }
     break;
@@ -494,12 +516,16 @@ json_parse_token(const jsmntok_t *token, const char *js, void *data)
 }
 
 int
-oc_rep_parse_json(const uint8_t *json, size_t json_len, oc_rep_t **out_rep)
+oc_rep_parse_json(const uint8_t *json, size_t json_len,
+                  oc_rep_parse_result_t *result)
 {
   jsmn_parser_t parser;
   jsmn_init(&parser);
   rep_data_t data = {
-    .root = NULL,
+    .root = {
+      .rep = NULL,
+      .type = REP_ROOT_TYPE_OBJECT,
+    },
     .cur = NULL,
     .previous = NULL,
     .err = CborNoError,
@@ -510,14 +536,22 @@ oc_rep_parse_json(const uint8_t *json, size_t json_len, oc_rep_t **out_rep)
     return CborErrorUnexpectedEOF;
   }
   assert(data.err == CborNoError);
-  if ((data.root->type == OC_REP_OBJECT_ARRAY ||
-       data.root->type == OC_REP_OBJECT) &&
-      data.root->name.size == 0 && data.root->next == NULL) {
-    *out_rep = data.root->value.object_array;
-    data.root->value.object_array = NULL;
-    oc_free_rep(data.root);
+
+  if (data.root.type == REP_ROOT_TYPE_EMPTY_ARRAY) {
+    result->type = OC_REP_PARSE_RESULT_EMPTY_ARRAY;
+    oc_free_rep(data.root.rep);
+    return CborNoError;
+  }
+
+  result->type = OC_REP_PARSE_RESULT_REP;
+  if ((data.root.rep->type == OC_REP_OBJECT_ARRAY ||
+       data.root.rep->type == OC_REP_OBJECT) &&
+      data.root.rep->name.size == 0 && data.root.rep->next == NULL) {
+    result->rep = data.root.rep->value.object_array;
+    data.root.rep->value.object_array = NULL;
+    oc_free_rep(data.root.rep);
   } else {
-    *out_rep = data.root;
+    result->rep = data.root.rep;
   }
   return CborNoError;
 }

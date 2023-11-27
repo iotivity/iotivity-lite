@@ -62,6 +62,7 @@ public:
 
   void TearDown() override
   {
+    oc::TestDevice::Reset();
     oc::TestDevice::StopServer();
 
     oc::RestoreSystemTimeFromTestStartTime();

@@ -78,6 +78,11 @@ public:
   {
     oc::TestDevice::StopServer();
   }
+
+  void TearDown() override
+  {
+    oc::TestDevice::Reset();
+  }
 };
 
 TEST_F(TestMaintenanceWithServer, GetResourceByIndex_F)
@@ -327,6 +332,11 @@ public:
   {
     oc::TestDevice::StopServer();
     oc_set_max_app_data_size(defaultAppSize);
+  }
+
+  void TearDown() override
+  {
+    oc::TestDevice::Reset();
   }
 
 private:

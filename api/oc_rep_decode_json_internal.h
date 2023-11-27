@@ -23,7 +23,8 @@
 
 #ifdef OC_JSON_ENCODER
 
-#include "oc_rep.h"
+#include "api/oc_rep_internal.h"
+#include "util/oc_compiler.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -33,7 +34,8 @@ extern "C" {
 #endif
 
 /** Parse a JSON root object or root array */
-int oc_rep_parse_json(const uint8_t *json, size_t json_len, oc_rep_t **out_rep);
+int oc_rep_parse_json(const uint8_t *json, size_t json_len,
+                      oc_rep_parse_result_t *result) OC_NONNULL(3);
 
 #ifdef __cplusplus
 }

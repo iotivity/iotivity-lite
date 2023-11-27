@@ -20,6 +20,7 @@
 #include "api/oc_main_internal.h"
 #include "api/oc_message_internal.h"
 #include "api/oc_platform_internal.h"
+#include "api/oc_rep_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_server_api_internal.h"
 #include "messaging/coap/options_internal.h"
@@ -86,13 +87,6 @@ oc_init_platform(const char *mfg_name, oc_init_platform_cb_t init_platform_cb,
                  void *data)
 {
   return oc_platform_init(mfg_name, init_platform_cb, data) == NULL ? -1 : 0;
-}
-
-static int
-response_length(void)
-{
-  int size = oc_rep_get_encoded_payload_size();
-  return (size <= 2) ? 0 : size;
 }
 
 void
@@ -165,6 +159,13 @@ oc_send_response_internal(oc_request_t *request, oc_status_t response_code,
   return true;
 }
 
+static int
+response_length(bool canTruncate)
+{
+  int size = oc_rep_get_encoded_payload_size_v1(true);
+  return (canTruncate && size <= 2) ? 0 : size;
+}
+
 void
 oc_send_response_with_callback(oc_request_t *request, oc_status_t response_code,
                                bool trigger_cb)
@@ -185,8 +186,10 @@ oc_send_response_with_callback(oc_request_t *request, oc_status_t response_code,
     content_format = APPLICATION_CBOR;
   }
 #endif /* OC_SPEC_VER_OIC */
+  // do not truncate OC_STATUS_OK responses to OC_GET requests
+  bool canTruncate = request->method != OC_GET || response_code != OC_STATUS_OK;
   if (!oc_send_response_internal(request, response_code, content_format,
-                                 response_length(), trigger_cb)) {
+                                 response_length(canTruncate), trigger_cb)) {
     OC_ERR("could not send response: invalid response code");
   }
 }
@@ -828,7 +831,7 @@ oc_send_separate_response(oc_separate_response_t *handle,
   if (handle->len != 0) {
     response_buffer.response_length = handle->len;
   } else {
-    response_buffer.response_length = response_length();
+    response_buffer.response_length = response_length(true);
   }
 
   response_buffer.code = (coap_status_t)code;

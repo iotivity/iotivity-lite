@@ -312,17 +312,15 @@ hawkbit_store_load(hawkbit_context_t *ctx)
 
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
   struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
-  oc_rep_t *rep = NULL;
-  if (oc_parse_rep(buf, (size_t)ret, &rep) != 0) {
+  oc_rep_t *rep = oc_parse_rep(buf, (size_t)ret);
+  if (rep == NULL || !hawkbit_decode(ctx, rep, true)) {
     APP_ERR("cannot parse representation");
+    oc_free_rep(rep);
     oc_rep_set_pool(prev_rep_objects);
 #ifdef OC_DYNAMIC_ALLOCATION
     free(buf);
 #endif /* OC_DYNAMIC_ALLOCATION */
     return -1;
-  }
-  if (!hawkbit_decode(ctx, rep, true)) {
-    ret = -1;
   }
   oc_free_rep(rep);
   oc_rep_set_pool(prev_rep_objects);

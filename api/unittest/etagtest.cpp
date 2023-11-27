@@ -432,6 +432,8 @@ public:
 #ifdef OC_STORAGE
     oc_etag_clear_storage();
 #endif // OC_STORAGE
+
+    oc::TestDevice::Reset();
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION

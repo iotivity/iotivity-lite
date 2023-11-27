@@ -690,7 +690,8 @@ coap_prepare_notification(coap_packet_t *notification,
                    (uint32_t)ctx.response->response_buffer->response_length);
 #ifdef OC_HAS_FEATURE_ETAG
   uint8_t etag_len = ctx.response->response_buffer->etag.length;
-  if (etag_len > 0 && ctx.response->response_buffer->response_length > 0) {
+  if (etag_len > 0) {
+    assert(ctx.response->response_buffer->response_length > 0);
     const uint8_t *etag = ctx.response->response_buffer->etag.value;
     coap_options_set_etag(notification, etag, etag_len);
   }
@@ -711,7 +712,6 @@ coap_send_notification_internal(coap_send_notification_ctx_t ctx)
   }
 
   COAP_DBG("notifying observer");
-  coap_transaction_t *transaction = NULL;
   if (ctx.response->response_buffer == NULL) {
     COAP_DBG("response buffer is NULL");
     return 0;
@@ -727,7 +727,7 @@ coap_send_notification_internal(coap_send_notification_ctx_t ctx)
 
   coap_packet_t notification;
 #ifdef OC_TCP
-  if (ctx.obs->endpoint.flags & TCP) {
+  if ((ctx.obs->endpoint.flags & TCP) != 0) {
     coap_tcp_init_message(&notification, status_code);
   } else
 #endif /* OC_TCP */
@@ -736,6 +736,11 @@ coap_send_notification_internal(coap_send_notification_ctx_t ctx)
   }
 
   if (ctx.ignore_is_revert || !is_revert) {
+    if (ctx.response->response_buffer->response_length == 0) {
+      COAP_DBG("ignoring empty notification");
+      return 0;
+    }
+
     int ret = coap_prepare_notification(&notification, ctx);
     if (ret <= 0) {
       return ret;
@@ -756,8 +761,8 @@ coap_send_notification_internal(coap_send_notification_ctx_t ctx)
       &notification, ctx.response->response_buffer->content_format);
   }
   coap_set_token(&notification, ctx.obs->token, ctx.obs->token_len);
-  transaction = coap_new_transaction(coap_get_mid(), ctx.obs->token,
-                                     ctx.obs->token_len, &ctx.obs->endpoint);
+  coap_transaction_t *transaction = coap_new_transaction(
+    coap_get_mid(), ctx.obs->token, ctx.obs->token_len, &ctx.obs->endpoint);
   if (transaction == NULL) {
     return -1;
   }
@@ -1531,7 +1536,7 @@ notify_discovery_observers(oc_resource_t *resource)
   if (buffer == NULL) {
     COAP_WRN("out of memory allocating buffer");
     return -1;
-  } //! buffer
+  }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   COAP_DBG("Issue GET request to resource %s", oc_string(resource->uri));

@@ -381,7 +381,11 @@ public:
     ASSERT_TRUE(oc::TestDevice::StartServer());
   }
 
-  void TearDown() override { oc::TestDevice::StopServer(); }
+  void TearDown() override
+  {
+    oc::TestDevice::Reset();
+    oc::TestDevice::StopServer();
+  }
 
   static std::optional<oc_endpoint_t> findEndpoint(size_t device);
 

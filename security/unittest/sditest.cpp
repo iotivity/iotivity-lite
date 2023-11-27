@@ -221,6 +221,11 @@ public:
       std::filesystem::remove_all(entry.path());
     }
   }
+
+  void TearDown() override
+  {
+    oc::TestDevice::Reset();
+  }
 };
 
 TEST_F(TestSdiWithServer, GetResourceByIndex)

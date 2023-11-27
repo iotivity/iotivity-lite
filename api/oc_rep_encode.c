@@ -16,8 +16,10 @@
  *
  ****************************************************************************/
 
+#include "api/oc_rep_decode_internal.h"
 #include "api/oc_rep_encode_cbor_internal.h"
 #include "api/oc_rep_encode_internal.h"
+#include "api/oc_rep_internal.h"
 #include "oc_rep.h"
 #include "port/oc_log_internal.h"
 #include "util/oc_features.h"
@@ -114,9 +116,6 @@ oc_rep_encoder_buffer_realloc_init(oc_rep_encoder_t *encoder, uint8_t **buffer,
   rep_cbor_context_init(encoder, size);
 }
 
-#endif /* OC_DYNAMIC_ALLOCATION */
-
-#ifdef OC_DYNAMIC_ALLOCATION
 static size_t
 rep_encoder_get_extra_bytes_needed(const oc_rep_encoder_t *encoder,
                                    CborEncoder *subEncoder)
@@ -269,14 +268,12 @@ oc_rep_get_encoder_buf(void)
 }
 
 #ifdef OC_DYNAMIC_ALLOCATION
+
 int
 oc_rep_get_encoder_buffer_size(void)
 {
   return (int)g_rep_encoder.buffer.size;
 }
-#endif /* OC_DYNAMIC_ALLOCATION */
-
-#ifdef OC_DYNAMIC_ALLOCATION
 
 bool
 oc_rep_encoder_shrink_buffer(oc_rep_encoder_t *encoder)
@@ -284,7 +281,7 @@ oc_rep_encoder_shrink_buffer(oc_rep_encoder_t *encoder)
   if (!encoder->buffer.enable_realloc || encoder->buffer.pptr == NULL) {
     return false;
   }
-  int size = oc_rep_encoder_payload_size(encoder);
+  int size = oc_rep_encoder_payload_size(encoder, false);
   if (size <= 0 || size == (int)encoder->buffer.size) {
     // if the size is 0, then it means that the encoder was not used at all
     // if the size is already the same as the buffer size, then there is no
@@ -322,30 +319,85 @@ oc_rep_shrink_encoder_buf(uint8_t *buf)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
+static int
+rep_get_decoder_for_encoder(oc_rep_encoder_type_t type)
+{
+  if (type == OC_REP_CBOR_ENCODER) {
+    return OC_REP_CBOR_DECODER;
+  }
+#ifdef OC_JSON_ENCODER
+  if (type == OC_REP_JSON_ENCODER) {
+    return OC_REP_JSON_DECODER;
+  }
+#endif /* OC_JSON_ENCODER */
+  return -1;
+}
+
+bool
+oc_rep_encoded_payload_is_empty_object(oc_rep_encoder_type_t type,
+                                       const uint8_t *payload, size_t size)
+{
+  int dtype = rep_get_decoder_for_encoder(type);
+  if (dtype == -1) {
+    OC_ERR("invalid encoder type(%d)", (int)type);
+    return false;
+  }
+
+  OC_MEMB_LOCAL(rep_objects, oc_rep_t, 1);
+  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
+  oc_rep_decoder_t decoder = oc_rep_decoder((oc_rep_decoder_type_t)dtype);
+  oc_rep_parse_result_t result;
+  memset(&result, 0, sizeof(result));
+  if (CborNoError != decoder.parse(payload, size, &result)) {
+    OC_DBG("failed to parse encoded payload");
+    oc_rep_set_pool(prev_rep_objects);
+    return false;
+  }
+
+  bool isEmpty = result.type == OC_REP_PARSE_RESULT_REP && result.rep == NULL;
+  oc_free_rep(result.rep);
+  oc_rep_set_pool(prev_rep_objects);
+  return isEmpty;
+}
+
 int
-oc_rep_encoder_payload_size(oc_rep_encoder_t *encoder)
+oc_rep_encoder_payload_size(oc_rep_encoder_t *encoder, bool truncateEmpty)
 {
   oc_rep_encoder_convert_offset_to_ptr(encoder, &encoder->ctx);
   size_t size =
     encoder->impl.get_buffer_size(&encoder->ctx, encoder->buffer.ptr);
+#if OC_WRN_IS_ENABLED
   size_t needed = encoder->impl.get_extra_bytes_needed(&encoder->ctx);
-  oc_rep_encoder_convert_ptr_to_offset(encoder, &encoder->ctx);
   if (g_err == CborErrorOutOfMemory) {
     OC_WRN("Insufficient memory: Increase OC_MAX_APP_DATA_SIZE to "
            "accomodate a larger payload(+%zu)",
            needed);
-    (void)needed;
   }
+#endif /* OC_WRN_IS_ENABLED */
+  oc_rep_encoder_convert_ptr_to_offset(encoder, &encoder->ctx);
   if (g_err != CborNoError) {
     return -1;
+  }
+
+  if (truncateEmpty && size == 2 &&
+      oc_rep_encoded_payload_is_empty_object(encoder->type, encoder->buffer.ptr,
+                                             size)) {
+    // we count empty object as empty payload
+    return 0;
   }
   return (int)size;
 }
 
 int
+oc_rep_get_encoded_payload_size_v1(bool truncateEmpty)
+{
+  return oc_rep_encoder_payload_size(&g_rep_encoder, truncateEmpty);
+}
+
+int
 oc_rep_get_encoded_payload_size(void)
 {
-  return oc_rep_encoder_payload_size(&g_rep_encoder);
+  return oc_rep_get_encoded_payload_size_v1(false);
 }
 
 long

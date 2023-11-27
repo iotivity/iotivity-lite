@@ -301,9 +301,15 @@ TestDiscoveryWithServer::TearDownTestCase()
 }
 
 void
-TestDiscoveryWithServer::TearDown()
+TestDiscoveryWithServer::SetUp()
 {
   coap_observe_counter_reset();
+}
+
+void
+TestDiscoveryWithServer::TearDown()
+{
+  oc::TestDevice::Reset();
 }
 
 std::unordered_map<std::string, DynamicResourceData>

@@ -87,6 +87,11 @@ public:
     ASSERT_EQ(0, oc::TestStorage.Clear());
   }
 
+  void TearDown() override
+  {
+    oc::TestDevice::Reset();
+  }
+
 #ifdef OC_DYNAMIC_ALLOCATION
   static long min_app_data_size_;
   static long max_app_data_size_;

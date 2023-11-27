@@ -175,9 +175,8 @@ oc_sec_load_ecdsa_keypair(size_t device)
   if (ret > 0) {
     OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
     struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
-    oc_rep_t *rep = NULL;
-    oc_parse_rep(sb.buffer, (int)ret, &rep);
-    if (oc_sec_ecdsa_decode_keypair_for_device(rep, device)) {
+    oc_rep_t *rep = oc_parse_rep(sb.buffer, (size_t)ret);
+    if (rep != NULL && oc_sec_ecdsa_decode_keypair_for_device(rep, device)) {
       OC_DBG("successfully read ECDSA keypair for device %zd", device);
     }
     oc_free_rep(rep);
@@ -242,9 +241,11 @@ oc_sec_load_cred(size_t device)
   if (ret > 0) {
     OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
     struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
-    oc_rep_t *rep = NULL;
-    oc_parse_rep(sb.buffer, (int)ret, &rep);
-    oc_sec_decode_cred(rep, NULL, true, false, NULL, device, NULL, NULL);
+    oc_rep_t *rep = oc_parse_rep(sb.buffer, (size_t)ret);
+    if (rep != NULL &&
+        oc_sec_decode_cred(rep, NULL, true, false, NULL, device, NULL, NULL)) {
+      OC_DBG("successfully read cred for device %zd", device);
+    }
     oc_free_rep(rep);
     oc_rep_set_pool(prev_rep_objects);
   }
@@ -297,11 +298,10 @@ oc_sec_load_acl(size_t device)
   if (ret > 0) {
     OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
     struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
-    oc_rep_t *rep = NULL;
-    if (oc_parse_rep(sb.buffer, (int)ret, &rep) != 0) {
-      OC_ERR("failed to parse acl buffer");
+    oc_rep_t *rep = oc_parse_rep(sb.buffer, (size_t)ret);
+    if (rep != NULL && oc_sec_decode_acl(rep, true, device, NULL, NULL)) {
+      OC_DBG("successfully read acl for device %zd", device);
     }
-    oc_sec_decode_acl(rep, true, device, NULL, NULL);
     oc_free_rep(rep);
     oc_rep_set_pool(prev_rep_objects);
   }
@@ -337,6 +337,25 @@ oc_sec_dump_acl(size_t device)
   oc_storage_free_buffer(sb);
 }
 
+static void
+sec_load_unique_ids_from_rep(oc_rep_t *rep, size_t device)
+{
+  oc_platform_info_t *platform_info = oc_core_get_platform_info();
+  oc_device_info_t *device_info = oc_core_get_device_info(device);
+  for (; rep != NULL; rep = rep->next) {
+    if (rep->type == OC_REP_STRING) {
+      if (oc_rep_is_property(rep, "pi", OC_CHAR_ARRAY_LEN("pi"))) {
+        oc_str_to_uuid(oc_string(rep->value.string), &platform_info->pi);
+        continue;
+      }
+      if (oc_rep_is_property(rep, "piid", OC_CHAR_ARRAY_LEN("piid"))) {
+        oc_str_to_uuid(oc_string(rep->value.string), &device_info->piid);
+        continue;
+      }
+    }
+  }
+}
+
 void
 oc_sec_load_unique_ids(size_t device)
 {
@@ -352,32 +371,11 @@ oc_sec_load_unique_ids(size_t device)
   oc_storage_gen_svr_tag("u_ids", device, svr_tag, sizeof(svr_tag));
   long ret = oc_storage_read(svr_tag, sb.buffer, sb.size);
   if (ret > 0) {
-    oc_platform_info_t *platform_info = oc_core_get_platform_info();
-    oc_device_info_t *device_info = oc_core_get_device_info(device);
     OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
     struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
-    oc_rep_t *rep = NULL;
-    int err = oc_parse_rep(sb.buffer, ret, &rep);
-    oc_rep_t *p = rep;
-    if (err == 0) {
-      while (rep != NULL) {
-        switch (rep->type) {
-        case OC_REP_STRING:
-          if (oc_string_len(rep->name) == 2 &&
-              memcmp(oc_string(rep->name), "pi", 2) == 0) {
-            oc_str_to_uuid(oc_string(rep->value.string), &platform_info->pi);
-          } else if (oc_string_len(rep->name) == 4 &&
-                     memcmp(oc_string(rep->name), "piid", 4) == 0) {
-            oc_str_to_uuid(oc_string(rep->value.string), &device_info->piid);
-          }
-          break;
-        default:
-          break;
-        }
-        rep = rep->next;
-      }
-    }
-    oc_free_rep(p);
+    oc_rep_t *rep = oc_parse_rep(sb.buffer, (size_t)ret);
+    sec_load_unique_ids_from_rep(rep, device);
+    oc_free_rep(rep);
     oc_rep_set_pool(prev_rep_objects);
   } else {
     oc_sec_dump_unique_ids(device);
@@ -442,9 +440,10 @@ oc_sec_load_ael(size_t device)
   if (ret > 0) {
     OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
     struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
-    oc_rep_t *rep = NULL;
-    oc_parse_rep(sb.buffer, (int)ret, &rep);
-    oc_sec_ael_decode(device, rep, true);
+    oc_rep_t *rep = oc_parse_rep(sb.buffer, (size_t)ret);
+    if (rep != NULL && oc_sec_ael_decode(device, rep, true)) {
+      OC_DBG("successfully read ael for device %zd", device);
+    }
     oc_free_rep(rep);
     oc_rep_set_pool(prev_rep_objects);
   }

@@ -107,6 +107,7 @@ class TestDiscoveryWithServer : public ::testing::Test {
 public:
   static void SetUpTestCase();
   static void TearDownTestCase();
+  void SetUp() override;
   void TearDown() override;
 
   static void onGetDynamicResource(oc_request_t *request,

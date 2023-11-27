@@ -926,6 +926,8 @@ public:
   static void SetUpTestCase() { ASSERT_TRUE(oc::TestDevice::StartServer()); }
 
   static void TearDownTestCase() { oc::TestDevice::StopServer(); }
+
+  void TearDown() override { oc::TestDevice::Reset(); }
 };
 
 TEST_F(TestEndpointWithServer, SetLocalAddressFail)

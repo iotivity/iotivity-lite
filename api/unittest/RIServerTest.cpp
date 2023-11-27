@@ -425,7 +425,11 @@ public:
     onPutCounter = 0;
   }
 
-  void TearDown() override { oc::TestDevice::ClearDynamicResources(); }
+  void TearDown() override
+  {
+    oc::TestDevice::Reset();
+    oc::TestDevice::ClearDynamicResources();
+  }
 
   static int onDeleteCounter;
   static std::unordered_map<std::string, int> onDelayedDeleteCounter;

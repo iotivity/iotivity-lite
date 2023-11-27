@@ -134,26 +134,15 @@ oc_storage_data_load(const char *name, size_t device,
   }
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
   struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
-  oc_rep_t *rep = NULL;
-  if (oc_parse_rep(buf.buffer, (int)ret, &rep) != 0) {
-    OC_ERR("cannot load from \"%s\" from store: cannot parse representation",
-           name);
-    goto error;
-  }
+  oc_rep_t *rep = oc_parse_rep(buf.buffer, (size_t)ret);
   if (rep != NULL && decode(rep, device, decode_data) != 0) {
     OC_ERR("cannot load from \"%s\" from store: cannot decode data", name);
-    goto error;
+    ret = -1;
   }
   oc_free_rep(rep);
   oc_rep_set_pool(prev_rep_objects);
   oc_storage_free_buffer(buf);
   return ret;
-
-error:
-  oc_free_rep(rep);
-  oc_rep_set_pool(prev_rep_objects);
-  oc_storage_free_buffer(buf);
-  return -1;
 }
 
 #if OC_DBG_IS_ENABLED
@@ -168,14 +157,15 @@ storage_print_data(const uint8_t *buf, size_t size)
   oc_rep_decoder_t decoder = oc_rep_decoder(OC_REP_CBOR_DECODER);
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
   struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
-  oc_rep_t *rep = NULL;
-  if (CborNoError != decoder.parse(buf, size, &rep)) {
+  oc_rep_parse_result_t result;
+  memset(&result, 0, sizeof(result));
+  if (CborNoError != decoder.parse(buf, size, &result)) {
     return;
   }
 #ifdef OC_DYNAMIC_ALLOCATION
-  size_t json_size = oc_rep_to_json(rep, NULL, 0, true);
+  size_t json_size = oc_rep_to_json(result.rep, NULL, 0, true);
   char *json = (char *)malloc(json_size + 1);
-  oc_rep_to_json(rep, json, json_size + 1, true);
+  oc_rep_to_json(result.rep, json, json_size + 1, true);
 #else  /* !OC_DYNAMIC_ALLOCATION */
   char json[4096] = { 0 };
   oc_rep_to_json(rep, json, OC_ARRAY_SIZE(json), true);
@@ -184,7 +174,7 @@ storage_print_data(const uint8_t *buf, size_t size)
 #ifdef OC_DYNAMIC_ALLOCATION
   free(json);
 #endif /* OC_DYNAMIC_ALLOCATION */
-  oc_free_rep(rep);
+  oc_free_rep(result.rep);
   oc_rep_set_pool(prev_rep_objects);
   // GCOVR_EXCL_STOP
 }

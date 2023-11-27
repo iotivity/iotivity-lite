@@ -19,6 +19,7 @@
 #ifndef OC_REP_DECODE_INTERNAL_H
 #define OC_REP_DECODE_INTERNAL_H
 
+#include "oc_rep_internal.h"
 #include "oc_ri.h"
 
 #include <stdbool.h>
@@ -27,7 +28,7 @@
 extern "C" {
 #endif
 
-typedef enum oc_rep_decoder_type_t {
+typedef enum {
   OC_REP_CBOR_DECODER = 0 /* default decoder */,
 #ifdef OC_JSON_ENCODER
   OC_REP_JSON_DECODER = 1,
@@ -35,9 +36,9 @@ typedef enum oc_rep_decoder_type_t {
 } oc_rep_decoder_type_t;
 
 /** Parse payload to oc_rep_t */
-typedef CborError (*oc_rep_parse_payload_t)(const uint8_t *payload,
-                                            size_t payload_size,
-                                            oc_rep_t **out_rep);
+typedef int (*oc_rep_parse_payload_t)(const uint8_t *payload,
+                                      size_t payload_size,
+                                      oc_rep_parse_result_t *result);
 
 typedef struct
 {

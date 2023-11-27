@@ -90,18 +90,23 @@ TEST_F(TestRep, OCRepEncodedPayloadSizeTooSmall)
   EXPECT_EQ(-1, oc_rep_get_encoded_payload_size());
 }
 
-TEST_F(TestRep, RepToJson_null)
+TEST_F(TestRep, OCRepToJson)
 {
-  const oc_rep_t *rep = nullptr;
-  EXPECT_EQ(2, oc_rep_to_json(rep, nullptr, 0, false));
-  EXPECT_EQ(4, oc_rep_to_json(rep, nullptr, 0, true));
+  EXPECT_EQ(2, oc_rep_to_json(nullptr, nullptr, 0, false));
+  EXPECT_EQ(4, oc_rep_to_json(nullptr, nullptr, 0, true));
 
   std::array<char, 5> buffer;
-  EXPECT_EQ(2, oc_rep_to_json(rep, buffer.data(), buffer.size(), false));
+  EXPECT_EQ(2, oc_rep_to_json(nullptr, buffer.data(), buffer.size(), false));
   EXPECT_STREQ("{}", buffer.data());
-
-  EXPECT_EQ(4, oc_rep_to_json(rep, buffer.data(), buffer.size(), true));
+  EXPECT_EQ(4, oc_rep_to_json(nullptr, buffer.data(), buffer.size(), true));
   EXPECT_STREQ("{\n}\n", buffer.data());
+
+  oc_rep_t rep{};
+  rep.type = OC_REP_OBJECT;
+  EXPECT_EQ(2, oc_rep_to_json(&rep, buffer.data(), buffer.size(), false));
+  EXPECT_STREQ("[]", buffer.data());
+  EXPECT_EQ(4, oc_rep_to_json(&rep, buffer.data(), buffer.size(), true));
+  EXPECT_STREQ("[\n]\n", buffer.data());
 }
 
 class TestRepWithPool : public testing::Test {
@@ -117,6 +122,8 @@ public:
     oc_rep_encoder_set_type(g_rep_default_encoder);
     oc_rep_decoder_set_type(g_rep_default_decoder);
   }
+
+  void ClearPool() { pool_.Clear(); }
 
   oc_memb *GetRepObjectsPool() { return pool_.GetRepObjectsPool(); }
 
@@ -135,7 +142,7 @@ private:
 /*
  * Most code done here is to enable testing without passing the code through the
  * framework. End users are not expected to call oc_rep_new, oc_rep_set_pool
- * and oc_parse_rep
+ * and oc_rep_parse_payload
  */
 TEST_F(TestRepWithPool, OCRepInvalidFormat)
 {
@@ -151,11 +158,9 @@ TEST_F(TestRepWithPool, OCRepInvalidFormat)
   int payload_len = oc_rep_get_encoded_payload_size();
   EXPECT_NE(payload_len, -1);
   oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = nullptr;
-  ASSERT_NE(CborNoError, oc_parse_rep(payload, payload_len, &rep));
-  ASSERT_EQ(nullptr, rep);
-
-  oc_free_rep(rep);
+  oc_rep_parse_result_t result{};
+  ASSERT_NE(CborNoError, oc_rep_parse_payload(payload, payload_len, &result));
+  ASSERT_EQ(nullptr, result.rep);
 }
 
 TEST_F(TestRepWithPool, OCRepInvalidArray)
@@ -180,11 +185,67 @@ TEST_F(TestRepWithPool, OCRepInvalidArray)
   int payload_len = oc_rep_get_encoded_payload_size();
   EXPECT_NE(payload_len, -1);
   oc_rep_set_pool(GetRepObjectsPool());
-  oc_rep_t *rep = nullptr;
-  ASSERT_NE(CborNoError, oc_parse_rep(payload, payload_len, &rep));
-  ASSERT_EQ(nullptr, rep);
+  oc_rep_parse_result_t result{};
+  ASSERT_NE(CborNoError, oc_rep_parse_payload(payload, payload_len, &result));
+  ASSERT_EQ(nullptr, result.rep);
+}
 
-  oc_free_rep(rep);
+TEST_F(TestRepWithPool, OCRepSetGetEmpty)
+{
+  // "{}"
+  oc_rep_begin_root_object();
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  auto rep = ParsePayload();
+  EXPECT_EQ(nullptr, rep.get());
+
+  ClearPool();
+  // "[]"
+  oc_rep_begin_links_array();
+  oc_rep_end_links_array();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
+  EXPECT_EQ(OC_REP_ARRAY, rep->type);
+}
+
+TEST_F(TestRepWithPool, OCRepIsEmptyObject)
+{
+  oc_rep_start_root_object();
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  EXPECT_TRUE(oc_rep_encoded_payload_is_empty_object(
+    oc_rep_encoder_get_type(), oc_rep_get_encoder_buf(),
+    oc_rep_get_encoded_payload_size()));
+}
+
+TEST_F(TestRepWithPool, OCRepIsEmptyObject_F)
+{
+  // "[]"
+  oc_rep_begin_links_array();
+  oc_rep_end_links_array();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  EXPECT_FALSE(oc_rep_encoded_payload_is_empty_object(
+    oc_rep_encoder_get_type(), oc_rep_get_encoder_buf(),
+    oc_rep_get_encoded_payload_size()));
+
+  ClearPool();
+  // "{a: 123}"
+  oc_rep_start_root_object();
+  oc_rep_set_int(root, a, 123);
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  EXPECT_FALSE(oc_rep_encoded_payload_is_empty_object(
+    oc_rep_encoder_get_type(), oc_rep_get_encoder_buf(),
+    oc_rep_get_encoded_payload_size()));
+
+  ClearPool();
+  // "{"
+  oc_rep_start_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  EXPECT_FALSE(oc_rep_encoded_payload_is_empty_object(
+    oc_rep_encoder_get_type(), oc_rep_get_encoder_buf(),
+    oc_rep_get_encoded_payload_size()));
 }
 
 TEST_F(TestRepWithPool, OCRepSetGetNull)
@@ -1093,11 +1154,11 @@ TEST_F(TestRepWithPool, OCRepSetGetObjectWithTag)
 
 #endif /* !OC_DYNAMIC_ALLOCATION  */
 
-TEST_F(TestRepWithPool, OCRepSetGetEmptyObjectArray)
+TEST_F(TestRepWithPool, OCRepSetGetEmptyArray)
 {
   /*
     {
-      "emptyObj": null,
+      "emptyObj": [],
     }
   */
   /* add values to root object */
@@ -1647,6 +1708,11 @@ public:
   static void TearDownTestCase()
   {
     oc::TestDevice::StopServer();
+  }
+
+  void TearDown() override
+  {
+    oc::TestDevice::Reset();
   }
 };
 

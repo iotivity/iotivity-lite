@@ -238,6 +238,11 @@ public:
   {
     oc::TestDevice::StopServer();
   }
+
+  void TearDown() override
+  {
+    oc::TestDevice::Reset();
+  }
 };
 
 TEST_F(TestCoreResourceWithDevice, CoreGetDeviceID_F)

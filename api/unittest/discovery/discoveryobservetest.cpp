@@ -95,7 +95,7 @@ TEST_F(TestDiscoveryWithServer, Observe)
   oc_resource_set_observable(res, true);
 
   int repeats = 0;
-  while (od.observe == 0 && repeats < 50) {
+  while (od.observe == 0 && repeats < 30) {
     oc::TestDevice::PoolEventsMsV1(10ms);
     ++repeats;
   }
@@ -108,7 +108,7 @@ TEST_F(TestDiscoveryWithServer, Observe)
   // deleting the resource should also trigger an observe notification
   ASSERT_TRUE(oc::TestDevice::ClearDynamicResource(res, true));
   repeats = 0;
-  while (od.observe == 0 && repeats < 50) {
+  while (od.observe == 0 && repeats < 30) {
     oc::TestDevice::PoolEventsMsV1(10ms);
     ++repeats;
   }
@@ -119,7 +119,7 @@ TEST_F(TestDiscoveryWithServer, Observe)
   od.links.clear();
 
   ASSERT_TRUE(oc_stop_observe(OCF_RES_URI, &ep));
-  while (od.observe == 0 && repeats < 50) {
+  while (od.observe == 0 && repeats < 30) {
     oc::TestDevice::PoolEventsMsV1(10ms);
     ++repeats;
   }
@@ -179,7 +179,7 @@ TEST_F(TestDiscoveryWithServer, ObserveBaseline)
   ASSERT_NE(nullptr, res);
 
   int repeats = 0;
-  while (obd.observe == 0 && repeats < 50) {
+  while (obd.observe == 0 && repeats < 30) {
     oc::TestDevice::PoolEventsMsV1(10ms);
     ++repeats;
   }
@@ -192,7 +192,7 @@ TEST_F(TestDiscoveryWithServer, ObserveBaseline)
   // deleting the resource should also trigger an observe notification
   ASSERT_TRUE(oc::TestDevice::ClearDynamicResource(res, true));
   repeats = 0;
-  while (obd.observe == 0 && repeats < 50) {
+  while (obd.observe == 0 && repeats < 30) {
     oc::TestDevice::PoolEventsMsV1(10ms);
     ++repeats;
   }
@@ -203,7 +203,7 @@ TEST_F(TestDiscoveryWithServer, ObserveBaseline)
   obd.baseline.links.clear();
 
   ASSERT_TRUE(oc_stop_observe(OCF_RES_URI, &ep));
-  while (obd.observe == 0 && repeats < 50) {
+  while (obd.observe == 0 && repeats < 30) {
     oc::TestDevice::PoolEventsMsV1(10ms);
     ++repeats;
   }
@@ -324,7 +324,7 @@ TEST_F(TestDiscoveryWithServer, ObserveBatchWithResourceUpdate)
   });
 
   int repeats = 0;
-  while (obd.observe == 0 && repeats < 50) {
+  while (obd.observe == 0 && repeats < 30) {
     oc::TestDevice::PoolEventsMsV1(10ms);
     ++repeats;
   }
@@ -346,7 +346,7 @@ TEST_F(TestDiscoveryWithServer, ObserveBatchWithResourceUpdate)
   obd.batch.clear();
 
   ASSERT_TRUE(oc_stop_observe(OCF_RES_URI, &ep));
-  while (obd.observe == 0 && repeats < 50) {
+  while (obd.observe == 0 && repeats < 30) {
     oc::TestDevice::PoolEventsMsV1(10ms);
     ++repeats;
   }
@@ -387,7 +387,7 @@ TEST_F(TestDiscoveryWithServer, ObserveBatchWithResourceAdded)
   ASSERT_NE(nullptr, res);
 
   int repeats = 0;
-  while (obd.observe == 0 && repeats < 50) {
+  while (obd.observe == 0 && repeats < 30) {
     oc::TestDevice::PoolEventsMsV1(10ms);
     ++repeats;
   }
@@ -398,7 +398,7 @@ TEST_F(TestDiscoveryWithServer, ObserveBatchWithResourceAdded)
 
   ASSERT_TRUE(oc::TestDevice::ClearDynamicResource(res, true));
   repeats = 0;
-  while (obd.observe == 0 && repeats < 50) {
+  while (obd.observe == 0 && repeats < 30) {
     oc::TestDevice::PoolEventsMsV1(10ms);
     ++repeats;
   }
@@ -408,7 +408,7 @@ TEST_F(TestDiscoveryWithServer, ObserveBatchWithResourceAdded)
   obd.batch.clear();
 
   ASSERT_TRUE(oc_stop_observe(OCF_RES_URI, &ep));
-  while (obd.observe == 0 && repeats < 50) {
+  while (obd.observe == 0 && repeats < 30) {
     oc::TestDevice::PoolEventsMsV1(10ms);
     ++repeats;
   }
@@ -418,7 +418,7 @@ TEST_F(TestDiscoveryWithServer, ObserveBatchWithResourceAdded)
   verifyBatchPayload(obd.batch, &ep);
 }
 
-TEST_F(TestDiscoveryWithServer, ObserveBatchWithEmptyChange)
+TEST_F(TestDiscoveryWithServer, ObserveBatchIgnoreEmptyChange)
 {
   ASSERT_TRUE(oc_get_con_res_announced());
 
@@ -440,17 +440,15 @@ TEST_F(TestDiscoveryWithServer, ObserveBatchWithEmptyChange)
   auto *res = oc_ri_get_app_resource_by_uri(kDynamicURI3.data(),
                                             kDynamicURI3.size(), kDeviceID);
   ASSERT_NE(nullptr, res);
+  // notification with empty payload should be ignored
   oc_notify_resource_changed(res);
-
   int repeats = 0;
-  while (obd.observe == 0 && repeats < 50) {
+  while (obd.observe == 0 && repeats < 30) {
     oc::TestDevice::PoolEventsMsV1(10ms);
     ++repeats;
   }
-  EXPECT_LE(OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE, obd.observe);
-  ASSERT_FALSE(obd.batch.empty());
-  obd.observe = 0;
-  obd.batch.clear();
+  EXPECT_EQ(0, obd.observe);
+  EXPECT_TRUE(obd.batch.empty());
 }
 
 TEST_F(TestDiscoveryWithServer, ObserveBatchWithEmptyPayload)

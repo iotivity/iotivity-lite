@@ -62,7 +62,7 @@ static void gen_cloud_tag(const char *name, size_t device, char *cloud_tag);
 int
 cloud_store_load(oc_cloud_store_t *store)
 {
-  char cloud_tag[CLOUD_TAG_MAX];
+  char cloud_tag[CLOUD_TAG_MAX] = { 0 };
   gen_cloud_tag(CLOUD_STORE_NAME, store->device, cloud_tag);
   return cloud_store_load_internal(cloud_tag, store);
 }
@@ -124,17 +124,14 @@ cloud_store_encode(const oc_cloud_store_t *store)
 static long
 cloud_store_dump_internal(const char *store_name, const oc_cloud_store_t *store)
 {
-  if (!store_name || !store) {
-    return -1;
-  }
-
 #ifdef OC_DYNAMIC_ALLOCATION
   uint8_t *buf = malloc(OC_MIN_APP_DATA_SIZE);
-  if (!buf)
+  if (buf == NULL) {
     return -1;
+  }
   oc_rep_new_realloc_v1(&buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
 #else  /* OC_DYNAMIC_ALLOCATION */
-  uint8_t buf[OC_MIN_APP_DATA_SIZE];
+  uint8_t buf[OC_MIN_APP_DATA_SIZE] = { 0 };
   oc_rep_new_v1(buf, sizeof(buf));
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
@@ -158,7 +155,7 @@ cloud_store_dump_internal(const char *store_name, const oc_cloud_store_t *store)
 long
 cloud_store_dump(const oc_cloud_store_t *store)
 {
-  char cloud_tag[CLOUD_TAG_MAX];
+  char cloud_tag[CLOUD_TAG_MAX] = { 0 };
   gen_cloud_tag(CLOUD_STORE_NAME, store->device, cloud_tag);
   // Calling dump for cloud and access point info
   return cloud_store_dump_internal(cloud_tag, store);
@@ -256,37 +253,33 @@ cloud_store_parse_int_property(const oc_rep_t *rep, oc_cloud_store_t *store)
   return false;
 }
 
-static int
+static bool
 cloud_store_decode(const oc_rep_t *rep, oc_cloud_store_t *store)
 {
   while (rep != NULL) {
     switch (rep->type) {
     case OC_REP_STRING:
       if (!cloud_store_parse_string_property(rep, store)) {
-        return -1;
+        return false;
       }
       break;
     case OC_REP_INT:
       if (!cloud_store_parse_int_property(rep, store)) {
-        return -1;
+        return false;
       }
       break;
     default:
       OC_CLOUD_ERR("Unknown property %s", oc_string(rep->name));
-      return -1;
+      return false;
     }
     rep = rep->next;
   }
-  return 0;
+  return true;
 }
 
 static int
 cloud_store_load_internal(const char *store_name, oc_cloud_store_t *store)
 {
-  if (!store_name || !store) {
-    return -1;
-  }
-
   int ret = 0;
 
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -296,17 +289,17 @@ cloud_store_load_internal(const char *store_name, oc_cloud_store_t *store)
     return -1;
   }
 #else  /* OC_DYNAMIC_ALLOCATION */
-  uint8_t buf[OC_MAX_APP_DATA_SIZE];
+  uint8_t buf[OC_MAX_APP_DATA_SIZE] = { 0 };
 #endif /* !OC_DYNAMIC_ALLOCATION */
   long size = oc_storage_read(store_name, buf, OC_MAX_APP_DATA_SIZE);
   if (size > 0) {
     OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
     struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
-    oc_rep_t *rep;
-    if (oc_parse_rep(buf, (int)size, &rep) != 0) {
+    oc_rep_t *rep = oc_parse_rep(buf, (size_t)size);
+    if (rep == NULL || !cloud_store_decode(rep, store)) {
       OC_CLOUD_ERR("failed to parse cloud store buffer");
+      ret = -1;
     }
-    ret = cloud_store_decode(rep, store);
     oc_free_rep(rep);
     oc_rep_set_pool(prev_rep_objects);
   } else {
