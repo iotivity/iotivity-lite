@@ -16,9 +16,8 @@
  *
  ****************************************************************************/
 
-#include "oc_ip.h"
-
 #include "oc_endpoint.h"
+#include "port/common/oc_ip_internal.h"
 
 #ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN

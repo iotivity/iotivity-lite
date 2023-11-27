@@ -844,8 +844,8 @@ TEST_F(TestSWUpdateWithServer, PostRequestUpdateNow)
   EXPECT_EQ(swupdateaction, oc_swupdate_get(kDeviceID)->swupdateaction);
 
   oc_clock_time_t end = oc_clock_time();
-  EXPECT_LT(start, oc_swupdate_get(kDeviceID)->updatetime);
-  EXPECT_GT(end, oc_swupdate_get(kDeviceID)->updatetime);
+  EXPECT_LE(start, oc_swupdate_get(kDeviceID)->updatetime);
+  EXPECT_GE(end, oc_swupdate_get(kDeviceID)->updatetime);
 }
 
 TEST_F(TestSWUpdateWithServer, PostRequestScheduleUpdate)

@@ -16,7 +16,7 @@
  *
  ****************************************************************************/
 
-#include "port/common/posix/oc_fcntl_internal.h"
+#include "port/common/oc_fcntl_internal.h"
 #include "tests/gtest/Endpoint.h"
 
 #ifdef OC_TCP

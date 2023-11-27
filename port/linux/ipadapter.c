@@ -27,7 +27,7 @@
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_network_monitor.h"
-#include "port/common/posix/oc_fcntl_internal.h"
+#include "port/common/oc_fcntl_internal.h"
 #include "port/common/posix/oc_socket_internal.h"
 #include "port/oc_assert.h"
 #include "port/oc_clock.h"

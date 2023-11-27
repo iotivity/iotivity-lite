@@ -75,4 +75,12 @@
 #define OC_HAS_FEATURE_ALLOCATOR_MUTEX
 #endif /* !OC_DYNAMIC_ALLOCATION || OC_INOUT_BUFFER_POOL */
 
+#ifdef OC_SIMPLE_MAIN_LOOP
+#if (defined(_WIN32) || defined(__linux__) || defined(__ANDROID__)) &&         \
+  !defined(ESP_PLATFORM)
+#define OC_HAS_FEATURE_LOOP_EVENT
+#define OC_HAS_FEATURE_SIMPLE_MAIN_LOOP
+#endif /* (_WIN32 || __linux__ || __ANDROID__) && !ESP_PLATFORM */
+#endif /* OC_SIMPLE_MAIN_LOOP */
+
 #endif /* OC_FEATURES_H */

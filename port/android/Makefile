@@ -212,9 +212,9 @@ LIBS?= -lm -llog
 
 # Skip building the native samples if JAVA=1
 ifneq ($(JAVA), 1)
-	NATIVE_SAMPLES := server client temp_sensor simpleserver simpleclient client_collections_linux \
-	  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client \
-	  smart_lock server_multithread_linux client_multithread_linux
+NATIVE_SAMPLES := server client temp_sensor simpleserver simpleclient client_collections_linux \
+  server_collections_linux server_block_linux client_block_linux smart_home_server_linux multi_device_server multi_device_client \
+  smart_lock server_multithread_linux client_multithread_linux
 endif
 
 ifeq ($(CLOUD),1)
@@ -227,6 +227,7 @@ endif
 
 OBT = onboarding_tool
 
+EXTRA_CFLAGS = -DOC_SIMPLE_MAIN_LOOP
 ifeq ($(DEBUG),1)
 	CFLAGS += -g -O0
 	EXTRA_CFLAGS += -DOC_DEBUG -DOC_LOG_MAXIMUM_LEVEL=8

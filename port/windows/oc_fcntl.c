@@ -16,7 +16,7 @@
  *
  ****************************************************************************/
 
-#include "port/common/posix/oc_fcntl_internal.h"
+#include "port/common/oc_fcntl_internal.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <winsock2.h>

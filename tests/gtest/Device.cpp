@@ -25,6 +25,7 @@
 #include "oc_clock_util.h"
 #include "oc_core_res.h"
 #include "messaging/coap/engine_internal.h"
+#include "port/oc_poll_loop.h"
 #include "util/oc_process.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
@@ -102,102 +103,20 @@ testNotSupportedMethod(oc_method_t method, const oc_endpoint_t *ep,
   EXPECT_TRUE(hd.invoked);
 }
 
-Device::Device()
-{
-#ifdef _WIN32
-  InitializeCriticalSection(&mutex_);
-  InitializeConditionVariable(&cv_);
-#else
-  if (pthread_mutex_init(&mutex_, nullptr) != 0) {
-    throw std::string("cannot initialize mutex");
-  }
-  pthread_condattr_t attr;
-  if (pthread_condattr_init(&attr) != 0) {
-    throw std::string("cannot attributes of conditional variable");
-  }
-  if (pthread_condattr_setclock(&attr, CLOCK_MONOTONIC) != 0) {
-    throw std::string("cannot configure clockid");
-  }
-  if (pthread_cond_init(&cv_, &attr) != 0) {
-    throw std::string("cannot initialize conditional variable");
-  }
-  pthread_condattr_destroy(&attr);
-#endif /* _WIN32 */
-}
+Device::Device() {}
 
-Device::~Device()
-{
-#ifndef _WIN32
-  pthread_cond_destroy(&cv_);
-  pthread_mutex_destroy(&mutex_);
-#endif /* !_WIN32 */
-}
+Device::~Device() {}
 
 void
 Device::SignalEventLoop()
 {
-  Lock();
-#ifdef _WIN32
-  WakeConditionVariable(&cv_);
-#else
-  pthread_cond_signal(&cv_);
-#endif /* _WIN32 */
-  Unlock();
-}
-
-void
-Device::Lock()
-{
-#ifdef _WIN32
-  EnterCriticalSection(&mutex_);
-#else
-  pthread_mutex_lock(&mutex_);
-#endif /* _WIN32 */
-}
-
-void
-Device::Unlock()
-{
-#ifdef _WIN32
-  LeaveCriticalSection(&mutex_);
-#else
-  pthread_mutex_unlock(&mutex_);
-#endif /* _WIN32 */
-}
-
-void
-Device::WaitForEvent(oc_clock_time_t next_event_mt)
-{
-#ifdef _WIN32
-  if (next_event_mt == 0) {
-    SleepConditionVariableCS(&cv_, &mutex_, INFINITE);
-    return;
-  }
-  oc_clock_time_t now_mt = oc_clock_time_monotonic();
-  if (now_mt < next_event_mt) {
-    SleepConditionVariableCS(
-      &cv_, &mutex_,
-      (DWORD)((next_event_mt - now_mt) * 1000 / OC_CLOCK_SECOND));
-  }
-#else
-  if (next_event_mt == 0) {
-    pthread_cond_wait(&cv_, &mutex_);
-    return;
-  }
-  struct timespec next_event = { 1, 0 };
-  if (oc_clock_time_t next_event_cv; oc_clock_monotonic_time_to_posix(
-        next_event_mt, CLOCK_MONOTONIC, &next_event_cv)) {
-    next_event = oc_clock_time_to_timespec(next_event_cv);
-  }
-  pthread_cond_timedwait(&cv_, &mutex_, &next_event);
-#endif /* _WIN32 */
+  oc_poll_loop_signal();
 }
 
 void
 Device::Terminate()
 {
-  OC_ATOMIC_STORE8(terminate_, 1);
-  SignalEventLoop();
+  oc_poll_loop_terminate();
 }
 
 void
@@ -209,8 +128,6 @@ Device::PoolEvents(uint64_t seconds, bool addDelay)
 void
 Device::PoolEventsMs(uint64_t mseconds, bool addDelay)
 {
-  OC_ATOMIC_STORE8(terminate_, 0);
-
   uint64_t interval = mseconds;
   if (addDelay) {
     // Add a delay to allow the server to process the request
@@ -218,20 +135,7 @@ Device::PoolEventsMs(uint64_t mseconds, bool addDelay)
   }
   oc_set_delayed_callback_ms_v1(this, Device::QuitEvent, interval);
 
-  while (OC_ATOMIC_LOAD8(terminate_) == 0) {
-    oc_clock_time_t next_event = oc_main_poll_v1();
-    Lock();
-    if (oc_main_needs_poll()) {
-      Unlock();
-      continue;
-    }
-    if (OC_ATOMIC_LOAD8(terminate_) != 0) {
-      Unlock();
-      break;
-    }
-    WaitForEvent(next_event);
-    Unlock();
-  }
+  oc_poll_loop_run();
 
 #ifdef OC_REQUEST_HISTORY
   oc_request_history_init();
@@ -289,6 +193,8 @@ TestDevice::ResetServerDevices()
 bool
 TestDevice::StartServer()
 {
+  oc_poll_loop_init();
+
   static oc_handler_t s_handler{};
   s_handler.init = AppInit;
   s_handler.signal_event_loop = SignalEventLoop;
@@ -319,6 +225,8 @@ TestDevice::StopServer()
     oc_main_shutdown();
   }
   ResetServerDevices();
+
+  oc_poll_loop_shutdown();
 }
 
 void

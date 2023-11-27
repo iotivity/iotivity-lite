@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#ifndef PORT_POSIX_OC_FCNTL_H
-#define PORT_POSIX_OC_FCNTL_H
+#ifndef PORT_OC_FCNTL_INTERNAL_H
+#define PORT_OC_FCNTL_INTERNAL_H
 
 #include <stdbool.h>
 
@@ -91,4 +91,4 @@ bool oc_fcntl_set_nonblocking(int fd);
 }
 #endif
 
-#endif /* PORT_POSIX_OC_FCNTL_H */
+#endif /* PORT_OC_FCNTL_INTERNAL_H */

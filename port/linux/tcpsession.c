@@ -16,7 +16,7 @@
  *
  ****************************************************************************/
 
-#define __USE_GNU
+#define _GNU_SOURCE
 
 #include "util/oc_features.h"
 
@@ -33,8 +33,8 @@
 #include "oc_buffer.h"
 #include "oc_endpoint.h"
 #include "oc_session_events.h"
+#include "port/common/oc_fcntl_internal.h"
 #include "port/common/oc_tcp_socket_internal.h"
-#include "port/common/posix/oc_fcntl_internal.h"
 #include "port/common/posix/oc_socket_internal.h"
 #include "port/oc_assert.h"
 #include "port/oc_connectivity_internal.h"

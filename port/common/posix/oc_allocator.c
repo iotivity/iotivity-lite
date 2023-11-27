@@ -16,10 +16,14 @@
  *
  ****************************************************************************/
 
-#include "port/oc_allocator_internal.h"
-#include "port/oc_assert.h"
+#ifndef _WIN32
+
+#include "util/oc_features.h"
 
 #ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
+
+#include "port/oc_allocator_internal.h"
+#include "port/oc_assert.h"
 
 #include <pthread.h>
 
@@ -58,3 +62,5 @@ oc_allocator_mutex_destroy(void)
 }
 
 #endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX */
+
+#endif /* !_WIN32 */

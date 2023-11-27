@@ -20,7 +20,6 @@
 #define PORT_COMMON_OC_IP_H
 
 #include "oc_endpoint.h"
-
 #include "util/oc_compiler.h"
 
 #include <stdint.h>

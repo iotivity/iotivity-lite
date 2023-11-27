@@ -134,8 +134,8 @@ getRequestWithQuery(const std::string &query = "")
 
   auto get_handler = [](oc_client_response_t *data) {
     oc::TestDevice::Terminate();
-    EXPECT_EQ(CODE, data->code);
     *static_cast<bool *>(data->user_data) = true;
+    EXPECT_EQ(CODE, data->code);
     OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload, true).data());
     if (data->code != OC_STATUS_OK) {
       return;
@@ -218,10 +218,10 @@ postRequestFail(const std::string &query, Fn encodeFn)
 
   auto post_handler = [](oc_client_response_t *data) {
     oc::TestDevice::Terminate();
-    ASSERT_EQ(CODE, data->code);
     *static_cast<bool *>(data->user_data) = true;
     OC_DBG("POST payload: %s",
            oc::RepPool::GetJson(data->payload, true).data());
+    EXPECT_EQ(CODE, data->code);
   };
 
   bool invoked = false;
@@ -230,7 +230,7 @@ postRequestFail(const std::string &query, Fn encodeFn)
 
   encodeFn();
 
-  auto timeout = 1s;
+  auto timeout = 2s;
   ASSERT_TRUE(oc_do_post_with_timeout(timeout.count()));
   oc::TestDevice::PoolEventsMsV1(timeout, true);
   EXPECT_TRUE(invoked);

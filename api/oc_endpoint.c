@@ -20,7 +20,7 @@
 #include "api/oc_helpers_internal.h"
 #include "oc_endpoint.h"
 #include "oc_core_res.h"
-#include "port/common/oc_ip.h"
+#include "port/common/oc_ip_internal.h"
 #include "port/oc_allocator_internal.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_log_internal.h"
@@ -712,8 +712,8 @@ oc_endpoint_is_empty(const oc_endpoint_t *endpoint)
 {
   oc_endpoint_t empty;
   memset(&empty, 0, sizeof(oc_endpoint_t));
-  return memcmp(&empty, endpoint, sizeof(oc_endpoint_t)) ==
-         0; // NOLINT(bugprone-suspicious-memory-comparison)
+  // NOLINTNEXTLINE(bugprone-suspicious-memory-comparison)
+  return memcmp(&empty, endpoint, sizeof(oc_endpoint_t)) == 0;
 }
 
 void
