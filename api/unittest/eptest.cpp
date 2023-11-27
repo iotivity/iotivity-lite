@@ -21,7 +21,7 @@
 #include "oc_endpoint.h"
 #include "oc_helpers.h"
 #include "oc_uuid.h"
-#include "port/common/oc_ip.h"
+#include "port/common/oc_ip_internal.h"
 #include "port/oc_allocator_internal.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_random.h"

@@ -17,7 +17,8 @@
  *
  ****************************************************************************/
 
-#define __USE_GNU
+#define _GNU_SOURCE
+
 #include <android/api-level.h>
 #if !defined(__ANDROID_API__) || __ANDROID_API__ == 10000
 #error __ANDROID_API__ not defined

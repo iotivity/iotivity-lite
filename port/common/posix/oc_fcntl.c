@@ -16,9 +16,9 @@
  *
  ****************************************************************************/
 
-#include "port/common/posix/oc_fcntl_internal.h"
-
 #ifndef _WIN32
+
+#include "port/common/oc_fcntl_internal.h"
 
 #include <fcntl.h>
 

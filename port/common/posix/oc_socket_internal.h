@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#ifndef PORT_POSIX_OC_SOCKET_H
-#define PORT_POSIX_OC_SOCKET_H
+#ifndef PORT_POSIX_OC_SOCKET_INTERNAL_H
+#define PORT_POSIX_OC_SOCKET_INTERNAL_H
 
 #include "oc_endpoint.h"
 #include "util/oc_compiler.h"
@@ -46,4 +46,4 @@ struct sockaddr_storage oc_socket_get_address(const oc_endpoint_t *endpoint)
 }
 #endif
 
-#endif /* PORT_POSIX_OC_SOCKET_H */
+#endif /* PORT_POSIX_OC_SOCKET_INTERNAL_H */

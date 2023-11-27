@@ -307,13 +307,18 @@
     <ClInclude Include="..\..\..\util\pt\lc.h" />
     <ClInclude Include="..\..\..\util\pt\pt-sem.h" />
     <ClInclude Include="..\..\..\util\pt\pt.h" />
-    <ClInclude Include="..\..\oc_allocator_internal.h.h" />
+    <ClInclude Include="..\..\common\oc_fcntl_internal.h" />
+    <ClInclude Include="..\..\common\oc_ip_internal.h" />
+    <ClInclude Include="..\..\common\oc_loop_event_internal.h" />
+    <ClInclude Include="..\..\common\oc_tcp_socket_internal.h" />
+    <ClInclude Include="..\..\oc_allocator_internal.h" />
     <ClInclude Include="..\..\oc_assert.h" />
     <ClInclude Include="..\..\oc_clock.h" />
     <ClInclude Include="..\..\oc_connectivity_internal.h" />
     <ClInclude Include="..\..\oc_connectivity.h" />
     <ClInclude Include="..\..\oc_log_internal.h" />
     <ClInclude Include="..\..\oc_network_event_handler_internal.h" />
+    <ClInclude Include="..\..\oc_poll_loop.h" />
     <ClInclude Include="..\..\oc_random.h" />
     <ClInclude Include="..\..\oc_storage_internal.h" />
     <ClInclude Include="..\..\oc_storage.h" />
@@ -443,8 +448,9 @@
     <ClCompile Include="..\..\..\messaging\coap\signal.c" />
     <ClCompile Include="..\..\..\messaging\coap\transactions.c" />
     <ClCompile Include="..\..\..\port\common\oc_ip.c" />
+    <ClCompile Include="..\..\..\port\common\oc_loop_event.c" />
+    <ClCompile Include="..\..\..\port\common\oc_poll_loop.c" />
     <ClCompile Include="..\..\..\port\common\oc_tcp_socket.c" />
-    <ClCompile Include="..\..\..\port\common\posix\oc_allocator.c" />
     <ClCompile Include="..\..\..\port\common\posix\oc_socket.c" />
     <ClCompile Include="..\..\..\security\oc_acl.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>

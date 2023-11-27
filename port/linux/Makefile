@@ -25,7 +25,7 @@ bindir = $(exec_prefix)/bin
 libdir = $(exec_prefix)/lib
 includedir = $(prefix)/include
 pkgconfigdir = $(libdir)/pkgconfig
-EXTRA_CFLAGS =
+EXTRA_CFLAGS = -DOC_SIMPLE_MAIN_LOOP
 ifeq ($(ASAN),1)
 	EXTRA_CFLAGS += -fsanitize=address
 endif

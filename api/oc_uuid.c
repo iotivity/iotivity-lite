@@ -142,7 +142,7 @@ oc_uuid_to_str(const oc_uuid_t *uuid, char *buffer, size_t buflen)
            uuid == NULL ? "null" : "ok");
     return;
   }
-  oc_uuid_to_str_v1(uuid, buffer, buflen);
+  (void)oc_uuid_to_str_v1(uuid, buffer, buflen);
 }
 
 void

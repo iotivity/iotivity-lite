@@ -219,6 +219,7 @@ AssertETag(oc_coap_etag_t etag, const oc_endpoint_t *endpoint, size_t device,
     return;
   }
 #else  /* !OC_RES_BATCH_SUPPORT */
+  (void)endpoint;
   (void)is_batch;
 #endif /* OC_RES_BATCH_SUPPORT */
   const oc_resource_t *discovery =

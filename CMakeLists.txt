@@ -63,6 +63,10 @@ set(OC_APP_DATA_BUFFER_POOL "" CACHE STRING "Custom static size of application m
 set(OC_VERSION_1_1_0_ENABLED OFF CACHE BOOL "Enable OCF version 1.1")
 set(OC_ETAG_ENABLED OFF CACHE BOOL "Enable Entity Tag (ETag) support.")
 set(OC_JSON_ENCODER_ENABLED OFF CACHE BOOL "Enable JSON encoder/decoder support.")
+set(OC_SIMPLE_MAIN_LOOP_ENABLED OFF CACHE BOOL "Compile with the single-threaded implementation of the main loop using event polling.")
+if (BUILD_EXAMPLE_APPLICATIONS OR BUILD_TESTING)
+    set(OC_SIMPLE_MAIN_LOOP_ENABLED ON CACHE BOOL "" FORCE)
+endif()
 set(PLGD_DEV_TIME_ENABLED OFF CACHE BOOL "Enable plgd time feature.")
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -424,6 +428,10 @@ if(OC_JSON_ENCODER_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_JSON_ENCODER")
 endif()
 
+if(OC_SIMPLE_MAIN_LOOP_ENABLED)
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_SIMPLE_MAIN_LOOP")
+endif()
+
 if(PLGD_DEV_TIME_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "PLGD_DEV_TIME")
     if(BUILD_MBEDTLS)
@@ -475,6 +483,13 @@ if(UNIX OR WIN32)
     file(GLOB COMMON_POSIX_SRC
         ${PROJECT_SOURCE_DIR}/port/common/posix/*.c
     )
+    if(WIN32)
+        list(REMOVE_ITEM COMMON_POSIX_SRC
+            ${PROJECT_SOURCE_DIR}/port/common/posix/oc_allocator.c
+            ${PROJECT_SOURCE_DIR}/port/common/posix/oc_fcntl.c
+            ${PROJECT_SOURCE_DIR}/port/common/posix/oc_poll.c
+        )
+    endif()
     list(APPEND COMMON_SRC ${COMMON_POSIX_SRC})
 endif()
 
@@ -1257,6 +1272,9 @@ install(FILES ${HEADERS_COAP}
 
 file(GLOB HEADERS_PORT ${PROJECT_SOURCE_DIR}/port/*.h)
 list(FILTER HEADERS_PORT EXCLUDE REGEX ".*_internal\\.h$")
+if(NOT OC_SIMPLE_MAIN_LOOP_ENABLED)
+    list(FILTER HEADERS_PORT EXCLUDE REGEX "${PROJECT_SOURCE_DIR}/port/oc_poll_loop\\.h$")
+endif()
 install(FILES ${HEADERS_PORT}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/port COMPONENT dev
 )
