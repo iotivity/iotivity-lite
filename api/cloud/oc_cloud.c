@@ -72,6 +72,7 @@ start_manager(void *user_data)
   ctx->cloud_ep = oc_new_endpoint();
   ctx->store.status &= ~OC_CLOUD_LOGGED_IN;
   cloud_manager_start(ctx);
+  cloud_manager_cb(ctx);
   return OC_EVENT_DONE;
 }
 
