@@ -22,6 +22,8 @@
 #include "port/oc_log_internal.h"
 #include "util/oc_buffer_internal.h"
 #include "util/oc_compiler.h"
+
+#include <assert.h>
 #include <inttypes.h>
 #include <stdarg.h>
 #include <stdbool.h>
@@ -51,16 +53,17 @@
 #define OC_JSON_UPDATE_BUFFER_AND_TOTAL                                        \
   do {                                                                         \
     total_char_printed += num_char_printed;                                    \
-    if (buf == NULL) {                                                         \
-      break;                                                                   \
-    }                                                                          \
+                                                                               \
     if (num_char_printed < buf_size) {                                         \
       buf += num_char_printed;                                                 \
       buf_size -= num_char_printed;                                            \
-    } else {                                                                   \
-      buf += buf_size;                                                         \
-      buf_size = 0;                                                            \
+      break;                                                                   \
     }                                                                          \
+    if (buf_size == 0) {                                                       \
+      break;                                                                   \
+    }                                                                          \
+    buf += buf_size;                                                           \
+    buf_size = 0;                                                              \
   } while (0)
 
 /*
@@ -73,6 +76,8 @@
 static size_t
 oc_rep_to_json_tab(char *buf, size_t buf_size, int tab_depth)
 {
+  assert(buf != NULL || buf_size == 0);
+
   oc_write_buffer_t b = {
     .buffer = buf,
     .buffer_size = buf_size,
@@ -97,6 +102,8 @@ static size_t
 oc_rep_to_json_base64_encoded_byte_string(char *buf, size_t buf_size,
                                           char *byte_str, size_t byte_str_size)
 {
+  assert(buf != NULL || buf_size == 0);
+
   size_t num_char_printed = 0;
   size_t total_char_printed = 0;
   // calculate the b64 encoded string size
@@ -137,6 +144,8 @@ static size_t
 oc_rep_to_json_format(const oc_rep_t *rep, char *buf, size_t buf_size,
                       int tab_depth, bool pretty_print)
 {
+  assert(buf != NULL || buf_size == 0);
+
   size_t num_char_printed = 0;
   size_t total_char_printed = 0;
   while (rep != NULL) {
@@ -403,6 +412,8 @@ size_t
 oc_rep_to_json(const oc_rep_t *rep, char *buf, size_t buf_size,
                bool pretty_print)
 {
+  assert(buf != NULL || buf_size == 0);
+
   size_t total_char_printed = 0;
   bool object_array = false;
   if (rep != NULL && oc_string_len(rep->name) == 0) {
