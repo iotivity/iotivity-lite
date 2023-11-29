@@ -199,14 +199,14 @@ encodeFloat()
   EXPECT_EQ(expCrc, *crc);
 }
 
-#ifdef HAVE_FLOAT16
+#ifdef OC_HAVE_FLOAT16
 
 TEST_F(TestCrcRepEncodeWithRealloc, EncodeFloat16)
 {
   encodeFloat<_Float16>();
 }
 
-#endif /* HAVE_FLOAT16 */
+#endif /* OC_HAVE_FLOAT16 */
 
 TEST_F(TestCrcRepEncodeWithRealloc, EncodeFloat)
 {

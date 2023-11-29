@@ -914,10 +914,14 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
         list(APPEND TEST_LINK_LIBS Threads::Threads)
     endif()
 
-    try_compile(HAVE_FLOAT16 ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/tools/test_float16.c)
-    if(HAVE_FLOAT16)
-        list(APPEND TEST_COMPILE_DEFINITIONS "HAVE_FLOAT16")
+    try_compile(OC_HAVE_FLOAT16 ${CMAKE_BINARY_DIR} ${PROJECT_SOURCE_DIR}/tools/test_float16.cpp)
+    if(OC_HAVE_FLOAT16)
+        message(STATUS "Looking for Float16 - found")
+        list(APPEND TEST_COMPILE_DEFINITIONS "OC_HAVE_FLOAT16")
+    else()
+        message(STATUS "Looking for Float16 - not found")
     endif()
+
 
     # Disable clang-tidy for gtest
     oc_disable_clang_tidy()
