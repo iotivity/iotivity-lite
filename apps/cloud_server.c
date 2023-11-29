@@ -26,6 +26,7 @@
 #include "oc_pki.h"
 #include "oc_clock_util.h"
 #include "port/oc_assert.h"
+#include "port/oc_poll_loop.h"
 #include "util/oc_compiler.h"
 #include "util/oc_features.h"
 #include "util/oc_process.h"
@@ -53,67 +54,27 @@
 #define ARRAY_SIZE(array) (sizeof(array) / sizeof((array)[0]))
 #define CHAR_ARRAY_LEN(x) (sizeof(x) - 1)
 
-static bool g_quit = false;
-
 #ifdef _WIN32
 #include <windows.h>
-
-static CONDITION_VARIABLE g_cv;
-static CRITICAL_SECTION g_cs;
-
-static void
-signal_event_loop(void)
-{
-  EnterCriticalSection(&g_cs);
-  WakeConditionVariable(&g_cv);
-  LeaveCriticalSection(&g_cs);
-}
 
 static void
 handle_signal(int signal)
 {
   (void)signal;
-  g_quit = true;
-  signal_event_loop();
+  oc_poll_loop_terminate();
 }
 
-static int
+static bool
 init(void)
 {
-  InitializeCriticalSection(&g_cs);
-  InitializeConditionVariable(&g_cv);
   signal(SIGINT, handle_signal);
-  return 0;
-}
 
-static void
-deinit(void)
-{
-  // no-op
-}
-
-static void
-run_loop(void)
-{
-  while (!g_quit) {
-    oc_clock_time_t next_event_mt = oc_main_poll_v1();
-    EnterCriticalSection(&g_cs);
-    if (oc_main_needs_poll()) {
-      LeaveCriticalSection(&g_cs);
-      continue;
-    }
-    if (next_event_mt == 0) {
-      SleepConditionVariableCS(&g_cv, &g_cs, INFINITE);
-    } else {
-      oc_clock_time_t now_mt = oc_clock_time_monotonic();
-      if (now_mt < next_event_mt) {
-        SleepConditionVariableCS(
-          &g_cv, &g_cs,
-          (DWORD)((next_event_mt - now_mt) * 1000 / OC_CLOCK_SECOND));
-      }
-    }
-    LeaveCriticalSection(&g_cs);
+  if (!oc_poll_loop_init()) {
+    OC_PRINTF("ERROR: failed to initialize main loop (error=%lu)!\n",
+              GetLastError());
+    return false;
   }
+  return true;
 }
 
 #elif defined(__linux__) || defined(__ANDROID_API__)
@@ -123,25 +84,13 @@ run_loop(void)
 #include <sys/types.h> // suseconds_t
 #include <unistd.h>
 
-static pthread_mutex_t g_mutex;
-static pthread_cond_t g_cv;
-
-static void
-signal_event_loop(void)
-{
-  pthread_mutex_lock(&g_mutex);
-  pthread_cond_signal(&g_cv);
-  pthread_mutex_unlock(&g_mutex);
-}
-
 static void
 handle_signal(int signal)
 {
   if (signal == SIGPIPE) {
     return;
   }
-  g_quit = true;
-  signal_event_loop();
+  oc_poll_loop_terminate();
 }
 
 static bool
@@ -155,66 +104,11 @@ init(void)
   sigaction(SIGPIPE, &sa, NULL);
   sigaction(SIGTERM, &sa, NULL);
 
-  int err = pthread_mutex_init(&g_mutex, NULL);
-  if (err != 0) {
-    OC_PRINTF("ERROR: pthread_mutex_init failed (error=%d)!\n", err);
+  if (!oc_poll_loop_init()) {
+    OC_PRINTF("ERROR: failed to initialize main loop (error=%d)!\n", errno);
     return false;
   }
-  pthread_condattr_t attr;
-  err = pthread_condattr_init(&attr);
-  if (err != 0) {
-    OC_PRINTF("ERROR: pthread_condattr_init failed (error=%d)!\n", err);
-    pthread_mutex_destroy(&g_mutex);
-    return false;
-  }
-  err = pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
-  if (err != 0) {
-    OC_PRINTF("ERROR: pthread_condattr_setclock failed (error=%d)!\n", err);
-    pthread_condattr_destroy(&attr);
-    pthread_mutex_destroy(&g_mutex);
-    return false;
-  }
-  err = pthread_cond_init(&g_cv, &attr);
-  if (err != 0) {
-    OC_PRINTF("ERROR: pthread_cond_init failed (error=%d)!\n", err);
-    pthread_condattr_destroy(&attr);
-    pthread_mutex_destroy(&g_mutex);
-    return false;
-  }
-  pthread_condattr_destroy(&attr);
   return true;
-}
-
-static void
-deinit(void)
-{
-  pthread_cond_destroy(&g_cv);
-  pthread_mutex_destroy(&g_mutex);
-}
-
-static void
-run_loop(void)
-{
-  while (!g_quit) {
-    oc_clock_time_t next_event_mt = oc_main_poll_v1();
-    pthread_mutex_lock(&g_mutex);
-    if (oc_main_needs_poll()) {
-      pthread_mutex_unlock(&g_mutex);
-      continue;
-    }
-    if (next_event_mt == 0) {
-      pthread_cond_wait(&g_cv, &g_mutex);
-    } else {
-      struct timespec next_event = { 1, 0 };
-      oc_clock_time_t next_event_cv;
-      if (oc_clock_monotonic_time_to_posix(next_event_mt, CLOCK_MONOTONIC,
-                                           &next_event_cv)) {
-        next_event = oc_clock_time_to_timespec(next_event_cv);
-      }
-      pthread_cond_timedwait(&g_cv, &g_mutex, &next_event);
-    }
-    pthread_mutex_unlock(&g_mutex);
-  }
 }
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
@@ -1700,7 +1594,7 @@ main(int argc, char *argv[])
 
   static const oc_handler_t handler = {
     .init = app_init,
-    .signal_event_loop = signal_event_loop,
+    .signal_event_loop = oc_poll_loop_signal,
     .register_resources = register_resources,
   };
   oc_log_set_function(cloud_server_log);
@@ -1722,7 +1616,7 @@ main(int argc, char *argv[])
 
   int ret = oc_main_init(&handler);
   if (ret < 0) {
-    deinit();
+    oc_poll_loop_shutdown();
     return ret;
   }
 
@@ -1746,7 +1640,7 @@ main(int argc, char *argv[])
   oc_etag_load_and_clear();
 #endif /* OC_HAS_FEATURE_ETAG */
 
-  run_loop();
+  oc_poll_loop_run();
 
   for (size_t i = 0; i < g_num_devices; ++i) {
     oc_cloud_context_t *ctx = oc_cloud_get_context(i);
@@ -1760,6 +1654,6 @@ main(int argc, char *argv[])
 #endif /* OC_HAS_FEATURE_ETAG */
 
   oc_main_shutdown();
-  deinit();
+  oc_poll_loop_shutdown();
   return 0;
 }
