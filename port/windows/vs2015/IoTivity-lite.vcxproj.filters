@@ -311,6 +311,9 @@
     <ClCompile Include="..\oc_fcntl.c">
       <Filter>Port</Filter>
     </ClCompile>
+    <ClCompile Include="..\oc_loop_event.c">
+      <Filter>Port</Filter>
+    </ClCompile>
     <ClCompile Include="..\random.c">
       <Filter>Port</Filter>
     </ClCompile>
@@ -485,13 +488,10 @@
     <ClCompile Include="..\..\..\port\common\oc_ip.c">
       <Filter>Port</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\port\common\oc_loop_event.c">
-      <Filter>Port</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\port\common\oc_tcp_socket.c">
-      <Filter>Port</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\port\common\posix\oc_socket.c">
+      <Filter>Port</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\port\common\posix\oc_tcp_socket.c">
       <Filter>Port</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\deps\mbedtls\library\platform_util.c">
@@ -550,22 +550,19 @@
     <ClInclude Include="..\..\..\include\oc_api.h">
       <Filter>Headers</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\common\oc_fcntl_internal.h">
-      <Filter>Port</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\common\oc_ip_internal.h">
-      <Filter>Port</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\common\oc_loop_event_internal.h">
-      <Filter>Port</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\common\oc_tcp_socket_internal.h">
-      <Filter>Port</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\oc_allocator_internal.h">
       <Filter>Port</Filter>
     </ClInclude>
     <ClInclude Include="..\..\oc_assert.h">
+      <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oc_loop_event_internal.h">
+      <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oc_ip_internal.h">
+      <Filter>Port</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oc_tcp_socket_internal.h">
       <Filter>Port</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_base64.h">
@@ -612,6 +609,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\api\oc_events_internal.h">
       <Filter>Core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oc_fcntl_internal.h">
+      <Filter>Port</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_helpers.h">
       <Filter>Headers</Filter>

@@ -21,11 +21,11 @@
 #ifdef OC_TCP
 
 #include "messaging/coap/coap_internal.h"
-#include "port/common/oc_fcntl_internal.h"
-#include "port/common/oc_tcp_socket_internal.h"
 #include "port/common/posix/oc_socket_internal.h"
 #include "port/oc_connectivity.h"
+#include "port/oc_fcntl_internal.h"
 #include "port/oc_log_internal.h"
+#include "port/oc_tcp_socket_internal.h"
 
 #ifdef _WIN32
 

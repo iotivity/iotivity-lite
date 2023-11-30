@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#ifndef PORT_COMMON_OC_IP_H
-#define PORT_COMMON_OC_IP_H
+#ifndef PORT_OC_IP_INTERNAL_H
+#define PORT_OC_IP_INTERNAL_H
 
 #include "oc_endpoint.h"
 #include "util/oc_compiler.h"
@@ -52,4 +52,4 @@ int oc_ipv4_address_and_port_to_string(const oc_ipv4_addr_t *ipv4, char *buffer,
 }
 #endif
 
-#endif /* PORT_COMMON_OC_IP_H */
+#endif /* PORT_OC_IP_INTERNAL_H */

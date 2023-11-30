@@ -25,10 +25,9 @@
 #include "messaging/coap/coap_internal.h"
 #include "oc_endpoint.h"
 #include "oc_session_events.h"
-#include "port/common/oc_fcntl_internal.h"
-#include "port/common/oc_tcp_socket_internal.h"
 #include "port/oc_assert.h"
 #include "port/oc_log_internal.h"
+#include "port/oc_tcp_socket_internal.h"
 #include "tcpadapter.h"
 #include "util/oc_memb.h"
 #include <arpa/inet.h>

@@ -16,41 +16,14 @@
  *
  ****************************************************************************/
 
-#ifndef PORT_OC_FCNTL_INTERNAL_H
-#define PORT_OC_FCNTL_INTERNAL_H
+#ifndef PORT_POSIX_OC_FCNTL_INTERNAL_H
+#define PORT_POSIX_OC_FCNTL_INTERNAL_H
 
 #include <stdbool.h>
-
-#ifdef _WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <winsock2.h>
-#endif /* _WIN32 */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#ifdef _WIN32
-
-/**
- * @brief Set socket descriptor to blocking mode.
- *
- * @param fd file descriptor
- * @return true on success
- * @return false on failure
- */
-bool oc_fcntl_set_blocking(SOCKET sock);
-
-/**
- * @brief Set socket descriptor to non-blocking mode.
- *
- * @param fd file descriptor
- * @return true on success
- * @return false on failure
- */
-bool oc_fcntl_set_nonblocking(SOCKET sock);
-
-#else /* !_WIN32 */
 
 /**
  * @brief Add or remove file descriptor flags.
@@ -67,28 +40,8 @@ bool oc_fcntl_set_nonblocking(SOCKET sock);
  */
 int oc_fcntl_set_flags(int fd, unsigned to_add, unsigned to_remove);
 
-/**
- * @brief Set file descriptor to blocking mode.
- *
- * @param fd file descriptor
- * @return true on success
- * @return false on failure
- */
-bool oc_fcntl_set_blocking(int fd);
-
-/**
- * @brief Set file descriptor to non-blocking mode.
- *
- * @param fd file descriptor
- * @return true on success
- * @return false on failure
- */
-bool oc_fcntl_set_nonblocking(int fd);
-
-#endif /* _WIN32 */
-
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PORT_OC_FCNTL_INTERNAL_H */
+#endif /* PORT_POSIX_OC_FCNTL_INTERNAL_H */

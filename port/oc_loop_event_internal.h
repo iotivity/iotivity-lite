@@ -16,8 +16,8 @@
  *
  ****************************************************************************/
 
-#ifndef PORT_COMMON_OC_LOOP_EVENT_INTERNAL_H
-#define PORT_COMMON_OC_LOOP_EVENT_INTERNAL_H
+#ifndef PORT_OC_LOOP_EVENT_INTERNAL_H
+#define PORT_OC_LOOP_EVENT_INTERNAL_H
 
 #include "port/oc_clock.h"
 #include "util/oc_compiler.h"
@@ -116,4 +116,4 @@ void oc_loop_event_signal(const oc_loop_event_t *event) OC_NONNULL();
 }
 #endif
 
-#endif /* PORT_COMMON_OC_LOOP_EVENT_INTERNAL_H */
+#endif /* PORT_OC_LOOP_EVENT_INTERNAL_H */

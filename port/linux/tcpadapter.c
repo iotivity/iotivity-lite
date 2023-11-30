@@ -20,8 +20,8 @@
 #include "ipadapter.h"
 #include "ipcontext.h"
 #include "tcpsession.h"
-#include "port/common/oc_fcntl_internal.h"
 #include "port/oc_assert.h"
+#include "port/oc_fcntl_internal.h"
 #include "port/oc_log_internal.h"
 #include <arpa/inet.h>
 #include <errno.h>

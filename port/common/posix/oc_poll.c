@@ -16,8 +16,6 @@
  *
  ****************************************************************************/
 
-#ifndef _WIN32
-
 // make ppoll() available
 #define _GNU_SOURCE
 
@@ -65,5 +63,3 @@ oc_poll_wait(struct pollfd *fds, nfds_t nfds, oc_poll_event_handler_t on_event,
 {
   return ppoll_wait(fds, nfds, NULL, on_event, data);
 }
-
-#endif /* !_WIN32 */

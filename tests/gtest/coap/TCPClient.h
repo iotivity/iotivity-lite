@@ -25,7 +25,7 @@
 #include "messaging/coap/coap_internal.h"
 #include "Message.h"
 #include "oc_endpoint.h"
-#include "port/common/oc_tcp_socket_internal.h"
+#include "port/oc_tcp_socket_internal.h"
 
 #include <atomic>
 #include <chrono>

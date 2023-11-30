@@ -16,12 +16,16 @@
  *
  ****************************************************************************/
 
-#include "port/common/oc_fcntl_internal.h"
+#include "port/oc_fcntl_internal.h"
 #include "tests/gtest/Endpoint.h"
 
 #ifdef OC_TCP
-#include "port/common/oc_tcp_socket_internal.h"
+#include "port/oc_tcp_socket_internal.h"
 #endif /* OC_TCP */
+
+#ifndef _WIN32
+#include "port/common/posix/oc_fcntl_internal.h"
+#endif /* !_WIN32 */
 
 #include <fcntl.h>
 #include <cstdio>

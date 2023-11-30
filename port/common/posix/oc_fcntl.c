@@ -16,9 +16,8 @@
  *
  ****************************************************************************/
 
-#ifndef _WIN32
-
-#include "port/common/oc_fcntl_internal.h"
+#include "port/common/posix/oc_fcntl_internal.h"
+#include "port/oc_fcntl_internal.h"
 
 #include <fcntl.h>
 
@@ -55,5 +54,3 @@ oc_fcntl_set_nonblocking(int fd)
 {
   return oc_fcntl_set_flags(fd, O_NONBLOCK, 0) != -1;
 }
-
-#endif /* !_WIN32 */
