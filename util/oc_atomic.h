@@ -33,10 +33,9 @@
 extern "C" {
 #endif
 
-#if defined(__linux__) || defined(__MINGW32__) || defined(ESP_PLATFORM)
-
-#if defined(__GNUC__) && defined(__GNUC_MINOR__) &&                            \
-  (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1))
+#if defined(__clang__) ||                                                      \
+  (defined(__GNUC__) && defined(__GNUC_MINOR__) &&                             \
+   (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)))
 
 #define OC_ATOMIC
 #define OC_ATOMIC_INT8_T int8_t
@@ -72,9 +71,7 @@ extern "C" {
 #define OC_ATOMIC_COMPARE_AND_SWAP8(x, expected, desired, result)              \
   OC_ATOMIC_COMPARE_AND_SWAP32(x, expected, desired, result)
 
-#endif // __GNUC__ >= 4 && __GNUC_MINOR__ >= 1
-
-#endif // __linux__ || __MINGW32__
+#else //  !__clang__ && __GNUC__ <= 4
 
 #if defined(_WIN32) || defined(_WIN64)
 
@@ -123,6 +120,8 @@ extern "C" {
 #endif // _MSC_VER
 
 #endif // defined(_WIN32) || defined(_WIN64)
+
+#endif // __clang__ || __GNUC__ > 4 || ( __GNUC__ == 4 && __GNUC_MINOR__ >= 1 )
 
 // fallback to volatile on platforms without atomic support
 #ifndef OC_ATOMIC

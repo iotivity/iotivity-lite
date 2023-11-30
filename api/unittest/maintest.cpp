@@ -158,7 +158,7 @@ TestMain::testSignalEventLoopinThreadWithMainLoop(
 #ifdef _WIN32
   DWORD worker_thread_id;
   HANDLE worker_thread = CreateThread(nullptr, 0, pollProcessAndSignalWin32,
-                                      nullptr, 0, &worker_thread_id);
+                                      this, 0, &worker_thread_id);
   ASSERT_NE(worker_thread, nullptr);
 #else  /* !_WIN32 */
   pthread_t worker_thread;

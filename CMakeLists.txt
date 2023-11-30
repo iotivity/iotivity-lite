@@ -81,23 +81,30 @@ if(OC_CLOUD_ENABLED AND OC_SECURITY_ENABLED AND NOT OC_PKI_ENABLED)
     message(FATAL_ERROR "Cannot enable cloud communications without PKI security")
 endif()
 
-if(UNIX)
+if(UNIX OR (WIN32 AND OC_COMPILER_IS_CLANG))
     if(OC_ASAN_ENABLED)
         message(STATUS "Address sanitizer enabled")
-        add_compile_options(${CMAKE_C_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer)
+        add_compile_options(-fsanitize=address -fno-omit-frame-pointer)
         add_link_options(-fsanitize=address)
-        set(OC_ASAN_OPTIONS "debug=true:atexit=true:check_initialization_order=true:detect_stack_use_after_return=true:alloc_dealloc_mismatch=true:detect_invalid_pointer_pairs=2:strict_string_checks=true")
+        set(OC_ASAN_OPTIONS "debug=true:atexit=true:check_initialization_order=true:detect_stack_use_after_return=true:detect_invalid_pointer_pairs=2:strict_string_checks=true")
+        if(WIN32)
+            # just print the issues until they are fixed
+            add_compile_options(-fsanitize-recover=address)
+            set(OC_ASAN_OPTIONS "${OC_ASAN_OPTIONS}:halt_on_error=false")
+        else()
+            set(OC_ASAN_OPTIONS "${OC_ASAN_OPTIONS}:alloc_dealloc_mismatch=true")
+        endif()
     endif()
 
-    if(OC_LSAN_ENABLED)
+    if(UNIX AND OC_LSAN_ENABLED)
         message(STATUS "Leak sanitizer enabled")
-        add_compile_options(${CMAKE_C_FLAGS_DEBUG} -fsanitize=leak -fno-omit-frame-pointer)
+        add_compile_options(-fsanitize=leak -fno-omit-frame-pointer)
         add_link_options(-fsanitize=leak)
     endif()
 
-    if(OC_TSAN_ENABLED)
+    if(UNIX AND OC_TSAN_ENABLED)
         message(STATUS "Thread sanitizer enabled")
-        add_compile_options(${CMAKE_C_FLAGS_DEBUG} -fsanitize=thread -fno-omit-frame-pointer)
+        add_compile_options(-fsanitize=thread -fno-omit-frame-pointer)
         add_link_options(-fsanitize=thread)
         set(OC_TSAN_OPTIONS "halt_on_error=1:abort_on_error=true")
     endif()
@@ -106,10 +113,10 @@ if(UNIX)
         message(STATUS "Undefined behaviour sanitizer enabled")
         if(OC_COMPILER_IS_CLANG)
             # -fno-sanitize-recover=undefined,local-bounds,nullability
-            add_compile_options(${CMAKE_C_FLAGS_DEBUG} -fsanitize=undefined,local-bounds,nullability -fno-omit-frame-pointer)
+            add_compile_options(-fsanitize=undefined,local-bounds,nullability -fno-omit-frame-pointer)
         else()
             # -fno-sanitize-recover=undefined
-            add_compile_options(${CMAKE_C_FLAGS_DEBUG} -fsanitize=undefined -fno-omit-frame-pointer)
+            add_compile_options(-fsanitize=undefined -fno-omit-frame-pointer)
         endif()
         add_link_options(-fsanitize=undefined)
         # halt_on_error=1
@@ -120,7 +127,7 @@ if(UNIX)
         # using clang
         if(OC_MSAN_ENABLED)
             message(STATUS "Memory sanitizer enabled")
-            add_compile_options(${CMAKE_C_FLAGS_DEBUG} -fsanitize=memory -fno-omit-frame-pointer)
+            add_compile_options(-fsanitize=memory -fno-omit-frame-pointer)
             add_link_options(-fsanitize=memory)
         endif()
     elseif(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -238,6 +245,9 @@ elseif(OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG)
     # as warnings for now
     oc_add_compile_options(GLOBAL FLAGS -Wno-error=cast-align -Wno-error=deprecated-declarations
         -Wno-error=documentation)
+    if(MINGW OR (WIN32 AND OC_COMPILER_IS_CLANG))
+      oc_add_compile_options(GLOBAL FLAGS -Wno-error=gnu-offsetof-extensions -Wno-error=sign-compare)
+    endif()
 endif()
 
 # Release compile and linker options
@@ -454,14 +464,16 @@ if(MINGW)
     endif()
 
     # force the use mingw_printf because the default doesn't support '%zu'
-    list(APPEND PRIVATE_COMPILE_DEFINITIONS "__USE_MINGW_ANSI_STDIO=(1)")
-    list(APPEND TEST_COMPILE_DEFINITIONS "__USE_MINGW_ANSI_STDIO=(1)")
-    if(BUILD_MBEDTLS)
-        list(APPEND MBEDTLS_COMPILE_DEFINITIONS "__USE_MINGW_ANSI_STDIO=(1)")
+    if(OC_COMPILER_IS_GCC)
+        list(APPEND PRIVATE_COMPILE_DEFINITIONS "__USE_MINGW_ANSI_STDIO=(1)")
+        list(APPEND TEST_COMPILE_DEFINITIONS "__USE_MINGW_ANSI_STDIO=(1)")
+        if(BUILD_MBEDTLS)
+            list(APPEND MBEDTLS_COMPILE_DEFINITIONS "__USE_MINGW_ANSI_STDIO=(1)")
+        endif()
     endif()
 endif()
 
-if(MSVC)
+if(WIN32 AND (MSVC OR OC_COMPILER_IS_CLANG))
     list(APPEND PRIVATE_COMPILE_DEFINITIONS "_CRT_SECURE_NO_WARNINGS=1")
 endif()
 
@@ -887,7 +899,7 @@ if(NOT MSVC)
     )
 endif()
 
-if(OC_SECURITY_ENABLED)
+if(OC_SECURITY_ENABLED AND (NOT MSVC))
     # Python client
     set(client-python-lib-obj
         $<TARGET_OBJECTS:client-common-obj>
@@ -915,8 +927,8 @@ if(OC_SECURITY_ENABLED)
     )
 endif()
 
-# ####### Units tests (UNIX only) ########
-if(BUILD_TESTING AND(UNIX OR MINGW))
+# ####### Units tests ########
+if(BUILD_TESTING AND (NOT MSVC))
     include(CTest)
     enable_language(CXX)
     set(CMAKE_CXX_STANDARD 17)
@@ -978,7 +990,9 @@ if(BUILD_TESTING AND(UNIX OR MINGW))
 
         target_link_libraries(${OC_PACKAGE_ADD_TEST_TARGET} PRIVATE ${TEST_LINK_LIBS})
         if(OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG)
-            target_link_libraries(${OC_PACKAGE_ADD_TEST_TARGET} PRIVATE "-Wl,--unresolved-symbols=ignore-in-shared-libs")
+            if (NOT WIN32)
+                target_link_libraries(${OC_PACKAGE_ADD_TEST_TARGET} PRIVATE "-Wl,--unresolved-symbols=ignore-in-shared-libs")
+            endif()
         endif()
         add_test(NAME ${OC_PACKAGE_ADD_TEST_TARGET} COMMAND ${OC_PACKAGE_ADD_TEST_TARGET})
 
@@ -1175,18 +1189,18 @@ write_basic_package_version_file(iotivity-liteConfigVersion.cmake
 
 # ####### Installation ########
 # Libraries
-set(INSTALL_TARGETS
-    client-static client-shared
-    server-static server-shared
-    client-server-static client-server-shared
-)
-
 if(MSVC)
     # Since the library symbols are not explicitly exported, no proper DLL and import LIB are generated with MSVC
     set(INSTALL_TARGETS
         client-static
         server-static
         client-server-static
+    )
+else()
+    set(INSTALL_TARGETS
+        client-static client-shared
+        server-static server-shared
+        client-server-static client-server-shared
     )
 endif()
 

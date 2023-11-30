@@ -16,6 +16,11 @@
  *
  ******************************************************************/
 
+#ifdef _WIN32
+// don't define max() macro
+#define NOMINMAX
+#endif /* _WIN32 */
+
 #include "util/oc_features.h"
 
 #ifdef OC_HAS_FEATURE_CRC_ENCODER

@@ -51,7 +51,7 @@ static unsigned char g_alloc_buf[MBEDTLS_ALLOC_BUF_SIZE];
 
 #if defined(_WIN32) || defined(_WIN64)
 #include <mbedtls/platform.h>
-#endif /* WIN32 || _WIN64  */
+#endif /* _WIN32 || _WIN64  */
 
 #include <time.h>
 

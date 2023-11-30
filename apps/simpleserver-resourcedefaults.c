@@ -66,7 +66,7 @@
 #include <signal.h>
 #include <stdlib.h>
 
-#ifdef WIN32
+#ifdef _WIN32
 /* windows specific code */
 #include <windows.h>
 static CONDITION_VARIABLE cv; /* event loop variable */
@@ -1226,7 +1226,7 @@ initialize_variables(void)
 
 #ifndef NO_MAIN
 
-#ifdef WIN32
+#ifdef _WIN32
 /**
  * signal the event loop (windows version)
  * wakes up the main function to handle the next callback
@@ -1236,7 +1236,7 @@ signal_event_loop(void)
 {
   WakeConditionVariable(&cv);
 }
-#endif /* WIN32 */
+#endif /* _WIN32 */
 
 #ifdef __linux__
 /**
@@ -1310,16 +1310,16 @@ init(void)
 static void
 deinit(void)
 {
-#ifndef WIN32
+#ifndef _WIN32
   pthread_cond_destroy(&cv);
   pthread_mutex_destroy(&mutex);
-#endif /* !WIN32 */
+#endif /* !_WIN32 */
 }
 
 static void
 run_loop(void)
 {
-#ifdef WIN32
+#ifdef _WIN32
   while (OC_ATOMIC_LOAD8(quit) != 1) {
     oc_clock_time_t next_event_mt = oc_main_poll_v1();
     if (next_event_mt == 0) {
@@ -1332,7 +1332,7 @@ run_loop(void)
       }
     }
   }
-#endif /* WIN32 */
+#endif /* _WIN32 */
 
 #ifdef __linux__
   while (OC_ATOMIC_LOAD8(quit) != 1) {

@@ -676,7 +676,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_CSM)
   coap_signal_set_blockwise_transfer(&packet, 1);
 
   std::vector<uint8_t> buffer;
-  buffer.reserve(OC_PDU_SIZE);
+  buffer.resize(OC_PDU_SIZE);
   size_t buffer_len =
     coap_serialize_message(&packet, buffer.data(), buffer.capacity());
 
@@ -697,7 +697,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_PING)
   coap_signal_set_custody(&packet, 1);
 
   std::vector<uint8_t> buffer;
-  buffer.reserve(OC_PDU_SIZE);
+  buffer.resize(OC_PDU_SIZE);
   size_t buffer_len =
     coap_serialize_message(&packet, buffer.data(), buffer.capacity());
 
@@ -717,7 +717,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_PONG)
   coap_signal_set_custody(&packet, 1);
 
   std::vector<uint8_t> buffer;
-  buffer.reserve(OC_PDU_SIZE);
+  buffer.resize(OC_PDU_SIZE);
   size_t buffer_len =
     coap_serialize_message(&packet, buffer.data(), buffer.capacity());
 
@@ -741,7 +741,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_RELEASE)
   ASSERT_TRUE(coap_signal_set_hold_off(&packet, hold_off));
 
   std::vector<uint8_t> buffer;
-  buffer.reserve(OC_PDU_SIZE);
+  buffer.resize(OC_PDU_SIZE);
   size_t buffer_len =
     coap_serialize_message(&packet, buffer.data(), buffer.capacity());
 
@@ -770,7 +770,7 @@ TEST_F(TestCoapSignal, SignalSerializeParseTest_ABORT)
                    static_cast<uint32_t>(diagnostic.size()));
 
   std::vector<uint8_t> buffer;
-  buffer.reserve(OC_PDU_SIZE);
+  buffer.resize(OC_PDU_SIZE);
   size_t buffer_len =
     coap_serialize_message(&packet, buffer.data(), buffer.capacity());
 

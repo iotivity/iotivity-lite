@@ -33,7 +33,9 @@
 
 namespace oc::coap::message {
 
+#ifndef OC_DYNAMIC_ALLOCATION
 constexpr size_t kPoolSize = 8;
+#endif /* OC_DYNAMIC_ALLOCATION */
 OC_MEMB(test_messages, oc_message_t, kPoolSize);
 
 bool

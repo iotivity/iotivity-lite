@@ -28,7 +28,6 @@
 
 #include <filesystem>
 #include <gtest/gtest.h>
-#include <pthread.h>
 
 #define ACCESS_TOKEN ("access_token")
 #define AUTH_PROVIDER ("auth_provider")
