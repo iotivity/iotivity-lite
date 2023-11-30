@@ -21,7 +21,7 @@
 #ifdef OC_HAS_FEATURE_SIMPLE_MAIN_LOOP
 
 #include "oc_api.h"
-#include "port/common/oc_loop_event_internal.h"
+#include "port/oc_loop_event_internal.h"
 #include "port/oc_poll_loop.h"
 #include "util/oc_atomic.h"
 #include "util/oc_macros_internal.h"

@@ -71,10 +71,10 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/separate.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../messaging/coap/transactions.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../port/common/oc_ip.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../../../port/common/oc_tcp_socket.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../port/common/posix/oc_allocator.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../port/common/posix/oc_fcntl.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../port/common/posix/oc_socket.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../../../port/common/posix/oc_tcp_socket.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_buffer.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_etimer.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../util/oc_list.c

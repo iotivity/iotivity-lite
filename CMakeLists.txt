@@ -479,15 +479,18 @@ file(GLOB COMMON_SRC
     ${PROJECT_SOURCE_DIR}/util/*.c
 )
 
+# common POSIX layer
 if(UNIX OR WIN32)
-    file(GLOB COMMON_POSIX_SRC
-        ${PROJECT_SOURCE_DIR}/port/common/posix/*.c
-    )
+    if (UNIX)
+        file(GLOB COMMON_POSIX_SRC
+            ${PROJECT_SOURCE_DIR}/port/common/posix/*.c
+        )
+    endif()
     if(WIN32)
-        list(REMOVE_ITEM COMMON_POSIX_SRC
-            ${PROJECT_SOURCE_DIR}/port/common/posix/oc_allocator.c
-            ${PROJECT_SOURCE_DIR}/port/common/posix/oc_fcntl.c
-            ${PROJECT_SOURCE_DIR}/port/common/posix/oc_poll.c
+        # WinSock2 implements POSIX for sockets
+        file(GLOB COMMON_POSIX_SRC
+            ${PROJECT_SOURCE_DIR}/port/common/posix/oc_socket.c
+            ${PROJECT_SOURCE_DIR}/port/common/posix/oc_tcp_socket.c
         )
     endif()
     list(APPEND COMMON_SRC ${COMMON_POSIX_SRC})

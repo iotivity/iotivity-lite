@@ -19,8 +19,6 @@
 #ifndef PORT_POSIX_OC_POLL_INTERNAL_H
 #define PORT_POSIX_OC_POLL_INTERNAL_H
 
-#ifndef _WIN32
-
 #include "port/oc_clock.h"
 #include "util/oc_compiler.h"
 
@@ -78,7 +76,5 @@ int oc_poll_wait(struct pollfd *fds, nfds_t nfds,
 #ifdef __cplusplus
 }
 #endif
-
-#endif /* _WIN32 */
 
 #endif /* PORT_POSIX_OC_POLL_INTERNAL_H */

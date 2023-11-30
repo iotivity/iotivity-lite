@@ -307,21 +307,21 @@
     <ClInclude Include="..\..\..\util\pt\lc.h" />
     <ClInclude Include="..\..\..\util\pt\pt-sem.h" />
     <ClInclude Include="..\..\..\util\pt\pt.h" />
-    <ClInclude Include="..\..\common\oc_fcntl_internal.h" />
-    <ClInclude Include="..\..\common\oc_ip_internal.h" />
-    <ClInclude Include="..\..\common\oc_loop_event_internal.h" />
-    <ClInclude Include="..\..\common\oc_tcp_socket_internal.h" />
     <ClInclude Include="..\..\oc_allocator_internal.h" />
     <ClInclude Include="..\..\oc_assert.h" />
     <ClInclude Include="..\..\oc_clock.h" />
     <ClInclude Include="..\..\oc_connectivity_internal.h" />
     <ClInclude Include="..\..\oc_connectivity.h" />
+    <ClInclude Include="..\..\oc_fcntl_internal.h" />
+    <ClInclude Include="..\..\oc_ip_internal.h" />
     <ClInclude Include="..\..\oc_log_internal.h" />
+    <ClInclude Include="..\..\oc_loop_event_internal.h" />
     <ClInclude Include="..\..\oc_network_event_handler_internal.h" />
     <ClInclude Include="..\..\oc_poll_loop.h" />
     <ClInclude Include="..\..\oc_random.h" />
     <ClInclude Include="..\..\oc_storage_internal.h" />
     <ClInclude Include="..\..\oc_storage.h" />
+    <ClInclude Include="..\..\oc_tcp_socket_internal.h" />
     <ClInclude Include="..\ipcontext.h" />
     <ClInclude Include="..\mutex.h" />
     <ClInclude Include="..\network_addresses.h" />
@@ -448,10 +448,9 @@
     <ClCompile Include="..\..\..\messaging\coap\signal.c" />
     <ClCompile Include="..\..\..\messaging\coap\transactions.c" />
     <ClCompile Include="..\..\..\port\common\oc_ip.c" />
-    <ClCompile Include="..\..\..\port\common\oc_loop_event.c" />
     <ClCompile Include="..\..\..\port\common\oc_poll_loop.c" />
-    <ClCompile Include="..\..\..\port\common\oc_tcp_socket.c" />
     <ClCompile Include="..\..\..\port\common\posix\oc_socket.c" />
+    <ClCompile Include="..\..\..\port\common\posix\oc_tcp_socket.c" />
     <ClCompile Include="..\..\..\security\oc_acl.c">
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">CompileAsC</CompileAs>
       <CompileAs Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">CompileAsC</CompileAs>
@@ -493,6 +492,7 @@
     <ClCompile Include="..\network_addresses.c" />
     <ClCompile Include="..\oc_allocator.c" />
     <ClCompile Include="..\oc_fcntl.c" />
+    <ClCompile Include="..\oc_loop_event.c" />
     <ClCompile Include="..\random.c" />
     <ClCompile Include="..\storage.c" />
     <ClCompile Include="..\tcpadapter.c" />

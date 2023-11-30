@@ -22,9 +22,9 @@
 
 #include "api/oc_message_internal.h"
 #include "api/oc_tcp_internal.h"
-#include "port/common/oc_fcntl_internal.h"
-#include "port/common/oc_tcp_socket_internal.h"
 #include "port/common/posix/oc_socket_internal.h"
+#include "port/oc_fcntl_internal.h"
+#include "port/oc_tcp_socket_internal.h"
 #include "TCPClient.h"
 #include "util/oc_memb.h"
 
