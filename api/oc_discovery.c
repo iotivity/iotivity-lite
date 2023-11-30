@@ -59,11 +59,11 @@
 #include "api/oc_etag_internal.h"
 #endif /* OC_HAS_FEATURE_ETAG */
 
-#ifdef WIN32
+#ifdef _WIN32
 #include <windows.h>
-#else /* !WIN32 */
+#else /* !_WIN32 */
 #include <strings.h>
-#endif /* WIN32 */
+#endif /* _WIN32 */
 
 #ifdef OC_WKCORE
 static size_t

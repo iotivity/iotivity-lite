@@ -354,7 +354,12 @@ TEST_F(TestObtCerts, GenerateValidIdentityCertificate)
   std::array<char, OC_UUID_LEN> uuid_cstr{};
   EXPECT_TRUE(oc_certs_parse_CN_for_UUID(&id_cert[0], id_cert.size(),
                                          uuid_cstr.data(), uuid_cstr.size()));
+#ifdef _WIN32
+  // linker error when ASAN is enabled
+  EXPECT_NE(-1, uuid_.find(uuid_cstr.data(), 0));
+#else
   EXPECT_NE(std::string::npos, uuid_.find(uuid_cstr.data(), 0));
+#endif
 
   std::array<uint8_t, 200> private_key{};
   ret = oc_certs_parse_private_key(0, &id_cert[0], id_cert.size(),
@@ -485,7 +490,12 @@ TEST_F(TestObtCerts, GenerateValidRoleCertificate)
   std::array<char, OC_UUID_LEN> uuid_cstr{};
   EXPECT_TRUE(oc_certs_parse_CN_for_UUID(&role_cert[0], role_cert.size(),
                                          uuid_cstr.data(), uuid_cstr.size()));
+#ifdef _WIN32
+  // linker error when ASAN is enabled
+  EXPECT_NE(-1, uuid_.find(uuid_cstr.data(), 0));
+#else
   EXPECT_NE(std::string::npos, uuid_.find(uuid_cstr.data(), 0));
+#endif
 
   std::array<uint8_t, 200> private_key{};
   ret = oc_certs_parse_private_key(0, &role_cert[0], role_cert.size(),

@@ -38,7 +38,6 @@
 #include <gtest/gtest.h>
 #include <set>
 #include <string>
-#include <unistd.h>
 #include <vector>
 
 #ifdef _WIN32
@@ -46,6 +45,7 @@
 #else /* !_WIN32 */
 #include <pthread.h>
 #include <stdexcept>
+#include <unistd.h>
 #endif /* _WIN32 */
 
 #if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_INOUT_BUFFER_POOL) &&        \
@@ -690,7 +690,7 @@ public:
 #ifdef OC_DEBUG
     if (data->payload != nullptr) {
       std::vector<char> json{};
-      json.reserve(256);
+      json.resize(256);
       oc_rep_to_json(data->payload, &json[0], json.capacity(), true);
       OC_PRINTF("%s\n", json.data());
     }

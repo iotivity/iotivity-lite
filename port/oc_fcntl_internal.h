@@ -35,7 +35,7 @@ extern "C" {
 /**
  * @brief Set socket descriptor to blocking mode.
  *
- * @param fd file descriptor
+ * @param sock file descriptor
  * @return true on success
  * @return false on failure
  */
@@ -44,7 +44,7 @@ bool oc_fcntl_set_blocking(SOCKET sock);
 /**
  * @brief Set socket descriptor to non-blocking mode.
  *
- * @param fd file descriptor
+ * @param sock file descriptor
  * @return true on success
  * @return false on failure
  */

@@ -20,6 +20,7 @@
 
 #include "api/oc_endpoint_internal.h"
 #include "api/oc_events_internal.h"
+#include "api/oc_message_buffer_internal.h"
 #include "api/oc_message_internal.h"
 #include "api/oc_network_events_internal.h"
 #include "api/oc_session_events_internal.h"
@@ -461,7 +462,6 @@ tls_drop_endpoint_events(const oc_endpoint_t *endpoint)
 
   oc_process_drop(&oc_tls_handler, tls_process_drop_event_for_removed_endpoint,
                   endpoint);
-  OC_PROCESS_NAME(oc_message_buffer_handler);
   oc_process_drop(&oc_message_buffer_handler,
                   tls_process_drop_event_for_removed_endpoint, endpoint);
   OC_PROCESS_NAME(g_coap_engine);

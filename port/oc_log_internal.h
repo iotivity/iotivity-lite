@@ -51,7 +51,7 @@
 #include <inttypes.h>
 
 #ifndef __FILENAME__
-#ifdef WIN32
+#ifdef _WIN32
 #define __FILENAME__                                                           \
   (strrchr(__FILE__, '\\') ? strrchr(__FILE__, '\\') + 1 : __FILE__)
 #else

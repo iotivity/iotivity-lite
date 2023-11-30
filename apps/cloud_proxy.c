@@ -85,7 +85,7 @@
  *    IDD via API, otherwise use header file to define the IDD
  * - __linux__
  *   build for linux
- * - WIN32
+ * - _WIN32
  *   build for windows
  *
  * compile flag PROXY_ALL_DISCOVERED_DEVICES
@@ -166,12 +166,12 @@
 #endif
 
 /* proxy all discovered devices on the network, this is for easier testing*/
-//#define PROXY_ALL_DISCOVERED_DEVICES
+// #define PROXY_ALL_DISCOVERED_DEVICES
 
 /* perform discovery using /oic/sec/doxm, which generates significantly less
  * traffic when compared to /oic/res discovery
  */
-//#define OC_DOXM_UUID_FILTER
+// #define OC_DOXM_UUID_FILTER
 
 #ifdef __linux__
 /* linux specific code */
@@ -182,15 +182,15 @@ static pthread_cond_t g_cv;
 #endif /* NO_MAIN */
 #endif /* __linux__ */
 
-#ifdef WIN32
+#ifdef _WIN32
 /* windows specific code */
 #include <windows.h>
 static CONDITION_VARIABLE g_cv; /**< event loop variable */
 static CRITICAL_SECTION g_cs;   /**< event loop variable */
-#endif                          /* WIN32 */
+#endif                          /* _WIN32 */
 
 #include <stdio.h> /* defines FILENAME_MAX */
-#ifdef WIN32
+#ifdef _WIN32
 #include <direct.h>
 #define GetCurrentDir _getcwd
 #else
@@ -1575,7 +1575,7 @@ issue_requests_all(void)
 
 #ifndef NO_MAIN
 
-#ifdef WIN32
+#ifdef _WIN32
 
 /**
  * signal the event loop (windows version)
@@ -1601,7 +1601,7 @@ handle_signal(int signal)
   WakeConditionVariable(&g_cv);
 }
 
-#endif /* WIN32 */
+#endif /* _WIN32 */
 
 #ifdef __linux__
 
@@ -1798,13 +1798,13 @@ display_device_uuid(void)
 static bool
 init(void)
 {
-#ifdef WIN32
+#ifdef _WIN32
   /* windows specific */
   InitializeCriticalSection(&g_cs);
   InitializeConditionVariable(&g_cv);
   /* install Ctrl-C */
   signal(SIGINT, handle_signal);
-#endif /* WIN32 */
+#endif /* _WIN32 */
 #ifdef __linux__
   /* linux specific */
   struct sigaction sa;
@@ -1857,7 +1857,7 @@ deinit(void)
 static void
 run_loop(void)
 {
-#ifdef WIN32
+#ifdef _WIN32
   /* windows specific loop */
   while (true) {
     oc_clock_time_t next_event_mt = oc_main_poll_v1();
@@ -1882,7 +1882,7 @@ run_loop(void)
     }
     LeaveCriticalSection(&g_cs);
   }
-#endif /* WIN32 */
+#endif /* _WIN32 */
 
 #ifdef __linux__
   /* linux specific loop */

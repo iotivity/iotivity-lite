@@ -214,8 +214,14 @@ TCPClient::Send(const uint8_t *data, size_t size)
 #else  /* !__linux__ && !__ANDROID__ && !ESP_PLATFORM */
     int flags = 0;
 #endif /* __linux__ || __ANDROID__ || ESP_PLATFORM */
-    // cast to char* to make Windows happy
-    ssize_t send_len =
+
+#ifdef _WIN32
+    SSIZE_T send_len;
+#else  /* !_WIN32 */
+    ssize_t send_len;
+#endif /* _WIN32 */
+    // cast to const char* to make Windows happy
+    send_len =
       send(socket_, (const char *)data + bytes_sent, size - bytes_sent, flags);
     if (send_len < 0) {
       if (wasInterrupted()) {
@@ -262,8 +268,13 @@ TCPClient::Receive(uint8_t *buffer, size_t size)
 
   size_t written = 0;
   do {
-    // cast to char* to make Windows happy
-    ssize_t count = recv(socket_, (char *)buffer + written, want_read, 0);
+#ifdef _WIN32
+    SSIZE_T count;
+#else  /* !_WIN32 */
+    ssize_t count;
+#endif /* _WIN32 */
+    // cast to const char* to make Windows happy
+    count = recv(socket_, (char *)buffer + written, want_read, 0);
     if (count < 0) {
       if (wasInterrupted()) {
         continue;

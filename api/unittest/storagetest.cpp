@@ -16,6 +16,11 @@
  *
  ****************************************************************************/
 
+#ifdef _WIN32
+// don't define max() macro
+#define NOMINMAX
+#endif /* _WIN32 */
+
 #include "oc_config.h"
 
 #ifdef OC_STORAGE

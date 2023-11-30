@@ -667,9 +667,9 @@ TEST(B64Test, EncodeThenDecode)
                       "be passed into the Base64 decoded and the result will "
                       "be checked with the original input to make sure the "
                       "round trip results are as expected.";
-  size_t input_size = input.size() + 1; // include null terminator
+  size_t input_size = input.length() + 1; // include null terminator
   size_t b64BufSize = (input_size / 3) * 4;
-  if (sizeof(input) % 3 != 0) {
+  if (input_size % 3 != 0) {
     b64BufSize += 4;
   }
   b64BufSize++;

@@ -16,6 +16,11 @@
  *
  ***************************************************************************/
 
+#ifdef _WIN32
+// don't define max() macro
+#define NOMINMAX
+#endif /* _WIN32 */
+
 #include "api/oc_helpers_internal.h"
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/observe_internal.h"

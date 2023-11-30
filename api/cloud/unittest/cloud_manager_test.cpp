@@ -159,7 +159,7 @@ public:
 #ifdef OC_DEBUG
     size_t json_size = oc_rep_to_json(rep, nullptr, 0, true);
     std::vector<char> json{};
-    json.reserve(json_size + 1);
+    json.resize(json_size + 1);
     oc_rep_to_json(rep, &json[0], json.capacity(), true);
     OC_PRINTF("%s", json.data());
 #endif /* OC_DEBUG */

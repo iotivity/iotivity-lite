@@ -21,6 +21,7 @@
 
 #include "port/oc_connectivity.h"
 #include "util/oc_features.h"
+#include "util/oc_process.h"
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
 #include "api/oc_tcp_internal.h"
@@ -31,6 +32,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+OC_PROCESS_NAME(oc_message_buffer_handler);
 
 /**
  * @brief Start the message buffer handler process

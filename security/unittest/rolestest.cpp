@@ -16,6 +16,11 @@
  *
  ****************************************************************************/
 
+#ifdef _WIN32
+// don't define max() macro
+#define NOMINMAX
+#endif /* _WIN32 */
+
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
 #include "api/oc_ri_internal.h"

@@ -27,7 +27,9 @@
 #ifndef OC_COMPILER_H
 #define OC_COMPILER_H
 
-#if defined(__MINGW32__) && (!defined(__GNUC__) || __GNUC__ < 9)
+#if defined(__MINGW32__) &&                                                    \
+  (!defined(__GNUC__) || (defined(__GNUC__) && __GNUC__ < 9)) &&               \
+  !defined(__clang__)
 #error "Unsupported compiler on MinGW platform"
 #endif /* __MINGW32__ && (!__GNUC__ || __GNUC__ < 9) */
 
@@ -97,8 +99,8 @@
 #endif
 
 #if defined(__clang__) || defined(__GNUC__)
-#if defined(__MINGW32__) && defined(__USE_MINGW_ANSI_STDIO) &&                 \
-  __USE_MINGW_ANSI_STDIO == 1
+#if defined(__MINGW32__) && !defined(__clang__) &&                             \
+  defined(__USE_MINGW_ANSI_STDIO) && __USE_MINGW_ANSI_STDIO == 1
 #define OC_PRINTF_FORMAT(...) __attribute__((format(gnu_printf, __VA_ARGS__)))
 #else
 #define OC_PRINTF_FORMAT(...) __attribute__((format(printf, __VA_ARGS__)))

@@ -26,6 +26,7 @@
 
 #include <iostream>
 #include <iomanip>
+#include <sstream>
 
 namespace oc::tls {
 

@@ -41,7 +41,7 @@ TEST(Timestamp, TimestampCompare)
 TEST(Timestamp, TimestampFormatBufferSize)
 {
   std::string buf;
-  buf.reserve(30);
+  buf.resize(30);
   timestamp_t ts{};
   // YYYY-MM-DDThh:mm:ssZ + null-terminator = min. size 21
   EXPECT_LT(0, timestamp_format(&buf[0], 21, &ts));
@@ -55,7 +55,7 @@ TEST(Timestamp, TimestampFormatBufferSize)
 TEST(Timestamp, TimestampFormatOutOfRange)
 {
   std::string buf;
-  buf.reserve(40);
+  buf.resize(40);
   timestamp_t ts{};
 
   // nsec out of range
@@ -95,7 +95,7 @@ TEST(Timestamp, TimestampFormatOutOfRange)
 TEST(Timestamp, TimestampFormatPrecision)
 {
   std::string buf;
-  buf.reserve(40);
+  buf.resize(40);
   timestamp_t ts{};
 
   EXPECT_EQ(30, timestamp_format_precision(&buf[0], buf.capacity(), &ts, 9));
@@ -183,7 +183,7 @@ TEST(Timestamp, TimestampFormat)
   };
 
   std::string buf;
-  buf.reserve(40);
+  buf.resize(40);
   for (size_t i = 0; i < tests.size(); ++i) {
     const auto &t = tests[i];
     EXPECT_EQ(t.expected.length(),

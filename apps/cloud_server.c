@@ -1153,6 +1153,7 @@ parse_options(int argc, char *argv[], parse_options_result_t *parsed_options)
   (void)printhelp;
   (void)parse_log_level;
   (void)parse_port;
+  (void)g_set_system_time;
 #else /* !_MSC_VER */
   static struct option long_options[] = {
     { OPT_HELP, no_argument, NULL, 'h' },

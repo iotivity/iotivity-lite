@@ -19,6 +19,7 @@
 #include "Device.h"
 
 #include "api/oc_core_res_internal.h"
+#include "api/oc_message_buffer_internal.h"
 #include "api/oc_ri_internal.h"
 #include "oc_acl.h"
 #include "oc_api.h"
@@ -37,8 +38,6 @@
 #include <gtest/gtest.h>
 #include <optional>
 #include <vector>
-
-OC_PROCESS_NAME(oc_message_buffer_handler);
 
 namespace oc {
 
