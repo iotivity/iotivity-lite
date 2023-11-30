@@ -358,3 +358,22 @@ oc_resource_encode_tag_properties(CborEncoder *object,
   oc_resource_encode_baseline_properties(object, resource, resource_is_tag,
                                          NULL);
 }
+
+oc_resource_t *
+oc_resource_get_by_uri(const char *uri, size_t uri_len, size_t device)
+{
+  /* Check against list of declared core resources. */
+  oc_resource_t *resource =
+    oc_core_get_resource_by_uri_v1(uri, uri_len, device);
+
+#ifdef OC_SERVER
+  if (resource != NULL) {
+    return resource;
+  }
+
+  /* Check against list of declared application resources. */
+  resource = oc_ri_get_app_resource_by_uri(uri, uri_len, device);
+#endif /* OC_SERVER */
+
+  return resource;
+}

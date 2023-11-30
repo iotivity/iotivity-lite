@@ -24,6 +24,7 @@
 #include "api/oc_rep_encode_internal.h"
 #include "api/oc_rep_decode_internal.h"
 #include "api/oc_rep_internal.h"
+#include "api/oc_resource_internal.h"
 #include "api/oc_ri_internal.h"
 #include "messaging/coap/coap_internal.h"
 #include "messaging/coap/options_internal.h"
@@ -1234,6 +1235,42 @@ ri_invoke_coap_entity_set_response(coap_packet_t *response,
   coap_set_status_code(response, response_buffer->code);
 }
 
+static oc_status_t
+ri_invoke_coap_entity_get_payload_rep(const uint8_t *payload,
+                                      size_t payload_len,
+                                      oc_content_format_t cf, oc_rep_t **rep)
+{
+  if (payload_len == 0) {
+    return OC_STATUS_OK;
+  }
+
+  if (!oc_rep_decoder_set_by_content_format(cf)) {
+    OC_WRN("ocri: unsupported content format (%d)", (int)cf);
+    return OC_STATUS_BAD_REQUEST;
+  }
+
+  /* Attempt to parse request payload using tinyCBOR via oc_rep helper
+   * functions. The result of this parse is a tree of oc_rep_t structures which
+   * will reflect the schema of the payload.
+   * Any failures while parsing the payload is viewed as an erroneous request
+   * and results in a 4.00 response being sent. */
+  oc_rep_parse_result_t result;
+  memset(&result, 0, sizeof(result));
+  int parse_error = oc_rep_parse_payload(payload, payload_len, &result);
+  if (parse_error != CborNoError) {
+    OC_WRN("ocri: error parsing request payload; tinyCBOR error code:  %d",
+           parse_error);
+    if (parse_error == CborErrorUnexpectedEOF) {
+      return OC_STATUS_REQUEST_ENTITY_TOO_LARGE;
+    }
+    return OC_STATUS_BAD_REQUEST;
+  }
+  if (result.type == OC_REP_PARSE_RESULT_REP) {
+    *rep = result.rep;
+  }
+  return OC_STATUS_OK;
+}
+
 bool
 oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
                                  oc_endpoint_t *endpoint, void *user_data)
@@ -1325,78 +1362,22 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
   request_obj.etag_len = coap_options_get_etag(ctx->request, &request_obj.etag);
 #endif /* OC_HAS_FEATURE_ETAG */
 
-  OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
-
-  bool bad_request = false;
-  bool entity_too_large = false;
-  if (payload_len > 0) {
-    if (!oc_rep_decoder_set_by_content_format(cf)) {
-      OC_WRN("ocri: unsupported content format (%d)", (int)cf);
-      bad_request = true;
-    }
-
-    if (!bad_request) {
-      /* Attempt to parse request payload using tinyCBOR via oc_rep helper
-       * functions. The result of this parse is a tree of oc_rep_t structures
-       * which will reflect the schema of the payload.
-       * Any failures while parsing the payload is viewed as an erroneous
-       * request and results in a 4.00 response being sent.
-       */
-      oc_rep_parse_result_t result;
-      memset(&result, 0, sizeof(result));
-      int parse_error = oc_rep_parse_payload(payload, payload_len, &result);
-      if (parse_error == CborNoError) {
-        assert(result.type == OC_REP_PARSE_RESULT_REP || result.rep == NULL);
-        request_obj.request_payload = result.rep;
-      } else {
-        OC_WRN("ocri: error(%d) parsing request payload", parse_error);
-        if (parse_error == CborErrorUnexpectedEOF) {
-          entity_too_large = true;
-        }
-        bad_request = true;
-      }
-    }
-  }
-
-  oc_resource_t *cur_resource = NULL;
-
-  /* If there were no errors thus far, attempt to locate the specific
-   * resource object that will handle the request using the request uri.
-   */
-  /* Check against list of declared core resources.
-   */
-  if (!bad_request) {
-    for (int i = 0; i < OC_NUM_CORE_RESOURCES_PER_DEVICE; ++i) {
-      oc_resource_t *resource =
-        oc_core_get_resource_by_index(i, endpoint->device);
-      if (resource != NULL &&
-          oc_string_len(resource->uri) == (uri_path_len + 1) &&
-          strncmp(oc_string(resource->uri) + 1, uri_path, uri_path_len) == 0) {
-        request_obj.resource = cur_resource = resource;
-        break;
-      }
-    }
-  }
-
+  /* Attempt to locate the specific resource object that will handle the request
+   * using the request uri. */
   bool resource_is_collection = false;
-#ifdef OC_SERVER
-  /* Check against list of declared application resources.
-   */
-  if (!cur_resource && !bad_request) {
-    cur_resource =
-      oc_ri_get_app_resource_by_uri(uri_path, uri_path_len, endpoint->device);
+  oc_resource_t *cur_resource =
+    oc_resource_get_by_uri(uri_path, uri_path_len, endpoint->device);
+  if (cur_resource != NULL) {
     request_obj.resource = cur_resource;
-
-#if defined(OC_COLLECTIONS)
-    if (cur_resource && oc_check_if_collection(cur_resource)) {
+#if defined(OC_SERVER) && defined(OC_COLLECTIONS)
+    if (oc_check_if_collection(cur_resource)) {
       resource_is_collection = true;
     }
-#endif /* OC_COLLECTIONS */
+#endif /* OC_SERVER && OC_COLLECTIONS */
   }
-#endif /* OC_SERVER */
 
   bool forbidden = false;
+  bool bad_request = false;
   oc_interface_mask_t iface_mask = 0;
   if (cur_resource) {
     /* If there was no interface selection, pick the "default interface". */
@@ -1526,39 +1507,52 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
   response_buffer.buffer_size = OC_BLOCK_SIZE;
 #endif /* !OC_BLOCK_WISE */
 
-  bool method_not_allowed = false;
-  if (cur_resource && !bad_request && !not_authorized && !not_modified) {
-    /* Process a request against a valid resource, request payload, and
-     * interface.
-     */
-    /* Initialize oc_rep with a buffer to hold the response payload. "buffer"
-     * points to memory allocated in the messaging layer for the "CoAP
-     * Transaction" to service this request.
-     */
-#if defined(OC_BLOCK_WISE) && defined(OC_DYNAMIC_ALLOCATION)
-    if (response_state_allocated) {
-      oc_rep_new_realloc_v1(&response_buffer.buffer,
-                            response_buffer.buffer_size, OC_MAX_APP_DATA_SIZE);
-      enable_realloc_rep = true;
-    } else {
-      oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
-    }
-#else  /* OC_DYNAMIC_ALLOCATION */
-    oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
-#endif /* !OC_DYNAMIC_ALLOCATION */
-    oc_rep_encoder_set_type_by_accept(accept);
+  OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
+  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
 
-    oc_status_t ret = ri_invoke_request_handler(
-      cur_resource, method, &request_obj, iface_mask, resource_is_collection);
-    switch (ret) {
-    case OC_STATUS_OK:
-      break;
-    case OC_STATUS_METHOD_NOT_ALLOWED:
-      method_not_allowed = true;
-      break;
-    default:
+  bool method_not_allowed = false;
+  bool entity_too_large = false;
+  if (cur_resource && !bad_request && !not_authorized && !not_modified) {
+    oc_status_t status = ri_invoke_coap_entity_get_payload_rep(
+      payload, payload_len, cf, &request_obj.request_payload);
+    if (status != OC_STATUS_OK) {
       bad_request = true;
-      break;
+      entity_too_large = status == OC_STATUS_REQUEST_ENTITY_TOO_LARGE;
+    }
+
+    if (!bad_request) {
+      /* Initialize oc_rep with a buffer to hold the response payload. "buffer"
+       * points to memory allocated in the messaging layer for the "CoAP
+       * Transaction" to service this request.
+       */
+#if defined(OC_BLOCK_WISE) && defined(OC_DYNAMIC_ALLOCATION)
+      if (response_state_allocated) {
+        oc_rep_new_realloc_v1(&response_buffer.buffer,
+                              response_buffer.buffer_size,
+                              OC_MAX_APP_DATA_SIZE);
+        enable_realloc_rep = true;
+      } else {
+        oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
+      }
+#else  /* OC_DYNAMIC_ALLOCATION */
+      oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
+#endif /* !OC_DYNAMIC_ALLOCATION */
+      oc_rep_encoder_set_type_by_accept(accept);
+
+      /* Process a request against a valid resource, request payload, and
+       * interface. */
+      oc_status_t ret = ri_invoke_request_handler(
+        cur_resource, method, &request_obj, iface_mask, resource_is_collection);
+      switch (ret) {
+      case OC_STATUS_OK:
+        break;
+      case OC_STATUS_METHOD_NOT_ALLOWED:
+        method_not_allowed = true;
+        break;
+      default:
+        bad_request = true;
+        break;
+      }
     }
   }
 

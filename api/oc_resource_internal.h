@@ -152,6 +152,10 @@ void oc_resource_encode_tag_properties(CborEncoder *object,
                                        const oc_resource_t *resource)
   OC_NONNULL();
 
+/** @brief Retrieve a core, application or collection resource with given URI */
+oc_resource_t *oc_resource_get_by_uri(const char *uri, size_t uri_len,
+                                      size_t device) OC_NONNULL();
+
 #ifdef __cplusplus
 }
 #endif
