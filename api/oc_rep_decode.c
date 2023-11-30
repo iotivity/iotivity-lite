@@ -16,6 +16,7 @@
  *
  ****************************************************************************/
 
+#include "api/oc_rep_decode_cbor_internal.h"
 #include "api/oc_rep_decode_internal.h"
 #include "api/oc_rep_internal.h"
 #include "port/oc_log_internal.h"
@@ -23,9 +24,6 @@
 #ifdef OC_JSON_ENCODER
 #include "api/oc_rep_decode_json_internal.h"
 #endif /* OC_JSON_ENCODER */
-
-static int oc_rep_parse_cbor(const uint8_t *payload, size_t payload_size,
-                             oc_rep_parse_result_t *result);
 
 static oc_rep_decoder_t g_rep_decoder = {
   .type = OC_REP_CBOR_DECODER,
@@ -491,7 +489,7 @@ rep_parse_root_array(CborValue *array, oc_rep_t **rep)
   return err;
 }
 
-static int
+int
 oc_rep_parse_cbor(const uint8_t *payload, size_t payload_size,
                   oc_rep_parse_result_t *result)
 {
@@ -525,7 +523,12 @@ oc_rep_parse_cbor(const uint8_t *payload, size_t payload_size,
     err = rep_parse_root_array(&array, &rep);
     goto done;
   }
+  if (cbor_value_is_null(&root_value)) {
+    result->type = OC_REP_PARSE_RESULT_NULL;
+    return CborNoError;
+  }
 
+  OC_ERR("failed to parse rep: invalid root type(%d)", root_value.type);
   return CborErrorInternalError;
 
 done:

@@ -70,17 +70,20 @@ parseJson(const std::string &json)
   return oc::oc_rep_unique_ptr(result.rep, &oc_free_rep);
 }
 
-TEST_F(TestRepDecodeJson, DecodeEmpty)
+TEST_F(TestRepDecodeJson, DecodeRootEmptyArray)
 {
   std::string emptyArray = "[]";
   auto json = oc::GetVector<uint8_t>(emptyArray, true);
   oc_rep_parse_result_t result{};
   ASSERT_EQ(CborNoError, oc_rep_parse_json(json.data(), json.size(), &result));
   EXPECT_EQ(OC_REP_PARSE_RESULT_EMPTY_ARRAY, result.type);
+}
 
+TEST_F(TestRepDecodeJson, DecodeRootEmptyObject)
+{
   std::string emptyObject = "{}";
-  json = oc::GetVector<uint8_t>(emptyObject, true);
-  result = {};
+  auto json = oc::GetVector<uint8_t>(emptyObject, true);
+  oc_rep_parse_result_t result{};
   ASSERT_EQ(CborNoError, oc_rep_parse_json(json.data(), json.size(), &result));
   EXPECT_EQ(OC_REP_PARSE_RESULT_REP, result.type);
   EXPECT_EQ(nullptr, result.rep);

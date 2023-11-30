@@ -1347,10 +1347,10 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
       memset(&result, 0, sizeof(result));
       int parse_error = oc_rep_parse_payload(payload, payload_len, &result);
       if (parse_error == CborNoError) {
+        assert(result.type == OC_REP_PARSE_RESULT_REP || result.rep == NULL);
         request_obj.request_payload = result.rep;
       } else {
-        OC_WRN("ocri: error parsing request payload; tinyCBOR error code:  %d",
-               parse_error);
+        OC_WRN("ocri: error(%d) parsing request payload", parse_error);
         if (parse_error == CborErrorUnexpectedEOF) {
           entity_too_large = true;
         }

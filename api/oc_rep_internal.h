@@ -58,6 +58,7 @@ struct oc_memb *oc_rep_reset_pool(struct oc_memb *pool);
 typedef enum {
   OC_REP_PARSE_RESULT_REP,
   OC_REP_PARSE_RESULT_EMPTY_ARRAY,
+  OC_REP_PARSE_RESULT_NULL,
 } oc_rep_parse_result_type_t;
 
 typedef struct
