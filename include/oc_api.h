@@ -1481,7 +1481,7 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
  * @param[in] callback callback function itself
  */
 OC_API
-void oc_resource_set_date_remover(oc_resource_t *resource, oc_remove_resource_cb_t callback);
+void oc_resource_set_data_remover(oc_resource_t *resource, oc_remove_resource_cb_t callback, void *context);
 #endif
 
 

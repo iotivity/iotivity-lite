@@ -51,9 +51,11 @@ typedef struct oc_virtual_device_s
   uint8_t *v_id;
   size_t v_id_size;
   oc_string_t econame;
-  size_t index;         ///< index of `g_oc_device_info[]` where
-                        ///< the corresponding Device is stored.
-  bool is_vod_online;      ///< true: Device itself is still alive, but is removed from "oic.r.vodlist:vods"
+  size_t index;             ///< index of `g_oc_device_info[]` where
+                            ///< the corresponding Device is stored.
+  void *ecosystem_device;   ///< conrresponding non-OCF ecosystem Device
+  bool is_vod_online;       ///< false: Device itself is still alive,
+                            ///< but it was removed from "oic.r.vodlist:vods"
 } oc_virtual_device_t;
 
 /**
@@ -149,20 +151,7 @@ size_t oc_bridge_add_virtual_device(
  *        This function DOES NOT add new Device to `g_oc_device_info[]`, but
  *        just re-registre existing VOD to "oic.r.vodlist:vods" list.
  *
- * @param device_index
- * @return 0: success, -1: failure
- */
-OC_API
-int oc_bridge_add_virtual_device2(size_t device_index);
-
-/**
- * @brief add new vodentry for an existing VOD to "oic.r.vodlist:vods".
- *        This function is usually called after `oc_bridge_remove_virtual_device()`
- *        is called.
- *        This function DOES NOT add new Device to `g_oc_device_info[]`, but
- *        just re-registre existing VOD to "oic.r.vodlist:vods" list.
- *
- * @param device_index
+ * @param device_index Device index of VOD to be online
  * @return 0: success, -1: failure
  */
 OC_API
@@ -256,7 +245,7 @@ oc_virtual_device_t *oc_bridge_get_vod_mapping_info2(
 /**
  * @brief return entry of "oic.r.vodlist:vods" list
  * @param di Device id of the VOD to be returned
- * @return VOD entry [oc_vods_t]
+ * @return VOD entry (oc_vods_t)
  */
 OC_API
 oc_vods_t * oc_bridge_get_vod(oc_uuid_t di);

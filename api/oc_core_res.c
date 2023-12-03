@@ -661,9 +661,6 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
   } else {
     oc_sec_svr_create_new_device(device_count, false);
   }
-  /*
-   * todo4me <2023/8/13> resume here...!!!
-   */
   oc_sec_svr_init_new_device(device_count);
 #endif
 
