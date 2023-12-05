@@ -511,6 +511,9 @@ TEST_F(TestMessagingBlockwise, BlockwiseRequest)
     return true;
   };
 
+  auto always_valid = [](coap_make_response_ctx_t *, const oc_endpoint_t *,
+                         void *) { return true; };
+
   coap_packet_t response_pkt;
   coap_receive_ctx_t ctx = {
     /*.request =*/&request_pkt,
@@ -523,7 +526,8 @@ TEST_F(TestMessagingBlockwise, BlockwiseRequest)
   };
   bool invoked = false;
   ASSERT_EQ(COAP_RECEIVE_SUCCESS,
-            coap_receive(&ctx, &endpoint, skip_response, &invoked));
+            coap_receive(&ctx, &endpoint, always_valid, nullptr, skip_response,
+                         &invoked));
   // the first block should be written to the partial request buffer
   ASSERT_NE(nullptr, ctx.request_buffer);
   ASSERT_EQ(kBlockSize, ctx.request_buffer->next_block_offset);
@@ -536,7 +540,8 @@ TEST_F(TestMessagingBlockwise, BlockwiseRequest)
 
   // duplicate block
   EXPECT_EQ(COAP_RECEIVE_SKIP_DUPLICATE_MESSAGE,
-            coap_receive(&ctx, &endpoint, skip_response, &invoked));
+            coap_receive(&ctx, &endpoint, always_valid, nullptr, skip_response,
+                         &invoked));
   // no change in the request buffer
   ASSERT_EQ(kBlockSize, ctx.request_buffer->next_block_offset);
   for (size_t i = 0; i < ctx.request_buffer->next_block_offset; ++i) {
@@ -554,7 +559,8 @@ TEST_F(TestMessagingBlockwise, BlockwiseRequest)
   }
   request_pkt.mid = coap_get_mid();
   EXPECT_EQ(COAP_RECEIVE_SUCCESS,
-            coap_receive(&ctx, &endpoint, skip_response, &invoked));
+            coap_receive(&ctx, &endpoint, always_valid, nullptr, skip_response,
+                         &invoked));
   ASSERT_EQ(kBlockSize, ctx.request_buffer->next_block_offset);
   for (size_t i = 0; i < ctx.request_buffer->next_block_offset; ++i) {
     EXPECT_EQ(i / kBlockSize, ctx.request_buffer->buffer[i]);
@@ -573,7 +579,8 @@ TEST_F(TestMessagingBlockwise, BlockwiseRequest)
   coap_options_set_block1(&request_pkt, 1, 1, kBlockSize, kBlockSize);
   ctx.block1 = coap_packet_get_block_options(&request_pkt, false);
   EXPECT_EQ(COAP_RECEIVE_SUCCESS,
-            coap_receive(&ctx, &endpoint, skip_response, &invoked));
+            coap_receive(&ctx, &endpoint, always_valid, nullptr, skip_response,
+                         &invoked));
   // two blocks should be written to the partial request buffer
   ASSERT_EQ(2 * kBlockSize, ctx.request_buffer->next_block_offset);
   for (size_t i = 0; i < ctx.request_buffer->next_block_offset; ++i) {
@@ -591,7 +598,7 @@ TEST_F(TestMessagingBlockwise, BlockwiseRequest)
   ctx.block1 = coap_packet_get_block_options(&request_pkt, false);
   EXPECT_EQ(COAP_RECEIVE_SUCCESS,
             coap_receive(
-              &ctx, &endpoint,
+              &ctx, &endpoint, always_valid, nullptr,
               [](coap_make_response_ctx_t *ctx, oc_endpoint_t *, void *data) {
                 *static_cast<bool *>(data) = true;
                 coap_set_status_code(ctx->response, VALID_2_03);
@@ -619,6 +626,9 @@ TEST_F(TestMessagingBlockwise, BlockwiseRequest_FailInvalidSize)
     return true;
   };
 
+  auto always_valid = [](coap_make_response_ctx_t *, const oc_endpoint_t *,
+                         void *) { return true; };
+
   coap_packet_t response_pkt;
   std::array<uint8_t, kBlockSize> payload{};
   memset(&payload[0], 'a', payload.size());
@@ -641,7 +651,8 @@ TEST_F(TestMessagingBlockwise, BlockwiseRequest_FailInvalidSize)
     /*.response_buffer =*/nullptr,
   };
   EXPECT_NE(COAP_RECEIVE_SUCCESS,
-            coap_receive(&ctx, &endpoint, skip_response, nullptr));
+            coap_receive(&ctx, &endpoint, always_valid, nullptr, skip_response,
+                         nullptr));
   // clean-up
   coap_free_all_transactions();
 
@@ -650,7 +661,8 @@ TEST_F(TestMessagingBlockwise, BlockwiseRequest_FailInvalidSize)
   block1.size = kBlockSize; // offset + size >=than allocated size
   ctx.block1 = block1;
   EXPECT_NE(COAP_RECEIVE_SUCCESS,
-            coap_receive(&ctx, &endpoint, skip_response, nullptr));
+            coap_receive(&ctx, &endpoint, always_valid, nullptr, skip_response,
+                         nullptr));
   // clean-up
   coap_free_all_transactions();
 
@@ -660,7 +672,8 @@ TEST_F(TestMessagingBlockwise, BlockwiseRequest_FailInvalidSize)
   block1.size = 1;   // offset + size <= than allocated size
   ctx.block1 = block1;
   EXPECT_NE(COAP_RECEIVE_SUCCESS,
-            coap_receive(&ctx, &endpoint, skip_response, nullptr));
+            coap_receive(&ctx, &endpoint, always_valid, nullptr, skip_response,
+                         nullptr));
 }
 
 static constexpr size_t kDeviceID = 0;

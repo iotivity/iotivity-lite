@@ -70,7 +70,8 @@ bool oc_resource_supports_interface(const oc_resource_t *resource,
  */
 bool oc_resource_get_method_handler(const oc_resource_t *resource,
                                     oc_method_t method,
-                                    oc_request_handler_t *handler) OC_NONNULL();
+                                    oc_request_handler_t *handler)
+  OC_NONNULL(1);
 
 /**
  * @brief Callback invoked for each resource iterated by oc_resources_iterate.

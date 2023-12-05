@@ -741,9 +741,40 @@ coap_receive_set_response_by_handler(coap_receive_ctx_t *ctx,
   return ctx->response->code;
 }
 
+static uint8_t
+coap_validate_request(coap_receive_ctx_t *ctx, const oc_endpoint_t *endpoint,
+                      coap_validate_request_fn_t validate_fn,
+                      void *validate_fn_data)
+{
+  coap_make_response_ctx_t handler_ctx;
+  handler_ctx.request = ctx->message;
+  handler_ctx.response = ctx->response;
+#ifdef OC_BLOCK_WISE
+  handler_ctx.request_state = &ctx->request_buffer;
+  handler_ctx.response_state = &ctx->response_buffer;
+  handler_ctx.block2_size = ctx->block2.size;
+#else  /* !OC_BLOCK_WISE */
+  handler_ctx.buffer = ctx->transaction->message->data + COAP_MAX_HEADER_SIZE;
+#endif /* OC_BLOCK_WISE */
+  if (!validate_fn(&handler_ctx, endpoint, validate_fn_data)) {
+#ifdef OC_BLOCK_WISE
+    if (ctx->request_buffer != NULL) {
+      ctx->request_buffer->ref_count = 0;
+    }
+    if (ctx->response_buffer != NULL) {
+      ctx->response_buffer->ref_count = 0;
+    }
+#endif /* OC_BLOCK_WISE */
+    return ctx->response->code;
+  }
+  return 0;
+}
+
 static coap_receive_status_t
 coap_receive_request_with_method(coap_receive_ctx_t *ctx,
                                  oc_endpoint_t *endpoint,
+                                 coap_validate_request_fn_t validate_fn,
+                                 void *validate_fn_data,
                                  coap_make_response_fn_t response_fn,
                                  void *response_fn_data)
 {
@@ -770,6 +801,17 @@ coap_receive_request_with_method(coap_receive_ctx_t *ctx,
   if (ctx->transaction == NULL) {
     COAP_ERR("could not allocate transaction");
     return COAP_RECEIVE_ERROR;
+  }
+
+  /* validate request
+   * - check if resource is found
+   * - check if method is allowed for resource
+   * - check ACLs
+   * - check resource interface
+   */
+  if (coap_validate_request(ctx, endpoint, validate_fn, validate_fn_data) !=
+      0) {
+    return COAP_RECEIVE_SUCCESS;
   }
 
 #ifdef OC_BLOCK_WISE
@@ -1015,11 +1057,13 @@ coap_receive_request_with_code(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint)
 
 coap_receive_status_t
 coap_receive(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint,
+             coap_validate_request_fn_t validate_fn, void *validate_fn_data,
              coap_make_response_fn_t response_fn, void *response_fn_data)
 {
   /* handle requests */
   if (ctx->message->code >= COAP_GET && ctx->message->code <= COAP_DELETE) {
-    return coap_receive_request_with_method(ctx, endpoint, response_fn,
+    return coap_receive_request_with_method(ctx, endpoint, validate_fn,
+                                            validate_fn_data, response_fn,
                                             response_fn_data);
   }
   return coap_receive_request_with_code(ctx, endpoint);
@@ -1130,8 +1174,8 @@ coap_process_inbound_message(oc_message_t *msg)
 #endif /* OC_BLOCK_WISE */
   };
 
-  ret =
-    coap_receive(&ctx, &msg->endpoint, oc_ri_invoke_coap_entity_handler, NULL);
+  ret = coap_receive(&ctx, &msg->endpoint, oc_ri_validate_coap_request, NULL,
+                     oc_ri_invoke_coap_entity_handler, NULL);
 
 #if !defined(OC_BLOCK_WISE) || defined(OC_TCP)
 receive_result:

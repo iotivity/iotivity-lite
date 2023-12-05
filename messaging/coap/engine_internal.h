@@ -116,6 +116,9 @@ typedef struct coap_make_response_ctx_t
 typedef bool (*coap_make_response_fn_t)(coap_make_response_ctx_t *,
                                         oc_endpoint_t *, void *);
 
+typedef bool (*coap_validate_request_fn_t)(coap_make_response_ctx_t *,
+                                           const oc_endpoint_t *, void *);
+
 typedef struct
 {
   const coap_packet_t *message;
@@ -135,6 +138,8 @@ typedef struct
  * @param ctx context for the coap request/response (cannot be NULL)
  * @param endpoint endpoint from which the coap request was received and to
  * which the coap response will be sent (cannot be NULL)
+ * @param validate_fn function to validate the coap request (cannot be NULL)
+ * @param validate_fn_data custom user data to pass to \p validate_fn
  * @param response_fn function to create a response to the coap request (cannot
  * be NULL)
  * @param response_fn_data custom user data to pass to \p response_fn
@@ -143,8 +148,11 @@ typedef struct
  */
 coap_receive_status_t coap_receive(coap_receive_ctx_t *ctx,
                                    oc_endpoint_t *endpoint,
+                                   coap_validate_request_fn_t validate_fn,
+                                   void *validate_fn_data,
                                    coap_make_response_fn_t response_fn,
-                                   void *response_fn_data) OC_NONNULL(1, 2, 3);
+                                   void *response_fn_data)
+  OC_NONNULL(1, 2, 3, 5);
 
 #ifdef OC_REQUEST_HISTORY
 
