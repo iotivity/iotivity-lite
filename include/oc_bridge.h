@@ -252,7 +252,7 @@ oc_vods_t * oc_bridge_get_vod(oc_uuid_t di);
 
 
 /**
- * return the list of current active VODs
+ * @brief return the list of current active VODs
  * (`g_vods` list)
  *
  * @return
@@ -260,6 +260,12 @@ oc_vods_t * oc_bridge_get_vod(oc_uuid_t di);
  */
 OC_API
 oc_vods_t * oc_bridge_get_vod_list(void);
+
+/**
+ * @brief Print out all contents of g_oc_device_info[] array
+ */
+OC_API
+void oc_bridge_print_device_list(void);
 
 #ifdef __cplusplus
 }

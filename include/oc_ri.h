@@ -378,8 +378,8 @@ struct oc_resource_s
  * modifiedbyme <2023/7/16> add func pointer var : `oc_resource_s.remove_resource_data()`
  */
 #ifdef OC_HAS_FEATURE_BRIDGE
-  void *data;                                    ///< property values of this Resource
-  oc_remove_resource_cb_t resource_data_remover; ///< callback to be called when the VOD including this Resource is removed
+//  void *data;                                    ///< property values of this Resource
+//  oc_remove_resource_cb_t resource_data_remover; ///< callback to be called when the VOD including this Resource is removed
 #endif
 };
 

@@ -705,6 +705,7 @@ oc_core_remove_device_at_index(size_t index)
    */
   oc_reset_device(index);
   oc_sec_sdi_clear(oc_sec_sdi_get(index));
+
 //  oc_sec_ael_reset(index);
   oc_sec_ael_free_device(index);
   oc_sec_cred_clear(index, NULL, NULL);
@@ -712,7 +713,7 @@ oc_core_remove_device_at_index(size_t index)
 #endif /* OC_SECURITY */
 
   /*
-   * fixme4me <2023/7/23> 이 device 와 관련된 ip connectivity 도 없애야 한다.
+   * FIXME4ME (done) <2023/7/23> 이 device 와 관련된 ip connectivity 도 없애야 한다.
    * oc_shutdown_all_devices() 참고
    * oc_connectivity_shutdown(device_index) 참고
    */

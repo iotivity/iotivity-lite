@@ -643,6 +643,7 @@ oc_resource_set_request_handler(oc_resource_t *resource, oc_method_t method,
 /*
  * fixme4me <Oct 30, 2023> enclosing_method() : rename this function (date -> data)
  */
+#if 0
 void
 oc_resource_set_data_remover(oc_resource_t *resource, oc_remove_resource_cb_t callback, void *context)
 {
@@ -651,6 +652,7 @@ oc_resource_set_data_remover(oc_resource_t *resource, oc_remove_resource_cb_t ca
 
   return;
 }
+#endif
 #endif
 
 #ifdef OC_OSCORE

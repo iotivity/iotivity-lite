@@ -70,7 +70,7 @@ oc_bridge_is_virtual_device(size_t device_index)
 {
   oc_resource_t *r = oc_core_get_resource_by_index(OCF_D, device_index);
   for (size_t i = 0; i < oc_string_array_get_allocated_size(r->types); ++i) {
-    if (strncmp(oc_string_array_get_item(r->types, i), "oic.d.virtual", 14) ==
+    if (strncmp(oc_string_array_get_item(r->types, i), "oic.d.virtual", strlen("oic.d.virtual")) ==
         0) {
       return true;
     }
@@ -559,6 +559,27 @@ oc_vods_t *
 oc_bridge_get_vod_list(void)
 {
   return oc_list_head(g_vods);
+}
+
+void
+oc_bridge_print_device_list(void)
+{
+  size_t device_count = oc_core_get_num_devices();
+  char di[OC_UUID_LEN];
+  char piid[OC_UUID_LEN];
+
+  for (size_t i=0; i<device_count; i++) {
+    oc_uuid_to_str(&oc_core_get_device_info(i)->di, di, OC_UUID_LEN);
+    oc_uuid_to_str(&oc_core_get_device_info(i)->piid, piid, OC_UUID_LEN);
+    printf("[ Device Index : %ld ]\n  |_ Device ID: %s\n  |_ PIID: %s\n  |_ Name: %s\n  |_ ICV: %s\n  |_ DMV: %s\n  |_ Enable: %d\n",
+        i,
+        di,
+        piid,
+        oc_string(oc_core_get_device_info(i)->name),
+        oc_string(oc_core_get_device_info(i)->icv),
+        oc_string(oc_core_get_device_info(i)->dmv),
+        !oc_core_get_device_info(i)->is_removed);
+  }
 }
 
 
