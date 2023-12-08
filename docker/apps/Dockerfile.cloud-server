@@ -10,9 +10,10 @@ RUN mkdir /iotivity-lite/build && \
 	cmake --build . --target cloud_server
 
 # install libfaketime
+# enable struct stat64 by adding -D__USE_LARGEFILE64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE
 RUN git clone https://github.com/wolfcw/libfaketime.git && \
 	cd /libfaketime/src && \
-	make install FAKETIME_COMPILE_CFLAGS="-DFAKE_SETTIME -DFAKE_STATELESS"
+	make install FAKETIME_COMPILE_CFLAGS="-DFAKE_SETTIME -DFAKE_STATELESS -D__USE_LARGEFILE64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE"
 
 FROM alpine:latest AS service
 RUN apk add --no-cache bash
