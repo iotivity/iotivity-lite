@@ -82,5 +82,3 @@ jobs:
           build-args: |
             BUILD_ARGS=-DOC_DEBUG_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON ${{ inputs.build_args }}
             BUILD_TYPE=${{ inputs.build_type }}
-          # required because of https://github.com/snok/container-retention-policy/issues/63
-          provenance: false
