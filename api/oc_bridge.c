@@ -391,14 +391,14 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
   /*
    * FIXME4ME <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later..
    */
-//  if (oc_is_owned_device(g_vodlist_res->device) || oc_is_owned_device(vd_index)) {
+  if (oc_is_owned_device(g_vodlist_res->device) || oc_is_owned_device(vd_index)) {
     oc_connectivity_ports_t ports;
     memset(&ports, 0, sizeof(ports));
     if (oc_connectivity_init(vd_index, ports) < 0) {
       oc_abort("error initializing connectivity for device");
     }
     OC_DBG("oc_bridge: init connectivity for virtual device %zd", vd_index);
-//  }
+  }
 #else
   oc_connectivity_ports_t ports;
   memset(&ports, 0, sizeof(ports));
@@ -413,11 +413,11 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
   /*
    * FIXME4ME <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later...
    */
-//  if (oc_is_owned_device(vd_index)) {
+  if (oc_is_owned_device(vd_index)) {
     add_virtual_device_to_vods_list(name, oc_core_get_device_id(vd_index),
                                     econame);
     oc_notify_observers(g_vodlist_res);
-//  }
+  }
 #endif // OC_SECURITY
   return vd_index;
 }
@@ -454,16 +454,16 @@ oc_bridge_add_vod(size_t device_index)
 
 #ifdef OC_SECURITY
   /*
-   * fixme4me <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later..
+   * FIXME4ME <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later..
    */
-//  if (oc_is_owned_device(g_vodlist_res->device) || oc_is_owned_device(device_index)) {
+  if (oc_is_owned_device(g_vodlist_res->device) || oc_is_owned_device(device_index)) {
     oc_connectivity_ports_t ports;
     memset(&ports, 0, sizeof(ports));
     if (oc_connectivity_init(device_index, ports) < 0) {
       oc_abort("error initializing connectivity for device");
     }
     OC_DBG("oc_bridge: init connectivity for virtual device %zd", device_index);
-//  }
+  }
 #else
   oc_connectivity_ports_t ports;
   memset(&ports, 0, sizeof(ports));
@@ -476,13 +476,13 @@ oc_bridge_add_vod(size_t device_index)
 #ifdef OC_SECURITY
 
   /*
-   * fixme4me <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later...
+   * FIXME4ME <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later...
    */
-//  if (oc_is_owned_device(device_index)) {
+  if (oc_is_owned_device(device_index)) {
     add_virtual_device_to_vods_list(oc_string(device->name), oc_core_get_device_id(device_index),
                                     oc_string(vod_mapping_item->econame));
     oc_notify_observers(g_vodlist_res);
-//  }
+  }
 #endif // OC_SECURITY
 
     return 0;

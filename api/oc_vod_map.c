@@ -50,7 +50,7 @@ oc_vod_map_decode(oc_rep_t *rep, bool from_storage)
   size_t len = 0;
 
   /*
-   * todo4me <2023/8/14> This could make a bug because Devices array (g_oc_device_info[])
+   * TODO4ME <2023/8/14> This could make a bug because Devices array (g_oc_device_info[])
    *                     can not be loaded now.
    *                     so currently disable loading of `g_vod_mapping_list`
    */
@@ -157,7 +157,7 @@ oc_vod_map_load(void)
     oc_parse_rep(buf, (uint16_t)ret, &rep);
 //    oc_vod_map_decode(rep, true);
     /*
-     * todo4me <2023/8/14> This could make a bug because Devices (g_oc_device_info[])
+     * TODO4ME <2023/8/14> This could make a bug because Devices (g_oc_device_info[])
      *                     can not be loaded now.
      *                     so, currently disable loading of `g_vod_mapping_list`
      */

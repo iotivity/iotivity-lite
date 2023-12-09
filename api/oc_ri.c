@@ -543,28 +543,6 @@ oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len, size_t device)
   return NULL;
 }
 
-oc_resource_t *
-oc_ri_get_app_resource_by_device(size_t device, bool reset)
-{
-  static oc_resource_t *rsc;
-  oc_resource_t *found;
-
-  if (reset) {
-    rsc = oc_ri_get_app_resources();
-  }
-
-  while (rsc) {
-    if (rsc->device == device) {
-      found = rsc;
-      rsc = rsc->next;
-      return found;
-    }
-
-    rsc = rsc->next;
-  }
-
-  return NULL;
-}
 
 static void
 oc_ri_delete_all_app_resources(void)
@@ -587,6 +565,55 @@ oc_ri_delete_all_app_resources(void)
  * modifiedbyme <2023/7/17> add new func : oc_ri_delete_app_resources_per_device(){}
  */
 #ifdef OC_HAS_FEATURE_BRIDGE
+oc_resource_t *
+oc_ri_get_app_resource_by_device(size_t device, bool reset)
+{
+  static oc_resource_t *rsc;
+#ifdef OC_COLLECTIONS
+  static oc_resource_t *coll_rsc;
+#endif
+  oc_resource_t *found;
+
+  if (reset) {
+    rsc = oc_ri_get_app_resources();
+#ifdef OC_COLLECTIONS
+    coll_rsc = oc_collection_get_collections();
+#endif
+  }
+
+#ifdef OC_COLLECTIONS
+  while (rsc || coll_rsc) {
+    if (rsc && (rsc->device == device)) {
+      found = rsc;
+      rsc = rsc->next;
+      return found;
+    } else {
+      if (rsc) rsc = rsc->next;
+      if (coll_rsc && (coll_rsc->device == device)) {
+        found = coll_rsc;
+        coll_rsc = coll_rsc->next;
+        return found;
+      } else {
+        if (coll_rsc) coll_rsc = coll_rsc->next;
+      }
+    }
+  }
+#else
+  while (rsc) {
+    if (rsc->device == device) {
+      found = rsc;
+      rsc = rsc->next;
+      return found;
+    }
+
+    rsc = rsc->next;
+  }
+#endif
+
+
+  return NULL;
+}
+
 void
 oc_ri_delete_app_resources_per_device(size_t index)
 {

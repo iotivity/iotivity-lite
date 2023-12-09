@@ -541,7 +541,7 @@ oc_core_add_new_device(oc_add_new_device_t cfg)
  * modifiedbyme <2023/7/16> add func : `oc_core_add_new_device_at_index()`
  */
 /*
- * fixme4me <2023/7/23> allocate new memory for SVR of new Device (e.g. ael (oc_sec_ael_t))
+ * FIXME4ME (done) <2023/7/23> allocate new memory for SVR of new Device (e.g. ael (oc_sec_ael_t))
  */
 #ifdef OC_HAS_FEATURE_BRIDGE
 oc_device_info_t *
@@ -701,7 +701,7 @@ oc_core_remove_device_at_index(size_t index)
 
 #ifdef OC_SECURITY
   /*
-   * fixme4me <2023/8/9> remove other SVRs...
+   * FIXME4ME (done) <2023/8/9> remove other SVRs...
    */
   oc_reset_device(index);
   oc_sec_sdi_clear(oc_sec_sdi_get(index));

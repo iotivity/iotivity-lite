@@ -641,7 +641,7 @@ oc_resource_set_request_handler(oc_resource_t *resource, oc_method_t method,
  */
 #ifdef OC_HAS_FEATURE_BRIDGE
 /*
- * fixme4me <Oct 30, 2023> enclosing_method() : rename this function (date -> data)
+ * FIXME4ME (done) <Oct 30, 2023> enclosing_method() : => not necessary, remove later..
  */
 #if 0
 void

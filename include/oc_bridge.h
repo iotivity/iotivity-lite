@@ -54,10 +54,6 @@ typedef struct oc_virtual_device_s
   size_t index;             ///< index of `g_oc_device_info[]` where
                             ///< the corresponding Device is stored.
 
-  /*
-   * TODO4ME <2023/12/08> oc_virtual_device_t : remove below field..
-   */
-  // void *ecosystem_device;   ///< conrresponding non-OCF ecosystem Device
   bool is_vod_online;       ///< false: Device itself is still alive,
                             ///< but it was removed from "oic.r.vodlist:vods"
 } oc_virtual_device_t;
