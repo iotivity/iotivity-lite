@@ -400,6 +400,30 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb)
 #endif /* OC_PKI */
   oc_list_remove(g_tls_peers, peer);
 
+  /*
+   * FIXME4ME <2023/12/11> oc_tls_free_peer() : debugging code.. remove later...
+   */
+  /* -----debug code---------------- */
+  char t_uuid[OC_UUID_LEN];
+  oc_string_t t_ep;
+  oc_uuid_to_str(&peer->uuid, t_uuid, OC_UUID_LEN);
+  oc_endpoint_to_string(&peer->endpoint, &t_ep);
+
+  OC_DBG("===> di of tls: %s, device index: %ld, ep: %s", t_uuid, peer->endpoint.device, oc_string(t_ep));
+
+//  oc_tls_peer_t *p;
+//  p = oc_list_head(g_tls_peers);
+//  while (p) {
+//    oc_uuid_to_str(&p->uuid, t_uuid, OC_UUID_LEN);
+//    oc_string_t t_ep;
+//    oc_endpoint_to_string(&p->endpoint, &t_ep);
+//    OC_DBG("===> di of tls: %s, device index: %ld, ep: %s", t_uuid, p->endpoint.device, oc_string(t_ep));
+//    oc_free_string(&t_ep);
+//    p = p->next;
+//  }
+  /* --------------------- */
+
+
   size_t device = peer->endpoint.device;
   const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
   if (pstat->s == OC_DOS_RFOTM) {
@@ -1961,10 +1985,31 @@ tls_is_valid_doc(size_t device)
      *  "/oic/sec/doxm", all attempts to establish new DTLS connections
      * shall be rejected.
      */
-    OC_ERR("oc_tls: DOC not valid: oxmsel not set");
+    OC_ERR("oc_tls: DOC not valid: oxmsel not set (device: %ld)", device);
     return false;
   }
+
+  /*
+   * FIXME4ME <2023/12/10> tls_is_valid_doc() : for debugging.. restore later
+   */
   if (oc_list_length(g_tls_peers) != 0) {
+//  if (oc_list_length(g_tls_peers) > 5) {
+    OC_ERR("====> length of g_tls_peers list: %d", oc_list_length(g_tls_peers));
+
+    /* -----debug code---------------- */
+    oc_tls_peer_t *p;
+    p = oc_list_head(g_tls_peers);
+    char t_uuid[OC_UUID_LEN];
+    while (p) {
+      oc_uuid_to_str(&p->uuid, t_uuid, OC_UUID_LEN);
+      oc_string_t t_ep;
+      oc_endpoint_to_string(&p->endpoint, &t_ep);
+      OC_DBG("===> peer di of tls: %s, ep.device index: %ld, device : %ld, ep: %s", t_uuid, p->endpoint.device, device, oc_string(t_ep));
+      oc_free_string(&t_ep);
+      p = p->next;
+    }
+    /* --------------------- */
+
     OC_ERR("oc_tls: DOC not valid: multiple DOC peers not allowed");
     /* Allow only a single DOC */
     return false;

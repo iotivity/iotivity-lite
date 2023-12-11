@@ -1724,7 +1724,7 @@ oc_connectivity_shutdown(size_t device)
    * FIXME <2023/8/9> handle NULL return value case (by jclee)
    */
   if (dev == NULL) {
-      OC_WRN("no ip-context is found for Device (Device index: %d)", device);
+      OC_WRN("no ip-context is found for Device (Device index: %ld)", device);
       return;
   }
 

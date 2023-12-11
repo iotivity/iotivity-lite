@@ -695,7 +695,7 @@ oc_core_remove_device_at_index(size_t index)
 {
   if (index >= g_device_count) {
     OC_ERR("Device index value is out of valid range! : \
-        Device index %d, current Device count %d", index, g_device_count);
+        Device index %ld, current Device count %d", index, g_device_count);
     return false;
   }
 
@@ -704,12 +704,11 @@ oc_core_remove_device_at_index(size_t index)
    * FIXME4ME (done) <2023/8/9> remove other SVRs...
    */
   oc_reset_device(index);
-  oc_sec_sdi_clear(oc_sec_sdi_get(index));
+//  oc_sec_sdi_clear(oc_sec_sdi_get(index)); => already done in oc_reset_device()
 
-//  oc_sec_ael_reset(index);
-  oc_sec_ael_free_device(index);
-  oc_sec_cred_clear(index, NULL, NULL);
-  oc_sec_acl_clear(index, NULL, NULL);
+//  oc_sec_ael_free_device(index); => already done in oc_reset_device()
+//  oc_sec_cred_clear(index, NULL, NULL); => already done in oc_reset_device()
+//  oc_sec_acl_clear(index, NULL, NULL); => already done in oc_reset_device()
 #endif /* OC_SECURITY */
 
   /*

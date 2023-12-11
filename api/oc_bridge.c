@@ -113,7 +113,7 @@ add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
 
   oc_list_add(g_vods, vod);
 
-  OC_DBG("oc_bridge: adding %s [%s] from oic.r.vodlist", name, econame);
+  OC_DBG("=====> oc_bridge: adding %s [%s] from oic.r.vodlist", name, econame);
   OC_PRINT_VODSLIST;
 }
 
@@ -138,7 +138,7 @@ remove_virtual_device_from_vods_list(const oc_uuid_t *di)
       }
 
       oc_list_remove(g_vods, vod_item);
-      OC_DBG("oc_bridge: removing %s [%s] from oic.r.vodlist",
+      OC_DBG("=====> oc_bridge: removing %s [%s] from oic.r.vodlist",
              oc_string(vod_item->name), oc_string(vod_item->econame));
       oc_free_string(&vod_item->name);
       oc_free_string(&vod_item->econame);
@@ -214,10 +214,12 @@ doxm_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
             oc_connectivity_ports_t ports;
             memset(&ports, 0, sizeof(ports));
 
+            OC_DBG("=====> Bridge is owned, VOD %ld connection is being initialized!!", device);
+
             if (oc_connectivity_init(device, ports) < 0) {
               oc_abort("error initializing connectivity for device");
             }
-            OC_DBG("oc_bridge: init connectivity for virtual device %zd",
+            OC_DBG("======> oc_bridge: init connectivity for virtual device %zd",
                    device);
           }
         }
@@ -274,7 +276,7 @@ doxm_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
         oc_vod_map_get_econame(&econame, device_index);
         add_virtual_device_to_vods_list(oc_string(device_info->name),
                                         device_uuid, oc_string(econame));
-        OC_DBG("oc_bridge: adding %s [%s] to oic.r.vodslist",
+        OC_DBG("======> oc_bridge: adding %s [%s] to oic.r.vodslist",
                oc_string(device_info->name), oc_string(econame));
       }
     } else {
@@ -397,7 +399,7 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
     if (oc_connectivity_init(vd_index, ports) < 0) {
       oc_abort("error initializing connectivity for device");
     }
-    OC_DBG("oc_bridge: init connectivity for virtual device %zd", vd_index);
+    OC_DBG("=====> oc_bridge: init connectivity for virtual device %zd", vd_index);
   }
 #else
   oc_connectivity_ports_t ports;
@@ -443,12 +445,12 @@ oc_bridge_add_vod(size_t device_index)
   oc_virtual_device_t *vod_mapping_item;
 
   if (!(vod_mapping_item = oc_bridge_get_vod_mapping_info(device_index))) {
-    OC_ERR("oc_bridge: failed to find VOD mapping entry which is corresponding to the Device (device index: %d)", device_index);
+    OC_ERR("oc_bridge: failed to find VOD mapping entry which is corresponding to the Device (device index: %ld)", device_index);
     return -1;
   }
 
   if (!(device = oc_core_get_device_info(device_index))) {
-    OC_ERR("oc_bridge: failed to find Device whose index is %d", device_index);
+    OC_ERR("oc_bridge: failed to find Device whose index is %ld", device_index);
     return -1;
   }
 
@@ -462,7 +464,7 @@ oc_bridge_add_vod(size_t device_index)
     if (oc_connectivity_init(device_index, ports) < 0) {
       oc_abort("error initializing connectivity for device");
     }
-    OC_DBG("oc_bridge: init connectivity for virtual device %zd", device_index);
+    OC_DBG("oc_bridge: init connectivity for virtual device %ld", device_index);
   }
 #else
   oc_connectivity_ports_t ports;

@@ -14,6 +14,7 @@
 // limitations under the License.
 */
 
+#include "oc_log.h"
 #include "oc_api.h"
 #include "oc_bridge.h"
 #include "oc_core_res.h"
@@ -121,70 +122,72 @@ WORD saved_attributes;
   } while (false)
 
 #elif defined(__linux__)
-#define C_RESET PRINT("\x1B[0m")
-#define C_YELLOW PRINT("\x1B[1;33m")
+#define C_RESET OC_PRINTF("\x1B[0m")
+#define C_YELLOW OC_PRINTF("\x1B[1;33m")
 #endif
 
 static void
-print_ascii_lights_ui()
+print_ascii_lights_ui(void)
 {
-  PRINT("\n");
+  OC_PRINTF("\n");
 
   for (size_t i = 0; i < VOD_COUNT; i++) {
     if (virtual_lights[i].discovered) {
       if (virtual_lights[i].on) {
         C_YELLOW;
       }
-      PRINT(" %s ", (virtual_lights[i].on) ? " _ " : " _ ");
+      OC_PRINTF(" %s ", (virtual_lights[i].on) ? " _ " : " _ ");
       if (virtual_lights[i].on) {
         C_RESET;
       }
     } else {
-      PRINT("     ");
+      OC_PRINTF("     ");
     }
   }
-  PRINT("\n");
+  OC_PRINTF("\n");
   for (size_t i = 0; i < VOD_COUNT; i++) {
     if (virtual_lights[i].discovered) {
       if (virtual_lights[i].on) {
         C_YELLOW;
       }
-      PRINT(" %s ", (virtual_lights[i].on) ? "(*)" : "(~)");
+      OC_PRINTF(" %s ", (virtual_lights[i].on) ? "(*)" : "(~)");
       if (virtual_lights[i].on) {
         C_RESET;
       }
     } else {
-      PRINT("     ");
+      OC_PRINTF("     ");
     }
   }
-  PRINT("\n");
+  OC_PRINTF("\n");
   for (size_t i = 0; i < VOD_COUNT; i++) {
     if (virtual_lights[i].discovered) {
       if (virtual_lights[i].on) {
         C_YELLOW;
       }
-      PRINT(" %s ", (virtual_lights[i].on) ? " # " : " # ");
+      OC_PRINTF(" %s ", (virtual_lights[i].on) ? " # " : " # ");
       if (virtual_lights[i].on) {
         C_RESET;
       }
     } else {
-      PRINT("     ");
+      OC_PRINTF("     ");
     }
   }
-  PRINT("\n");
+  OC_PRINTF("\n");
   for (size_t i = 0; i < VOD_COUNT; i++) {
     if (virtual_lights[i].discovered) {
-      PRINT(" %s ", (virtual_lights[i].on) ? "ON " : "OFF");
+      OC_PRINTF(" %s ", (virtual_lights[i].on) ? "ON " : "OFF");
     } else {
-      PRINT(" N/A ");
+      OC_PRINTF(" N/A ");
     }
   }
-  PRINT("\n");
+  OC_PRINTF("\n");
 }
 
-void
+static void
 set_idd_from_file(const char *file_name, size_t device)
 {
+  (void)file_name;
+  (void)device;
 #if defined(OC_IDD_API)
   FILE *fp;
   uint8_t *buffer;
@@ -204,14 +207,14 @@ set_idd_from_file(const char *file_name, size_t device)
 
     if (fread_ret == 1) {
       oc_set_introspection_data(device, buffer, buffer_size);
-      PRINT("\tIntrospection data set for device.\n");
+      OC_PRINTF("\tIntrospection data set for device.\n");
     } else {
-      PRINT("%s %s\n %s", introspection_error1, file_name,
+      OC_PRINTF("%s %s\n %s", introspection_error1, file_name,
             introspection_error2);
     }
     free(buffer);
   } else {
-    PRINT("%s %s\n %s", introspection_error1, file_name, introspection_error2);
+    OC_PRINTF("%s %s\n %s", introspection_error1, file_name, introspection_error2);
   }
 #endif
 }
@@ -243,7 +246,7 @@ signal_event_loop(void)
 #endif
 }
 
-void
+static void
 handle_signal(int signal)
 {
   (void)signal;
@@ -251,7 +254,7 @@ handle_signal(int signal)
   quit = 1;
 }
 
-virtual_light_t *
+static virtual_light_t *
 lookup_virtual_light(size_t device_index)
 {
   oc_virtual_device_t *virtual_device_info =
@@ -314,7 +317,7 @@ post_binary_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
 #else
   light = (virtual_light_t *)user_data;
 #endif
-  PRINT("POST_BinarySwitch\n");
+  OC_PRINTF("POST_BinarySwitch\n");
   if (light) {
     oc_rep_t *rep = request->request_payload;
     if (rep != NULL) {
@@ -343,7 +346,7 @@ put_binary_switch(oc_request_t *request, oc_interface_mask_t iface_mask,
   post_binary_switch(request, iface_mask, user_data);
 }
 
-void
+static void
 register_binaryswitch_resource(const char *name, const char *uri,
                                size_t device_index, void *user_data)
 {
@@ -363,13 +366,13 @@ register_binaryswitch_resource(const char *name, const char *uri,
  * When a device is discovered it will be added to
  * the bridge as a virtual_device
  */
-void
-poll_for_discovered_devices()
+static void
+poll_for_discovered_devices(void)
 {
   size_t virtual_device_index;
   for (size_t i = 0; i < VOD_COUNT; i++) {
     if (virtual_lights[i].discovered && !virtual_lights[i].added_to_bridge) {
-      PRINT("Adding %s to bridge\n", virtual_lights[i].device_name);
+      OC_PRINTF("Adding %s to bridge\n", virtual_lights[i].device_name);
       app_mutex_lock(app_sync_lock);
 
       virtual_device_index = oc_bridge_add_virtual_device(
@@ -455,39 +458,39 @@ ocf_event_thread(void *data)
 static void
 display_menu(void)
 {
-  PRINT("\n");
+  OC_PRINTF("\n");
   if (display_ascii_ui) {
     print_ascii_lights_ui();
   }
-  PRINT("################################################\n");
-  PRINT("Dummy Bridge\n");
-  PRINT("################################################\n");
-  PRINT("[0] Display this menu\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[1] Simulate discovery of 'Light 1'\n");
-  PRINT("[2] Simulate discovery of 'Light 2'\n");
-  PRINT("[3] Simulate discovery of 'Light 3'\n");
-  PRINT("[4] Simulate discovery of 'Light 4'\n");
-  PRINT("[5] Simulate discovery of 'Light 5'\n");
-  PRINT("   Select simulate discovery of any device again\n");
-  PRINT("   to simulate that device being disconnected.\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[6] Display summary of dummy bridge.\n");
-  PRINT("[7] Start/Stop virtual device discovery.\n");
-  PRINT("[8] Enable/Disable ASCII light bulb UI.\n");
-  PRINT("    A representation of the bridged lights\n");
-  PRINT("    using ASCII art.\n");
+  OC_PRINTF("################################################\n");
+  OC_PRINTF("Dummy Bridge\n");
+  OC_PRINTF("################################################\n");
+  OC_PRINTF("[0] Display this menu\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[1] Simulate discovery of 'Light 1'\n");
+  OC_PRINTF("[2] Simulate discovery of 'Light 2'\n");
+  OC_PRINTF("[3] Simulate discovery of 'Light 3'\n");
+  OC_PRINTF("[4] Simulate discovery of 'Light 4'\n");
+  OC_PRINTF("[5] Simulate discovery of 'Light 5'\n");
+  OC_PRINTF("   Select simulate discovery of any device again\n");
+  OC_PRINTF("   to simulate that device being disconnected.\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[6] Display summary of dummy bridge.\n");
+  OC_PRINTF("[7] Start/Stop virtual device discovery.\n");
+  OC_PRINTF("[8] Enable/Disable ASCII light bulb UI.\n");
+  OC_PRINTF("    A representation of the bridged lights\n");
+  OC_PRINTF("    using ASCII art.\n");
 #ifdef OC_SECURITY
-  PRINT("[9] Reset Device\n");
-  PRINT("[10] Delete Device\n");
+  OC_PRINTF("[9] Reset Device\n");
+  OC_PRINTF("[10] Delete Device\n");
 #endif /* OC_SECURITY */
-  PRINT("-----------------------------------------------\n");
-  PRINT("[99] Exit\n");
-  PRINT("################################################\n");
-  PRINT("Select option: \n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[99] Exit\n");
+  OC_PRINTF("################################################\n");
+  OC_PRINTF("Select option: \n");
 }
 
-void
+static void
 disconnect_light(unsigned int index)
 {
   virtual_lights[index].discovered = false;
@@ -497,17 +500,17 @@ disconnect_light(unsigned int index)
     virtual_lights[index].eco_system);
   if (device != 0) {
     if (oc_bridge_remove_virtual_device(device) == 0) {
-      PRINT("%s removed from the bridge\n", virtual_lights[index].device_name);
+      OC_PRINTF("%s removed from the bridge\n", virtual_lights[index].device_name);
     } else {
-      PRINT("FAILED to remove %s from the bridge\n",
+      OC_PRINTF("FAILED to remove %s from the bridge\n",
             virtual_lights[index].device_name);
     }
   } else {
-    PRINT("FAILED to find virtual light to remove.");
+    OC_PRINTF("FAILED to find virtual light to remove.");
   }
 }
 
-void
+static void
 discover_light(unsigned int index)
 {
   virtual_lights[index].discovered = !virtual_lights[index].discovered;
@@ -523,7 +526,7 @@ discover_light(unsigned int index)
   }
 }
 
-void
+static void
 display_summary(void)
 {
   for (size_t i = 0; i < VOD_COUNT; i++) {
@@ -540,22 +543,22 @@ display_summary(void)
       }
     }
 
-    PRINT("%s:\n", virtual_lights[i].device_name);
-    PRINT("\tVirtual Device ID :%s\n", virtual_lights[i].uuid);
-    PRINT("\teconame: %s\n", virtual_lights[i].eco_system);
-    PRINT("\tlight switch is: %s\n", (virtual_lights[i].on ? "ON" : "OFF"));
-    PRINT("\tAdded to bridge: %s\n",
+    OC_PRINTF("%s:\n", virtual_lights[i].device_name);
+    OC_PRINTF("\tVirtual Device ID :%s\n", virtual_lights[i].uuid);
+    OC_PRINTF("\teconame: %s\n", virtual_lights[i].eco_system);
+    OC_PRINTF("\tlight switch is: %s\n", (virtual_lights[i].on ? "ON" : "OFF"));
+    OC_PRINTF("\tAdded to bridge: %s\n",
           (virtual_lights[i].discovered ? "discovered" : "not discovered"));
-    PRINT("\tOCF Device ID: %s\n",
+    OC_PRINTF("\tOCF Device ID: %s\n",
           (virtual_lights[i].added_to_bridge ? di_str : "N/A"));
   }
-  PRINT((discover_vitual_devices) ? "ACTIVELY DISCOVERING DEVICES\n"
+  OC_PRINTF((discover_vitual_devices) ? "ACTIVELY DISCOVERING DEVICES\n"
                                   : "NOT DISCOVERING DEVICES\n");
 }
 #define SCANF(...)                                                             \
   do {                                                                         \
     if (scanf(__VA_ARGS__) <= 0) {                                             \
-      PRINT("ERROR Invalid input\n");                                          \
+      OC_PRINTF("ERROR Invalid input\n");                                          \
       while ((c = getchar()) != EOF && c != '\n')                              \
         ;                                                                      \
       fflush(stdin);                                                           \
@@ -563,7 +566,7 @@ display_summary(void)
   } while (0)
 
 #ifdef OC_SECURITY
-void
+static void
 reset_light(unsigned int index)
 {
   (void)index;
@@ -571,32 +574,35 @@ reset_light(unsigned int index)
     (uint8_t *)virtual_lights[index].uuid, OC_UUID_LEN,
     virtual_lights[index].eco_system);
   if (device_index != 0) {
+//    oc_reset_device_v1(device_index, true);
     oc_reset_device(device_index);
+    OC_PRINTF("device %ld is being reset!!\n", device_index);
     virtual_lights[index].discovered = false;
     virtual_lights[index].added_to_bridge = false;
   }
 }
 
-void
-reset_device()
+static void
+reset_device(void)
 {
-  PRINT("################################################\n");
-  PRINT("[0] Reset Bridge\n");
-  PRINT("    Reseting the Bridge will reset all Virtual\n");
-  PRINT("    Devices exposed by the Bridge.\n");
-  PRINT("-----------------------------------------------\n");
-  PRINT("[1] Reset 'Light 1'\n");
-  PRINT("[2] Reset 'Light 2'\n");
-  PRINT("[3] Reset 'Light 3'\n");
-  PRINT("[4] Reset 'Light 4'\n");
-  PRINT("[5] Reset 'Light 5'\n");
-  PRINT("################################################\n");
-  PRINT("Select option: \n");
+  OC_PRINTF("################################################\n");
+  OC_PRINTF("[0] Reset Bridge\n");
+  OC_PRINTF("    Reseting the Bridge will reset all Virtual\n");
+  OC_PRINTF("    Devices exposed by the Bridge.\n");
+  OC_PRINTF("-----------------------------------------------\n");
+  OC_PRINTF("[1] Reset 'Light 1'\n");
+  OC_PRINTF("[2] Reset 'Light 2'\n");
+  OC_PRINTF("[3] Reset 'Light 3'\n");
+  OC_PRINTF("[4] Reset 'Light 4'\n");
+  OC_PRINTF("[5] Reset 'Light 5'\n");
+  OC_PRINTF("################################################\n");
+  OC_PRINTF("Select option: \n");
   int c = 1000;
   SCANF("%d", &c);
   switch (c) {
   case 0:
     oc_reset_device(0u);
+//    oc_reset_device_v1(0u, true);
     break;
   case 1:
     reset_light(0u);
@@ -619,7 +625,7 @@ reset_device()
 }
 #endif /* OC_SECURITY */
 
-void
+static void
 delete_light(unsigned int index)
 {
   size_t device_index = oc_bridge_get_virtual_device_index(
@@ -632,17 +638,17 @@ delete_light(unsigned int index)
   }
 }
 
-void
-delete_device()
+static void
+delete_device(void)
 {
-  PRINT("################################################\n");
-  PRINT("[1] Delete 'Light 1'\n");
-  PRINT("[2] Delete 'Light 2'\n");
-  PRINT("[3] Delete 'Light 3'\n");
-  PRINT("[4] Delete 'Light 4'\n");
-  PRINT("[5] Delete 'Light 5'\n");
-  PRINT("################################################\n");
-  PRINT("Select option: \n");
+  OC_PRINTF("################################################\n");
+  OC_PRINTF("[1] Delete 'Light 1'\n");
+  OC_PRINTF("[2] Delete 'Light 2'\n");
+  OC_PRINTF("[3] Delete 'Light 3'\n");
+  OC_PRINTF("[4] Delete 'Light 4'\n");
+  OC_PRINTF("[5] Delete 'Light 5'\n");
+  OC_PRINTF("################################################\n");
+  OC_PRINTF("Select option: \n");
   int c = 1000;
   SCANF("%d", &c);
   switch (c) {
@@ -666,7 +672,7 @@ delete_device()
   }
 }
 
-bool
+static bool
 directoryFound(const char *path)
 {
   struct stat info;
@@ -694,6 +700,8 @@ main(void)
   sa.sa_handler = handle_signal;
   sigaction(SIGINT, &sa, NULL);
 #endif
+
+  oc_log_set_level(OC_LOG_LEVEL_DEBUG);
 
   static const oc_handler_t handler = { .init = app_init,
                                         .signal_event_loop = signal_event_loop,
