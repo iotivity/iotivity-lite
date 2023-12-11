@@ -38,6 +38,19 @@ oc_factory_presets_t *oc_get_factory_presets_cb(void);
 /** @brief Check if the IoT stack is initialized. */
 bool oc_main_initialized(void);
 
+/*
+ * modifiedbyme <2023/7/16> add func proto : `oc_resize_drop_command()`
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+/**
+ * @brief Realloc memory for g_drop_commands, It is necessary when the Bridge
+ *        manages Devices dynamically
+ *
+ * @param[in] device_count number of Devices
+ */
+void oc_resize_drop_command(size_t device_count);
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 #ifdef __cplusplus
 }
 #endif

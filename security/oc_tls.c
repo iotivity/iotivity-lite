@@ -2090,7 +2090,7 @@ tls_is_valid_doc(size_t device)
      *  "/oic/sec/doxm", all attempts to establish new DTLS connections
      * shall be rejected.
      */
-    OC_ERR("oc_tls: DOC not valid: oxmsel not set");
+    OC_ERR("oc_tls: DOC not valid: oxmsel not set (device: %ld)", device);
     return false;
   }
   if (oc_tls_num_peers(device) != 0) {

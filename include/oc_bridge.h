@@ -1,0 +1,273 @@
+/*
+ * Copyright (c) 2020 Intel Corporation
+ * Copyright (c) 2023 ETRI
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/**
+ * @file
+ * Functions to aid bridging IoTivity to other eco-systems
+ */
+#ifndef OC_BRIDGE_H
+#define OC_BRIDGE_H
+
+#include "oc_uuid.h"
+#include "util/oc_list.h"
+#include "oc_helpers.h"
+#include "oc_api.h"
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+
+/*
+ * internal struct that holds the values that build the `oic.r.vodlist`
+ * properties.
+ */
+typedef struct oc_vods_s
+{
+  struct oc_vods_s *next;
+  oc_string_t name;
+  oc_uuid_t di;
+  oc_string_t econame;
+} oc_vods_t;
+
+
+typedef struct oc_virtual_device_s
+{
+  struct oc_virtual_device_s *next;
+  uint8_t *v_id;
+  size_t v_id_size;
+  oc_string_t econame;
+  size_t index;             ///< index of `g_oc_device_info[]` where
+                            ///< the corresponding Device is stored.
+
+  bool is_vod_online;       ///< false: Device itself is still alive,
+                            ///< but it was removed from "oic.r.vodlist:vods"
+} oc_virtual_device_t;
+
+/**
+ * Add an oic.d.bridge device.
+ *
+ * The oic.r.vodlist resource will be registered to the bridge device.
+ *
+ * @param[in] name the user readable name of the device
+ * @param[in] spec_version The version of the OCF Server.
+ *                       This is the "icv" device property
+ * @param[in] data_model_version Spec version of the resource and device
+ *                               specifications to which this device data model
+ *                               is implemented. This is the "dmv" device
+ *                               property
+ * @param[in] add_device_cb callback function invoked during oc_add_device().
+ *                          The purpose is to add additional device properties
+ *                          that are not supplied to
+ *                          oc_bridge_add_bridge_device() function call.
+ * @param[in] data context pointer that is passed to the oc_add_device_cb_t
+ *
+ * @return
+ *   `0` on success
+ *   `-1` on failure
+ */
+OC_API
+int oc_bridge_add_bridge_device(const char *name, const char *spec_version,
+                                const char *data_model_version,
+                                oc_add_device_cb_t add_device_cb, void *data);
+
+/**
+ * Add a virtual ocf device to the the stack.
+ *
+ * This function is called to add a newly discovered non-ocf device to a bridge
+ * device. This will typically be called in response to the non-ocf devices
+ * discovery mechanism.
+ *
+ * The `oc_bridge_add_virtual_device()` function may be called as many times as
+ * needed.  Each call will add a new device to the stack with its own port
+ * address. Each device is automatically assigned a device index number. Unlike
+ * the `oc_add_device()` function this number is not incremented by one but
+ * assigned an index number based on avalibility.  The index assigned to the
+ * virtual device will be returned from the function call. The function
+ * `oc_bridge_get_virtual_device_index()` can also be used to get the logical
+ * device index number after this function call.
+ *
+ * The function `oc_bridge_add_bridge_device()` must be called before this
+ * function.
+ *
+ * @param virtual_device_id a unique identifier that identifies the virtual
+ *                          device this could be a UUID, serial number or other
+ *                          means of uniquely identifying the device
+ * @param virtual_device_id_size size in bytes of the virtual_device_id param
+ * @param econame ecosystem name of the bridged device which is exposed by this
+ *                virtual device
+ * @param uri the The device URI.  The wellknown default URI "/oic/d" is hosted
+ *            by every server. Used to device specific information.
+ * @param rt the resource type
+ * @param name the user readable name of the device
+ * @param spec_version The version of the OCF Server.  This is the "icv" device
+ *                     property
+ * @param data_model_version Spec version of the resource and device
+ *                           specifications to which this device data model is
+ *                           implemented. This is the "dmv" device property
+ * @param add_device_cb callback function invoked during oc_add_device(). The
+ *                      purpose is to add additional device properties that are
+ *                      not supplied to oc_add_device() function call.
+ * @param data context pointer that is passed to the oc_add_device_cb_t
+ *
+ * @return
+ *   - the logical index of the virtual device on success
+ *   - `0` on failure since a bridge device is required to add virtual devices
+           a zero index cannot be assigned to a virtual device.
+ *
+ * @note device index is cast from size_t to int and may lose information.
+ *       The `oc_bridge_add_virtual_device()` function can be used to get
+ *       the non-cast device index.
+ * @note The function `oc_bridge_add_bridge_device()` must be called before this
+ *       function.
+ *
+ * @see init
+ */
+OC_API
+size_t oc_bridge_add_virtual_device(
+  const uint8_t *virtual_device_id, size_t virtual_device_id_size,
+  const char *econame, const char *uri, const char *rt, const char *name,
+  const char *spec_version, const char *data_model_version,
+  oc_add_device_cb_t add_device_cb, void *data);
+
+/**
+ * @brief add new vodentry for an existing VOD to "oic.r.vodlist:vods".
+ *        This function is usually called after `oc_bridge_remove_virtual_device()`
+ *        is called.
+ *        This function DOES NOT add new Device to `g_oc_device_info[]`, but
+ *        just re-registre existing VOD to "oic.r.vodlist:vods" list.
+ *
+ * @param device_index Device index of VOD to be online
+ * @return 0: success, -1: failure
+ */
+OC_API
+int oc_bridge_add_vod(size_t device_index);
+
+/**
+ * If the non-ocf device is no longer reachable this can be used to remove
+ * the virtual device from the bridge device.
+ *
+ * This will shutdown network connectivity for the device and will update
+ * the vodslist resource found on the bridge.
+ *
+ * Any any persistant settings will remain unchanged.  If the virtual device has
+ * already been onboarded and permission settings have been modified when the
+ * device is added again using `oc_bridge_add_virtual_device` those
+ * persistant settings will still be in place.
+ *
+ * @param device_index the index of the virtual device
+ *
+ * @return
+ *   - `0` on succes
+ *   - `-1` on failure
+ */
+OC_API
+int oc_bridge_remove_virtual_device(size_t device_index);
+
+/**
+ * This will remove the virtual device and free memory associated with that
+ * device.
+ *
+ * Delete virtual device will remove all persistant settings. If the virtual
+ * device is added again the onboarding and device permissions will need to be
+ * setup as if the device were a new device.
+ *
+ * @param device_index index of teh virtual device
+ *
+ * @return
+ *   - `0` on success
+ *   - `-1` on failure
+ */
+OC_API
+int oc_bridge_delete_virtual_device(size_t device_index);
+
+/**
+ * Get the logical device index for the virtual device
+ *
+ * @param virtual_device_id a unique identifier that identifies the virtual
+ *                          device this could be a UUID, serial number or other
+ *                          means of uniquely identifying the device
+ * @param virtual_device_id_size size in bytes of the virtual_device_id param
+ * @param econame ecosystem name of the bridged virtual device
+ *
+ * @return
+ *   - the logical index of the virtual device on success
+ *   - `0` on failure since a bridge device is required to add virtual devices
+ *         a zero index cannot be assigned to a virtual device.
+ */
+OC_API
+size_t oc_bridge_get_virtual_device_index(const uint8_t *virtual_device_id,
+                                          size_t virtual_device_id_size,
+                                          const char *econame);
+
+/**
+ * Use the device index of the virtual device to look up the virtual device
+ * info.
+ *
+ * @param virtual_device_index the logical index of the virtual device
+ *
+ * @return
+ *    - a pointer to the oc_virtual_device_t upon success
+ *    - NULL if no virtual device was found using the provided index
+ */
+OC_API
+oc_virtual_device_t *oc_bridge_get_vod_mapping_info(
+  size_t virtual_device_index);
+
+/**
+ * find VOD mapping entry which is corresponding to an item of "oic.r.vodlist:vods"
+ *
+ * @param vod an item of "oic.r.vodlist:vods"
+ *
+ * @return
+ *    - a pointer to the oc_virtual_device_t upon success
+ *    - NULL if no virtual device was found corresponding to the `vod`
+ */
+OC_API
+oc_virtual_device_t *oc_bridge_get_vod_mapping_info2(
+  oc_vods_t *vod);
+
+
+/**
+ * @brief return entry of "oic.r.vodlist:vods" list
+ * @param di Device id of the VOD to be returned
+ * @return VOD entry (oc_vods_t)
+ */
+OC_API
+oc_vods_t * oc_bridge_get_vod(oc_uuid_t di);
+
+
+/**
+ * @brief return the list of current active VODs
+ * (`g_vods` list)
+ *
+ * @return
+ *  - head of `g_vods` list
+ */
+OC_API
+oc_vods_t * oc_bridge_get_vod_list(void);
+
+/**
+ * @brief Print out all contents of g_oc_device_info[] array
+ */
+OC_API
+void oc_bridge_print_device_list(void);
+
+#ifdef __cplusplus
+}
+#endif
+#endif // OC_BRIDGE_H

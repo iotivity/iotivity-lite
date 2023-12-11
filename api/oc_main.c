@@ -482,3 +482,22 @@ _oc_signal_event_loop(void)
     g_app_callbacks->signal_event_loop();
   }
 }
+
+/*
+ * modifiedbyme <2023/7/16> add func : `oc_resize_drop_command() {}`
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+void
+oc_resize_drop_command(size_t device_count)
+{
+  g_drop_commands = (bool *)realloc(g_drop_commands, (device_count) * sizeof(bool));
+
+  if (g_drop_commands == NULL) {
+    oc_abort("Insufficient memory");
+  }
+
+  g_drop_commands[device_count - 1] = false;
+  return;
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
+

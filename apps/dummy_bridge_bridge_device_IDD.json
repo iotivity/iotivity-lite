@@ -1,0 +1,303 @@
+{
+  "schemes": [
+    "http"
+  ],
+  "swagger": "2.0",
+  "consumes": [
+    "application/json"
+  ],
+  "paths": {
+    "/bridge/vodlist": {
+      "get": {
+        "description": "This resource describes the VODs that have been onboarded on the Bridge Platform.\n",
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/vodlist"
+            },
+            "description": ""
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/parameters/interface-r"
+          },
+          {
+            "schema": {
+              "$ref": "#/definitions/vodlist"
+            },
+            "in": "body",
+            "required": true,
+            "name": "body"
+          }
+        ]
+      }
+    },
+    "/oic/p": {
+      "get": {
+        "responses": {
+          "200": {
+            "schema": {
+              "$ref": "#/definitions/Platform"
+            },
+            "description": ""
+          }
+        },
+        "parameters": [
+          {
+            "$ref": "#/parameters/interface-r"
+          }
+        ],
+        "description": ""
+      }
+    }
+  },
+  "definitions": {
+    "vodlist": {
+      "properties": {
+        "n": {
+          "type": "string",
+          "maxLength": 64,
+          "readOnly": true,
+          "description": "Friendly name of the Resource"
+        },
+        "rt": {
+          "minItems": 1,
+          "items": {
+            "enum": [
+              "oic.r.vodlist"
+            ],
+            "type": "string",
+            "maxLength": 64
+          },
+          "description": "Resource Type",
+          "uniqueItems": true,
+          "readOnly": true,
+          "default": [
+            "oic.r.vodlist"
+          ],
+          "type": "array"
+        },
+        "if": {
+          "minItems": 2,
+          "items": {
+            "enum": [
+              "oic.if.r",
+              "oic.if.baseline"
+            ],
+            "type": "string"
+          },
+          "description": "The OCF Interface set supported by this Resource",
+          "uniqueItems": true,
+          "readOnly": true,
+          "type": "array"
+        },
+        "vods": {
+          "description": "Array of information per VOD created by the Bridge",
+          "type": "array",
+          "minItems": 0,
+          "uniqueItems": true,
+          "readOnly": true,
+          "items": {
+            "$ref": "#/definitions/vodentry"
+          }
+        }
+      },
+      "required": [ "vods" ],
+      "type": "object"
+    },
+    "vodentry": {
+      "description": "Information for a VOD created by the Bridge",
+      "type": "object",
+      "properties": {
+        "n": {
+          "type": "string",
+          "maxLength": 64,
+          "readOnly": true,
+          "description": "Friendly name of the Resource"
+        },
+        "di": {
+          "type": "string",
+          "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+          "readOnly": true,
+          "description": "Format pattern according to IETF RFC 4122."
+        },
+        "econame": {
+          "type": "string",
+          "enum": [ "ABC", "XYZ" ],
+          "readOnly": true,
+          "description": "Ecosystem Name of the Bridged Device which is exposed by this VOD"
+        }
+      },
+      "required": ["n", "di", "econame"]
+      },
+    "Platform": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "if": {
+            "minItems": 2,
+            "items": {
+              "enum": [
+                "oic.if.r",
+                "oic.if.baseline"
+              ],
+              "type": "string",
+              "maxLength": 64
+            },
+            "description": "",
+            "uniqueItems": true,
+            "readOnly": true,
+            "type": "array"
+          },
+          "n": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "mnmn": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "mnnct": {
+            "minItems": 1,
+            "items": {
+              "minimum": 1,
+              "type": "integer",
+              "description": ""
+            },
+            "readOnly": true,
+            "type": "array",
+            "description": ""
+          },
+          "mnml": {
+            "format": "uri",
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 256,
+            "description": ""
+          },
+          "mnsel": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "mnpv": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "mnfv": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "rt": {
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "oic.wk.p"
+              ],
+              "type": "string",
+              "maxLength": 64
+            },
+            "description": "",
+            "uniqueItems": true,
+            "readOnly": true,
+            "default": [
+              "oic.wk.p"
+            ],
+            "type": "array"
+          },
+          "mnos": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "mnhw": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "vid": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "mnmo": {
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 64,
+            "description": ""
+          },
+          "mndt": {
+            "readOnly": true,
+            "type": "string",
+            "pattern": "^([0-9]{4})-(1[0-2]|0[1-9])-(3[0-1]|2[0-9]|1[0-9]|0[1-9])$",
+            "description": ""
+          },
+          "pi": {
+            "readOnly": true,
+            "type": "string",
+            "pattern": "^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$",
+            "description": ""
+          },
+          "st": {
+            "format": "date-time",
+            "readOnly": true,
+            "type": "string",
+            "description": ""
+          },
+          "mnsl": {
+            "format": "uri",
+            "type": "string",
+            "readOnly": true,
+            "maxLength": 256,
+            "description": ""
+          }
+        },
+        "required": [
+          "pi",
+          "mnmn"
+        ],
+        "type": "object"
+      }
+    },
+  "info": {
+    "version": "20190215",
+    "title": "serverlite24521",
+    "termsOfService": "https://openconnectivityfoundation.github.io/core/DISCLAIMER.md",
+    "license": {
+      "x-copyright": "copyright 2016-2017, 2019 Open Connectivity Foundation, Inc. All rights reserved.",
+      "url": "https://github.com/openconnectivityfoundation/core/blob/e28a9e0a92e17042ba3e83661e4c0fbce8bdc4ba/LICENSE.md",
+      "name": "OCF Data Model License"
+    }
+  },
+  "parameters": {
+    "interface-r": {
+      "enum": [
+        "oic.if.r",
+        "oic.if.baseline"
+      ],
+      "type": "string",
+      "in": "query",
+      "name": "if"
+    }
+  },
+  "produces": [
+    "application/json"
+  ]
+}

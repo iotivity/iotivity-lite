@@ -533,6 +533,25 @@ oc_resource_set_request_handler(oc_resource_t *resource, oc_method_t method,
   }
 }
 
+/*
+ * modifiedbyme <2023/7/17> add func : oc_resource_set_date_remover(){}
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+/*
+ * FIXME4ME (done) <Oct 30, 2023> enclosing_method() : => not necessary, remove later..
+ */
+#if 0
+void
+oc_resource_set_data_remover(oc_resource_t *resource, oc_remove_resource_cb_t callback, void *context)
+{
+  resource->data = context;
+  resource->resource_data_remover = callback;
+
+  return;
+}
+#endif
+#endif
+
 #ifdef OC_OSCORE
 void
 oc_resource_set_secure_mcast(oc_resource_t *resource, bool supported)

@@ -538,6 +538,17 @@ oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len,
                                              size_t device);
 
 /**
+ * @brief return a resource which belongs to the device whenever it is called
+ *
+ * @param device the device index
+ * @param reset (reset == 1): search from the beginning of the list,
+ *              (reset == 0): resume search from the next of the last found item.
+ * @return non-NULL found resource
+ * @return NULL no more resource or end of list
+ */
+oc_resource_t *oc_ri_get_app_resource_by_device(size_t device, bool reset);
+
+/**
  * @brief retrieve list of resources
  *
  * @return oc_resource_t* the resource list
@@ -619,8 +630,23 @@ bool oc_ri_on_delete_resource_add_callback(oc_ri_delete_resource_cb_t cb)
 OC_API
 bool oc_ri_on_delete_resource_remove_callback(oc_ri_delete_resource_cb_t cb)
   OC_NONNULL();
-
 #endif /* OC_SERVER */
+
+/*
+ * modifiedbyme <2023/7/17> add func proto : oc_ri_delete_app_resources_per_device()
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+/**
+ * @brief remove the resource mapped to specific Device
+ *        from the list of application resources
+ *
+ * @param index index of `g_oc_device_info[]`
+ * @return true success
+ * @return false failure
+ */
+OC_API
+void oc_ri_delete_app_resources_per_device(size_t index);
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 /**
  * @brief retrieve the query value at the nth position

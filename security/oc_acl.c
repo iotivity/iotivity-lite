@@ -77,6 +77,47 @@ oc_sec_acl_init(void)
   }
 }
 
+/*
+ * modifiedbyme <2023/7/25> add func : oc_sec_acl_new_device(){}
+ */
+#ifdef OC_HAS_FEATURE_BRIDGE
+void
+oc_sec_acl_new_device(size_t device_index, bool need_realloc)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  if ((device_index == (oc_core_get_num_devices() - 1)) && need_realloc) {
+    /*
+     * if `g_oc_device_info[device_index]` is newly allocated entry...
+     */
+    g_aclist =
+        (oc_sec_acl_t *)realloc(g_aclist, oc_core_get_num_devices() * sizeof(oc_sec_acl_t));
+    if (!g_aclist) {
+      oc_abort("Insufficient memory");
+    }
+
+    memset(&g_aclist[device_index], 0, sizeof(oc_sec_acl_t));
+    OC_LIST_STRUCT_INIT(&g_aclist[device_index], subjects);
+
+    size_t i=0;
+    while (i < (device_index)) {
+      OC_LIST_STRUCT_REINIT(&g_aclist[i], subjects);
+      i++;
+    }
+  } else {
+    /*
+     * if `g_oc_device_info[device_index]` is existing entry...
+     */
+    memset(&g_aclist[device_index], 0, sizeof(oc_sec_acl_t));
+    /*
+     * FIXME4ME <2023/12/11> oc_sec_acl_new_device() : free linked list memory.. before init
+     * - maybe use oc_sec_acl_free().. => it is already done in oc_core_remove_device_at_index()...
+     */
+    OC_LIST_STRUCT_INIT(&g_aclist[device_index], subjects);
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 oc_sec_acl_t *
 oc_sec_get_acl(size_t device)
 {
