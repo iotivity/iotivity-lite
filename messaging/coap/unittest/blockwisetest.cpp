@@ -505,7 +505,7 @@ TEST_F(TestMessagingBlockwise, BlockwiseRequest)
   coap_set_payload(&request_pkt, payload.data(), kBlockSize);
   coap_options_set_block1(&request_pkt, 0, 1, kBlockSize, 0);
 
-  auto skip_response = [](coap_make_response_ctx_t *, oc_endpoint_t *,
+  auto skip_response = [](coap_make_response_ctx_t *, const oc_endpoint_t *,
                           void *data) {
     *static_cast<bool *>(data) = true;
     return true;
@@ -596,15 +596,16 @@ TEST_F(TestMessagingBlockwise, BlockwiseRequest)
   coap_set_payload(&request_pkt, payload.data() + 2 * kBlockSize, kBlockSize);
   coap_options_set_block1(&request_pkt, 2, 0, kBlockSize, 2 * kBlockSize);
   ctx.block1 = coap_packet_get_block_options(&request_pkt, false);
-  EXPECT_EQ(COAP_RECEIVE_SUCCESS,
-            coap_receive(
-              &ctx, &endpoint, always_valid, nullptr,
-              [](coap_make_response_ctx_t *ctx, oc_endpoint_t *, void *data) {
-                *static_cast<bool *>(data) = true;
-                coap_set_status_code(ctx->response, VALID_2_03);
-                return true;
-              },
-              &invoked));
+  EXPECT_EQ(
+    COAP_RECEIVE_SUCCESS,
+    coap_receive(
+      &ctx, &endpoint, always_valid, nullptr,
+      [](coap_make_response_ctx_t *ctx, const oc_endpoint_t *, void *data) {
+        *static_cast<bool *>(data) = true;
+        coap_set_status_code(ctx->response, VALID_2_03);
+        return true;
+      },
+      &invoked));
   EXPECT_TRUE(invoked);
   EXPECT_EQ(payload.size(), ctx.request_buffer->payload_size);
   EXPECT_TRUE(memcmp(payload.data(), ctx.request_buffer->buffer,
@@ -622,9 +623,8 @@ TEST_F(TestMessagingBlockwise, BlockwiseRequest_FailInvalidSize)
   coap_options_set_block1(&request_pkt, 0, 1, kBlockSize, 0);
   coap_options_set_size1(&request_pkt, kBlockSize);
 
-  auto skip_response = [](coap_make_response_ctx_t *, oc_endpoint_t *, void *) {
-    return true;
-  };
+  auto skip_response = [](coap_make_response_ctx_t *, const oc_endpoint_t *,
+                          void *) { return true; };
 
   auto always_valid = [](coap_make_response_ctx_t *, const oc_endpoint_t *,
                          void *) { return true; };

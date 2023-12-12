@@ -656,14 +656,16 @@ send_transaction:
 }
 
 static uint8_t
-coap_receive_set_response_by_handler(coap_receive_ctx_t *ctx,
-                                     oc_endpoint_t *endpoint,
-                                     coap_make_response_fn_t response_fn,
-                                     void *response_fn_data)
+coap_receive_set_response_by_handler(
+  coap_receive_ctx_t *ctx,
+  const oc_ri_preparsed_request_obj_t *preparsed_request_obj,
+  const oc_endpoint_t *endpoint, coap_make_response_fn_t response_fn,
+  void *response_fn_data)
 {
   coap_make_response_ctx_t handler_ctx;
   handler_ctx.request = ctx->message;
   handler_ctx.response = ctx->response;
+  handler_ctx.preparsed_request_obj = preparsed_request_obj;
 #ifdef OC_BLOCK_WISE
   handler_ctx.request_state = &ctx->request_buffer;
   handler_ctx.response_state = &ctx->response_buffer;
@@ -742,13 +744,16 @@ coap_receive_set_response_by_handler(coap_receive_ctx_t *ctx,
 }
 
 static uint8_t
-coap_validate_request(coap_receive_ctx_t *ctx, const oc_endpoint_t *endpoint,
-                      coap_validate_request_fn_t validate_fn,
-                      void *validate_fn_data)
+coap_validate_request(
+  coap_receive_ctx_t *ctx,
+  const oc_ri_preparsed_request_obj_t *preparsed_request_obj,
+  const oc_endpoint_t *endpoint, coap_validate_request_fn_t validate_fn,
+  void *validate_fn_data)
 {
   coap_make_response_ctx_t handler_ctx;
   handler_ctx.request = ctx->message;
   handler_ctx.response = ctx->response;
+  handler_ctx.preparsed_request_obj = preparsed_request_obj;
 #ifdef OC_BLOCK_WISE
   handler_ctx.request_state = &ctx->request_buffer;
   handler_ctx.response_state = &ctx->response_buffer;
@@ -803,14 +808,17 @@ coap_receive_request_with_method(coap_receive_ctx_t *ctx,
     return COAP_RECEIVE_ERROR;
   }
 
+  oc_ri_preparsed_request_obj_t preparsed_request_obj;
+  oc_ri_prepare_request(ctx->message, &preparsed_request_obj, endpoint);
+
   /* validate request
    * - check if resource is found
    * - check if method is allowed for resource
    * - check ACLs
    * - check resource interface
    */
-  if (coap_validate_request(ctx, endpoint, validate_fn, validate_fn_data) !=
-      0) {
+  if (coap_validate_request(ctx, &preparsed_request_obj, endpoint, validate_fn,
+                            validate_fn_data) != 0) {
     return COAP_RECEIVE_SUCCESS;
   }
 
@@ -821,7 +829,8 @@ coap_receive_request_with_method(coap_receive_ctx_t *ctx,
     return ret;
   }
 #endif /* OC_BLOCK_WISE */
-  if (coap_receive_set_response_by_handler(ctx, endpoint, response_fn,
+  if (coap_receive_set_response_by_handler(ctx, &preparsed_request_obj,
+                                           endpoint, response_fn,
                                            response_fn_data) != 0) {
     return COAP_RECEIVE_SUCCESS;
   }

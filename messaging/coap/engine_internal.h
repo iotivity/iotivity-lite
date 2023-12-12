@@ -50,6 +50,7 @@
 #ifndef COAP_ENGINE_INTERNAL_H
 #define COAP_ENGINE_INTERNAL_H
 
+#include "api/oc_ri_preparsed_request_internal.h"
 #include "coap_internal.h"
 #include "oc_config.h"
 #include "port/oc_connectivity.h"
@@ -102,6 +103,7 @@ coap_block_options_t coap_packet_get_block_options(const coap_packet_t *message,
 typedef struct coap_make_response_ctx_t
 {
   const coap_packet_t *request;
+  const oc_ri_preparsed_request_obj_t *preparsed_request_obj;
   coap_packet_t *response;
 #ifdef OC_BLOCK_WISE
   oc_blockwise_state_t **request_state;
@@ -114,7 +116,7 @@ typedef struct coap_make_response_ctx_t
 
 /** @brief Callback function to create a response to the coap request */
 typedef bool (*coap_make_response_fn_t)(coap_make_response_ctx_t *,
-                                        oc_endpoint_t *, void *);
+                                        const oc_endpoint_t *, void *);
 
 typedef bool (*coap_validate_request_fn_t)(coap_make_response_ctx_t *,
                                            const oc_endpoint_t *, void *);
