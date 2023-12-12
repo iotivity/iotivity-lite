@@ -1292,7 +1292,8 @@ typedef struct
 } ri_invoke_handler_out_t;
 
 static void
-ri_invoke_handler(coap_make_response_ctx_t *ctx, ri_invoke_handler_in_t in,
+ri_invoke_handler(coap_make_response_ctx_t *ctx,
+                  const ri_invoke_handler_in_t *in,
                   ri_invoke_handler_out_t *out)
 {
   /* Alloc response_state. It also affects request_obj.response.
@@ -1310,7 +1311,7 @@ ri_invoke_handler(coap_make_response_ctx_t *ctx, ri_invoke_handler_in_t in,
 #endif /* OC_HAS_FEATURE_ETAG */
     OC_DBG("creating new block-wise response state");
     *ctx->response_state = oc_blockwise_alloc_response_buffer(
-      in.uri_path.data, in.uri_path.length, in.endpoint, in.method,
+      in->uri_path.data, in->uri_path.length, in->endpoint, in->method,
       OC_BLOCKWISE_SERVER, (uint32_t)OC_MIN_APP_DATA_SIZE, CONTENT_2_05,
       generate_etag);
     if (*ctx->response_state == NULL) {
@@ -1325,9 +1326,9 @@ ri_invoke_handler(coap_make_response_ctx_t *ctx, ri_invoke_handler_in_t in,
         response_state_allocated = true;
       }
 #endif /* OC_DYNAMIC_ALLOCATION */
-      if (in.uri_query.length > 0) {
-        oc_new_string(&(*ctx->response_state)->uri_query, in.uri_query.data,
-                      in.uri_query.length);
+      if (in->uri_query.length > 0) {
+        oc_new_string(&(*ctx->response_state)->uri_query, in->uri_query.data,
+                      in->uri_query.length);
       }
       out->response_buffer->buffer = (*ctx->response_state)->buffer;
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -1357,7 +1358,7 @@ ri_invoke_handler(coap_make_response_ctx_t *ctx, ri_invoke_handler_in_t in,
   // we need to check only for bad request
   if (!out->bitmask_code) {
     oc_status_t status = ri_invoke_coap_entity_get_payload_rep(
-      in.payload, in.payload_len, in.cf, &in.request_obj->request_payload);
+      in->payload, in->payload_len, in->cf, &in->request_obj->request_payload);
     if (status != OC_STATUS_OK) {
       out->bitmask_code |= BITMASK_CODE_BAD_REQUEST;
       if (status == OC_STATUS_REQUEST_ENTITY_TOO_LARGE) {
@@ -1385,13 +1386,13 @@ ri_invoke_handler(coap_make_response_ctx_t *ctx, ri_invoke_handler_in_t in,
     oc_rep_new_v1(out->response_buffer->buffer,
                   out->response_buffer->buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
-    oc_rep_encoder_set_type_by_accept(in.accept);
+    oc_rep_encoder_set_type_by_accept(in->accept);
 
     /* Process a request against a valid resource, request payload, and
      * interface. */
     oc_status_t ret =
-      ri_invoke_request_handler(in.cur_resource, in.method, in.request_obj,
-                                in.iface_mask, in.resource_is_collection);
+      ri_invoke_request_handler(in->cur_resource, in->method, in->request_obj,
+                                in->iface_mask, in->resource_is_collection);
     switch (ret) {
     case OC_STATUS_OK:
       break;
@@ -1419,12 +1420,12 @@ ri_invoke_handler(coap_make_response_ctx_t *ctx, ri_invoke_handler_in_t in,
 #endif /* OC_DYNAMIC_ALLOCATION */
 #endif /* OC_BLOCK_WISE */
 
-  if (in.request_obj->request_payload != NULL) {
+  if (in->request_obj->request_payload != NULL) {
     /* To the extent that the request payload was parsed, free the payload
      * structure (and return its memory to the pool).
      */
-    oc_free_rep(in.request_obj->request_payload);
-    in.request_obj->request_payload = NULL;
+    oc_free_rep(in->request_obj->request_payload);
+    in->request_obj->request_payload = NULL;
   }
   oc_rep_set_pool(prev_rep_objects);
 }
@@ -1631,41 +1632,45 @@ typedef struct
 } ri_invoke_coap_set_etag_in_t;
 
 static bitmask_code_t
-ri_invoke_coap_set_etag(ri_invoke_coap_set_etag_in_t in,
+ri_invoke_coap_set_etag(const ri_invoke_coap_set_etag_in_t *in,
                         oc_request_t *request_obj)
 {
-  if (!in.bitmask_code && in.cur_resource != NULL && in.method == OC_GET &&
-      (in.resource_is_collection || in.cur_resource->get_handler.cb != NULL)) {
-    /* If the request is a GET request, check if the client has provided a valid
-     * ETag in the header. If so, and if the ETag matches the ETag of the
-     * resource, then the response will be a 2.03 response with an empty
-     * payload.
-     */
-    const uint8_t *req_etag_buf = NULL;
-    uint8_t req_etag_buf_len =
-      coap_options_get_etag(in.ctx->request, &req_etag_buf);
-    uint64_t etag = (in.iface_mask == OC_IF_B)
-                      ? oc_ri_get_batch_etag(in.cur_resource, in.endpoint,
-                                             in.endpoint->device)
-                      : oc_ri_get_etag(in.cur_resource);
-    if (etag != OC_ETAG_UNINITIALIZED) {
-      if (req_etag_buf_len == sizeof(etag)) {
-        uint64_t req_etag;
-        memcpy(&req_etag, &req_etag_buf[0], sizeof(etag));
-        if (req_etag == etag) {
-          in.bitmask_code |= BITMASK_CODE_NOT_MODIFIED;
-        }
-      }
-
-      // Store ETag to the response buffer before the method handler is invoked.
-      // A resource with a custom method handler may want to override the ETag
-      // value with oc_set_send_response_etag().
-      memcpy(&request_obj->response->response_buffer->etag.value[0], &etag,
-             sizeof(etag));
-      request_obj->response->response_buffer->etag.length = sizeof(etag);
+  bitmask_code_t bitmask_code = in->bitmask_code;
+  if (bitmask_code || in->cur_resource == NULL || in->method != OC_GET ||
+      !(in->resource_is_collection ||
+        in->cur_resource->get_handler.cb != NULL)) {
+    return bitmask_code;
+  }
+  /* If the request is a GET request, check if the client has provided a valid
+   * ETag in the header. If so, and if the ETag matches the ETag of the
+   * resource, then the response will be a 2.03 response with an empty
+   * payload.
+   */
+  const uint8_t *req_etag_buf = NULL;
+  uint8_t req_etag_buf_len =
+    coap_options_get_etag(in->ctx->request, &req_etag_buf);
+  uint64_t etag = (in->iface_mask == OC_IF_B)
+                    ? oc_ri_get_batch_etag(in->cur_resource, in->endpoint,
+                                           in->endpoint->device)
+                    : oc_ri_get_etag(in->cur_resource);
+  if (etag == OC_ETAG_UNINITIALIZED) {
+    return bitmask_code;
+  }
+  if (req_etag_buf_len == sizeof(etag)) {
+    uint64_t req_etag;
+    memcpy(&req_etag, &req_etag_buf[0], sizeof(etag));
+    if (req_etag == etag) {
+      bitmask_code |= BITMASK_CODE_NOT_MODIFIED;
     }
   }
-  return in.bitmask_code;
+
+  // Store ETag to the response buffer before the method handler is invoked.
+  // A resource with a custom method handler may want to override the ETag
+  // value with oc_set_send_response_etag().
+  memcpy(&request_obj->response->response_buffer->etag.value[0], &etag,
+         sizeof(etag));
+  request_obj->response->response_buffer->etag.length = sizeof(etag);
+  return bitmask_code;
 }
 #endif /* OC_HAS_FEATURE_ETAG */
 
@@ -1785,7 +1790,7 @@ ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
 
 #ifdef OC_HAS_FEATURE_ETAG
   bitmask_code |= ri_invoke_coap_set_etag(
-    (ri_invoke_coap_set_etag_in_t){
+    &(ri_invoke_coap_set_etag_in_t){
       .ctx = ctx,
       .bitmask_code = bitmask_code,
       .cur_resource = cur_resource,
@@ -1798,25 +1803,26 @@ ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
 #endif /* OC_HAS_FEATURE_ETAG */
 
   if (!bitmask_code && cur_resource != NULL) {
-    ri_invoke_handler_in_t in = {
-      .request_obj = &request_obj,
-      .cur_resource = cur_resource,
-      .endpoint = endpoint,
-      .accept = accept,
-      .uri_path = oc_string_view(uri_path, uri_path_len),
-      .uri_query = oc_string_view(uri_query, uri_query_len),
-      .iface_mask = iface_mask,
-      .resource_is_collection = resource_is_collection,
-      .method = method,
-      .payload = payload,
-      .payload_len = payload_len,
-      .cf = cf,
-    };
     ri_invoke_handler_out_t out = {
       .bitmask_code = bitmask_code,
       .response_buffer = &response_buffer,
     };
-    ri_invoke_handler(ctx, in, &out);
+    ri_invoke_handler(ctx,
+                      &(ri_invoke_handler_in_t){
+                        .request_obj = &request_obj,
+                        .cur_resource = cur_resource,
+                        .endpoint = endpoint,
+                        .accept = accept,
+                        .uri_path = oc_string_view(uri_path, uri_path_len),
+                        .uri_query = oc_string_view(uri_query, uri_query_len),
+                        .iface_mask = iface_mask,
+                        .resource_is_collection = resource_is_collection,
+                        .method = method,
+                        .payload = payload,
+                        .payload_len = payload_len,
+                        .cf = cf,
+                      },
+                      &out);
     bitmask_code |= out.bitmask_code;
   }
 
