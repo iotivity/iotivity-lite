@@ -32,6 +32,8 @@ jobs:
           - args: "CLOUD=1"
           # cloud on (tcp on, ipv4 on), debug on
           - args: "CLOUD=1 DEBUG=1"
+          # cloud on (tcp on, ipv4 on), debug on, mbedTLS v3.5.0
+          - args: "CLOUD=1 DEBUG=1 MBEDTLS_FORCE_3_5_0=1"
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -104,7 +106,7 @@ jobs:
           ./esp-idf/install.sh
           . ./esp-idf/export.sh
           idf.py ${{ matrix.args }} set-target esp32
-          ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../../../patches/01-ocf-x509san-anon-psk.patch)
-          ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../patches/mbedtls/02-ocf-mbedtls-config.patch)
+          ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../../../patches/mbedtls/3.1/01-ocf-x509san-anon-psk.patch)
+          ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../patches/mbedtls/3.1/02-ocf-mbedtls-config.patch)
           ( cd esp-idf/components/lwip/lwip && find ../../../../patches/lwip/ -type f -name '*.patch' -exec patch -p1 -i {} \; )
           idf.py build

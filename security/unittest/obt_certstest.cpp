@@ -182,6 +182,9 @@ TestObtCerts::GenerateRoleCertificate(oc::keypair_t &kp,
   int err =
     oc_obt_generate_role_cert_pem(cert_data, cert_buf.data(), cert_buf.size());
   EXPECT_EQ(0, err);
+  if (err != 0) {
+    return {};
+  }
   return GetPEM(cert_buf);
 }
 
@@ -253,6 +256,8 @@ TEST_F(TestObtCerts, GenerateValidSelfSignedCertificate)
   oc_free_string(&pk);
 }
 
+#ifdef OC_TEST
+
 TEST_F(TestObtCerts, SerializeSelfSignedCertificate)
 {
   auto root_cert = GenerateSelfSignedRootCertificate(kp384_, MBEDTLS_MD_SHA384);
@@ -271,6 +276,8 @@ TEST_F(TestObtCerts, SerializeSelfSignedCertificate)
 
   mbedtls_x509_crt_free(&crt);
 }
+
+#endif /* OC_TEST */
 
 TEST_F(TestObtCerts, ValidateSelfSignedCertificate)
 {
@@ -373,6 +380,8 @@ TEST_F(TestObtCerts, GenerateValidIdentityCertificate)
   EXPECT_EQ(0, memcmp(kp256_.public_key.data(), public_key.data(), ret));
 }
 
+#ifdef OC_TEST
+
 TEST_F(TestObtCerts, SerializeIdentityCertificate)
 {
   auto id_cert = GenerateIdentityCertificate(kp384_);
@@ -391,6 +400,8 @@ TEST_F(TestObtCerts, SerializeIdentityCertificate)
 
   mbedtls_x509_crt_free(&crt);
 }
+
+#endif /* OC_TEST */
 
 TEST_F(TestObtCerts, ValidateIdentityCertificate)
 {
@@ -480,15 +491,16 @@ TEST_F(TestObtCerts, GenerateRoleCertificateFail)
 TEST_F(TestObtCerts, GenerateValidRoleCertificate)
 {
   auto role_cert = GenerateRoleCertificate(kp256_, MBEDTLS_MD_SHA384);
+  ASSERT_FALSE(role_cert.empty());
 
   std::array<char, 128> serial{};
   int ret = oc_certs_parse_serial_number(&role_cert[0], role_cert.size(),
                                          serial.data(), serial.size());
-  EXPECT_LT(0, ret);
+  ASSERT_LT(0, ret);
   OC_DBG("serial: %s", &serial[0]);
 
   std::array<char, OC_UUID_LEN> uuid_cstr{};
-  EXPECT_TRUE(oc_certs_parse_CN_for_UUID(&role_cert[0], role_cert.size(),
+  ASSERT_TRUE(oc_certs_parse_CN_for_UUID(&role_cert[0], role_cert.size(),
                                          uuid_cstr.data(), uuid_cstr.size()));
 #ifdef _WIN32
   // linker error when ASAN is enabled
@@ -500,17 +512,17 @@ TEST_F(TestObtCerts, GenerateValidRoleCertificate)
   std::array<uint8_t, 200> private_key{};
   ret = oc_certs_parse_private_key(0, &role_cert[0], role_cert.size(),
                                    private_key.data(), private_key.size());
-  EXPECT_EQ(kp256_.private_key_size, ret);
+  ASSERT_EQ(kp256_.private_key_size, ret);
 
   std::array<uint8_t, 200> public_key{};
   ret = oc_certs_parse_public_key(&role_cert[0], role_cert.size(),
                                   public_key.data(), public_key.size());
-  EXPECT_LT(0, ret);
+  ASSERT_LT(0, ret);
   EXPECT_EQ(0, memcmp(kp256_.public_key.data(), public_key.data(), ret));
 
   oc_string_t role{};
   oc_string_t authority{};
-  EXPECT_TRUE(oc_certs_parse_first_role(&role_cert[0], role_cert.size(), &role,
+  ASSERT_TRUE(oc_certs_parse_first_role(&role_cert[0], role_cert.size(), &role,
                                         &authority));
   EXPECT_STREQ(oc_string(roles_.Get(0)->role), oc_string(role));
   EXPECT_STREQ(oc_string(roles_.Get(0)->authority), oc_string(authority));
@@ -519,6 +531,8 @@ TEST_F(TestObtCerts, GenerateValidRoleCertificate)
   oc_free_string(&role);
   oc_free_string(&authority);
 }
+
+#ifdef OC_TEST
 
 TEST_F(TestObtCerts, SerializeRoleCertificate)
 {
@@ -538,6 +552,8 @@ TEST_F(TestObtCerts, SerializeRoleCertificate)
 
   mbedtls_x509_crt_free(&crt);
 }
+
+#endif /* OC_TEST */
 
 TEST_F(TestObtCerts, ValidateRoleCertificate)
 {

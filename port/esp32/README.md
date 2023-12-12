@@ -75,8 +75,8 @@ git clone -b release/v5.0 https://github.com/espressif/esp-idf.git
 idf.py set-target esp32
 idf.py menuconfig # this will bring up a GUI where you need to set up wifi
 # apply iotivity-lite patches for mbedTLS v3.1.0
-( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../../../patches/01-ocf-x509san-anon-psk.patch )
-( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../patches/mbedtls/02-ocf-mbedtls-config.patch )
+( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../../../patches/mbedtls/3.1/01-ocf-x509san-anon-psk.patch )
+( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../patches/mbedtls/3.1/02-ocf-mbedtls-config.patch )
 ( cd esp-idf/components/lwip/lwip && find ../../../../patches/lwip/ -type f -name '*.patch' -exec patch -p1 -i {} \; )
 idf.py build
 ESPBAUD=115200 idf.py flash monitor

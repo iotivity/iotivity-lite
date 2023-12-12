@@ -36,6 +36,7 @@
 #include "oc_pki.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_connectivity_internal.h"
+#include "port/oc_log_internal.h"
 #include "security/oc_acl_internal.h"
 #include "security/oc_audit_internal.h"
 #include "security/oc_cred_internal.h"
@@ -73,22 +74,14 @@
 #include <string.h>
 #include <inttypes.h>
 
-/// TODO update mbedtls_config.h to use LOG_LEVEL instead of OC_DEBUG
-#if defined(OC_DEBUG)
+#if OC_ERR_IS_ENABLED
 #include <mbedtls/debug.h>
 #include <mbedtls/error.h>
 #include <mbedtls/platform.h>
-#elif OC_DBG_IS_ENABLED || OC_ERR_IS_ENABLED || OC_WRN_IS_ENABLED
-static void
-mbedtls_strerror(int ret, char *buf, size_t buflen)
-{
-  snprintf(buf, buflen, "MBEDTLS_ERR(%d)", ret);
-}
-#endif /* OC_DBG_IS_ENABLED || OC_ERR_IS_ENABLED || OC_WRN_IS_ENABLED */
+#endif /* OC_ERR_IS_ENABLED */
 
 #define OC_TLS_SELECTED_ANY_CRED_ID (-1)
 
-#if OC_DBG_IS_ENABLED || OC_ERR_IS_ENABLED
 #if OC_ERR_IS_ENABLED
 #define MBEDTLS_ERR(mbedtls_func_name, mbedtls_err)                            \
   do {                                                                         \
@@ -98,9 +91,6 @@ mbedtls_strerror(int ret, char *buf, size_t buflen)
     OC_ERR("oc_tls: %s ends with error: %s", mbedtls_func_name,                \
            buf_mbedtls_strerror);                                              \
   } while (0)
-#else /* OC_ERR_IS_ENABLED */
-#define MBEDTLS_ERR(mbedtls_func_name, mbedtls_err)
-#endif /* !OC_ERR_IS_ENABLED */
 
 #define TLS_LOG_MBEDTLS_ERROR(mbedtls_func_name, mbedtls_err)                  \
   do {                                                                         \
@@ -115,6 +105,7 @@ mbedtls_strerror(int ret, char *buf, size_t buflen)
     MBEDTLS_ERR(mbedtls_func_name, mbedtls_err);                               \
   } while (0)
 #else /* !OC_DBG_IS_ENABLED && !OC_ERR_IS_ENABLED */
+#define MBEDTLS_ERR(mbedtls_func_name, mbedtls_err)
 #define TLS_LOG_MBEDTLS_ERROR(mbedtls_func_name, mbedtls_err)
 #endif /* !OC_DBG_IS_ENABLED && !OC_ERR_IS_ENABLED */
 
@@ -321,22 +312,19 @@ oc_tls_get_trust_anchors(void)
 }
 #endif /* OC_PKI */
 
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
 static void
 oc_mbedtls_debug(void *ctx, int level, const char *file, int line,
                  const char *str)
 {
   (void)ctx;
   (void)level;
-#if OC_DBG_IS_ENABLED
   OC_DBG("mbedtls_log: %s:%04d: %s", file, line, str);
-#else  /* !OC_DBG_IS_ENABLED */
   (void)file;
   (void)line;
   (void)str;
-#endif /* OC_DBG_IS_ENABLED */
 }
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
 static bool
 is_peer_active(const oc_tls_peer_t *peer)
@@ -771,29 +759,27 @@ ssl_set_timer(void *ctx, uint32_t int_ms, uint32_t fin_ms)
 
 int
 oc_tls_pbkdf2(const unsigned char *pin, size_t pin_len, const oc_uuid_t *uuid,
-              unsigned int c, uint8_t *key, uint32_t key_len)
+              unsigned int c, mbedtls_md_type_t key_type, uint8_t *key,
+              uint32_t key_len)
 {
-  mbedtls_md_context_t hmac_SHA256;
-  mbedtls_md_init(&hmac_SHA256);
-
-  if (mbedtls_md_setup(&hmac_SHA256,
-                       mbedtls_md_info_from_type(MBEDTLS_MD_SHA256), 1) != 0) {
-    return -1;
-  }
-
-  memset(key, 0, key_len);
-
-  int ret = mbedtls_pkcs5_pbkdf2_hmac(&hmac_SHA256, pin, pin_len,
-                                      (const unsigned char *)uuid->id, 16, c,
-                                      key_len, key);
-
-  mbedtls_md_free(&hmac_SHA256);
-
+#if MBEDTLS_VERSION_NUMBER <= 0x03010000
+  mbedtls_md_context_t hmac;
+  mbedtls_md_init(&hmac);
+  int ret = mbedtls_md_setup(&hmac, mbedtls_md_info_from_type(key_type), 1);
   if (ret != 0) {
-    ret = -1;
+    mbedtls_md_free(&hmac);
+    return ret;
   }
-
+  ret = mbedtls_pkcs5_pbkdf2_hmac(&hmac, pin, pin_len,
+                                  (const unsigned char *)uuid->id,
+                                  OC_ARRAY_SIZE(uuid->id), c, key_len, key);
+  mbedtls_md_free(&hmac);
   return ret;
+#else  /* MBEDTLS_VERSION_NUMBER > 0x03010000 */
+  return mbedtls_pkcs5_pbkdf2_hmac_ext(
+    key_type, pin, pin_len, (const unsigned char *)uuid->id,
+    OC_ARRAY_SIZE(uuid->id), c, key_len, key);
+#endif /* MBEDTLS_VERSION_NUMBER <= 0x03010000 */
 }
 
 static void
@@ -867,9 +853,9 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
     OC_DBG("oc_tls: deriving PPSK for PIN OTM");
     memcpy(peer->uuid.id, identity, 16);
 
-    uint8_t key[16];
-    if (oc_tls_pbkdf2(g_pin, PIN_LEN, &doxm->deviceuuid, 1000, key,
-                      OC_ARRAY_SIZE(key)) != 0) {
+    uint8_t key[16] = { 0 };
+    if (oc_tls_pbkdf2(g_pin, PIN_LEN, &doxm->deviceuuid, 1000,
+                      MBEDTLS_MD_SHA256, key, OC_ARRAY_SIZE(key)) != 0) {
       OC_ERR("oc_tls: error deriving PPSK");
       return -1;
     }
@@ -1957,13 +1943,15 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
     }
   }
 
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
   mbedtls_ssl_conf_dbg(conf, oc_mbedtls_debug, stdout);
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
   mbedtls_ssl_conf_rng(conf, mbedtls_ctr_drbg_random, &g_oc_ctr_drbg_ctx);
+#if MBEDTLS_VERSION_NUMBER <= 0x03010000
   mbedtls_ssl_conf_min_version(conf, MBEDTLS_SSL_MAJOR_VERSION_3,
                                MBEDTLS_SSL_MINOR_VERSION_3);
+#endif /* MBEDTLS_VERSION_NUMBER <= 0x03010000 */
   const oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
   if ((ps->s > OC_DOS_RFOTM) || (role != MBEDTLS_SSL_IS_SERVER)) {
     mbedtls_ssl_conf_authmode(conf, MBEDTLS_SSL_VERIFY_REQUIRED);

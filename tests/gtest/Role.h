@@ -29,7 +29,7 @@ namespace oc {
 
 class Role {
 public:
-  Role(const std::string &role, const std::string &authority);
+  Role(const std::string &role, const std::string &authority = "");
   ~Role();
 
   Role(Role &other) = delete;

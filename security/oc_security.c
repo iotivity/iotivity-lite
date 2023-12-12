@@ -45,8 +45,19 @@
 #include <mbedtls/platform_time.h>
 
 #ifndef OC_DYNAMIC_ALLOCATION
-#define MBEDTLS_ALLOC_BUF_SIZE (20000)
-static unsigned char g_alloc_buf[MBEDTLS_ALLOC_BUF_SIZE];
+
+/* Static allocation buffer used by mbedTLS
+ * Note: for mbedTLS v3.1.0 20000 bytes is enough, but for mbedTLS v3.5.0 the
+ * handshake sometimes fails with allocation errors */
+#ifndef OC_MBEDTLS_ALLOCATION_BUFFER_SIZE
+#if MBEDTLS_VERSION_NUMBER <= 0x03010000
+#define OC_MBEDTLS_ALLOCATION_BUFFER_SIZE (20000)
+#else /* MBEDTLS_VERSION_NUMBER > 0x03010000 */
+#define OC_MBEDTLS_ALLOCATION_BUFFER_SIZE (25000)
+#endif /* MBEDTLS_VERSION_NUMBER <= 0x03010000 */
+#endif /* OC_MBEDTLS_ALLOCATION_BUFFER_SIZE */
+
+static unsigned char g_alloc_buf[OC_MBEDTLS_ALLOCATION_BUFFER_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 #if defined(_WIN32) || defined(_WIN64)
@@ -59,16 +70,16 @@ void
 oc_mbedtls_init(void)
 {
 #ifndef OC_DYNAMIC_ALLOCATION
-  mbedtls_memory_buffer_alloc_init(g_alloc_buf, sizeof(g_alloc_buf));
+  mbedtls_memory_buffer_alloc_init(g_alloc_buf, OC_ARRAY_SIZE(g_alloc_buf));
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
 #if defined(_WIN32) || defined(_WIN64)
   // mbedtls debug logs fail if snprintf is not specified
   mbedtls_platform_set_snprintf(snprintf);
 #endif /* _WIN32 or _WIN64 */
   mbedtls_debug_set_threshold(4);
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 }
 
 int

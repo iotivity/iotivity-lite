@@ -93,9 +93,6 @@ oc_rep_t *
 oc_alloc_rep(void)
 {
   oc_rep_t *rep = (oc_rep_t *)oc_memb_alloc(g_rep_objects);
-#ifdef OC_DEBUG
-  oc_assert(rep != NULL);
-#endif
   if (rep == NULL) {
     return NULL;
   }

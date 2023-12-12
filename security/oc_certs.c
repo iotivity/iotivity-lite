@@ -146,9 +146,9 @@ oc_certs_is_PEM(const unsigned char *cert, size_t cert_len)
          memcmp(cert, PEM_BEGIN, pem_begin_len) == 0;
 }
 
-int
-oc_certs_extract_serial_number(const mbedtls_x509_crt *cert, char *buffer,
-                               size_t buffer_size)
+static int
+certs_extract_serial_number(const mbedtls_x509_crt *cert, char *buffer,
+                            size_t buffer_size)
 {
   return mbedtls_x509_serial_gets(buffer, buffer_size, &cert->serial);
 }
@@ -163,28 +163,26 @@ oc_certs_parse_serial_number(const unsigned char *cert, size_t cert_size,
   int ret = mbedtls_x509_crt_parse(&crt, cert, cert_size);
   if (ret != 0) {
     OC_ERR("could not parse the provided cert %d", ret);
-    return -1;
+    return ret;
   }
 
-  ret = oc_certs_extract_serial_number(&crt, buffer, buffer_size);
+  ret = certs_extract_serial_number(&crt, buffer, buffer_size);
   mbedtls_x509_crt_free(&crt);
   return ret;
 }
 
-int
-oc_certs_extract_private_key(size_t device, const mbedtls_x509_crt *cert,
-                             unsigned char *buffer, size_t buffer_size)
+static int
+certs_extract_private_key(size_t device, const mbedtls_x509_crt *cert,
+                          unsigned char *buffer, size_t buffer_size)
 {
   int ret = oc_mbedtls_pk_write_key_der(device, &cert->pk, buffer, buffer_size);
-  if (ret < 0) {
+  if (ret <= 0) {
     OC_ERR("could not extract private key from cert %d", ret);
     return ret;
   }
-  if (ret > 0) {
-    // mbedtls_pk_write_key_der writes the key at the end of the buffer, we
-    // move it to the beginning
-    memmove(buffer, buffer + buffer_size - ret, ret);
-  }
+  // mbedtls_pk_write_key_der writes the key at the end of the buffer, we
+  // move it to the beginning
+  memmove(buffer, buffer + buffer_size - ret, ret);
   return ret;
 }
 
@@ -199,29 +197,27 @@ oc_certs_parse_private_key(size_t device, const unsigned char *cert,
   int ret = mbedtls_x509_crt_parse(&crt, cert, cert_size);
   if (ret != 0) {
     OC_ERR("could not parse the provided cert %d", ret);
-    return -1;
+    return ret;
   }
 
-  ret = oc_certs_extract_private_key(device, &crt, buffer, buffer_size);
+  ret = certs_extract_private_key(device, &crt, buffer, buffer_size);
   mbedtls_x509_crt_free(&crt);
   return ret;
 }
 
-int
-oc_certs_extract_public_key(const mbedtls_x509_crt *cert, unsigned char *buffer,
-                            size_t buffer_size)
+static int
+certs_extract_public_key(const mbedtls_x509_crt *cert, unsigned char *buffer,
+                         size_t buffer_size)
 {
   int ret = oc_mbedtls_pk_write_pubkey_der(&cert->pk, buffer, buffer_size);
-  if (ret < 0) {
+  if (ret <= 0) {
     OC_ERR("could not extract public key from cert %d", ret);
     return ret;
   }
 
-  if (ret > 0) {
-    // mbedtls_pk_write_pubkey_der writes the key at the end of the buffer, we
-    // move it to the beginning
-    memmove(buffer, buffer + buffer_size - ret, ret);
-  }
+  // mbedtls_pk_write_pubkey_der writes the key at the end of the buffer, we
+  // move it to the beginning
+  memmove(buffer, buffer + buffer_size - ret, ret);
   return ret;
 }
 
@@ -237,16 +233,14 @@ oc_certs_extract_public_key_to_oc_string(const mbedtls_x509_crt *cert,
                       : RSA_PUB_DER_MAX_BYTES;
   oc_string_t pk;
   oc_alloc_string(&pk, key_size);
-  int ret = oc_certs_extract_public_key(cert, oc_cast(pk, uint8_t), key_size);
-  if (ret < 0) {
+  int ret = certs_extract_public_key(cert, oc_cast(pk, uint8_t), key_size);
+  if (ret <= 0) {
     oc_free_string(&pk);
     return ret;
   }
 
-  if (ret > 0) {
-    oc_alloc_string(buffer, (size_t)ret);
-    memcpy(oc_cast(*buffer, uint8_t), oc_cast(pk, uint8_t), (size_t)ret);
-  }
+  oc_alloc_string(buffer, (size_t)ret);
+  memcpy(oc_cast(*buffer, uint8_t), oc_cast(pk, uint8_t), (size_t)ret);
   oc_free_string(&pk);
   return ret;
 }
@@ -264,7 +258,7 @@ oc_certs_parse_public_key(const unsigned char *cert, size_t cert_size,
     return -1;
   }
 
-  ret = oc_certs_extract_public_key(&crt, buffer, buffer_size);
+  ret = certs_extract_public_key(&crt, buffer, buffer_size);
   mbedtls_x509_crt_free(&crt);
   return ret;
 }
@@ -287,67 +281,6 @@ oc_certs_parse_public_key_to_oc_string(const unsigned char *cert,
   return ret;
 }
 
-int
-oc_certs_parse_role_certificate(const unsigned char *rcert, size_t rcert_size,
-                                oc_sec_cred_t *role_cred, bool roles_resource)
-{
-  mbedtls_x509_crt c;
-  mbedtls_x509_crt *cert;
-  if (roles_resource) {
-    cert = (mbedtls_x509_crt *)role_cred->ctx;
-  } else {
-    cert = &c;
-  }
-  mbedtls_x509_crt_init(cert);
-
-  /* Parse role certificate chain */
-  int ret = mbedtls_x509_crt_parse(cert, rcert, rcert_size);
-  if (ret != 0) {
-    OC_ERR("could not parse role cert chain %d", ret);
-    goto exit_parse_role_cert;
-  }
-
-  uint32_t flags = 0;
-  if (oc_certs_validate_role_cert(cert, &flags) < 0 || flags != 0) {
-    OC_ERR("role certificate does not meet the necessary constraints");
-    goto exit_parse_role_cert;
-  }
-
-  /* Verify that the role certificate was signed by a CA */
-  mbedtls_x509_crt *trust_ca = oc_tls_get_trust_anchors();
-  ret = mbedtls_x509_crt_verify_with_profile(cert, trust_ca, NULL,
-                                             &mbedtls_x509_crt_profile_default,
-                                             NULL, &flags, NULL, NULL);
-  if (ret != 0 || flags != 0) {
-    OC_ERR("error verifying role certificate %d", ret);
-    goto exit_parse_role_cert;
-  }
-
-  /* Extract a Role ID from the role certificate's subjectAlternativeName
-   * extension and store it inside the "role" and "authority" parameters.
-   *
-   * For this, inspect the GeneralNames SEQUENCE.
-   */
-  if (!oc_certs_extract_first_role(cert, &role_cred->role.role,
-                                   &role_cred->role.authority)) {
-    OC_ERR("error extracing role and authority from certificate");
-    goto exit_parse_role_cert;
-  }
-
-  OC_DBG("successfully parsed role certificate");
-  if (!roles_resource) {
-    mbedtls_x509_crt_free(cert);
-  }
-  return 0;
-
-exit_parse_role_cert:
-  if (!roles_resource) {
-    mbedtls_x509_crt_free(cert);
-  }
-  OC_ERR("invalid role certificate");
-  return -1;
-}
-
 bool
 oc_certs_encode_CN_with_UUID(const oc_uuid_t *uuid, char *buf, size_t buf_len)
 {
@@ -355,12 +288,8 @@ oc_certs_encode_CN_with_UUID(const oc_uuid_t *uuid, char *buf, size_t buf_len)
     return false;
   }
 
-  int ret = snprintf(buf, buf_len, CN_UUID_PREFIX);
-  if (ret < 0 || (size_t)ret >= buf_len) {
-    return false;
-  }
-  oc_uuid_to_str(uuid, buf + CN_UUID_PREFIX_LEN, OC_UUID_LEN);
-  return true;
+  memcpy(buf, CN_UUID_PREFIX, CN_UUID_PREFIX_LEN);
+  return oc_uuid_to_str_v1(uuid, buf + CN_UUID_PREFIX_LEN, OC_UUID_LEN) != -1;
 }
 
 static const char *
@@ -481,9 +410,11 @@ oc_certs_CN_extract_issuer(const mbedtls_x509_crt *cert)
   return NULL;
 }
 
-bool
-oc_certs_extract_first_role(const mbedtls_x509_crt *cert, oc_string_t *role,
-                            oc_string_t *authority)
+#if MBEDTLS_VERSION_NUMBER <= 0x03010000
+
+static bool
+certs_extract_first_role(const mbedtls_x509_crt *cert, oc_string_t *role,
+                         oc_string_t *authority)
 {
   for (const mbedtls_x509_general_names *san = &cert->subject_alt_names;
        san != NULL; san = san->next) {
@@ -494,21 +425,19 @@ oc_certs_extract_first_role(const mbedtls_x509_crt *cert, oc_string_t *role,
 
     const mbedtls_x509_name *dnRole = NULL;
     const mbedtls_x509_name *dnAuthority = NULL;
-    for (const mbedtls_x509_name *directoryName =
-           san->general_name.name.directory_name;
-         directoryName != NULL; directoryName = directoryName->next) {
+    for (const mbedtls_x509_name *name = san->general_name.name.directory_name;
+         name != NULL && (dnRole == NULL || dnAuthority == NULL);
+         name = name->next) {
       /* Look for the Common Name (CN) component in the directoryName */
-      if (oc_certs_DN_is_CN(directoryName)) {
-        dnRole = directoryName;
+      if (oc_certs_DN_is_CN(name)) {
+        dnRole = name;
+        continue;
       }
       /* Look for an Organizational Unit (OU) component in the directoryName
        */
-      else if (oc_certs_DN_is_OU(directoryName)) {
-        dnAuthority = directoryName;
-      }
-
-      if (dnRole != NULL && dnAuthority != NULL) {
-        break;
+      if (oc_certs_DN_is_OU(name)) {
+        dnAuthority = name;
+        continue;
       }
     }
 
@@ -523,10 +452,9 @@ oc_certs_extract_first_role(const mbedtls_x509_crt *cert, oc_string_t *role,
        * (CN) component and store it.
        */
       dnAuthority = oc_certs_CN_extract_issuer(cert);
-    }
-
-    if (dnAuthority == NULL) {
-      return false;
+      if (dnAuthority == NULL) {
+        return false;
+      }
     }
 
     // both role and authority are set
@@ -537,6 +465,74 @@ oc_certs_extract_first_role(const mbedtls_x509_crt *cert, oc_string_t *role,
   }
   return false;
 }
+
+#else /* MBEDTLS_VERSION_NUMBER > 0x03010000 */
+
+static bool
+certs_extract_first_role(const mbedtls_x509_crt *cert, oc_string_t *role,
+                         oc_string_t *authority)
+{
+  for (const mbedtls_x509_sequence *names = &cert->subject_alt_names;
+       names != NULL; names = names->next) {
+
+    mbedtls_x509_subject_alternative_name san;
+    int ret = mbedtls_x509_parse_subject_alt_name(&names->buf, &san);
+    if (ret < 0) {
+      return false;
+    }
+
+    if (san.type != MBEDTLS_X509_SAN_DIRECTORY_NAME) {
+      mbedtls_x509_free_subject_alt_name(&san);
+      continue;
+    }
+
+    const mbedtls_x509_name *dnRole = NULL;
+    const mbedtls_x509_name *dnAuthority = NULL;
+    for (const mbedtls_x509_name *name = &san.san.directory_name;
+         name != NULL && (dnRole == NULL || dnAuthority == NULL);
+         name = name->next) {
+      /* Look for the Common Name (CN) component in the directoryName */
+      if (oc_certs_DN_is_CN(name)) {
+        dnRole = name;
+        continue;
+      }
+      /* Look for an Organizational Unit (OU) component in the directoryName
+       */
+      if (oc_certs_DN_is_OU(name)) {
+        dnAuthority = name;
+        continue;
+      }
+    }
+
+    if (dnRole == NULL) {
+      mbedtls_x509_free_subject_alt_name(&san);
+      return false;
+    }
+
+    if (dnAuthority == NULL) {
+      /* If the OU component was absent in the directoryName, it is assumed
+       * that the issuer of this role certificate is the "authority".
+       * Accordingly, extract the issuer's name from the issuer's Common Name
+       * (CN) component and store it.
+       */
+      dnAuthority = oc_certs_CN_extract_issuer(cert);
+      if (dnAuthority == NULL) {
+        mbedtls_x509_free_subject_alt_name(&san);
+        return false;
+      }
+    }
+
+    // both role and authority are set
+    oc_new_string(role, (const char *)dnRole->val.p, dnRole->val.len);
+    oc_new_string(authority, (const char *)dnAuthority->val.p,
+                  dnAuthority->val.len);
+    mbedtls_x509_free_subject_alt_name(&san);
+    return true;
+  }
+  return false;
+}
+
+#endif /* MBEDTLS_VERSION_NUMBER <= 0x03010000 */
 
 bool
 oc_certs_parse_first_role(const unsigned char *cert, size_t cert_size,
@@ -551,9 +547,70 @@ oc_certs_parse_first_role(const unsigned char *cert, size_t cert_size,
     return false;
   }
 
-  bool ok = oc_certs_extract_first_role(&crt, role, authority);
+  bool ok = certs_extract_first_role(&crt, role, authority);
   mbedtls_x509_crt_free(&crt);
   return ok;
+}
+
+int
+oc_certs_parse_role_certificate(const unsigned char *rcert, size_t rcert_size,
+                                oc_sec_cred_t *role_cred, bool roles_resource)
+{
+  mbedtls_x509_crt c;
+  mbedtls_x509_crt *cert;
+  if (roles_resource) {
+    cert = (mbedtls_x509_crt *)role_cred->ctx;
+  } else {
+    cert = &c;
+  }
+  mbedtls_x509_crt_init(cert);
+
+  /* Parse role certificate chain */
+  int ret = mbedtls_x509_crt_parse(cert, rcert, rcert_size);
+  if (ret != 0) {
+    OC_ERR("could not parse role cert chain %d", ret);
+    goto exit_parse_role_cert;
+  }
+
+  uint32_t flags = 0;
+  if (oc_certs_validate_role_cert(cert, &flags) < 0 || flags != 0) {
+    OC_ERR("role certificate does not meet the necessary constraints");
+    goto exit_parse_role_cert;
+  }
+
+  /* Verify that the role certificate was signed by a CA */
+  mbedtls_x509_crt *trust_ca = oc_tls_get_trust_anchors();
+  ret = mbedtls_x509_crt_verify_with_profile(cert, trust_ca, NULL,
+                                             &mbedtls_x509_crt_profile_default,
+                                             NULL, &flags, NULL, NULL);
+  if (ret != 0 || flags != 0) {
+    OC_ERR("error verifying role certificate %d", ret);
+    goto exit_parse_role_cert;
+  }
+
+  /* Extract a Role ID from the role certificate's subjectAlternativeName
+   * extension and store it inside the "role" and "authority" parameters.
+   *
+   * For this, inspect the GeneralNames SEQUENCE.
+   */
+  if (!certs_extract_first_role(cert, &role_cred->role.role,
+                                &role_cred->role.authority)) {
+    OC_ERR("error extracing role and authority from certificate");
+    goto exit_parse_role_cert;
+  }
+
+  OC_DBG("successfully parsed role certificate");
+  if (!roles_resource) {
+    mbedtls_x509_crt_free(cert);
+  }
+  return 0;
+
+exit_parse_role_cert:
+  if (!roles_resource) {
+    mbedtls_x509_crt_free(cert);
+  }
+  OC_ERR("invalid role certificate");
+  return -1;
 }
 
 timestamp_t
@@ -597,12 +654,24 @@ oc_certs_time_to_unix_timestamp(mbedtls_x509_time time)
   return result;
 }
 
-static int
-oc_certs_serialize_to_pem(const mbedtls_x509_crt *cert, char *output_buffer,
-                          size_t output_buffer_len)
+bool
+oc_certs_is_subject_the_issuer(const mbedtls_x509_crt *issuer,
+                               const mbedtls_x509_crt *child)
 {
+  return child->issuer_raw.len == issuer->subject_raw.len &&
+         memcmp(child->issuer_raw.p, issuer->subject_raw.p,
+                child->issuer_raw.len) == 0;
+}
+
+#ifdef OC_TEST
+
+static int
+certs_serialize_to_pem(const mbedtls_x509_crt *cert, char *output_buffer,
+                       size_t output_buffer_len)
+{
+#define STR_LEN(x) (sizeof(x) - 1)
 #define NEWLINE "\r\n"
-#define NEWLINE_LEN (sizeof(NEWLINE) - 1)
+#define NEWLINE_LEN (STR_LEN(NEWLINE))
 
 #define append_new_line_to_output                                              \
   do {                                                                         \
@@ -621,16 +690,14 @@ oc_certs_serialize_to_pem(const mbedtls_x509_crt *cert, char *output_buffer,
 
   size_t ch = 0;
 
-  uint8_t alphabet[65] = { 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-                           'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T',
-                           'U', 'V', 'W', 'X', 'Y', 'Z', 'a', 'b', 'c', 'd',
-                           'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n',
-                           'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x',
-                           'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7',
-                           '8', '9', '+', '/', '=' };
   uint8_t val = 0;
   size_t input_len = cert->raw.len;
   const uint8_t *input = cert->raw.p;
+  /* handle the case that an empty input is provided */
+  if (input_len == 0) {
+    return -1;
+  }
+
   size_t output_len = (input_len / 3) * 4;
   if (input_len % 3 != 0) {
     output_len += 4;
@@ -638,22 +705,25 @@ oc_certs_serialize_to_pem(const mbedtls_x509_crt *cert, char *output_buffer,
 
   const char begin_pem[] = "-----BEGIN CERTIFICATE-----" NEWLINE;
   const char end_pem[] = "-----END CERTIFICATE-----" NEWLINE;
-#define STR_LEN(x) (sizeof(x) - 1)
 
   output_len += (output_len + 63) / 64 * NEWLINE_LEN + (STR_LEN(begin_pem)) +
                 (STR_LEN(end_pem));
 
   /* If the output buffer provided was not large enough, return an error. */
-  if (output_buffer_len < output_len)
+  if (output_buffer_len < output_len) {
     return -1;
-
-  /* handle the case that an empty input is provided */
-  if (input_len == 0) {
-    output_buffer[0] = '\0';
   }
 
   memcpy(output_buffer, begin_pem, STR_LEN(begin_pem));
   size_t j = STR_LEN(begin_pem);
+
+  const uint8_t alphabet[65] = {
+    'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
+    'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
+    'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/', '='
+  };
 
   size_t i = 0;
   for (i = 0; i < input_len; i++) {
@@ -699,27 +769,17 @@ oc_certs_serialize_chain_to_pem(const mbedtls_x509_crt *cert_chain,
   size_t buffer_len = output_buffer_len;
   const mbedtls_x509_crt *cert = cert_chain;
   while (cert != NULL) {
-    if (oc_certs_serialize_to_pem(
-          cert, output_buffer + output_buffer_len - buffer_len, buffer_len) ==
-        -1) {
+    char *buffer = output_buffer + output_buffer_len - buffer_len;
+    int ret = certs_serialize_to_pem(cert, buffer, buffer_len);
+    if (ret == -1) {
       return -1;
     }
-    buffer_len -= strlen(output_buffer);
+    buffer_len -= ret;
     cert = cert->next;
   }
-  return (int)strlen(output_buffer);
+  return (int)(output_buffer_len - buffer_len);
 }
 
-int
-oc_certs_is_subject_the_issuer(const mbedtls_x509_crt *issuer,
-                               const mbedtls_x509_crt *child)
-{
-  if (child->issuer_raw.len == issuer->subject_raw.len &&
-      memcmp(child->issuer_raw.p, issuer->subject_raw.p,
-             child->issuer_raw.len) == 0) {
-    return 0;
-  }
-  return -1;
-}
+#endif /* OC_TEST */
 
 #endif /* OC_SECURITY && OC_PKI */

@@ -42,6 +42,28 @@
 #include <cstdlib>
 #include <gtest/gtest.h>
 
+class TestTLS : public testing::Test {};
+
+TEST_F(TestTLS, Pbkdf2_Fail)
+{
+  std::array<uint8_t, 1> key{};
+  std::array<unsigned char, 1> pin{};
+  oc_uuid_t uuid{};
+  EXPECT_NE(0, oc_tls_pbkdf2(&pin[0], pin.size(), &uuid, 10, MBEDTLS_MD_NONE,
+                             &key[0], key.size()));
+}
+
+TEST_F(TestTLS, Pbkdf2)
+{
+  std::array<uint8_t, 16> key{};
+  std::array<unsigned char, 8> pin{};
+  oc_uuid_t uuid{};
+  EXPECT_EQ(0, oc_tls_pbkdf2(&pin[0], pin.size(), &uuid, 10, MBEDTLS_MD_SHA256,
+                             &key[0], key.size()));
+  EXPECT_EQ(0, oc_tls_pbkdf2(&pin[0], pin.size(), &uuid, 10, MBEDTLS_MD_SHA384,
+                             &key[0], key.size()));
+}
+
 static constexpr size_t kDeviceID{ 0 };
 static const std::string kDeviceURI{ "/oic/d" };
 static const std::string kDeviceType{ "oic.d.light" };
@@ -51,7 +73,7 @@ static const std::string kOCFSpecVersion{ "ocf.1.0.0" };
 static const std::string kOCFDataModelVersion{ "ocf.res.1.0.0" };
 
 class TestTlsConnection : public testing::Test {
-protected:
+public:
   void SetUp() override
   {
     oc_network_event_handler_mutex_init();

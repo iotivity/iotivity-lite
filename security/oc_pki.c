@@ -107,7 +107,7 @@ pki_add_intermediate_cert(size_t device, int credid, const unsigned char *cert,
   /* Confirm that the intermediate cert is the issuer of the last cert
    * in the chain, if not return.
    */
-  if (oc_certs_is_subject_the_issuer(&int_ca, id_cert) != 0) {
+  if (!oc_certs_is_subject_the_issuer(&int_ca, id_cert)) {
     OC_ERR("could not add intermediate CA cert to /oic/sec/cred: supplied "
            "intermediate CA cert is not issuer of identity cert");
     mbedtls_x509_crt_free(&int_ca);
