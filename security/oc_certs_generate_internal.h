@@ -34,10 +34,9 @@
 extern "C" {
 #endif
 
-/// Fill with serial number of the certificates with random byte string of given
-/// size
-int oc_certs_generate_serial_number(mbedtls_x509write_cert *crt, size_t size)
-  OC_NONNULL();
+/// Fill buffer with serial random byte string of given size
+long oc_certs_generate_serial_number(unsigned char *buffer, size_t buffer_size,
+                                     size_t size) OC_NONNULL();
 
 /**
  * @brief Convert timestamp into a UTC timezone string expected by the x509
@@ -53,7 +52,7 @@ bool oc_certs_timestamp_format(timestamp_t ts, char *buffer, size_t buffer_size)
   OC_NONNULL();
 
 /**
- * @brief Encode role and authority into a nul-terminated C-String for a Common
+ * @brief Encode role and authority into a null-terminated C-String for a Common
  * Name and Organizational Unit fields of a certificate.
  *
  * The Common Name (CN) component contains the role and the Organizational Unit
@@ -67,24 +66,6 @@ bool oc_certs_timestamp_format(timestamp_t ts, char *buffer, size_t buffer_size)
  */
 bool oc_certs_encode_role(const oc_role_t *role, char *buf, size_t buf_len)
   OC_NONNULL();
-
-/**
- * @brief Encode linked list of role and authority pairs into linked list of
- * mbedtls_x509_general_names*
- *
- * @param[in] roles linked list of role-authority pairs
- * @param[out] general_names output pointer to store linked list of
- * mbedtls_x509_general_names* (cannot be NULL, must be deallocated by
- * oc_certs_free_encoded_roles)
- * @return >=0 on success, number of encoded roles
- * @return -1 on error
- */
-int oc_certs_encode_roles(const oc_role_t *roles,
-                          mbedtls_x509_general_names **general_names)
-  OC_NONNULL(2);
-
-/// @brief Deallocate a linked list of mbedtls_x509_general_names*
-void oc_certs_free_encoded_roles(mbedtls_x509_general_names *general_names);
 
 typedef struct oc_certs_validity_t
 {
@@ -121,6 +102,8 @@ typedef struct oc_certs_key_usage_t
   oc_certs_buffer_t extended_key_usage;
 } oc_certs_key_usage_t;
 
+typedef bool (*oc_certs_modify_fn_t)(mbedtls_x509write_cert *, const void *);
+
 typedef struct oc_certs_generate_t
 {
   oc_certs_buffer_t personalization_string; // cannot be empty
@@ -132,6 +115,10 @@ typedef struct oc_certs_generate_t
   mbedtls_md_type_t signature_md; // MD algorithm to use for the signature
   bool is_CA;                     // is a self-signed CA certificate
   const oc_role_t *roles;         // roles for a Role certificate
+  oc_certs_modify_fn_t
+    modify_fn; // optional custom modification function called before the
+               // certificate is serialized to PEM format
+  const void *modify_fn_data; // custom data passed to modify_fn
 } oc_certs_generate_t;
 
 /**

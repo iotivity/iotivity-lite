@@ -31,9 +31,11 @@
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
 #include <mbedtls/oid.h>
+#include <mbedtls/platform.h>
+#include <mbedtls/x509_crt.h>
 
-int
-oc_certs_generate_serial_number(mbedtls_x509write_cert *crt, size_t size)
+static bool
+certs_generate_serial_number(mbedtls_mpi *buffer, size_t size)
 {
   mbedtls_ctr_drbg_context ctr_drbg;
   mbedtls_ctr_drbg_init(&ctr_drbg);
@@ -43,28 +45,56 @@ oc_certs_generate_serial_number(mbedtls_x509write_cert *crt, size_t size)
   oc_entropy_add_source(&entropy);
 
 #define PERSONALIZATION_DATA "IoTivity-Lite-Certificate_Serial_Number"
-
   int ret = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy,
                                   (const unsigned char *)PERSONALIZATION_DATA,
                                   sizeof(PERSONALIZATION_DATA));
-
 #undef PERSONALIZATION_DATA
 
   if (ret < 0) {
     OC_ERR("error initializing RNG %d", ret);
-    return -1;
+    goto error;
   }
 
   mbedtls_ctr_drbg_set_prediction_resistance(&ctr_drbg, MBEDTLS_CTR_DRBG_PR_ON);
 
-  ret = mbedtls_mpi_fill_random(&crt->serial, size, mbedtls_ctr_drbg_random,
-                                &ctr_drbg);
-
+  ret =
+    mbedtls_mpi_fill_random(buffer, size, mbedtls_ctr_drbg_random, &ctr_drbg);
   if (ret < 0) {
     OC_ERR("error generating random serial number for certificate %d", ret);
+    goto error;
+  }
+
+  mbedtls_entropy_free(&entropy);
+  mbedtls_ctr_drbg_free(&ctr_drbg);
+  return true;
+
+error:
+  mbedtls_entropy_free(&entropy);
+  mbedtls_ctr_drbg_free(&ctr_drbg);
+  return false;
+}
+
+long
+oc_certs_generate_serial_number(unsigned char *buffer, size_t buffer_size,
+                                size_t size)
+{
+  mbedtls_mpi serial;
+  mbedtls_mpi_init(&serial);
+  if (!certs_generate_serial_number(&serial, size)) {
+    mbedtls_mpi_free(&serial);
     return -1;
   }
-  return 0;
+
+  int ret = mbedtls_mpi_write_binary(&serial, &buffer[0], buffer_size);
+  if (ret < 0) {
+    OC_ERR("error generating random serial number for certificate: cannot "
+           "write to certificate(error %d)",
+           ret);
+    mbedtls_mpi_free(&serial);
+    return -1;
+  }
+  mbedtls_mpi_free(&serial);
+  return (long)size;
 }
 
 bool
@@ -101,25 +131,20 @@ static int
 certs_validity_write(mbedtls_x509write_cert *cert, timestamp_t not_before,
                      timestamp_t not_after)
 {
-#define OC_CERTS_TIMESTAMP_BUFFER_SIZE (15)
-  char nb[OC_CERTS_TIMESTAMP_BUFFER_SIZE] = { 0 };
+  char nb[MBEDTLS_X509_RFC5280_UTC_TIME_LEN] = { 0 };
   if (!oc_certs_timestamp_format(not_before, nb, OC_ARRAY_SIZE(nb))) {
+    OC_ERR("cannot write not_before timestamp");
     return -1;
   }
 
-  char na[OC_CERTS_TIMESTAMP_BUFFER_SIZE] = { 0 };
+  char na[MBEDTLS_X509_RFC5280_UTC_TIME_LEN] = { 0 };
   if (!oc_certs_timestamp_format(not_after, na, OC_ARRAY_SIZE(na))) {
+    OC_ERR("cannot write not_after timestamp");
     return -1;
-  }
-
-  int ret = mbedtls_x509write_crt_set_validity(cert, nb, na);
-  if (ret < 0) {
-    OC_ERR("error writing cert validity %d", ret);
-    return ret;
   }
 
   OC_DBG("certificate validity not_before:%s not_after:%s", nb, na);
-  return 0;
+  return mbedtls_x509write_crt_set_validity(cert, nb, na);
 }
 
 static int
@@ -221,21 +246,13 @@ certs_write_key_usage(mbedtls_x509write_cert *cert, oc_certs_key_usage_t ku)
   return 0;
 }
 
-void
-oc_certs_free_encoded_roles(mbedtls_x509_general_names *general_names)
-{
-  while (general_names != NULL) {
-    mbedtls_x509_general_names *next = general_names->next;
-    mbedtls_asn1_free_named_data_list(
-      &general_names->general_name.name.directory_name);
-    free(general_names);
-    general_names = next;
-  }
-}
-
 bool
 oc_certs_encode_role(const oc_role_t *role, char *buf, size_t buf_len)
 {
+  if (oc_string_is_empty(&role->role)) {
+    OC_ERR("invalid role");
+    return false;
+  }
   char *buffer = buf;
   size_t length = buf_len;
   int ret = snprintf(buffer, length, "CN=%s", oc_string(role->role));
@@ -243,7 +260,7 @@ oc_certs_encode_role(const oc_role_t *role, char *buf, size_t buf_len)
     OC_ERR("could not encode role");
     return false;
   }
-  if (oc_string_len(role->authority) == 0) {
+  if (oc_string_is_empty(&role->authority)) {
     return true;
   }
 
@@ -257,11 +274,26 @@ oc_certs_encode_role(const oc_role_t *role, char *buf, size_t buf_len)
   return true;
 }
 
+#if MBEDTLS_VERSION_NUMBER <= 0x03010000
+
+/// @brief Deallocate a linked list of mbedtls_x509_general_names*
+static void
+certs_free_encoded_roles(mbedtls_x509_general_names *general_names)
+{
+  while (general_names != NULL) {
+    mbedtls_x509_general_names *next = general_names->next;
+    mbedtls_asn1_free_named_data_list(
+      &general_names->general_name.name.directory_name);
+    free(general_names);
+    general_names = next;
+  }
+}
+
 static mbedtls_x509_general_names *
 certs_encode_role(const oc_role_t *role)
 {
-  char roleid[512];
-  if (!oc_certs_encode_role(role, roleid, sizeof(roleid))) {
+  char roleid[MBEDTLS_X509_MAX_DN_NAME_SIZE] = { 0 };
+  if (!oc_certs_encode_role(role, roleid, OC_ARRAY_SIZE(roleid))) {
     OC_ERR("error encoding roleid");
     return NULL;
   }
@@ -288,9 +320,19 @@ certs_encode_role(const oc_role_t *role)
   return name;
 }
 
-int
-oc_certs_encode_roles(const oc_role_t *roles,
-                      mbedtls_x509_general_names **general_names)
+/**
+ * @brief Encode linked list of role and authority pairs into linked list of
+ * mbedtls_x509_general_names*
+ *
+ * @param[in] roles linked list of role-authority pairs
+ * @param[out] names output pointer to store linked list of
+ * mbedtls_x509_general_names* (cannot be NULL, must be deallocated by
+ * certs_free_encoded_roles)
+ * @return >=0 on success, number of encoded roles
+ * @return -1 on error
+ */
+static int OC_NONNULL(2)
+  certs_encode_roles(const oc_role_t *roles, mbedtls_x509_general_names **names)
 {
   mbedtls_x509_general_names *head = NULL;
   mbedtls_x509_general_names *last = NULL;
@@ -299,7 +341,7 @@ oc_certs_encode_roles(const oc_role_t *roles,
   while (roles != NULL) {
     mbedtls_x509_general_names *name = certs_encode_role(roles);
     if (name == NULL) {
-      oc_certs_free_encoded_roles(head);
+      certs_free_encoded_roles(head);
       return -1;
     }
     OC_DBG("encoding role[%d] (%s:%s)", count, oc_string(roles->role),
@@ -318,29 +360,164 @@ oc_certs_encode_roles(const oc_role_t *roles,
     roles = roles->next;
   }
 
-  *general_names = head;
+  *names = head;
   return count;
 }
+
+#else /* MBEDTLS_VERSION_NUMBER > 0x03010000 */
+
+/// @brief Deallocate a linked list of mbedtls_x509_san_list*
+static void
+certs_free_encoded_roles(mbedtls_x509_san_list *names)
+{
+  while (names != NULL) {
+    mbedtls_x509_san_list *next = names->next;
+    assert(names->node.type == MBEDTLS_X509_SAN_DIRECTORY_NAME);
+    mbedtls_free(names->node.san.directory_name.oid.p);
+    mbedtls_free(names->node.san.directory_name.val.p);
+    if (names->node.san.directory_name.next != NULL) {
+      mbedtls_asn1_free_named_data_list(&names->node.san.directory_name.next);
+    }
+    free(names);
+    names = next;
+  }
+}
+
+static mbedtls_x509_san_list *
+certs_encode_role(const oc_role_t *role)
+{
+  char roleid[MBEDTLS_X509_MAX_DN_NAME_SIZE] = { 0 };
+  if (!oc_certs_encode_role(role, roleid, OC_ARRAY_SIZE(roleid))) {
+    OC_ERR("error encoding roleid");
+    return NULL;
+  }
+  /* A RoleId is encoded in a GeneralName that is of type directoryName into
+   * the GeneralNames SEQUEENCE.
+   */
+  mbedtls_x509_san_list *name =
+    (mbedtls_x509_san_list *)calloc(1, sizeof(mbedtls_x509_san_list));
+  if (name == NULL) {
+    OC_ERR("error allocating memory for directoryName");
+    return NULL;
+  }
+  name->node.type = MBEDTLS_X509_SAN_DIRECTORY_NAME;
+
+  mbedtls_asn1_named_data *names = NULL;
+  int ret = mbedtls_x509_string_to_names(&names, roleid);
+  if (ret < 0) {
+    OC_ERR("error writing roleid to directoryName %d", ret);
+    mbedtls_asn1_free_named_data_list(&names);
+    free(name);
+    return NULL;
+  }
+
+  name->node.san.directory_name = *names;
+  mbedtls_platform_zeroize(&names->oid, sizeof(names->oid));
+  mbedtls_platform_zeroize(&names->val, sizeof(names->val));
+  names->next = NULL;
+  mbedtls_asn1_free_named_data_list(&names);
+  return name;
+}
+
+/**
+ * @brief Encode linked list of role and authority pairs into linked list of
+ * mbedtls_x509_san_list*
+ *
+ * @param[in] roles linked list of role-authority pairs
+ * @param[out] names output pointer to store linked list of
+ * mbedtls_x509_san_list* (cannot be NULL, must be deallocated by
+ * certs_free_encoded_roles)
+ * @return >=0 on success, number of encoded roles
+ * @return -1 on error
+ */
+static int OC_NONNULL(2)
+  certs_encode_roles(const oc_role_t *roles, mbedtls_x509_san_list **names)
+{
+  mbedtls_x509_san_list *head = NULL;
+  mbedtls_x509_san_list *last = NULL;
+
+  int count = 0;
+  while (roles != NULL) {
+    mbedtls_x509_san_list *name = certs_encode_role(roles);
+    if (name == NULL) {
+      certs_free_encoded_roles(head);
+      return -1;
+    }
+    OC_DBG("encoding role[%d] (%s:%s)", count, oc_string(roles->role),
+           oc_string(roles->authority) != NULL ? oc_string(roles->authority)
+                                               : "");
+
+    if (head == NULL) {
+      head = name;
+    }
+    if (last != NULL) {
+      last->next = name;
+    }
+    last = name;
+
+    ++count;
+    roles = roles->next;
+  }
+
+  *names = head;
+  return count;
+}
+
+#endif /* MBEDTLS_VERSION_NUMBER <= 0x03010000 */
 
 static bool
 certs_write_roles_to_subject_alt_names(mbedtls_x509write_cert *cert,
                                        const oc_role_t *roles)
 {
-  mbedtls_x509_general_names *general_names = NULL;
-  int ret = oc_certs_encode_roles(roles, &general_names);
+#if MBEDTLS_VERSION_NUMBER <= 0x03010000
+  mbedtls_x509_general_names *alt_names = NULL;
+  int ret = certs_encode_roles(roles, &alt_names);
   if (ret < 0) {
     return false;
   }
 
-  ret = mbedtls_x509write_crt_set_subject_alt_names(cert, general_names);
+  ret = mbedtls_x509write_crt_set_subject_alt_names(cert, alt_names);
   if (ret < 0) {
     OC_ERR("error writing subjectAlternativeName to cert %d", ret);
-    oc_certs_free_encoded_roles(general_names);
+    certs_free_encoded_roles(alt_names);
     return false;
   }
 
-  oc_certs_free_encoded_roles(general_names);
+  certs_free_encoded_roles(alt_names);
   return true;
+#else  /* MBEDTLS_VERSION_NUMBER > 0x03010000  */
+  mbedtls_x509_san_list *alt_names = NULL;
+  int ret = certs_encode_roles(roles, &alt_names);
+  if (ret < 0) {
+    return false;
+  }
+
+  ret = mbedtls_x509write_crt_set_subject_alternative_name(cert, alt_names);
+  if (ret < 0) {
+    OC_ERR("error writing subjectAlternativeName to cert %d", ret);
+    certs_free_encoded_roles(alt_names);
+    return false;
+  }
+
+  certs_free_encoded_roles(alt_names);
+  return true;
+#endif /* MBEDTLS_VERSION_NUMBER <= 0x03010000 */
+}
+
+static bool
+certs_write_serial_number(mbedtls_x509write_cert *crt, size_t size)
+{
+#if MBEDTLS_VERSION_NUMBER <= 0x03010000
+  return certs_generate_serial_number(&crt->serial, size);
+#else  /* MBEDTLS_VERSION_NUMBER > 0x03010000 */
+  long serial_len = oc_certs_generate_serial_number(
+    &crt->serial[0], OC_ARRAY_SIZE(crt->serial), size);
+  if (serial_len < 0) {
+    return false;
+  }
+  crt->serial_len = (size_t)serial_len;
+  return true;
+#endif /* MBEDTLS_VERSION_NUMBER <= 0x03010000 */
 }
 
 int
@@ -381,8 +558,8 @@ oc_certs_generate(const oc_certs_generate_t *data, unsigned char *buffer,
   if (data->serial_number_size > 0) {
     OC_DBG("\tadding serial number");
     /* SerialNumber */
-    ret = oc_certs_generate_serial_number(&cert, data->serial_number_size);
-    if (ret < 0) {
+    if (!certs_write_serial_number(&cert, data->serial_number_size)) {
+      ret = -1;
       goto exit;
     }
   }
@@ -391,13 +568,14 @@ oc_certs_generate(const oc_certs_generate_t *data, unsigned char *buffer,
     ret = certs_validity_write(&cert, data->validity.not_before,
                                data->validity.not_after);
     if (ret < 0) {
+      OC_ERR("error writing cert validity %d", ret);
       goto exit;
     }
   }
 
   /* Version: v3 */
   mbedtls_x509write_crt_set_version(&cert, MBEDTLS_X509_CRT_VERSION_3);
-  /* signatureAlgorithm: ecdsa-with-SHA256 */
+  /* signatureAlgorithm */
   mbedtls_x509write_crt_set_md_alg(&cert, data->signature_md);
 
   ret =
@@ -409,7 +587,7 @@ oc_certs_generate(const oc_certs_generate_t *data, unsigned char *buffer,
 
   int is_CA = data->is_CA ? 1 : 0;
   int max_pathlen = data->is_CA ? -1 : 0; // -1 = unlimited
-  /* basicConstraints: cA = TRUE, pathLenConstraint = unlimited */
+  /* basicConstraints: cA, pathLenConstraint */
   ret = mbedtls_x509write_crt_set_basic_constraints(&cert, is_CA, max_pathlen);
   if (ret < 0) {
     OC_ERR("error writing certificate basicConstraints %d", ret);
@@ -427,6 +605,13 @@ oc_certs_generate(const oc_certs_generate_t *data, unsigned char *buffer,
 
   ret = certs_write_key_usage(&cert, data->key_usage);
   if (ret != 0) {
+    goto exit;
+  }
+
+  if (data->modify_fn != NULL &&
+      !data->modify_fn(&cert, data->modify_fn_data)) {
+    OC_ERR("error writing custom properties");
+    ret = -1;
     goto exit;
   }
 

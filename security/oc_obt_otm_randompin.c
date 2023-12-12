@@ -636,8 +636,9 @@ oc_obt_perform_random_pin_otm(const oc_uuid_t *uuid, const unsigned char *pin,
     oc_cred_remove_subject(subjectuuid, 0);
   }
 
-  uint8_t key[16];
-  if (oc_tls_pbkdf2(pin, pin_len, uuid, 1000, key, OC_ARRAY_SIZE(key)) != 0) {
+  uint8_t key[16] = { 0 };
+  if (oc_tls_pbkdf2(pin, pin_len, uuid, 1000, MBEDTLS_MD_SHA256, key,
+                    OC_ARRAY_SIZE(key)) != 0) {
     return -1;
   }
 

@@ -23,11 +23,14 @@
 #include "port/oc_random.h"
 #include "security/oc_certs_generate_internal.h"
 #include "security/oc_certs_internal.h"
+#include "tests/gtest/Utility.h"
 
 #include <algorithm>
 #include <array>
 #include <gtest/gtest.h>
+#include <limits>
 #include <mbedtls/asn1.h>
+#include <mbedtls/ctr_drbg.h>
 #include <string>
 #include <vector>
 
@@ -42,20 +45,12 @@ public:
     // restore defaults
     oc_sec_certs_default();
   }
-
-  template<class T>
-  static std::vector<T> toArray(const std::string &str)
-  {
-    std::vector<T> res{};
-    std::copy(std::begin(str), std::end(str), std::back_inserter(res));
-    return res;
-  }
 };
 
 TEST_F(TestCerts, IsPem)
 {
   auto is_pem = [](const std::string &str) {
-    std::vector<unsigned char> buf{ toArray<unsigned char>(str) };
+    auto buf{ oc::GetVector<unsigned char>(str) };
     return oc_certs_is_PEM(buf.data(), buf.size());
   };
 
@@ -65,32 +60,23 @@ TEST_F(TestCerts, IsPem)
   EXPECT_TRUE(is_pem("-----BEGIN CERTIFICATE-----"));
 }
 
-#ifdef OC_DYNAMIC_ALLOCATION
-
-TEST_F(TestCerts, TimestampFormatFail)
+TEST_F(TestCerts, EncodeCNWithUUID_Fail)
 {
-  timestamp_t ts = oc_certs_timestamp_now();
-
-  std::array<char, 1> too_small;
+  oc_uuid_t uuid{};
+  oc_gen_uuid(&uuid);
+  std::array<char, 1> too_small{};
   EXPECT_FALSE(
-    oc_certs_timestamp_format(ts, too_small.data(), too_small.size()));
+    oc_certs_encode_CN_with_UUID(&uuid, &too_small[0], too_small.size()));
 }
 
-TEST_F(TestCerts, TimestampFormat)
+TEST_F(TestCerts, EncodeCNWithUUID)
 {
-  timestamp_t ts = oc_certs_timestamp_now();
-
-  std::array<char, 15> buffer;
-  EXPECT_TRUE(oc_certs_timestamp_format(ts, buffer.data(), buffer.size()));
-  OC_DBG("now: %s", buffer.data());
-
-  std::string notAfter{ "2029-12-31T23:59:59Z" };
-  EXPECT_EQ(0, timestamp_parse(notAfter.c_str(), notAfter.length(), &ts));
-  EXPECT_TRUE(oc_certs_timestamp_format(ts, buffer.data(), buffer.size()));
-  OC_DBG("notAfter: %s", buffer.data());
+  oc_uuid_t uuid{};
+  oc_gen_uuid(&uuid);
+  // at least CN_UUID_PREFIX_LEN + OC_UUID_LEN
+  std::array<char, 100> buffer{};
+  EXPECT_TRUE(oc_certs_encode_CN_with_UUID(&uuid, &buffer[0], buffer.size()));
 }
-
-#endif /* OC_DYNAMIC_ALLOCATION */
 
 TEST_F(TestCerts, SetSignatureMDAlgorithm)
 {
@@ -238,28 +224,28 @@ getUUID(const std::string &prefix = "")
 TEST_F(TestCerts, ExtractUUIDFromCommonNameFail)
 {
   // invalid CN: empty str
-  auto empty = toArray<unsigned char>("");
+  auto empty = oc::GetVector<unsigned char>("");
   std::array<char, OC_UUID_LEN> CN_uuid{};
   EXPECT_FALSE(oc_certs_parse_CN_buffer_for_UUID(
     getMbedTLSAsn1Buffer(empty), CN_uuid.data(), CN_uuid.size()));
 
   // invalid CN: invalid format (valid prefix, but invalid uuid string)
-  auto invalid_uuid = toArray<unsigned char>("uuid:invalid");
+  auto invalid_uuid = oc::GetVector<unsigned char>("uuid:invalid");
   EXPECT_FALSE(oc_certs_parse_CN_buffer_for_UUID(
     getMbedTLSAsn1Buffer(invalid_uuid), CN_uuid.data(), CN_uuid.size()));
 
   // invalid CN: invalid format (missing prefix "uuid:")
-  invalid_uuid = toArray<unsigned char>(getUUID());
+  invalid_uuid = oc::GetVector<unsigned char>(getUUID());
   EXPECT_FALSE(oc_certs_parse_CN_buffer_for_UUID(
     getMbedTLSAsn1Buffer(invalid_uuid), CN_uuid.data(), CN_uuid.size()));
 
   // invalid CN: invalid format (invalid prefix "leet:")
-  invalid_uuid = toArray<unsigned char>(getUUID("leet:"));
+  invalid_uuid = oc::GetVector<unsigned char>(getUUID("leet:"));
   EXPECT_FALSE(oc_certs_parse_CN_buffer_for_UUID(
     getMbedTLSAsn1Buffer(invalid_uuid), CN_uuid.data(), CN_uuid.size()));
 
   // correct format (uuid:<UUID string>), but buffer is too small
-  auto valid_uuid = toArray<unsigned char>(getUUID("uuid:"));
+  auto valid_uuid = oc::GetVector<unsigned char>(getUUID("uuid:"));
   std::array<char, OC_UUID_LEN - 1> too_small{};
   EXPECT_FALSE(oc_certs_parse_CN_buffer_for_UUID(
     getMbedTLSAsn1Buffer(valid_uuid), too_small.data(), too_small.size()));
@@ -268,17 +254,49 @@ TEST_F(TestCerts, ExtractUUIDFromCommonNameFail)
 TEST_F(TestCerts, ExtractUUIDFromCommonName)
 {
   std::string uuid = getUUID();
-  auto uuid_encoded = toArray<unsigned char>("uuid:" + uuid);
+  auto uuid_encoded = oc::GetVector<unsigned char>("uuid:" + uuid);
   std::array<char, OC_UUID_LEN> CN_uuid{};
   EXPECT_TRUE(oc_certs_parse_CN_buffer_for_UUID(
     getMbedTLSAsn1Buffer(uuid_encoded), CN_uuid.data(), CN_uuid.size()));
   EXPECT_STREQ(uuid.c_str(), CN_uuid.data());
 
   uuid_encoded =
-    toArray<unsigned char>("prefix data in the CN field, uuid:" + uuid);
+    oc::GetVector<unsigned char>("prefix data in the CN field, uuid:" + uuid);
   EXPECT_TRUE(oc_certs_parse_CN_buffer_for_UUID(
     getMbedTLSAsn1Buffer(uuid_encoded), CN_uuid.data(), CN_uuid.size()));
   EXPECT_STREQ(uuid.c_str(), CN_uuid.data());
 }
+
+TEST_F(TestCerts, ExtractUUIDFromCertificate_Fail)
+{
+  mbedtls_x509_crt crt;
+  mbedtls_x509_crt_init(&crt);
+  std::array<char, 100> buffer{};
+  EXPECT_FALSE(oc_certs_extract_CN_for_UUID(&crt, &buffer[0], buffer.size()));
+  mbedtls_x509_crt_free(&crt);
+}
+
+TEST_F(TestCerts, ExtractUUIDFromPEM_Fail)
+{
+  std::array<unsigned char, 100> cert{};
+  std::array<char, 100> buffer{};
+  EXPECT_FALSE(oc_certs_parse_CN_for_UUID(cert.data(), cert.size(), &buffer[0],
+                                          buffer.size()));
+}
+
+#ifdef OC_TEST
+
+TEST_F(TestCerts, SerializeChainToPEM)
+{
+  mbedtls_x509_crt crt;
+  mbedtls_x509_crt_init(&crt);
+  std::array<char, 4096> buffer{};
+  EXPECT_EQ(-1,
+            oc_certs_serialize_chain_to_pem(&crt, &buffer[0], buffer.size()));
+  std::cout << buffer.data() << std::endl;
+  mbedtls_x509_crt_free(&crt);
+}
+
+#endif /* OC_TEST */
 
 #endif /* OC_SECURITY && OC_PKI */

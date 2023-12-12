@@ -142,7 +142,7 @@ TEST_F(TestDTLSWithServer, DTLSInactivityMonitor)
     oc::TestDevice::PoolEventsMs(200);
   }
 
-  EXPECT_EQ(1, oc_tls_num_peers(kDeviceID));
+  ASSERT_EQ(1, oc_tls_num_peers(kDeviceID));
   uint64_t timeout_msecs =
     (oc_dtls_inactivity_timeout() / OC_CLOCK_SECOND) * 1000;
   oc::TestDevice::PoolEventsMs(timeout_msecs * 2);

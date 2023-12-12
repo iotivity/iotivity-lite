@@ -60,10 +60,21 @@
 #endif
 #endif /* !__FILENAME__ */
 
+#ifndef OC_LOG_MAXIMUM_LEVEL
+#define OC_LOG_MAXIMUM_LEVEL (OC_LOG_LEVEL_DISABLED_MACRO)
+#endif /* !OC_LOG_MAXIMUM_LEVEL */
+
+#define OC_TRACE_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_TRACE_MACRO)
+#define OC_DBG_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_DEBUG_MACRO)
+#define OC_INFO_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_INFO_MACRO)
+#define OC_NOTE_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_NOTICE_MACRO)
+#define OC_WRN_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_WARNING_MACRO)
+#define OC_ERR_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_ERROR_MACRO)
+
 #ifdef __ANDROID__
 #include "android/oc_log_android.h"
 
-#if defined(OC_DEBUG) || defined(OC_PUSHDEBUG)
+#if OC_DBG_IS_ENABLED || defined(OC_PUSHDEBUG)
 #define OC_LOG_WITH_COMPONENT(level, component, ...)                           \
   android_log((level), (component), __FILE__, __func__, __LINE__, __VA_ARGS__)
 #define OC_LOG(level, ...)                                                     \
@@ -73,11 +84,11 @@
 #define OC_LOGbytes(bytes, length)                                             \
   android_log_bytes(OC_LOG_LEVEL_DEBUG, __FILE__, __func__, __LINE__, bytes,   \
                     length)
-#else /* defined(OC_DEBUG) || defined(OC_PUSHDEBUG) */
+#else /* OC_DBG_IS_ENABLED || defined(OC_PUSHDEBUG) */
 #define OC_LOG(level, ...)
 #define OC_LOGipaddr(endpoint)
 #define OC_LOGbytes(bytes, length)
-#endif /* !defined(OC_DEBUG) && !defined(OC_PUSHDEBUG) */
+#endif /* !OC_DBG_IS_ENABLED && !defined(OC_PUSHDEBUG) */
 #endif /* __ANDROID__ */
 
 // port's layer can override this macro to provide its own logger
@@ -115,11 +126,6 @@
   OC_LOG_WITH_COMPONENT(log_level, OC_LOG_COMPONENT_DEFAULT, __VA_ARGS__)
 #endif /* !OC_LOG */
 
-#ifndef OC_LOG_MAXIMUM_LEVEL
-#define OC_LOG_MAXIMUM_LEVEL (OC_LOG_LEVEL_DISABLED_MACRO)
-#endif /* !OC_LOG_MAXIMUM_LEVEL */
-
-#define OC_TRACE_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_TRACE_MACRO)
 #ifndef OC_TRACE
 #if OC_TRACE_IS_ENABLED
 #define OC_TRACE(...) OC_LOG(OC_LOG_LEVEL_TRACE, __VA_ARGS__)
@@ -128,7 +134,6 @@
 #endif
 #endif /* !OC_TRACE */
 
-#define OC_DBG_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_DEBUG_MACRO)
 #ifndef OC_DBG
 #if OC_DBG_IS_ENABLED
 #define OC_DBG(...) OC_LOG(OC_LOG_LEVEL_DEBUG, __VA_ARGS__)
@@ -137,7 +142,6 @@
 #endif
 #endif /* !OC_DBG */
 
-#define OC_INFO_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_INFO_MACRO)
 #ifndef OC_INFO
 #if OC_INFO_IS_ENABLED
 #define OC_INFO(...) OC_LOG(OC_LOG_LEVEL_INFO, __VA_ARGS__)
@@ -146,7 +150,6 @@
 #endif
 #endif /* !OC_INFO */
 
-#define OC_NOTE_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_NOTICE_MACRO)
 #ifndef OC_NOTE
 #if OC_NOTE_IS_ENABLED
 #define OC_NOTE(...) OC_LOG(OC_LOG_LEVEL_NOTICE, __VA_ARGS__)
@@ -155,7 +158,6 @@
 #endif
 #endif /* !OC_NOTE */
 
-#define OC_WRN_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_WARNING_MACRO)
 #ifndef OC_WRN
 #if OC_WRN_IS_ENABLED
 #define OC_WRN(...) OC_LOG(OC_LOG_LEVEL_WARNING, __VA_ARGS__)
@@ -164,7 +166,6 @@
 #endif
 #endif /* !OC_WRN */
 
-#define OC_ERR_IS_ENABLED OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_ERROR_MACRO)
 #ifndef OC_ERR
 #if OC_ERR_IS_ENABLED
 #define OC_ERR(...) OC_LOG(OC_LOG_LEVEL_ERROR, __VA_ARGS__)

@@ -419,7 +419,7 @@ swig: $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	${MAKE} -C ${SWIG_DIR}
 
 ifneq ($(SECURE),0)
-MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch) $(wildcard ../../patches/make/*.patch))
+MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/mbedtls/3.1/*.patch) $(wildcard ../../patches/mbedtls/3.1/make/*.patch))
 ${MBEDTLS_DIR}/.git:
 	git submodule update --init ${@D}
 

@@ -90,6 +90,11 @@ bool
 oc_tcp_is_valid_header(const uint8_t *data, size_t data_size, bool is_tls)
 {
 #ifdef OC_SECURITY
+#define SSL_MAJOR_VERSION_3 (3)
+#define SSL_MINOR_VERSION_1 (1)
+#define SSL_MINOR_VERSION_2 (2)
+#define SSL_MINOR_VERSION_3 (3)
+#define SSL_MINOR_VERSION_4 (4)
   if (is_tls) {
     if (data_size < 3) {
       OC_ERR("TLS header too short: %zu", data_size);
@@ -114,20 +119,20 @@ oc_tcp_is_valid_header(const uint8_t *data, size_t data_size, bool is_tls)
       OC_ERR("invalid record type: %d", type);
       return false;
     }
-    if (major_version != MBEDTLS_SSL_MAJOR_VERSION_3) {
+    if (major_version != SSL_MAJOR_VERSION_3) {
       OC_ERR("invalid major version: %d", major_version);
       return false;
     }
     if (
       // TLS 1.0 - some implementations doesn't set the minor version (eg
       // golang)
-      minor_version != 1 &&
+      minor_version != SSL_MINOR_VERSION_1 &&
       // TLS 1.1
-      minor_version != 2 &&
+      minor_version != SSL_MINOR_VERSION_2 &&
       // TLS 1.2
-      minor_version != MBEDTLS_SSL_MINOR_VERSION_3 &&
+      minor_version != SSL_MINOR_VERSION_3 &&
       // TLS 1.3
-      minor_version != MBEDTLS_SSL_MINOR_VERSION_4) {
+      minor_version != SSL_MINOR_VERSION_4) {
       OC_ERR("invalid minor version: %d", minor_version);
       return false;
     }

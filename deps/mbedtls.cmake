@@ -12,6 +12,8 @@ endif()
 # use command-line parameters to enable mbedtls unit tests / helper programs
 option(ENABLE_PROGRAMS "Build mbed TLS programs." OFF)
 option(ENABLE_TESTING "Build mbed TLS tests." OFF)
+# generate export sets for mbedtls targets
+option(DISABLE_PACKAGE_CONFIG_AND_INSTALL ON)
 
 if(OC_INSTALL_MBEDTLS)
     add_subdirectory(${PROJECT_SOURCE_DIR}/deps/mbedtls)
@@ -70,8 +72,9 @@ foreach(target ${mbedtls_targets})
     target_compile_definitions(${target} PRIVATE ${MBEDTLS_COMPILE_DEFINITIONS})
 
     if(OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG)
-        # TODO: fix unused variable t mbedtls/library/bignum.c
-        target_compile_options(${target} PRIVATE -Wno-error=unused)
+        if(NOT BUILD_MBEDTLS_FORCE_3_5_0)
+            target_compile_options(${target} PRIVATE -Wno-error=unused)
+        endif()
     endif()
 
     target_compile_options(${target} PRIVATE ${MBEDTLS_COMPILE_OPTIONS})

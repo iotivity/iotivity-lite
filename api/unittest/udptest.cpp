@@ -103,54 +103,53 @@ TEST_F(UDPMessage, ValidateHeader)
   ValidateMessage(false, false, nullptr, 0);
   ValidateMessage(true, false, { 1 << COAP_HEADER_VERSION_POSITION, 2, 3, 4 });
   ValidateMessage(false, false, { 0xff, 2, 3, 4 });
+
 #ifdef OC_SECURITY
+#define SSL_MAJOR_VERSION_3 (3)
+#define SSL_MINOR_VERSION_1 (1)
+#define SSL_MINOR_VERSION_2 (2)
+#define SSL_MINOR_VERSION_3 (3)
+#define SSL_MINOR_VERSION_4 (4)
   OC_DBG("ValidateMessage(true, true, {MBEDTLS_SSL_MSG_HANDSHAKE, "
-         "255-MBEDTLS_SSL_MAJOR_VERSION_3+2, 255-1+1});");
+         "255-SSL_MAJOR_VERSION_3+2, 255-1+1});");
   ValidateMessage(true, true,
-                  { MBEDTLS_SSL_MSG_HANDSHAKE,
-                    255 - MBEDTLS_SSL_MAJOR_VERSION_3 + 2, 255 - 1 + 1 });
-  OC_DBG(
-    "ValidateMessage(true, true, {MBEDTLS_SSL_MSG_HANDSHAKE, "
-    "255-MBEDTLS_SSL_MAJOR_VERSION_3+2, 255-MBEDTLS_SSL_MINOR_VERSION_3+1});");
+                  { MBEDTLS_SSL_MSG_HANDSHAKE, 255 - SSL_MAJOR_VERSION_3 + 2,
+                    255 - SSL_MINOR_VERSION_1 + 1 });
+  OC_DBG("ValidateMessage(true, true, {MBEDTLS_SSL_MSG_HANDSHAKE, "
+         "255-SSL_MAJOR_VERSION_3+2, 255-SSL_MINOR_VERSION_1+1});");
   ValidateMessage(true, true,
-                  { MBEDTLS_SSL_MSG_HANDSHAKE,
-                    255 - MBEDTLS_SSL_MAJOR_VERSION_3 + 2, 255 - 2 + 1 });
-  OC_DBG(
-    "ValidateMessage(true, true, {MBEDTLS_SSL_MSG_HANDSHAKE, "
-    "255-MBEDTLS_SSL_MAJOR_VERSION_3+2, 255-MBEDTLS_SSL_MINOR_VERSION_3+1});");
+                  { MBEDTLS_SSL_MSG_HANDSHAKE, 255 - SSL_MAJOR_VERSION_3 + 2,
+                    255 - SSL_MINOR_VERSION_2 + 1 });
+  OC_DBG("ValidateMessage(true, true, {MBEDTLS_SSL_MSG_HANDSHAKE, "
+         "255-SSL_MAJOR_VERSION_3+2, 255-SSL_MINOR_VERSION_3+1});");
   ValidateMessage(true, true,
-                  { MBEDTLS_SSL_MSG_HANDSHAKE,
-                    255 - MBEDTLS_SSL_MAJOR_VERSION_3 + 2,
-                    255 - MBEDTLS_SSL_MINOR_VERSION_3 + 1 });
-  OC_DBG(
-    "ValidateMessage(true, true, {MBEDTLS_SSL_MSG_HANDSHAKE, "
-    "255-MBEDTLS_SSL_MAJOR_VERSION_3+2, 255-MBEDTLS_SSL_MINOR_VERSION_4+1});");
+                  { MBEDTLS_SSL_MSG_HANDSHAKE, 255 - SSL_MAJOR_VERSION_3 + 2,
+                    255 - SSL_MINOR_VERSION_3 + 1 });
+  OC_DBG("ValidateMessage(true, true, {MBEDTLS_SSL_MSG_HANDSHAKE, "
+         "255-SSL_MAJOR_VERSION_3+2, 255-SSL_MINOR_VERSION_4+1});");
   ValidateMessage(true, true,
-                  { MBEDTLS_SSL_MSG_HANDSHAKE,
-                    255 - MBEDTLS_SSL_MAJOR_VERSION_3 + 2,
-                    255 - MBEDTLS_SSL_MINOR_VERSION_4 + 1 });
+                  { MBEDTLS_SSL_MSG_HANDSHAKE, 255 - SSL_MAJOR_VERSION_3 + 2,
+                    255 - SSL_MINOR_VERSION_4 + 1 });
   OC_DBG("ValidateMessage(false, true, {MBEDTLS_SSL_MSG_HANDSHAKE, 0xff, "
-         "255-MBEDTLS_SSL_MINOR_VERSION_3+1});");
+         "255-SSL_MINOR_VERSION_3+1});");
   ValidateMessage(
     false, true,
-    { MBEDTLS_SSL_MSG_HANDSHAKE, 0xff, 255 - MBEDTLS_SSL_MINOR_VERSION_3 + 1 });
+    { MBEDTLS_SSL_MSG_HANDSHAKE, 0xff, 255 - SSL_MINOR_VERSION_3 + 1 });
   OC_DBG("ValidateMessage(false, true, {MBEDTLS_SSL_MSG_HANDSHAKE, "
-         "255-MBEDTLS_SSL_MAJOR_VERSION_3+2, 128});");
+         "255-SSL_MAJOR_VERSION_3+2, 128});");
   ValidateMessage(
     false, true,
-    { MBEDTLS_SSL_MSG_HANDSHAKE, 255 - MBEDTLS_SSL_MAJOR_VERSION_3 + 2, 128 });
+    { MBEDTLS_SSL_MSG_HANDSHAKE, 255 - SSL_MAJOR_VERSION_3 + 2, 128 });
   OC_DBG("ValidateMessage(false, true, {MBEDTLS_SSL_MSG_HANDSHAKE, "
-         "255-MBEDTLS_SSL_MAJOR_VERSION_3+2, 0xff});");
-  ValidateMessage(
-    false, true,
-    { MBEDTLS_SSL_MSG_HANDSHAKE, 255 - MBEDTLS_SSL_MAJOR_VERSION_3 + 2 });
-  OC_DBG(
-    "ValidateMessage(false, true, {0xff, 255-MBEDTLS_SSL_MAJOR_VERSION_3+2, "
-    "255-MBEDTLS_SSL_MINOR_VERSION_3+1});");
+         "255-SSL_MAJOR_VERSION_3+2, 0xff});");
+  ValidateMessage(false, true,
+                  { MBEDTLS_SSL_MSG_HANDSHAKE, 255 - SSL_MAJOR_VERSION_3 + 2 });
+  OC_DBG("ValidateMessage(false, true, {0xff, 255-SSL_MAJOR_VERSION_3+2, "
+         "255-SSL_MINOR_VERSION_3+1});");
   // produces just warning
-  ValidateMessage(true, true,
-                  { 0xff, 255 - MBEDTLS_SSL_MAJOR_VERSION_3 + 2,
-                    255 - MBEDTLS_SSL_MINOR_VERSION_3 + 1 });
+  ValidateMessage(
+    true, true,
+    { 0xff, 255 - SSL_MAJOR_VERSION_3 + 2, 255 - SSL_MINOR_VERSION_3 + 1 });
 
 #ifdef OC_OSCORE
   OC_DBG("ValidateMessage(true, false, true, oscorePacket);");
