@@ -59,7 +59,7 @@ jobs:
     uses: ./.github/workflows/plgd-device-test-with-cfg.yml
     with:
       name: ${{ matrix.name }}
-      build_args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON -DOC_COVERAGE_ENABLED=ON ${{ matrix.build_args }}"
+      build_args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON -DOC_COVERAGE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON ${{ matrix.build_args }}"
       build_type: Debug
       cert_signature_algorithm: ${{ matrix.cert_signature_algorithm }}
       cert_elliptic_curve: ${{ matrix.cert_elliptic_curve }}
@@ -78,7 +78,7 @@ jobs:
     uses: ./.github/workflows/plgd-hub-test-with-cfg.yml
     with:
       name: ${{ matrix.name }}
-      build_args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON -DOC_COVERAGE_ENABLED=ON ${{ matrix.build_args }}"
+      build_args: "-DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON -DOC_COVERAGE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON ${{ matrix.build_args }}"
       build_type: Debug
       coverage: true
       hub_args: ${{ matrix.hub_args }}
