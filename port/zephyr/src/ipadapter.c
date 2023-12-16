@@ -269,11 +269,11 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
     NET_ERR("Invalid IPv6 address %s", CONFIG_NET_APP_MY_IPV6_ADDR);
   }
 
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
   struct net_if_addr *ifaddr =
 #endif
     net_if_ipv6_addr_add(net_if_get_default(), &in6addr_my, NET_ADDR_MANUAL, 0);
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
   OC_DBG("=====>>>Interface unicast address added @ %p", ifaddr);
 #endif
 

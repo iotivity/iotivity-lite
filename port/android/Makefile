@@ -230,10 +230,7 @@ OBT = onboarding_tool
 EXTRA_CFLAGS = -DOC_SIMPLE_MAIN_LOOP
 ifeq ($(DEBUG),1)
 	CFLAGS += -g -O0
-	EXTRA_CFLAGS += -DOC_DEBUG -DOC_LOG_MAXIMUM_LEVEL=8
-ifeq ($(DEBUG_TLS),1)
-	EXTRA_CFLAGS += -DOC_DEBUG_TLS
-endif
+	EXTRA_CFLAGS += -DOC_LOG_MAXIMUM_LEVEL=8
 else
 
 # don't use these options on github
