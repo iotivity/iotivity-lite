@@ -1,0 +1,15 @@
+diff --git a/include/mbedtls/mbedtls_config.h b/include/mbedtls/mbedtls_config.h
+index af0761395..c8b8967a9 100644
+--- a/include/mbedtls/mbedtls_config.h
++++ b/include/mbedtls/mbedtls_config.h
+@@ -314,6 +314,10 @@
+  */
+ //#define MBEDTLS_PLATFORM_ZEROIZE_ALT
+ 
++#define MBEDTLS_KEY_EXCHANGE_ECDH_ANON_ENABLED
++#define MBEDTLS_ALLOW_PRIVATE_ACCESS
++#define MBEDTLS_ENTROPY_MAX_SOURCES                2 /**< Maximum number of sources supported */
++
+ /**
+  * \def MBEDTLS_DEPRECATED_WARNING
+  *
