@@ -241,10 +241,7 @@ endif
 OBT = onboarding_tool
 
 ifeq ($(DEBUG),1)
-	EXTRA_CFLAGS += -DOC_DEBUG -DOC_LOG_MAXIMUM_LEVEL=8 -g -O0 
-ifeq ($(DEBUG_TLS),1)
-	EXTRA_CFLAGS += -DOC_DEBUG_TLS
-endif
+	EXTRA_CFLAGS += -DOC_LOG_MAXIMUM_LEVEL=8 -g -O0 
 else
 	CFLAGS += -Wl,--gc-sections
 	CXXFLAGS += -Wl,--gc-sections

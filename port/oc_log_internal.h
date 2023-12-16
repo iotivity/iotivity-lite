@@ -25,19 +25,23 @@
     prints the endpoint information to stdout
   - OC_LOGbytes
     prints the bytes to stdout
+  - OC_TRACE
+    prints information as Trace level
   - OC_DBG
     prints information as Debug level
+  - OC_INFO
+    prints information as Info level
+  - OC_NOTE
+    prints information as Notice level
   - OC_WRN
     prints information as Warning level
   - OC_ERR
     prints information as Error level
 
   compile flags:
-  - OC_DEBUG
-    enables output of logging functions for android
   - OC_NO_LOG_BYTES
-    disables output of OC_LOGbytes logging function
-    if OC_DEBUG is enabled.
+    disables output of OC_LOGbytes logging function if OC_TRACE_IS_ENABLED is
+    true.
 */
 
 #ifndef OC_PORT_LOG_INTERNAL_H
@@ -254,10 +258,9 @@
 #endif /* !OC_DBG_IS_ENABLED */
 
 #ifndef OC_LOGbytes_WITH_COMPONENT
-#if defined(OC_NO_LOG_BYTES) || !defined(OC_DEBUG) ||                          \
-  !OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_TRACE)
+#if defined(OC_NO_LOG_BYTES) || !OC_TRACE_IS_ENABLED
 #define OC_LOGbytes_WITH_COMPONENT(component, bytes, length)
-#else /* OC_NO_LOG_BYTES || !OC_DEBUG */
+#else /* OC_NO_LOG_BYTES || !OC_TRACE_IS_ENABLED */
 #define OC_LOGbytes_WITH_COMPONENT(component, bytes, length)                   \
   do {                                                                         \
     if ((length) == 0) {                                                       \
@@ -299,17 +302,16 @@
     oc_free_string(&_oc_log_bytes_buf);                                        \
     fflush(stdout);                                                            \
   } while (0)
-#endif /* !OC_NO_LOG_BYTES && OC_DEBUG */
+#endif /* !OC_NO_LOG_BYTES && OC_TRACE_IS_ENABLED */
 #endif /* !OC_LOGbytes_WITH_COMPONENT */
 
 #ifndef OC_LOGbytes
-#if defined(OC_NO_LOG_BYTES) || !defined(OC_DEBUG) ||                          \
-  !OC_LOG_LEVEL_IS_ENABLED(OC_LOG_LEVEL_TRACE)
+#if defined(OC_NO_LOG_BYTES) || !OC_TRACE_IS_ENABLED
 #define OC_LOGbytes(bytes, length)
-#else /* OC_NO_LOG_BYTES || !OC_DEBUG */
+#else /* OC_NO_LOG_BYTES || !OC_TRACE_IS_ENABLED */
 #define OC_LOGbytes(bytes, length)                                             \
   OC_LOGbytes_WITH_COMPONENT(OC_LOG_COMPONENT_DEFAULT, bytes, length)
-#endif /* !OC_NO_LOG_BYTES && OC_DEBUG */
+#endif /* !OC_NO_LOG_BYTES && OC_TRACE_IS_ENABLED */
 #endif /* !OC_LOGbytes */
 
 #endif /* OC_PORT_LOG_INTERNAL_H */

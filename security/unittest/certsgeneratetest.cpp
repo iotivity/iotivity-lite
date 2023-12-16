@@ -158,11 +158,11 @@ TEST_F(TestGenerateCerts, Generate_FailBadSerialNumber)
   oc_certs_generate_t generate{};
   generate.personalization_string.value = kPersonalizationString.data();
   generate.personalization_string.size = kPersonalizationString.size();
-  #if MBEDTLS_VERSION_NUMBER <= 0x03010000
-    generate.serial_number_size = 4096;
-  #else /* MBEDTLS_VERSION_NUMBER >= 0x03010000 */
-    generate.serial_number_size = MBEDTLS_CTR_DRBG_MAX_REQUEST;
-  #endif /* MBEDTLS_VERSION_NUMBER <= 0x03010000 */
+#if MBEDTLS_VERSION_NUMBER <= 0x03010000
+  generate.serial_number_size = 4096;
+#else  /* MBEDTLS_VERSION_NUMBER >= 0x03010000 */
+  generate.serial_number_size = MBEDTLS_CTR_DRBG_MAX_REQUEST;
+#endif /* MBEDTLS_VERSION_NUMBER <= 0x03010000 */
 
   std::array<unsigned char, 4096> cert_pem{};
   EXPECT_GT(0, oc_certs_generate(&generate, &cert_pem[0], cert_pem.size()));
@@ -203,7 +203,7 @@ TEST_F(TestGenerateCerts, Generate_FailBadIssuer)
   oc::keypair_t kp{ oc::GetECPKeyPair(MBEDTLS_ECP_DP_SECP256R1) };
   generate.subject.public_key.value = kp.public_key.data();
   generate.subject.public_key.size = kp.public_key_size;
-    // invalid issuer name, ',' is not supported as a value
+  // invalid issuer name, ',' is not supported as a value
   generate.issuer.name = "issuer=,";
 
   std::array<unsigned char, 4096> cert_pem{};

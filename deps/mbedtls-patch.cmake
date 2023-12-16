@@ -55,10 +55,6 @@ set(MBEDTLS_INCLUDE_DIR "${IOTIVITY_SRC_DIR}/deps/mbedtls/include/mbedtls")
 
 if(ENABLE_TESTING OR ENABLE_PROGRAMS)
 	# configure variables for mbedtls_oc_platform-standalone.in
-	if(OC_DEBUG_ENABLED)
-		set(OC_DEBUG_MACRO "#define OC_DEBUG")
-	endif()
-
 	if(OC_LOG_MAXIMUM_LEVEL)
 		set(OC_LOG_MAXIMUM_LEVEL_MACRO "#define OC_LOG_MAXIMUM_LEVEL (${OC_LOG_MAXIMUM_LEVEL})")
 	endif()

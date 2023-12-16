@@ -1,12 +1,13 @@
 diff --git a/include/mbedtls/mbedtls_config.h b/include/mbedtls/mbedtls_config.h
-index 0558ee001..b18a66da0 100644
+index 0558ee001..8f791f6c0 100644
 --- a/include/mbedtls/mbedtls_config.h
 +++ b/include/mbedtls/mbedtls_config.h
-@@ -33,6 +33,17 @@
+@@ -33,6 +33,18 @@
   */
  //#define MBEDTLS_CONFIG_VERSION 0x03000000
  
 +#include <oc_config.h>
++#include <oc_log.h>
 +#include "port/oc_connectivity.h"
 +#include "port/oc_assert.h"
 +
@@ -20,7 +21,7 @@ index 0558ee001..b18a66da0 100644
  /**
   * \name SECTION: System support
   *
-@@ -57,7 +68,7 @@
+@@ -57,7 +69,7 @@
   *
   * Comment to disable the use of assembly code.
   */
@@ -29,7 +30,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_NO_UDBL_DIVISION
-@@ -118,6 +129,8 @@
+@@ -118,6 +130,8 @@
   */
  //#define MBEDTLS_HAVE_SSE2
  
@@ -38,7 +39,7 @@ index 0558ee001..b18a66da0 100644
  /**
   * \def MBEDTLS_HAVE_TIME
   *
-@@ -153,6 +166,8 @@
+@@ -153,6 +167,8 @@
   * MBEDTLS_PLATFORM_GMTIME_R_ALT.
   */
  #define MBEDTLS_HAVE_TIME_DATE
@@ -47,7 +48,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_PLATFORM_MEMORY
-@@ -176,7 +191,7 @@
+@@ -176,7 +192,7 @@
   *
   * Enable this layer to allow use of alternative memory allocators.
   */
@@ -56,7 +57,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_PLATFORM_NO_STD_FUNCTIONS
-@@ -195,7 +210,7 @@
+@@ -195,7 +211,7 @@
   * Uncomment to prevent default assignment of standard functions in the
   * platform layer.
   */
@@ -65,7 +66,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_PLATFORM_EXIT_ALT
-@@ -220,11 +235,13 @@
+@@ -220,11 +236,13 @@
   * Uncomment a macro to enable alternate implementation of specific base
   * platform function
   */
@@ -82,7 +83,7 @@ index 0558ee001..b18a66da0 100644
  //#define MBEDTLS_PLATFORM_VSNPRINTF_ALT
  //#define MBEDTLS_PLATFORM_NV_SEED_ALT
  //#define MBEDTLS_PLATFORM_SETUP_TEARDOWN_ALT
-@@ -242,7 +259,9 @@
+@@ -242,7 +260,9 @@
   *
   * Uncomment to get warnings on using deprecated functions and features.
   */
@@ -93,7 +94,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_DEPRECATED_REMOVED
-@@ -487,7 +506,7 @@
+@@ -487,7 +507,7 @@
   * This option is independent of \c MBEDTLS_AES_FEWER_TABLES.
   *
   */
@@ -102,7 +103,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_AES_FEWER_TABLES
-@@ -541,7 +560,7 @@
+@@ -541,7 +561,7 @@
   *        macro is not defined. To completely disable return value check
   *        warnings, define #MBEDTLS_CHECK_RETURN with an empty expansion.
   */
@@ -111,7 +112,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_CIPHER_MODE_CBC
-@@ -555,28 +574,28 @@
+@@ -555,28 +575,28 @@
   *
   * Enable Cipher Feedback mode (CFB) for symmetric ciphers.
   */
@@ -144,7 +145,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_CIPHER_NULL_CIPHER
-@@ -621,10 +640,10 @@
+@@ -621,10 +641,10 @@
   *
   * Enable padding modes in the cipher layer.
   */
@@ -159,7 +160,7 @@ index 0558ee001..b18a66da0 100644
  
  /** \def MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
   *
-@@ -642,20 +661,20 @@
+@@ -642,20 +662,20 @@
   * Comment macros to disable the curve and functions for it
   */
  /* Short Weierstrass curves (supporting ECP, ECDH, ECDSA) */
@@ -191,7 +192,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_ECP_NIST_OPTIM
-@@ -666,7 +685,7 @@
+@@ -666,7 +686,7 @@
   *
   * Comment this macro to disable NIST curves optimisation.
   */
@@ -200,7 +201,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_ECP_RESTARTABLE
-@@ -704,7 +723,7 @@
+@@ -704,7 +724,7 @@
   *
   * Comment this macro to disable deterministic ECDSA.
   */
@@ -209,7 +210,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-@@ -753,7 +772,7 @@
+@@ -753,7 +773,7 @@
   *             See dhm.h for more details.
   *
   */
@@ -218,7 +219,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_KEY_EXCHANGE_ECDHE_PSK_ENABLED
-@@ -794,7 +813,7 @@
+@@ -794,7 +814,7 @@
   *      MBEDTLS_TLS_RSA_PSK_WITH_CAMELLIA_128_GCM_SHA256
   *      MBEDTLS_TLS_RSA_PSK_WITH_CAMELLIA_128_CBC_SHA256
   */
@@ -227,7 +228,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_KEY_EXCHANGE_RSA_ENABLED
-@@ -819,7 +838,7 @@
+@@ -819,7 +839,7 @@
   *      MBEDTLS_TLS_RSA_WITH_CAMELLIA_128_CBC_SHA256
   *      MBEDTLS_TLS_RSA_WITH_CAMELLIA_128_CBC_SHA
   */
@@ -236,7 +237,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_KEY_EXCHANGE_DHE_RSA_ENABLED
-@@ -851,7 +870,7 @@
+@@ -851,7 +871,7 @@
   *             See dhm.h for more details.
   *
   */
@@ -245,7 +246,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_KEY_EXCHANGE_ECDHE_RSA_ENABLED
-@@ -874,7 +893,9 @@
+@@ -874,7 +894,9 @@
   *      MBEDTLS_TLS_ECDHE_RSA_WITH_CAMELLIA_128_GCM_SHA256
   *      MBEDTLS_TLS_ECDHE_RSA_WITH_CAMELLIA_128_CBC_SHA256
   */
@@ -255,7 +256,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-@@ -896,7 +917,9 @@
+@@ -896,7 +918,9 @@
   *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_GCM_SHA256
   *      MBEDTLS_TLS_ECDHE_ECDSA_WITH_CAMELLIA_128_CBC_SHA256
   */
@@ -265,7 +266,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_KEY_EXCHANGE_ECDH_ECDSA_ENABLED
-@@ -918,7 +941,9 @@
+@@ -918,7 +942,9 @@
   *      MBEDTLS_TLS_ECDH_ECDSA_WITH_CAMELLIA_128_GCM_SHA256
   *      MBEDTLS_TLS_ECDH_ECDSA_WITH_CAMELLIA_256_GCM_SHA384
   */
@@ -275,7 +276,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_KEY_EXCHANGE_ECDH_RSA_ENABLED
-@@ -940,7 +965,7 @@
+@@ -940,7 +966,7 @@
   *      MBEDTLS_TLS_ECDH_RSA_WITH_CAMELLIA_128_GCM_SHA256
   *      MBEDTLS_TLS_ECDH_RSA_WITH_CAMELLIA_256_GCM_SHA384
   */
@@ -284,7 +285,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_KEY_EXCHANGE_ECJPAKE_ENABLED
-@@ -973,7 +998,7 @@
+@@ -973,7 +999,7 @@
   *
   * Disable if you only need to support RFC 5915 + 5480 key formats.
   */
@@ -293,7 +294,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_ERROR_STRERROR_DUMMY
-@@ -988,7 +1013,7 @@
+@@ -988,7 +1014,7 @@
   * Disable if you run into name conflicts and want to really remove the
   * mbedtls_strerror()
   */
@@ -302,7 +303,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_GENPRIME
-@@ -997,14 +1022,14 @@
+@@ -997,14 +1023,14 @@
   *
   * Requires: MBEDTLS_BIGNUM_C
   */
@@ -319,7 +320,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES
-@@ -1027,7 +1052,7 @@
+@@ -1027,7 +1053,7 @@
   *
   * Uncomment this macro to disable the built-in platform entropy functions.
   */
@@ -328,7 +329,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_ENTROPY_FORCE_SHA256
-@@ -1117,7 +1142,7 @@
+@@ -1117,7 +1143,7 @@
   *
   * Comment this macro to disable support for external private RSA keys.
   */
@@ -337,7 +338,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_PKCS1_V15
-@@ -1139,7 +1164,7 @@
+@@ -1139,7 +1165,7 @@
   *
   * This enables support for RSAES-OAEP and RSASSA-PSS operations.
   */
@@ -346,7 +347,7 @@ index 0558ee001..b18a66da0 100644
  
  /** \def MBEDTLS_PSA_CRYPTO_BUILTIN_KEYS
   *
-@@ -1265,7 +1290,7 @@
+@@ -1265,7 +1291,7 @@
   *
   * Enable the checkup functions (*_self_test).
   */
@@ -355,7 +356,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_SHA256_SMALLER
-@@ -1371,7 +1396,7 @@
+@@ -1371,7 +1397,7 @@
   *
   * Comment to disable the context serialization APIs.
   */
@@ -364,7 +365,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_SSL_DEBUG_ALL
-@@ -1403,7 +1428,7 @@
+@@ -1403,7 +1429,7 @@
   *
   * Comment this macro to disable support for Encrypt-then-MAC
   */
@@ -373,7 +374,7 @@ index 0558ee001..b18a66da0 100644
  
  /** \def MBEDTLS_SSL_EXTENDED_MASTER_SECRET
   *
-@@ -1463,7 +1488,7 @@
+@@ -1463,7 +1489,7 @@
   *          configuration of this extension).
   *
   */
@@ -382,7 +383,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_SSL_MAX_FRAGMENT_LENGTH
-@@ -1543,7 +1568,7 @@
+@@ -1543,7 +1569,7 @@
   *
   * Comment this macro to disable support for ALPN.
   */
@@ -391,7 +392,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_SSL_DTLS_ANTI_REPLAY
-@@ -1623,7 +1648,7 @@
+@@ -1623,7 +1649,7 @@
   *
   * Comment this to disable support for clients reusing the source port.
   */
@@ -400,7 +401,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_SSL_SESSION_TICKETS
-@@ -1637,7 +1662,7 @@
+@@ -1637,7 +1663,7 @@
   *
   * Comment this macro to disable support for SSL session tickets
   */
@@ -409,7 +410,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_SSL_SERVER_NAME_INDICATION
-@@ -1648,7 +1673,7 @@
+@@ -1648,7 +1674,7 @@
   *
   * Comment this macro to disable support for server name indication in SSL
   */
@@ -418,7 +419,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_SSL_VARIABLE_BUFFER_LENGTH
-@@ -1788,7 +1813,7 @@
+@@ -1788,7 +1814,7 @@
   *
   * Comment this to disable run-time checking and save ROM space
   */
@@ -427,7 +428,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_X509_TRUSTED_CERTIFICATE_CALLBACK
-@@ -1828,7 +1853,7 @@
+@@ -1828,7 +1854,7 @@
   *
   * Comment this macro to disallow using RSASSA-PSS in certificates.
   */
@@ -436,7 +437,7 @@ index 0558ee001..b18a66da0 100644
  /* \} name SECTION: mbed TLS feature support */
  
  /**
-@@ -1850,7 +1875,7 @@
+@@ -1850,7 +1876,7 @@
   *
   * This modules adds support for the AES-NI instructions on x86-64
   */
@@ -445,7 +446,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_AES_C
-@@ -1939,7 +1964,9 @@
+@@ -1939,7 +1965,9 @@
   *          library/pkcs5.c
   *          library/pkparse.c
   */
@@ -455,7 +456,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_ASN1_WRITE_C
-@@ -1953,7 +1980,9 @@
+@@ -1953,7 +1981,9 @@
   *          library/x509write_crt.c
   *          library/x509write_csr.c
   */
@@ -465,7 +466,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_BASE64_C
-@@ -1965,7 +1994,9 @@
+@@ -1965,7 +1995,9 @@
   *
   * This module is required for PEM support (required by X.509).
   */
@@ -475,7 +476,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_BIGNUM_C
-@@ -2037,7 +2068,7 @@
+@@ -2037,7 +2069,7 @@
   *      MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_GCM_SHA256
   *      MBEDTLS_TLS_PSK_WITH_CAMELLIA_128_CBC_SHA256
   */
@@ -484,7 +485,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_ARIA_C
-@@ -2103,7 +2134,9 @@
+@@ -2103,7 +2135,9 @@
   * This module enables the AES-CCM ciphersuites, if other requisites are
   * enabled as well.
   */
@@ -494,7 +495,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_CHACHA20_C
-@@ -2112,7 +2145,7 @@
+@@ -2112,7 +2146,7 @@
   *
   * Module:  library/chacha20.c
   */
@@ -503,7 +504,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_CHACHAPOLY_C
-@@ -2123,7 +2156,7 @@
+@@ -2123,7 +2157,7 @@
   *
   * This module requires: MBEDTLS_CHACHA20_C, MBEDTLS_POLY1305_C
   */
@@ -512,17 +513,18 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_CIPHER_C
-@@ -2187,7 +2220,9 @@
+@@ -2187,7 +2221,10 @@
   *
   * This module provides debugging functions.
   */
-+#ifdef OC_DEBUG
++#if defined(OC_LOG_MAXIMUM_LEVEL) && defined(OC_LOG_LEVEL_DEBUG_MACRO) && \
++    ((OC_LOG_LEVEL_DEBUG_MACRO) <= (OC_LOG_MAXIMUM_LEVEL))
  #define MBEDTLS_DEBUG_C
 +#endif
  
  /**
   * \def MBEDTLS_DES_C
-@@ -2203,7 +2238,7 @@
+@@ -2203,7 +2240,7 @@
   * \warning   DES is considered a weak cipher and its use constitutes a
   *            security risk. We recommend considering stronger ciphers instead.
   */
@@ -531,7 +533,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_DHM_C
-@@ -2224,7 +2259,7 @@
+@@ -2224,7 +2261,7 @@
   *             See dhm.h for more details.
   *
   */
@@ -540,7 +542,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_ECDH_C
-@@ -2257,7 +2292,9 @@
+@@ -2257,7 +2294,9 @@
   *           and at least one MBEDTLS_ECP_DP_XXX_ENABLED for a
   *           short Weierstrass curve.
   */
@@ -550,17 +552,18 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_ECJPAKE_C
-@@ -2316,7 +2353,9 @@
+@@ -2316,7 +2355,10 @@
   *
   * This module enables mbedtls_strerror().
   */
-+#ifdef OC_DEBUG
++#if defined(OC_LOG_MAXIMUM_LEVEL) && defined(OC_LOG_LEVEL_ERROR_MACRO) && \
++    ((OC_LOG_LEVEL_ERROR_MACRO) <= (OC_LOG_MAXIMUM_LEVEL))
  #define MBEDTLS_ERROR_C
 +#endif
  
  /**
   * \def MBEDTLS_GCM_C
-@@ -2330,7 +2369,9 @@
+@@ -2330,7 +2372,9 @@
   * This module enables the AES-GCM and CAMELLIA-GCM ciphersuites, if other
   * requisites are enabled as well.
   */
@@ -570,7 +573,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_HKDF_C
-@@ -2345,7 +2386,7 @@
+@@ -2345,7 +2389,7 @@
   * This module adds support for the Hashed Message Authentication Code
   * (HMAC)-based key derivation function (HKDF).
   */
@@ -579,7 +582,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_HMAC_DRBG_C
-@@ -2359,7 +2400,7 @@
+@@ -2359,7 +2403,7 @@
   *
   * Uncomment to enable the HMAC_DRBG random number geerator.
   */
@@ -588,7 +591,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_NIST_KW_C
-@@ -2405,7 +2446,7 @@
+@@ -2405,7 +2449,7 @@
   *            it, and considering stronger message digests instead.
   *
   */
@@ -597,7 +600,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_MEMORY_BUFFER_ALLOC_C
-@@ -2421,7 +2462,9 @@
+@@ -2421,7 +2465,9 @@
   *
   * Enable this module to enable the buffer memory allocator.
   */
@@ -608,7 +611,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_NET_C
-@@ -2440,7 +2483,11 @@
+@@ -2440,7 +2486,11 @@
   *
   * This module provides networking routines.
   */
@@ -620,7 +623,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_OID_C
-@@ -2463,7 +2510,9 @@
+@@ -2463,7 +2513,9 @@
   *
   * This modules translates between OIDs and internal values.
   */
@@ -630,7 +633,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_PADLOCK_C
-@@ -2477,7 +2526,7 @@
+@@ -2477,7 +2529,7 @@
   *
   * This modules adds support for the VIA PadLock on x86.
   */
@@ -639,7 +642,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_PEM_PARSE_C
-@@ -2495,7 +2544,9 @@
+@@ -2495,7 +2547,9 @@
   *
   * This modules adds support for decoding / parsing PEM files.
   */
@@ -649,7 +652,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_PEM_WRITE_C
-@@ -2511,7 +2562,9 @@
+@@ -2511,7 +2565,9 @@
   *
   * This modules adds support for encoding / writing PEM files.
   */
@@ -659,7 +662,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_PK_C
-@@ -2527,7 +2580,9 @@
+@@ -2527,7 +2583,9 @@
   *
   * Uncomment to enable generic public key wrappers.
   */
@@ -669,7 +672,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_PK_PARSE_C
-@@ -2542,7 +2597,9 @@
+@@ -2542,7 +2600,9 @@
   *
   * Uncomment to enable generic public key parse functions.
   */
@@ -679,7 +682,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_PK_WRITE_C
-@@ -2556,7 +2613,9 @@
+@@ -2556,7 +2616,9 @@
   *
   * Uncomment to enable generic public key write functions.
   */
@@ -689,7 +692,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_PKCS5_C
-@@ -2584,7 +2643,7 @@
+@@ -2584,7 +2646,7 @@
   *
   * This module enables PKCS#12 functions.
   */
@@ -698,7 +701,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_PLATFORM_C
-@@ -2614,7 +2673,7 @@
+@@ -2614,7 +2676,7 @@
   * Module:  library/poly1305.c
   * Caller:  library/chachapoly.c
   */
@@ -707,7 +710,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_PSA_CRYPTO_C
-@@ -2628,7 +2687,7 @@
+@@ -2628,7 +2690,7 @@
   *           or MBEDTLS_PSA_CRYPTO_EXTERNAL_RNG.
   *
   */
@@ -716,7 +719,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_PSA_CRYPTO_SE_C
-@@ -2657,7 +2716,7 @@
+@@ -2657,7 +2719,7 @@
   *           either MBEDTLS_PSA_ITS_FILE_C or a native implementation of
   *           the PSA ITS interface
   */
@@ -725,7 +728,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_PSA_ITS_FILE_C
-@@ -2669,7 +2728,7 @@
+@@ -2669,7 +2731,7 @@
   *
   * Requires: MBEDTLS_FS_IO
   */
@@ -734,7 +737,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_RIPEMD160_C
-@@ -2680,7 +2739,7 @@
+@@ -2680,7 +2742,7 @@
   * Caller:  library/md.c
   *
   */
@@ -743,7 +746,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_RSA_C
-@@ -2699,7 +2758,9 @@
+@@ -2699,7 +2761,9 @@
   *
   * Requires: MBEDTLS_BIGNUM_C, MBEDTLS_OID_C
   */
@@ -753,7 +756,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_SHA1_C
-@@ -2721,7 +2782,7 @@
+@@ -2721,7 +2785,7 @@
   *            on it, and considering stronger message digests instead.
   *
   */
@@ -762,7 +765,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_SHA224_C
-@@ -2800,7 +2861,7 @@
+@@ -2800,7 +2864,7 @@
   *
   * Requires: MBEDTLS_SSL_CACHE_C
   */
@@ -771,7 +774,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_SSL_COOKIE_C
-@@ -2822,7 +2883,7 @@
+@@ -2822,7 +2886,7 @@
   *
   * Requires: MBEDTLS_CIPHER_C
   */
@@ -780,7 +783,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_SSL_CLI_C
-@@ -2908,7 +2969,11 @@
+@@ -2908,7 +2972,11 @@
   *
   * Module:  library/timing.c
   */
@@ -792,7 +795,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_VERSION_C
-@@ -2919,7 +2984,7 @@
+@@ -2919,7 +2987,7 @@
   *
   * This module provides run-time version information.
   */
@@ -801,7 +804,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_X509_USE_C
-@@ -2936,7 +3001,9 @@
+@@ -2936,7 +3004,9 @@
   *
   * This module is required for the X.509 parsing modules.
   */
@@ -811,7 +814,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_X509_CRT_PARSE_C
-@@ -2952,7 +3019,9 @@
+@@ -2952,7 +3022,9 @@
   *
   * This module is required for X.509 certificate parsing.
   */
@@ -821,7 +824,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_X509_CRL_PARSE_C
-@@ -2966,7 +3035,7 @@
+@@ -2966,7 +3038,7 @@
   *
   * This module is required for X.509 CRL parsing.
   */
@@ -830,7 +833,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_X509_CSR_PARSE_C
-@@ -2980,7 +3049,9 @@
+@@ -2980,7 +3052,9 @@
   *
   * This module is used for reading X.509 certificate request.
   */
@@ -840,7 +843,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_X509_CREATE_C
-@@ -2993,7 +3064,9 @@
+@@ -2993,7 +3067,9 @@
   *
   * This module is the basis for creating X.509 certificates and CSRs.
   */
@@ -850,7 +853,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_X509_CRT_WRITE_C
-@@ -3006,7 +3079,9 @@
+@@ -3006,7 +3082,9 @@
   *
   * This module is required for X.509 certificate creation.
   */
@@ -860,7 +863,7 @@ index 0558ee001..b18a66da0 100644
  
  /**
   * \def MBEDTLS_X509_CSR_WRITE_C
-@@ -3019,7 +3094,9 @@
+@@ -3019,7 +3097,9 @@
   *
   * This module is required for X.509 certificate request writing.
   */
@@ -870,7 +873,7 @@ index 0558ee001..b18a66da0 100644
  
  /* \} name SECTION: mbed TLS modules */
  
-@@ -3060,7 +3137,12 @@
+@@ -3060,7 +3140,12 @@
  //#define MBEDTLS_ECP_FIXED_POINT_OPTIM      1 /**< Enable fixed-point speed-up */
  
  /* Entropy options */
@@ -884,7 +887,7 @@ index 0558ee001..b18a66da0 100644
  //#define MBEDTLS_ENTROPY_MAX_GATHER                128 /**< Maximum amount requested from entropy sources */
  //#define MBEDTLS_ENTROPY_MIN_HARDWARE               32 /**< Default minimum number of bytes required for the hardware entropy source mbedtls_hardware_poll() before entropy is released */
  
-@@ -3069,14 +3151,19 @@
+@@ -3069,14 +3154,19 @@
  
  /* Platform options */
  //#define MBEDTLS_PLATFORM_STD_MEM_HDR   <stdlib.h> /**< Header to include if MBEDTLS_PLATFORM_NO_STD_FUNCTIONS is defined. Don't define if no header is needed. */
@@ -909,7 +912,7 @@ index 0558ee001..b18a66da0 100644
  //#define MBEDTLS_PLATFORM_STD_EXIT_SUCCESS       0 /**< Default exit value to use, can be undefined */
  //#define MBEDTLS_PLATFORM_STD_EXIT_FAILURE       1 /**< Default exit value to use, can be undefined */
  //#define MBEDTLS_PLATFORM_STD_NV_SEED_READ   mbedtls_platform_std_nv_seed_read /**< Default nv_seed_read function to use, can be undefined */
-@@ -3171,6 +3258,9 @@
+@@ -3171,6 +3261,9 @@
   * Uncomment to set the maximum plaintext size of the incoming I/O buffer.
   */
  //#define MBEDTLS_SSL_IN_CONTENT_LEN              16384
@@ -919,7 +922,7 @@ index 0558ee001..b18a66da0 100644
  
  /** \def MBEDTLS_SSL_CID_IN_LEN_MAX
   *
-@@ -3221,6 +3311,9 @@
+@@ -3221,6 +3314,9 @@
   * Uncomment to set the maximum plaintext size of the outgoing I/O buffer.
   */
  //#define MBEDTLS_SSL_OUT_CONTENT_LEN             16384
@@ -929,7 +932,7 @@ index 0558ee001..b18a66da0 100644
  
  /** \def MBEDTLS_SSL_DTLS_MAX_BUFFERING
   *
-@@ -3240,6 +3333,7 @@
+@@ -3240,6 +3336,7 @@
  //#define MBEDTLS_SSL_DTLS_MAX_BUFFERING             32768
  
  //#define MBEDTLS_PSK_MAX_LEN               32 /**< Max size of TLS pre-shared keys, in bytes (default 256 bits) */

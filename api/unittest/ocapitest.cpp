@@ -687,14 +687,14 @@ public:
     auto *code = static_cast<oc_status_t *>(data->user_data);
     memcpy(code, &data->code, sizeof(oc_status_t));
 
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
     if (data->payload != nullptr) {
       std::vector<char> json{};
       json.resize(256);
       oc_rep_to_json(data->payload, &json[0], json.capacity(), true);
       OC_PRINTF("%s\n", json.data());
     }
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
 
     ApiHelper::terminate();
   }

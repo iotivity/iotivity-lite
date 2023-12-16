@@ -47,7 +47,7 @@ ifeq ($(RETARGET),1)
 endif
 
 ifeq ($(DEBUG),1)
-	CFLAGS += -DOC_DEBUG -g -O0
+	CFLAGS += -DOC_LOG_MAXIMUM_LEVEL=8 -g -O0
 else
 	CFLAGS += -g -O0
 endif
