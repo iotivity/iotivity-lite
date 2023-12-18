@@ -389,4 +389,19 @@ cloud_send_ping(const oc_endpoint_t *endpoint, uint16_t timeout_seconds,
                                 timeout_seconds, handler, LOW_QOS, user_data);
 }
 
+const char *
+oc_cloud_action_to_str(oc_cloud_action_t action)
+{
+  switch (action) {
+  case OC_CLOUD_ACTION_REGISTER:
+    return OC_CLOUD_ACTION_REGISTER_STR;
+  case OC_CLOUD_ACTION_LOGIN:
+    return OC_CLOUD_ACTION_LOGIN_STR;
+  case OC_CLOUD_ACTION_REFRESH_TOKEN:
+    return OC_CLOUD_ACTION_REFRESH_TOKEN_STR;
+  default:
+    return NULL;
+  }
+}
+
 #endif /* OC_CLOUD */

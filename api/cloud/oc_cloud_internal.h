@@ -39,6 +39,10 @@ extern "C" {
  */
 #define RD_PUBLISH_TTL_UNLIMITED 0
 
+#define OC_CLOUD_ACTION_REGISTER_STR "register"
+#define OC_CLOUD_ACTION_LOGIN_STR "login"
+#define OC_CLOUD_ACTION_REFRESH_TOKEN_STR "refreshtoken"
+
 typedef struct cloud_conf_update_t
 {
   const char *access_token; /**< Access Token resolved with an auth code. */

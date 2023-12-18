@@ -18,6 +18,7 @@
 
 #include "api/cloud/oc_cloud_internal.h"
 #include "oc_api.h"
+#include "oc_cloud.h"
 #include "tests/gtest/Device.h"
 
 #include <gtest/gtest.h>
@@ -101,4 +102,16 @@ TEST_F(TestCloud, oc_cloud_provision_conf_resource)
   EXPECT_STREQ(ci_server, oc_string(ctx->store.ci_server));
   EXPECT_STREQ(sid, oc_string(ctx->store.sid));
   EXPECT_EQ(OC_CLOUD_INITIALIZED, ctx->store.status);
+}
+
+TEST_F(TestCloud, oc_cloud_action_to_str)
+{
+  std::string v;
+  v.assign(oc_cloud_action_to_str(OC_CLOUD_ACTION_REGISTER));
+  EXPECT_EQ(OC_CLOUD_ACTION_REGISTER_STR, v);
+  v.assign(oc_cloud_action_to_str(OC_CLOUD_ACTION_REFRESH_TOKEN));
+  EXPECT_EQ(OC_CLOUD_ACTION_REFRESH_TOKEN_STR, v);
+  v.assign(oc_cloud_action_to_str(OC_CLOUD_ACTION_LOGIN));
+  EXPECT_EQ(OC_CLOUD_ACTION_LOGIN_STR, v);
+  EXPECT_EQ(nullptr, oc_cloud_action_to_str(OC_CLOUD_ACTION_UNKNOWN));
 }
