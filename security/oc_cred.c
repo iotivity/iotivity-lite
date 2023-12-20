@@ -119,26 +119,26 @@ oc_sec_cred_new_device(size_t device_index, bool need_realloc)
     /*
      * if `g_oc_device_info[device_index]` is newly allocated entry...
      */
-    devices =
-        (oc_sec_creds_t *)realloc(devices, oc_core_get_num_devices() * sizeof(oc_sec_creds_t));
-    if (!devices) {
+    g_devices =
+        (oc_sec_creds_t *)realloc(g_devices, oc_core_get_num_devices() * sizeof(oc_sec_creds_t));
+    if (!g_devices) {
       oc_abort("Insufficient memory");
     }
 
-    memset(&devices[device_index], 0, sizeof(oc_sec_creds_t));
-    OC_LIST_STRUCT_INIT(&devices[device_index], creds);
+    memset(&g_devices[device_index], 0, sizeof(oc_sec_creds_t));
+    OC_LIST_STRUCT_INIT(&g_devices[device_index], creds);
 
     size_t i=0;
     while (i < device_index) {
-      OC_LIST_STRUCT_REINIT(&devices[i], creds);
+      OC_LIST_STRUCT_REINIT(&g_devices[i], creds);
       i++;
     }
   } else {
     /*
      * if `g_oc_device_info[device_index]` is existing entry...
      */
-    memset(&devices[device_index], 0, sizeof(oc_sec_creds_t));
-    OC_LIST_STRUCT_INIT(&devices[device_index], creds);
+    memset(&g_devices[device_index], 0, sizeof(oc_sec_creds_t));
+    OC_LIST_STRUCT_INIT(&g_devices[device_index], creds);
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 }

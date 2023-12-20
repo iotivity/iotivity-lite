@@ -486,6 +486,7 @@ _oc_signal_event_loop(void)
 /*
  * modifiedbyme <2023/7/16> add func : `oc_resize_drop_command() {}`
  */
+#if 0
 #ifdef OC_HAS_FEATURE_BRIDGE
 void
 oc_resize_drop_command(size_t device_count)
@@ -500,4 +501,5 @@ oc_resize_drop_command(size_t device_count)
   return;
 }
 #endif /* OC_HAS_FEATURE_BRIDGE */
+#endif
 

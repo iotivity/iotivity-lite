@@ -21,6 +21,7 @@
 
 #include "oc_vod_map.h"
 #include "oc_rep.h"
+#include "oc_rep_internal.h"
 #include "oc_core_res.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_log_internal.h"
@@ -104,10 +105,10 @@ oc_vod_map_decode(oc_rep_t *rep, bool from_storage)
           return false;
         }
         vod->index = (size_t)temp;
-//        vod->is_removed = true;
         /*
          * TODO4ME <Oct 24, 2023> oc_vod_map_decode() : insert codes to restore `is_removed` value
          */
+        // vod->is_removed = true;
         oc_list_add(g_vod_mapping_list.vods, vod);
         v = v->next;
       }
@@ -154,7 +155,7 @@ oc_vod_map_load(void)
     struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
 #endif /* OC_DYNAMIC_ALLOCATION */
     oc_rep_set_pool(&rep_objects);
-    oc_parse_rep(buf, (uint16_t)ret, &rep);
+    rep = oc_parse_rep(buf, (size_t)ret);
 //    oc_vod_map_decode(rep, true);
     /*
      * TODO4ME <2023/8/14> This could make a bug because Devices (g_oc_device_info[])

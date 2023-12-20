@@ -78,7 +78,7 @@ oc_sec_acl_init(void)
 }
 
 /*
- * modifiedbyme <2023/7/25> add func : oc_sec_acl_new_device(){}
+ * MODIFIEDBYME <2023/7/25> add func : oc_sec_acl_new_device(){}
  */
 #ifdef OC_HAS_FEATURE_BRIDGE
 void
@@ -109,7 +109,7 @@ oc_sec_acl_new_device(size_t device_index, bool need_realloc)
      */
     memset(&g_aclist[device_index], 0, sizeof(oc_sec_acl_t));
     /*
-     * FIXME4ME <2023/12/11> oc_sec_acl_new_device() : free linked list memory.. before init
+     * FIXME4ME (done) <2023/12/11> oc_sec_acl_new_device() : free linked list memory.. before init
      * - maybe use oc_sec_acl_free().. => it is already done in oc_core_remove_device_at_index()...
      */
     OC_LIST_STRUCT_INIT(&g_aclist[device_index], subjects);

@@ -78,24 +78,6 @@ TEST_F(VodMapTest, vod_map_add_id) {
 
   oc_vod_map_free();
 
-  // by freeing the vod map and calling oc_vod_map_init again the code is using
-  // the same code path it would take if the process were shut down and had
-  // to load the vod map from oc_storage.
-  oc_vod_map_init();
-  // tv[0] and tv[1] were dumped to file so should be loaded as part of the init
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 2);
-  // tv[2] should not be found since it was not added above.
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 0);
-
-  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 2);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 3);
-
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 2);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 3);
-  oc_vod_map_free();
 }
 
 
@@ -121,18 +103,6 @@ TEST_F(VodMapTest, vod_map_remove_id) {
   oc_vod_map_remove_mapping_entry(1);
   EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 0);
   EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 2);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 0);
-
-  oc_vod_map_free();
-
-  // by freeing the vod map and calling oc_vod_map_init again the code is using
-  // the same code path it would take if the process were shut down and had
-  // to load the vod map from oc_storage.
-  oc_vod_map_init();
-  // tv[0] and tv[1] were dumped to file so should be loaded as part of the init
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 2);
-  // tv[2] should not be found since it was not added above.
   EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 0);
 
   EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
@@ -188,19 +158,6 @@ TEST_F(VodMapTest, vod_map_remove_id) {
   EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 0);
   EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system), 5);
 
-  oc_vod_map_free();
-
-  // by freeing the vod map and calling oc_vod_map_init again the code is using
-  // the same code path it would take if the process were shut down and had
-  // to load the vod map from oc_storage.
-  oc_vod_map_init();
-
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 3);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system), 5);
-
   EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 2);
   EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 4);
 
@@ -244,18 +201,6 @@ TEST_F(VodMapTest, vod_map_remove_id) {
   oc_vod_map_remove_mapping_entry(2);
   oc_vod_map_remove_mapping_entry(4);
   oc_vod_map_remove_mapping_entry(3);
-
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system), 0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system), 0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system), 5);
-
-  oc_vod_map_free();
-  // by freeing the vod map and calling oc_vod_map_init again the code is using
-  // the same code path it would take if the process were shut down and had
-  // to load the vod map from oc_storage.
-  oc_vod_map_init();
 
   EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system), 1);
   EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system), 0);

@@ -535,9 +535,6 @@ oc_ri_delete_app_resources_per_device(size_t index)
 
   while (res) {
     if (res->device == index) {
-//      if (res->resource_data_remover) {
-//        res->resource_data_remover(res);
-//      }
       t = res;
       res = res->next;
       oc_ri_delete_resource(t);
@@ -545,6 +542,11 @@ oc_ri_delete_app_resources_per_device(size_t index)
     }
     res = res->next;
   }
+
+  /*
+   * TODO4ME <2023/12/11> oc_ri_delete_app_resources_per_device() : remove collection too
+   */
+  // oc_collections_free_per_device(index);
 }
 #endif /* OC_HAS_FEATURE_BRIDGE */
 

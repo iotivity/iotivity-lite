@@ -701,7 +701,7 @@ main(void)
   sigaction(SIGINT, &sa, NULL);
 #endif
 
-  oc_log_set_level(OC_LOG_LEVEL_DEBUG);
+//  oc_log_set_level(OC_LOG_LEVEL_DEBUG);
 
   static const oc_handler_t handler = { .init = app_init,
                                         .signal_event_loop = signal_event_loop,

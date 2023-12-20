@@ -313,7 +313,7 @@ oc_bridge_add_bridge_device(const char *name, const char *spec_version,
   oc_resource_set_default_interface(g_vodlist_res, OC_IF_R);
   oc_resource_set_discoverable(g_vodlist_res, true);
   // TODO4me <2023/7/24> do we need to make the oic.r.vodlist periodic observable?
-  oc_resource_set_periodic_observable(g_vodlist_res, 30);
+  // oc_resource_set_periodic_observable(g_vodlist_res, 30);
   oc_resource_set_request_handler(g_vodlist_res, OC_GET, get_bridge, NULL);
   if (!oc_add_resource(g_vodlist_res)) {
     return -1;
@@ -370,6 +370,9 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
     return 0;
   }
 
+  /*
+   * FIXME4ME <2023/12/11> oc_bridge_add_virtual_device() : do we need this code?
+   */
   if (oc_uuid_is_nil(&device->piid)) {
     oc_gen_uuid(&device->piid);
 #ifdef OC_SECURITY
@@ -391,7 +394,7 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
    */
 #ifdef OC_SECURITY
   /*
-   * FIXME4ME <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later..
+   * FIXME4ME (done) <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later..
    */
   if (oc_is_owned_device(g_vodlist_res->device) || oc_is_owned_device(vd_index)) {
     oc_connectivity_ports_t ports;
@@ -413,7 +416,7 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
 
 #ifdef OC_SECURITY
   /*
-   * FIXME4ME <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later...
+   * FIXME4ME (done) <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later...
    */
   if (oc_is_owned_device(vd_index)) {
     add_virtual_device_to_vods_list(name, oc_core_get_device_id(vd_index),
@@ -456,7 +459,7 @@ oc_bridge_add_vod(size_t device_index)
 
 #ifdef OC_SECURITY
   /*
-   * FIXME4ME <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later..
+   * FIXME4ME (done) <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later..
    */
   if (oc_is_owned_device(g_vodlist_res->device) || oc_is_owned_device(device_index)) {
     oc_connectivity_ports_t ports;
@@ -478,7 +481,7 @@ oc_bridge_add_vod(size_t device_index)
 #ifdef OC_SECURITY
 
   /*
-   * FIXME4ME <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later...
+   * FIXME4ME (done) <Sep 10, 2023> oc_bridge_add_virtual_device() : uncomment below code later...
    */
   if (oc_is_owned_device(device_index)) {
     add_virtual_device_to_vods_list(oc_string(device->name), oc_core_get_device_id(device_index),

@@ -808,6 +808,10 @@ void
 oc_reset_devices_in_RFOTM(void)
 {
   for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
+#ifdef OC_HAS_FEATURE_BRIDGE
+    if (oc_core_get_device_info(device)->is_removed)
+      continue;
+#endif
     if (g_pstat[device].s == OC_DOS_RFOTM) {
       oc_pstat_reset_device(device, true);
     }

@@ -67,8 +67,10 @@ typedef struct oc_device_info_t
   /*
    * modifiedbyme <2023/7/16> add struct member : `oc_device_info_t.is_removed`
    */
+  /*
+   * TODO4ME (done) <2023/12/13> enclosing_method() : remove later.. these info is maintained in oc_virtual_device_t
+   */
 #ifdef OC_HAS_FEATURE_BRIDGE
-  oc_string_t econame;                   ///< Ecosystem Name of the Bridged Device which is exposed by this VOD
   oc_string_t ecoversion;                ///< Version of ecosystem that a Bridged Device belongs to. Typical version string format is like n.n (e.g. 5.0)
   bool is_removed;                       ///< true: this device was previously allocated and then removed
 #endif
