@@ -615,9 +615,9 @@ cloud_manager_login_handler(oc_client_response_t *data)
   bool handleUnauthorizedByRefresh = cloud_context_has_refresh_token(ctx);
   oc_cps_t cps = OC_CPS_FAILED;
   oc_cloud_error_t err = _login_handler(ctx, data, &cps);
-  oc_reset_delayed_callback(ctx, cloud_manager_callback_handler_async, 0);
   if ((ctx->store.status & OC_CLOUD_REGISTERED) == 0) {
     cloud_set_cps_and_last_error(ctx, cps, err);
+    oc_reset_delayed_callback(ctx, cloud_manager_callback_handler_async, 0);
     return;
   }
   if (err == CLOUD_OK) {
@@ -631,6 +631,7 @@ cloud_manager_login_handler(oc_client_response_t *data)
         refresh_token_expires_in_ms(ctx->store.expires_in *
                                     MILLISECONDS_PER_SECOND));
     }
+    oc_reset_delayed_callback(ctx, cloud_manager_callback_handler_async, 0);
     return;
   }
   ctx->store.status |= OC_CLOUD_FAILURE;
@@ -640,6 +641,7 @@ cloud_manager_login_handler(oc_client_response_t *data)
     OC_CLOUD_DBG("Login failed with error(%d), retrying", (int)err);
     // While retrying, keep last error (clec) to CLOUD_OK
     cloud_set_cps_and_last_error(ctx, cps, CLOUD_OK);
+    oc_reset_delayed_callback(ctx, cloud_manager_callback_handler_async, 0);
     return;
   }
   if (err == CLOUD_ERROR_UNAUTHORIZED) {
@@ -654,6 +656,7 @@ cloud_manager_login_handler(oc_client_response_t *data)
         cloud_context_clear(ctx);
       }
     }
+    oc_reset_delayed_callback(ctx, cloud_manager_callback_handler_async, 0);
     return;
   }
   cloud_set_cps_and_last_error(ctx, cps, err);

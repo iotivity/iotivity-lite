@@ -232,9 +232,9 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
     return;
   }
 
-  if (oc_cloud_manager_start(ctx, ctx->callback, ctx->user_data) != 0) {
-    OC_CLOUD_ERR("cannot start cloud manager");
-  }
+  // if (oc_cloud_manager_start(ctx, ctx->callback, ctx->user_data) != 0) {
+  //   OC_CLOUD_ERR("cannot start cloud manager");
+  // }
 }
 
 #ifdef OC_SESSION_EVENTS
