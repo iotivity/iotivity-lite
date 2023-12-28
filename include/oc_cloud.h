@@ -234,6 +234,8 @@ int oc_cloud_manager_stop(oc_cloud_context_t *ctx);
 /**
  * @brief Restart cloud registration process with the current configuration.
  *
+ * @note The cloud manager must be started before calling this function.
+ *
  * @param ctx cloud context (cannot be NULL)
  */
 OC_API
