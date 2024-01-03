@@ -474,9 +474,6 @@ oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len, size_t device)
 
 #endif /* OC_SERVER */
 
-/*
- * modifiedbyme <2023/7/17> add new func : oc_ri_delete_app_resources_per_device(){}
- */
 #ifdef OC_HAS_FEATURE_BRIDGE
 oc_resource_t *
 oc_ri_get_app_resource_by_device(size_t device, bool reset)
@@ -523,7 +520,6 @@ oc_ri_get_app_resource_by_device(size_t device, bool reset)
   }
 #endif
 
-
   return NULL;
 }
 
@@ -544,7 +540,7 @@ oc_ri_delete_app_resources_per_device(size_t index)
   }
 
   /*
-   * TODO4ME <2023/12/11> oc_ri_delete_app_resources_per_device() : remove collection too
+   * TODO4ME <2023/12/11> oc_ri_delete_app_resources_per_device() : remove collection too ?
    */
   // oc_collections_free_per_device(index);
 }

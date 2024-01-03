@@ -334,9 +334,6 @@ oc_create_device_resource(size_t device_count, const char *uri, const char *rt)
   }
 }
 
-/*
- * modifiedbyme <2023/7/16> add func : `core_update_existing_device_data(){}`
- */
 #ifdef OC_HAS_FEATURE_BRIDGE
 static void
 core_update_existing_device_data(uint32_t device_count, oc_add_new_device_t cfg)
@@ -426,9 +423,6 @@ oc_core_add_new_device(oc_add_new_device_t cfg)
     oc_abort("error initializing connectivity for device");
   }
 
-  /*
-   * modifiedbyme <2023/7/17> add func call : `core_set_device_removed(device_count, false);`
-   */
 #ifdef OC_HAS_FEATURE_BRIDGE
   core_set_device_removed(device_count, false);
 #endif
@@ -436,13 +430,6 @@ oc_core_add_new_device(oc_add_new_device_t cfg)
   return &g_oc_device_info[device_count];
 }
 
-
-/*
- * modifiedbyme <2023/7/16> add func : `oc_core_add_new_device_at_index()`
- */
-/*
- * FIXME4ME (done) <2023/7/23> allocate new memory for SVR of new Device (e.g. ael (oc_sec_ael_t))
- */
 #ifdef OC_HAS_FEATURE_BRIDGE
 oc_device_info_t *
 oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
@@ -498,11 +485,6 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
     /* extend memory allocated to `g_oc_device_info` to add new Device
      * and add new `oc_device_info_t` entry */
     core_update_device_data(device_count, cfg);
-
-#if 0
-    /* realloc memory for g_drop_commands for dynamic Device management */
-    oc_resize_drop_command(device_count+1);
-#endif
   }
 
   /* Construct device resource */
@@ -580,23 +562,12 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
    * so, newle added VOD should be re-onboarded.
    */
   oc_sec_svr_init_new_device(device_count);
-
 #endif
 
-//  if (oc_connectivity_init(device_count, cfg.ports) < 0) {
-//    oc_abort("error initializing connectivity for device");
-//  }
-
-//  oc_set_drop_commands(device_count, false);
   core_set_device_removed(device_count, false);
-
   return &g_oc_device_info[device_count];
 }
 
-
-/*
- * modifiedbyme <2023/7/16> add func : `oc_core_delete_device_at_index()`
- */
 static void
 core_delete_app_resources_per_device(size_t index)
 {
@@ -605,10 +576,6 @@ core_delete_app_resources_per_device(size_t index)
   return;
 }
 
-
-/*
- * modifiedbyme <2023/7/16> add func : `oc_core_remove_device_at_index()`
- */
 bool
 oc_core_remove_device_at_index(size_t index)
 {
@@ -619,22 +586,14 @@ oc_core_remove_device_at_index(size_t index)
   }
 
 #ifdef OC_SECURITY
-  /*
-   * FIXME4ME (done) <2023/8/9> remove other SVRs...
-   */
   oc_reset_device(index);
-//  oc_sec_sdi_clear(oc_sec_sdi_get(index)); => already done in oc_reset_device()
-
-//  oc_sec_ael_free_device(index); => already done in oc_reset_device()
-//  oc_sec_cred_clear(index, NULL, NULL); => already done in oc_reset_device()
-//  oc_sec_acl_clear(index, NULL, NULL); => already done in oc_reset_device()
-#endif /* OC_SECURITY */
-
   /*
-   * FIXME4ME (done) <2023/7/23> 이 device 와 관련된 ip connectivity 도 없애야 한다.
-   * oc_shutdown_all_devices() 참고
-   * oc_connectivity_shutdown(device_index) 참고
+   * oc_sec_sdi_clear(oc_sec_sdi_get(index)); => already done in oc_reset_device()
+   * oc_sec_ael_free_device(index); => already done in oc_reset_device()
+   * oc_sec_cred_clear(index, NULL, NULL); => already done in oc_reset_device()
+   * oc_sec_acl_clear(index, NULL, NULL); => already done in oc_reset_device()
    */
+#endif /* OC_SECURITY */
 
   /* 1. remove core Resources mapped to this Device */
   for (size_t i = 1 + (OCF_D * index); i < 1 + (OCF_D * (index + 1)); ++i) {
@@ -645,7 +604,7 @@ oc_core_remove_device_at_index(size_t index)
 
   /* 2. remove all application Resources (including collections) mapped to this Device */
   /*
-   * TODO4ME <2023/12/11> oc_core_remove_device_at_index() : app resource에 연관된 observer가 있다면 같이 삭제 필요?: oc_ri_reset() 참고
+   * TODO4ME <2023/12/11> oc_core_remove_device_at_index() : do we need to delete observer too? (e.g. oc_ri_reset())
    */
   core_delete_app_resources_per_device(index);
 

@@ -632,9 +632,6 @@ bool oc_ri_on_delete_resource_remove_callback(oc_ri_delete_resource_cb_t cb)
   OC_NONNULL();
 #endif /* OC_SERVER */
 
-/*
- * modifiedbyme <2023/7/17> add func proto : oc_ri_delete_app_resources_per_device()
- */
 #ifdef OC_HAS_FEATURE_BRIDGE
 /**
  * @brief remove the resource mapped to specific Device

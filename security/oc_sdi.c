@@ -55,11 +55,6 @@ oc_sec_sdi_init(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
-
-
-/*
- * modifiedbyme <2023/7/25> add func : oc_sec_sdi_new_device(){}
- */
 #ifdef OC_HAS_FEATURE_BRIDGE
 void
 oc_sec_sdi_new_device(size_t device_index, bool need_realloc)
@@ -77,8 +72,6 @@ oc_sec_sdi_new_device(size_t device_index, bool need_realloc)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 #endif /* OC_HAS_FEATURE_BRIDGE */
-
-
 
 void
 oc_sec_sdi_free(void)

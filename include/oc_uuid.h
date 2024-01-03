@@ -142,9 +142,6 @@ void oc_gen_uuid(oc_uuid_t *uuid) OC_NONNULL();
 OC_API
 bool oc_uuid_is_equal(oc_uuid_t first, oc_uuid_t second);
 
-/*
- * modifiedbyme <2023/7/16> add func proto : `oc_uuid_is_nil()`
- */
 #ifdef OC_HAS_FEATURE_BRIDGE
 /**
  * @brief Check if the uuid is null or not

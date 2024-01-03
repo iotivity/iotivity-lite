@@ -74,9 +74,6 @@ oc_sec_svr_create(void)
 }
 
 
-/*
- * modifiedbyme <2023/7/28> add func : oc_sec_svr_create_new_devicee(){}
- */
 #ifdef OC_HAS_FEATURE_BRIDGE
 void
 oc_sec_svr_create_new_device(size_t device_index, bool need_realloc)
@@ -124,13 +121,9 @@ oc_sec_svr_create_new_device(size_t device_index, bool need_realloc)
 }
 
 
-/*
- * modifiedbyme <2023/8/8> add func : oc_sec_svr_init_new_devicee(){}
- */
 void
 oc_sec_svr_init_new_device(size_t device_index)
 {
-//  oc_sec_svr_create_new_device();
   oc_sec_load_unique_ids(device_index);
   OC_DBG("oc_main_init(): loading pstat(%zu)", device_index);
   oc_sec_load_pstat(device_index);

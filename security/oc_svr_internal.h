@@ -31,9 +31,6 @@ extern "C" {
  */
 void oc_sec_svr_create(void);
 
-/*
- * modifiedbyme <2023/7/28> add func proto : oc_sec_svr_create_new_device()
- */
 #ifdef OC_HAS_FEATURE_BRIDGE
 /**
  * @brief add SVR for the Device which is added dynamically.
@@ -55,7 +52,6 @@ void oc_sec_svr_create_new_device(size_t device_index, bool need_realloc);
  */
 void oc_sec_svr_init_new_device(size_t device_index);
 #endif /* OC_HAS_FEATURE_BRIDGE */
-
 
 /**
  * @brief Deinitialize secure vertical resources;

@@ -179,9 +179,6 @@ oc_uuid_is_equal(oc_uuid_t first, oc_uuid_t second)
   return memcmp(first.id, second.id, OC_UUID_ID_SIZE) == 0;
 }
 
-/*
- * modifiedbyme <2023/7/16> add func : `oc_uuid_is_nil(){}`
- */
 #ifdef OC_HAS_FEATURE_BRIDGE
 bool
 oc_uuid_is_nil(const oc_uuid_t *uuid)

@@ -39,9 +39,6 @@
 #define OC_HAS_FEATURE_PUSH
 #endif
 
-/*
- * modifiedbyme <2023/7/16> add new MACRO VAR : `OC_HAS_FEATURE_BRIDGE`
- */
 #if defined(OC_BRIDGE) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
   defined(OC_DYNAMIC_ALLOCATION)
 #define OC_HAS_FEATURE_BRIDGE

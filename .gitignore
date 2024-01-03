@@ -111,3 +111,7 @@ service/resource-directory/client/unittest/obj
 
 # cmake build folder
 build
+build4test
+
+# sonarqube
+.scannerwork

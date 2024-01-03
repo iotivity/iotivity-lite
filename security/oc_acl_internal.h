@@ -37,9 +37,6 @@ extern "C" {
 
 void oc_sec_acl_init(void);
 
-/*
- * modifiedbyme <2023/7/25> add func proto : oc_sec_acl_new_device()
- */
 #ifdef OC_HAS_FEATURE_BRIDGE
 /**
  * @brief increase existing memory for acl for all Devices

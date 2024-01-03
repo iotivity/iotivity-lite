@@ -107,9 +107,6 @@ oc_sec_cred_init(void)
   }
 }
 
-/*
- * modifiedbyme <2023/7/25> add func : oc_sec_cred_new_device(){}
- */
 #ifdef OC_HAS_FEATURE_BRIDGE
 void
 oc_sec_cred_new_device(size_t device_index, bool need_realloc)

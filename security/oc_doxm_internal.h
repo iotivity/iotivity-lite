@@ -60,9 +60,6 @@ typedef struct
 /** @brief Allocate and initialize global variables */
 void oc_sec_doxm_init(void);
 
-/*
- * modifiedbyme <2023/7/25> add func proto : void oc_sec_doxm_new_device()
- */
 #ifdef OC_HAS_FEATURE_BRIDGE
 /**
  * by the size of `oc_sec_doxm_t`

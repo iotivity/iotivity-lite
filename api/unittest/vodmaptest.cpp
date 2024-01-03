@@ -1,6 +1,7 @@
 /******************************************************************
  *
  * Copyright 2020 Intel Corporation
+ * Copyright 2023 ETRI Joo-Chul Kevin Lee
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +16,11 @@
  * limitations under the License.
  *
  ******************************************************************/
+
+#include "util/oc_features.h"
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+
 #include <gtest/gtest.h>
 #include <sys/stat.h>
 #define OC_STORAGE
@@ -245,3 +251,5 @@ TEST_F(VodMapTest, vod_map_add_same_id_different_econame) {
 
   oc_vod_map_free();
 }
+
+#endif /* OC_HAS_FEATURE_BRIDGE */

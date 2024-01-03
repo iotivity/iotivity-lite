@@ -55,9 +55,6 @@ void oc_core_shutdown(void);
  */
 oc_device_info_t *oc_core_add_new_device(oc_add_new_device_t cfg);
 
-/*
- * modifiedbyme <2023/7/16> add func proto : `oc_core_add_new_device_at_index()`
- */
 #ifdef OC_HAS_FEATURE_BRIDGE
 /**
  * @brief Add new device to the position designeted by `index` of Device array (g_oc_device_info[])
@@ -68,9 +65,6 @@ oc_device_info_t *oc_core_add_new_device(oc_add_new_device_t cfg);
  */
 oc_device_info_t *oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index);
 
-/*
- * modifiedbyme <2023/7/16> add func proto : `oc_core_remove_device_at_index()`
- */
 /**
  * @brief Remove existing device at "index" position
  *
