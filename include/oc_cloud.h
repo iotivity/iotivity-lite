@@ -143,8 +143,6 @@ const char *oc_cloud_action_to_str(oc_cloud_action_t action);
  * @param action Cloud action to schedule.
  * @param retry_count Retries count - 0 means the first attempt to perform the
  * action.
- * @param last_status Last response status of the action, OC_STATUS_OK with
- * retry_count = 0.
  * @param delay Delay the action in milliseconds before executing it.
  * @param timeout Timeout in seconds for the action.
  * @param user_data User data passed from the caller.
@@ -153,9 +151,11 @@ const char *oc_cloud_action_to_str(oc_cloud_action_t action);
  *         false if the cloud manager should stop for OC_CLOUD_ACTION_REGISTER
  * or restart for other actions.
  */
-typedef bool (*oc_cloud_schedule_action_cb_t)(
-  oc_cloud_action_t action, uint8_t retry_count, oc_status_t last_status,
-  uint64_t *delay, uint16_t *timeout, void *user_data);
+typedef bool (*oc_cloud_schedule_action_cb_t)(oc_cloud_action_t action,
+                                              uint8_t retry_count,
+                                              uint64_t *delay,
+                                              uint16_t *timeout,
+                                              void *user_data);
 
 /**
  * @brief Cloud retry configuration structure.

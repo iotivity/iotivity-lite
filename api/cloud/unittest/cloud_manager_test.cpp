@@ -86,8 +86,9 @@ TEST_F(TestCloudManager, cloud_manager_start_initialized_schedule_turnoff)
   // When
   oc_cloud_set_schedule_action(
     &m_context,
-    [](oc_cloud_action_t, uint8_t, oc_status_t, uint64_t *, uint16_t *,
-       void *) -> bool { return false; },
+    [](oc_cloud_action_t, uint8_t, uint64_t *, uint16_t *, void *) -> bool {
+      return false;
+    },
     nullptr);
 
   m_context.store.status = OC_CLOUD_INITIALIZED;
@@ -111,7 +112,7 @@ TEST_F(TestCloudManager,
   // When
   oc_cloud_set_schedule_action(
     &m_context,
-    [](oc_cloud_action_t action, uint8_t retry, oc_status_t, uint64_t *delay,
+    [](oc_cloud_action_t action, uint8_t retry, uint64_t *delay,
        uint16_t *timeout, void *data) -> bool {
       auto *ctx = static_cast<oc_cloud_context_t *>(data);
       if (action == OC_CLOUD_ACTION_REGISTER && retry == 0) {
@@ -147,7 +148,7 @@ TEST_F(TestCloudManager, cloud_manager_start_initialized_without_retry_f)
   // When
   oc_cloud_set_schedule_action(
     &m_context,
-    [](oc_cloud_action_t, uint8_t retry_count, oc_status_t, uint64_t *delay,
+    [](oc_cloud_action_t, uint8_t retry_count, uint64_t *delay,
        uint16_t *timeout, void *data) -> bool {
       auto *ctx = static_cast<oc_cloud_context_t *>(data);
       if (retry_count == 0) {
@@ -197,7 +198,7 @@ TEST_F(TestCloudManager, cloud_manager_start_registered_without_retry_and_uid_f)
   // When
   oc_cloud_set_schedule_action(
     &m_context,
-    [](oc_cloud_action_t action, uint8_t retry, oc_status_t, uint64_t *delay,
+    [](oc_cloud_action_t action, uint8_t retry, uint64_t *delay,
        uint16_t *timeout, void *data) -> bool {
       auto *ctx = static_cast<oc_cloud_context_t *>(data);
       if (action == OC_CLOUD_ACTION_LOGIN && retry == 0) {
@@ -249,7 +250,7 @@ TEST_F(TestCloudManager,
   // When
   oc_cloud_set_schedule_action(
     &m_context,
-    [](oc_cloud_action_t action, uint8_t retry, oc_status_t, uint64_t *delay,
+    [](oc_cloud_action_t action, uint8_t retry, uint64_t *delay,
        uint16_t *timeout, void *data) -> bool {
       auto *ctx = static_cast<oc_cloud_context_t *>(data);
       if (action == OC_CLOUD_ACTION_REFRESH_TOKEN && retry == 0) {

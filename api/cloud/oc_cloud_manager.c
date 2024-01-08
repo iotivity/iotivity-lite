@@ -137,7 +137,7 @@ on_action_response_set_retry(oc_cloud_context_t *ctx, oc_cloud_action_t action,
   bool ok = false;
   if (ctx->schedule_action.on_schedule_action != NULL) {
     ok = ctx->schedule_action.on_schedule_action(
-      action, retry_count, last_status, delay, &ctx->schedule_action.timeout,
+      action, retry_count, delay, &ctx->schedule_action.timeout,
       ctx->schedule_action.user_data);
   } else {
     ok = default_schedule_action(action, retry_count, last_status, delay,
