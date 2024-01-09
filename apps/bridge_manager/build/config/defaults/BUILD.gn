@@ -1,0 +1,58 @@
+# Copyright 2014 The Chromium Authors. All rights reserved.
+# Use of this source code is governed by a BSD-style license that can be
+# found in the LICENSE file.
+
+# import("../args.gni")
+
+config("iotivity_header") {
+  include_dirs = [ 
+    "/usr/local/include/iotivity-lite",
+    "/usr/local/include/tinycbor",
+  ]
+}
+
+config("iotivity_library") {
+  lib_dirs = [
+    "/usr/local/lib"
+  ]
+
+  libs = [
+    "iotivity-lite-client-server",
+    "pthread",
+    "jansson"
+  ]
+  # ldflags = [
+  #   "-liotivity-lite-client-server"
+  # ]
+}
+
+config("compiler_default_config") {
+  if (current_os == "linux") {
+    cflags = [
+      "-fPIC",
+      "-pthread",
+      "-g",
+    ]
+    # print(cflags)
+  }
+}
+
+config("linker_executable_config") {
+  if (!is_mac) {
+    ldflags = [
+      # "-Wl,-rpath=\$ORIGIN/",
+      # "-Wl,-rpath-link=",
+    ]
+  }
+}
+
+config("linker_dynamic_config") {
+  if (!is_mac) {
+    ldflags = [
+      "-shared",
+    ]
+
+    # print("argument library_name: ${library_name}")
+    # print("ldflags : $ldflags")
+  }
+}
