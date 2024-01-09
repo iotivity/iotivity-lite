@@ -277,6 +277,12 @@ ifeq ($(PUSH_DEBUG), 1)
 endif
 endif
 
+# for Bridging
+ifeq ($(BRIDGE), 1)
+	EXTRA_CFLAGS += -DOC_BRIDGE
+	SAMPLES += dummy_bridge_linux
+endif
+
 ifneq ($(SECURE),0)
 	SRC += $(addprefix ../../security/,	oc_acl.c oc_ael.c oc_audit.c oc_certs.c oc_certs_generate.c oc_certs_validate.c oc_cred.c oc_csr.c oc_doxm.c oc_entropy.c \
 			oc_keypair.c oc_oscore_engine.c oc_oscore_crypto.c oc_oscore_context.c oc_pki.c oc_pstat.c oc_roles.c oc_sdi.c \
@@ -629,6 +635,10 @@ push_targetserver_multithread_linux: libiotivity-lite-client-server.a $(ROOT_DIR
 	${CC} -o $@ ../../apps/$@.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS}  ${LIBS}
 
 push_configurator_multithread_linux: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/push_configurator_multithread_linux.c
+	@mkdir -p $@_creds
+	${CC} -o $@ ../../apps/$@.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS}  ${LIBS}
+
+dummy_bridge_linux: libiotivity-lite-client-server.a $(ROOT_DIR)/apps/dummy_bridge_linux.c
 	@mkdir -p $@_creds
 	${CC} -o $@ ../../apps/$@.c libiotivity-lite-client-server.a -DOC_CLIENT -DOC_SERVER ${CFLAGS}  ${LIBS}
 

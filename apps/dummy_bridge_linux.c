@@ -712,15 +712,15 @@ main(void)
   // max app data size set to 13k large enough to hold full IDD
   oc_set_max_app_data_size(13312);
 #ifdef OC_STORAGE
-  if (!directoryFound("dummy_bridge_creds")) {
-    printf("Creating dummy_bridge_creds directory for persistant storage.");
+  if (!directoryFound("dummy_bridge_linux_creds")) {
+    printf("Creating dummy_bridge_linux_creds directory for persistant storage.");
 #ifdef WIN32
-    CreateDirectory("dummy_bridge_creds", NULL);
+    CreateDirectory("dummy_bridge_linux_creds", NULL);
 #else
-    mkdir("dummy_bridge_creds", 0755);
+    mkdir("dummy_bridge_linux_creds", 0755);
 #endif
   }
-  oc_storage_config("./dummy_bridge_creds/");
+  oc_storage_config("./dummy_bridge_linux_creds/");
 #endif /* OC_STORAGE */
 
   init = oc_main_init(&handler);

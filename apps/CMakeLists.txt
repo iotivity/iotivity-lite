@@ -221,8 +221,8 @@ if(UNIX)
     
     if(OC_BRIDGE_ENABLED)
         oc_add_app_executable(
-            TARGET dummy_bridge
-            SOURCES ${PROJECT_SOURCE_DIR}/dummy_bridge.c
+            TARGET dummy_bridge_linux
+            SOURCES ${PROJECT_SOURCE_DIR}/dummy_bridge_linux.c
             DEPENDENCIES client-server-static
         )
     endif()
