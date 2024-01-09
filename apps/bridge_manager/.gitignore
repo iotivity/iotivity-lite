@@ -1,0 +1,11 @@
+# eclipse
+.settings
+.project
+.cproject
+
+# gn
+build
+
+# sonarqube
+.scannerwork
+bw-output
