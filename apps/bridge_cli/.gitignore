@@ -1,0 +1,9 @@
+# cffi generated file
+bridge_manager.c
+*.so
+
+# iotivity credentials
+bridge_creds
+
+# sonarcloud generated files
+.scannerwork
