@@ -4,7 +4,7 @@
 .cproject
 
 # gn
-build
+out
 
 # sonarqube
 .scannerwork
