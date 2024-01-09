@@ -909,7 +909,7 @@ _module_load(const json_t *json_root)
     path_len = snprintf(plugin_path, PLUGIN_PATH_LEN, "%s/%s/%s_translator_plugin.so",
         json_string_value(g_config_plugin_path),
         /* TODO4ME <Jan 2, 2024> _module_load(): replace "out" with json_string_value(json_array_get(json_module_list, i)), */
-        "out",
+        json_string_value(json_array_get(json_module_list, i)),
         json_string_value(json_array_get(json_module_list, i)));
 
     if (path_len > PLUGIN_PATH_LEN) {

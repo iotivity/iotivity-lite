@@ -46,12 +46,19 @@ $ sudo apt install libjansson-dev
 	- `libbridge_manager.so` will be created in `out` folder
 	- to enable log messages, uncomment `OC_BRG_DEBUG` in **BUILD.gn** file
 4. edit `settings.json` in **Bridge CLI** folder :
-	- edit "`pluginPath`" with path where `libbridge_manager.so` exists (absolute path should be used).
+	- edit "`pluginPath`" with path where all Ecosystem Translation plugin module folders exist (absolute path should be used).
 		```json
 		// example
 		{
-		  "pluginPath": "/home/jclee/Development/Matter/WS_Matter/matter_translation_plugin"
+		  "pluginPath": "/home/jclee/iotivity-lite/matter_cli/plugins"
 		}
+
+		// example folder structure
+		// matter_cli
+		// 	|__plugins
+		// 		 |__matter
+		// 		 |__ble
+		// 		 |__z-wave
 		```
 <br>
 
