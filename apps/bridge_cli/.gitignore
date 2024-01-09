@@ -7,3 +7,6 @@ bridge_creds
 
 # sonarcloud generated files
 .scannerwork
+
+# python cache
+__pycache__
