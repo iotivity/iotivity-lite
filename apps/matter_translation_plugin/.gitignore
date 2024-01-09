@@ -1,0 +1,12 @@
+# eclipse
+.settings
+.project
+.cproject
+
+# gn
+out
+
+# sonarqube
+.scannerwork
+bw-output
+coverage
