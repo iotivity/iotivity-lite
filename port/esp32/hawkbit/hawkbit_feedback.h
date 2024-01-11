@@ -20,7 +20,10 @@
 #ifndef HAWKBIT_FEEDBACK_H
 #define HAWKBIT_FEEDBACK_H
 
+#include "api/oc_helpers_internal.h"
 #include "hawkbit_context.h"
+#include "util/oc_compiler.h"
+
 #include <stdbool.h>
 
 #ifdef __cplusplus
@@ -50,14 +53,16 @@ typedef enum {
  * @brief Send deployment feedback to Hawkbit server
  *
  * @param ctx hawkbit context (cannot be NULL)
- * @param id deployment id (cannot be NULL)
+ * @param id deployment id
  * @param execution feedback execution
  * @param result feedback result
  * @return true on success
  * @return false on failure
  */
-bool hawkbit_send_deploy_feedback(const hawkbit_context_t *ctx, const char *id,
+bool hawkbit_send_deploy_feedback(const hawkbit_context_t *ctx,
+                                  oc_string_view_t id,
                                   hawkbit_feedback_execution_t execution,
-                                  hawkbit_feedback_result_t result);
+                                  hawkbit_feedback_result_t result)
+  OC_NONNULL();
 
 #endif /* HAWKBIT_FEEDBACK_H */

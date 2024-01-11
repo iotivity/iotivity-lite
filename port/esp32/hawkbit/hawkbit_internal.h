@@ -23,6 +23,9 @@
 #include "hawkbit_action.h"
 #include "hawkbit_context.h"
 #include "hawkbit_deployment.h"
+
+#include "util/oc_compiler.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -59,7 +62,7 @@ typedef enum {
  * @see hawkbit_stop_polling
  */
 hawkbit_error_t hawkbit_poll(hawkbit_context_t *ctx,
-                             hawkbit_configuration_t *cfg);
+                             hawkbit_configuration_t *cfg) OC_NONNULL(1);
 
 /**
  * @brief Invoke hawkbit_poll function and reschedule polling interval if
@@ -70,14 +73,15 @@ hawkbit_error_t hawkbit_poll(hawkbit_context_t *ctx,
  * @return true polling was rescheduled
  * @return false polling was not rescheduled
  */
-bool hawkbit_poll_and_reschedule(hawkbit_context_t *ctx, bool forceReschedule);
+bool hawkbit_poll_and_reschedule(hawkbit_context_t *ctx, bool forceReschedule)
+  OC_NONNULL();
 
 /**
  * @brief Start device with Hawkbit.
  *
  * @param ctx hawkbit context (cannot be NULL)
  */
-void hawkbit_start(hawkbit_context_t *ctx);
+void hawkbit_start(hawkbit_context_t *ctx) OC_NONNULL();
 
 /**
  * @brief Start polling Hawkbit base resource
@@ -90,16 +94,15 @@ void hawkbit_start(hawkbit_context_t *ctx);
  * polled
  */
 void hawkbit_start_polling(hawkbit_context_t *ctx,
-                           hawkbit_on_polling_action_cb_t on_action);
+                           hawkbit_on_polling_action_cb_t on_action)
+  OC_NONNULL(1);
 
 /**
  * @brief Stop polling Hawkbit base resource
  *
  * @param ctx hawkbit context (cannot be NULL)
  */
-void hawkbit_stop_polling(hawkbit_context_t *ctx);
-
-void hawkbit_reschedule_polling(hawkbit_context_t *ctx);
+void hawkbit_stop_polling(hawkbit_context_t *ctx) OC_NONNULL();
 
 /**
  * @brief Poll the base resource to obtain the current actions for the device.
@@ -114,7 +117,8 @@ void hawkbit_reschedule_polling(hawkbit_context_t *ctx);
  */
 hawkbit_error_t hawkbit_poll_base_resource(hawkbit_context_t *ctx,
                                            hawkbit_action_t *action,
-                                           hawkbit_configuration_t *cfg);
+                                           hawkbit_configuration_t *cfg)
+  OC_NONNULL(1, 2);
 
 /**
  * @brief Download upgrade from Hawkbit server and store it to currently unused
@@ -128,7 +132,8 @@ hawkbit_error_t hawkbit_poll_base_resource(hawkbit_context_t *ctx,
  * @param download_action callback invoked after download finishes
  */
 void hawkbit_download(hawkbit_context_t *ctx,
-                      hawkbit_on_download_done_cb_t download_action);
+                      hawkbit_on_download_done_cb_t download_action)
+  OC_NONNULL(1);
 
 /**
  * @brief Check whether on currently unused OTA partition contains a valid
@@ -138,14 +143,14 @@ void hawkbit_download(hawkbit_context_t *ctx,
  * @return true on success
  * @return false on error
  */
-bool hawkbit_update(hawkbit_context_t *ctx);
+bool hawkbit_update(hawkbit_context_t *ctx) OC_NONNULL();
 
 /**
  * @brief Save resources to storage and restart ESP.
  *
  * @param ctx hawkbit context (cannot be NULL)
  */
-void hawkbit_restart_device(hawkbit_context_t *ctx);
+void hawkbit_restart_device(hawkbit_context_t *ctx) OC_NONNULL();
 
 /**
  * @brief Parse purl property of the /oc/swupdate resource to expected Hawkbit
@@ -166,7 +171,7 @@ void hawkbit_restart_device(hawkbit_context_t *ctx);
 hawkbit_error_t hawkbit_get_url(const hawkbit_context_t *ctx, char *server_url,
                                 size_t server_url_size, char *tenant,
                                 size_t tenant_size, char *controller_id,
-                                size_t controller_id_size);
+                                size_t controller_id_size) OC_NONNULL();
 
 #ifdef __cplusplus
 }

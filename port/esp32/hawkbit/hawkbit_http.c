@@ -17,6 +17,7 @@
  *
  ****************************************************************************/
 
+#include "hawkbit_certificate.h"
 #include "hawkbit_context.h"
 #include "hawkbit_http.h"
 #include "debug_print.h"
@@ -97,12 +98,18 @@ http_event_handler(esp_http_client_event_t *evt)
 }
 
 static esp_http_client_config_t
-hawkbit_get_client_config(const char *url, hawkbit_http_buffer_t *buffer)
+hawkbit_get_client_config(const char *url, oc_string_view_t cert,
+                          hawkbit_http_buffer_t *buffer)
 {
   esp_http_client_config_t config = {};
   config.url = url;
   config.user_data = buffer;
   config.event_handler = http_event_handler;
+  config.cert_pem = cert.data;
+  config.cert_len =
+    cert.length + 1; // must include the nul-terminator for mbedTLS
+  config.keep_alive_enable = true;
+  config.timeout_ms = 5000;
   return config;
 }
 
@@ -143,14 +150,16 @@ hawkbit_prepare_client(esp_http_client_config_t config,
 }
 
 int
-hawkbit_http_perform_get(const char *url, char *buffer, size_t buffer_size)
+hawkbit_http_perform_get(oc_string_view_t url, oc_string_view_t cert,
+                         char *buffer, size_t buffer_size)
 {
+  assert(url.data != NULL);
   hawkbit_http_buffer_t data = {
     .data = buffer,
     .size = buffer_size,
   };
   esp_http_client_handle_t client =
-    hawkbit_prepare_client(hawkbit_get_client_config(url, &data),
+    hawkbit_prepare_client(hawkbit_get_client_config(url.data, cert, &data),
                            HTTP_METHOD_GET, "application/hal+json", NULL);
   if (client == NULL) {
     APP_ERR("perform HTTP GET failed: %s", "failed to get http client");
@@ -169,21 +178,21 @@ hawkbit_http_perform_get(const char *url, char *buffer, size_t buffer_size)
 }
 
 static int
-hawkbit_http_perform_update(esp_http_client_method_t method, const char *url,
-                            const char *body, char *buffer, size_t buffer_size)
+hawkbit_http_perform_update(esp_http_client_method_t method,
+                            oc_string_view_t url, const char *body,
+                            oc_string_view_t cert, char *buffer,
+                            size_t buffer_size)
 {
-  assert(url != NULL);
-  if (method != HTTP_METHOD_POST && method != HTTP_METHOD_PUT) {
-    APP_ERR("invalid method(%d)", (int)method);
-    return -1;
-  }
+  assert(url.data != NULL);
+  assert(method == HTTP_METHOD_POST || method == HTTP_METHOD_PUT);
+
   hawkbit_http_buffer_t data = {
     .data = buffer,
     .size = buffer_size,
   };
   esp_http_client_handle_t client =
-    hawkbit_prepare_client(hawkbit_get_client_config(url, &data), method,
-                           "application/hal+json", "application/json");
+    hawkbit_prepare_client(hawkbit_get_client_config(url.data, cert, &data),
+                           method, "application/hal+json", "application/json");
   if (client == NULL) {
     APP_ERR("perform HTTP %s failed: failed to get http client",
             method == HTTP_METHOD_POST ? "POST" : "GET");
@@ -214,17 +223,19 @@ hawkbit_http_perform_update(esp_http_client_method_t method, const char *url,
 }
 
 int
-hawkbit_http_perform_post(const char *url, const char *body, char *buffer,
+hawkbit_http_perform_post(oc_string_view_t url, const char *body,
+                          oc_string_view_t cert, char *buffer,
                           size_t buffer_size)
 {
-  return hawkbit_http_perform_update(HTTP_METHOD_POST, url, body, buffer,
+  return hawkbit_http_perform_update(HTTP_METHOD_POST, url, body, cert, buffer,
                                      buffer_size);
 }
 
 int
-hawkbit_http_perform_put(const char *url, const char *body, char *buffer,
+hawkbit_http_perform_put(oc_string_view_t url, const char *body,
+                         oc_string_view_t cert, char *buffer,
                          size_t buffer_size)
 {
-  return hawkbit_http_perform_update(HTTP_METHOD_PUT, url, body, buffer,
+  return hawkbit_http_perform_update(HTTP_METHOD_PUT, url, body, cert, buffer,
                                      buffer_size);
 }

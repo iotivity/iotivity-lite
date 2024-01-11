@@ -22,6 +22,7 @@
 
 #include "hawkbit_deployment.h"
 #include "oc_helpers.h"
+#include "util/oc_compiler.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,10 +69,10 @@ const char *hawkbit_action_type_to_string(hawkbit_action_type_t action);
 hawkbit_action_t hawkbit_action_none();
 
 /** Create cancel action */
-hawkbit_action_t hawkbit_action_cancel(const char *id);
+hawkbit_action_t hawkbit_action_cancel(const char *id) OC_NONNULL();
 
 /** Create configure action */
-hawkbit_action_t hawkbit_action_configure(const char *url);
+hawkbit_action_t hawkbit_action_configure(const char *url) OC_NONNULL();
 
 /** Create deploy action */
 hawkbit_action_t hawkbit_action_deploy(hawkbit_deployment_t deployment);
@@ -79,7 +80,7 @@ hawkbit_action_t hawkbit_action_deploy(hawkbit_deployment_t deployment);
 /**
  * @brief Deallocate data for given action type
  *
- * @param action action to free (cannot be NULL)
+ * @param action action to free
  */
 void hawkbit_action_free(hawkbit_action_t *action);
 

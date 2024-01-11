@@ -243,6 +243,9 @@ hawkbit_deployment_get_chunk(const cJSON *json,
 void
 hawkbit_deployment_free(hawkbit_deployment_t *deployment)
 {
+  if (deployment == NULL) {
+    return;
+  }
   hawkbit_deployment_chunk_free(&deployment->chunk);
   oc_free_string(&deployment->id);
 }

@@ -19,10 +19,27 @@ config SNTP_TIME_SERVER
     help
         Hostname of the main SNTP server.
 
-config OC_DEBUG
-    bool "OC_DEBUG"
+choice OC_LOG_MAXIMUM_LEVEL
+    prompt "Maximal log level"
+    default OC_LOG_LEVEL_INFO
     help
-        enable or disable IoTivity-constrained debug
+        set compile-time IoTivity-constrained log level
+
+    config OC_LOG_LEVEL_DISABLED
+        bool "Disabled"
+    config OC_LOG_LEVEL_ERROR
+        bool "Error"
+    config OC_LOG_LEVEL_WARNING
+        bool "Warning"
+    config OC_LOG_LEVEL_NOTICE
+        bool "Notice"
+    config OC_LOG_LEVEL_INFO
+        bool "Info"
+    config OC_LOG_LEVEL_DEBUG
+        bool "Debug"
+    config OC_LOG_LEVEL_TRACE
+        bool "Trace"
+endchoice
 
 config APP_DEBUG
     bool "APP_DEBUG"

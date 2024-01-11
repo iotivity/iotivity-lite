@@ -23,6 +23,8 @@
 #include "oc_helpers.h"
 #include "port/oc_assert.h"
 #include "util/oc_memb.h"
+
+#include <assert.h>
 #include <stddef.h>
 
 typedef struct hawkbit_download_t
@@ -91,51 +93,44 @@ hawkbit_download_free(hawkbit_download_t *download)
   oc_memb_free(&g_hawkbit_download_s, download);
 }
 
-const char *
+oc_string_view_t
 hawkbit_download_get_deployment_id(const hawkbit_download_t *download)
 {
-  assert(download != NULL);
-  return oc_string(download->deployment_id);
+  return oc_string_view2(&download->deployment_id);
 }
 
-const char *
+oc_string_view_t
 hawkbit_download_get_version(const hawkbit_download_t *download)
 {
-  assert(download != NULL);
-  return oc_string(download->version);
+  return oc_string_view2(&download->version);
 }
 
-const char *
+oc_string_view_t
 hawkbit_download_get_name(const hawkbit_download_t *download)
 {
-  assert(download != NULL);
-  return oc_string(download->name);
+  return oc_string_view2(&download->name);
 }
 
-const char *
+oc_string_view_t
 hawkbit_download_get_filename(const hawkbit_download_t *download)
 {
-  assert(download != NULL);
-  return oc_string(download->filename);
+  return oc_string_view2(&download->filename);
 }
 
 size_t
 hawkbit_download_get_size(const hawkbit_download_t *download)
 {
-  assert(download != NULL);
   return download->size;
 }
 
 hawkbit_sha256_digest_t
 hawkbit_download_get_hash(const hawkbit_download_t *download)
 {
-  assert(download != NULL);
   return download->hash;
 }
 
 hawkbit_download_links_t
 hawkbit_download_get_links(const hawkbit_download_t *download)
 {
-  assert(download != NULL);
   return download->links;
 }

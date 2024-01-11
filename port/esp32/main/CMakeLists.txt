@@ -90,20 +90,33 @@ set(sources
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
+set(OC_DEFINITIONS -DOC_SERVER -DOC_CLIENT)
 if(CONFIG_APP_DEBUG)
-	add_definitions(-DAPP_DEBUG)
+	list(APPEND OC_DEFINITIONS -DAPP_DEBUG)
 endif()
 
-if(CONFIG_OC_DEBUG)
-	add_definitions(-DOC_DEBUG -DOC_LOG_MAXIMUM_LEVEL=8)
+if(CONFIG_OC_LOG_LEVEL_DISABLED)
+	list(APPEND OC_DEFINITIONS "-DOC_LOG_MAXIMUM_LEVEL=(-1)")
+elseif(CONFIG_OC_LOG_LEVEL_ERROR)
+	list(APPEND OC_DEFINITIONS "-DOC_LOG_MAXIMUM_LEVEL=(3)")
+elseif(CONFIG_OC_LOG_LEVEL_WARNING)
+	list(APPEND OC_DEFINITIONS "-DOC_LOG_MAXIMUM_LEVEL=(4)")
+elseif(CONFIG_OC_LOG_LEVEL_NOTICE)
+	list(APPEND OC_DEFINITIONS "-DOC_LOG_MAXIMUM_LEVEL=(5)")
+elseif(CONFIG_OC_LOG_LEVEL_INFO)
+	list(APPEND OC_DEFINITIONS "-DOC_LOG_MAXIMUM_LEVEL=(6)")
+elseif(CONFIG_OC_LOG_LEVEL_DEBUG)
+	list(APPEND OC_DEFINITIONS "-DOC_LOG_MAXIMUM_LEVEL=(7)")
+elseif(CONFIG_OC_LOG_LEVEL_TRACE)
+	list(APPEND OC_DEFINITIONS "-DOC_LOG_MAXIMUM_LEVEL=(8)")
 endif()
 
 if(CONFIG_IPV4)
-	add_definitions(-DOC_IPV4)
+	list(APPEND OC_DEFINITIONS -DOC_IPV4)
 endif()
 
 if (CONFIG_TCP)
-	add_definitions(-DOC_TCP)
+	list(APPEND OC_DEFINITIONS -DOC_TCP)
 	list(APPEND sources
 		${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/tcpadapter.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_tcp.c
@@ -112,7 +125,7 @@ if (CONFIG_TCP)
 endif()
 
 if (CONFIG_CLOUD)
-	add_definitions(-DOC_CLOUD -DOC_DYNAMIC_ALLOCATION -DOC_IPV4)
+	list(APPEND OC_DEFINITIONS -DOC_CLOUD -DOC_DYNAMIC_ALLOCATION -DOC_IPV4)
 	list(APPEND sources
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_access.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_apis.c
@@ -139,12 +152,14 @@ if(CONFIG_PLGD_DEV_HAWKBIT OR CONFIG_SECURE)
 endif()
 
 if(CONFIG_PLGD_DEV_HAWKBIT)
-	add_definitions(-DOC_SOFTWARE_UPDATE -DPLGD_DEV_HAWKBIT)
+	list(APPEND OC_DEFINITIONS -DOC_SOFTWARE_UPDATE -DPLGD_DEV_HAWKBIT)
 	list(APPEND sources
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_swupdate.c
 
 		${CMAKE_CURRENT_SOURCE_DIR}/../hawkbit/hawkbit.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../hawkbit/hawkbit_action.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../hawkbit/hawkbit_buffer.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../hawkbit/hawkbit_certificate.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../hawkbit/hawkbit_context.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../hawkbit/hawkbit_deployment.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../hawkbit/hawkbit_download.c
@@ -159,14 +174,14 @@ if(CONFIG_PLGD_DEV_HAWKBIT)
 endif()
 
 if(CONFIG_DYNAMIC)
-	add_definitions(-DOC_DYNAMIC_ALLOCATION)
+	list(APPEND OC_DEFINITIONS -DOC_DYNAMIC_ALLOCATION)
 	list(APPEND sources
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_collection.c
 	)
 endif()
 
 if(CONFIG_SECURE)
-	add_definitions(-DOC_SECURITY -DOC_PKI)
+	list(APPEND OC_DEFINITIONS -DOC_SECURITY -DOC_PKI)
 	list(APPEND sources
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_acl.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_ael.c
@@ -175,6 +190,7 @@ if(CONFIG_SECURE)
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_certs_generate.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_certs_validate.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_cred.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_cred_util.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_csr.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_doxm.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_entropy.c
@@ -197,20 +213,18 @@ if(CONFIG_SECURE)
 endif()
 
 if (CONFIG_ETAG)
-	add_definitions(-DOC_ETAG)
+	list(APPEND OC_DEFINITIONS -DOC_ETAG)
 	list(APPEND sources
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/oc_etag.c
 	)
 endif()
 
 if (CONFIG_PLGD_DEV_TIME)
-	add_definitions(-DPLGD_DEV_TIME)
+	list(APPEND OC_DEFINITIONS -DPLGD_DEV_TIME)
 	list(APPEND sources
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/plgd/plgd_time.c
 	)
 endif()
-
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-format-truncation")
 
 idf_component_register(
 	SRCS
@@ -219,7 +233,4 @@ idf_component_register(
 		${includes}
 )
 
-set_source_files_properties(${sources}
-	PROPERTIES COMPILE_FLAGS
-	"-DOC_SERVER -DOC_CLIENT"
-)
+idf_build_set_property(COMPILE_OPTIONS "${OC_DEFINITIONS}" APPEND)
