@@ -155,7 +155,7 @@ oc_sec_svr_free(void)
   oc_sec_sdi_free();
   oc_sec_sp_free();
   oc_sec_ael_free();
-  oc_sec_cred_free();
+  oc_sec_cred_deinit();
   oc_sec_acl_free();
   oc_sec_pstat_free();
   oc_sec_doxm_free();

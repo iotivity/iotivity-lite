@@ -21,7 +21,9 @@
 #include "debug_print.h"
 #include "hawkbit_context.h"
 #include "hawkbit.h"
+
 #include "oc_api.h"
+#include "oc_cloud.h"
 #include "oc_ri.h"
 
 static void

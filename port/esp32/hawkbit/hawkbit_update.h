@@ -20,8 +20,12 @@
 #ifndef HAWKBIT_UPDATE_H
 #define HAWKBIT_UPDATE_H
 
+#include "api/oc_helpers_internal.h"
 #include "oc_helpers.h"
+#include "util/oc_compiler.h"
+
 #include <esp_image_format.h>
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -43,12 +47,10 @@ typedef struct
 } hawkbit_async_update_t;
 
 /** @brief Create instance with given data */
-hawkbit_async_update_t hawkbit_update_create(const char *deployment_id,
-                                             const char *version,
-                                             const uint8_t *sha256,
-                                             size_t sha256_size,
-                                             const uint8_t *partition_sha256,
-                                             size_t partition_sha256_size);
+hawkbit_async_update_t hawkbit_update_create(
+  oc_string_view_t deployment_id, oc_string_view_t version,
+  const uint8_t *sha256, size_t sha256_size, const uint8_t *partition_sha256,
+  size_t partition_sha256_size) OC_NONNULL();
 
 /** @brief Deallocate instance data */
 void hawkbit_update_free(hawkbit_async_update_t *update);

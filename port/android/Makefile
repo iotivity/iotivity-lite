@@ -230,10 +230,7 @@ OBT = onboarding_tool
 EXTRA_CFLAGS = -DOC_SIMPLE_MAIN_LOOP
 ifeq ($(DEBUG),1)
 	CFLAGS += -g -O0
-	EXTRA_CFLAGS += -DOC_DEBUG -DOC_LOG_MAXIMUM_LEVEL=8
-ifeq ($(DEBUG_TLS),1)
-	EXTRA_CFLAGS += -DOC_DEBUG_TLS
-endif
+	EXTRA_CFLAGS += -DOC_LOG_MAXIMUM_LEVEL=8
 else
 
 # don't use these options on github
@@ -272,8 +269,9 @@ ifeq ($(PLGD_DEV_TIME),1)
 endif
 
 ifneq ($(SECURE),0)
-	SRC += $(addprefix ../../security/, oc_acl.c oc_ael.c oc_audit.c oc_certs.c oc_certs_generate.c oc_certs_validate.c oc_cred.c oc_csr.c oc_doxm.c oc_entropy.c \
-			oc_keypair.c oc_pki.c oc_pstat.c oc_roles.c oc_sdi.c oc_security.c oc_sp.c oc_store.c oc_svr.c oc_tls.c)
+	SRC += $(addprefix ../../security/, oc_acl.c oc_ael.c oc_audit.c oc_certs.c oc_certs_generate.c oc_certs_validate.c \
+			oc_cred.c oc_cred_util.c oc_csr.c oc_doxm.c oc_entropy.c oc_keypair.c oc_pki.c oc_pstat.c oc_roles.c oc_sdi.c \
+			oc_security.c oc_sp.c oc_store.c oc_svr.c oc_tls.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
 ifeq ($(DYNAMIC),1)
@@ -419,7 +417,7 @@ swig: $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	${MAKE} -C ${SWIG_DIR}
 
 ifneq ($(SECURE),0)
-MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch) $(wildcard ../../patches/make/*.patch))
+MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/mbedtls/3.1/*.patch) $(wildcard ../../patches/mbedtls/3.1/make/*.patch))
 ${MBEDTLS_DIR}/.git:
 	git submodule update --init ${@D}
 

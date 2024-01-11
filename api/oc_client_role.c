@@ -22,7 +22,9 @@
 
 #include "oc_role.h"
 #include "port/oc_log_internal.h"
+#include "security/oc_cred_util_internal.h"
 #include "security/oc_roles_internal.h"
+#include "util/oc_secure_string_internal.h"
 
 oc_role_t *
 oc_get_all_roles(void)
@@ -65,10 +67,23 @@ oc_assert_role(const char *role, const char *authority,
   if (oc_tls_uses_psk_cred(oc_tls_get_peer(endpoint))) {
     return false;
   }
-  const oc_sec_cred_t *cr =
-    oc_sec_find_role_cred(/*start*/ NULL, role, authority,
-                          /*tag*/ NULL); // ignore tag, we want to serialize
-                                         // only the [role,authority] pairs
+
+  oc_string_view_t role_view =
+    oc_string_view(role, oc_strnlen_s(role, OC_MAX_STRING_LENGTH));
+  if (role_view.data == NULL || role_view.length == OC_MAX_STRING_LENGTH) {
+    OC_ERR("invalid role");
+    return false;
+  }
+  oc_string_view_t authority_view =
+    oc_string_view(authority, oc_strnlen_s(authority, OC_MAX_STRING_LENGTH));
+  if (authority_view.length == OC_MAX_STRING_LENGTH) {
+    OC_ERR("invalid authority");
+    return false;
+  }
+  const oc_sec_cred_t *cr = oc_sec_find_role_cred(
+    /*start*/ NULL, role_view, authority_view,
+    /*tag*/ OC_STRING_VIEW_NULL); // ignore tag, we want to serialize
+                                  // only the [role,authority] pairs
   if (cr == NULL) {
     OC_ERR("no role was found");
     return false;
@@ -112,9 +127,10 @@ oc_assert_all_roles(const oc_endpoint_t *endpoint,
 
   while (roles) {
     const oc_sec_cred_t *cr = oc_sec_find_role_cred(
-      /*start*/ NULL, oc_string(roles->role), oc_string(roles->authority),
-      /*tag*/ NULL); // ignore tag, we want to serialize only the
-                     // [role,authority] pairs
+      /*start*/ NULL, oc_string_view2(&roles->role),
+      oc_string_view2(&roles->authority),
+      /*tag*/ OC_STRING_VIEW_NULL); // ignore tag, we want to serialize only the
+                                    // [role,authority] pairs
     if (cr != NULL) {
       serialize_role_credential(&roles_array, cr);
     }

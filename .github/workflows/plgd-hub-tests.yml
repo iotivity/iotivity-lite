@@ -199,7 +199,7 @@ jobs:
     uses: ./.github/workflows/plgd-hub-test-with-cfg.yml
     with:
       name: ${{ matrix.name }}
-      build_args: -DOC_DEBUG_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON ${{ matrix.build_args }}
+      build_args: -DOC_DEBUG_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON ${{ matrix.build_args }}
       build_type: ${{ (github.event_name == 'workflow_dispatch' && inputs.build_type) || (matrix.build_type || 'Debug') }}
       hub_args: ${{ matrix.hub_args }}
       args: ${{ matrix.args }}

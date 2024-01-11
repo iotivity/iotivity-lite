@@ -44,81 +44,72 @@ bool oc_certs_is_PEM(const unsigned char *cert, size_t cert_len);
 /**
  * @brief Extract serial number in a printable form from a x509 certificate.
  *
- * @param[in] cert certificate with the serial number (cannot be NULL)
- * @param[out] buffer output buffer to store the serial number
- * @param[in] buffer_size size of the output buffer
+ * @param cert x509 certificate in PEM string format
+ * @param cert_size length of the PEM string
+ * @param buffer output buffer to store the serial number
+ * @param buffer_size size of the output buffer
  * @return <0 on error
  * @return >=0 on success, length of the string written (not including the
- * terminating nul byte)
+ * terminating null byte)
  */
-int oc_certs_extract_serial_number(const mbedtls_x509_crt *cert, char *buffer,
-                                   size_t buffer_size);
-
-/// @brief Parse PEM string into a x509 certificate and extract serial number in
-/// a printable form.
-/// @see oc_certs_extract_serial_number
 int oc_certs_parse_serial_number(const unsigned char *cert, size_t cert_size,
-                                 char *buffer, size_t buffer_size);
+                                 char *buffer, size_t buffer_size)
+  OC_NONNULL(3);
 
 /**
  * @brief Extract private key from a x509 certificate.
  *
- * @param[in] cert certificate with the private key (cannot be NULL)
+ * @param device device index (use if oc_pki_set_pk_functions was used to
+ * introduce pk functions overrides)
+ * @param cert x509 certificate in PEM string format
+ * @param cert_size length of the PEM string
  * @param[out] buffer output buffer to store the key (cannot be NULL)
- * @param[in] buffer_size size of the output buffer
+ * @param buffer_size size of the output buffer
  * @return <0 on error
  * @return >=0 on success, length of data written
  */
-int oc_certs_extract_private_key(size_t device, const mbedtls_x509_crt *cert,
-                                 unsigned char *buffer, size_t buffer_size);
-
-/// @brief Parse PEM string into a x509 certificate and extract public key
-/// @see oc_certs_extract_private_key
 int oc_certs_parse_private_key(size_t device, const unsigned char *cert,
                                size_t cert_size, unsigned char *buffer,
-                               size_t buffer_size);
+                               size_t buffer_size) OC_NONNULL(4);
 
 /**
  * @brief Extract public key from a x509 certificate.
  *
- * @param[in] cert certificate with the public key (cannot be NULL)
+ * @param cert x509 certificate in PEM string format
+ * @param cert_size length of the PEM string
  * @param[out] buffer output buffer to store the key (cannot be NULL)
- * @param[in] buffer_size size of the output buffer
+ * @param buffer_size size of the output buffer
  * @return <0 on error
  * @return >=0 on success, length of data written
  */
-int oc_certs_extract_public_key(const mbedtls_x509_crt *cert,
-                                unsigned char *buffer, size_t buffer_size);
+int oc_certs_parse_public_key(const unsigned char *cert, size_t cert_size,
+                              unsigned char *buffer, size_t buffer_size)
+  OC_NONNULL(3);
 
 /// Extract public key from a x509 certificate to an oc_string_t.
-/// @see oc_certs_extract_public_key
+/// @see oc_certs_parse_public_key
 int oc_certs_extract_public_key_to_oc_string(const mbedtls_x509_crt *cert,
-                                             oc_string_t *buffer);
-
-/// @brief Parse PEM string into a x509 certificate and extract public key.
-/// @see oc_certs_extract_public_key.
-int oc_certs_parse_public_key(const unsigned char *cert, size_t cert_size,
-                              unsigned char *buffer, size_t buffer_size);
+                                             oc_string_t *buffer) OC_NONNULL();
 
 /// Parse PEM string into a x509 certificate and extract public key to an
 /// oc_string_t.
 /// @see oc_certs_parse_public_key
 int oc_certs_parse_public_key_to_oc_string(const unsigned char *cert,
                                            size_t cert_size,
-                                           oc_string_t *buffer);
+                                           oc_string_t *buffer) OC_NONNULL(3);
 
 /**
  * @brief Encode UUID into a nul-terminated C-String for a Common Name field of
  * a certificate.
  *
  * @param[in] uuid UUID to encode (cannot be NULL)
- * @param[out] buf output buffer to store the encoded UUID
+ * @param[out] buf output buffer to store the encoded UUID (cannot be NULL)
  * @param[in] buf_len size of the output buffer
  * @return true on success
  * @return false on failure
  */
 bool oc_certs_encode_CN_with_UUID(const oc_uuid_t *uuid, char *buf,
-                                  size_t buf_len);
+                                  size_t buf_len) OC_NONNULL();
 
 /** @brief Helper function to extract encoded UUID in a mbedTLS buffer */
 bool oc_certs_parse_CN_buffer_for_UUID(mbedtls_asn1_buf val, char *buffer,
@@ -135,19 +126,19 @@ bool oc_certs_parse_CN_buffer_for_UUID(mbedtls_asn1_buf val, char *buffer,
  * @return =0 on success
  */
 bool oc_certs_extract_CN_for_UUID(const mbedtls_x509_crt *cert, char *buffer,
-                                  size_t buffer_size);
+                                  size_t buffer_size) OC_NONNULL();
 
 /// @brief Parse PEM string into a x509 certificate and extract uuid stored in
 /// the subject's Common Name field.
 /// @see oc_certs_extract_CN_for_UUID.
 bool oc_certs_parse_CN_for_UUID(const unsigned char *cert, size_t cert_size,
-                                char *buffer, size_t buffer_size);
-
+                                char *buffer, size_t buffer_size) OC_NONNULL();
 /**
  * @brief Extract the first role and authority pair from Common Name and
  * Organizational Unit fields of a certificate.
  *
- * @param[in] cert the certificate to examine (cannot be NULL)
+ * @param cert x509 certificate in PEM string format
+ * @param cert_size length of the PEM string
  * @param[out] role output variable to store the parsed role (cannot be NULL,
  * must be deallocated by the caller)
  * @param[out] authority output variable to store the parsed role (cannot be
@@ -155,12 +146,6 @@ bool oc_certs_parse_CN_for_UUID(const unsigned char *cert, size_t cert_size,
  * @return true on success
  * @return false on error
  */
-bool oc_certs_extract_first_role(const mbedtls_x509_crt *cert,
-                                 oc_string_t *role, oc_string_t *authority);
-
-/// @brief Parse PEM string into a x509 certificate and extract the first role
-/// and authority pair from fields of the certificate.
-/// @see oc_certs_extract_first_role.
 bool oc_certs_parse_first_role(const unsigned char *cert, size_t cert_size,
                                oc_string_t *role, oc_string_t *authority);
 
@@ -170,14 +155,9 @@ timestamp_t oc_certs_timestamp_now(void);
 /// Convert mbedtls_x509_time to UNIX timestamp
 uint64_t oc_certs_time_to_unix_timestamp(mbedtls_x509_time time);
 
-/// Serialize certificate chain to PEM string
-int oc_certs_serialize_chain_to_pem(const mbedtls_x509_crt *cert_chain,
-                                    char *output_buffer,
-                                    size_t output_buffer_len);
-
 /// Check if the child certificate has been issued by the other certificate
-int oc_certs_is_subject_the_issuer(const mbedtls_x509_crt *issuer,
-                                   const mbedtls_x509_crt *child);
+bool oc_certs_is_subject_the_issuer(const mbedtls_x509_crt *issuer,
+                                    const mbedtls_x509_crt *child);
 
 /**
  * @brief Parse role certificate from a PEM string.
@@ -193,6 +173,15 @@ int oc_certs_is_subject_the_issuer(const mbedtls_x509_crt *issuer,
 int oc_certs_parse_role_certificate(const unsigned char *rcert,
                                     size_t rcert_size, oc_sec_cred_t *role_cred,
                                     bool roles_resource);
+
+#ifdef OC_TEST
+
+/// Serialize certificate chain to PEM string
+int oc_certs_serialize_chain_to_pem(const mbedtls_x509_crt *cert_chain,
+                                    char *output_buffer,
+                                    size_t output_buffer_len) OC_NONNULL();
+
+#endif /* OC_TEST */
 
 #ifdef __cplusplus
 }

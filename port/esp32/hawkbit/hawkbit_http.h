@@ -20,7 +20,10 @@
 #ifndef HAWKBIT_HTTP_H
 #define HAWKBIT_HTTP_H
 
-#include "esp_http_client.h"
+#include "api/oc_helpers_internal.h"
+#include "util/oc_compiler.h"
+
+#include <esp_http_client.h>
 
 #include <stddef.h>
 
@@ -28,45 +31,51 @@
 extern "C" {
 #endif
 
-#define HAWKBIT_HTTP_CODE_OK 200
-#define HAWKBIT_HTTP_MAX_OUTPUT_BUFFER 2048
+#define HAWKBIT_HTTP_CODE_OK (200)
+#define HAWKBIT_HTTP_MAX_OUTPUT_BUFFER (2048)
 
 /**
  * @brief Perform GET request and store response to buffer.
  *
- * @param[in] url request url
+ * @param url request url (cannot be empty)
+ * @param cert certificate in PEM format (for HTTPS)
  * @param[out] buffer output buffer (cannot be NULL)
- * @param[in] buffer_size size of the output buffer
+ * @param buffer_size size of the output buffer
  * @return -1 on error
  * @return >=0 on success, status code
  */
-int hawkbit_http_perform_get(const char *url, char *buffer, size_t buffer_size);
+int hawkbit_http_perform_get(oc_string_view_t url, oc_string_view_t cert,
+                             char *buffer, size_t buffer_size) OC_NONNULL(3);
 
 /**
  * @brief Perform POST request and store response to buffer.
  *
- * @param[in] url request url
- * @param[in] body request body
+ * @param url request url (cannot be empty)
+ * @param body request body
+ * @param cert certificate in PEM format (for HTTPS)
  * @param[out] buffer output buffer (cannot be NULL)
- * @param[in] buffer_size size of the output buffer
+ * @param buffer_size size of the output buffer
  * @return -1 on error
  * @return >=0 on success, status code
  */
-int hawkbit_http_perform_post(const char *url, const char *body, char *buffer,
-                              size_t buffer_size);
+int hawkbit_http_perform_post(oc_string_view_t url, const char *body,
+                              oc_string_view_t cert, char *buffer,
+                              size_t buffer_size) OC_NONNULL(4);
 
 /**
  * @brief Perform PUT request and store response to buffer.
  *
- * @param[in] url request url
- * @param[in] body request body
+ * @param url request url (cannot be empty)
+ * @param body request body
+ * @param cert certificate in PEM format (for HTTPS)
  * @param[out] buffer output buffer (cannot be NULL)
- * @param[in] buffer_size size of the output buffer
+ * @param buffer_size size of the output buffer
  * @return -1 on error
  * @return >=0 on success, status code
  */
-int hawkbit_http_perform_put(const char *url, const char *body, char *buffer,
-                             size_t buffer_size);
+int hawkbit_http_perform_put(oc_string_view_t url, const char *body,
+                             oc_string_view_t cert, char *buffer,
+                             size_t buffer_size) OC_NONNULL(4);
 
 #ifdef __cplusplus
 }

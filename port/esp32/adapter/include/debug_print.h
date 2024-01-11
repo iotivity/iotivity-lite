@@ -18,8 +18,6 @@
 extern "C" {
 #endif
 
-#define APP_PRINT(...) printf(__VA_ARGS__)
-
 /**
  * @brief  print current all macro information
  *
@@ -38,23 +36,7 @@ void print_macro_info();
  * @param[in]  message: the struct oc_message_t to print
  *
  */
-void print_message_info(oc_message_t *message);
-
-/**
- * @brief  print the data detail information
- *
- * print input data, print from data[0] to data[len-1], addtionally add notes
- * string
- *
- * @param[in]  data: input data pointer to print
- * @param[in]  len: data length
- * @param[in]  note: notes for read easily
- * @param[in]  mode: 0x00, 0x01, 0x10, 0x11 to decide the BINARY_SHOW &&
- * BYTES_SHOW
- *
- */
-void print_debug(const char *data, const unsigned int len, const char *note,
-                 int mode);
+void print_message_info(const oc_message_t *message);
 
 /**
  * @brief  print the fatal error information and cycle it
@@ -73,8 +55,8 @@ void print_debug(const char *data, const unsigned int len, const char *note,
 
 #define APP_LOG(level, ...)                                                    \
   do {                                                                         \
-    APP_PRINT("%s: %s <%s:%d>: ", level, __FILE__, __FUNCTION__, __LINE__);    \
-    APP_PRINT(__VA_ARGS__);                                                    \
+    printf("%s: %s <%s:%d>: ", level, __FILE__, __FUNCTION__, __LINE__);       \
+    printf(__VA_ARGS__);                                                       \
     printf("\n");                                                              \
   } while (0)
 #define APP_DBG(...) APP_LOG("DEBUG", __VA_ARGS__)

@@ -67,7 +67,7 @@ LDFLAG += -lm
 INSTALL_ANDROID_LIBS =
 
 ifeq ($(DEBUG),1)
-	EXTRA_FLAG += -DOC_DEBUG -g -O0
+	EXTRA_FLAG += -DOC_LOG_MAXIMUM_LEVEL=8 -g -O0
 endif
 
 ifeq ($(CLOUD),1)

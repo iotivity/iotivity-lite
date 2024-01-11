@@ -18,9 +18,13 @@
  ****************************************************************************/
 
 #include "debug_print.h"
+#include "hawkbit_buffer.h"
+#include "hawkbit_certificate.h"
 #include "hawkbit_feedback.h"
 #include "hawkbit_http.h"
 #include "hawkbit_internal.h"
+
+#include "api/oc_helpers_internal.h"
 
 #include <assert.h>
 #include <cJSON.h>
@@ -73,7 +77,8 @@ hawkbit_feedback_result_to_string(hawkbit_feedback_result_t result)
 }
 
 static bool
-hawkbit_send_feedback(const char *url, const char *id,
+hawkbit_send_feedback(const hawkbit_context_t *ctx, oc_string_view_t url,
+                      oc_string_view_t id,
                       hawkbit_feedback_execution_t execution,
                       hawkbit_feedback_result_t result)
 {
@@ -82,7 +87,7 @@ hawkbit_send_feedback(const char *url, const char *id,
     APP_ERR("send feedback error: cannot create root JSON object");
     return false;
   }
-  if (!cJSON_AddItemToObject(root, "id", cJSON_CreateString(id))) {
+  if (!cJSON_AddItemToObject(root, "id", cJSON_CreateString(id.data))) {
     APP_ERR("send feedback error: cannot set 'id' property object");
     return false;
   }
@@ -131,11 +136,39 @@ hawkbit_send_feedback(const char *url, const char *id,
     APP_ERR("send feedback error: cannot render JSON object");
     return false;
   }
+
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  hawkbit_buffer_t hb;
+  long pem_len = hawkbit_certificate_get_CA(hawkbit_get_device(ctx), &hb);
+  if (pem_len < 0) {
+    APP_ERR("cannot obtain certificate");
+    free(body);
+    return false;
+  }
+  oc_string_view_t pem = oc_string_view(hb.buffer, (size_t)pem_len);
+#else  /* !OC_SECURITY || !OC_PKI */
+  (void)ctx;
+  oc_string_view_t pem = OC_STRING_VIEW_NULL;
+#endif /* OC_SECURITY && OC_PKI */
+
   APP_DBG("send feedback payload: %s", body);
 
-  char output[HAWKBIT_HTTP_MAX_OUTPUT_BUFFER] = { 0 };
-  int code = hawkbit_http_perform_post(url, body, output, sizeof(output));
+  hawkbit_buffer_t output;
+  if (!hawkbit_buffer_init(&output, HAWKBIT_HTTP_MAX_OUTPUT_BUFFER)) {
+    APP_ERR("send feedback error: failed to allocate output buffer");
+#if defined(OC_SECURITY) && defined(OC_PKI)
+    hawkbit_buffer_free(&hb);
+#endif /* OC_SECURITY && OC_PKI */
+    free(body);
+    return false;
+  }
+  int code = hawkbit_http_perform_post(url, body, pem, output.buffer,
+                                       hawkbit_buffer_size(&output));
+  hawkbit_buffer_free(&output);
   free(body);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  hawkbit_buffer_free(&hb);
+#endif /* OC_SECURITY && OC_PKI */
   if (code != HAWKBIT_HTTP_CODE_OK) {
     APP_ERR("send feedback error: unexpected HTTP code(%d)", code);
     return false;
@@ -143,7 +176,7 @@ hawkbit_send_feedback(const char *url, const char *id,
   return true;
 }
 
-static bool
+static int
 hawkbit_feedback_get_url(const hawkbit_context_t *ctx, const char *action,
                          const char *actionId, char *buffer, size_t buffer_size)
 {
@@ -157,7 +190,7 @@ hawkbit_feedback_get_url(const hawkbit_context_t *ctx, const char *action,
   if (hawkbit_get_url(ctx, server_url, sizeof(server_url), tenant,
                       sizeof(tenant), controller_id,
                       sizeof(controller_id)) != HAWKBIT_OK) {
-    return false;
+    return -1;
   }
   int len =
     snprintf(buffer, buffer_size, "%s/%s/controller/v1/%s/%s/%s/feedback",
@@ -165,19 +198,22 @@ hawkbit_feedback_get_url(const hawkbit_context_t *ctx, const char *action,
 
   if (len < 0 || (size_t)len >= buffer_size) {
     APP_ERR("get feedback URL failed: %s", "cannot get URL");
-    return false;
+    return -1;
   }
-  return true;
+  return len;
 }
 
 bool
-hawkbit_send_deploy_feedback(const hawkbit_context_t *ctx, const char *id,
+hawkbit_send_deploy_feedback(const hawkbit_context_t *ctx, oc_string_view_t id,
                              hawkbit_feedback_execution_t execution,
                              hawkbit_feedback_result_t result)
 {
   char url[512];
-  if (!hawkbit_feedback_get_url(ctx, "deploymentBase", id, url, sizeof(url))) {
+  int url_len =
+    hawkbit_feedback_get_url(ctx, "deploymentBase", id.data, url, sizeof(url));
+  if (url_len < 0) {
     return false;
   }
-  return hawkbit_send_feedback(url, id, execution, result);
+  oc_string_view_t urlview = oc_string_view(url, url_len);
+  return hawkbit_send_feedback(ctx, urlview, id, execution, result);
 }

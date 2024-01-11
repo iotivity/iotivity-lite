@@ -193,28 +193,32 @@ TEST_F(TCPMessage, ValidateHeader)
   ValidateHeader(false, false, { 0xff, 2, 3, 4 });
 
 #ifdef OC_SECURITY
+#define SSL_MAJOR_VERSION_3 (3)
+#define SSL_MINOR_VERSION_1 (1)
+#define SSL_MINOR_VERSION_2 (2)
+#define SSL_MINOR_VERSION_3 (3)
+#define SSL_MINOR_VERSION_4 (4)
   ValidateHeader(false, true, nullptr, 0);
-  ValidateHeader(true, true,
-                 { MBEDTLS_SSL_MSG_HANDSHAKE, MBEDTLS_SSL_MAJOR_VERSION_3, 1 });
-  ValidateHeader(true, true,
-                 { MBEDTLS_SSL_MSG_HANDSHAKE, MBEDTLS_SSL_MAJOR_VERSION_3, 2 });
-  ValidateHeader(true, true,
-                 { MBEDTLS_SSL_MSG_HANDSHAKE, MBEDTLS_SSL_MAJOR_VERSION_3,
-                   MBEDTLS_SSL_MINOR_VERSION_3 });
-  ValidateHeader(true, true,
-                 { MBEDTLS_SSL_MSG_HANDSHAKE, MBEDTLS_SSL_MAJOR_VERSION_3,
-                   MBEDTLS_SSL_MINOR_VERSION_4 });
   ValidateHeader(
-    false, true,
-    { MBEDTLS_SSL_MSG_HANDSHAKE, 0xff, MBEDTLS_SSL_MINOR_VERSION_3 });
+    true, true,
+    { MBEDTLS_SSL_MSG_HANDSHAKE, SSL_MAJOR_VERSION_3, SSL_MINOR_VERSION_1 });
   ValidateHeader(
-    false, true,
-    { MBEDTLS_SSL_MSG_HANDSHAKE, MBEDTLS_SSL_MAJOR_VERSION_3, 0xff });
+    true, true,
+    { MBEDTLS_SSL_MSG_HANDSHAKE, SSL_MAJOR_VERSION_3, SSL_MINOR_VERSION_2 });
+  ValidateHeader(
+    true, true,
+    { MBEDTLS_SSL_MSG_HANDSHAKE, SSL_MAJOR_VERSION_3, SSL_MINOR_VERSION_3 });
+  ValidateHeader(
+    true, true,
+    { MBEDTLS_SSL_MSG_HANDSHAKE, SSL_MAJOR_VERSION_3, SSL_MINOR_VERSION_4 });
   ValidateHeader(false, true,
-                 { MBEDTLS_SSL_MSG_HANDSHAKE, MBEDTLS_SSL_MAJOR_VERSION_3 });
-  ValidateHeader(
-    false, true,
-    { 0xff, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3 });
+                 { MBEDTLS_SSL_MSG_HANDSHAKE, 0xff, SSL_MINOR_VERSION_3 });
+  ValidateHeader(false, true,
+                 { MBEDTLS_SSL_MSG_HANDSHAKE, SSL_MAJOR_VERSION_3, 0xff });
+  ValidateHeader(false, true,
+                 { MBEDTLS_SSL_MSG_HANDSHAKE, SSL_MAJOR_VERSION_3 });
+  ValidateHeader(false, true,
+                 { 0xff, SSL_MAJOR_VERSION_3, SSL_MINOR_VERSION_3 });
 #endif /* OC_SECURITY */
 }
 
@@ -258,9 +262,10 @@ TEST_F(TCPMessage, GetTotalLength)
   ASSERT_EQ(0, mbedtls_ssl_config_defaults(&conf, MBEDTLS_SSL_IS_CLIENT,
                                            MBEDTLS_SSL_TRANSPORT_STREAM,
                                            MBEDTLS_SSL_PRESET_DEFAULT));
+#if MBEDTLS_VERSION_NUMBER <= 0x03010000
   mbedtls_ssl_conf_min_version(&conf, MBEDTLS_SSL_MAJOR_VERSION_3,
                                MBEDTLS_SSL_MINOR_VERSION_3);
-
+#endif /* MBEDTLS_VERSION_NUMBER <= 0x03010000 */
   mbedtls_ssl_context ssl;
   mbedtls_ssl_init(&ssl);
   ASSERT_EQ(0, mbedtls_ssl_setup(&ssl, &conf));
@@ -277,8 +282,12 @@ TEST_F(TCPMessage, GetTotalLength)
     },
     nullptr, nullptr);
 
+#if MBEDTLS_VERSION_NUMBER <= 0x03010000
   ssl.major_ver = MBEDTLS_SSL_MAJOR_VERSION_3;
   ssl.minor_ver = MBEDTLS_SSL_MINOR_VERSION_3;
+#else  /* MBEDTLS_VERSION_NUMBER > 0x03010000 */
+  ssl.tls_version = MBEDTLS_SSL_VERSION_TLS1_2;
+#endif /* MBEDTLS_VERSION_NUMBER <= 0x03010000 */
   ssl.state = MBEDTLS_SSL_HANDSHAKE_OVER;
   std::vector<uint8_t> data{ 0x01, 0x02, 0x03, 0x04 };
   ASSERT_EQ(data.size(), mbedtls_ssl_write(&ssl, &data[0], data.size()));
@@ -288,9 +297,11 @@ TEST_F(TCPMessage, GetTotalLength)
   mbedtls_ssl_free(&ssl);
   mbedtls_ssl_config_free(&conf);
 
-  ValidateHeaderLength(-1, true,
-                       { MBEDTLS_SSL_MSG_HANDSHAKE, MBEDTLS_SSL_MAJOR_VERSION_3,
-                         MBEDTLS_SSL_MINOR_VERSION_3 });
+#define SSL_MAJOR_VERSION_3 (3)
+#define SSL_MINOR_VERSION_3 (3)
+  ValidateHeaderLength(
+    -1, true,
+    { MBEDTLS_SSL_MSG_HANDSHAKE, SSL_MAJOR_VERSION_3, SSL_MINOR_VERSION_3 });
 #endif /* OC_SECURITY */
 }
 

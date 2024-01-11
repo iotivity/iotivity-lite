@@ -132,8 +132,8 @@ typedef struct oc_sec_creds_t
  * @return true if security credential matches the filter
  * @return false otherwise
  */
-typedef bool (*oc_sec_cred_filter_t)(const oc_sec_cred_t *cred,
-                                     void *user_data);
+typedef bool (*oc_sec_cred_filter_t)(const oc_sec_cred_t *cred, void *user_data)
+  OC_NONNULL(1);
 
 #ifdef OC_PKI
 

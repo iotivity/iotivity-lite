@@ -41,6 +41,7 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_SECURITY is defined.
 #include "security/oc_acl_internal.h"
 #include "security/oc_certs_internal.h"
 #include "security/oc_cred_internal.h"
+#include "security/oc_cred_util_internal.h"
 #include "security/oc_csr_internal.h"
 #include "security/oc_doxm_internal.h"
 #include "security/oc_keypair_internal.h"
@@ -442,7 +443,7 @@ free_otm_state(oc_otm_ctx_t *o, int status, oc_obt_otm_t otm)
   if (status == -1) {
     char suuid[OC_UUID_LEN];
     oc_uuid_to_str(&o->device->uuid, suuid, OC_UUID_LEN);
-    oc_cred_remove_subject(suuid, 0);
+    oc_cred_remove_by_subject(suuid, 0);
     o->cb.cb(&o->device->uuid, status, o->cb.data);
     free_device(o->device);
   } else {
@@ -909,7 +910,7 @@ free_hard_reset_ctx(oc_hard_reset_ctx_t *ctx, int status)
     /* Remove device's credential from OBT's credential store */
     char subjectuuid[OC_UUID_LEN];
     oc_uuid_to_str(&ctx->device->uuid, subjectuuid, OC_UUID_LEN);
-    oc_cred_remove_subject(subjectuuid, 0);
+    oc_cred_remove_by_subject(subjectuuid, 0);
     cb.cb(&ctx->device->uuid, 0, cb.data);
   } else {
     cb.cb(&ctx->device->uuid, -1, cb.data);

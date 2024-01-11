@@ -32,6 +32,8 @@ endif
 ifeq ($(TSAN),1)
 	EXTRA_CFLAGS += -fsanitize=thread
 endif
+# for now use v3.1.0 as default
+MBEDTLS_FORCE_3_5_0 ?= 0
 
 TINYCBOR_DIR := $(ROOT_DIR)/deps/tinycbor
 MBEDTLS_DIR := $(ROOT_DIR)/deps/mbedtls
@@ -92,7 +94,7 @@ CLOUD_TEST_OBJ_FILES := $(patsubst $(CLOUD_TEST_DIR)/%.cpp,$(CLOUD_TEST_OBJ_DIR)
 
 UNIT_TESTS = apitest platformtest securitytest messagingtest
 
-DTLS= 	aes.c		aesni.c   	asn1parse.c	asn1write.c	base64.c	\
+DTLS = aes.c	aesni.c   	asn1parse.c	asn1write.c	base64.c	\
 	bignum.c	camellia.c	ccm.c		cipher.c	cipher_wrap.c	\
 	cmac.c		ctr_drbg.c	des.c		dhm.c		ecdh.c		ecdsa.c		\
 	ecjpake.c	ecp.c		ecp_curves.c	entropy.c	entropy_poll.c	error.c		\
@@ -102,10 +104,19 @@ DTLS= 	aes.c		aesni.c   	asn1parse.c	asn1write.c	base64.c	\
 	pkwrite.c	platform.c	ripemd160.c	rsa.c		sha1.c		sha256.c	\
 	sha512.c	threading.c	timing.c	version.c	version_features.c		\
 	x509.c 		x509_crt.c	debug.c		net_sockets.c	\
-	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c	platform_util.c	\
-	ssl_srv.c	ssl_ticket.c	ssl_tls.c	x509write_csr.c\
+	ssl_cache.c	ssl_ciphersuites.c		ssl_cookie.c	platform_util.c	\
+	ssl_ticket.c	ssl_tls.c	x509write_csr.c \
 	x509write_crt.c	x509_create.c	x509_csr.c ssl_msg.c constant_time.c \
 	nist_kw.c aria.c rsa_alt_helpers.c
+
+ifeq ($(MBEDTLS_FORCE_3_5_0),1)
+DTLS += bignum_core.c \
+		ssl_client.c ssl_debug_helpers_generated.c ssl_tls12_client.c ssl_tls12_server.c \
+		x509write.c
+else
+DTLS += ssl_cli.c ssl_srv.c
+endif
+
 DTLSFLAGS=-I../../deps/mbedtls/include -Wno-error=unused
 
 CBOR_DIR=../../deps/tinycbor/src
@@ -230,10 +241,7 @@ endif
 OBT = onboarding_tool
 
 ifeq ($(DEBUG),1)
-	EXTRA_CFLAGS += -DOC_DEBUG -DOC_LOG_MAXIMUM_LEVEL=8 -g -O0 
-ifeq ($(DEBUG_TLS),1)
-	EXTRA_CFLAGS += -DOC_DEBUG_TLS
-endif
+	EXTRA_CFLAGS += -DOC_LOG_MAXIMUM_LEVEL=8 -g -O0 
 else
 	CFLAGS += -Wl,--gc-sections
 	CXXFLAGS += -Wl,--gc-sections
@@ -284,9 +292,9 @@ ifeq ($(BRIDGE), 1)
 endif
 
 ifneq ($(SECURE),0)
-	SRC += $(addprefix ../../security/,	oc_acl.c oc_ael.c oc_audit.c oc_certs.c oc_certs_generate.c oc_certs_validate.c oc_cred.c oc_csr.c oc_doxm.c oc_entropy.c \
-			oc_keypair.c oc_oscore_engine.c oc_oscore_crypto.c oc_oscore_context.c oc_pki.c oc_pstat.c oc_roles.c oc_sdi.c \
-			oc_security.c oc_sp.c oc_store.c oc_svr.c oc_tls.c)
+	SRC += $(addprefix ../../security/,	oc_acl.c oc_ael.c oc_audit.c oc_certs.c oc_certs_generate.c oc_certs_validate.c \
+			oc_cred.c oc_cred_util.c oc_csr.c oc_doxm.c oc_entropy.c oc_keypair.c oc_oscore_engine.c oc_oscore_crypto.c \
+			 oc_oscore_context.c oc_pki.c oc_pstat.c oc_roles.c oc_sdi.c oc_security.c oc_sp.c oc_store.c oc_svr.c oc_tls.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
 ifeq ($(DYNAMIC),1)
@@ -694,21 +702,48 @@ swig: $(CONSTRAINED_LIBS) $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT_SERVER) 
 	${MAKE} -C ${SWIG_DIR}
 
 ifneq ($(SECURE),0)
-MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/*.patch) $(wildcard ../../patches/make/*.patch))
+
 ${MBEDTLS_DIR}/.git:
 	git submodule update --init ${@D}
 
+
+ifeq ($(MBEDTLS_FORCE_3_5_0),1)
+
+MBEDTLS_PATCHES := $(sort $(wildcard ../../patches/mbedtls/3.5/*.patch) $(wildcard ../../patches/mbedtls/3.5/make/*.patch))
+
 $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 	if [ -d ${MBEDTLS_DIR} ]; then \
+		cd ${MBEDTLS_DIR} && \
+		git clean -fdx . && \
+		git reset --hard && \
+		(git fetch --unshallow || git fetch --all) && \
+		git checkout v3.5.0 && \
+		cd - && \
+		git add -u ${MBEDTLS_DIR} ; \
+	fi && \
+	git submodule update --init && \
+	git reset HEAD ${MBEDTLS_DIR} && \
 	cd ${MBEDTLS_DIR} && \
-	git clean -fdx . && \
-	git reset --hard && \
-	cd -; \
+	for patch in $(MBEDTLS_PATCHES); do patch -r - -s -N -p1 < $${patch} ; done && \
+	echo "Patches applied in $^" > ${@F}
+
+else
+
+MBEDTLS_PATCHES := $(sort $(wildcard ../../patches/mbedtls/3.1/*.patch) $(wildcard ../../patches/mbedtls/3.1/make/*.patch))
+
+$(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
+	if [ -d ${MBEDTLS_DIR} ]; then \
+		cd ${MBEDTLS_DIR} && \
+		git clean -fdx . && \
+		git reset --hard && \
+		cd -; \
 	fi && \
 	git submodule update --init && \
 	cd ${MBEDTLS_DIR} && \
 	for patch in $(MBEDTLS_PATCHES); do patch -r - -s -N -p1 < $${patch} ; done && \
 	echo "Patches applied in $^" > ${@F}
+endif
+
 endif
 
 clean:

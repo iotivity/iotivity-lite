@@ -9,7 +9,7 @@ ccflags-y += -DOC_SECURITY
 endif
 
 ifeq ($(DEBUG),1)
-ccflags-y += -DOC_DEBUG
+ccflags-y += -DOC_LOG_MAXIMUM_LEVEL=8
 endif
 
 ifeq ($(CLIENT),1)

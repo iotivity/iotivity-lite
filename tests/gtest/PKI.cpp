@@ -18,14 +18,18 @@
 
 #ifdef OC_PKI
 
-#include "PKI.h"
 #include "oc_pki.h"
+#include "PKI.h"
 #include "port/oc_log_internal.h"
+#include "security/oc_certs_internal.h"
+#include "security/oc_entropy_internal.h"
 
+#include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <gtest/gtest.h>
 #include <string>
+#include <vector>
 
 namespace oc::pki {
 
@@ -48,6 +52,133 @@ ReadPem(const std::string &path)
   data.assign((std::istream_iterator<char>(f)), std::istream_iterator<char>());
   data.push_back('\0');
   return data;
+}
+
+#if defined(OC_DYNAMIC_ALLOCATION) || defined(OC_TEST)
+
+static constexpr std::string_view kRootSubjectName{ "IoTivity-Lite Test" };
+static const std::string kRootSubject{ "C=US, O=OCF, CN=" +
+                                       std::string(kRootSubjectName) };
+static const std::vector<uint8_t> kPersonalizationString{ 'I', 'o', 'T' };
+// 12/31/2029 23:59:59 to seconds since epoch
+static constexpr int64_t kNotAfter{ 1893455999 };
+
+std::vector<unsigned char>
+GenerateCertificate(const oc_certs_generate_t &generate)
+{
+  std::vector<unsigned char> cert_buf{};
+  cert_buf.resize(4096, '\0');
+  int err = oc_certs_generate(&generate, cert_buf.data(), cert_buf.size());
+  EXPECT_EQ(0, err);
+  if (err != 0) {
+    return {};
+  }
+
+  auto it = std::find(cert_buf.begin(), cert_buf.end(),
+                      static_cast<unsigned char>('\0'));
+  size_t data_len =
+    std::distance(cert_buf.begin(), it) + 1; // size with NULL terminator
+  if (cert_buf.end() == it || !oc_certs_is_PEM(&cert_buf[0], data_len)) {
+    return {};
+  }
+  cert_buf.resize(data_len);
+  return cert_buf;
+}
+
+std::vector<unsigned char>
+GenerateRootCertificate(const oc::keypair_t &kp)
+{
+  oc_certs_generate_t root_cert{};
+  root_cert.personalization_string = { kPersonalizationString.data(),
+                                       kPersonalizationString.size() };
+  root_cert.serial_number_size = 20;
+  root_cert.validity.not_before = oc_certs_timestamp_now();
+  root_cert.validity.not_after = { kNotAfter, 0, 0 };
+  root_cert.subject.name = kRootSubject.c_str();
+  root_cert.subject.public_key = { kp.public_key.data(), kp.public_key_size };
+  root_cert.subject.private_key = { kp.private_key.data(),
+                                    kp.private_key_size };
+  root_cert.signature_md = MBEDTLS_MD_SHA256;
+  root_cert.is_CA = true;
+  return GenerateCertificate(root_cert);
+}
+
+std::vector<unsigned char>
+GeneratIdentityCertificate(const oc::keypair_t &kp,
+                           const oc::keypair_t &issuer_kp)
+{
+  oc_uuid_t uuid{};
+  oc_gen_uuid(&uuid);
+  std::array<char, 50> subject{};
+  if (!oc_certs_encode_CN_with_UUID(&uuid, subject.data(), subject.size())) {
+    return {};
+  }
+
+  oc_certs_generate_t identity_cert{};
+  identity_cert.personalization_string = { kPersonalizationString.data(),
+                                           kPersonalizationString.size() };
+  identity_cert.serial_number_size = 20;
+  identity_cert.validity.not_before = oc_certs_timestamp_now();
+  identity_cert.validity.not_after = { kNotAfter, 0, 0 };
+  identity_cert.subject.name = subject.data();
+  identity_cert.subject.public_key = { kp.public_key.data(),
+                                       kp.public_key_size };
+  identity_cert.issuer.name = kRootSubject.c_str();
+  identity_cert.issuer.private_key = { issuer_kp.private_key.data(),
+                                       issuer_kp.private_key_size };
+  identity_cert.signature_md = MBEDTLS_MD_SHA256;
+  return GenerateCertificate(identity_cert);
+}
+
+#endif /* OC_DYNAMIC_ALLOCATION || OC_TEST */
+
+KeyParser::KeyParser()
+{
+  mbedtls_entropy_init(&entropy_ctx_);
+  oc_entropy_add_source(&entropy_ctx_);
+  mbedtls_ctr_drbg_init(&ctr_drbg_ctx_);
+  std::string pers = "test";
+  if (mbedtls_ctr_drbg_seed(
+        &ctr_drbg_ctx_, mbedtls_entropy_func, &entropy_ctx_,
+        reinterpret_cast<const unsigned char *>(pers.c_str()),
+        pers.length()) != 0) {
+    throw std::string("failed to initialize entropy function");
+  }
+}
+
+KeyParser::~KeyParser()
+{
+  mbedtls_entropy_free(&entropy_ctx_);
+  mbedtls_ctr_drbg_free(&ctr_drbg_ctx_);
+}
+
+std::vector<unsigned char>
+KeyParser::GetPrivateKey(const unsigned char *key, size_t keylen)
+{
+  mbedtls_pk_context pk;
+  mbedtls_pk_init(&pk);
+  if (mbedtls_pk_parse_key(&pk, key, keylen, nullptr, 0,
+                           mbedtls_ctr_drbg_random, &ctr_drbg_ctx_) != 0) {
+    mbedtls_pk_free(&pk);
+    return {};
+  }
+
+  std::vector<unsigned char> pem{};
+  pem.resize(1024);
+  if (mbedtls_pk_write_key_pem(&pk, &pem[0], pem.size()) != 0) {
+    mbedtls_pk_free(&pk);
+    return {};
+  }
+  mbedtls_pk_free(&pk);
+
+  auto it = std::find(pem.begin(), pem.end(), static_cast<unsigned char>('\0'));
+  if (pem.end() == it) {
+    return {};
+  }
+  size_t dataSize =
+    std::distance(pem.begin(), it) + 1; // include null terminator
+  pem.resize(dataSize);
+  return pem;
 }
 
 PemData::PemData(const std::string &path)

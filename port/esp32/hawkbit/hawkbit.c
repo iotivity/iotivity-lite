@@ -20,6 +20,8 @@
 #include "debug_print.h"
 #include "oc_esp.h"
 #include "hawkbit_action.h"
+#include "hawkbit_buffer.h"
+#include "hawkbit_certificate.h"
 #include "hawkbit_context.h"
 #include "hawkbit_deployment.h"
 #include "hawkbit_feedback.h"
@@ -28,6 +30,7 @@
 #include "hawkbit_json.h"
 #include "hawkbit_util.h"
 
+#include "api/oc_helpers_internal.h"
 #include "api/oc_swupdate_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
@@ -35,6 +38,7 @@
 #ifdef OC_SECURITY
 #include "oc_store.h"
 #include "security/oc_doxm_internal.h"
+#include "security/oc_cred_util_internal.h"
 #endif /* OC_SECURITY */
 
 #include <cJSON.h>
@@ -46,6 +50,7 @@
 #include <esp_partition.h>
 #include <esp_system.h>
 
+#include <assert.h>
 #include <errno.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -53,17 +58,43 @@
 #include <stdlib.h>
 
 static cJSON *
-hawkbit_fetch_by_http_get(const char *url)
+hawkbit_fetch_by_http_get(const hawkbit_context_t *ctx, oc_string_view_t url)
 {
-  char buffer[HAWKBIT_HTTP_MAX_OUTPUT_BUFFER] = { 0 };
-  int code = hawkbit_http_perform_get(url, buffer, sizeof(buffer));
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  hawkbit_buffer_t hb;
+  long pem_len = hawkbit_certificate_get_CA(hawkbit_get_device(ctx), &hb);
+  if (pem_len < 0) {
+    APP_ERR("cannot obtain certificate");
+    return false;
+  }
+  oc_string_view_t pem = oc_string_view(hb.buffer, (size_t)pem_len);
+#else  /* !OC_SECURITY || !OC_PKI */
+  (void)ctx;
+  oc_string_view_t pem = OC_STRING_VIEW_NULL;
+#endif /* OC_SECURITY && OC_PKI */
+
+  hawkbit_buffer_t output;
+  if (!hawkbit_buffer_init(&output, HAWKBIT_HTTP_MAX_OUTPUT_BUFFER)) {
+    APP_ERR("fetch by HTTP GET: failed to allocate output buffer");
+#if defined(OC_SECURITY) && defined(OC_PKI)
+    hawkbit_buffer_free(&hb);
+#endif /* OC_SECURITY && OC_PKI */
+    return false;
+  }
+  int code = hawkbit_http_perform_get(url, pem, output.buffer,
+                                      hawkbit_buffer_size(&output));
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  hawkbit_buffer_free(&hb);
+#endif /* OC_SECURITY && OC_PKI */
   if (code < 0 || code != HAWKBIT_HTTP_CODE_OK) {
     APP_ERR("fetch by HTTP GET: unexpected HTTP code(%d)", code);
+    hawkbit_buffer_free(&output);
     return NULL;
   }
 
-  APP_DBG("Fetch by HTTP GET payload: %s", buffer);
-  cJSON *root = cJSON_Parse(buffer);
+  APP_DBG("Fetch by HTTP GET payload: %s", output.buffer);
+  cJSON *root = cJSON_Parse(output.buffer);
+  hawkbit_buffer_free(&output);
   if (root == NULL) {
 #ifdef APP_DEBUG
     const char *json_error = cJSON_GetErrorPtr();
@@ -105,15 +136,18 @@ hawkbit_get_url_tenant(size_t device, hawkbit_url_t hurl, char *tenant,
     tenant[hurl.tenant_length] = '\0';
     return true;
   }
+  (void)device;
+#if 0
 #ifdef OC_SECURITY
+  // TODO: devowneruuid doesn't seem to work for hawkbit, check if the tenant_id
+  // must have some format
   const oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
   if (doxm->owned && tenant_size >= OC_UUID_LEN) {
     oc_uuid_to_str(&doxm->devowneruuid, tenant, tenant_size);
     return true;
   }
-#else  /* !OC_SECURITY */
-  (void)device;
 #endif /* OC_SECURITY */
+#endif
   return false;
 }
 
@@ -143,10 +177,6 @@ hawkbit_get_url(const hawkbit_context_t *ctx, char *server_url,
                 size_t server_url_size, char *tenant, size_t tenant_size,
                 char *controller_id, size_t controller_id_size)
 {
-  assert(server_url != NULL);
-  assert(tenant != NULL);
-  assert(controller_id != NULL);
-
   const char *purl = hawkbit_get_package_url(ctx);
   if (purl == NULL) {
     return HAWKBIT_ERROR_PACKAGE_URL_NOT_SET;
@@ -162,8 +192,6 @@ hawkbit_get_url(const hawkbit_context_t *ctx, char *server_url,
     return HAWKBIT_ERROR_GENERAL;
   }
 
-  // TODO: devowneruuid doesn't seem to work for hawkbit, check if the tenant_id
-  // must have some format
   if (!hawkbit_get_url_tenant(hawkbit_get_device(ctx), hurl, tenant,
                               tenant_size)) {
     APP_ERR("get URL failed: cannot get tenant");
@@ -181,7 +209,7 @@ hawkbit_get_url(const hawkbit_context_t *ctx, char *server_url,
   return HAWKBIT_OK;
 }
 
-static hawkbit_error_t
+static int
 hawkbit_base_resource_url(const hawkbit_context_t *ctx, char *buffer,
                           size_t buffer_size)
 {
@@ -201,15 +229,16 @@ hawkbit_base_resource_url(const hawkbit_context_t *ctx, char *buffer,
     APP_ERR("get resource URL failed: %s", "cannot get url");
     return HAWKBIT_ERROR_GENERAL;
   }
-  return HAWKBIT_OK;
+  return len;
 }
 
 static bool
-hawkbit_fetch_deployment(const char *url, hawkbit_deployment_t *deployment)
+hawkbit_fetch_deployment(const hawkbit_context_t *ctx, oc_string_view_t url,
+                         hawkbit_deployment_t *deployment)
 {
-  assert(url != NULL);
+  assert(url.data != NULL);
   assert(deployment != NULL);
-  cJSON *root = hawkbit_fetch_by_http_get(url);
+  cJSON *root = hawkbit_fetch_by_http_get(ctx, url);
   if (root == NULL) {
     return false;
   }
@@ -220,11 +249,12 @@ hawkbit_fetch_deployment(const char *url, hawkbit_deployment_t *deployment)
 }
 
 static bool
-hawkbit_fetch_cancel(const char *url, hawkbit_action_t *action)
+hawkbit_fetch_cancel(const hawkbit_context_t *ctx, oc_string_view_t url,
+                     hawkbit_action_t *action)
 {
-  assert(url != NULL);
+  assert(url.data != NULL);
   assert(action != NULL);
-  cJSON *root = hawkbit_fetch_by_http_get(url);
+  cJSON *root = hawkbit_fetch_by_http_get(ctx, url);
   if (root == NULL) {
     return false;
   }
@@ -296,16 +326,14 @@ hawkbit_error_t
 hawkbit_poll_base_resource(hawkbit_context_t *ctx, hawkbit_action_t *action,
                            hawkbit_configuration_t *cfg)
 {
-  assert(ctx != NULL);
-  assert(action != NULL);
-
   char url[256];
-  hawkbit_error_t err = hawkbit_base_resource_url(ctx, url, sizeof(url));
-  if (err != HAWKBIT_OK) {
-    return err;
+  int ret = hawkbit_base_resource_url(ctx, url, sizeof(url));
+  if (ret < 0) {
+    return (hawkbit_error_t)ret;
   }
   APP_DBG("Base resource URL: %s", url);
-  cJSON *root = hawkbit_fetch_by_http_get(url);
+  oc_string_view_t urlv = oc_string_view(url, (size_t)ret);
+  cJSON *root = hawkbit_fetch_by_http_get(ctx, urlv);
   if (root == NULL) {
     return HAWKBIT_ERROR_GENERAL;
   }
@@ -328,8 +356,9 @@ hawkbit_poll_base_resource(hawkbit_context_t *ctx, hawkbit_action_t *action,
     hawkbit_json_get_string(root, "_links.deploymentBase.href");
   if (href != NULL) {
     APP_DBG("Deployment URL: %s", href);
+    oc_string_view_t hrefv = oc_string_view(href, strlen(href));
     hawkbit_deployment_t deployment;
-    if (!hawkbit_fetch_deployment(href, &deployment)) {
+    if (!hawkbit_fetch_deployment(ctx, hrefv, &deployment)) {
       cJSON_Delete(root);
       return HAWKBIT_ERROR_GENERAL;
     }
@@ -350,7 +379,8 @@ hawkbit_poll_base_resource(hawkbit_context_t *ctx, hawkbit_action_t *action,
   href = hawkbit_json_get_string(root, "_links.cancelAction.href");
   if (href != NULL) {
     APP_DBG("Cancel URL: %s", href);
-    bool result = hawkbit_fetch_cancel(href, action);
+    oc_string_view_t hrefv = oc_string_view(href, strlen(href));
+    bool result = hawkbit_fetch_cancel(ctx, hrefv, action);
     cJSON_Delete(root);
     return result ? HAWKBIT_OK : HAWKBIT_ERROR_GENERAL;
   }
@@ -367,7 +397,7 @@ typedef struct
 } hawkbit_data_item_t;
 
 static bool
-hawkbit_configure(const hawkbit_context_t *ctx, const char *url)
+hawkbit_configure(const hawkbit_context_t *ctx, oc_string_view_t url)
 {
   oc_esp_mac_address_t mac;
   if (!oc_esp_get_mac_address(&mac)) {
@@ -408,12 +438,12 @@ hawkbit_configure(const hawkbit_context_t *ctx, const char *url)
   };
   const size_t data_size = sizeof(data) / sizeof(data[0]);
 
-  if (url == NULL || url[0] == '\0') {
+  if (url.data == NULL || url.data[0] == '\0') {
     APP_ERR("hawkbit configure error: invalid configuration URL");
     return -1;
   }
 
-  APP_DBG("hawkbit configure at href(%s)", url);
+  APP_DBG("hawkbit configure at href(%s)", url.data);
   cJSON *root = cJSON_CreateObject();
 
   // mode
@@ -445,9 +475,36 @@ hawkbit_configure(const hawkbit_context_t *ctx, const char *url)
     return false;
   }
 
-  char output[HAWKBIT_HTTP_MAX_OUTPUT_BUFFER] = { 0 };
-  int code = hawkbit_http_perform_put(url, body, output, sizeof(output));
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  hawkbit_buffer_t hb;
+  long pem_len = hawkbit_certificate_get_CA(hawkbit_get_device(ctx), &hb);
+  if (pem_len < 0) {
+    APP_ERR("cannot obtain certificate");
+    free(body);
+    return false;
+  }
+  oc_string_view_t pem = oc_string_view(hb.buffer, (size_t)pem_len);
+#else  /* !OC_SECURITY || !OC_PKI */
+  oc_string_view_t pem = OC_STRING_VIEW_NULL;
+#endif /* OC_SECURITY && OC_PKI */
+
+  hawkbit_buffer_t output;
+  if (!hawkbit_buffer_init(&output, HAWKBIT_HTTP_MAX_OUTPUT_BUFFER)) {
+    APP_ERR("hawkbit configure error: failed to allocate output buffer");
+#if defined(OC_SECURITY) && defined(OC_PKI)
+    hawkbit_buffer_free(&hb);
+#endif /* OC_SECURITY && OC_PKI */
+    free(body);
+    return false;
+  }
+  int code = hawkbit_http_perform_put(url, body, pem, output.buffer,
+                                      hawkbit_buffer_size(&output));
+  hawkbit_buffer_free(&output);
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  hawkbit_buffer_free(&hb);
+#endif /* OC_SECURITY && OC_PKI */
   free(body);
+
   if (code < 0 || code != HAWKBIT_HTTP_CODE_OK) {
     APP_ERR("hawkbit configure error: unexpected HTTP code(%d)", code);
     return false;
@@ -456,39 +513,55 @@ hawkbit_configure(const hawkbit_context_t *ctx, const char *url)
 }
 
 static esp_http_client_config_t
-hawkbit_download_get_client_config(hawkbit_download_links_t links)
+hawkbit_download_get_client_config(hawkbit_download_links_t links,
+                                   oc_string_view_t pem)
 {
-  if (oc_string(links.download) != NULL) {
-    // TODO
-  }
-  if (oc_string(links.downloadHttp) != NULL) {
-    esp_http_client_config_t config = {};
-    config.url = oc_string(links.downloadHttp);
-    config.cert_pem = (char *)"";
-    config.skip_cert_common_name_check = true;
-    return config;
-  }
+  assert(oc_string(links.downloadHttp) != NULL);
+
   esp_http_client_config_t config = {};
+  config.url = oc_string(links.downloadHttp);
+  config.cert_pem = pem.data;
+  config.cert_len =
+    pem.length + 1; // must include the nul-terminator for mbedTLS
+  config.keep_alive_enable = true;
+  config.timeout_ms = 5000;
   return config;
 }
 
 bool
-hawkbit_download_from_links(hawkbit_download_links_t links)
+hawkbit_download_from_links(const hawkbit_context_t *ctx,
+                            hawkbit_download_links_t links)
 {
   if (oc_string(links.download) == NULL &&
       oc_string(links.downloadHttp) == NULL) {
     return false;
   }
-  esp_http_client_config_t config = hawkbit_download_get_client_config(links);
+
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  hawkbit_buffer_t hb;
+  long pem_len = hawkbit_certificate_get_CA(hawkbit_get_device(ctx), &hb);
+  if (pem_len < 0) {
+    APP_ERR("cannot obtain certificate");
+    return false;
+  }
+  oc_string_view_t pem = oc_string_view(hb.buffer, (size_t)pem_len);
+#else  /* !OC_SECURITY || !OC_PKI */
+  (void)ctx;
+  oc_string_view_t pem = OC_STRING_VIEW_NULL;
+#endif /* OC_SECURITY && OC_PKI */
+
+  esp_http_client_config_t config =
+    hawkbit_download_get_client_config(links, pem);
   esp_https_ota_config_t ota_config = {
     .http_config = &config,
-    .partial_http_download = false,
+    .partial_http_download = true,
+    .max_http_request_size = CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN,
   };
   esp_https_ota_handle_t https_ota_handle = NULL;
   esp_err_t err = esp_https_ota_begin(&ota_config, &https_ota_handle);
   if (err != ESP_OK) {
     APP_ERR("OTA update begin failed: %s", esp_err_to_name(err));
-    return false;
+    goto error;
   }
 
   while (true) {
@@ -496,28 +569,43 @@ hawkbit_download_from_links(hawkbit_download_links_t links)
     if (err != ESP_ERR_HTTPS_OTA_IN_PROGRESS) {
       break;
     }
+    APP_DBG("Image bytes read: %d",
+            esp_https_ota_get_image_len_read(https_ota_handle));
   }
 
   if (err != ESP_OK) {
     APP_ERR("OTA update perform failed: %s", esp_err_to_name(err));
-    err = esp_https_ota_abort(https_ota_handle);
-    if (err != ESP_OK) {
-      APP_ERR("OTA abort failed: %s", esp_err_to_name(err));
-    }
-    return false;
+    esp_https_ota_abort(https_ota_handle);
+    goto error;
+  }
+
+  if (!esp_https_ota_is_complete_data_received(https_ota_handle)) {
+    APP_ERR("Complete data was not received.");
+    esp_https_ota_abort(https_ota_handle);
+    goto error;
   }
 
   err = esp_https_ota_finish(https_ota_handle);
   if (err != ESP_OK) {
     APP_ERR("OTA update finish failed: %s", esp_err_to_name(err));
-    return false;
+    goto error;
   }
+
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  hawkbit_buffer_free(&hb);
+#endif /* OC_SECURITY && OC_PKI */
   return true;
+
+error:
+#if defined(OC_SECURITY) && defined(OC_PKI)
+  hawkbit_buffer_free(&hb);
+#endif /* OC_SECURITY && OC_PKI */
+  return false;
 }
 
 static void
 hawkbit_send_deploy_feedback_and_log_error(
-  const hawkbit_context_t *ctx, const char *id,
+  const hawkbit_context_t *ctx, oc_string_view_t id,
   hawkbit_feedback_execution_t execution, hawkbit_feedback_result_t result)
 {
   if (!hawkbit_send_deploy_feedback(ctx, id, execution, result)) {
@@ -526,8 +614,9 @@ hawkbit_send_deploy_feedback_and_log_error(
 }
 
 static bool
-hawkbit_prepare_async_update(hawkbit_context_t *ctx, const char *deployment_id,
-                             const char *version,
+hawkbit_prepare_async_update(hawkbit_context_t *ctx,
+                             oc_string_view_t deployment_id,
+                             oc_string_view_t version,
                              hawkbit_sha256_digest_t digest)
 {
   const esp_partition_t *update = esp_ota_get_boot_partition();
@@ -578,7 +667,7 @@ hawkbit_download_execute(hawkbit_context_t *ctx)
     ctx, hawkbit_download_get_deployment_id(download),
     HAWKBIT_FEEDBACK_EXECUTION_PROCEEDING, HAWKBIT_FEEDBACK_RESULT_NONE);
 
-  if (!hawkbit_download_from_links(hawkbit_download_get_links(download))) {
+  if (!hawkbit_download_from_links(ctx, hawkbit_download_get_links(download))) {
     APP_ERR("hawkbit download error: failed to download the update");
     hawkbit_send_deploy_feedback_and_log_error(
       ctx, hawkbit_download_get_deployment_id(download),
@@ -668,8 +757,8 @@ hawkbit_update(hawkbit_context_t *ctx)
   if (update_partition == NULL) {
     APP_ERR("partition with stored update not found");
     hawkbit_send_deploy_feedback_and_log_error(
-      ctx, oc_string(update->deployment_id), HAWKBIT_FEEDBACK_EXECUTION_CLOSED,
-      HAWKBIT_FEEDBACK_RESULT_FAILURE);
+      ctx, oc_string_view2(&update->deployment_id),
+      HAWKBIT_FEEDBACK_EXECUTION_CLOSED, HAWKBIT_FEEDBACK_RESULT_FAILURE);
     hawkbit_clear_update(ctx);
     return false;
   }
@@ -678,8 +767,8 @@ hawkbit_update(hawkbit_context_t *ctx)
     return false;
   }
   hawkbit_send_deploy_feedback_and_log_error(
-    ctx, oc_string(update->deployment_id), HAWKBIT_FEEDBACK_EXECUTION_CLOSED,
-    HAWKBIT_FEEDBACK_RESULT_SUCCESS);
+    ctx, oc_string_view2(&update->deployment_id),
+    HAWKBIT_FEEDBACK_EXECUTION_CLOSED, HAWKBIT_FEEDBACK_RESULT_SUCCESS);
   return true;
 }
 
@@ -805,7 +894,7 @@ hawkbit_poll(hawkbit_context_t *ctx, hawkbit_configuration_t *cfg)
   APP_DBG("hawkbit action: %s(%d)", hawkbit_action_type_to_string(action.type),
           action.type);
   if (action.type == HAWKBIT_ACTION_CONFIGURE) {
-    if (!hawkbit_configure(ctx, oc_string(action.data.configure.url))) {
+    if (!hawkbit_configure(ctx, oc_string_view2(&action.data.configure.url))) {
       APP_ERR("cannot configure device in hawkbit server");
       hawkbit_action_free(&action);
       return HAWKBIT_ERROR_GENERAL;

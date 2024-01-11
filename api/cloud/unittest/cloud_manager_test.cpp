@@ -156,13 +156,13 @@ public:
   static void PrintJson(const oc_rep_t *rep)
   {
     (void)rep;
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
     size_t json_size = oc_rep_to_json(rep, nullptr, 0, true);
     std::vector<char> json{};
     json.resize(json_size + 1);
     oc_rep_to_json(rep, &json[0], json.capacity(), true);
     OC_PRINTF("%s", json.data());
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
   }
 
   oc::oc_rep_unique_ptr GetPayload(const std::string &access_token,

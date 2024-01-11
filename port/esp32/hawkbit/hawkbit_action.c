@@ -19,8 +19,6 @@
 
 #include "hawkbit_action.h"
 
-#include <assert.h>
-
 #define HAWKBIT_ACTION_NONE_STR "no action"
 #define HAWKBIT_ACTION_CONFIGURE_STR "configure"
 #define HAWKBIT_ACTION_DEPLOY_STR "deploy"
@@ -56,7 +54,6 @@ hawkbit_action_none()
 hawkbit_action_t
 hawkbit_action_cancel(const char *id)
 {
-  assert(id != NULL);
   hawkbit_action_t action = {
     .type = HAWKBIT_ACTION_CANCEL,
   };
@@ -67,7 +64,6 @@ hawkbit_action_cancel(const char *id)
 hawkbit_action_t
 hawkbit_action_configure(const char *url)
 {
-  assert(url != NULL);
   hawkbit_action_t action = {
     .type = HAWKBIT_ACTION_CONFIGURE,
   };
@@ -85,14 +81,13 @@ hawkbit_action_deploy(hawkbit_deployment_t deployment)
   return action;
 }
 
-/**
- * @brief Deallocate data for given action type
- *
- * @param action action to clear (cannot be NULL)
- */
 void
 hawkbit_action_free(hawkbit_action_t *action)
 {
+  if (action == NULL) {
+    return;
+  }
+
   if (action->type == HAWKBIT_ACTION_CANCEL) {
     oc_free_string(&action->data.cancel.id);
     return;
