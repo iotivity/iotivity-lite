@@ -17,7 +17,9 @@
  *
  ****************************************************************************/
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 
 #include <android/api-level.h>
 #if !defined(__ANDROID_API__) || __ANDROID_API__ == 10000

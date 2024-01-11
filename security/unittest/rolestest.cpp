@@ -28,6 +28,7 @@
 #include "port/oc_log_internal.h"
 #include "security/oc_certs_generate_internal.h"
 #include "security/oc_certs_internal.h"
+#include "security/oc_cred_util_internal.h"
 #include "security/oc_obt_internal.h"
 #include "security/oc_roles_internal.h"
 #include "security/oc_security_internal.h"

@@ -846,7 +846,9 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
   }
   const oc_sec_doxm_t *doxm = oc_sec_get_doxm(peer->endpoint.device);
   if (ps->s == OC_DOS_RFOTM && doxm->oxmsel == OC_OXMTYPE_RDP) {
-    if (identity_len != 16 || memcmp(identity, "oic.sec.doxm.rdp", 16) != 0) {
+    if (identity_len != OC_CHAR_ARRAY_LEN(OC_OXMTYPE_RDP_STR) ||
+        memcmp(identity, OC_OXMTYPE_RDP_STR,
+               OC_CHAR_ARRAY_LEN(OC_OXMTYPE_RDP_STR)) != 0) {
       OC_ERR("oc_tls: OBT identity incorrectly set for PIN OTM");
       return -1;
     }
@@ -953,6 +955,7 @@ next_cred_in_chain:
       cert, (const unsigned char *)oc_string(cred->publicdata.data), cert_len);
     if (ret < 0) {
       OC_ERR("could not parse identity cert from cred");
+      mbedtls_x509_crt_free(cert);
       return true;
     }
 
@@ -1918,8 +1921,8 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
   if (role == MBEDTLS_SSL_IS_CLIENT && use_pin_obt_psk_identity) {
     use_pin_obt_psk_identity = false;
     if (mbedtls_ssl_conf_psk(conf, device_id->id, 1,
-                             (const unsigned char *)"oic.sec.doxm.rdp",
-                             16) != 0) {
+                             (const unsigned char *)OC_OXMTYPE_RDP_STR,
+                             OC_CHAR_ARRAY_LEN(OC_OXMTYPE_RDP_STR)) != 0) {
       return -1;
     }
   } else

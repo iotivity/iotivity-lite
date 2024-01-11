@@ -163,6 +163,7 @@ oc_certs_parse_serial_number(const unsigned char *cert, size_t cert_size,
   int ret = mbedtls_x509_crt_parse(&crt, cert, cert_size);
   if (ret != 0) {
     OC_ERR("could not parse the provided cert %d", ret);
+    mbedtls_x509_crt_free(&crt);
     return ret;
   }
 
@@ -197,6 +198,7 @@ oc_certs_parse_private_key(size_t device, const unsigned char *cert,
   int ret = mbedtls_x509_crt_parse(&crt, cert, cert_size);
   if (ret != 0) {
     OC_ERR("could not parse the provided cert %d", ret);
+    mbedtls_x509_crt_free(&crt);
     return ret;
   }
 
@@ -255,6 +257,7 @@ oc_certs_parse_public_key(const unsigned char *cert, size_t cert_size,
   int ret = mbedtls_x509_crt_parse(&crt, cert, cert_size);
   if (ret != 0) {
     OC_ERR("could not parse the provided cert %d", ret);
+    mbedtls_x509_crt_free(&crt);
     return -1;
   }
 
@@ -273,6 +276,7 @@ oc_certs_parse_public_key_to_oc_string(const unsigned char *cert,
   int ret = mbedtls_x509_crt_parse(&crt, cert, cert_size);
   if (ret != 0) {
     OC_ERR("could not parse the provided cert %d", ret);
+    mbedtls_x509_crt_free(&crt);
     return -1;
   }
 
@@ -372,6 +376,7 @@ oc_certs_parse_CN_for_UUID(const unsigned char *cert, size_t cert_size,
   int ret = mbedtls_x509_crt_parse(&crt, cert, cert_size);
   if (ret != 0) {
     OC_ERR("could not parse the provided cert %d", ret);
+    mbedtls_x509_crt_free(&crt);
     return false;
   }
 
@@ -544,6 +549,7 @@ oc_certs_parse_first_role(const unsigned char *cert, size_t cert_size,
   int ret = mbedtls_x509_crt_parse(&crt, cert, cert_size);
   if (ret != 0) {
     OC_ERR("could not parse the provided cert %d", ret);
+    mbedtls_x509_crt_free(&crt);
     return false;
   }
 

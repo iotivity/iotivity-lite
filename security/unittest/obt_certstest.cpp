@@ -631,7 +631,7 @@ TEST_F(TestObtCertsWithDevice, RootCertificateCredential)
 
   size_t device = 0;
   int credid = oc_obt_generate_self_signed_root_cert(cert_data, device);
-  EXPECT_LT(0, credid);
+  ASSERT_LT(0, credid);
 
   oc_sec_cred_t *cred = oc_sec_get_cred_by_credid(credid, device);
   EXPECT_NE(nullptr, cred);

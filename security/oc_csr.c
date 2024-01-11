@@ -29,6 +29,7 @@
 #include "oc_uuid.h"
 #include "port/oc_log_internal.h"
 #include "security/oc_certs_internal.h"
+#include "security/oc_cred_util_internal.h"
 #include "security/oc_csr_internal.h"
 #include "security/oc_entropy_internal.h"
 #include "security/oc_keypair_internal.h"

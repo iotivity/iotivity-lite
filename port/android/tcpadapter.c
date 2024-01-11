@@ -16,7 +16,9 @@
  *
  ****************************************************************************/
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 
 #include "api/oc_message_internal.h"
 #include "api/oc_session_events_internal.h"
