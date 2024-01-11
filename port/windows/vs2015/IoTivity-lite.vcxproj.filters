@@ -362,6 +362,9 @@
     <ClCompile Include="..\..\..\security\oc_cred.c">
       <Filter>Security</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_cred_util.c">
+      <Filter>Security</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\security\oc_doxm.c">
       <Filter>Security</Filter>
     </ClCompile>

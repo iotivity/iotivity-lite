@@ -286,9 +286,9 @@ endif
 endif
 
 ifneq ($(SECURE),0)
-	SRC += $(addprefix ../../security/,	oc_acl.c oc_ael.c oc_audit.c oc_certs.c oc_certs_generate.c oc_certs_validate.c oc_cred.c oc_csr.c oc_doxm.c oc_entropy.c \
-			oc_keypair.c oc_oscore_engine.c oc_oscore_crypto.c oc_oscore_context.c oc_pki.c oc_pstat.c oc_roles.c oc_sdi.c \
-			oc_security.c oc_sp.c oc_store.c oc_svr.c oc_tls.c)
+	SRC += $(addprefix ../../security/,	oc_acl.c oc_ael.c oc_audit.c oc_certs.c oc_certs_generate.c oc_certs_validate.c \
+			oc_cred.c oc_cred_util.c oc_csr.c oc_doxm.c oc_entropy.c oc_keypair.c oc_oscore_engine.c oc_oscore_crypto.c \
+			 oc_oscore_context.c oc_pki.c oc_pstat.c oc_roles.c oc_sdi.c oc_security.c oc_sp.c oc_store.c oc_svr.c oc_tls.c)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt
 ifeq ($(DYNAMIC),1)

@@ -20,7 +20,8 @@
 #ifndef OC_CERTS_GENERATE_INTERNAL_H
 #define OC_CERTS_GENERATE_INTERNAL_H
 
-#if defined(OC_SECURITY) && defined(OC_PKI) && defined(OC_DYNAMIC_ALLOCATION)
+#if defined(OC_SECURITY) && defined(OC_PKI) &&                                 \
+  (defined(OC_DYNAMIC_ALLOCATION) || defined(OC_TEST))
 
 #include "api/c-timestamp/timestamp.h"
 #include "oc_role.h"
@@ -138,6 +139,6 @@ int oc_certs_generate(const oc_certs_generate_t *data, unsigned char *buffer,
 }
 #endif
 
-#endif /* OC_SECURITY & OC_PKI && OC_DYNAMIC_ALLOCATION */
+#endif /* OC_SECURITY & OC_PKI && (OC_DYNAMIC_ALLOCATION || OC_TEST) */
 
 #endif /* OC_CERTS_GENERATE_INTERNAL_H */

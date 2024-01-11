@@ -16,7 +16,10 @@
  *
  ******************************************************************/
 
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
+
 #include "ip.h"
 #include "port/oc_log_internal.h"
 #include "util/oc_macros_internal.h"

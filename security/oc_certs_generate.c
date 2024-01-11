@@ -19,7 +19,8 @@
 
 #include "oc_config.h"
 
-#if defined(OC_SECURITY) && defined(OC_PKI) && defined(OC_DYNAMIC_ALLOCATION)
+#if defined(OC_SECURITY) && defined(OC_PKI) &&                                 \
+  (defined(OC_DYNAMIC_ALLOCATION) || defined(OC_TEST))
 
 #include "port/oc_log_internal.h"
 #include "security/oc_certs_generate_internal.h"
@@ -33,6 +34,7 @@
 #include <mbedtls/oid.h>
 #include <mbedtls/platform.h>
 #include <mbedtls/x509_crt.h>
+#include <stdlib.h>
 
 static bool
 certs_generate_serial_number(mbedtls_mpi *buffer, size_t size)
@@ -632,4 +634,4 @@ exit:
   return ret;
 }
 
-#endif /* OC_SECURITY && OC_PKI && OC_DYNAMIC_ALLOCATION */
+#endif /* OC_SECURITY && OC_PKI && (OC_DYNAMIC_ALLOCATION || OC_TEST) */

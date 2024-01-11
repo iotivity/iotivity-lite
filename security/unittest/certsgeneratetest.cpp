@@ -25,6 +25,7 @@
 #include "security/oc_certs_generate_internal.h"
 #include "security/oc_certs_internal.h"
 #include "tests/gtest/KeyPair.h"
+#include "tests/gtest/PKI.h"
 #include "tests/gtest/Role.h"
 #include "tests/gtest/Utility.h"
 
@@ -278,28 +279,6 @@ defaultCertificateGenerate(const oc::keypair_t &kp, bool isCA = false)
   return generate;
 }
 
-static std::vector<unsigned char>
-getCertificate(const oc_certs_generate_t &generate)
-{
-  std::vector<unsigned char> cert_buf{};
-  cert_buf.resize(4096, '\0');
-  int err = oc_certs_generate(&generate, cert_buf.data(), cert_buf.size());
-  EXPECT_EQ(0, err);
-  if (err != 0) {
-    return {};
-  }
-
-  auto it = std::find(cert_buf.begin(), cert_buf.end(),
-                      static_cast<unsigned char>('\0'));
-  size_t data_len =
-    std::distance(cert_buf.begin(), it) + 1; // size with NULL terminator
-  if (cert_buf.end() == it || !oc_certs_is_PEM(&cert_buf[0], data_len)) {
-    return {};
-  }
-  cert_buf.resize(data_len);
-  return cert_buf;
-}
-
 TEST_F(TestParseCerts, ParseSerialNumber_Fail)
 {
   // invalid PEM
@@ -311,7 +290,7 @@ TEST_F(TestParseCerts, ParseSerialNumber_Fail)
   oc_certs_generate_t generate{ defaultCertificateGenerate(kp) };
   // longer than the buffer size
   generate.serial_number_size = 20;
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
   ASSERT_FALSE(pem.empty());
   EXPECT_GT(0, oc_certs_parse_serial_number(pem.data(), pem.size(), &buffer[0],
                                             buffer.size()));
@@ -321,7 +300,7 @@ TEST_F(TestParseCerts, ParseSerialNumber)
 {
   oc::keypair_t kp{ oc::GetECPKeyPair(MBEDTLS_ECP_DP_SECP256R1) };
   oc_certs_generate_t generate{ defaultCertificateGenerate(kp) };
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
   ASSERT_FALSE(pem.empty());
   std::array<char, 64> buffer{};
   // certificate without serial number
@@ -330,7 +309,7 @@ TEST_F(TestParseCerts, ParseSerialNumber)
 
   generate = defaultCertificateGenerate(kp);
   generate.serial_number_size = 10;
-  pem = getCertificate(generate);
+  pem = oc::pki::GenerateCertificate(generate);
   ASSERT_FALSE(pem.empty());
   EXPECT_LT(0, oc_certs_parse_serial_number(pem.data(), pem.size(), &buffer[0],
                                             buffer.size()));
@@ -344,7 +323,7 @@ TEST_F(TestParseCerts, ParsePrivateKey_Fail)
 
   oc::keypair_t kp{ oc::GetECPKeyPair(MBEDTLS_ECP_DP_SECP256R1) };
   oc_certs_generate_t generate{ defaultCertificateGenerate(kp) };
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
   ASSERT_FALSE(pem.empty());
   std::array<uint8_t, 1> too_small{};
   EXPECT_GT(0, oc_certs_parse_private_key(0, pem.data(), pem.size(),
@@ -355,7 +334,7 @@ TEST_F(TestParseCerts, ParsePrivateKey)
 {
   oc::keypair_t kp{ oc::GetECPKeyPair(MBEDTLS_ECP_DP_SECP256R1) };
   oc_certs_generate_t generate{ defaultCertificateGenerate(kp) };
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
   ASSERT_FALSE(pem.empty());
   std::array<uint8_t, 200> private_key{};
   int ret = oc_certs_parse_private_key(0, pem.data(), pem.size(),
@@ -371,7 +350,7 @@ TEST_F(TestParseCerts, ParsePublicKey_Fail)
 
   oc::keypair_t kp{ oc::GetECPKeyPair(MBEDTLS_ECP_DP_SECP256R1) };
   oc_certs_generate_t generate{ defaultCertificateGenerate(kp) };
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
   ASSERT_FALSE(pem.empty());
   std::array<uint8_t, 1> too_small{};
   EXPECT_GT(0, oc_certs_parse_public_key(pem.data(), pem.size(), &too_small[0],
@@ -382,7 +361,7 @@ TEST_F(TestParseCerts, ParsePublicKey)
 {
   oc::keypair_t kp{ oc::GetECPKeyPair(MBEDTLS_ECP_DP_SECP256R1) };
   oc_certs_generate_t generate{ defaultCertificateGenerate(kp) };
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
   ASSERT_FALSE(pem.empty());
   std::array<uint8_t, 200> public_key{};
   int ret = oc_certs_parse_public_key(pem.data(), pem.size(), &public_key[0],
@@ -414,7 +393,7 @@ TEST_F(TestParseCerts, ParsePublicKeyToOCString)
   oc_string_t public_key{};
   oc::keypair_t kp{ oc::GetECPKeyPair(MBEDTLS_ECP_DP_SECP256R1) };
   oc_certs_generate_t generate{ defaultCertificateGenerate(kp) };
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
   ASSERT_FALSE(pem.empty());
   int ret =
     oc_certs_parse_public_key_to_oc_string(pem.data(), pem.size(), &public_key);
@@ -433,7 +412,7 @@ TEST_F(TestParseCerts, ParseFirstRole_Fail)
 
   oc::keypair_t kp{ oc::GetECPKeyPair(MBEDTLS_ECP_DP_SECP256R1) };
   oc_certs_generate_t generate{ defaultCertificateGenerate(kp) };
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
   ASSERT_FALSE(pem.empty());
   EXPECT_FALSE(
     oc_certs_parse_first_role(pem.data(), pem.size(), &role, &authority));
@@ -456,7 +435,7 @@ TEST_F(TestParseCerts, ParseFirstRole_FailInvalidSubjectRole)
   ASSERT_EQ(0, mbedtls_x509_string_to_names(
                  &names.general_name.name.directory_name, invalidRole.c_str()));
   generate.modify_fn_data = &names;
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
   mbedtls_asn1_free_named_data_list(&names.general_name.name.directory_name);
 #else  /*  MBEDTLS_VERSION_NUMBER > 0x03010000  */
   generate.modify_fn = [](mbedtls_x509write_cert *crt, const void *data) {
@@ -470,7 +449,7 @@ TEST_F(TestParseCerts, ParseFirstRole_FailInvalidSubjectRole)
   ASSERT_EQ(0, mbedtls_x509_string_to_names(&namedData, invalidRole.c_str()));
   names.node.san.directory_name = *namedData;
   generate.modify_fn_data = &names;
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
   mbedtls_asn1_free_named_data_list(&namedData);
 #endif /* MBEDTLS_VERSION_NUMBER <= 0x03010000 */
   ASSERT_FALSE(pem.empty());
@@ -498,7 +477,7 @@ TEST_F(TestParseCerts, ParseFirstRole_FailMissingSubjectRole)
     0, mbedtls_x509_string_to_names(&names.general_name.name.directory_name,
                                     invalidSubject.c_str()));
   generate.modify_fn_data = &names;
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
   mbedtls_asn1_free_named_data_list(&names.general_name.name.directory_name);
 #else  /*  MBEDTLS_VERSION_NUMBER > 0x03010000  */
   generate.modify_fn = [](mbedtls_x509write_cert *crt, const void *data) {
@@ -513,7 +492,7 @@ TEST_F(TestParseCerts, ParseFirstRole_FailMissingSubjectRole)
             mbedtls_x509_string_to_names(&namedData, invalidSubject.c_str()));
   names.node.san.directory_name = *namedData;
   generate.modify_fn_data = &names;
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
   mbedtls_asn1_free_named_data_list(&namedData);
 #endif /* MBEDTLS_VERSION_NUMBER <= 0x03010000 */
   ASSERT_FALSE(pem.empty());
@@ -539,7 +518,7 @@ TEST_F(TestParseCerts, ParseFirstRole_FailInvalidSubjectType)
   names.general_name.name.dns_name.p = invalidSubject.data();
   names.general_name.name.dns_name.len = invalidSubject.size();
   generate.modify_fn_data = &names;
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
 #else  /*  MBEDTLS_VERSION_NUMBER > 0x03010000  */
   generate.modify_fn = [](mbedtls_x509write_cert *crt, const void *data) {
     const auto *alt_names = static_cast<const mbedtls_x509_san_list *>(data);
@@ -551,7 +530,7 @@ TEST_F(TestParseCerts, ParseFirstRole_FailInvalidSubjectType)
   names.node.san.unstructured_name.p = invalidSubject.data();
   names.node.san.unstructured_name.len = invalidSubject.size();
   generate.modify_fn_data = &names;
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
 #endif /* MBEDTLS_VERSION_NUMBER <= 0x03010000 */
   ASSERT_FALSE(pem.empty());
   oc_string_t role{};
@@ -568,7 +547,7 @@ TEST_F(TestParseCerts, ParseFirstRole_FailInvalidSubjectAuthority)
   oc::Roles roles{};
   roles.Add("user1");
   generate.roles = roles.Head();
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
   ASSERT_FALSE(pem.empty());
   oc_string_t role{};
   oc_string_t authority{};
@@ -584,7 +563,7 @@ TEST_F(TestParseCerts, ParseFirstRole)
   roles.Add("user1", "admin1");
   roles.Add("user2", "admin2");
   generate.roles = roles.Head();
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
   ASSERT_FALSE(pem.empty());
 
   oc_string_t role{};
@@ -605,7 +584,7 @@ TEST_F(TestParseCerts, ParseFirstRoleGetAuthorityFromIssuer)
   oc::Roles roles{};
   roles.Add("user1");
   generate.roles = roles.Head();
-  auto pem = getCertificate(generate);
+  auto pem = oc::pki::GenerateCertificate(generate);
   ASSERT_FALSE(pem.empty());
 
   oc_string_t role{};

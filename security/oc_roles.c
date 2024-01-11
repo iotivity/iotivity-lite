@@ -23,8 +23,9 @@
 #include "api/oc_core_res_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "port/oc_log_internal.h"
-#include "oc_roles_internal.h"
-#include "oc_tls_internal.h"
+#include "security/oc_cred_util_internal.h"
+#include "security/oc_roles_internal.h"
+#include "security/oc_tls_internal.h"
 
 #include <mbedtls/x509_crt.h>
 

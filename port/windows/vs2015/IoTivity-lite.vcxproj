@@ -461,6 +461,7 @@
     <ClCompile Include="..\..\..\security\oc_certs_generate.c" />
     <ClCompile Include="..\..\..\security\oc_certs_validate.c" />
     <ClCompile Include="..\..\..\security\oc_cred.c" />
+    <ClCompile Include="..\..\..\security\oc_cred_util.c" />
     <ClCompile Include="..\..\..\security\oc_csr.c" />
     <ClCompile Include="..\..\..\security\oc_doxm.c" />
     <ClCompile Include="..\..\..\security\oc_keypair.c" />

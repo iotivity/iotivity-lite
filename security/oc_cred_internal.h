@@ -42,20 +42,11 @@ typedef struct
                     ///< credential replaced a previously existing one
 } oc_sec_add_new_cred_data_t;
 
-#define OC_ENCODING_BASE64_STR "oic.sec.encoding.base64"
-#define OC_ENCODING_RAW_STR "oic.sec.encoding.raw"
-#define OC_ENCODING_HANDLE_STR "oic.sec.encoding.handle"
-#ifdef OC_PKI
-#define OC_ENCODING_PEM_STR "oic.sec.encoding.pem"
-
-#define OC_CREDUSAGE_TRUSTCA_STR "oic.sec.cred.trustca"
-#define OC_CREDUSAGE_IDENTITY_CERT_STR "oic.sec.cred.cert"
-#define OC_CREDUSAGE_ROLE_CERT_STR "oic.sec.cred.rolecert"
-#define OC_CREDUSAGE_MFG_TRUSTCA_STR "oic.sec.cred.mfgtrustca"
-#define OC_CREDUSAGE_MFG_CERT_STR "oic.sec.cred.mfgcert"
-
-#endif /* OC_PKI */
-
+/**
+ * Encoded data (in case the data is in the PEM string format, the string must
+ * contain the nul-terminator, but the size value must be the length without
+ * nul-terminator. This is required for convertibility with oc_cred_data_t.)
+ * */
 typedef struct
 {
   const uint8_t *data;
@@ -72,9 +63,29 @@ int oc_sec_add_new_cred(size_t device, bool roles_resource,
                         oc_string_view_t authority, oc_string_view_t tag,
                         oc_sec_add_new_cred_data_t *new_cred_data);
 
+/** Convenience wrapper over oc_sec_add_new_cred to create a new PSK credential
+ */
+int oc_sec_add_new_psk_cred(size_t device, const char *subjectuuid,
+                            oc_sec_encoded_data_t privatedata,
+                            oc_string_view_t tag);
+
+/** Deallocate given credential */
+void oc_sec_cred_free(oc_sec_cred_t *cred) OC_NONNULL();
+
+/**
+ * @brief Remove credential from device
+ *
+ * @param credid credential ID
+ * @param device device index
+ * @return NULL if credential with given ID was not found on device
+ * @return oc_sec_cred_t * if credential was found and removed
+ */
+oc_sec_cred_t *oc_sec_cred_remove_from_device_by_credid(int credid,
+                                                        size_t device);
+
 void oc_sec_cred_default(size_t device);
 void oc_sec_cred_init(void);
-void oc_sec_cred_free(void);
+void oc_sec_cred_deinit(void);
 void oc_sec_encode_cred(size_t device, oc_interface_mask_t iface_mask,
                         bool to_storage);
 bool oc_sec_decode_cred(const oc_rep_t *rep, oc_sec_cred_t **owner,
@@ -82,19 +93,6 @@ bool oc_sec_decode_cred(const oc_rep_t *rep, oc_sec_cred_t **owner,
                         const struct oc_tls_peer_t *client, size_t device,
                         oc_sec_on_apply_cred_cb_t on_apply_cred_cb,
                         void *on_apply_cred_data);
-
-/** Convert encoding to oc_string_view_t */
-oc_string_view_t oc_cred_encoding_to_string(oc_sec_encoding_t encoding);
-
-/**
- * @brief Parse cred encoding from string
- *
- * @param str string (cannot be NULL)
- * @param str_len length of \p str
- * @return oc_sec_encoding_t parsed encoding
- */
-oc_sec_encoding_t oc_cred_encoding_from_string(const char *str, size_t str_len)
-  OC_NONNULL();
 
 /**
  * @brief Allocate and initialize a new credential and append it to global
@@ -112,8 +110,12 @@ oc_sec_cred_t *oc_sec_allocate_cred(const oc_uuid_t *subjectuuid,
                                     oc_sec_credusage_t credusage,
                                     size_t device);
 
+/** Find first credential with matching subject UUID */
+oc_sec_cred_t *oc_cred_find_by_subject(const char *subjectuuid, size_t device)
+  OC_NONNULL();
+
 /**
- * @brief Remove and deallocate credential with matching subject uuid from the
+ * @brief Remove and deallocate credential with matching subject UUID from the
  * list of credentials for given device.
  *
  * @param subjectuuid subject uuid (cannot be NULL)
@@ -121,7 +123,8 @@ oc_sec_cred_t *oc_sec_allocate_cred(const oc_uuid_t *subjectuuid,
  * @return true credential was found and removed
  * @return false otherwise
  */
-bool oc_cred_remove_subject(const char *subjectuuid, size_t device);
+bool oc_cred_remove_by_subject(const char *subjectuuid, size_t device)
+  OC_NONNULL();
 
 /**
  * @brief Find credential with matching subject uuid from the list of
@@ -162,16 +165,17 @@ oc_sec_cred_t *oc_sec_find_cred(oc_sec_cred_t *start,
  *
  * @param start Starting position of the search (if NULL is used then the search
  * starts from the head of the list)
- * @param role role to match (cannot be NULL)
- * @param authority authority to match (if NULL then the authority values won't
+ * @param role role to match
+ * @param authority authority to match (if empty then the authority values won't
  * be compared)
- * @param tag tag to match (if NULL then the tag values won't be
- * compared)
+ * @param tag tag to match (if empty then the tag values won't be compared)
  * @return oc_sec_cred_t* matching credential
  * @return NULL if no matching credential was found
  */
-oc_sec_cred_t *oc_sec_find_role_cred(oc_sec_cred_t *start, const char *role,
-                                     const char *authority, const char *tag);
+oc_sec_cred_t *oc_sec_find_role_cred(oc_sec_cred_t *start,
+                                     oc_string_view_t role,
+                                     oc_string_view_t authority,
+                                     oc_string_view_t tag);
 
 /**
  * @brief Create roles (/oic/sec/cred) resource for given device.
@@ -179,23 +183,6 @@ oc_sec_cred_t *oc_sec_find_role_cred(oc_sec_cred_t *start, const char *role,
  * @param device device index
  */
 void oc_sec_cred_create_resource(size_t device);
-
-#ifdef OC_PKI
-
-/** @brief Convert credusage to oc_string_view_t */
-oc_string_view_t oc_cred_credusage_to_string(oc_sec_credusage_t credusage);
-
-/**
- * @brief Parse cred usage from string
- *
- * @param str string (cannot be NULL)
- * @param str_len length of \p str
- * @return oc_sec_credusage_t parsed usage
- */
-oc_sec_credusage_t oc_cred_usage_from_string(const char *str, size_t str_len)
-  OC_NONNULL();
-
-#endif /* OC_PKI */
 
 #ifdef __cplusplus
 }
