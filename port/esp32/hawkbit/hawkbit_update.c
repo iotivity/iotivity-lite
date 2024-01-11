@@ -19,19 +19,25 @@
 
 #include "hawkbit_update.h"
 
+#include "oc_helpers.h"
+
+#include <assert.h>
+#include <string.h>
+
 hawkbit_async_update_t
-hawkbit_update_create(const char *deployment_id, const char *version,
+hawkbit_update_create(oc_string_view_t deployment_id, oc_string_view_t version,
                       const uint8_t *sha256, size_t sha256_size,
                       const uint8_t *partition_sha256,
                       size_t partition_sha256_size)
 {
-  assert(deployment_id != NULL);
-  assert(version != NULL);
+  assert(deployment_id.data != NULL);
+  assert(version.data != NULL);
 
   hawkbit_async_update_t update;
   memset(&update, 0, sizeof(hawkbit_async_update_t));
-  oc_new_string(&update.deployment_id, deployment_id, strlen(deployment_id));
-  oc_new_string(&update.version, version, strlen(version));
+  oc_new_string(&update.deployment_id, deployment_id.data,
+                deployment_id.length);
+  oc_new_string(&update.version, version.data, version.length);
   assert(sha256_size == sizeof(update.sha256));
   memcpy(update.sha256, sha256, sha256_size);
   assert(partition_sha256_size == sizeof(update.partition_sha256));
@@ -42,6 +48,9 @@ hawkbit_update_create(const char *deployment_id, const char *version,
 void
 hawkbit_update_free(hawkbit_async_update_t *update)
 {
+  if (update == NULL) {
+    return;
+  }
   oc_free_string(&update->deployment_id);
   oc_free_string(&update->version);
   memset(update, 0, sizeof(hawkbit_async_update_t));

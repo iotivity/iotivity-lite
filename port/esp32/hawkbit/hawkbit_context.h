@@ -23,8 +23,11 @@
 #include "hawkbit_action.h"
 #include "hawkbit_download.h"
 #include "hawkbit_update.h"
+
+#include "api/oc_helpers_internal.h"
 #include "oc_rep.h"
 #include "oc_ri.h"
+#include "util/oc_compiler.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -47,7 +50,7 @@ hawkbit_context_t *hawkbit_get_context(size_t device);
  * @param to_storage encoding to storage
  */
 void hawkbit_encode(const hawkbit_context_t *ctx, oc_resource_t *resource,
-                    oc_interface_mask_t iface, bool to_storage);
+                    oc_interface_mask_t iface, bool to_storage) OC_NONNULL(1);
 
 /**
  * @brief Decode representation into the hawkbit structure
@@ -60,7 +63,7 @@ void hawkbit_encode(const hawkbit_context_t *ctx, oc_resource_t *resource,
  * @return false on failure
  */
 bool hawkbit_decode(hawkbit_context_t *ctx, const oc_rep_t *rep,
-                    bool from_storage);
+                    bool from_storage) OC_NONNULL(1);
 
 /**
  * @brief Load hawkbit data from storage
@@ -70,7 +73,7 @@ bool hawkbit_decode(hawkbit_context_t *ctx, const oc_rep_t *rep,
  * @return -1 on error
  * @return  >=0 on success, number of bytes loaded from storage
  */
-long hawkbit_store_load(hawkbit_context_t *ctx);
+long hawkbit_store_load(hawkbit_context_t *ctx) OC_NONNULL();
 
 /**
  * @brief Save hawkbit data to storage
@@ -80,71 +83,74 @@ long hawkbit_store_load(hawkbit_context_t *ctx);
  * @return  <0 on error
  * @return >=0 on success, number of bytes written to storage
  */
-long hawkbit_store_save(const hawkbit_context_t *ctx);
+long hawkbit_store_save(const hawkbit_context_t *ctx) OC_NONNULL();
 
 /** Set device version */
 void hawkbit_set_version(hawkbit_context_t *ctx, const char *version,
-                         size_t length);
+                         size_t length) OC_NONNULL(1);
 
 /** Get device index */
-size_t hawkbit_get_device(const hawkbit_context_t *ctx);
+size_t hawkbit_get_device(const hawkbit_context_t *ctx) OC_NONNULL();
 
 /** Get device version */
-const char *hawkbit_get_version(const hawkbit_context_t *ctx);
+const char *hawkbit_get_version(const hawkbit_context_t *ctx) OC_NONNULL();
 
 /** Get package url from /oc/swu resource */
-const char *hawkbit_get_package_url(const hawkbit_context_t *ctx);
+const char *hawkbit_get_package_url(const hawkbit_context_t *ctx) OC_NONNULL();
 
 /** Set polling interval */
 void hawkbit_set_polling_interval(hawkbit_context_t *ctx,
-                                  uint64_t pollingInterval);
+                                  uint64_t pollingInterval) OC_NONNULL();
 
 typedef void (*hawkbit_on_polling_action_cb_t)(hawkbit_context_t *ctx,
                                                const hawkbit_action_t *action);
 
 /** Get callback to be called when a new command is received by polling */
 hawkbit_on_polling_action_cb_t hawkbit_get_polling_action_cb(
-  const hawkbit_context_t *ctx);
+  const hawkbit_context_t *ctx) OC_NONNULL();
 
 /** Set download from parsed deployment */
 void hawkbit_set_download(hawkbit_context_t *ctx,
-                          hawkbit_deployment_t deployment);
+                          hawkbit_deployment_t deployment) OC_NONNULL();
 
 /** Get download */
-const hawkbit_download_t *hawkbit_get_download(const hawkbit_context_t *ctx);
+const hawkbit_download_t *hawkbit_get_download(const hawkbit_context_t *ctx)
+  OC_NONNULL();
 
 /** Clear stored download */
-void hawkbit_clear_download(hawkbit_context_t *ctx);
+void hawkbit_clear_download(hawkbit_context_t *ctx) OC_NONNULL();
 
 typedef void (*hawkbit_on_download_done_cb_t)(hawkbit_context_t *ctx,
                                               bool success);
 
 /** Set callback to be called when donwload succeeds or fails with some error */
 void hawkbit_set_on_download_done_cb(
-  hawkbit_context_t *ctx, hawkbit_on_download_done_cb_t on_download_done_cb);
+  hawkbit_context_t *ctx, hawkbit_on_download_done_cb_t on_download_done_cb)
+  OC_NONNULL();
 
 /** Get callback to be called when donwload succeeds or fails with some error */
 hawkbit_on_download_done_cb_t hawkbit_get_on_download_done_cb(
-  const hawkbit_context_t *ctx);
+  const hawkbit_context_t *ctx) OC_NONNULL();
 
 /** Set update */
-void hawkbit_set_update(hawkbit_context_t *ctx, const char *deployment_id,
-                        const char *version, const uint8_t *sha256,
+void hawkbit_set_update(hawkbit_context_t *ctx, oc_string_view_t deployment_id,
+                        oc_string_view_t version, const uint8_t *sha256,
                         size_t sha256_size, const uint8_t *partition_sha256,
-                        size_t partition_sha256_size);
+                        size_t partition_sha256_size) OC_NONNULL(1);
 
 /** Get update */
-const hawkbit_async_update_t *hawkbit_get_update(const hawkbit_context_t *ctx);
+const hawkbit_async_update_t *hawkbit_get_update(const hawkbit_context_t *ctx)
+  OC_NONNULL();
 
 /** Clear stored update */
-void hawkbit_clear_update(hawkbit_context_t *ctx);
+void hawkbit_clear_update(hawkbit_context_t *ctx) OC_NONNULL();
 
 /** All update steps should executed automatically without manually trigger */
 void hawkbit_set_execute_all_steps(hawkbit_context_t *ctx,
-                                   bool execute_all_steps);
+                                   bool execute_all_steps) OC_NONNULL();
 
 /** Check if all update steps should executed automatically */
-bool hawkbit_execute_all_steps(const hawkbit_context_t *ctx);
+bool hawkbit_execute_all_steps(const hawkbit_context_t *ctx) OC_NONNULL();
 
 #ifdef __cplusplus
 }

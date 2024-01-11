@@ -70,6 +70,7 @@ for mbedTLS v3.1.0:
     # apply iotivity-lite patches for mbedTLS v3.1.0
     ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../../../patches/mbedtls/3.1/01-ocf-x509san-anon-psk.patch )
     ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../patches/mbedtls/3.1/02-ocf-mbedtls-config.patch )
+    ( cd esp-idf/components/lwip/lwip && find ../../../../patches/lwip/ -type f -name '*.patch' -exec patch -p1 -i {} \; )
 -->
 
 ```bash

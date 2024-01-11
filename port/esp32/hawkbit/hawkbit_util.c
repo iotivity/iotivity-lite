@@ -20,7 +20,6 @@
 #include "hawkbit_util.h"
 #include "debug_print.h"
 
-#include <assert.h>
 #include <regex.h>
 #include <stdint.h>
 #include <stdlib.h>
@@ -91,8 +90,6 @@ hawkbit_sha256_digest_to_hash(hawkbit_sha256_digest_t digest)
 bool
 hawkbit_parse_package_url(const char *purl, hawkbit_url_t *url)
 {
-  assert(purl != NULL);
-
   const char *pattern = "^https?://[^[:space:]/$.?#].[^[:space:]/]+("
                         "/([^[:space:]/]+)/controller/v1/([^[:space:]/]+)|"
                         "/([^[:space:]/]+)|"

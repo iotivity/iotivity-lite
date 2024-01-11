@@ -24,6 +24,7 @@
 #include "hawkbit_internal.h"
 #include "hawkbit_update.h"
 
+#include "api/oc_helpers_internal.h"
 #include "api/oc_rep_internal.h"
 #include "api/oc_swupdate_internal.h"
 #include "oc_api.h"
@@ -39,7 +40,7 @@
 #include <esp_image_format.h>
 
 #ifndef OC_SOFTWARE_UPDATE
-#error Preprocessor macro PLGD_HAWKBIT is defined but OC_SOFTWARE_UPDATE is not defined.
+#error Preprocessor macro OC_SOFTWARE_UPDATE is not defined.
 #endif
 
 typedef struct
@@ -153,13 +154,15 @@ static void
 hawkbit_encode_download(const hawkbit_download_t *download)
 {
   oc_rep_open_object(root, download);
-  oc_rep_set_text_string(download, deployment_id,
-                         hawkbit_download_get_deployment_id(download));
-  oc_rep_set_text_string(download, version,
-                         hawkbit_download_get_version(download));
-  oc_rep_set_text_string(download, name, hawkbit_download_get_name(download));
-  oc_rep_set_text_string(download, filename,
-                         hawkbit_download_get_filename(download));
+  oc_string_view_t deployment_id = hawkbit_download_get_deployment_id(download);
+  oc_rep_set_text_string_v1(download, deployment_id, deployment_id.data,
+                            deployment_id.length);
+  oc_string_view_t version = hawkbit_download_get_version(download);
+  oc_rep_set_text_string_v1(download, version, version.data, version.length);
+  oc_string_view_t name = hawkbit_download_get_name(download);
+  oc_rep_set_text_string_v1(download, name, name.data, name.length);
+  oc_string_view_t filename = hawkbit_download_get_filename(download);
+  oc_rep_set_text_string_v1(download, filename, filename.data, filename.length);
   oc_rep_set_int(download, size, (int64_t)hawkbit_download_get_size(download));
   hawkbit_sha256_hash_t sha256 =
     hawkbit_sha256_digest_to_hash(hawkbit_download_get_hash(download));
@@ -262,7 +265,8 @@ hawkbit_decode(hawkbit_context_t *ctx, const oc_rep_t *rep, bool from_storage)
 
   if (deployment_id != NULL && newVersion != NULL &&
       newVersionPartitionSha256 != NULL && newVersionSha256 != NULL) {
-    hawkbit_set_update(ctx, oc_string(*deployment_id), oc_string(*newVersion),
+    hawkbit_set_update(ctx, oc_string_view2(deployment_id),
+                       oc_string_view2(newVersion),
                        oc_cast(*newVersionSha256, const uint8_t),
                        oc_string_len(*newVersionSha256),
                        oc_cast(*newVersionPartitionSha256, const uint8_t),
@@ -340,7 +344,7 @@ hawkbit_store_save(const hawkbit_context_t *ctx)
   if (buf == NULL) {
     return -1;
   }
-  oc_rep_new_realloc(&buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
+  oc_rep_new_realloc_v1(&buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
 #else  /* OC_DYNAMIC_ALLOCATION */
   uint8_t buf[OC_MIN_APP_DATA_SIZE];
   oc_rep_new(buf, OC_MIN_APP_DATA_SIZE);
@@ -453,35 +457,30 @@ hawkbit_get_context(size_t device)
 size_t
 hawkbit_get_device(const hawkbit_context_t *ctx)
 {
-  assert(ctx != NULL);
   return ctx->device;
 }
 
 const char *
 hawkbit_get_package_url(const hawkbit_context_t *ctx)
 {
-  assert(ctx != NULL);
   return oc_string(oc_swupdate_get(ctx->device)->purl);
 }
 
 void
 hawkbit_set_version(hawkbit_context_t *ctx, const char *version, size_t length)
 {
-  assert(ctx != NULL);
   oc_set_string(&ctx->version, version, length);
 }
 
 const char *
 hawkbit_get_version(const hawkbit_context_t *ctx)
 {
-  assert(ctx != NULL);
   return oc_string(ctx->version);
 }
 
 void
 hawkbit_set_polling_interval(hawkbit_context_t *ctx, uint64_t pollingInterval)
 {
-  assert(ctx != NULL);
   assert(pollingInterval > 0);
   ctx->polling.interval = pollingInterval;
 };
@@ -489,14 +488,12 @@ hawkbit_set_polling_interval(hawkbit_context_t *ctx, uint64_t pollingInterval)
 hawkbit_on_polling_action_cb_t
 hawkbit_get_polling_action_cb(const hawkbit_context_t *ctx)
 {
-  assert(ctx != NULL);
   return ctx->polling.action;
 }
 
 void
 hawkbit_set_download(hawkbit_context_t *ctx, hawkbit_deployment_t deployment)
 {
-  assert(ctx != NULL);
   if (ctx->download == NULL) {
     ctx->download = hawkbit_download_alloc();
   }
@@ -506,14 +503,12 @@ hawkbit_set_download(hawkbit_context_t *ctx, hawkbit_deployment_t deployment)
 const hawkbit_download_t *
 hawkbit_get_download(const hawkbit_context_t *ctx)
 {
-  assert(ctx != NULL);
   return ctx->download;
 }
 
 void
 hawkbit_clear_download(hawkbit_context_t *ctx)
 {
-  assert(ctx != NULL);
   hawkbit_download_free(ctx->download);
   ctx->download = NULL;
 }
@@ -522,24 +517,21 @@ void
 hawkbit_set_on_download_done_cb(
   hawkbit_context_t *ctx, hawkbit_on_download_done_cb_t on_download_done_cb)
 {
-  assert(ctx != NULL);
   ctx->downloadDoneAction = on_download_done_cb;
 }
 
 hawkbit_on_download_done_cb_t
 hawkbit_get_on_download_done_cb(const hawkbit_context_t *ctx)
 {
-  assert(ctx != NULL);
   return ctx->downloadDoneAction;
 }
 
 void
-hawkbit_set_update(hawkbit_context_t *ctx, const char *deployment_id,
-                   const char *version, const uint8_t *sha256,
+hawkbit_set_update(hawkbit_context_t *ctx, oc_string_view_t deployment_id,
+                   oc_string_view_t version, const uint8_t *sha256,
                    size_t sha256_size, const uint8_t *partition_sha256,
                    size_t partition_sha256_size)
 {
-  assert(ctx != NULL);
   hawkbit_update_free(&ctx->store.update);
   ctx->store.update =
     hawkbit_update_create(deployment_id, version, sha256, sha256_size,
@@ -549,7 +541,6 @@ hawkbit_set_update(hawkbit_context_t *ctx, const char *deployment_id,
 const hawkbit_async_update_t *
 hawkbit_get_update(const hawkbit_context_t *ctx)
 {
-  assert(ctx != NULL);
   if (oc_string(ctx->store.update.version) == NULL) {
     return NULL;
   }
@@ -559,20 +550,17 @@ hawkbit_get_update(const hawkbit_context_t *ctx)
 void
 hawkbit_clear_update(hawkbit_context_t *ctx)
 {
-  assert(ctx != NULL);
   hawkbit_update_free(&ctx->store.update);
 }
 
 void
 hawkbit_set_execute_all_steps(hawkbit_context_t *ctx, bool execute_all_steps)
 {
-  assert(ctx != NULL);
   ctx->execute_all_steps = execute_all_steps;
 }
 
 bool
 hawkbit_execute_all_steps(const hawkbit_context_t *ctx)
 {
-  assert(ctx != NULL);
   return ctx->execute_all_steps;
 }

@@ -21,7 +21,10 @@
 #define HAWKBIT_DOWNLOAD_H
 
 #include "hawkbit_util.h"
+
+#include "api/oc_helpers_internal.h"
 #include "oc_helpers.h"
+#include "util/oc_compiler.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -45,31 +48,36 @@ typedef struct hawkbit_deployment_t hawkbit_deployment_t;
 
 /** Copy data to download from deployment */
 void hawkbit_download_set_from_deployment(
-  hawkbit_download_t *download, const hawkbit_deployment_t *deployment);
+  hawkbit_download_t *download, const hawkbit_deployment_t *deployment)
+  OC_NONNULL();
 
 /** Get deployment id */
-const char *hawkbit_download_get_deployment_id(
-  const hawkbit_download_t *download);
+oc_string_view_t hawkbit_download_get_deployment_id(
+  const hawkbit_download_t *download) OC_NONNULL();
 
 /** Get version */
-const char *hawkbit_download_get_version(const hawkbit_download_t *download);
+oc_string_view_t hawkbit_download_get_version(
+  const hawkbit_download_t *download) OC_NONNULL();
 
 /** Get deployment name */
-const char *hawkbit_download_get_name(const hawkbit_download_t *download);
+oc_string_view_t hawkbit_download_get_name(const hawkbit_download_t *download)
+  OC_NONNULL();
 
 /** Get filename */
-const char *hawkbit_download_get_filename(const hawkbit_download_t *download);
+oc_string_view_t hawkbit_download_get_filename(
+  const hawkbit_download_t *download) OC_NONNULL();
 
 /** Get download size */
-size_t hawkbit_download_get_size(const hawkbit_download_t *download);
+size_t hawkbit_download_get_size(const hawkbit_download_t *download)
+  OC_NONNULL();
 
 /** Get sha256 */
 hawkbit_sha256_digest_t hawkbit_download_get_hash(
-  const hawkbit_download_t *download);
+  const hawkbit_download_t *download) OC_NONNULL();
 
 /** Get download links */
 hawkbit_download_links_t hawkbit_download_get_links(
-  const hawkbit_download_t *download);
+  const hawkbit_download_t *download) OC_NONNULL();
 
 #ifdef __cplusplus
 }
