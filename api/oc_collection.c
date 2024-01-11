@@ -158,6 +158,25 @@ oc_collections_free_all(void)
   }
 }
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+void
+oc_collections_free_per_device(size_t device)
+{
+  oc_collection_t *res = (oc_collection_t *)oc_list_head(g_collections);
+  oc_collection_t *t;
+
+  while (res) {
+    if (res->res.device == device) {
+      t = res;
+      res = (oc_collection_t *)res->res.next;
+      collection_free(t, false);
+      continue;
+    }
+    res = (oc_collection_t *)res->res.next;
+  }
+}
+#endif
+
 void
 oc_collection_notify_resource_changed(oc_collection_t *collection,
                                       bool discoveryBatchDispatch)

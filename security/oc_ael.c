@@ -127,6 +127,43 @@ oc_sec_ael_init(void)
   }
 }
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+void
+oc_sec_ael_new_device(size_t device_index, bool need_realloc)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  if ((device_index == (oc_core_get_num_devices() - 1)) && need_realloc) {
+    /*
+     * if `g_oc_device_info[device_index]` is newly allocated entry...
+     */
+    ael =
+        (oc_sec_ael_t *)realloc(ael, oc_core_get_num_devices() * sizeof(oc_sec_ael_t));
+    if (!ael) {
+      oc_abort("Insufficient memory");
+    }
+
+    memset(&ael[device_index], 0, sizeof(oc_sec_ael_t));
+    OC_LIST_STRUCT_INIT(&ael[device_index], events);
+
+    size_t i=0;
+    while (i < device_index) {
+      OC_LIST_STRUCT_REINIT(&ael[i], events);
+      i++;
+    }
+  } else {
+    /*
+     * if `g_oc_device_info[device_index]` is existing entry...
+     */
+    memset(&ael[device_index], 0, sizeof(oc_sec_ael_t));
+    OC_LIST_STRUCT_INIT(&ael[device_index], events);
+  }
+
+
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
+
 void
 oc_sec_ael_free(void)
 {
@@ -138,6 +175,14 @@ oc_sec_ael_free(void)
   ael = NULL;
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+void
+oc_sec_ael_free_device(size_t index)
+{
+  oc_sec_ael_reset(index);
+}
+#endif
 
 void
 oc_sec_ael_default(size_t device)

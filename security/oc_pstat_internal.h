@@ -64,6 +64,19 @@ void oc_sec_pstat_init(void);
 /** @brief Deallocate global variables */
 void oc_sec_pstat_free(void);
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+/**
+ * @brief increase existing memory for pstat for all Devices
+ * by the size of `oc_sec_pstat_t`
+ *
+ * @param[in] device_index index of `g_oc_device_info[]` where new Device is
+ *            stored
+ * @param[in] need_realloc indicates whether reallocation of memory for SVR is
+ *            needed or not
+ */
+void oc_sec_pstat_new_device(size_t device_index, bool need_realloc);
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 /**
  * @brief Get pstat resource representation for given device
  *

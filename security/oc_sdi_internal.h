@@ -49,6 +49,10 @@ typedef struct
  */
 void oc_sec_sdi_init(void);
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+void oc_sec_sdi_new_device(size_t device_index, bool need_realloc);
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 /**
  * @brief Deallocate all sdi resource data.
  */
