@@ -212,8 +212,8 @@ oc_sec_doxm_new_device(size_t device_index, bool need_realloc)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   if ((device_index == (oc_core_get_num_devices() - 1)) && need_realloc) {
-    g_doxm =
-        (oc_sec_doxm_t *)realloc(g_doxm, oc_core_get_num_devices() * sizeof(oc_sec_doxm_t));
+    g_doxm = (oc_sec_doxm_t *)realloc(g_doxm, oc_core_get_num_devices() *
+                                                sizeof(oc_sec_doxm_t));
     if (!g_doxm) {
       oc_abort("Insufficient memory");
     }

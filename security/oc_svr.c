@@ -73,7 +73,6 @@ oc_sec_svr_create(void)
   }
 }
 
-
 #ifdef OC_HAS_FEATURE_BRIDGE
 void
 oc_sec_svr_create_new_device(size_t device_index, bool need_realloc)
@@ -93,13 +92,13 @@ oc_sec_svr_create_new_device(size_t device_index, bool need_realloc)
       OC_DISCOVERABLE, get_doxm, 0, post_doxm, 0, 1, "oic.r.doxm");
 #endif
   oc_core_populate_resource(OCF_SEC_PSTAT, device_index, "/oic/sec/pstat",
-      OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-      OC_DISCOVERABLE | OC_OBSERVABLE, get_pstat, 0,
-      post_pstat, 0, 1, "oic.r.pstat");
+                            OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+                            OC_DISCOVERABLE | OC_OBSERVABLE, get_pstat, 0,
+                            post_pstat, 0, 1, "oic.r.pstat");
   oc_core_populate_resource(OCF_SEC_ACL, device_index, "/oic/sec/acl2",
-      OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-      OC_DISCOVERABLE | OC_SECURE, get_acl, 0, post_acl,
-      delete_acl, 1, "oic.r.acl2");
+                            OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+                            OC_DISCOVERABLE | OC_SECURE, get_acl, 0, post_acl,
+                            delete_acl, 1, "oic.r.acl2");
   oc_sec_cred_create_resource(device_index);
 #if 0
   oc_core_populate_resource(OCF_SEC_CRED, device_index, "/oic/sec/cred",
@@ -107,9 +106,10 @@ oc_sec_svr_create_new_device(size_t device_index, bool need_realloc)
       OC_DISCOVERABLE | OC_SECURE, get_cred, 0,
       post_cred, delete_cred, 1, "oic.r.cred");
 #endif
-  oc_core_populate_resource(
-      OCF_SEC_AEL, device_index, "/oic/sec/ael", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-      OC_DISCOVERABLE | OC_SECURE, get_ael, 0, post_ael, 0, 1, "oic.r.ael");
+  oc_core_populate_resource(OCF_SEC_AEL, device_index, "/oic/sec/ael",
+                            OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+                            OC_DISCOVERABLE | OC_SECURE, get_ael, 0, post_ael,
+                            0, 1, "oic.r.ael");
 
   oc_sec_sp_create_resource(device_index);
   oc_sec_sdi_create_resource(device_index);
@@ -117,9 +117,7 @@ oc_sec_svr_create_new_device(size_t device_index, bool need_realloc)
   oc_sec_csr_create_resource(device_index);
   oc_sec_roles_create_resource(device_index);
 #endif /* OC_PKI */
-
 }
-
 
 void
 oc_sec_svr_init_new_device(size_t device_index)
@@ -146,8 +144,6 @@ oc_sec_svr_init_new_device(size_t device_index)
 }
 
 #endif /* OC_HAS_FEATURE_BRIDGE */
-
-
 
 void
 oc_sec_svr_free(void)

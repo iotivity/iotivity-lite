@@ -103,8 +103,8 @@ oc_sec_pstat_new_device(size_t device_index, bool need_realloc)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
   if ((device_index == (oc_core_get_num_devices() - 1)) && need_realloc) {
-    g_pstat =
-        (oc_sec_pstat_t *)realloc(g_pstat, oc_core_get_num_devices() * sizeof(oc_sec_pstat_t));
+    g_pstat = (oc_sec_pstat_t *)realloc(g_pstat, oc_core_get_num_devices() *
+                                                   sizeof(oc_sec_pstat_t));
     if (!g_pstat) {
       oc_abort("Insufficient memory");
     }

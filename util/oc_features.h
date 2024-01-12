@@ -39,7 +39,7 @@
 #define OC_HAS_FEATURE_PUSH
 #endif
 
-#if defined(OC_BRIDGE) && defined(OC_SERVER) && defined(OC_CLIENT) &&            \
+#if defined(OC_BRIDGE) && defined(OC_SERVER) && defined(OC_CLIENT) &&          \
   defined(OC_DYNAMIC_ALLOCATION)
 #define OC_HAS_FEATURE_BRIDGE
 #endif

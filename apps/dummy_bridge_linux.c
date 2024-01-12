@@ -210,11 +210,12 @@ set_idd_from_file(const char *file_name, size_t device)
       OC_PRINTF("\tIntrospection data set for device.\n");
     } else {
       OC_PRINTF("%s %s\n %s", introspection_error1, file_name,
-            introspection_error2);
+                introspection_error2);
     }
     free(buffer);
   } else {
-    OC_PRINTF("%s %s\n %s", introspection_error1, file_name, introspection_error2);
+    OC_PRINTF("%s %s\n %s", introspection_error1, file_name,
+              introspection_error2);
   }
 #endif
 }
@@ -258,7 +259,7 @@ static virtual_light_t *
 lookup_virtual_light(size_t device_index)
 {
   oc_virtual_device_t *virtual_device_info =
-      oc_bridge_get_vod_mapping_info(device_index);
+    oc_bridge_get_vod_mapping_info(device_index);
   for (size_t i = 0; i < VOD_COUNT; ++i) {
     if (strncmp(virtual_lights[i].eco_system,
                 oc_string(virtual_device_info->econame), 32) == 0) {
@@ -445,7 +446,8 @@ ocf_event_thread(void *data)
       pthread_cond_wait(&cv, &mutex);
     } else {
       ts.tv_sec = (__time_t)(next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (__syscall_slong_t)((double)(next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND);
+      ts.tv_nsec = (__syscall_slong_t)((double)(next_event % OC_CLOCK_SECOND) *
+                                       1.e09 / OC_CLOCK_SECOND);
       pthread_cond_timedwait(&cv, &mutex, &ts);
     }
     app_mutex_unlock(mutex);
@@ -500,10 +502,11 @@ disconnect_light(unsigned int index)
     virtual_lights[index].eco_system);
   if (device != 0) {
     if (oc_bridge_remove_virtual_device(device) == 0) {
-      OC_PRINTF("%s removed from the bridge\n", virtual_lights[index].device_name);
+      OC_PRINTF("%s removed from the bridge\n",
+                virtual_lights[index].device_name);
     } else {
       OC_PRINTF("FAILED to remove %s from the bridge\n",
-            virtual_lights[index].device_name);
+                virtual_lights[index].device_name);
     }
   } else {
     OC_PRINTF("FAILED to find virtual light to remove.");
@@ -548,17 +551,17 @@ display_summary(void)
     OC_PRINTF("\teconame: %s\n", virtual_lights[i].eco_system);
     OC_PRINTF("\tlight switch is: %s\n", (virtual_lights[i].on ? "ON" : "OFF"));
     OC_PRINTF("\tAdded to bridge: %s\n",
-          (virtual_lights[i].discovered ? "discovered" : "not discovered"));
+              (virtual_lights[i].discovered ? "discovered" : "not discovered"));
     OC_PRINTF("\tOCF Device ID: %s\n",
-          (virtual_lights[i].added_to_bridge ? di_str : "N/A"));
+              (virtual_lights[i].added_to_bridge ? di_str : "N/A"));
   }
   OC_PRINTF((discover_vitual_devices) ? "ACTIVELY DISCOVERING DEVICES\n"
-                                  : "NOT DISCOVERING DEVICES\n");
+                                      : "NOT DISCOVERING DEVICES\n");
 }
 #define SCANF(...)                                                             \
   do {                                                                         \
     if (scanf(__VA_ARGS__) <= 0) {                                             \
-      OC_PRINTF("ERROR Invalid input\n");                                          \
+      OC_PRINTF("ERROR Invalid input\n");                                      \
       while ((c = getchar()) != EOF && c != '\n')                              \
         ;                                                                      \
       fflush(stdin);                                                           \
@@ -574,7 +577,7 @@ reset_light(unsigned int index)
     (uint8_t *)virtual_lights[index].uuid, OC_UUID_LEN,
     virtual_lights[index].eco_system);
   if (device_index != 0) {
-//    oc_reset_device_v1(device_index, true);
+    //    oc_reset_device_v1(device_index, true);
     oc_reset_device(device_index);
     OC_PRINTF("device %zu is being reset!!\n", device_index);
     virtual_lights[index].discovered = false;
@@ -602,7 +605,7 @@ reset_device(void)
   switch (c) {
   case 0:
     oc_reset_device(0u);
-//    oc_reset_device_v1(0u, true);
+    //    oc_reset_device_v1(0u, true);
     break;
   case 1:
     reset_light(0u);
@@ -701,7 +704,7 @@ main(void)
   sigaction(SIGINT, &sa, NULL);
 #endif
 
-//  oc_log_set_level(OC_LOG_LEVEL_DEBUG);
+  //  oc_log_set_level(OC_LOG_LEVEL_DEBUG);
 
   static const oc_handler_t handler = { .init = app_init,
                                         .signal_event_loop = signal_event_loop,
@@ -713,7 +716,8 @@ main(void)
   oc_set_max_app_data_size(13312);
 #ifdef OC_STORAGE
   if (!directoryFound("dummy_bridge_linux_creds")) {
-    printf("Creating dummy_bridge_linux_creds directory for persistant storage.");
+    printf(
+      "Creating dummy_bridge_linux_creds directory for persistant storage.");
 #ifdef WIN32
     CreateDirectory("dummy_bridge_linux_creds", NULL);
 #else

@@ -542,7 +542,8 @@ oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len,
  *
  * @param device the device index
  * @param reset (reset == 1): search from the beginning of the list,
- *              (reset == 0): resume search from the next of the last found item.
+ *              (reset == 0): resume search from the next of the last found
+ * item.
  * @return non-NULL found resource
  * @return NULL no more resource or end of list
  */

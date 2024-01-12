@@ -33,7 +33,6 @@
 extern "C" {
 #endif
 
-
 /*
  * internal struct that holds the values that build the `oic.r.vodlist`
  * properties.
@@ -46,18 +45,17 @@ typedef struct oc_vods_s
   oc_string_t econame;
 } oc_vods_t;
 
-
 typedef struct oc_virtual_device_s
 {
   struct oc_virtual_device_s *next;
   uint8_t *v_id;
   size_t v_id_size;
   oc_string_t econame;
-  size_t index;             ///< index of `g_oc_device_info[]` where
-                            ///< the corresponding Device is stored.
+  size_t index; ///< index of `g_oc_device_info[]` where
+                ///< the corresponding Device is stored.
 
-  bool is_vod_online;       ///< false: Device itself is still alive,
-                            ///< but it was removed from "oic.r.vodlist:vods"
+  bool is_vod_online; ///< false: Device itself is still alive,
+                      ///< but it was removed from "oic.r.vodlist:vods"
 } oc_virtual_device_t;
 
 /**
@@ -148,10 +146,10 @@ size_t oc_bridge_add_virtual_device(
 
 /**
  * @brief add new vodentry for an existing VOD to "oic.r.vodlist:vods".
- *        This function is usually called after `oc_bridge_remove_virtual_device()`
- *        is called.
- *        This function DOES NOT add new Device to `g_oc_device_info[]`, but
- *        just re-registre existing VOD to "oic.r.vodlist:vods" list.
+ *        This function is usually called after
+ * `oc_bridge_remove_virtual_device()` is called. This function DOES NOT add new
+ * Device to `g_oc_device_info[]`, but just re-registre existing VOD to
+ * "oic.r.vodlist:vods" list.
  *
  * @param device_index Device index of VOD to be online
  * @return 0: success, -1: failure
@@ -231,7 +229,8 @@ oc_virtual_device_t *oc_bridge_get_vod_mapping_info(
   size_t virtual_device_index);
 
 /**
- * find VOD mapping entry which is corresponding to an item of "oic.r.vodlist:vods"
+ * find VOD mapping entry which is corresponding to an item of
+ * "oic.r.vodlist:vods"
  *
  * @param vod an item of "oic.r.vodlist:vods"
  *
@@ -240,9 +239,7 @@ oc_virtual_device_t *oc_bridge_get_vod_mapping_info(
  *    - NULL if no virtual device was found corresponding to the `vod`
  */
 OC_API
-oc_virtual_device_t *oc_bridge_get_vod_mapping_info2(
-  oc_vods_t *vod);
-
+oc_virtual_device_t *oc_bridge_get_vod_mapping_info2(oc_vods_t *vod);
 
 /**
  * @brief return entry of "oic.r.vodlist:vods" list
@@ -250,8 +247,7 @@ oc_virtual_device_t *oc_bridge_get_vod_mapping_info2(
  * @return VOD entry (oc_vods_t)
  */
 OC_API
-oc_vods_t * oc_bridge_get_vod(oc_uuid_t di);
-
+oc_vods_t *oc_bridge_get_vod(oc_uuid_t di);
 
 /**
  * @brief return the list of current active VODs
@@ -261,7 +257,7 @@ oc_vods_t * oc_bridge_get_vod(oc_uuid_t di);
  *  - head of `g_vods` list
  */
 OC_API
-oc_vods_t * oc_bridge_get_vod_list(void);
+oc_vods_t *oc_bridge_get_vod_list(void);
 
 /**
  * @brief Print out all contents of g_oc_device_info[] array

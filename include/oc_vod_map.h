@@ -48,7 +48,8 @@ extern "C" {
 typedef struct oc_vod_mapping_list_s
 {
   OC_LIST_STRUCT(vods);
-  size_t next_index;        ///< index of g_oc_device_info[]. new VOD will be added to this position
+  size_t next_index; ///< index of g_oc_device_info[]. new VOD will be added to
+                     ///< this position
 } oc_vod_mapping_list_t;
 
 /*
@@ -87,14 +88,13 @@ void oc_vod_map_reset(void);
  * @return 0 if not found
  */
 size_t oc_vod_map_get_vod_index(const uint8_t *vod_id, size_t vod_id_size,
-                               const char *econame);
+                                const char *econame);
 
 /**
  *
- * @brief add new VOD mapping entry (identified by vod_id) to the proper position of
- *        `g_vod_mapping_list.vods` list,
- *        and update `g_vod_mapping_list.next_index`.
- *        finally, write updated vod_map file.
+ * @brief add new VOD mapping entry (identified by vod_id) to the proper
+ * position of `g_vod_mapping_list.vods` list, and update
+ * `g_vod_mapping_list.next_index`. finally, write updated vod_map file.
  *
  * @param vod_id id to be used as VOD's ID
  *        (UUID, serial number, or any other identifier that can
@@ -104,8 +104,9 @@ size_t oc_vod_map_get_vod_index(const uint8_t *vod_id, size_t vod_id_size,
  *
  * @return index of just added vod (index of `g_oc_device_info[]`)
  */
-size_t oc_vod_map_add_mapping_entry(const uint8_t *vod_id, const size_t vod_id_size,
-                         const char *econame);
+size_t oc_vod_map_add_mapping_entry(const uint8_t *vod_id,
+                                    const size_t vod_id_size,
+                                    const char *econame);
 
 /*
  * Remove the vod_id at the given device index
@@ -134,7 +135,7 @@ oc_virtual_device_t *oc_vod_map_get_mapping_entry(size_t device_index);
  *
  * @return head of g_vod_mapping_list.vods
  */
-oc_virtual_device_t * oc_vod_map_get_mapping_list(void);
+oc_virtual_device_t *oc_vod_map_get_mapping_list(void);
 
 #ifdef __cplusplus
 }

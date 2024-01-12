@@ -498,13 +498,15 @@ oc_ri_get_app_resource_by_device(size_t device, bool reset)
       rsc = rsc->next;
       return found;
     } else {
-      if (rsc) rsc = rsc->next;
+      if (rsc)
+        rsc = rsc->next;
       if (coll_rsc && (coll_rsc->device == device)) {
         found = coll_rsc;
         coll_rsc = coll_rsc->next;
         return found;
       } else {
-        if (coll_rsc) coll_rsc = coll_rsc->next;
+        if (coll_rsc)
+          coll_rsc = coll_rsc->next;
       }
     }
   }
@@ -540,7 +542,8 @@ oc_ri_delete_app_resources_per_device(size_t index)
   }
 
   /*
-   * TODO4ME <2023/12/11> oc_ri_delete_app_resources_per_device() : remove collection too ?
+   * TODO4ME <2023/12/11> oc_ri_delete_app_resources_per_device() : remove
+   * collection too ?
    */
   // oc_collections_free_per_device(index);
 }

@@ -86,8 +86,8 @@ oc_sec_acl_new_device(size_t device_index, bool need_realloc)
     /*
      * if `g_oc_device_info[device_index]` is newly allocated entry...
      */
-    g_aclist =
-        (oc_sec_acl_t *)realloc(g_aclist, oc_core_get_num_devices() * sizeof(oc_sec_acl_t));
+    g_aclist = (oc_sec_acl_t *)realloc(g_aclist, oc_core_get_num_devices() *
+                                                   sizeof(oc_sec_acl_t));
     if (!g_aclist) {
       oc_abort("Insufficient memory");
     }
@@ -95,7 +95,7 @@ oc_sec_acl_new_device(size_t device_index, bool need_realloc)
     memset(&g_aclist[device_index], 0, sizeof(oc_sec_acl_t));
     OC_LIST_STRUCT_INIT(&g_aclist[device_index], subjects);
 
-    size_t i=0;
+    size_t i = 0;
     while (i < (device_index)) {
       OC_LIST_STRUCT_REINIT(&g_aclist[i], subjects);
       i++;

@@ -1246,7 +1246,6 @@ void oc_resource_set_request_handler(oc_resource_t *resource,
                                      oc_request_callback_t callback,
                                      void *user_data) OC_NONNULL(1);
 
-
 #ifdef OC_OSCORE
 /**
  * @brief sets the support of the secure multicast feature

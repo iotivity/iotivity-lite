@@ -132,12 +132,10 @@ extern "C" {
     oc_list_init((struct_ptr)->name);                                          \
   } while (0)
 
-
 #define OC_LIST_STRUCT_REINIT(struct_ptr, name)                                \
   do {                                                                         \
     (struct_ptr)->name = &((struct_ptr)->OC_LIST_CONCAT(name, _list));         \
   } while (0)
-
 
 /**
  * The linked list type.
