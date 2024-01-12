@@ -217,12 +217,12 @@ doxm_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
             oc_connectivity_ports_t ports;
             memset(&ports, 0, sizeof(ports));
 
-            OC_DBG("=====> Bridge is owned, VOD %ld connection is being initialized!!", device);
+            OC_DBG("=====> Bridge is owned, VOD %zu connection is being initialized!!", device);
 
             if (oc_connectivity_init(device, ports) < 0) {
               oc_abort("error initializing connectivity for device");
             }
-            OC_DBG("======> oc_bridge: init connectivity for virtual device %zd",
+            OC_DBG("======> oc_bridge: init connectivity for virtual device %zu",
                    device);
           }
         }
@@ -400,7 +400,7 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
     if (oc_connectivity_init(vd_index, ports) < 0) {
       oc_abort("error initializing connectivity for device");
     }
-    OC_DBG("=====> oc_bridge: init connectivity for virtual device %zd", vd_index);
+    OC_DBG("=====> oc_bridge: init connectivity for virtual device %zu", vd_index);
   }
 #else
   oc_connectivity_ports_t ports;
@@ -443,12 +443,12 @@ oc_bridge_add_vod(size_t device_index)
   oc_virtual_device_t *vod_mapping_item;
 
   if (!(vod_mapping_item = oc_bridge_get_vod_mapping_info(device_index))) {
-    OC_ERR("oc_bridge: failed to find VOD mapping entry which is corresponding to the Device (device index: %ld)", device_index);
+    OC_ERR("oc_bridge: failed to find VOD mapping entry which is corresponding to the Device (device index: %zu)", device_index);
     return -1;
   }
 
   if (!(device = oc_core_get_device_info(device_index))) {
-    OC_ERR("oc_bridge: failed to find Device whose index is %ld", device_index);
+    OC_ERR("oc_bridge: failed to find Device whose index is %zu", device_index);
     return -1;
   }
 
@@ -459,7 +459,7 @@ oc_bridge_add_vod(size_t device_index)
     if (oc_connectivity_init(device_index, ports) < 0) {
       oc_abort("error initializing connectivity for device");
     }
-    OC_DBG("oc_bridge: init connectivity for virtual device %ld", device_index);
+    OC_DBG("oc_bridge: init connectivity for virtual device %zu", device_index);
   }
 #else
   oc_connectivity_ports_t ports;
@@ -583,7 +583,7 @@ oc_bridge_print_device_list(void)
   for (size_t i=0; i<device_count; i++) {
     oc_uuid_to_str(&oc_core_get_device_info(i)->di, di, OC_UUID_LEN);
     oc_uuid_to_str(&oc_core_get_device_info(i)->piid, piid, OC_UUID_LEN);
-    printf("[ Device Index : %ld ]\n  |_ Device ID: %s\n  |_ PIID: %s\n  |_ Name: %s\n  |_ ICV: %s\n  |_ DMV: %s\n  |_ Enable: %d\n",
+    printf("[ Device Index : %zu ]\n  |_ Device ID: %s\n  |_ PIID: %s\n  |_ Name: %s\n  |_ ICV: %s\n  |_ DMV: %s\n  |_ Enable: %d\n",
         i,
         di,
         piid,

@@ -638,8 +638,6 @@ bool oc_ri_on_delete_resource_remove_callback(oc_ri_delete_resource_cb_t cb)
  *        from the list of application resources
  *
  * @param index index of `g_oc_device_info[]`
- * @return true success
- * @return false failure
  */
 OC_API
 void oc_ri_delete_app_resources_per_device(size_t index);

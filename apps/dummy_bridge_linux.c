@@ -576,7 +576,7 @@ reset_light(unsigned int index)
   if (device_index != 0) {
 //    oc_reset_device_v1(device_index, true);
     oc_reset_device(device_index);
-    OC_PRINTF("device %ld is being reset!!\n", device_index);
+    OC_PRINTF("device %zu is being reset!!\n", device_index);
     virtual_lights[index].discovered = false;
     virtual_lights[index].added_to_bridge = false;
   }
