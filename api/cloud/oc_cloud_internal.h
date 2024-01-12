@@ -42,6 +42,7 @@ extern "C" {
 #define OC_CLOUD_ACTION_REGISTER_STR "register"
 #define OC_CLOUD_ACTION_LOGIN_STR "login"
 #define OC_CLOUD_ACTION_REFRESH_TOKEN_STR "refreshtoken"
+#define OC_CLOUD_ACTION_UNKNOWN_STR "unknown"
 
 typedef struct cloud_conf_update_t
 {

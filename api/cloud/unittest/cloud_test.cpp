@@ -113,5 +113,6 @@ TEST_F(TestCloud, oc_cloud_action_to_str)
   EXPECT_EQ(OC_CLOUD_ACTION_REFRESH_TOKEN_STR, v);
   v.assign(oc_cloud_action_to_str(OC_CLOUD_ACTION_LOGIN));
   EXPECT_EQ(OC_CLOUD_ACTION_LOGIN_STR, v);
-  EXPECT_EQ(nullptr, oc_cloud_action_to_str(OC_CLOUD_ACTION_UNKNOWN));
+  v.assign(oc_cloud_action_to_str(OC_CLOUD_ACTION_UNKNOWN));
+  EXPECT_EQ(OC_CLOUD_ACTION_UNKNOWN_STR, v);
 }

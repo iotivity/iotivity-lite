@@ -400,7 +400,7 @@ oc_cloud_action_to_str(oc_cloud_action_t action)
   case OC_CLOUD_ACTION_REFRESH_TOKEN:
     return OC_CLOUD_ACTION_REFRESH_TOKEN_STR;
   default:
-    return NULL;
+    return OC_CLOUD_ACTION_UNKNOWN_STR;
   }
 }
 

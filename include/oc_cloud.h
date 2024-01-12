@@ -155,7 +155,7 @@ typedef bool (*oc_cloud_schedule_action_cb_t)(oc_cloud_action_t action,
                                               uint8_t retry_count,
                                               uint64_t *delay,
                                               uint16_t *timeout,
-                                              void *user_data);
+                                              void *user_data) OC_NONNULL(3, 4);
 
 /**
  * @brief Cloud retry configuration structure.
@@ -430,7 +430,7 @@ void oc_cloud_set_keepalive(
 OC_API
 void oc_cloud_set_schedule_action(
   oc_cloud_context_t *ctx, oc_cloud_schedule_action_cb_t on_schedule_action,
-  void *user_data);
+  void *user_data) OC_NONNULL(1);
 
 /**
  * @brief Remove cloud context values, disconnect, and stop the cloud manager,

@@ -49,8 +49,6 @@
 #define MILLISECONDS_PER_MINUTE (60 * MILLISECONDS_PER_SECOND)
 #define MILLISECONDS_PER_HOUR (60 * MILLISECONDS_PER_MINUTE)
 
-#define MIN_DELAYED_VALUE_MS (256)
-
 static void cloud_start_process(oc_cloud_context_t *ctx);
 static oc_event_callback_retval_t cloud_manager_reconnect_async(void *data);
 static oc_event_callback_retval_t cloud_manager_register_async(void *data);
@@ -100,29 +98,16 @@ cloud_manager_reconnect_async(void *data)
 }
 
 static bool
-OC_NONNULL()
-  default_schedule_action(oc_cloud_action_t action, uint8_t retry_count,
-                          oc_status_t last_status, uint64_t *delay,
-                          uint16_t *timeout)
+OC_NONNULL() default_schedule_action(uint8_t retry_count, uint64_t *delay,
+                                     uint16_t *timeout)
 {
-  (void)action;
-  if (retry_count > OC_ARRAY_SIZE(g_retry_timeout)) {
+  if (retry_count >= OC_ARRAY_SIZE(g_retry_timeout)) {
     return false;
   }
-  if (retry_count == 0) {
-    *delay = oc_random_value() % MIN_DELAYED_VALUE_MS;
-    *timeout = g_retry_timeout[retry_count];
-    return true;
-  }
-  retry_count--;
   *timeout = g_retry_timeout[retry_count];
-  if (cloud_is_timeout_error_code(last_status)) {
-    *delay = MIN_DELAYED_VALUE_MS;
-  } else {
-    // for delay use timeout/2 value + random [0, timeout/2]
-    *delay =
-      (uint64_t)(g_retry_timeout[retry_count]) * MILLISECONDS_PER_SECOND / 2;
-  }
+  // for delay use timeout/2 value + random [0, timeout/2]
+  *delay =
+    (uint64_t)(g_retry_timeout[retry_count]) * MILLISECONDS_PER_SECOND / 2;
   // Include a random delay to prevent multiple devices from attempting to
   // connect or make requests simultaneously.
   *delay += oc_random_value() % *delay;
@@ -131,8 +116,7 @@ OC_NONNULL()
 
 static bool
 on_action_response_set_retry(oc_cloud_context_t *ctx, oc_cloud_action_t action,
-                             uint8_t retry_count, oc_status_t last_status,
-                             uint64_t *delay)
+                             uint8_t retry_count, uint64_t *delay)
 {
   bool ok = false;
   if (ctx->schedule_action.on_schedule_action != NULL) {
@@ -140,7 +124,7 @@ on_action_response_set_retry(oc_cloud_context_t *ctx, oc_cloud_action_t action,
       action, retry_count, delay, &ctx->schedule_action.timeout,
       ctx->schedule_action.user_data);
   } else {
-    ok = default_schedule_action(action, retry_count, last_status, delay,
+    ok = default_schedule_action(retry_count, delay,
                                  &ctx->schedule_action.timeout);
   }
   if (!ok) {
@@ -158,8 +142,7 @@ on_action_response_set_retry(oc_cloud_context_t *ctx, oc_cloud_action_t action,
 
 static bool
 cloud_schedule_action(oc_cloud_context_t *ctx, oc_cloud_action_t action,
-                      oc_trigger_t callback, oc_status_t last_code,
-                      bool is_retry)
+                      oc_trigger_t callback, bool is_retry)
 {
   uint64_t interval = 0;
   uint8_t count = 0;
@@ -177,7 +160,7 @@ cloud_schedule_action(oc_cloud_context_t *ctx, oc_cloud_action_t action,
       ctx->retry_count = 0;
     }
   }
-  if (!on_action_response_set_retry(ctx, action, count, last_code, &interval)) {
+  if (!on_action_response_set_retry(ctx, action, count, &interval)) {
     return false;
   }
   oc_reset_delayed_callback_ms(ctx, callback, interval);
@@ -186,16 +169,16 @@ cloud_schedule_action(oc_cloud_context_t *ctx, oc_cloud_action_t action,
 
 static bool
 cloud_schedule_retry(oc_cloud_context_t *ctx, oc_cloud_action_t action,
-                     oc_trigger_t callback, oc_status_t last_code)
+                     oc_trigger_t callback)
 {
-  return cloud_schedule_action(ctx, action, callback, last_code, true);
+  return cloud_schedule_action(ctx, action, callback, true);
 }
 
 static bool
 cloud_schedule_first_attempt(oc_cloud_context_t *ctx, oc_cloud_action_t action,
                              oc_trigger_t callback)
 {
-  return cloud_schedule_action(ctx, action, callback, OC_STATUS_OK, false);
+  return cloud_schedule_action(ctx, action, callback, false);
 }
 
 static void
@@ -233,7 +216,7 @@ cloud_start_process(oc_cloud_context_t *ctx)
                  oc_cloud_action_to_str(action));
     cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, CLOUD_ERROR_CONNECT);
     ctx->store.status |= OC_CLOUD_FAILURE;
-    oc_reset_delayed_callback(ctx, cloud_manager_reconnect_async, 2);
+    oc_reset_delayed_callback(ctx, cloud_manager_reconnect_async, 0);
   }
   _oc_signal_event_loop();
 }
@@ -432,7 +415,7 @@ cloud_manager_register_handler(oc_client_response_t *data)
 finish:
   oc_reset_delayed_callback(ctx, cloud_manager_callback_handler_async, 0);
   if (retry && cloud_schedule_retry(ctx, OC_CLOUD_ACTION_REGISTER,
-                                    cloud_manager_register_async, data->code)) {
+                                    cloud_manager_register_async)) {
     OC_CLOUD_DBG("Registration failed with error(%d), retrying", (int)err);
     // While retrying, keep last error (clec) to CLOUD_OK
     cloud_set_cps_and_last_error(ctx, OC_CPS_REGISTERING, CLOUD_OK);
@@ -476,8 +459,7 @@ cloud_manager_register_async(void *data)
 
 retry:
   if (!cloud_schedule_retry(ctx, OC_CLOUD_ACTION_REGISTER,
-                            cloud_manager_register_async,
-                            OC_STATUS_SERVICE_UNAVAILABLE)) {
+                            cloud_manager_register_async)) {
     OC_CLOUD_ERR("Cannot schedule retry register");
     cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, CLOUD_ERROR_CONNECT);
     return OC_EVENT_DONE;
@@ -580,7 +562,7 @@ on_keepalive_response_default(oc_cloud_context_t *ctx, bool response_received,
     }
     ++ctx->retry_count;
   }
-  return !(ctx->retry_count >= OC_ARRAY_SIZE(g_retry_timeout));
+  return ctx->retry_count < OC_ARRAY_SIZE(g_retry_timeout);
 }
 
 static bool
@@ -611,15 +593,15 @@ cloud_manager_login_handler(oc_client_response_t *data)
   OC_CLOUD_DBG("login handler(%d)", data->code);
 
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)data->user_data;
+
   oc_remove_delayed_callback(ctx, cloud_manager_login_async);
-  bool handleUnauthorizedByRefresh = cloud_context_has_refresh_token(ctx);
-  oc_cps_t cps = OC_CPS_FAILED;
-  oc_cloud_error_t err = _login_handler(ctx, data, &cps);
   if ((ctx->store.status & OC_CLOUD_REGISTERED) == 0) {
-    cloud_set_cps_and_last_error(ctx, cps, err);
+    cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, CLOUD_ERROR_RESPONSE);
     oc_reset_delayed_callback(ctx, cloud_manager_callback_handler_async, 0);
     return;
   }
+  oc_cps_t cps = OC_CPS_FAILED;
+  oc_cloud_error_t err = _login_handler(ctx, data, &cps);
   if (err == CLOUD_OK) {
     cloud_set_cps_and_last_error(ctx, cps, err);
     uint64_t next_ping = 0;
@@ -635,18 +617,22 @@ cloud_manager_login_handler(oc_client_response_t *data)
     return;
   }
   ctx->store.status |= OC_CLOUD_FAILURE;
-  if (err == CLOUD_ERROR_CONNECT &&
-      cloud_schedule_retry(ctx, OC_CLOUD_ACTION_LOGIN,
-                           cloud_manager_login_async, data->code)) {
-    OC_CLOUD_DBG("Login failed with error(%d), retrying", (int)err);
-    // While retrying, keep last error (clec) to CLOUD_OK
-    cloud_set_cps_and_last_error(ctx, cps, CLOUD_OK);
-    oc_reset_delayed_callback(ctx, cloud_manager_callback_handler_async, 0);
-    return;
+
+  if (err == CLOUD_ERROR_CONNECT) {
+    if (cloud_schedule_retry(ctx, OC_CLOUD_ACTION_LOGIN,
+                             cloud_manager_login_async)) {
+      OC_CLOUD_DBG("Login failed with error(%d), retrying", (int)err);
+      // While retrying, keep last error (clec) to CLOUD_OK
+      cloud_set_cps_and_last_error(ctx, cps, CLOUD_OK);
+      oc_reset_delayed_callback(ctx, cloud_manager_callback_handler_async, 0);
+      return;
+    }
+    cps = OC_CPS_FAILED;
   }
   if (err == CLOUD_ERROR_UNAUTHORIZED) {
     cloud_set_cps_and_last_error(ctx, cps, err);
     cloud_context_clear_access_token(ctx);
+    bool handleUnauthorizedByRefresh = cloud_context_has_refresh_token(ctx);
     if (!handleUnauthorizedByRefresh) {
       cloud_context_clear(ctx);
     } else {
@@ -698,12 +684,11 @@ cloud_manager_login_async(void *data)
 
 retry:
   if (!cloud_schedule_retry(ctx, OC_CLOUD_ACTION_LOGIN,
-                            cloud_manager_login_async,
-                            OC_STATUS_SERVICE_UNAVAILABLE)) {
+                            cloud_manager_login_async)) {
     OC_CLOUD_ERR("Cannot schedule retry login, restarting");
     cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED, CLOUD_ERROR_CONNECT);
     ctx->store.status |= OC_CLOUD_FAILURE;
-    oc_reset_delayed_callback(ctx, cloud_manager_reconnect_async, 2);
+    oc_reset_delayed_callback(ctx, cloud_manager_reconnect_async, 0);
     return OC_EVENT_DONE;
   }
   // While retrying, keep last error (clec) to CLOUD_OK
@@ -870,8 +855,7 @@ cloud_manager_refresh_token_handler(oc_client_response_t *data)
   } else if (err == CLOUD_ERROR_CONNECT) {
     if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
       if (!cloud_schedule_retry(ctx, OC_CLOUD_ACTION_REFRESH_TOKEN,
-                                cloud_manager_refresh_token_async,
-                                data->code)) {
+                                cloud_manager_refresh_token_async)) {
         OC_CLOUD_ERR(
           "Refreshing of access token failed with error(%d), restarting",
           (int)err);
@@ -928,13 +912,12 @@ cloud_manager_refresh_token_async(void *data)
 
 retry:
   if (!cloud_schedule_retry(ctx, OC_CLOUD_ACTION_REFRESH_TOKEN,
-                            cloud_manager_refresh_token_async,
-                            OC_STATUS_SERVICE_UNAVAILABLE)) {
+                            cloud_manager_refresh_token_async)) {
     OC_CLOUD_ERR("Cannot schedule refresh token, restarting");
     cloud_set_cps_and_last_error(ctx, OC_CPS_FAILED,
                                  CLOUD_ERROR_REFRESH_ACCESS_TOKEN);
     ctx->store.status |= OC_CLOUD_FAILURE;
-    oc_reset_delayed_callback(ctx, cloud_manager_reconnect_async, 2);
+    oc_reset_delayed_callback(ctx, cloud_manager_reconnect_async, 0);
     return OC_EVENT_DONE;
   }
   cloud_set_last_error(ctx, CLOUD_ERROR_REFRESH_ACCESS_TOKEN);
