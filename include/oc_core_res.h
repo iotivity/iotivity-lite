@@ -98,8 +98,8 @@ oc_device_info_t *oc_core_get_device_info(size_t device);
 /**
  * @brief retrieve the device whose device is di
  *
- * @param di[in] device id to be used for search
- * @param device[out] device index (index of g_oc_device_info[])
+ * @param di device id to be used for search
+ * @param device device index (index of g_oc_device_info[])
  *        of the device whose device id is di
  * @return 0 if found
  */

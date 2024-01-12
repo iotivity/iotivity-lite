@@ -42,8 +42,8 @@ static CONDITION_VARIABLE cv;
 static CRITICAL_SECTION cs;
 
 /* OS specific definition for lock/unlock */
-#define app_mutex_lock(m) EnterCriticalSection(&m)
-#define app_mutex_unlock(m) LeaveCriticalSection(&m)
+#define app_mutex_lock(m) EnterCriticalSection(&(m))
+#define app_mutex_unlock(m) LeaveCriticalSection(&(m))
 
 #elif defined(__linux__)
 static pthread_t event_thread;
@@ -52,8 +52,8 @@ static pthread_mutex_t mutex;
 static pthread_cond_t cv;
 
 /* OS specific definition for lock/unlock */
-#define app_mutex_lock(m) pthread_mutex_lock(&m)
-#define app_mutex_unlock(m) pthread_mutex_unlock(&m)
+#define app_mutex_lock(m) pthread_mutex_lock(&(m))
+#define app_mutex_unlock(m) pthread_mutex_unlock(&(m))
 
 static struct timespec ts;
 #endif
@@ -136,7 +136,7 @@ print_ascii_lights_ui(void)
       if (virtual_lights[i].on) {
         C_YELLOW;
       }
-      OC_PRINTF(" %s ", (virtual_lights[i].on) ? " _ " : " _ ");
+      OC_PRINTF(" %s ", " _ ");
       if (virtual_lights[i].on) {
         C_RESET;
       }
@@ -164,7 +164,7 @@ print_ascii_lights_ui(void)
       if (virtual_lights[i].on) {
         C_YELLOW;
       }
-      OC_PRINTF(" %s ", (virtual_lights[i].on) ? " # " : " # ");
+      OC_PRINTF(" %s ", " # ");
       if (virtual_lights[i].on) {
         C_RESET;
       }
@@ -437,15 +437,15 @@ ocf_event_thread(void *data)
   oc_clock_time_t next_event;
   while (quit != 1) {
     app_mutex_lock(app_sync_lock);
-    next_event = oc_main_poll();
+    next_event = oc_main_poll_v1();
     app_mutex_unlock(app_sync_lock);
 
     app_mutex_lock(mutex);
     if (next_event == 0) {
       pthread_cond_wait(&cv, &mutex);
     } else {
-      ts.tv_sec = (next_event / OC_CLOCK_SECOND);
-      ts.tv_nsec = (next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND;
+      ts.tv_sec = (__time_t)(next_event / OC_CLOCK_SECOND);
+      ts.tv_nsec = (__syscall_slong_t)((double)(next_event % OC_CLOCK_SECOND) * 1.e09 / OC_CLOCK_SECOND);
       pthread_cond_timedwait(&cv, &mutex, &ts);
     }
     app_mutex_unlock(mutex);

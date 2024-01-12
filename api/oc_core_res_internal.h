@@ -68,7 +68,7 @@ oc_device_info_t *oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_
 /**
  * @brief Remove existing device at "index" position
  *
- * @param index
+ * @param index Device index
  * @return true success
  * @return false failure
  */
