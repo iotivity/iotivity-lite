@@ -214,7 +214,7 @@ oc_vod_map_dump(void)
   uint8_t buf[OC_MAX_APP_DATA_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
-  oc_rep_new(buf, OC_MAX_APP_DATA_SIZE);
+  oc_rep_new_v1(buf, OC_MAX_APP_DATA_SIZE);
   oc_vod_map_encode();
   int size = oc_rep_get_encoded_payload_size();
   if (size > 0) {

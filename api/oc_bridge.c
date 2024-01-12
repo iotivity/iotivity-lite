@@ -51,19 +51,19 @@ OC_LIST(g_vods);
 static oc_resource_t *g_vodlist_res;
 
 #define OC_PRINT_VODSLIST                                                      \
-  OC_DBG("\"vods\": [");                                                       \
+  OC_PRINTF("\"vods\": [");                                                       \
   oc_vods_t *print_vod_item = (oc_vods_t *)oc_list_head(g_vods);       \
   while (print_vod_item) {                                                     \
-    OC_DBG("  {");                                                             \
-    OC_DBG("    \"n\": \"%s\"", oc_string(print_vod_item->name));              \
+    OC_PRINTF("  {");                                                             \
+    OC_PRINTF("    \"n\": \"%s\"", oc_string(print_vod_item->name));              \
     char di_uuid[OC_UUID_LEN];                                                 \
     oc_uuid_to_str(&print_vod_item->di, di_uuid, OC_UUID_LEN);                 \
-    OC_DBG("    \"di\": \"%s\"", di_uuid);                                     \
-    OC_DBG("    \"econame\": \"%s\"", oc_string(print_vod_item->econame));     \
+    OC_PRINTF("    \"di\": \"%s\"", di_uuid);                                     \
+    OC_PRINTF("    \"econame\": \"%s\"", oc_string(print_vod_item->econame));     \
     if (print_vod_item->next) {                                                \
-      OC_DBG("  },");                                                          \
+      OC_PRINTF("  },");                                                          \
     } else {                                                                   \
-      OC_DBG("  }");                                                           \
+      OC_PRINTF("  }");                                                           \
     }                                                                          \
     print_vod_item = print_vod_item->next;                                     \
   }
@@ -81,6 +81,7 @@ oc_bridge_is_virtual_device(size_t device_index)
   return false;
 }
 
+#ifdef OC_SECURITY
 static void
 add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
                                 const char *econame)
@@ -119,6 +120,7 @@ add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
   OC_DBG("=====> oc_bridge: adding %s [%s] from oic.r.vodlist", name, econame);
   OC_PRINT_VODSLIST;
 }
+#endif // OC_SECURITY
 
 /*
  * remove VOD from `oic.r.vodlist` Resource
@@ -442,12 +444,14 @@ oc_bridge_add_vod(size_t device_index)
   oc_device_info_t *device;
   oc_virtual_device_t *vod_mapping_item;
 
-  if (!(vod_mapping_item = oc_bridge_get_vod_mapping_info(device_index))) {
+  vod_mapping_item = oc_bridge_get_vod_mapping_info(device_index);
+  if (!vod_mapping_item) {
     OC_ERR("oc_bridge: failed to find VOD mapping entry which is corresponding to the Device (device index: %zu)", device_index);
     return -1;
   }
 
-  if (!(device = oc_core_get_device_info(device_index))) {
+  device = oc_core_get_device_info(device_index);
+  if (!device) {
     OC_ERR("oc_bridge: failed to find Device whose index is %zu", device_index);
     return -1;
   }

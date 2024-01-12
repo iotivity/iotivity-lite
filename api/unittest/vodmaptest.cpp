@@ -51,7 +51,11 @@ protected:
   virtual void SetUp()
   {
 #ifdef OC_STORAGE
+#if defined(_WIN32_)
+    mkdir("vod_map_test_dir");
+#elif defined(__linux__)
     mkdir("vod_map_test_dir", S_IRWXU | S_IRWXG | S_IRWXG /* 0777 permissions*/ );
+#endif /* if defined(_WIN32_) */
     oc_storage_config("./vod_map_test_dir/");
 #endif /* OC_STORAGE */
 
