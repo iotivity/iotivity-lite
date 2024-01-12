@@ -34,6 +34,11 @@ oc_udp_is_valid_message(oc_message_t *message)
 {
   assert(message != NULL);
 #ifdef OC_SECURITY
+#define SSL_MAJOR_VERSION_3 (3)
+#define SSL_MINOR_VERSION_1 (1)
+#define SSL_MINOR_VERSION_2 (2)
+#define SSL_MINOR_VERSION_3 (3)
+#define SSL_MINOR_VERSION_4 (4)
   if ((message->endpoint.flags & SECURED) != 0) {
     if (message->length < 3) {
       OC_ERR("invalid DTLS header length: %lu", (long unsigned)message->length);
@@ -47,7 +52,7 @@ oc_udp_is_valid_message(oc_message_t *message)
     uint8_t minor_version = 255 - message->data[2] + 1;
     OC_DBG("TLS header: record type: %d, major %d(%d), minor %d(%d)", type,
            major_version, message->data[1], minor_version, message->data[2]);
-    if (major_version != MBEDTLS_SSL_MAJOR_VERSION_3) {
+    if (major_version != SSL_MAJOR_VERSION_3) {
       OC_ERR("invalid major version: %d", major_version);
       // Invalid major version
       return false;
@@ -55,13 +60,13 @@ oc_udp_is_valid_message(oc_message_t *message)
     if (
       // TLS 1.0 - some implementations doesn't set the minor version (eg
       // golang)
-      minor_version != 1 &&
+      minor_version != SSL_MINOR_VERSION_1 &&
       // TLS 1.1
-      minor_version != 2 &&
+      minor_version != SSL_MINOR_VERSION_2 &&
       // TLS 1.2
-      minor_version != MBEDTLS_SSL_MINOR_VERSION_3 &&
+      minor_version != SSL_MINOR_VERSION_3 &&
       // TLS 1.3
-      minor_version != MBEDTLS_SSL_MINOR_VERSION_4) {
+      minor_version != SSL_MINOR_VERSION_4) {
       OC_ERR("invalid minor version: %d", minor_version);
       return false;
     }

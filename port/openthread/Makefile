@@ -47,7 +47,7 @@ ifeq ($(RETARGET),1)
 endif
 
 ifeq ($(DEBUG),1)
-	CFLAGS += -DOC_DEBUG -g -O0
+	CFLAGS += -DOC_LOG_MAXIMUM_LEVEL=8 -g -O0
 else
 	CFLAGS += -g -O0
 endif
@@ -57,7 +57,7 @@ ifeq ($(MEMORY_TRACE), 1)
 endif
 
 ifeq ($(SECURE),1)
-	SRC_COMMON += oc_acl.c oc_cred.c oc_doxm.c oc_pstat.c oc_dtls.c oc_svr.c oc_store.c oc_sdi.c
+	SRC_COMMON += oc_acl.c oc_cred.c oc_cred_util.c oc_doxm.c oc_pstat.c oc_dtls.c oc_svr.c oc_store.c oc_sdi.c
 	SRC_COMMON += memory_buffer_alloc.c
 	CFLAGS += -DOC_SECURITY
 endif

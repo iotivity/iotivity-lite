@@ -32,17 +32,15 @@ std::optional<IdentityHint>
 AddPresharedKey(size_t device, const PreSharedKey &psk)
 {
   oc_uuid_t *uuid = oc_core_get_device_id(device);
-  IdentityHint hint{};
-  std::copy(std::begin(uuid->id), std::end(uuid->id), std::begin(hint));
   std::array<char, OC_UUID_LEN> uuid_str{};
   oc_uuid_to_str(uuid, uuid_str.data(), uuid_str.size());
-  if (oc_sec_add_new_cred(
-        device, false, nullptr, -1, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL,
-        uuid_str.data(), { psk.data(), psk.size(), OC_ENCODING_RAW },
-        { nullptr, 0, OC_ENCODING_UNSUPPORTED }, { nullptr, 0 }, { nullptr, 0 },
-        { nullptr, 0 }, nullptr) == -1) {
+  if (oc_sec_add_new_psk_cred(device, uuid_str.data(),
+                              { psk.data(), psk.size(), OC_ENCODING_RAW },
+                              OC_STRING_VIEW_NULL) == -1) {
     return {};
   }
+  IdentityHint hint{};
+  std::copy(std::begin(uuid->id), std::end(uuid->id), std::begin(hint));
   return hint;
 }
 

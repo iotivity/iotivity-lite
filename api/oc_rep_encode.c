@@ -436,7 +436,7 @@ oc_rep_encoder_write_raw(oc_rep_encoder_t *encoder, const uint8_t *data,
     memcpy(&encoder->ctx, &prevEncoder, sizeof(prevEncoder));
 #else  /* OC_DYNAMIC_ALLOCATION */
     OC_WRN("Insufficient memory: Increase OC_MAX_APP_DATA_SIZE to "
-           "accomodate a larger payload(+%zu)",
+           "accomodate a larger payload(+%lu)",
            len - remaining);
     return CborErrorOutOfMemory;
 #endif /* !OC_DYNAMIC_ALLOCATION */

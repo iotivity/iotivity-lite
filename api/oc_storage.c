@@ -168,7 +168,7 @@ storage_print_data(const uint8_t *buf, size_t size)
   oc_rep_to_json(result.rep, json, json_size + 1, true);
 #else  /* !OC_DYNAMIC_ALLOCATION */
   char json[4096] = { 0 };
-  oc_rep_to_json(rep, json, OC_ARRAY_SIZE(json), true);
+  oc_rep_to_json(result.rep, json, OC_ARRAY_SIZE(json), true);
 #endif /* OC_DYNAMIC_ALLOCATION */
   OC_DBG("payload %s", json);
 #ifdef OC_DYNAMIC_ALLOCATION

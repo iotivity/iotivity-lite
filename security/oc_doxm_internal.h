@@ -44,6 +44,12 @@ typedef enum oc_sec_doxmtype_t {
   OC_OXMTYPE_MFG_CERT = 2
 } oc_sec_oxmtype_t;
 
+#define OC_OXMTYPE_JW_STR "oic.sec.doxm.jw"
+#define OC_OXMTYPE_RDP_STR "oic.sec.doxm.rdp"
+#ifdef OC_PKI
+#define OC_OXMTYPE_MFG_CERT_STR "oic.sec.doxm.mfgcert"
+#endif /* OC_PKI */
+
 /// Device Owner Transfer Resource representation
 typedef struct
 {

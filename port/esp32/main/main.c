@@ -16,6 +16,7 @@
  *
  ******************************************************************/
 
+#include "debug_print.h"
 #include "oc_api.h"
 #include "oc_clock_util.h"
 #include "oc_core_res.h"
@@ -32,7 +33,6 @@
 #include "hawkbit.h"
 #endif /* OC_HAS_FEATURE_PLGD_HAWKBIT */
 
-#include "debug_print.h"
 #include "driver/gpio.h"
 #include "esp_event.h"
 #include "esp_log.h"
@@ -61,8 +61,6 @@ static const int IPV6_CONNECTED_BIT = BIT1;
 
 static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_cond_t g_cv = PTHREAD_COND_INITIALIZER;
-static struct timespec ts;
-static int quit = 0;
 static bool light_state = false;
 
 static const char *TAG = "iotivity server";
@@ -128,14 +126,10 @@ post_light(oc_request_t *request, oc_interface_mask_t interface,
       state = rep->value.boolean;
       OC_PRINTF("value: %d\n", state);
       gpio_set_level(BLINK_GPIO, state);
-
       break;
-
-    // case ...
     default:
       oc_send_response(request, OC_STATUS_BAD_REQUEST);
       return;
-      break;
     }
     rep = rep->next;
   }
@@ -304,6 +298,8 @@ cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
 void
 factory_presets_cb_new(size_t device, void *data)
 {
+  OC_PRINTF("factory_presets_cb: %d\n", (int)device);
+
   gpio_set_level(BLINK_GPIO, false);
   gpio_reset_pin(BLINK_GPIO);
   gpio_set_direction(BLINK_GPIO, GPIO_MODE_OUTPUT);
@@ -312,105 +308,9 @@ factory_presets_cb_new(size_t device, void *data)
   oc_free_string(&dev->name);
   oc_new_string(&dev->name, device_name, strlen(device_name));
   (void)data;
-#if defined(OC_SECURITY) && defined(OC_PKI)
-  OC_PRINTF("factory_presets_cb: %d\n", (int)device);
-
-  const char *cert =
-    "-----BEGIN CERTIFICATE-----\n"
-    "MIIEFDCCA7qgAwIBAgIJAI0K+3tTsk4eMAoGCCqGSM49BAMCMFsxDDAKBgNVBAoM\n"
-    "A09DRjEiMCAGA1UECwwZS3lyaW8gVGVzdCBJbmZyYXN0cnVjdHVyZTEnMCUGA1UE\n"
-    "AwweS3lyaW8gVEVTVCBJbnRlcm1lZGlhdGUgQ0EwMDAyMB4XDTIwMDQxNDE3MzMy\n"
-    "NloXDTIwMDUxNDE3MzMyNlowYTEMMAoGA1UECgwDT0NGMSIwIAYDVQQLDBlLeXJp\n"
-    "byBUZXN0IEluZnJhc3RydWN0dXJlMS0wKwYDVQQDDCQyYjI1ODQ4Mi04ZDZhLTQ5\n"
-    "OTEtOGQ2OS0zMTAxNDE5ODE2NDYwWTATBgcqhkjOPQIBBggqhkjOPQMBBwNCAARZ\n"
-    "H0LnMEg5BR41xctwQMPoNwa0ERVB1J9WWUvdrKq4GVkX/HwPUGvViISpmIS0GM8z\n"
-    "Ky2IjHm+rMrc4oSTfyX0o4ICXzCCAlswCQYDVR0TBAIwADAOBgNVHQ8BAf8EBAMC\n"
-    "A4gwKQYDVR0lBCIwIAYIKwYBBQUHAwIGCCsGAQUFBwMBBgorBgEEAYLefAEGMB0G\n"
-    "A1UdDgQWBBTS5/x0htLNUYt8JoL82HU2rkjuWDAfBgNVHSMEGDAWgBQZc2oEGgsH\n"
-    "cE9TeVM2h/wMunyuCzCBlgYIKwYBBQUHAQEEgYkwgYYwXQYIKwYBBQUHMAKGUWh0\n"
-    "dHA6Ly90ZXN0cGtpLmt5cmlvLmNvbS9vY2YvY2FjZXJ0cy9CQkU2NEY5QTdFRTM3\n"
-    "RDI5QTA1RTRCQjc3NTk1RjMwOEJFNDFFQjA3LmNydDAlBggrBgEFBQcwAYYZaHR0\n"
-    "cDovL3Rlc3RvY3NwLmt5cmlvLmNvbTBfBgNVHR8EWDBWMFSgUqBQhk5odHRwOi8v\n"
-    "dGVzdHBraS5reXJpby5jb20vb2NmL2NybHMvQkJFNjRGOUE3RUUzN0QyOUEwNUU0\n"
-    "QkI3NzU5NUYzMDhCRTQxRUIwNy5jcmwwGAYDVR0gBBEwDzANBgsrBgEEAYORVgAB\n"
-    "AjBhBgorBgEEAYORVgEABFMwUTAJAgECAgEAAgEAMDYMGTEuMy42LjEuNC4xLjUx\n"
-    "NDE0LjAuMC4xLjAMGTEuMy42LjEuNC4xLjUxNDE0LjAuMC4yLjAMBUxpdGUxDAVM\n"
-    "aXRlMTAqBgorBgEEAYORVgEBBBwwGgYLKwYBBAGDkVYBAQAGCysGAQQBg5FWAQEB\n"
-    "MDAGCisGAQQBg5FWAQIEIjAgDA4xLjMuNi4xLjQuMS43MQwJRGlzY292ZXJ5DAMx\n"
-    "LjAwCgYIKoZIzj0EAwIDSAAwRQIgedG7zHeLh9YzM0bU3DQBnKDRIFnJHiDayyuE\n"
-    "8pVfJOQCIQCo/llZOZD87IHzsyxEfXm/QhkTNA5WJOa7sjF2ngQ1/g==\n"
-    "-----END CERTIFICATE-----\n";
-
-  const char *key =
-    "-----BEGIN EC PARAMETERS-----\n"
-    "BggqhkjOPQMBBw==\n"
-    "-----END EC PARAMETERS-----\n"
-    "-----BEGIN EC PRIVATE KEY-----\n"
-    "MHcCAQEEIBF8S8rq+h8EnykDcCpAyvMam+u3D9i/5oYF5owt/+SnoAoGCCqGSM49\n"
-    "AwEHoUQDQgAEWR9C5zBIOQUeNcXLcEDD6DcGtBEVQdSfVllL3ayquBlZF/x8D1Br\n"
-    "1YiEqZiEtBjPMystiIx5vqzK3OKEk38l9A==\n"
-    "-----END EC PRIVATE KEY-----\n";
-  const char *inter_ca =
-    "-----BEGIN CERTIFICATE-----\n"
-    "MIIC+jCCAqGgAwIBAgIJAPObjMBXKhG1MAoGCCqGSM49BAMCMFMxDDAKBgNVBAoM\n"
-    "A09DRjEiMCAGA1UECwwZS3lyaW8gVGVzdCBJbmZyYXN0cnVjdHVyZTEfMB0GA1UE\n"
-    "AwwWS3lyaW8gVEVTVCBST09UIENBMDAwMjAeFw0xODExMzAxODEyMTVaFw0yODEx\n"
-    "MjYxODEyMTVaMFsxDDAKBgNVBAoMA09DRjEiMCAGA1UECwwZS3lyaW8gVGVzdCBJ\n"
-    "bmZyYXN0cnVjdHVyZTEnMCUGA1UEAwweS3lyaW8gVEVTVCBJbnRlcm1lZGlhdGUg\n"
-    "Q0EwMDAyMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEvA+Gn3ofRpH40XuVppBR\n"
-    "f78mDtfclOkBd7/32yQcmK2LQ0wm/uyl2cyeABPuN6NFcR9+LYkXZ5P4Ovy9R43Q\n"
-    "vqOCAVQwggFQMBIGA1UdEwEB/wQIMAYBAf8CAQAwDgYDVR0PAQH/BAQDAgGGMB0G\n"
-    "A1UdDgQWBBQZc2oEGgsHcE9TeVM2h/wMunyuCzAfBgNVHSMEGDAWgBQoSOTlJ1jZ\n"
-    "CO4JNOSxuz1ZZh/I9TCBjQYIKwYBBQUHAQEEgYAwfjBVBggrBgEFBQcwAoZJaHR0\n"
-    "cDovL3Rlc3Rwa2kua3lyaW8uY29tL29jZi80RTY4RTNGQ0YwRjJFNEY4MEE4RDE0\n"
-    "MzhGNkExQkE1Njk1NzEzRDYzLmNydDAlBggrBgEFBQcwAYYZaHR0cDovL3Rlc3Rv\n"
-    "Y3NwLmt5cmlvLmNvbTBaBgNVHR8EUzBRME+gTaBLhklodHRwOi8vdGVzdHBraS5r\n"
-    "eXJpby5jb20vb2NmLzRFNjhFM0ZDRjBGMkU0RjgwQThEMTQzOEY2QTFCQTU2OTU3\n"
-    "MTNENjMuY3JsMAoGCCqGSM49BAMCA0cAMEQCHwXkRYd+u5pOPH544wBmBRJz/b0j\n"
-    "ppvUIHx8IUH0CioCIQDC8CnMVTOC5aIoo5Yg4k7BDDNxbRQoPujYes0OTVGgPA==\n"
-    "-----END CERTIFICATE-----\n";
-
-  const char *root_ca =
-    "-----BEGIN CERTIFICATE-----\n"
-    "MIIB3zCCAYWgAwIBAgIJAPObjMBXKhGyMAoGCCqGSM49BAMCMFMxDDAKBgNVBAoM\n"
-    "A09DRjEiMCAGA1UECwwZS3lyaW8gVGVzdCBJbmZyYXN0cnVjdHVyZTEfMB0GA1UE\n"
-    "AwwWS3lyaW8gVEVTVCBST09UIENBMDAwMjAeFw0xODExMzAxNzMxMDVaFw0yODEx\n"
-    "MjcxNzMxMDVaMFMxDDAKBgNVBAoMA09DRjEiMCAGA1UECwwZS3lyaW8gVGVzdCBJ\n"
-    "bmZyYXN0cnVjdHVyZTEfMB0GA1UEAwwWS3lyaW8gVEVTVCBST09UIENBMDAwMjBZ\n"
-    "MBMGByqGSM49AgEGCCqGSM49AwEHA0IABGt1sU2QhQcK/kflKSF9TCrvKaDckLWd\n"
-    "ZoyvP6z0OrqNdtBscZgVYsSHMQZ1R19wWxsflvNr8bMVW1K3HWMkpsijQjBAMA8G\n"
-    "A1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgGGMB0GA1UdDgQWBBQoSOTlJ1jZ\n"
-    "CO4JNOSxuz1ZZh/I9TAKBggqhkjOPQQDAgNIADBFAiAlMUwgVeL8d5W4jZdFJ5Zg\n"
-    "clk7XT66LNMfGkExSjU1ngIhANOvTmd32A0kEtIpHbiKA8+RFDCPJWjN4loxrBC7\n"
-    "v0JE\n"
-    "-----END CERTIFICATE-----\n";
-
-  int ee_credid =
-    oc_pki_add_mfg_cert(0, (const unsigned char *)cert, strlen(cert),
-                        (const unsigned char *)key, strlen(key));
-  if (ee_credid < 0) {
-    OC_PRINTF("ERROR installing manufacturer EE cert\n");
-    return;
-  }
-
-  int subca_credid = oc_pki_add_mfg_intermediate_cert(
-    0, ee_credid, (const unsigned char *)inter_ca, strlen(inter_ca));
-
-  if (subca_credid < 0) {
-    OC_PRINTF("ERROR installing intermediate CA cert\n");
-    return;
-  }
-
-  int rootca_credid = oc_pki_add_mfg_trust_anchor(
-    0, (const unsigned char *)root_ca, strlen(root_ca));
-  if (rootca_credid < 0) {
-    OC_PRINTF("ERROR installing root cert\n");
-    return;
-  }
-
-  oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, ee_credid);
-#endif /* OC_SECURITY && OC_PKI */
 }
+
+#ifdef APP_DEBUG
 
 oc_event_callback_retval_t
 heap_dbg(void *v)
@@ -419,11 +319,13 @@ heap_dbg(void *v)
   return OC_EVENT_CONTINUE;
 }
 
+#endif /* APP_DEBUG */
+
 static void
 initialize_sntp(void)
 {
   ESP_LOGI(TAG, "Initializing SNTP");
-  sntp_setoperatingmode(SNTP_OPMODE_POLL);
+  esp_sntp_setoperatingmode(SNTP_OPMODE_POLL);
 
 /*
  * If 'NTP over DHCP' is enabled, we set dynamic pool address
@@ -431,37 +333,38 @@ initialize_sntp(void)
  * address provided via NTP over DHCP is not accessible
  */
 #if LWIP_DHCP_GET_NTP_SRV && SNTP_MAX_SERVERS > 1
-  sntp_setservername(1, "pool.ntp.org");
+  esp_sntp_setservername(1, "pool.ntp.org");
 
 #if LWIP_IPV6 &&                                                               \
   SNTP_MAX_SERVERS > 2 // statically assigned IPv6 address is also possible
   ip_addr_t ip6;
   if (ipaddr_aton("2a01:3f7::1", &ip6)) { // ipv6 ntp source "ntp.netnod.se"
-    sntp_setserver(2, &ip6);
+    esp_sntp_setserver(2, &ip6);
   }
 #endif /* LWIP_IPV6 */
 
 #else /* LWIP_DHCP_GET_NTP_SRV && (SNTP_MAX_SERVERS > 1) */
   // otherwise, use DNS address from a pool
-  sntp_setservername(0, CONFIG_SNTP_TIME_SERVER);
+  esp_sntp_setservername(0, CONFIG_SNTP_TIME_SERVER);
 
-  sntp_setservername(1,
-                     "pool.ntp.org"); // set the secondary NTP server (will be
-                                      // used only if SNTP_MAX_SERVERS > 1)
+  esp_sntp_setservername(
+    1,
+    "pool.ntp.org"); // set the secondary NTP server (will be
+                     // used only if SNTP_MAX_SERVERS > 1)
 #endif
 
-  sntp_set_sync_mode(SNTP_SYNC_MODE_SMOOTH);
-  sntp_init();
+  esp_sntp_set_sync_mode(SNTP_SYNC_MODE_SMOOTH);
+  esp_sntp_init();
 
   ESP_LOGI(TAG, "List of configured NTP servers:");
 
   for (uint8_t i = 0; i < SNTP_MAX_SERVERS; ++i) {
-    if (sntp_getservername(i)) {
-      ESP_LOGI(TAG, "server %d: %s", i, sntp_getservername(i));
+    if (esp_sntp_getservername(i)) {
+      ESP_LOGI(TAG, "server %d: %s", i, esp_sntp_getservername(i));
     } else {
       // we have either IPv4 or IPv6 address, let's print it
       char buff[IPADDR_STRLEN_MAX];
-      ip_addr_t const *ip = sntp_getserver(i);
+      ip_addr_t const *ip = esp_sntp_getserver(i);
       if (ipaddr_ntoa_r(ip, buff, IPADDR_STRLEN_MAX) != NULL)
         ESP_LOGI(TAG, "server %d: %s", i, buff);
     }
@@ -471,14 +374,14 @@ initialize_sntp(void)
 static void
 obtain_time(void)
 {
-#ifdef LWIP_DHCP_GET_NTP_SRV
-  sntp_servermode_dhcp(1); // accept NTP offers from DHCP server, if any
+#if defined(LWIP_DHCP_GET_NTP_SRV) && LWIP_DHCP_GET_NTP_SRV
+  esp_sntp_servermode_dhcp(1); // accept NTP offers from DHCP server, if any
 #endif
   initialize_sntp();
   // wait for time to be set
   int retry = 0;
   const int retry_count = 15;
-  while (sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET &&
+  while (esp_sntp_get_sync_status() == SNTP_SYNC_STATUS_RESET &&
          ++retry < retry_count) {
     ESP_LOGI(TAG, "Waiting for system time to be set... (%d/%d)", retry,
              retry_count);
@@ -508,6 +411,7 @@ static oc_swupdate_cb_t hawkbit_swupdate_impl = {
 static void
 server_main(void *pvParameter)
 {
+  (void)pvParameter;
   ESP_LOGI(TAG, "iotivity server task started(version=%s)",
            oc_esp_get_application_version());
   // wait to fetch IPv4 && ipv6 address
@@ -524,7 +428,7 @@ server_main(void *pvParameter)
     print_error("get IPv4 address failed");
   } else {
     char buf[32];
-    ESP_LOGI(TAG, "got IPv4 addr:%s",
+    ESP_LOGI(TAG, "got IPv4 addr: %s",
              esp_ip4addr_ntoa(&(ip4_info.ip), buf, sizeof(buf)));
   }
 #endif /* OC_IPV4 */
@@ -544,13 +448,17 @@ server_main(void *pvParameter)
                                           register_resources };
 
 #ifdef OC_SECURITY
+#ifdef OC_STORAGE
   if (oc_storage_config("storage") != 0) {
     ESP_LOGE(TAG, "cannot create storage");
   }
+#endif /* OC_STORAGE */
   oc_set_factory_presets_cb(factory_presets_cb_new, NULL);
-#endif /* OC_SECURITY */
 
+  oc_set_max_app_data_size(CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN);
+#else  /* !OC_SECURITY */
   oc_set_max_app_data_size(10000);
+#endif /* OC_SECURITY */
 
   if (oc_main_init(&handler) < 0) {
     return;
@@ -569,9 +477,11 @@ server_main(void *pvParameter)
   }
 #endif /* OC_HAS_FEATURE_PLGD_HAWKBIT */
 
+#ifdef APP_DEBUG
   oc_set_delayed_callback(NULL, heap_dbg, 1);
+#endif /* APP_DEBUG */
 
-  while (quit != 1) {
+  while (true) {
     oc_clock_time_t next_event = oc_main_poll();
     pthread_mutex_lock(&g_mutex);
     if (oc_main_needs_poll()) {
@@ -581,7 +491,7 @@ server_main(void *pvParameter)
     if (next_event == 0) {
       pthread_cond_wait(&g_cv, &g_mutex);
     } else {
-      ts = oc_clock_time_to_timespec(next_event);
+      struct timespec ts = oc_clock_time_to_timespec(next_event);
       pthread_cond_timedwait(&g_cv, &g_mutex, &ts);
     }
     pthread_mutex_unlock(&g_mutex);

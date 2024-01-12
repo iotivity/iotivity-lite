@@ -17,7 +17,9 @@
  ****************************************************************************/
 
 // make ppoll() available
+#ifndef _GNU_SOURCE
 #define _GNU_SOURCE
+#endif
 
 #include "port/common/posix/oc_poll_internal.h"
 #include "oc_clock_util.h"

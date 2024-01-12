@@ -656,12 +656,12 @@ addTCPEventCallback(TCPSessionData *tcp_data)
 {
   auto tcp_events = [](const oc_endpoint_t *endpoint, oc_session_state_t state,
                        void *data) {
-#ifdef OC_DEBUG
+#if OC_DBG_IS_ENABLED
     oc_string_t ep_str{};
     oc_endpoint_to_string(endpoint, &ep_str);
     OC_DBG("session event endpoint=%s state=%d", oc_string(ep_str), (int)state);
     oc_free_string(&ep_str);
-#endif /* OC_DEBUG */
+#endif /* OC_DBG_IS_ENABLED */
     auto *tsd = static_cast<TCPSessionData *>(data);
     if ((oc_endpoint_compare(endpoint, tsd->ep) == 0) &&
         (state == OC_SESSION_DISCONNECTED)) {

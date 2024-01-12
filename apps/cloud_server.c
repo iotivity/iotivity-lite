@@ -31,6 +31,10 @@
 #include "util/oc_features.h"
 #include "util/oc_process.h"
 
+#ifdef OC_SOFTWARE_UPDATE
+#include "oc_swupdate.h"
+#endif /* OC_SOFTWARE_UPDATE */
+
 #ifdef OC_HAS_FEATURE_ETAG
 #include "oc_etag.h"
 #endif /* OC_HAS_FEATURE_ETAG */
@@ -246,6 +250,16 @@ plgd_time_init(void)
 
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 
+static void
+set_device_properties(void *data)
+{
+  (void)data;
+  // model number
+  oc_set_custom_device_property(dmno, "CS-0");
+  // software version
+  oc_set_custom_device_property(sv, "1.0.1-rc1");
+}
+
 static int
 app_init(void)
 {
@@ -270,7 +284,7 @@ app_init(void)
       .name = dev_name_ptr,
       .spec_version = spec_version,
       .data_model_version = data_model_version,
-      .add_device_cb = NULL,
+      .add_device_cb = set_device_properties,
       .add_device_cb_data = NULL,
     };
     if (i == 0) {
@@ -678,6 +692,54 @@ register_plgd_time(size_t device)
 }
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 
+#ifdef OC_SOFTWARE_UPDATE
+static int
+swu_validate_purl(const char *url)
+{
+  (void)url;
+  return 0;
+}
+
+static int
+swu_check_new_version(size_t device, const char *url, const char *version)
+{
+  (void)device;
+  (void)url;
+  (void)version;
+  return 0;
+}
+
+static int
+swu_download_update(size_t device, const char *url)
+{
+  (void)device;
+  (void)url;
+  return 0;
+}
+
+static int
+swu_perform_upgrade(size_t device, const char *url)
+{
+  (void)device;
+  (void)url;
+  return 0;
+}
+
+static bool
+register_swu(size_t device)
+{
+  oc_swupdate_set_impl(&(oc_swupdate_cb_t){
+    .validate_purl = swu_validate_purl,
+    .check_new_version = swu_check_new_version,
+    .download_update = swu_download_update,
+    .perform_upgrade = swu_perform_upgrade,
+  });
+  oc_resource_t *swu_res = oc_core_get_resource_by_index(OCF_SW_UPDATE, device);
+  return oc_cloud_add_resource(swu_res) == 0;
+}
+
+#endif /* OC_SOFTWARE_UPDATE */
+
 static void
 register_resources(void)
 {
@@ -703,6 +765,11 @@ register_resources(void)
       oc_abort("ERROR: could not register plgd time resource\n");
     }
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
+#if defined(OC_SOFTWARE_UPDATE)
+    if (!register_swu(i)) {
+      oc_abort("ERROR: could not register software update resource\n");
+    }
+#endif /* OC_SOFTWARE_UPDATE */
   }
 }
 
@@ -1604,7 +1671,13 @@ main(int argc, char *argv[])
   oc_storage_config("./cloud_server_creds/");
 #endif /* OC_STORAGE */
   oc_set_factory_presets_cb(factory_presets_cb, NULL);
-  oc_set_max_app_data_size(8 * 1024 + num_resources * 512);
+
+  size_t max_app_data_size = 8 * 1024 + num_resources * 512;
+#ifdef OC_SOFTWARE_UPDATE
+  max_app_data_size += 512;
+#endif /* OC_SOFTWARE_UPDATE */
+
+  oc_set_max_app_data_size(max_app_data_size);
   oc_set_min_app_data_size(512);
 #if defined(OC_SECURITY) && defined(OC_PKI)
   oc_sec_certs_md_set_algorithms_allowed(

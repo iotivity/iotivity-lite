@@ -136,8 +136,10 @@ DTLSClient::DTLSClient()
     throw std::string("cannot setup DTLS cookie");
   }
 
+#if MBEDTLS_VERSION_NUMBER <= 0x03010000
   mbedtls_ssl_conf_min_version(&config_, MBEDTLS_SSL_MAJOR_VERSION_3,
                                MBEDTLS_SSL_MINOR_VERSION_3);
+#endif /* MBEDTLS_VERSION_NUMBER <= 0x03010000 */
   mbedtls_ssl_conf_authmode(&config_, MBEDTLS_SSL_VERIFY_REQUIRED);
   mbedtls_ssl_conf_rng(&config_, mbedtls_ctr_drbg_random, &ctrDrbg_);
 

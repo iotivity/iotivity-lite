@@ -32,6 +32,8 @@ jobs:
           - args: "CLOUD=1"
           # cloud on (tcp on, ipv4 on), debug on
           - args: "CLOUD=1 DEBUG=1"
+          # cloud on (tcp on, ipv4 on), debug on, mbedTLS v3.5.0
+          - args: "CLOUD=1 DEBUG=1 MBEDTLS_FORCE_3_5_0=1"
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -97,14 +99,11 @@ jobs:
         run: |
           sudo apt install -y git wget flex bison gperf python3 python3-pip python3-setuptools python3-serial python3-click python3-cryptography python3-future python3-pyparsing python3-pyelftools cmake ninja-build ccache libffi-dev libssl-dev libusb-1.0-0
           cd ./port/esp32
-          # git clone --recursive -b release/v5.0 https://github.com/espressif/esp-idf.git
-          git clone -b release/v5.0 https://github.com/espressif/esp-idf.git
-          ( cd esp-idf && git checkout 335ca8a687d4f507b8ffe8a4ec3132ba4a4a4be3 )
-          ( cd esp-idf && git submodule update --init --recursive )
+          git clone --recursive -b release/v5.1 https://github.com/espressif/esp-idf.git
           ./esp-idf/install.sh
           . ./esp-idf/export.sh
           idf.py ${{ matrix.args }} set-target esp32
-          ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../../../patches/01-ocf-x509san-anon-psk.patch)
-          ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../patches/mbedtls/02-ocf-mbedtls-config.patch)
+          ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../../../patches/mbedtls/3.5/01-ocf-anon-psk.patch )
+          ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../patches/mbedtls/3.5/02-ocf-mbedtls-config.patch )
           ( cd esp-idf/components/lwip/lwip && find ../../../../patches/lwip/ -type f -name '*.patch' -exec patch -p1 -i {} \; )
           idf.py build

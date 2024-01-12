@@ -49,7 +49,7 @@
 #include <inttypes.h>
 
 // TODO: add push component to logs and use standard logging functions
-#if defined(OC_PUSHDEBUG) || defined(OC_DEBUG)
+#if defined(OC_PUSHDEBUG) || OC_DBG_IS_ENABLED
 #define OC_PUSH_DBG(...) OC_LOG(OC_LOG_LEVEL_DEBUG, __VA_ARGS__)
 #define OC_PUSH_WRN(...) OC_LOG(OC_LOG_LEVEL_WARNING, __VA_ARGS__)
 #define OC_PUSH_ERR(...) OC_LOG(OC_LOG_LEVEL_ERROR, __VA_ARGS__)

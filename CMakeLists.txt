@@ -21,9 +21,14 @@ endif()
 ######## Build configuration options ########
 set(BUILD_EXAMPLE_APPLICATIONS ON CACHE BOOL "Build example applications.")
 set(BUILD_MBEDTLS ON CACHE BOOL "Build Mbed TLS library. When set to OFF, the Mbed TLS library with the OCF patches has to be provided.")
+set(BUILD_MBEDTLS_FORCE_3_5_0 OFF CACHE BOOL "Force v3.5.0 of the MbedTLS library to be used (by default v3.1.0 is used by master)")
 set(OC_INSTALL_MBEDTLS ON CACHE BOOL "Include Mbed TLS in installation")
 set(BUILD_TINYCBOR ON CACHE BOOL "Build TinyCBOR library. When set to OFF, the TinyCBOR library has to be provided.")
 set(OC_INSTALL_TINYCBOR ON CACHE BOOL "Include TinyCBOR in installation")
+
+if(NOT BUILD_MBEDTLS_FORCE_3_5_0)
+    message(WARNING "MbedTLS v3.1.0 is deprecated and support will be removed in a future release")
+endif()
 
 set(OC_DYNAMIC_ALLOCATION_ENABLED ON CACHE BOOL "Enable dynamic memory allocation within the OCF stack and Mbed TLS.")
 set(OC_SECURITY_ENABLED ON CACHE BOOL "Enable security.")
@@ -223,6 +228,14 @@ elseif(OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG)
         CFLAGS -Wmissing-prototypes -Wstrict-prototypes
     )
 
+    # ignore issues in mbedTLS test and utility code
+    if(BUILD_MBEDTLS AND (ENABLE_TESTING OR ENABLE_PROGRAMS))
+        oc_add_compile_options(GLOBAL
+            FLAGS -Wno-error=missing-declarations
+            CFLAGS -Wno-error=missing-prototypes
+        )
+    endif()
+
     if(NOT OC_CLANG_TIDY_ENABLED)
         oc_add_compile_options(GLOBAL
             CXXFLAGS -Wuseless-cast -Wno-error=useless-cast
@@ -262,34 +275,33 @@ if(BUILD_MBEDTLS)
     set(MBEDTLS_COMPILE_DEFINITIONS "__OC_PLATFORM")
 endif()
 
-set(OC_LOG_MAXIMUM_LEVEL)
+set(OC_LOG_MAXIMUM_LOG_LEVEL_INT)
 if(OC_LOG_MAXIMUM_LOG_LEVEL STREQUAL "DISABLED")
-    set(OC_LOG_MAXIMUM_LEVEL -1)
-    # list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=-1")
+    set(OC_LOG_MAXIMUM_LOG_LEVEL_INT -1)
 elseif(OC_LOG_MAXIMUM_LOG_LEVEL STREQUAL "ERROR")
-    # list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=3")
-    set(OC_LOG_MAXIMUM_LEVEL 3)
+    set(OC_LOG_MAXIMUM_LOG_LEVEL_INT 3)
 elseif(OC_LOG_MAXIMUM_LOG_LEVEL STREQUAL "WARNING")
-    # list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=4")
-    set(OC_LOG_MAXIMUM_LEVEL 4)
+    set(OC_LOG_MAXIMUM_LOG_LEVEL_INT 4)
 elseif(OC_LOG_MAXIMUM_LOG_LEVEL STREQUAL "NOTICE")
-    # list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=5")
-    set(OC_LOG_MAXIMUM_LEVEL 5)
+    set(OC_LOG_MAXIMUM_LOG_LEVEL_INT 5)
 elseif(OC_LOG_MAXIMUM_LOG_LEVEL STREQUAL "INFO")
-    # list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=6")
-    set(OC_LOG_MAXIMUM_LEVEL 6)
+    set(OC_LOG_MAXIMUM_LOG_LEVEL_INT 6)
 elseif(OC_LOG_MAXIMUM_LOG_LEVEL STREQUAL "DEBUG")
-    # list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=7")
-    set(OC_LOG_MAXIMUM_LEVEL 7)
+    set(OC_LOG_MAXIMUM_LOG_LEVEL_INT 7)
 elseif(OC_LOG_MAXIMUM_LOG_LEVEL STREQUAL "TRACE")
-    # list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=8")
-    set(OC_LOG_MAXIMUM_LEVEL 8)
+    set(OC_LOG_MAXIMUM_LOG_LEVEL_INT 8)
 else()
     message(FATAL_ERROR "Invalid OC_LOG_MAXIMUM_LOG_LEVEL: ${OC_LOG_MAXIMUM_LOG_LEVEL}")
 endif()
+
+set(OC_LOG_MAXIMUM_LEVEL ${OC_LOG_MAXIMUM_LOG_LEVEL_INT} CACHE INTERNAL "Maximum supported log level in compile time as integer.")
+
 # clang-tidy triggers bugprone-macro-parentheses if the value is not in ()
 list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=(${OC_LOG_MAXIMUM_LEVEL})")
 list(APPEND TEST_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=(${OC_LOG_MAXIMUM_LEVEL})")
+if(BUILD_MBEDTLS)
+    list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=(${OC_LOG_MAXIMUM_LEVEL})")
+endif()
 
 if(OC_PUSH_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_PUSH")
@@ -327,14 +339,6 @@ if(OC_PKI_ENABLED)
     if(BUILD_MBEDTLS)
         list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_PKI")
     endif()
-endif()
-
-if(OC_DEBUG_ENABLED)
-    list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_DEBUG")
-    if(BUILD_MBEDTLS)
-        list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_DEBUG")
-    endif()
-    list(APPEND TEST_COMPILE_DEFINITIONS "OC_DEBUG")
 endif()
 
 if(OC_CLOUD_ENABLED)

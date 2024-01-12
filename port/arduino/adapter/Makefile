@@ -29,9 +29,9 @@ CORE_HEADERS  =$(addprefix -I$(ROOT_DIR)/, messaging/coap util util/pt include  
 CFLAGS += -I. $(CORE_HEADERS) $(LIB_HEADERS) $(DEPS_HEADERS)
 
 ifeq ($(VERBOSE),1)
-	CFLAGS += -DOC_DEBUG -DOC_LOG_L1 -DOC_LOG_MAXIMUM_LEVEL=8
+	CFLAGS += -DOC_LOG_L1 -DOC_LOG_MAXIMUM_LEVEL=8
 else ifeq ($(VERBOSE),2)
-	CFLAGS += -DOC_DEBUG  -DOC_LOG_L2 -DOC_LOG_MAXIMUM_LEVEL=8
+	CFLAGS += -DOC_LOG_L2 -DOC_LOG_MAXIMUM_LEVEL=8
 endif
 
 ifeq ($(DYNAMIC),1)
@@ -39,8 +39,9 @@ ifeq ($(DYNAMIC),1)
 endif
 
 ifeq ($(SECURE),1)
-	SEC_SRC += $(addprefix $(ROOT_DIR)/security/, oc_acl.c oc_cred.c oc_certs.c oc_certs_generate.c oc_certs_validate.c oc_csr.c oc_doxm.c oc_entropy.c \
-	              oc_keypair.c oc_pki.c oc_pstat.c oc_roles.c oc_security.c oc_sp.c oc_store.c oc_svr.c oc_tls.c)
+	SEC_SRC += $(addprefix $(ROOT_DIR)/security/, oc_acl.c oc_cred.c oc_cred_util.c oc_certs.c oc_certs_generate.c oc_certs_validate.c \
+				oc_csr.c oc_doxm.c oc_entropy.c oc_keypair.c oc_pki.c oc_pstat.c oc_roles.c oc_security.c oc_sp.c oc_store.c oc_svr.c \
+				oc_tls.c)
 	SRC += $(SEC_SRC)
 	SRC_COMMON += $(addprefix $(MBEDTLS_DIR)/library/,${DTLS})
 	MBEDTLS_PATCH_FILE := $(MBEDTLS_DIR)/patched.txt

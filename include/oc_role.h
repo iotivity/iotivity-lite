@@ -26,6 +26,7 @@
 #include "oc_client_state.h"
 #include "oc_helpers.h"
 #include "oc_endpoint.h"
+#include "util/oc_compiler.h"
 
 #include <stdbool.h>
 
@@ -55,17 +56,18 @@ oc_role_t *oc_get_all_roles(void);
 /**
  * @brief assert the specific role
  *
- * @param role the role
+ * @param role the role (cannot be NULL)
  * @param authority the authority
- * @param endpoint endpoint identifying the connection
- * @param handler the response handler
+ * @param endpoint endpoint identifying the connection (cannot be NULL)
+ * @param handler the response handler (cannot be NULL)
  * @param user_data the user data to be conveyed to the response handler
  * @return true request was initialized and sent
  * @return false otherwise
  */
 bool oc_assert_role(const char *role, const char *authority,
                     const oc_endpoint_t *endpoint,
-                    oc_response_handler_t handler, void *user_data);
+                    oc_response_handler_t handler, void *user_data)
+  OC_NONNULL(1, 3, 4);
 
 /**
  * @brief set automatic role assertion (e.g. for all endpoints with a

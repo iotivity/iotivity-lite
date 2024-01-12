@@ -20,7 +20,7 @@
 
 namespace oc {
 
-Role::Role(const std::string &role, const std::string &authority = "")
+Role::Role(const std::string &role, const std::string &authority)
 {
   if (!role.empty()) {
     oc_new_string(&role_.role, role.c_str(), role.length());

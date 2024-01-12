@@ -143,11 +143,10 @@ oc_set_string(oc_string_t *dst, const char *str, size_t str_len)
 oc_string_view_t
 oc_string_view(const char *data, size_t length)
 {
-  oc_string_view_t view = {
+  return (oc_string_view_t){
     .data = data,
     .length = length,
   };
-  return view;
 }
 
 oc_string_view_t

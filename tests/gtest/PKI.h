@@ -20,7 +20,13 @@
 
 #ifdef OC_PKI
 
-#include <oc_pki.h>
+#include "oc_pki.h"
+#include "security/oc_certs_generate_internal.h"
+#include "tests/gtest/KeyPair.h"
+
+#include <mbedtls/build_info.h>
+#include <mbedtls/ctr_drbg.h>
+#include <mbedtls/entropy.h>
 
 #include <string>
 #include <vector>
@@ -28,6 +34,29 @@
 namespace oc::pki {
 
 std::vector<unsigned char> ReadPem(const std::string &path);
+
+#if defined(OC_DYNAMIC_ALLOCATION) || defined(OC_TEST)
+std::vector<unsigned char> GenerateCertificate(
+  const oc_certs_generate_t &generate);
+
+std::vector<unsigned char> GenerateRootCertificate(const oc::keypair_t &kp);
+
+std::vector<unsigned char> GeneratIdentityCertificate(
+  const oc::keypair_t &kp, const oc::keypair_t &issuer_kp);
+#endif /* OC_DYNAMIC_ALLOCATION || OC_TEST */
+
+class KeyParser {
+public:
+  KeyParser();
+  ~KeyParser();
+
+  std::vector<unsigned char> GetPrivateKey(const unsigned char *key,
+                                           size_t keylen);
+
+private:
+  mbedtls_ctr_drbg_context ctr_drbg_ctx_{};
+  mbedtls_entropy_context entropy_ctx_{};
+};
 
 class PemData {
 public:

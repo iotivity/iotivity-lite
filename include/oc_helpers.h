@@ -167,7 +167,7 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
  * @param str2 second string (cannot be NULL)
  */
 void oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2);
-#define oc_string_len(ocstring) ((ocstring).size ? (ocstring).size - 1 : 0)
+#define oc_string_len(ocstring) ((ocstring).size != 0 ? (ocstring).size - 1 : 0)
 
 #define oc_int_array_size(ocintarray) ((ocintarray).size)
 #define oc_bool_array_size(ocboolarray) ((ocboolarray).size)
@@ -288,14 +288,29 @@ void oc_set_string(oc_string_t *dst, const char *str, size_t str_len)
   OC_NONNULL(1);
 
 /**
+ * @brief Check if oc_string is NULL or ""
+ *
+ * @note an oc_string_t must be null-terminated so the only string of size equal
+ * to 1 is the empty string
+ *
+ * @param ocstring string to be check (cannot be NULL)
+ * @return true if the string is empty
+ */
+static inline bool
+OC_NONNULL() oc_string_is_empty(const oc_string_t *ocstring)
+{
+  return ocstring->size <= 1;
+}
+
+/**
  * @brief copy ocstring
  *
  * @param dst destination (cannot be NULL)
  * @param src source (if NULL data of destination is freed and the destination
  * is memset to zeroes)
  */
-OC_API
-void oc_copy_string(oc_string_t *dst, const oc_string_t *src) OC_NONNULL(1);
+OC_API void oc_copy_string(oc_string_t *dst, const oc_string_t *src)
+  OC_NONNULL(1);
 
 /**
  * @brief new array

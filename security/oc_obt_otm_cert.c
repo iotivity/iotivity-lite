@@ -30,6 +30,7 @@
 #include "oc_store.h"
 #include "security/oc_acl_internal.h"
 #include "security/oc_cred_internal.h"
+#include "security/oc_cred_util_internal.h"
 #include "security/oc_doxm_internal.h"
 #include "security/oc_obt_internal.h"
 #include "security/oc_pstat_internal.h"
@@ -353,25 +354,20 @@ obt_cert_9(oc_client_response_t *data)
   char suuid[OC_UUID_LEN];
   oc_uuid_to_str(&device->uuid, suuid, OC_UUID_LEN);
 
-#define OXM_MFG_CERT "oic.sec.doxm.mfgcert"
   uint8_t key[16];
   bool derived = oc_sec_derive_owner_psk(
-    ep, (const uint8_t *)OXM_MFG_CERT, OC_CHAR_ARRAY_LEN(OXM_MFG_CERT),
-    device->uuid.id, OC_ARRAY_SIZE(device->uuid.id), my_uuid->id,
-    OC_ARRAY_SIZE(my_uuid->id), key, OC_ARRAY_SIZE(key));
-#undef OXM_MFG_CERT
+    ep, (const uint8_t *)OC_OXMTYPE_MFG_CERT_STR,
+    OC_CHAR_ARRAY_LEN(OC_OXMTYPE_MFG_CERT_STR), device->uuid.id,
+    OC_ARRAY_SIZE(device->uuid.id), my_uuid->id, OC_ARRAY_SIZE(my_uuid->id),
+    key, OC_ARRAY_SIZE(key));
   if (!derived) {
     goto err_obt_cert_9;
   }
 
   oc_sec_encoded_data_t privatedata = { key, OC_ARRAY_SIZE(key),
                                         OC_ENCODING_RAW };
-  oc_sec_encoded_data_t publicdata = { NULL, 0, 0 };
   int credid =
-    oc_sec_add_new_cred(0, false, NULL, -1, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL,
-                        suuid, privatedata, publicdata, oc_string_view2(NULL),
-                        oc_string_view2(NULL), oc_string_view2(NULL), NULL);
-
+    oc_sec_add_new_psk_cred(0, suuid, privatedata, OC_STRING_VIEW_NULL);
   if (credid == -1) {
     goto err_obt_cert_9;
   }
@@ -705,7 +701,7 @@ oc_obt_perform_cert_otm(const oc_uuid_t *uuid, oc_obt_device_status_cb_t cb,
   if (oc_obt_is_owned_device(uuid)) {
     char subjectuuid[OC_UUID_LEN];
     oc_uuid_to_str(uuid, subjectuuid, OC_UUID_LEN);
-    oc_cred_remove_subject(subjectuuid, 0);
+    oc_cred_remove_by_subject(subjectuuid, 0);
   }
 
   oc_otm_ctx_t *o = oc_obt_alloc_otm_ctx();
