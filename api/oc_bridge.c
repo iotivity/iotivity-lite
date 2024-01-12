@@ -50,23 +50,28 @@ typedef struct oc_vods_s
 OC_LIST(g_vods);
 static oc_resource_t *g_vodlist_res;
 
-#define OC_PRINT_VODSLIST                                                      \
-  OC_PRINTF("\"vods\": [");                                                       \
-  oc_vods_t *print_vod_item = (oc_vods_t *)oc_list_head(g_vods);       \
-  while (print_vod_item) {                                                     \
-    OC_PRINTF("  {");                                                             \
-    OC_PRINTF("    \"n\": \"%s\"", oc_string(print_vod_item->name));              \
-    char di_uuid[OC_UUID_LEN];                                                 \
-    oc_uuid_to_str(&print_vod_item->di, di_uuid, OC_UUID_LEN);                 \
-    OC_PRINTF("    \"di\": \"%s\"", di_uuid);                                     \
-    OC_PRINTF("    \"econame\": \"%s\"", oc_string(print_vod_item->econame));     \
-    if (print_vod_item->next) {                                                \
-      OC_PRINTF("  },");                                                          \
-    } else {                                                                   \
-      OC_PRINTF("  }");                                                           \
-    }                                                                          \
-    print_vod_item = print_vod_item->next;                                     \
+static void print_vodlist(void)
+{
+#if OC_DBG_IS_ENABLED
+  OC_PRINTF("\"vods\": [");
+  oc_vods_t *print_vod_item = (oc_vods_t *)oc_list_head(g_vods);
+  while (print_vod_item) {
+    OC_PRINTF("  {");
+    OC_PRINTF("    \"n\": \"%s\"", oc_string(print_vod_item->name));
+    char di_uuid[OC_UUID_LEN];
+    oc_uuid_to_str(&print_vod_item->di, di_uuid, OC_UUID_LEN);
+    OC_PRINTF("    \"di\": \"%s\"", di_uuid);
+    OC_PRINTF("    \"econame\": \"%s\"", oc_string(print_vod_item->econame));
+    if (print_vod_item->next) {
+      OC_PRINTF("  },");
+    } else {
+      OC_PRINTF("  }");
+    }
+    print_vod_item = print_vod_item->next;
   }
+#endif
+}
+
 
 static bool
 oc_bridge_is_virtual_device(size_t device_index)
@@ -118,7 +123,7 @@ add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
   oc_list_add(g_vods, vod);
 
   OC_DBG("=====> oc_bridge: adding %s [%s] from oic.r.vodlist", name, econame);
-  OC_PRINT_VODSLIST;
+  print_vodlist();
 }
 #endif // OC_SECURITY
 
@@ -153,7 +158,7 @@ remove_virtual_device_from_vods_list(const oc_uuid_t *di)
     }
     vod_item = vod_item->next;
   }
-  OC_PRINT_VODSLIST;
+  print_vodlist();
 }
 
 static void

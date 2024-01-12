@@ -115,3 +115,7 @@ build4test
 
 # sonarqube
 .scannerwork
+
+# clang-tidy
+.clang-tidy
+compile_commands.json
