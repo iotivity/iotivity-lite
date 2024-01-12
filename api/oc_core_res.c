@@ -581,7 +581,7 @@ oc_core_remove_device_at_index(size_t index)
 {
   if (index >= g_device_count) {
     OC_ERR("Device index value is out of valid range! : \
-        Device index %ld, current Device count %d", index, g_device_count);
+        Device index %zu, current Device count %d", index, g_device_count);
     return false;
   }
 
