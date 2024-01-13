@@ -46,9 +46,9 @@ static oc_vod_mapping_list_t g_vod_mapping_list;
 #define SVR_TAG_MAX (32)
 
 static bool
-_decode_obj_array(const oc_rep_t *rep)
+_decode_vod_list(const oc_rep_t *rep)
 {
-  oc_rep_t *v; // = rep->value.object_array;
+  oc_rep_t *v;
   if (!oc_rep_get_object_array(rep, "vods", &v)) {
     OC_DBG("oc_vod_map: decode 'vods' object array not found.");
     return false;
@@ -114,60 +114,8 @@ _decode_rep(const oc_rep_t *rep)
     }
     break;
   case OC_REP_OBJECT_ARRAY: {
-
-    if (_decode_obj_array(rep) == false)
+    if (_decode_vod_list(rep) == false)
       return false;
-
-#if 0
-
-    oc_rep_t *v; // = rep->value.object_array;
-    if (!oc_rep_get_object_array(rep, "vods", &v)) {
-      OC_DBG("oc_vod_map: decode 'vods' object array not found.");
-      return false;
-    }
-    while (NULL != v) {
-      oc_virtual_device_t *vod =
-          (oc_virtual_device_t *)malloc(sizeof(oc_virtual_device_t));
-      char *v_id = NULL;
-      if (!oc_rep_get_byte_string(v->value.object, "vod_id", &v_id,
-          &vod->v_id_size)) {
-        OC_DBG("oc_vod_map: decode 'vod_id' not found.");
-        return false;
-      }
-      if (NULL != v_id) {
-        vod->v_id = (uint8_t *)malloc(vod->v_id_size * sizeof(uint8_t));
-        memcpy(vod->v_id, v_id, vod->v_id_size);
-      } else {
-        OC_DBG("oc_vod_map: decode failed to find 'vod_id'");
-        return false;
-      }
-      char *en = NULL;
-      size_t en_size = 0;
-      if (!oc_rep_get_string(v->value.object, "econame", &en, &en_size)) {
-        OC_DBG("oc_vod_map: decode 'econame' not found.");
-        return false;
-      }
-      if (NULL != en) {
-        oc_new_string(&vod->econame, en, en_size);
-      } else {
-        return false;
-      }
-      int64_t temp = 0;
-      if (!oc_rep_get_int(v->value.object, "index", &temp)) {
-        OC_DBG("oc_vod_map: decode 'index' not found.");
-        return false;
-      }
-      vod->index = (size_t)temp;
-      /*
-       * TODO4ME <Oct 24, 2023> oc_vod_map_decode() : insert codes to restore `is_removed` value
-       */
-      // vod->is_removed = true;
-      oc_list_add(g_vod_mapping_list.vods, vod);
-      v = v->next;
-    }
-
-#endif
-
   } break;
   default:
     break;
@@ -195,68 +143,6 @@ oc_vod_map_decode(oc_rep_t *rep, bool from_storage)
   while (rep != NULL) {
     if (_decode_rep(rep) == false)
       return false;
-
-#if 0
-    len = oc_string_len(rep->name);
-    switch (rep->type) {
-    case OC_REP_INT:
-      if (len == 10 && memcmp(oc_string(rep->name), "next_index", 10) == 0) {
-        g_vod_mapping_list.next_index = (size_t)rep->value.integer;
-      }
-      break;
-    case OC_REP_OBJECT_ARRAY: {
-      oc_rep_t *v; // = rep->value.object_array;
-      if (!oc_rep_get_object_array(rep, "vods", &v)) {
-        OC_DBG("oc_vod_map: decode 'vods' object array not found.");
-        return false;
-      }
-      while (NULL != v) {
-        oc_virtual_device_t *vod =
-          (oc_virtual_device_t *)malloc(sizeof(oc_virtual_device_t));
-        char *v_id = NULL;
-        if (!oc_rep_get_byte_string(v->value.object, "vod_id", &v_id,
-                                    &vod->v_id_size)) {
-          OC_DBG("oc_vod_map: decode 'vod_id' not found.");
-          return false;
-        }
-        if (NULL != v_id) {
-          vod->v_id = (uint8_t *)malloc(vod->v_id_size * sizeof(uint8_t));
-          memcpy(vod->v_id, v_id, vod->v_id_size);
-        } else {
-          OC_DBG("oc_vod_map: decode failed to find 'vod_id'");
-          return false;
-        }
-        char *en = NULL;
-        size_t en_size = 0;
-        if (!oc_rep_get_string(v->value.object, "econame", &en, &en_size)) {
-          OC_DBG("oc_vod_map: decode 'econame' not found.");
-          return false;
-        }
-        if (NULL != en) {
-          oc_new_string(&vod->econame, en, en_size);
-        } else {
-          return false;
-        }
-        int64_t temp = 0;
-        if (!oc_rep_get_int(v->value.object, "index", &temp)) {
-          OC_DBG("oc_vod_map: decode 'index' not found.");
-          return false;
-        }
-        vod->index = (size_t)temp;
-        /*
-         * TODO4ME <Oct 24, 2023> oc_vod_map_decode() : insert codes to restore
-         * `is_removed` value
-         */
-        // vod->is_removed = true;
-        oc_list_add(g_vod_mapping_list.vods, vod);
-        v = v->next;
-      }
-    } break;
-    default:
-      break;
-    }
-#endif
-
     rep = rep->next;
   }
   return true;
