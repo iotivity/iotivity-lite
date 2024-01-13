@@ -241,7 +241,7 @@ oc_virtual_device_t *oc_bridge_get_vod_mapping_info(
  */
 OC_API
 oc_virtual_device_t *oc_bridge_get_vod_mapping_info2(
-  oc_vods_t *vod);
+  const oc_vods_t *vod);
 
 
 /**

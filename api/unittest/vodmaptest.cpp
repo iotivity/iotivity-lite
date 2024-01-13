@@ -48,7 +48,7 @@ public:
 
   };
 protected:
-  virtual void SetUp()
+  void SetUp() override
   {
 #ifdef OC_STORAGE
 #if defined(_WIN32_)
@@ -60,7 +60,7 @@ protected:
 #endif /* OC_STORAGE */
 
   }
-  virtual void TearDown()
+  void TearDown() override
   {
     remove("./vod_map_test_dir/vod_map");
     remove("./vod_map_test_dir/");

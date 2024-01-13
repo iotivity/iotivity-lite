@@ -96,7 +96,7 @@ oc_sec_acl_new_device(size_t device_index, bool need_realloc)
     OC_LIST_STRUCT_INIT(&g_aclist[device_index], subjects);
 
     size_t i=0;
-    while (i < (device_index)) {
+    while (i < device_index) {
       OC_LIST_STRUCT_REINIT(&g_aclist[i], subjects);
       i++;
     }

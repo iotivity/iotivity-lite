@@ -537,6 +537,7 @@ oc_interface_mask_t oc_ri_get_interface_mask(const char *iface,
 oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len,
                                              size_t device);
 
+#ifdef OC_HAS_FEATURE_BRIDGE
 /**
  * @brief return a resource which belongs to the device whenever it is called
  *
@@ -547,6 +548,7 @@ oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len,
  * @return NULL no more resource or end of list
  */
 oc_resource_t *oc_ri_get_app_resource_by_device(size_t device, bool reset);
+#endif
 
 /**
  * @brief retrieve list of resources

@@ -336,7 +336,7 @@ oc_create_device_resource(size_t device_count, const char *uri, const char *rt)
 
 #ifdef OC_HAS_FEATURE_BRIDGE
 static void
-core_update_existing_device_data(uint32_t device_count, oc_add_new_device_t cfg)
+core_update_existing_device_data(size_t device_count, oc_add_new_device_t cfg)
 {
   oc_gen_uuid(&g_oc_device_info[device_count].di);
   oc_gen_uuid(&g_oc_device_info[device_count].piid);
@@ -459,7 +459,7 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
 
     /* store new `oc_device_info_t` entry to existing memory slot */
     core_update_existing_device_data(index, cfg);
-    device_count = index;
+    device_count = (uint32_t)index;
   } else if (index == device_count) {
     /*
      * if `index` is same as the next normal index of Device,

@@ -29,15 +29,16 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-/*
-{
-  "vods" : [
-  {"vod_id":"virtual_device_id-1", "econame": "UPnP", "index":1},
-  {"vod_id":"virtual_device_id-2", "econame": "ZigBee", "index":2}
-  ],
-  "next_index": 3
-}
-*/
+/**
+ * vod mapping list example :
+ * {
+ *  "vods" : [
+ *    {"vod_id":"virtual_device_id-1", "econame": "UPnP", "index":1},
+ *     {"vod_id":"virtual_device_id-2", "econame": "ZigBee", "index":2}
+ *  ],
+ *  "next_index": 3
+ * }
+ */
 
 /**
  * @struct oc_vod_mapping_list_t
