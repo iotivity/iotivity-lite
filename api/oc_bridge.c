@@ -93,7 +93,6 @@ add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
 {
   oc_vods_t *vod = (oc_vods_t *)malloc(sizeof(oc_vods_t));
   oc_new_string(&vod->name, name, strlen(name));
-  //  oc_uuid_copy(&vod->di, di);
   memcpy(&vod->di, di, sizeof(oc_uuid_t));
   oc_new_string(&vod->econame, econame, strlen(econame));
 
@@ -195,6 +194,92 @@ get_bridge(oc_request_t *request, oc_interface_mask_t iface_mask,
 }
 
 #ifdef OC_SECURITY
+static void
+_handle_owned_bridge(size_t device_index)
+{
+  /*
+   * walk all devices
+   * if device is unowned and a virtual device then call connection_init
+   * assumption all virtual devices have a higher device index than bridge
+   */
+  for (size_t device = device_index + 1; device < oc_core_get_num_devices();
+       ++device) {
+    if (oc_uuid_is_nil(&oc_core_get_device_info(device)->di)) {
+      continue;
+    }
+    if (!oc_is_owned_device(device)) {
+      if (oc_bridge_is_virtual_device(device)) {
+        oc_connectivity_ports_t ports;
+        memset(&ports, 0, sizeof(ports));
+
+        OC_DBG(
+          "=====> Bridge is owned, VOD %zu connection is being initialized!!",
+          device);
+
+        if (oc_connectivity_init(device, ports) < 0) {
+          oc_abort("error initializing connectivity for device");
+        }
+        OC_DBG("======> oc_bridge: init connectivity for virtual device %zu",
+               device);
+      }
+    }
+  }
+}
+
+static void
+_handle_unowned_bridge(size_t device_index)
+{
+  /*
+   * Reset all virtual device information.
+   * walk all devices
+   * if device is a virtual device call reset and connection_shutdown
+   * reset the vod_map
+   * assumption all virtual devices have a higher device index than bridge
+   */
+  for (size_t device = device_index + 1; device < oc_core_get_num_devices();
+       ++device) {
+    if (oc_bridge_is_virtual_device(device)) {
+      oc_virtual_device_t *vod_mapping_item =
+        oc_bridge_get_vod_mapping_info(device);
+      if (vod_mapping_item) {
+        vod_mapping_item->is_vod_online = false;
+      }
+
+      oc_reset_device(device);
+      oc_connectivity_shutdown(device);
+    }
+  }
+#if 0
+  /* TODO4ME: add way to remove virtual device before reseting the vod_map */
+  oc_vod_map_reset();
+  OC_DBG("oc_bridge: bridge reset, reseting all connected virtual devices");
+#endif
+}
+
+static void
+_handle_owned_vod(const oc_uuid_t *device_uuid, size_t device_index)
+{
+  /*
+   * if corresponding non-OCF device is still in paired
+   * while this VOD is offboard and onboard again.
+   *
+   * the device ID of corresponding OCF Device stored in non-OCF
+   * device cache could point wrong OCF Device..
+   *
+   * => NOP!!!. onboard/offboard DON"T delete oc_device_info_t
+   * from g_oc_device_info[] array!!
+   */
+  if (oc_bridge_is_virtual_device(device_index)) {
+    oc_device_info_t *device_info = oc_core_get_device_info(device_index);
+    oc_string_t econame;
+    oc_vod_map_get_econame(&econame, device_index);
+    add_virtual_device_to_vods_list(oc_string(device_info->name), device_uuid,
+                                    oc_string(econame));
+    OC_DBG("======> oc_bridge: adding %s [%s] to oic.r.vodslist",
+           oc_string(device_info->name), oc_string(econame));
+  }
+}
+
 /*
  * For bridging the doxm_owned_changed callback is responsible for two tasks:
  * 1. Making sure unowned VODs connect or disconnect from the network based
@@ -210,37 +295,9 @@ doxm_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
   /* Bridge Device */
   if (g_vodlist_res->device == device_index) {
     if (owned) {
-      /*
-       *walk all devices
-       * if device is unowned and a virtual device then call connection_init
-       * assumption all virtual devices have a higher device index than bridge
-       */
-      for (size_t device = device_index + 1; device < oc_core_get_num_devices();
-           ++device) {
-        if (oc_uuid_is_nil(&oc_core_get_device_info(device)->di)) {
-          continue;
-        }
-        if (!oc_is_owned_device(device)) {
-          if (oc_bridge_is_virtual_device(device)) {
-            oc_connectivity_ports_t ports;
-            memset(&ports, 0, sizeof(ports));
-
-            OC_DBG("=====> Bridge is owned, VOD %zu connection is being "
-                   "initialized!!",
-                   device);
-
-            if (oc_connectivity_init(device, ports) < 0) {
-              oc_abort("error initializing connectivity for device");
-            }
-            OC_DBG(
-              "======> oc_bridge: init connectivity for virtual device %zu",
-              device);
-          }
-        }
-      }
-    }
-    /* Bridge device is unowned */
-    else {
+      _handle_owned_bridge(device_index);
+    } else {
+      /* Bridge device is unowned */
       /*
        * Reset all virtual device information.
        * walk all devices
@@ -248,28 +305,10 @@ doxm_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
        * reset the vod_map
        * assumption all virtual devices have a higher device index than bridge
        */
-      for (size_t device = device_index + 1; device < oc_core_get_num_devices();
-           ++device) {
-        if (oc_bridge_is_virtual_device(device)) {
-          oc_virtual_device_t *vod_mapping_item =
-            oc_bridge_get_vod_mapping_info(device);
-          if (vod_mapping_item) {
-            vod_mapping_item->is_vod_online = false;
-          }
-
-          oc_reset_device(device);
-          oc_connectivity_shutdown(device);
-        }
-      }
-      /* TODO: add way to remove virtual device before reseting the vod_map */
-      /*
-      oc_vod_map_reset();
-      OC_DBG("oc_bridge: bridge reset, reseting all connected virtual devices");
-      */
+      _handle_unowned_bridge(device_index);
     }
-  }
-  /* Device other than Bridge Device */
-  else {
+  } else {
+    /* Device other than Bridge Device */
     if (owned) {
       /*
        * if corresponding non-OCF device is still in paired
@@ -281,15 +320,7 @@ doxm_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
        * => NOP!!!. onboard/offboard DON"T delete oc_device_info_t
        * from g_oc_device_info[] array!!
        */
-      if (oc_bridge_is_virtual_device(device_index)) {
-        oc_device_info_t *device_info = oc_core_get_device_info(device_index);
-        oc_string_t econame;
-        oc_vod_map_get_econame(&econame, device_index);
-        add_virtual_device_to_vods_list(oc_string(device_info->name),
-                                        device_uuid, oc_string(econame));
-        OC_DBG("======> oc_bridge: adding %s [%s] to oic.r.vodslist",
-               oc_string(device_info->name), oc_string(econame));
-      }
+      _handle_owned_vod(device_uuid, device_index);
     } else {
       /*
        * attempt to remove the unowned device from the vods_list if the uuid
@@ -345,6 +376,18 @@ oc_bridge_add_bridge_device(const char *name, const char *spec_version,
 #endif // OC_SECURITY
   return 0;
 }
+
+#if 0
+oc_add_new_device_t cfg = {
+  .uri = uri,
+  .rt = rt,
+  .name = name,
+  .spec_version = spec_version,
+  .data_model_version = data_model_version,
+  .add_device_cb = add_device_cb,
+  .add_device_cb_data = data,
+};
+#endif
 
 size_t
 oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
@@ -547,7 +590,7 @@ oc_bridge_get_vod_mapping_info(size_t virtual_device_index)
 }
 
 oc_virtual_device_t *
-oc_bridge_get_vod_mapping_info2(oc_vods_t *vod)
+oc_bridge_get_vod_mapping_info2(const oc_vods_t *vod)
 {
   /* find corresponding VOD mapping entry */
   size_t device_index;
