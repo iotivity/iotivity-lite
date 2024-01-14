@@ -207,8 +207,8 @@ _handle_owned_bridge(size_t device_index)
     if (oc_uuid_is_nil(&oc_core_get_device_info(device)->di)) {
       continue;
     }
-    if (!oc_is_owned_device(device)) {
-      if (oc_bridge_is_virtual_device(device)) {
+    if (!oc_is_owned_device(device)
+        && oc_bridge_is_virtual_device(device)) {
         oc_connectivity_ports_t ports;
         memset(&ports, 0, sizeof(ports));
 
@@ -221,7 +221,6 @@ _handle_owned_bridge(size_t device_index)
         }
         OC_DBG("======> oc_bridge: init connectivity for virtual device %zu",
                device);
-      }
     }
   }
 }
