@@ -577,7 +577,6 @@ reset_light(unsigned int index)
     (uint8_t *)virtual_lights[index].uuid, OC_UUID_LEN,
     virtual_lights[index].eco_system);
   if (device_index != 0) {
-    //    oc_reset_device_v1(device_index, true);
     oc_reset_device(device_index);
     OC_PRINTF("device %zu is being reset!!\n", device_index);
     virtual_lights[index].discovered = false;
@@ -605,7 +604,6 @@ reset_device(void)
   switch (c) {
   case 0:
     oc_reset_device(0u);
-    //    oc_reset_device_v1(0u, true);
     break;
   case 1:
     reset_light(0u);
@@ -704,7 +702,9 @@ main(void)
   sigaction(SIGINT, &sa, NULL);
 #endif
 
-  //  oc_log_set_level(OC_LOG_LEVEL_DEBUG);
+#if 0
+  oc_log_set_level(OC_LOG_LEVEL_DEBUG);
+#endif
 
   static const oc_handler_t handler = { .init = app_init,
                                         .signal_event_loop = signal_event_loop,

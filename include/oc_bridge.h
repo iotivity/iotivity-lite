@@ -239,7 +239,7 @@ oc_virtual_device_t *oc_bridge_get_vod_mapping_info(
  *    - NULL if no virtual device was found corresponding to the `vod`
  */
 OC_API
-oc_virtual_device_t *oc_bridge_get_vod_mapping_info2(oc_vods_t *vod);
+oc_virtual_device_t *oc_bridge_get_vod_mapping_info2(const oc_vods_t *vod);
 
 /**
  * @brief return entry of "oic.r.vodlist:vods" list
