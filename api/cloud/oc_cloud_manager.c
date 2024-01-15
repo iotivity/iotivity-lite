@@ -535,6 +535,7 @@ oc_cloud_login_handler(oc_client_response_t *data)
   oc_cloud_error_t err = _login_handler(ctx, data, &cps);
   if (err != CLOUD_OK) {
     cps = OC_CPS_FAILED;
+    ctx->store.status |= OC_CLOUD_FAILURE;
   }
   cloud_set_cps_and_last_error(ctx, cps, err);
   if (p->cb) {
@@ -780,13 +781,12 @@ _refresh_token_handler(oc_cloud_context_t *ctx,
   return CLOUD_OK;
 
 error:
+  ctx->store.status |= OC_CLOUD_FAILURE;
   if (err == CLOUD_ERROR_UNAUTHORIZED) {
-    ctx->store.status |= OC_CLOUD_FAILURE;
     *cps = OC_CPS_FAILED;
     return err;
   }
 
-  ctx->store.status |= OC_CLOUD_FAILURE;
   // we cannot be considered as logged in when refresh token fails.
   ctx->store.status &= ~OC_CLOUD_LOGGED_IN;
   if (err == CLOUD_ERROR_CONNECT) {
