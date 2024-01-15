@@ -23,6 +23,7 @@
 
 #include "api/oc_ri_internal.h"
 #include "api/oc_ri_server_internal.h"
+#include "api/oc_server_api_internal.h"
 #include "oc_api.h"
 #include "oc_cloud_context_internal.h"
 #include "oc_cloud_deregister_internal.h"
@@ -79,6 +80,10 @@ start_manager(void *user_data)
 static void
 cloud_manager_restart(oc_cloud_context_t *ctx)
 {
+  if (!ctx->cloud_manager) {
+    OC_CLOUD_ERR("cloud manager is not running");
+    return;
+  }
   cloud_manager_stop(ctx);
   cloud_deregister_stop(ctx);
   oc_remove_delayed_callback(ctx, start_manager);
@@ -229,11 +234,6 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
   ctx->store.cps = OC_CPS_READYTOREGISTER;
   if (ctx->cloud_manager) {
     oc_cloud_manager_restart(ctx);
-    return;
-  }
-
-  if (oc_cloud_manager_start(ctx, ctx->callback, ctx->user_data) != 0) {
-    OC_CLOUD_ERR("cannot start cloud manager");
   }
 }
 
@@ -255,9 +255,9 @@ cloud_ep_session_event_handler(const oc_endpoint_t *endpoint,
   }
 
   ctx->cloud_ep_state = state;
-  if (ctx->cloud_ep_state == OC_SESSION_DISCONNECTED && ctx->cloud_manager) {
+  if (ctx->cloud_ep_state == OC_SESSION_DISCONNECTED) {
     OC_CLOUD_INFO("Session disconnected");
-    if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
+    if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0 && ctx->cloud_manager) {
       cloud_manager_restart(ctx);
     }
   }
@@ -270,7 +270,7 @@ static void
 cloud_interface_up_event_handler(oc_cloud_context_t *ctx, void *user_data)
 {
   (void)user_data;
-  if (ctx->store.status == OC_CLOUD_INITIALIZED) {
+  if (ctx->store.status == OC_CLOUD_INITIALIZED && ctx->cloud_manager) {
     cloud_manager_restart(ctx);
   }
 }
@@ -329,6 +329,10 @@ cloud_is_deregistering(const oc_cloud_context_t *ctx)
 void
 oc_cloud_manager_restart(oc_cloud_context_t *ctx)
 {
+  if (!ctx->cloud_manager) {
+    OC_CLOUD_ERR("cloud manager is not running");
+    return;
+  }
   OC_CLOUD_DBG("oc_cloud_manager_restart");
 #ifdef OC_SESSION_EVENTS
   if (ctx->cloud_ep_state == OC_SESSION_CONNECTED) {
@@ -339,8 +343,7 @@ oc_cloud_manager_restart(oc_cloud_context_t *ctx)
     }
   }
 #endif /* OC_SESSION_EVENTS */
-  oc_remove_delayed_callback(ctx, restart_manager);
-  oc_set_delayed_callback(ctx, restart_manager, 0);
+  oc_reset_delayed_callback(ctx, restart_manager, 0);
 }
 
 int
