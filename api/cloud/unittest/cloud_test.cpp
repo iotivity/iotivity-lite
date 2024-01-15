@@ -141,9 +141,9 @@ TEST_F(TestCloud, cloud_register)
   bool cbk_called = false;
   auto cbk = [](oc_cloud_context_t *, oc_cloud_status_t status,
                 void *user_data) {
-    auto cbk_called = static_cast<bool *>(user_data);
+    auto called = static_cast<bool *>(user_data);
     EXPECT_EQ(OC_CLOUD_FAILURE, (status & OC_CLOUD_FAILURE));
-    *cbk_called = true;
+    *called = true;
   };
 
   int ret = cloud_register(ctx, cbk, &cbk_called, 1);
@@ -176,9 +176,9 @@ TEST_F(TestCloud, cloud_login)
   bool cbk_called = false;
   auto cbk = [](oc_cloud_context_t *, oc_cloud_status_t status,
                 void *user_data) {
-    auto cbk_called = static_cast<bool *>(user_data);
+    auto called = static_cast<bool *>(user_data);
     EXPECT_EQ(OC_CLOUD_FAILURE, (status & OC_CLOUD_FAILURE));
-    *cbk_called = true;
+    *called = true;
   };
 
   int ret = cloud_login(ctx, cbk, &cbk_called, 1);
@@ -218,9 +218,9 @@ TEST_F(TestCloud, cloud_refresh_token)
   bool cbk_called = false;
   auto cbk = [](oc_cloud_context_t *, oc_cloud_status_t status,
                 void *user_data) {
-    auto cbk_called = static_cast<bool *>(user_data);
+    auto called = static_cast<bool *>(user_data);
     EXPECT_EQ(OC_CLOUD_FAILURE, (status & OC_CLOUD_FAILURE));
-    *cbk_called = true;
+    *called = true;
   };
 
   int ret = cloud_refresh_token(ctx, cbk, &cbk_called, 1);
