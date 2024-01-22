@@ -2,6 +2,7 @@
  *
  * Copyright 2018 GRANITE RIVER LABS All Rights Reserved.
  *           2021 CASCODA LTD        All Rights Reserved.
+ *           2024 ETRI               All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -26,6 +27,14 @@
 #include "api/oc_runtime_internal.h"
 #include "port/oc_network_event_handler_internal.h"
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+#include "oc_api.h"
+#include "oc_core_res.h"
+#include "security/oc_svr_internal.h"
+#include "api/oc_core_res_internal.h"
+#include <set>
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 #ifdef OC_TCP
 #include "messaging/coap/signal_internal.h"
 #endif /* OC_TCP */
@@ -43,15 +52,128 @@ public:
     oc_network_event_handler_mutex_init();
     oc_runtime_init();
     oc_ri_init();
+#ifdef OC_HAS_FEATURE_BRIDGE
+    oc_core_init();
+    oc_sec_svr_create();
+#endif /* OC_HAS_FEATURE_BRIDGE */
   }
 
   void TearDown() override
   {
+#ifdef OC_HAS_FEATURE_BRIDGE
+    oc_core_shutdown();
+#endif /* OC_HAS_FEATURE_BRIDGE */
     oc_ri_shutdown();
     oc_runtime_shutdown();
     oc_network_event_handler_mutex_destroy();
   }
 };
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+static void
+get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
+            void *user_data)
+{
+}
+
+TEST_F(TestOcRi, GetNDeleteAppResourceByIndex)
+{
+  std::string deviceName{ "Device1" };
+  std::string deviceURI{ "/oic/d" };
+  std::string deviceType{ "oic.d.light" };
+  std::string OCFSpecVersion{ "ocf.2.2.6" };
+  std::string OCFDataModelVersion{ "ocf.res.1.0.0" };
+
+  /* -------------------------------------------------*/
+  /*
+   * oc_ri_get_app_resource_by_device(device, reset)
+   */
+  /*--------------------------------------------------*/
+
+  auto deviceIndex = oc_add_device(
+    deviceURI.c_str(), deviceType.c_str(), deviceName.c_str(),
+    OCFSpecVersion.c_str(), OCFDataModelVersion.c_str(), nullptr, nullptr);
+
+  auto deviceInfo = oc_core_get_device_info(deviceIndex);
+
+  ASSERT_NE(deviceInfo, nullptr);
+  EXPECT_STREQ(deviceName.c_str(), oc_string(deviceInfo->name));
+  EXPECT_EQ(0, deviceIndex);
+
+  /*
+   * add Resources
+   */
+  std::string rscURI1{ "/rsc1" };
+  auto resource1 = oc_new_resource(nullptr, rscURI1.c_str(), 0, deviceIndex);
+  oc_resource_set_request_handler(resource1, OC_GET, get_handler, nullptr);
+  ASSERT_NE(nullptr, resource1);
+  EXPECT_EQ(deviceIndex, resource1->device);
+  oc_add_resource(resource1);
+
+  std::string rscURI2{ "/rsc2" };
+  auto resource2 = oc_new_resource(nullptr, rscURI2.c_str(), 0, deviceIndex);
+  oc_resource_set_request_handler(resource2, OC_GET, get_handler, nullptr);
+  ASSERT_NE(nullptr, resource2);
+  EXPECT_EQ(deviceIndex, resource2->device);
+  oc_add_resource(resource2);
+
+  /*
+   * add collection Resource
+   */
+  std::string colURI1 = "/col1";
+  auto colResource3 =
+    oc_new_collection(nullptr, colURI1.c_str(), 0, deviceIndex);
+  ASSERT_NE(nullptr, colResource3);
+  EXPECT_STREQ(colURI1.c_str(), oc_string(colResource3->uri));
+  EXPECT_EQ(deviceIndex, colResource3->device);
+  oc_add_collection_v1(colResource3);
+
+  /*
+   * try to find from the first entry...
+   */
+  auto rsc1 = oc_ri_get_app_resource_by_device(deviceIndex, true);
+  ASSERT_NE(rsc1, nullptr);
+
+  auto rsc2 = oc_ri_get_app_resource_by_device(deviceIndex, true);
+  ASSERT_NE(rsc2, nullptr);
+  EXPECT_STREQ(oc_string(rsc1->uri), oc_string(rsc2->uri));
+
+  /*
+   * try to resume search from the entry which was seen last...
+   */
+  rsc1 = oc_ri_get_app_resource_by_device(deviceIndex, true);
+  ASSERT_NE(rsc1, nullptr);
+
+  rsc2 = oc_ri_get_app_resource_by_device(deviceIndex, false);
+  ASSERT_NE(rsc2, nullptr);
+  EXPECT_STRNE(oc_string(rsc1->uri), oc_string(rsc2->uri));
+
+  /*
+   * try to find all app resources mapped to a Device
+   */
+  std::set<std::string> rscSet{ rscURI1.c_str(), rscURI2.c_str(),
+                                colURI1.c_str() };
+
+  rsc1 = oc_ri_get_app_resource_by_device(deviceIndex, true);
+  while (rsc1) {
+    rscSet.erase(oc_string(rsc1->uri));
+    rsc1 = oc_ri_get_app_resource_by_device(deviceIndex, false);
+  }
+
+  EXPECT_EQ(true, rscSet.empty());
+
+  /* -------------------------------------------------*/
+  /*
+   * oc_ri_delete_app_resources_per_device(index)
+   */
+  /*--------------------------------------------------*/
+  oc_ri_delete_app_resources_per_device(deviceIndex);
+  rsc1 = oc_ri_get_app_resource_by_device(deviceIndex, true);
+
+  EXPECT_EQ(nullptr, rsc1);
+}
+
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 TEST_F(TestOcRi, StatusCodeToCoapCode)
 {

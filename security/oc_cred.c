@@ -115,12 +115,14 @@ oc_sec_cred_new_device(size_t device_index, bool need_realloc)
       OC_LIST_STRUCT_REINIT(&g_devices[i], creds);
       i++;
     }
-  } else {
+  } else if (device_index < oc_core_get_num_devices()) {
     /*
      * if `g_oc_device_info[device_index]` is existing entry...
      */
     memset(&g_devices[device_index], 0, sizeof(oc_sec_creds_t));
     OC_LIST_STRUCT_INIT(&g_devices[device_index], creds);
+  } else {
+    OC_ERR("device index error ! (%zu)", device_index);
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 }

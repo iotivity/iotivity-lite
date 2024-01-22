@@ -1,6 +1,8 @@
 /******************************************************************
  *
  * Copyright 2018 GRANITE RIVER LABS All Rights Reserved.
+ *           2024 ETRI               All Rights Reserved.
+ *
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -31,6 +33,11 @@
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+#include "oc_bridge.h"
+#include "security/oc_svr_internal.h"
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 #include <algorithm>
 #include <cstdlib>
 #include <gtest/gtest.h>
@@ -57,6 +64,9 @@ public:
     oc_runtime_init();
     oc_ri_init();
     oc_core_init();
+#ifdef OC_HAS_FEATURE_BRIDGE
+    oc_sec_svr_create();
+#endif
   }
 
   void TearDown() override
@@ -64,12 +74,84 @@ public:
 #ifdef OC_HAS_FEATURE_PUSH
     oc_push_free();
 #endif /* OC_HAS_FEATURE_PUSH */
+
     oc_core_shutdown();
     oc_ri_shutdown();
     oc_runtime_shutdown();
     oc_network_event_handler_mutex_destroy();
   }
 };
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+/*
+ * Not testable (static functioins) :
+ * core_update_existing_device_data()
+ * core_delete_app_resources_per_device()
+ * core_set_device_removed()
+ *
+ * Done:
+ * oc_core_add_new_device_at_index()
+ * oc_core_remove_device_at_index()
+ * oc_core_get_device_index()
+ *
+ */
+TEST_F(TestCoreResource, CoreAddNRemoveDeviceAtIndex)
+{
+  oc_add_new_device_t cfg{};
+  cfg.name = kDeviceName.c_str();
+  cfg.uri = kDeviceURI.c_str();
+  cfg.rt = kDeviceType.c_str();
+  cfg.spec_version = kOCFSpecVersion.c_str();
+  cfg.data_model_version = kOCFDataModelVersion.c_str();
+  size_t device_count;
+
+  /* -------------------------------------------------*/
+  /*
+   * oc_core_add_new_device_at_index()
+   * oc_core_remove_device_at_index()
+   * oc_core_get_device_index()
+   */
+  /*--------------------------------------------------*/
+
+  /*
+   * device index is outranged
+   * => should fail
+   */
+  device_count = oc_core_get_num_devices();
+  EXPECT_EQ(oc_core_add_new_device_at_index(cfg, device_count + 1), nullptr);
+
+  /*
+   * add new device at the end of array
+   * => should succeed
+   */
+  EXPECT_NE(oc_core_add_new_device_at_index(cfg, device_count), nullptr);
+  EXPECT_EQ(oc_core_get_device_info(device_count)->is_removed, false);
+
+  /*
+   * try to overwrite new device onto existing device
+   * => should fail
+   */
+  EXPECT_EQ(oc_core_add_new_device_at_index(cfg, device_count), nullptr);
+
+  /*
+   * try to overwrite new device into the slot where existing device was deleted
+   * => should succeed
+   */
+  oc_core_remove_device_at_index(device_count);
+  EXPECT_NE(oc_core_add_new_device_at_index(cfg, device_count), nullptr);
+
+  /*
+   * try to find device with device id
+   * => should succeed
+   */
+  size_t device_index;
+  oc_core_get_device_index(oc_core_get_device_info(device_count)->di,
+                           &device_index);
+  EXPECT_EQ(device_index, device_count);
+
+  oc_core_remove_device_at_index(device_count);
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 TEST_F(TestCoreResource, CoreDevice_P)
 {
@@ -234,15 +316,9 @@ public:
 #endif /* OC_SERVER && OC_DYNAMIC_ALLOCATION */
   }
 
-  static void TearDownTestCase()
-  {
-    oc::TestDevice::StopServer();
-  }
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 
-  void TearDown() override
-  {
-    oc::TestDevice::Reset();
-  }
+  void TearDown() override { oc::TestDevice::Reset(); }
 };
 
 TEST_F(TestCoreResourceWithDevice, CoreGetDeviceID_F)

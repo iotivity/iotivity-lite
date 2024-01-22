@@ -1,6 +1,7 @@
 /******************************************************************
  *
  * Copyright 2023 Daniel Adam, All Rights Reserved.
+ * Copyright 2024 ETRI Joo-Chul Kevin Lee, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -301,20 +302,11 @@ public:
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
 
-  static void TearDownTestCase()
-  {
-    oc::TestDevice::StopServer();
-  }
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 
-  void SetUp() override
-  {
-    oc_sec_sp_default(kDeviceID);
-  }
+  void SetUp() override { oc_sec_sp_default(kDeviceID); }
 
-  void TearDown() override
-  {
-    oc::TestDevice::Reset();
-  }
+  void TearDown() override { oc::TestDevice::Reset(); }
 };
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
@@ -467,5 +459,40 @@ TEST_F(TestSecurityProfileWithServer, DeleteRequest_Fail)
   oc::testNotSupportedMethod(OC_DELETE, &ep, OCF_SEC_SP_URI, nullptr,
                              error_code);
 }
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+static bool
+IsSpEntryInitialized(const oc_sec_sp_t *sdiEntry)
+{
+  auto emptySp = std::make_unique<oc_sec_sp_t>();
+  memset(emptySp.get(), 0, sizeof(oc_sec_sp_t));
+
+  if (/*!memcmp(sdiEntry, emptySp.get(), sizeof(oc_sec_sp_t))
+      &&*/
+      (sdiEntry->current_profile == OC_SP_BASELINE) &&
+      (sdiEntry->supported_profiles == OC_SP_BASELINE) &&
+      (sdiEntry->credid == -1)) {
+    return true;
+  }
+  return false;
+}
+
+TEST_F(TestSecurityProfile, SpNewDevice)
+{
+  /*
+   * overwrite entry in the existing position
+   */
+  auto spEntry = oc_sec_sp_get(kDeviceID);
+  auto orgSp = std::make_unique<oc_sec_sp_t>();
+
+  memcpy(orgSp.get(), spEntry, sizeof(oc_sec_sp_t));
+  oc_sec_sp_new_device(kDeviceID, false);
+  oc_sec_sp_default(kDeviceID);
+
+  EXPECT_EQ(true, IsSpEntryInitialized(spEntry));
+
+  memcpy(spEntry, orgSp.get(), sizeof(oc_sec_sp_t));
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 #endif /* OC_SECURITY */
