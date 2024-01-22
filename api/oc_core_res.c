@@ -440,7 +440,9 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
   assert(cfg.data_model_version != NULL);
 
   uint32_t device_count = OC_ATOMIC_LOAD32(g_device_count);
+#ifdef OC_SECURITY
   bool is_realloc = false;
+#endif
 
   if (index > device_count) {
     OC_ERR(
@@ -487,7 +489,9 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
     /* extend memory allocated to `g_oc_device_info` to add new Device
      * and add new `oc_device_info_t` entry */
     core_update_device_data(device_count, cfg);
+#ifdef OC_SECURITY
     is_realloc = true;
+#endif
   }
 
   /* Construct device resource */
