@@ -36,6 +36,10 @@
 
 #include "tests/gtest/Device.h"
 
+#ifdef OC_HAS_FEATURE_PUSH
+#include "api/oc_push_internal.h"
+#endif /* OC_HAS_FEATURE_PUSH */
+
 extern "C" {
 void bridge_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
                           bool owned, void *user_data);
