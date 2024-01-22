@@ -257,7 +257,7 @@ elseif(OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG)
 
     # TODO: alignment warnings appear on some 32-bit compilers, keep those just
     # as warnings for now
-    oc_add_compile_options(GLOBAL FLAGS -g -Wno-error=cast-align -Wno-error=deprecated-declarations
+    oc_add_compile_options(GLOBAL FLAGS -Wno-error=cast-align -Wno-error=deprecated-declarations
         -Wno-error=documentation)
     if(MINGW OR (WIN32 AND OC_COMPILER_IS_CLANG))
       oc_add_compile_options(GLOBAL FLAGS -Wno-error=gnu-offsetof-extensions -Wno-error=sign-compare)

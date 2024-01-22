@@ -1530,12 +1530,10 @@ oc_connectivity_shutdown(size_t device)
 {
   ip_context_t *dev = oc_get_ip_context_for_device(device);
 
-#ifdef OC_HAS_FEATURE_BRIDGE
   if (dev == NULL) {
     OC_WRN("no ip-context is found for Device (Device index: %zu)", device);
     return;
   }
-#endif
 
   OC_ATOMIC_STORE8(dev->terminate, 1);
   do {

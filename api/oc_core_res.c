@@ -360,7 +360,6 @@ core_set_device_removed(size_t index, bool is_removed)
 }
 #endif /* OC_HAS_FEATURE_BRIDGE */
 
-
 oc_device_info_t *
 oc_core_add_new_device(oc_add_new_device_t cfg)
 {
@@ -441,6 +440,7 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
   assert(cfg.data_model_version != NULL);
 
   uint32_t device_count = OC_ATOMIC_LOAD32(g_device_count);
+  bool is_realloc = false;
 
   if (index > device_count) {
     OC_ERR(
@@ -487,6 +487,7 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
     /* extend memory allocated to `g_oc_device_info` to add new Device
      * and add new `oc_device_info_t` entry */
     core_update_device_data(device_count, cfg);
+    is_realloc = true;
   }
 
   /* Construct device resource */
@@ -549,7 +550,7 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
 #endif /* OC_HAS_FEATURE_PUSH */
 
 #ifdef OC_SECURITY
-  if (g_device_count == (device_count + 1)) {
+  if ((g_device_count == (device_count + 1)) && is_realloc) {
     /* realloc memory and populate SVR Resources
      * only if new Device is attached to the end of `g_oc_device_info[]` */
     oc_sec_svr_create_new_device(device_count, true);
@@ -592,11 +593,11 @@ oc_core_remove_device_at_index(size_t index)
   oc_reset_device(index);
   /*
    * oc_sec_sdi_clear(oc_sec_sdi_get(index)); => already done in
-   * oc_reset_device() 
+   * oc_reset_device()
    * oc_sec_ael_free_device(index); => already done in
-   * oc_reset_device() 
+   * oc_reset_device()
    * oc_sec_cred_clear(index, NULL, NULL); => already done in
-   * oc_reset_device() 
+   * oc_reset_device()
    * oc_sec_acl_clear(index, NULL, NULL); => already done in
    * oc_reset_device()
    */

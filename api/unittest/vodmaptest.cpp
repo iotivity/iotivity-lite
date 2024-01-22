@@ -30,21 +30,24 @@
 #include <oc_vod_map.h>
 #include "port/oc_storage.h"
 
-typedef struct test_vod
+#include <string>
+#include <vector>
+
+using test_vod = struct test_vod
 {
-  char vod_id[37];
-  char eco_system[5];
-} test_vod;
+  std::string vod_id;
+  std::string eco_system;
+};
 
 class VodMapTest : public testing::Test {
 public:
   int dirExists(const char *const path);
-  test_vod tv[5] = { { "1b32e152-3756-4fb6-b3f2-d8db7aafe39f", "ABC" },
-                     { "f959f6fd-8d08-4766-849b-74c3eec5e041", "ABC" },
-                     { "02feb15a-bf94-4f33-9794-adfb25c7bc60", "XYZ" },
-                     { "686ef93d-36e0-47fc-8316-fbd7045e850a", "ABC" },
-                     { "686ef93d-36e0-47fc-8316-fbd7045e850a", "XYZ" }
-
+  std::vector<test_vod> tv = {
+    { "1b32e152-3756-4fb6-b3f2-d8db7aafe39f", "ABC" },
+    { "f959f6fd-8d08-4766-849b-74c3eec5e041", "ABC" },
+    { "02feb15a-bf94-4f33-9794-adfb25c7bc60", "XYZ" },
+    { "686ef93d-36e0-47fc-8316-fbd7045e850a", "ABC" },
+    { "686ef93d-36e0-47fc-8316-fbd7045e850a", "XYZ" }
   };
 
 protected:
@@ -70,14 +73,17 @@ protected:
 TEST_F(VodMapTest, vod_map_add_id)
 {
   oc_vod_map_init();
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id,
-                                     strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id.c_str(),
+                                     strlen(tv[0].vod_id.c_str()),
+                                     tv[0].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id,
-                                     strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id.c_str(),
+                                     strlen(tv[1].vod_id.c_str()),
+                                     tv[1].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id,
-                                     strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id.c_str(),
+                                     strlen(tv[2].vod_id.c_str()),
+                                     tv[2].eco_system.c_str()),
             0);
 
   // The vod map code actually expects the zero device to always be a bridge or
@@ -87,21 +93,26 @@ TEST_F(VodMapTest, vod_map_add_id)
   const char *dummy = "dummy";
   EXPECT_EQ(
     oc_vod_map_add_mapping_entry((uint8_t *)dummy, strlen(dummy), dummy), 0);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[0].vod_id.c_str(),
+                                         strlen(tv[0].vod_id.c_str()),
+                                         tv[0].eco_system.c_str()),
             1);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[1].vod_id.c_str(),
+                                         strlen(tv[1].vod_id.c_str()),
+                                         tv[1].eco_system.c_str()),
             2);
 
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id,
-                                     strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id.c_str(),
+                                     strlen(tv[0].vod_id.c_str()),
+                                     tv[0].eco_system.c_str()),
             1);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id,
-                                     strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id.c_str(),
+                                     strlen(tv[1].vod_id.c_str()),
+                                     tv[1].eco_system.c_str()),
             2);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id,
-                                     strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id.c_str(),
+                                     strlen(tv[2].vod_id.c_str()),
+                                     tv[2].eco_system.c_str()),
             0);
 
   oc_vod_map_free();
@@ -110,14 +121,17 @@ TEST_F(VodMapTest, vod_map_add_id)
 TEST_F(VodMapTest, vod_map_remove_id)
 {
   oc_vod_map_init();
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id,
-                                     strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id.c_str(),
+                                     strlen(tv[0].vod_id.c_str()),
+                                     tv[0].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id,
-                                     strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id.c_str(),
+                                     strlen(tv[1].vod_id.c_str()),
+                                     tv[1].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id,
-                                     strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id.c_str(),
+                                     strlen(tv[2].vod_id.c_str()),
+                                     tv[2].eco_system.c_str()),
             0);
 
   // The vod map code actually expects the zero device to always be a bridge or
@@ -127,85 +141,107 @@ TEST_F(VodMapTest, vod_map_remove_id)
   const char *dummy = "dummy";
   EXPECT_EQ(
     oc_vod_map_add_mapping_entry((uint8_t *)dummy, strlen(dummy), dummy), 0);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[0].vod_id.c_str(),
+                                         strlen(tv[0].vod_id.c_str()),
+                                         tv[0].eco_system.c_str()),
             1);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[1].vod_id.c_str(),
+                                         strlen(tv[1].vod_id.c_str()),
+                                         tv[1].eco_system.c_str()),
             2);
 
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id,
-                                     strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id.c_str(),
+                                     strlen(tv[0].vod_id.c_str()),
+                                     tv[0].eco_system.c_str()),
             1);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id,
-                                     strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id.c_str(),
+                                     strlen(tv[1].vod_id.c_str()),
+                                     tv[1].eco_system.c_str()),
             2);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id,
-                                     strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id.c_str(),
+                                     strlen(tv[2].vod_id.c_str()),
+                                     tv[2].eco_system.c_str()),
             0);
 
   oc_vod_map_remove_mapping_entry(1);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id,
-                                     strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id.c_str(),
+                                     strlen(tv[0].vod_id.c_str()),
+                                     tv[0].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id,
-                                     strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id.c_str(),
+                                     strlen(tv[1].vod_id.c_str()),
+                                     tv[1].eco_system.c_str()),
             2);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id,
-                                     strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id.c_str(),
+                                     strlen(tv[2].vod_id.c_str()),
+                                     tv[2].eco_system.c_str()),
             0);
 
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[0].vod_id.c_str(),
+                                         strlen(tv[0].vod_id.c_str()),
+                                         tv[0].eco_system.c_str()),
             1);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[1].vod_id.c_str(),
+                                         strlen(tv[1].vod_id.c_str()),
+                                         tv[1].eco_system.c_str()),
             2);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[2].vod_id.c_str(),
+                                         strlen(tv[2].vod_id.c_str()),
+                                         tv[2].eco_system.c_str()),
             3);
 
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id,
-                                     strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id.c_str(),
+                                     strlen(tv[0].vod_id.c_str()),
+                                     tv[0].eco_system.c_str()),
             1);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id,
-                                     strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id.c_str(),
+                                     strlen(tv[1].vod_id.c_str()),
+                                     tv[1].eco_system.c_str()),
             2);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id,
-                                     strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id.c_str(),
+                                     strlen(tv[2].vod_id.c_str()),
+                                     tv[2].eco_system.c_str()),
             3);
 
   oc_vod_map_reset();
 
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id,
-                                     strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id.c_str(),
+                                     strlen(tv[0].vod_id.c_str()),
+                                     tv[0].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id,
-                                     strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id.c_str(),
+                                     strlen(tv[1].vod_id.c_str()),
+                                     tv[1].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id,
-                                     strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id.c_str(),
+                                     strlen(tv[2].vod_id.c_str()),
+                                     tv[2].eco_system.c_str()),
             0);
 
   oc_vod_map_free();
 
-  // test intermittent removal of vod_ids
+  // test intermittent removal of vod_id.c_strs
 
   oc_vod_map_init();
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id,
-                                     strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id.c_str(),
+                                     strlen(tv[0].vod_id.c_str()),
+                                     tv[0].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id,
-                                     strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id.c_str(),
+                                     strlen(tv[1].vod_id.c_str()),
+                                     tv[1].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id,
-                                     strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id.c_str(),
+                                     strlen(tv[2].vod_id.c_str()),
+                                     tv[2].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id,
-                                     strlen(tv[3].vod_id), tv[3].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id.c_str(),
+                                     strlen(tv[3].vod_id.c_str()),
+                                     tv[3].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id,
-                                     strlen(tv[4].vod_id), tv[4].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id.c_str(),
+                                     strlen(tv[4].vod_id.c_str()),
+                                     tv[4].eco_system.c_str()),
             0);
 
   // The vod map code actually expects the zero device to always be a bridge or
@@ -214,100 +250,127 @@ TEST_F(VodMapTest, vod_map_remove_id)
   // test results.
   EXPECT_EQ(
     oc_vod_map_add_mapping_entry((uint8_t *)dummy, strlen(dummy), dummy), 0);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[0].vod_id.c_str(),
+                                         strlen(tv[0].vod_id.c_str()),
+                                         tv[0].eco_system.c_str()),
             1);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[1].vod_id.c_str(),
+                                         strlen(tv[1].vod_id.c_str()),
+                                         tv[1].eco_system.c_str()),
             2);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[2].vod_id.c_str(),
+                                         strlen(tv[2].vod_id.c_str()),
+                                         tv[2].eco_system.c_str()),
             3);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[3].vod_id.c_str(),
+                                         strlen(tv[3].vod_id.c_str()),
+                                         tv[3].eco_system.c_str()),
             4);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[4].vod_id.c_str(),
+                                         strlen(tv[4].vod_id.c_str()),
+                                         tv[4].eco_system.c_str()),
             5);
 
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id,
-                                     strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id.c_str(),
+                                     strlen(tv[0].vod_id.c_str()),
+                                     tv[0].eco_system.c_str()),
             1);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id,
-                                     strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id.c_str(),
+                                     strlen(tv[1].vod_id.c_str()),
+                                     tv[1].eco_system.c_str()),
             2);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id,
-                                     strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id.c_str(),
+                                     strlen(tv[2].vod_id.c_str()),
+                                     tv[2].eco_system.c_str()),
             3);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id,
-                                     strlen(tv[3].vod_id), tv[3].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id.c_str(),
+                                     strlen(tv[3].vod_id.c_str()),
+                                     tv[3].eco_system.c_str()),
             4);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id,
-                                     strlen(tv[4].vod_id), tv[4].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id.c_str(),
+                                     strlen(tv[4].vod_id.c_str()),
+                                     tv[4].eco_system.c_str()),
             5);
 
   oc_vod_map_remove_mapping_entry(2);
   oc_vod_map_remove_mapping_entry(4);
 
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id,
-                                     strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id.c_str(),
+                                     strlen(tv[0].vod_id.c_str()),
+                                     tv[0].eco_system.c_str()),
             1);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id,
-                                     strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id.c_str(),
+                                     strlen(tv[1].vod_id.c_str()),
+                                     tv[1].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id,
-                                     strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id.c_str(),
+                                     strlen(tv[2].vod_id.c_str()),
+                                     tv[2].eco_system.c_str()),
             3);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id,
-                                     strlen(tv[3].vod_id), tv[3].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id.c_str(),
+                                     strlen(tv[3].vod_id.c_str()),
+                                     tv[3].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id,
-                                     strlen(tv[4].vod_id), tv[4].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id.c_str(),
+                                     strlen(tv[4].vod_id.c_str()),
+                                     tv[4].eco_system.c_str()),
             5);
 
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[3].vod_id.c_str(),
+                                         strlen(tv[3].vod_id.c_str()),
+                                         tv[3].eco_system.c_str()),
             2);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[1].vod_id.c_str(),
+                                         strlen(tv[1].vod_id.c_str()),
+                                         tv[1].eco_system.c_str()),
             4);
 
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id,
-                                     strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id.c_str(),
+                                     strlen(tv[0].vod_id.c_str()),
+                                     tv[0].eco_system.c_str()),
             1);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id,
-                                     strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id.c_str(),
+                                     strlen(tv[1].vod_id.c_str()),
+                                     tv[1].eco_system.c_str()),
             4);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id,
-                                     strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id.c_str(),
+                                     strlen(tv[2].vod_id.c_str()),
+                                     tv[2].eco_system.c_str()),
             3);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id,
-                                     strlen(tv[3].vod_id), tv[3].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id.c_str(),
+                                     strlen(tv[3].vod_id.c_str()),
+                                     tv[3].eco_system.c_str()),
             2);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id,
-                                     strlen(tv[4].vod_id), tv[4].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id.c_str(),
+                                     strlen(tv[4].vod_id.c_str()),
+                                     tv[4].eco_system.c_str()),
             5);
 
   oc_vod_map_reset();
   oc_vod_map_free();
 
-  // test consecutive removal of vod_ids
+  // test consecutive removal of vod_id.c_strs
 
   oc_vod_map_init();
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id,
-                                     strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id.c_str(),
+                                     strlen(tv[0].vod_id.c_str()),
+                                     tv[0].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id,
-                                     strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id.c_str(),
+                                     strlen(tv[1].vod_id.c_str()),
+                                     tv[1].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id,
-                                     strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id.c_str(),
+                                     strlen(tv[2].vod_id.c_str()),
+                                     tv[2].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id,
-                                     strlen(tv[3].vod_id), tv[3].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id.c_str(),
+                                     strlen(tv[3].vod_id.c_str()),
+                                     tv[3].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id,
-                                     strlen(tv[4].vod_id), tv[4].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id.c_str(),
+                                     strlen(tv[4].vod_id.c_str()),
+                                     tv[4].eco_system.c_str()),
             0);
 
   // The vod map code actually expects the zero device to always be a bridge or
@@ -316,82 +379,105 @@ TEST_F(VodMapTest, vod_map_remove_id)
   // test results.
   EXPECT_EQ(
     oc_vod_map_add_mapping_entry((uint8_t *)dummy, strlen(dummy), dummy), 0);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[0].vod_id, strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[0].vod_id.c_str(),
+                                         strlen(tv[0].vod_id.c_str()),
+                                         tv[0].eco_system.c_str()),
             1);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[1].vod_id.c_str(),
+                                         strlen(tv[1].vod_id.c_str()),
+                                         tv[1].eco_system.c_str()),
             2);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[2].vod_id.c_str(),
+                                         strlen(tv[2].vod_id.c_str()),
+                                         tv[2].eco_system.c_str()),
             3);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[3].vod_id.c_str(),
+                                         strlen(tv[3].vod_id.c_str()),
+                                         tv[3].eco_system.c_str()),
             4);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[4].vod_id.c_str(),
+                                         strlen(tv[4].vod_id.c_str()),
+                                         tv[4].eco_system.c_str()),
             5);
 
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id,
-                                     strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id.c_str(),
+                                     strlen(tv[0].vod_id.c_str()),
+                                     tv[0].eco_system.c_str()),
             1);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id,
-                                     strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id.c_str(),
+                                     strlen(tv[1].vod_id.c_str()),
+                                     tv[1].eco_system.c_str()),
             2);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id,
-                                     strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id.c_str(),
+                                     strlen(tv[2].vod_id.c_str()),
+                                     tv[2].eco_system.c_str()),
             3);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id,
-                                     strlen(tv[3].vod_id), tv[3].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id.c_str(),
+                                     strlen(tv[3].vod_id.c_str()),
+                                     tv[3].eco_system.c_str()),
             4);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id,
-                                     strlen(tv[4].vod_id), tv[4].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id.c_str(),
+                                     strlen(tv[4].vod_id.c_str()),
+                                     tv[4].eco_system.c_str()),
             5);
 
   oc_vod_map_remove_mapping_entry(2);
   oc_vod_map_remove_mapping_entry(4);
   oc_vod_map_remove_mapping_entry(3);
 
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id,
-                                     strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id.c_str(),
+                                     strlen(tv[0].vod_id.c_str()),
+                                     tv[0].eco_system.c_str()),
             1);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id,
-                                     strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id.c_str(),
+                                     strlen(tv[1].vod_id.c_str()),
+                                     tv[1].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id,
-                                     strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id.c_str(),
+                                     strlen(tv[2].vod_id.c_str()),
+                                     tv[2].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id,
-                                     strlen(tv[3].vod_id), tv[3].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id.c_str(),
+                                     strlen(tv[3].vod_id.c_str()),
+                                     tv[3].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id,
-                                     strlen(tv[4].vod_id), tv[4].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id.c_str(),
+                                     strlen(tv[4].vod_id.c_str()),
+                                     tv[4].eco_system.c_str()),
             5);
 
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[3].vod_id.c_str(),
+                                         strlen(tv[3].vod_id.c_str()),
+                                         tv[3].eco_system.c_str()),
             2);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[2].vod_id, strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[2].vod_id.c_str(),
+                                         strlen(tv[2].vod_id.c_str()),
+                                         tv[2].eco_system.c_str()),
             3);
-  EXPECT_EQ(oc_vod_map_add_mapping_entry(
-              (uint8_t *)tv[1].vod_id, strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_add_mapping_entry((uint8_t *)tv[1].vod_id.c_str(),
+                                         strlen(tv[1].vod_id.c_str()),
+                                         tv[1].eco_system.c_str()),
             4);
 
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id,
-                                     strlen(tv[0].vod_id), tv[0].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[0].vod_id.c_str(),
+                                     strlen(tv[0].vod_id.c_str()),
+                                     tv[0].eco_system.c_str()),
             1);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id,
-                                     strlen(tv[1].vod_id), tv[1].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[1].vod_id.c_str(),
+                                     strlen(tv[1].vod_id.c_str()),
+                                     tv[1].eco_system.c_str()),
             4);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id,
-                                     strlen(tv[2].vod_id), tv[2].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[2].vod_id.c_str(),
+                                     strlen(tv[2].vod_id.c_str()),
+                                     tv[2].eco_system.c_str()),
             3);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id,
-                                     strlen(tv[3].vod_id), tv[3].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id.c_str(),
+                                     strlen(tv[3].vod_id.c_str()),
+                                     tv[3].eco_system.c_str()),
             2);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id,
-                                     strlen(tv[4].vod_id), tv[4].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id.c_str(),
+                                     strlen(tv[4].vod_id.c_str()),
+                                     tv[4].eco_system.c_str()),
             5);
 
   oc_vod_map_free();
@@ -400,12 +486,14 @@ TEST_F(VodMapTest, vod_map_remove_id)
 TEST_F(VodMapTest, vod_map_add_same_id_different_econame)
 {
   oc_vod_map_init();
-  // verify the vod_id are not yet added
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id,
-                                     strlen(tv[3].vod_id), tv[3].eco_system),
+  // verify the vod_id.c_str() are not yet added
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id.c_str(),
+                                     strlen(tv[3].vod_id.c_str()),
+                                     tv[3].eco_system.c_str()),
             0);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id,
-                                     strlen(tv[4].vod_id), tv[4].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id.c_str(),
+                                     strlen(tv[4].vod_id.c_str()),
+                                     tv[4].eco_system.c_str()),
             0);
 
   // The vod map code actually expects the zero device to always be a bridge or
@@ -416,19 +504,23 @@ TEST_F(VodMapTest, vod_map_add_same_id_different_econame)
   EXPECT_EQ(
     oc_vod_map_add_mapping_entry((uint8_t *)dummy, strlen(dummy), dummy), 0);
 
-  // even though tv[3] and tv[4] have the same vod_id they have different
-  // econames and should each get a different index
+  // even though tv[3] and tv[4] have the same vod_id.c_str() they have
+  // different econames and should each get a different index
   size_t vod_index3 = oc_vod_map_add_mapping_entry(
-    (uint8_t *)tv[3].vod_id, strlen(tv[3].vod_id), tv[3].eco_system);
+    (uint8_t *)tv[3].vod_id.c_str(), strlen(tv[3].vod_id.c_str()),
+    tv[3].eco_system.c_str());
   size_t vod_index4 = oc_vod_map_add_mapping_entry(
-    (uint8_t *)tv[4].vod_id, strlen(tv[4].vod_id), tv[4].eco_system);
+    (uint8_t *)tv[4].vod_id.c_str(), strlen(tv[4].vod_id.c_str()),
+    tv[4].eco_system.c_str());
   EXPECT_NE(vod_index3, vod_index4);
 
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id,
-                                     strlen(tv[3].vod_id), tv[3].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[3].vod_id.c_str(),
+                                     strlen(tv[3].vod_id.c_str()),
+                                     tv[3].eco_system.c_str()),
             1);
-  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id,
-                                     strlen(tv[4].vod_id), tv[4].eco_system),
+  EXPECT_EQ(oc_vod_map_get_vod_index((uint8_t *)tv[4].vod_id.c_str(),
+                                     strlen(tv[4].vod_id.c_str()),
+                                     tv[4].eco_system.c_str()),
             2);
 
   oc_vod_map_free();

@@ -142,7 +142,6 @@ void oc_gen_uuid(oc_uuid_t *uuid) OC_NONNULL();
 OC_API
 bool oc_uuid_is_equal(oc_uuid_t first, oc_uuid_t second);
 
-#ifdef OC_HAS_FEATURE_BRIDGE
 /**
  * @brief Check if the uuid is null or not
  *
@@ -151,8 +150,7 @@ bool oc_uuid_is_equal(oc_uuid_t first, oc_uuid_t second);
  * @return false Otherwise
  */
 OC_API
-bool oc_uuid_is_nil(const oc_uuid_t *uuid);
-#endif
+bool oc_uuid_is_nil(oc_uuid_t uuid);
 
 #ifdef __cplusplus
 }

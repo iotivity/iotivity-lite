@@ -100,12 +100,14 @@ oc_sec_acl_new_device(size_t device_index, bool need_realloc)
       OC_LIST_STRUCT_REINIT(&g_aclist[i], subjects);
       i++;
     }
-  } else {
+  } else if (device_index < oc_core_get_num_devices()) {
     /*
      * if `g_oc_device_info[device_index]` is existing entry...
      */
     memset(&g_aclist[device_index], 0, sizeof(oc_sec_acl_t));
     OC_LIST_STRUCT_INIT(&g_aclist[device_index], subjects);
+  } else {
+    OC_ERR("device index error ! (%zu)", device_index);
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 }

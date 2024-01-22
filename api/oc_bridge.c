@@ -33,20 +33,6 @@
 #include "oc_store.h"
 #endif // OC_SECURITY
 
-/*
- * internal struct that holds the values that build the `oic.r.vodlist`
- * properties.
- */
-#if 0
-typedef struct oc_vods_s
-{
-  struct oc_vods_s *next;
-  oc_string_t name;
-  oc_uuid_t di;
-  oc_string_t econame;
-} oc_vods_t;
-#endif
-
 OC_LIST(g_vods);
 static oc_resource_t *g_vodlist_res;
 
@@ -95,19 +81,6 @@ add_virtual_device_to_vods_list(const char *name, const oc_uuid_t *di,
   oc_new_string(&vod->name, name, strlen(name));
   memcpy(&vod->di, di, sizeof(oc_uuid_t));
   oc_new_string(&vod->econame, econame, strlen(econame));
-
-#if 0
-  /* find corresponding VOD mapping entry */
-  size_t device_index;
-  if (oc_core_get_device_index(vod->di , &device_index) < 0) {
-    char uuid[OC_UUID_LEN];
-    oc_uuid_to_str(&vod->di, uuid, OC_UUID_LEN);
-    OC_DBG("oc_bridge: failed to find Device whose ID is (%s)", uuid);
-  }
-
-  /* mark that this VOD is online */
-  oc_virtual_device_t *vod_mapping_item = oc_bridge_get_virtual_device_info(device_index);
-#endif
 
   /* mark this vod is online... */
   oc_virtual_device_t *vod_mapping_item = oc_bridge_get_vod_mapping_info2(vod);
@@ -204,23 +177,22 @@ _handle_owned_bridge(size_t device_index)
    */
   for (size_t device = device_index + 1; device < oc_core_get_num_devices();
        ++device) {
-    if (oc_uuid_is_nil(&oc_core_get_device_info(device)->di)) {
+    if (oc_uuid_is_nil(oc_core_get_device_info(device)->di)) {
       continue;
     }
-    if (!oc_is_owned_device(device)
-        && oc_bridge_is_virtual_device(device)) {
-        oc_connectivity_ports_t ports;
-        memset(&ports, 0, sizeof(ports));
+    if (!oc_is_owned_device(device) && oc_bridge_is_virtual_device(device)) {
+      oc_connectivity_ports_t ports;
+      memset(&ports, 0, sizeof(ports));
 
-        OC_DBG(
-          "=====> Bridge is owned, VOD %zu connection is being initialized!!",
-          device);
+      OC_DBG(
+        "=====> Bridge is owned, VOD %zu connection is being initialized!!",
+        device);
 
-        if (oc_connectivity_init(device, ports) < 0) {
-          oc_abort("error initializing connectivity for device");
-        }
-        OC_DBG("======> oc_bridge: init connectivity for virtual device %zu",
-               device);
+      if (oc_connectivity_init(device, ports) < 0) {
+        oc_abort("error initializing connectivity for device");
+      }
+      OC_DBG("======> oc_bridge: init connectivity for virtual device %zu",
+             device);
     }
   }
 }
@@ -333,6 +305,18 @@ doxm_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
     }
   }
 }
+
+#ifdef OC_TEST
+void bridge_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
+                          bool owned, void *user_data);
+
+void
+bridge_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
+                     bool owned, void *user_data)
+{
+  doxm_owned_changed(device_uuid, device_index, owned, user_data);
+}
+#endif // OC_TEST
 #endif // OC_SECURITY
 
 int
@@ -375,18 +359,6 @@ oc_bridge_add_bridge_device(const char *name, const char *spec_version,
 #endif // OC_SECURITY
   return 0;
 }
-
-#if 0
-oc_add_new_device_t cfg = {
-  .uri = uri,
-  .rt = rt,
-  .name = name,
-  .spec_version = spec_version,
-  .data_model_version = data_model_version,
-  .add_device_cb = add_device_cb,
-  .add_device_cb_data = data,
-};
-#endif
 
 size_t
 oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
@@ -431,7 +403,7 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
    * FIXME4ME <2023/12/11> oc_bridge_add_virtual_device() : do we need this
    * code?
    */
-  if (oc_uuid_is_nil(&device->piid)) {
+  if (oc_uuid_is_nil(device->piid)) {
     oc_gen_uuid(&device->piid);
 #ifdef OC_SECURITY
     oc_sec_dump_unique_ids(vd_index);
@@ -481,10 +453,6 @@ oc_bridge_add_virtual_device(const uint8_t *virtual_device_id,
   return vd_index;
 }
 
-/*
- * DONE4ME <Oct 24, 2023> new_function() : add new function that add vod to
- * "oic.r.vodlist:vods" only
- */
 /*
  * @brief add new vodentry for an existing VOD to "oic.r.vodlist:vods".
  *        This function is usually called after
@@ -616,7 +584,7 @@ oc_bridge_get_vod(oc_uuid_t di)
   item = (oc_vods_t *)oc_list_head(g_vods);
 
   while (item) {
-    if (!oc_uuid_is_equal(item->di, di)) {
+    if (oc_uuid_is_equal(item->di, di)) {
       return item;
     }
     item = item->next;
