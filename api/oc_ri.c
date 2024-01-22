@@ -1281,12 +1281,6 @@ typedef struct
   size_t payload_len;
 } ri_invoke_handler_in_t;
 
-typedef struct
-{
-  bitmask_code_t bitmask_code;
-  oc_response_buffer_t *response_buffer;
-} ri_invoke_handler_out_t;
-
 static bool
 get_resource_is_collection(
   const oc_ri_preparsed_request_obj_t *preparsed_request_obj)
@@ -1299,11 +1293,12 @@ get_resource_is_collection(
 #endif /* OC_SERVER && OC_COLLECTIONS */
 }
 
-static void
+static bitmask_code_t
 ri_invoke_handler(coap_make_response_ctx_t *ctx,
                   const ri_invoke_handler_in_t *in,
-                  ri_invoke_handler_out_t *out)
+                  oc_response_buffer_t *response_buffer)
 {
+  bitmask_code_t bitmask_code = BITMASK_CODE_OK;
   /* Alloc response_state. It also affects request_obj.response.
    */
 #ifdef OC_BLOCK_WISE
@@ -1325,7 +1320,7 @@ ri_invoke_handler(coap_make_response_ctx_t *ctx,
       generate_etag);
     if (*ctx->response_state == NULL) {
       OC_ERR("failure to alloc response state");
-      out->bitmask_code |= BITMASK_CODE_BAD_REQUEST;
+      bitmask_code |= BITMASK_CODE_BAD_REQUEST;
     } else {
 #ifdef OC_DYNAMIC_ALLOCATION
 #ifdef OC_APP_DATA_BUFFER_POOL
@@ -1340,62 +1335,58 @@ ri_invoke_handler(coap_make_response_ctx_t *ctx,
                       in->preparsed_request_obj->uri_query.data,
                       in->preparsed_request_obj->uri_query.length);
       }
-      out->response_buffer->buffer = (*ctx->response_state)->buffer;
+      response_buffer->buffer = (*ctx->response_state)->buffer;
 #ifdef OC_DYNAMIC_ALLOCATION
-      out->response_buffer->buffer_size = (*ctx->response_state)->buffer_size;
+      response_buffer->buffer_size = (*ctx->response_state)->buffer_size;
 #else  /* !OC_DYNAMIC_ALLOCATION */
-      out->response_buffer->buffer_size =
-        sizeof((*ctx->response_state)->buffer);
+      response_buffer->buffer_size = sizeof((*ctx->response_state)->buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
     }
   } else {
     OC_DBG("using existing block-wise response state");
-    out->response_buffer->buffer = (*ctx->response_state)->buffer;
+    response_buffer->buffer = (*ctx->response_state)->buffer;
 #ifdef OC_DYNAMIC_ALLOCATION
-    out->response_buffer->buffer_size = (*ctx->response_state)->buffer_size;
+    response_buffer->buffer_size = (*ctx->response_state)->buffer_size;
 #else  /* !OC_DYNAMIC_ALLOCATION */
-    out->response_buffer->buffer_size = sizeof((*ctx->response_state)->buffer);
+    response_buffer->buffer_size = sizeof((*ctx->response_state)->buffer);
 #endif /* OC_DYNAMIC_ALLOCATION */
   }
 #else  /* OC_BLOCK_WISE */
-  out->response_buffer->buffer = ctx->buffer;
-  out->response_buffer->buffer_size = OC_BLOCK_SIZE;
+  response_buffer->buffer = ctx->buffer;
+  response_buffer->buffer_size = OC_BLOCK_SIZE;
 #endif /* !OC_BLOCK_WISE */
 
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
   struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
 
   // we need to check only for bad request
-  if (!out->bitmask_code) {
+  if (!bitmask_code) {
     oc_status_t status = ri_invoke_coap_entity_get_payload_rep(
       in->payload, in->payload_len, in->preparsed_request_obj->cf,
       &in->request_obj->request_payload);
     if (status != OC_STATUS_OK) {
-      out->bitmask_code |= BITMASK_CODE_BAD_REQUEST;
+      bitmask_code |= BITMASK_CODE_BAD_REQUEST;
       if (status == OC_STATUS_REQUEST_ENTITY_TOO_LARGE) {
-        out->bitmask_code |= BITMASK_CODE_REQUEST_ENTITY_TOO_LARGE;
+        bitmask_code |= BITMASK_CODE_REQUEST_ENTITY_TOO_LARGE;
       }
     }
   }
 
-  if (!out->bitmask_code) {
+  if (!bitmask_code) {
     /* Initialize oc_rep with a buffer to hold the response payload. "buffer"
      * points to memory allocated in the messaging layer for the "CoAP
      * Transaction" to service this request.
      */
 #if defined(OC_BLOCK_WISE) && defined(OC_DYNAMIC_ALLOCATION)
     if (response_state_allocated) {
-      oc_rep_new_realloc_v1(&out->response_buffer->buffer,
-                            out->response_buffer->buffer_size,
-                            OC_MAX_APP_DATA_SIZE);
+      oc_rep_new_realloc_v1(&response_buffer->buffer,
+                            response_buffer->buffer_size, OC_MAX_APP_DATA_SIZE);
       enable_realloc_rep = true;
     } else {
-      oc_rep_new_v1(out->response_buffer->buffer,
-                    out->response_buffer->buffer_size);
+      oc_rep_new_v1(response_buffer->buffer, response_buffer->buffer_size);
     }
 #else  /* OC_DYNAMIC_ALLOCATION */
-    oc_rep_new_v1(out->response_buffer->buffer,
-                  out->response_buffer->buffer_size);
+    oc_rep_new_v1(response_buffer->buffer, response_buffer->buffer_size);
 #endif /* !OC_DYNAMIC_ALLOCATION */
     oc_rep_encoder_set_type_by_accept(in->preparsed_request_obj->accept);
 
@@ -1408,10 +1399,10 @@ ri_invoke_handler(coap_make_response_ctx_t *ctx,
     case OC_STATUS_OK:
       break;
     case OC_STATUS_NOT_MODIFIED:
-      out->bitmask_code |= BITMASK_CODE_NOT_MODIFIED;
+      bitmask_code |= BITMASK_CODE_NOT_MODIFIED;
       break;
     default:
-      out->bitmask_code |= BITMASK_CODE_BAD_REQUEST;
+      bitmask_code |= BITMASK_CODE_BAD_REQUEST;
       break;
     }
   }
@@ -1422,10 +1413,10 @@ ri_invoke_handler(coap_make_response_ctx_t *ctx,
 #ifdef OC_DYNAMIC_ALLOCATION
   // for realloc we need reassign memory again.
   if (enable_realloc_rep) {
-    out->response_buffer->buffer =
-      oc_rep_shrink_encoder_buf(out->response_buffer->buffer);
+    response_buffer->buffer =
+      oc_rep_shrink_encoder_buf(response_buffer->buffer);
     if ((*ctx->response_state) != NULL) {
-      (*ctx->response_state)->buffer = out->response_buffer->buffer;
+      (*ctx->response_state)->buffer = response_buffer->buffer;
     }
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -1439,18 +1430,26 @@ ri_invoke_handler(coap_make_response_ctx_t *ctx,
     in->request_obj->request_payload = NULL;
   }
   oc_rep_set_pool(prev_rep_objects);
+  return bitmask_code;
 }
 
 static coap_status_t
-bitmask_code_to_status(bitmask_code_t bitmask_code)
+bitmask_code_to_status(bitmask_code_t bitmask_code, oc_method_t method,
+                       oc_string_view_t uri_path)
 {
+#if !OC_WRN_IS_ENABLED
+  (void)method;
+  (void)uri_path;
+#endif /* !OC_WRN_IS_ENABLED */
   if (bitmask_code & BITMASK_CODE_FORBIDDEN) {
-    OC_WRN("ocri: Forbidden request");
+    OC_WRN("ocri: Forbidden request for %s: %.*s", oc_method_to_str(method),
+           (int)uri_path.length, uri_path.data);
     return oc_status_code_unsafe(OC_STATUS_FORBIDDEN);
   }
 #ifdef OC_SECURITY
-  else if (bitmask_code & BITMASK_CODE_UNAUTHORIZED) {
-    OC_WRN("ocri: Subject not authorized");
+  if (bitmask_code & BITMASK_CODE_UNAUTHORIZED) {
+    OC_WRN("ocri: Subject not authorized for %s: %.*s",
+           oc_method_to_str(method), (int)uri_path.length, uri_path.data);
     /* If the requestor (subject) does not have access granted via an
      * access control entry in the ACL, then it is not authorized to
      * access the resource. A 4.01 response is sent.
@@ -1458,24 +1457,32 @@ bitmask_code_to_status(bitmask_code_t bitmask_code)
     return oc_status_code_unsafe(OC_STATUS_UNAUTHORIZED);
   }
 #endif /* OC_SECURITY */
-  else if (bitmask_code & BITMASK_CODE_REQUEST_ENTITY_TOO_LARGE) {
-    OC_WRN("ocri: Request payload too large (hence incomplete)");
+  if (bitmask_code & BITMASK_CODE_REQUEST_ENTITY_TOO_LARGE) {
+    OC_WRN("ocri: Request payload too large (hence incomplete) for %s: %.*s",
+           oc_method_to_str(method), (int)uri_path.length, uri_path.data);
     return oc_status_code_unsafe(OC_STATUS_REQUEST_ENTITY_TOO_LARGE);
-  } else if (bitmask_code & BITMASK_CODE_BAD_REQUEST) {
-    OC_WRN("ocri: Bad request");
+  }
+  if (bitmask_code & BITMASK_CODE_BAD_REQUEST) {
+    OC_WRN("ocri: Bad request for %s: %.*s", oc_method_to_str(method),
+           (int)uri_path.length, uri_path.data);
     /* Return a 4.00 response */
     return oc_status_code_unsafe(OC_STATUS_BAD_REQUEST);
-  } else if (bitmask_code & BITMASK_CODE_NOT_FOUND) {
-    OC_WRN("ocri: Could not find resource");
+  }
+  if (bitmask_code & BITMASK_CODE_NOT_FOUND) {
+    OC_WRN("ocri: Could not find resource for %s: %.*s",
+           oc_method_to_str(method), (int)uri_path.length, uri_path.data);
     /* Return a 4.04 response if the requested resource was not found */
     return oc_status_code_unsafe(OC_STATUS_NOT_FOUND);
-  } else if (bitmask_code & BITMASK_CODE_METHOD_NOT_ALLOWED) {
-    OC_WRN("ocri: Could not find method");
+  }
+  if (bitmask_code & BITMASK_CODE_METHOD_NOT_ALLOWED) {
+    OC_WRN("ocri: Could not find method for %s: %.*s", oc_method_to_str(method),
+           (int)uri_path.length, uri_path.data);
     /* Return a 4.05 response if the resource does not implement the
      * request method.
      */
     return oc_status_code_unsafe(OC_STATUS_METHOD_NOT_ALLOWED);
-  } else if (bitmask_code & BITMASK_CODE_NOT_MODIFIED) {
+  }
+  if (bitmask_code & BITMASK_CODE_NOT_MODIFIED) {
     return oc_status_code_unsafe(OC_STATUS_NOT_MODIFIED);
   }
   return oc_status_code_unsafe(OC_STATUS_OK);
@@ -1504,10 +1511,10 @@ bitmask_code_to_success(bitmask_code_t bitmask_code)
 static bool
 ri_validate_coap_set_response(coap_packet_t *response,
                               const oc_endpoint_t *endpoint,
-                              bitmask_code_t bitmask_code)
+                              bitmask_code_t bitmask_code, oc_method_t method,
+                              oc_string_view_t uri_path)
 {
-  coap_status_t code = bitmask_code_to_status(bitmask_code);
-  bool success = bitmask_code_to_success(bitmask_code);
+  coap_status_t code = bitmask_code_to_status(bitmask_code, method, uri_path);
 
   if (oc_endpoint_is_multicast(endpoint) &&
       code >= oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
@@ -1517,7 +1524,6 @@ ri_validate_coap_set_response(coap_packet_t *response,
      */
     coap_set_status_code(response, CLEAR_TRANSACTION);
     coap_set_global_status_code(CLEAR_TRANSACTION);
-    // return success to avoid processing the request further
     return false;
   }
   if (code > COAP_NO_ERROR) {
@@ -1526,7 +1532,7 @@ ri_validate_coap_set_response(coap_packet_t *response,
      */
     coap_set_status_code(response, code);
   }
-  return success;
+  return bitmask_code_to_success(bitmask_code);
 }
 
 static oc_interface_mask_t
@@ -1540,8 +1546,8 @@ get_iface_mask(const oc_ri_preparsed_request_obj_t *preparsed_request_obj)
 }
 
 static bool
-ri_validate_coap_request(coap_make_response_ctx_t *ctx,
-                         const oc_endpoint_t *endpoint)
+ri_parse_coap_request_header(coap_make_response_ctx_t *ctx,
+                             const oc_endpoint_t *endpoint)
 {
   assert(ctx->preparsed_request_obj != NULL);
   /* This function is a server-side entry point solely for requests.
@@ -1612,7 +1618,9 @@ ri_validate_coap_request(coap_make_response_ctx_t *ctx,
   }
 #endif /* OC_SECURITY */
 
-  return ri_validate_coap_set_response(ctx->response, endpoint, bitmask_code);
+  return ri_validate_coap_set_response(ctx->response, endpoint, bitmask_code,
+                                       method,
+                                       ctx->preparsed_request_obj->uri_path);
 }
 
 #ifdef OC_HAS_FEATURE_ETAG
@@ -1620,7 +1628,6 @@ typedef struct
 {
   const coap_packet_t *request;
   const oc_ri_preparsed_request_obj_t *preparsed_request_obj;
-  bitmask_code_t bitmask_code;
   const oc_endpoint_t *endpoint;
   oc_method_t method;
   oc_interface_mask_t iface_mask;
@@ -1630,7 +1637,7 @@ static bitmask_code_t
 ri_invoke_coap_set_etag(const ri_invoke_coap_set_etag_in_t *in,
                         oc_request_t *request_obj)
 {
-  bitmask_code_t bitmask_code = in->bitmask_code;
+  bitmask_code_t bitmask_code = BITMASK_CODE_OK;
   if (bitmask_code || in->preparsed_request_obj->cur_resource == NULL ||
       in->method != OC_GET ||
       !(get_resource_is_collection(in->preparsed_request_obj) ||
@@ -1747,8 +1754,6 @@ ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
    */
   oc_method_t method = ctx->request->code;
 
-  request_obj.response->response_buffer->content_format =
-    APPLICATION_NOT_DEFINED;
   request_obj.origin = endpoint;
   request_obj.method = method;
 
@@ -1807,7 +1812,6 @@ ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
     &(ri_invoke_coap_set_etag_in_t){
       .request = ctx->request,
       .preparsed_request_obj = ctx->preparsed_request_obj,
-      .bitmask_code = bitmask_code,
       .endpoint = endpoint,
       .method = method,
       .iface_mask = iface_mask,
@@ -1816,27 +1820,24 @@ ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
 #endif /* OC_HAS_FEATURE_ETAG */
 
   if (!bitmask_code && cur_resource != NULL) {
-    ri_invoke_handler_out_t out = {
-      .bitmask_code = bitmask_code,
-      .response_buffer = &response_buffer,
-    };
-    ri_invoke_handler(ctx,
-                      &(ri_invoke_handler_in_t){
-                        .request_obj = &request_obj,
-                        .preparsed_request_obj = ctx->preparsed_request_obj,
-                        .endpoint = endpoint,
-                        .method = method,
-                        .iface_mask = iface_mask,
-                        .payload = payload,
-                        .payload_len = payload_len,
-                      },
-                      &out);
-    bitmask_code |= out.bitmask_code;
+    bitmask_code |=
+      ri_invoke_handler(ctx,
+                        &(ri_invoke_handler_in_t){
+                          .request_obj = &request_obj,
+                          .preparsed_request_obj = ctx->preparsed_request_obj,
+                          .endpoint = endpoint,
+                          .method = method,
+                          .iface_mask = iface_mask,
+                          .payload = payload,
+                          .payload_len = payload_len,
+                        },
+                        &response_buffer);
   }
 
   if (bitmask_code != BITMASK_CODE_OK) {
     response_buffer.response_length = 0;
-    response_buffer.code = bitmask_code_to_status(bitmask_code);
+    response_buffer.code = bitmask_code_to_status(
+      bitmask_code, method, ctx->preparsed_request_obj->uri_path);
   }
   bool success = bitmask_code_to_success(bitmask_code);
 
@@ -1895,11 +1896,11 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
 }
 
 bool
-oc_ri_validate_coap_request(coap_make_response_ctx_t *ctx,
-                            const oc_endpoint_t *endpoint, void *user_data)
+oc_ri_parse_coap_request_header(coap_make_response_ctx_t *ctx,
+                                const oc_endpoint_t *endpoint, void *user_data)
 {
   (void)user_data;
-  return ri_validate_coap_request(ctx, endpoint);
+  return ri_parse_coap_request_header(ctx, endpoint);
 }
 
 void

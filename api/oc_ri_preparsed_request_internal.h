@@ -48,11 +48,12 @@ typedef struct
 } oc_ri_preparsed_request_obj_t;
 
 /**
- * @brief Parse the request URI and query string.
+ * @brief Parse the request header, set the resource, and store the values in
+ * the preparsed_request.
  *
- * @param request the source request for parsing
- * @param preparsed_request_obj object to store the preparsed request values
- * @param endpoint to set ocf version
+ * @param request The source request for parsing.
+ * @param preparsed_request_obj Object to store the preparsed request values.
+ * @param endpoint To set the OCF version.
  */
 void oc_ri_prepare_request(const coap_packet_t *request,
                            oc_ri_preparsed_request_obj_t *preparsed_request_obj,
