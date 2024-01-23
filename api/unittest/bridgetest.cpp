@@ -18,6 +18,7 @@
 
 #include "util/oc_features.h"
 
+//#if 0
 #ifdef OC_HAS_FEATURE_BRIDGE
 
 #include <gtest/gtest.h>
@@ -36,6 +37,7 @@
 #include "port/oc_network_event_handler_internal.h"
 
 #include "tests/gtest/Device.h"
+
 
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
@@ -64,22 +66,26 @@ class TestBridge : public testing::Test {
 private:
   void RunBridgeDevice()
   {
+    auto result = oc_init_platform("ETRI", nullptr, nullptr);
+    EXPECT_EQ(result, 0);
+
     /*
      * add bridge device (oic.d.bridge)
      */
-    ASSERT_EQ(oc_bridge_add_bridge_device(
-        kBridgeDevice.name.c_str(), kBridgeDevice.spec_version.c_str(),
-        kBridgeDevice.data_model_version.c_str(), nullptr, nullptr),
-        0);
+    auto bridgeIndex = oc_bridge_add_bridge_device(
+            kBridgeDevice.name.c_str(), kBridgeDevice.spec_version.c_str(),
+            kBridgeDevice.data_model_version.c_str(), nullptr, nullptr);
 
+    EXPECT_EQ(bridgeIndex, kBridgeDeviceID);
   }
+
 public:
   void SetUp() override
   {
-    oc_network_event_handler_mutex_init();
     oc_runtime_init();
     oc_ri_init();
     oc_core_init();
+    oc_network_event_handler_mutex_init();
     RunBridgeDevice();
     oc_sec_svr_create();
 #ifdef OC_SOFTWARE_UPDATE
@@ -90,13 +96,25 @@ public:
   void TearDown() override
   {
     oc_sec_svr_free();
+
+#ifdef OC_SOFTWARE_UPDATE
+    oc_swupdate_free();
+#endif /* OC_SOFTWARE_UPDATE */
+
 #ifdef OC_HAS_FEATURE_PUSH
     oc_push_free();
 #endif /* OC_HAS_FEATURE_PUSH */
-    oc_core_shutdown();
     oc_ri_shutdown();
-    oc_runtime_shutdown();
+
+    for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
+      if (oc_core_get_device_info(device)->is_removed == false)
+        oc_connectivity_shutdown(device);
+    }
+
     oc_network_event_handler_mutex_destroy();
+    oc_core_shutdown();
+
+    oc_runtime_shutdown();
   }
 };
 
@@ -108,6 +126,19 @@ TEST_F(TestBridge, BridgeAPITest)
    * oc_bridge_add_bridge_device()
    */
   /* -------------------------------------------------*/
+//  auto result = oc_init_platform("ETRI", nullptr, nullptr);
+//  EXPECT_EQ(result, 0);
+
+  /*
+   * add bridge device (oic.d.bridge)
+   */
+//  auto bridgeIndex = oc_bridge_add_bridge_device(
+//          kBridgeDevice.name.c_str(), kBridgeDevice.spec_version.c_str(),
+//          kBridgeDevice.data_model_version.c_str(), nullptr, nullptr);
+//
+//  EXPECT_EQ(bridgeIndex, kBridgeDeviceID);
+
+
 
   auto bridgeDeviceInfo = oc_core_get_device_info(kBridgeDeviceID);
   ASSERT_NE(bridgeDeviceInfo, nullptr);
@@ -130,7 +161,7 @@ TEST_F(TestBridge, BridgeAPITest)
    */
   /* -------------------------------------------------*/
   size_t vodIndex = oc_bridge_add_virtual_device(
-    kVODDeviceID.c_str(), kVODDeviceID.size(), kVODEconame.c_str(),
+      (const uint8_t *)kVODDeviceID.c_str(), kVODDeviceID.size(), kVODEconame.c_str(),
     kVODDevice.uri.c_str(), kVODDevice.rt.c_str(), kVODDevice.name.c_str(),
     kVODDevice.spec_version.c_str(), kVODDevice.data_model_version.c_str(),
     nullptr, nullptr);
@@ -152,9 +183,9 @@ TEST_F(TestBridge, BridgeAPITest)
                oc_string_array_get_item(vodDeviceRsc->types, 0));
 
   /* check device index */
-  EXPECT_EQ(oc_bridge_get_virtual_device_index(
-              kVODDeviceID.c_str(), kVODDeviceID.size(), kVODEconame.c_str()),
-            vodIndex);
+  auto vodIndexTemp = oc_bridge_get_virtual_device_index(
+                (const uint8_t *)kVODDeviceID.c_str(), kVODDeviceID.size(), kVODEconame.c_str());
+  EXPECT_EQ(vodIndexTemp, vodIndex);
 
   /* -------------------------------------------------*/
   /*
@@ -237,7 +268,9 @@ TEST_F(TestBridge, BridgeAPITest)
   oc_uuid_t vodDi;
   memcpy(vodDi.id, vodDeviceInfo->di.id, OC_UUID_ID_SIZE);
 
-  ASSERT_EQ(oc_bridge_delete_virtual_device(vodIndex), 0);
+//  ASSERT_EQ(oc_bridge_delete_virtual_device(vodIndex), 0);
+  auto result = oc_bridge_delete_virtual_device(vodIndex);
+  EXPECT_EQ(result, 0);
 
   /* check vod is removed from vod list */
   /* get vod item for VOD */

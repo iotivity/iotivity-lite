@@ -32,9 +32,12 @@
 #include "oc_core_res.h"
 #include "security/oc_svr_internal.h"
 #include "api/oc_core_res_internal.h"
-#include "api/oc_swupdate_internal.h"
 #include <set>
 #endif /* OC_HAS_FEATURE_BRIDGE */
+
+#ifdef OC_SOFTWARE_UPDATE
+#include "api/oc_swupdate_internal.h"
+#endif
 
 #ifdef OC_TCP
 #include "messaging/coap/signal_internal.h"
