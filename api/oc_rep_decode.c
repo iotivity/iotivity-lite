@@ -571,23 +571,40 @@ oc_rep_decoder_get_type(void)
   return g_rep_decoder.type;
 }
 
-bool
-oc_rep_decoder_set_by_content_format(oc_content_format_t content_format)
+static bool
+rep_decoder_set_or_check_content_format(oc_content_format_t content_format,
+                                        bool check)
 {
-  if (content_format == APPLICATION_CBOR ||
-      content_format == APPLICATION_VND_OCF_CBOR ||
-      content_format == APPLICATION_NOT_DEFINED) {
-    oc_rep_decoder_set_type(OC_REP_CBOR_DECODER);
+  if (content_format == APPLICATION_NOT_DEFINED ||
+      content_format == APPLICATION_CBOR ||
+      content_format == APPLICATION_VND_OCF_CBOR) {
+    if (!check) {
+      oc_rep_decoder_set_type(OC_REP_CBOR_DECODER);
+    }
     return true;
   }
 #ifdef OC_JSON_ENCODER
   if (content_format == APPLICATION_JSON ||
       content_format == APPLICATION_TD_JSON) {
-    oc_rep_decoder_set_type(OC_REP_JSON_DECODER);
+    if (!check) {
+      oc_rep_decoder_set_type(OC_REP_JSON_DECODER);
+    }
     return true;
   }
 #endif /* OC_JSON_ENCODER */
   return false;
+}
+
+bool
+oc_rep_decoder_set_by_content_format(oc_content_format_t content_format)
+{
+  return rep_decoder_set_or_check_content_format(content_format, false);
+}
+
+bool
+oc_rep_decoder_is_supported_content_format(oc_content_format_t content_format)
+{
+  return rep_decoder_set_or_check_content_format(content_format, true);
 }
 
 int

@@ -19,6 +19,7 @@
 #include "api/oc_endpoint_internal.h"
 #include "api/oc_event_callback_internal.h"
 #include "api/oc_events_internal.h"
+#include "api/oc_etag_internal.h"
 #include "api/oc_message_buffer_internal.h"
 #include "api/oc_network_events_internal.h"
 #include "api/oc_rep_encode_internal.h"
@@ -26,6 +27,7 @@
 #include "api/oc_rep_internal.h"
 #include "api/oc_resource_internal.h"
 #include "api/oc_ri_internal.h"
+#include "api/oc_ri_preparsed_request_internal.h"
 #include "messaging/coap/coap_internal.h"
 #include "messaging/coap/options_internal.h"
 #include "messaging/coap/constants.h"
@@ -802,7 +804,7 @@ oc_ri_audit_log(oc_method_t method, const oc_resource_t *resource,
 #endif /* OC_SECURITY */
 
 static oc_status_t
-ri_invoke_request_handler(oc_resource_t *resource, oc_method_t method,
+ri_invoke_request_handler(const oc_resource_t *resource, oc_method_t method,
                           oc_request_t *request, oc_interface_mask_t iface_mask,
                           bool is_collection)
 {
@@ -824,24 +826,10 @@ ri_invoke_request_handler(oc_resource_t *resource, oc_method_t method,
    * its handler for the requested method. If it has not
    * implemented that method, then return a 4.05 response.
    */
-  if (method == OC_GET && resource->get_handler.cb) {
-    resource->get_handler.cb(request, iface_mask,
-                             resource->get_handler.user_data);
-    return OC_STATUS_OK;
-  }
-  if (method == OC_POST && resource->post_handler.cb) {
-    resource->post_handler.cb(request, iface_mask,
-                              resource->post_handler.user_data);
-    return OC_STATUS_OK;
-  }
-  if (method == OC_PUT && resource->put_handler.cb) {
-    resource->put_handler.cb(request, iface_mask,
-                             resource->put_handler.user_data);
-    return OC_STATUS_OK;
-  }
-  if (method == OC_DELETE && resource->delete_handler.cb) {
-    resource->delete_handler.cb(request, iface_mask,
-                                resource->delete_handler.user_data);
+  oc_request_handler_t handler;
+  memset(&handler, 0, sizeof(oc_request_handler_t));
+  if (oc_resource_get_method_handler(resource, method, &handler)) {
+    handler.cb(request, iface_mask, handler.user_data);
     return OC_STATUS_OK;
   }
   return OC_STATUS_METHOD_NOT_ALLOWED;
@@ -1165,6 +1153,7 @@ ri_invoke_coap_entity_set_response(coap_packet_t *response,
      * below a response code of CLEAR_TRANSACTION, which results in the
      * messaging layer freeing the CoAP transaction associated with the request.
      */
+    coap_set_status_code(response, CLEAR_TRANSACTION);
     coap_set_global_status_code(CLEAR_TRANSACTION);
     return;
   }
@@ -1204,7 +1193,6 @@ ri_invoke_coap_entity_set_response(coap_packet_t *response,
       }
     }
   }
-
 #endif /* OC_SERVER */
   if (response_buffer->response_length > 0) {
 #ifdef OC_BLOCK_WISE
@@ -1271,18 +1259,479 @@ ri_invoke_coap_entity_get_payload_rep(const uint8_t *payload,
   return OC_STATUS_OK;
 }
 
-bool
-oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
-                                 oc_endpoint_t *endpoint, void *user_data)
-{
-  (void)user_data;
-  endpoint->version = ri_get_ocf_version_from_header(ctx->request);
+typedef enum {
+  BITMASK_CODE_OK = 0,
+  BITMASK_CODE_NOT_MODIFIED = 1 << 0,
+  BITMASK_CODE_BAD_REQUEST = 1 << 1,
+  BITMASK_CODE_REQUEST_ENTITY_TOO_LARGE = 1 << 2,
+  BITMASK_CODE_FORBIDDEN = 1 << 3,
+  BITMASK_CODE_UNAUTHORIZED = 1 << 4,
+  BITMASK_CODE_NOT_FOUND = 1 << 5,
+  BITMASK_CODE_METHOD_NOT_ALLOWED = 1 << 6,
+} bitmask_code_t;
 
+typedef struct
+{
+  oc_request_t *request_obj;
+  const oc_ri_preparsed_request_obj_t *preparsed_request_obj;
+  const oc_endpoint_t *endpoint;
+  oc_method_t method;
+  oc_interface_mask_t iface_mask;
+  const uint8_t *payload;
+  size_t payload_len;
+} ri_invoke_handler_in_t;
+
+static bool
+get_resource_is_collection(
+  const oc_ri_preparsed_request_obj_t *preparsed_request_obj)
+{
+#if defined(OC_SERVER) && defined(OC_COLLECTIONS)
+  return preparsed_request_obj->resource_is_collection;
+#else  /* !OC_SERVER || !OC_COLLECTIONS */
+  (void)preparsed_request_obj;
+  return false;
+#endif /* OC_SERVER && OC_COLLECTIONS */
+}
+
+static bitmask_code_t
+ri_invoke_handler(coap_make_response_ctx_t *ctx,
+                  const ri_invoke_handler_in_t *in,
+                  oc_response_buffer_t *response_buffer)
+{
+  bitmask_code_t bitmask_code = BITMASK_CODE_OK;
+  /* Alloc response_state. It also affects request_obj.response.
+   */
+#ifdef OC_BLOCK_WISE
+#ifdef OC_DYNAMIC_ALLOCATION
+  bool response_state_allocated = false;
+  bool enable_realloc_rep = false;
+#endif /* OC_DYNAMIC_ALLOCATION */
+  if (*ctx->response_state == NULL) {
+#ifdef OC_HAS_FEATURE_ETAG
+    bool generate_etag = false;
+#else  /* OC_HAS_FEATURE_ETAG */
+    bool generate_etag = true;
+#endif /* OC_HAS_FEATURE_ETAG */
+    OC_DBG("creating new block-wise response state");
+    *ctx->response_state = oc_blockwise_alloc_response_buffer(
+      in->preparsed_request_obj->uri_path.data,
+      in->preparsed_request_obj->uri_path.length, in->endpoint, in->method,
+      OC_BLOCKWISE_SERVER, (uint32_t)OC_MIN_APP_DATA_SIZE, CONTENT_2_05,
+      generate_etag);
+    if (*ctx->response_state == NULL) {
+      OC_ERR("failure to alloc response state");
+      bitmask_code |= BITMASK_CODE_BAD_REQUEST;
+    } else {
+#ifdef OC_DYNAMIC_ALLOCATION
+#ifdef OC_APP_DATA_BUFFER_POOL
+      if (!(*ctx->response_state)->block)
+#endif /* OC_APP_DATA_BUFFER_POOL */
+      {
+        response_state_allocated = true;
+      }
+#endif /* OC_DYNAMIC_ALLOCATION */
+      if (in->preparsed_request_obj->uri_query.length > 0) {
+        oc_new_string(&(*ctx->response_state)->uri_query,
+                      in->preparsed_request_obj->uri_query.data,
+                      in->preparsed_request_obj->uri_query.length);
+      }
+      response_buffer->buffer = (*ctx->response_state)->buffer;
+#ifdef OC_DYNAMIC_ALLOCATION
+      response_buffer->buffer_size = (*ctx->response_state)->buffer_size;
+#else  /* !OC_DYNAMIC_ALLOCATION */
+      response_buffer->buffer_size = sizeof((*ctx->response_state)->buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
+    }
+  } else {
+    OC_DBG("using existing block-wise response state");
+    response_buffer->buffer = (*ctx->response_state)->buffer;
+#ifdef OC_DYNAMIC_ALLOCATION
+    response_buffer->buffer_size = (*ctx->response_state)->buffer_size;
+#else  /* !OC_DYNAMIC_ALLOCATION */
+    response_buffer->buffer_size = sizeof((*ctx->response_state)->buffer);
+#endif /* OC_DYNAMIC_ALLOCATION */
+  }
+#else  /* OC_BLOCK_WISE */
+  response_buffer->buffer = ctx->buffer;
+  response_buffer->buffer_size = OC_BLOCK_SIZE;
+#endif /* !OC_BLOCK_WISE */
+
+  OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
+  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
+
+  // we need to check only for bad request
+  if (!bitmask_code) {
+    oc_status_t status = ri_invoke_coap_entity_get_payload_rep(
+      in->payload, in->payload_len, in->preparsed_request_obj->cf,
+      &in->request_obj->request_payload);
+    if (status != OC_STATUS_OK) {
+      bitmask_code |= BITMASK_CODE_BAD_REQUEST;
+      if (status == OC_STATUS_REQUEST_ENTITY_TOO_LARGE) {
+        bitmask_code |= BITMASK_CODE_REQUEST_ENTITY_TOO_LARGE;
+      }
+    }
+  }
+
+  if (!bitmask_code) {
+    /* Initialize oc_rep with a buffer to hold the response payload. "buffer"
+     * points to memory allocated in the messaging layer for the "CoAP
+     * Transaction" to service this request.
+     */
+#if defined(OC_BLOCK_WISE) && defined(OC_DYNAMIC_ALLOCATION)
+    if (response_state_allocated) {
+      oc_rep_new_realloc_v1(&response_buffer->buffer,
+                            response_buffer->buffer_size, OC_MAX_APP_DATA_SIZE);
+      enable_realloc_rep = true;
+    } else {
+      oc_rep_new_v1(response_buffer->buffer, response_buffer->buffer_size);
+    }
+#else  /* OC_DYNAMIC_ALLOCATION */
+    oc_rep_new_v1(response_buffer->buffer, response_buffer->buffer_size);
+#endif /* !OC_DYNAMIC_ALLOCATION */
+    oc_rep_encoder_set_type_by_accept(in->preparsed_request_obj->accept);
+
+    /* Process a request against a valid resource, request payload, and
+     * interface. */
+    oc_status_t ret = ri_invoke_request_handler(
+      in->preparsed_request_obj->cur_resource, in->method, in->request_obj,
+      in->iface_mask, get_resource_is_collection(in->preparsed_request_obj));
+    switch (ret) {
+    case OC_STATUS_OK:
+      break;
+    case OC_STATUS_NOT_MODIFIED:
+      bitmask_code |= BITMASK_CODE_NOT_MODIFIED;
+      break;
+    default:
+      bitmask_code |= BITMASK_CODE_BAD_REQUEST;
+      break;
+    }
+  }
+
+#ifdef OC_BLOCK_WISE
+  oc_blockwise_free_request_buffer(*ctx->request_state);
+  *ctx->request_state = NULL;
+#ifdef OC_DYNAMIC_ALLOCATION
+  // for realloc we need reassign memory again.
+  if (enable_realloc_rep) {
+    response_buffer->buffer =
+      oc_rep_shrink_encoder_buf(response_buffer->buffer);
+    if ((*ctx->response_state) != NULL) {
+      (*ctx->response_state)->buffer = response_buffer->buffer;
+    }
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+#endif /* OC_BLOCK_WISE */
+
+  if (in->request_obj->request_payload != NULL) {
+    /* To the extent that the request payload was parsed, free the payload
+     * structure (and return its memory to the pool).
+     */
+    oc_free_rep(in->request_obj->request_payload);
+    in->request_obj->request_payload = NULL;
+  }
+  oc_rep_set_pool(prev_rep_objects);
+  return bitmask_code;
+}
+
+static coap_status_t
+bitmask_code_to_status(bitmask_code_t bitmask_code, oc_method_t method,
+                       oc_string_view_t uri_path)
+{
+#if !OC_WRN_IS_ENABLED
+  (void)method;
+  (void)uri_path;
+#endif /* !OC_WRN_IS_ENABLED */
+  if (bitmask_code & BITMASK_CODE_FORBIDDEN) {
+    OC_WRN("ocri: Forbidden request for %s: %.*s", oc_method_to_str(method),
+           (int)uri_path.length, uri_path.data);
+    return oc_status_code_unsafe(OC_STATUS_FORBIDDEN);
+  }
+#ifdef OC_SECURITY
+  if (bitmask_code & BITMASK_CODE_UNAUTHORIZED) {
+    OC_WRN("ocri: Subject not authorized for %s: %.*s",
+           oc_method_to_str(method), (int)uri_path.length, uri_path.data);
+    /* If the requestor (subject) does not have access granted via an
+     * access control entry in the ACL, then it is not authorized to
+     * access the resource. A 4.01 response is sent.
+     */
+    return oc_status_code_unsafe(OC_STATUS_UNAUTHORIZED);
+  }
+#endif /* OC_SECURITY */
+  if (bitmask_code & BITMASK_CODE_REQUEST_ENTITY_TOO_LARGE) {
+    OC_WRN("ocri: Request payload too large (hence incomplete) for %s: %.*s",
+           oc_method_to_str(method), (int)uri_path.length, uri_path.data);
+    return oc_status_code_unsafe(OC_STATUS_REQUEST_ENTITY_TOO_LARGE);
+  }
+  if (bitmask_code & BITMASK_CODE_BAD_REQUEST) {
+    OC_WRN("ocri: Bad request for %s: %.*s", oc_method_to_str(method),
+           (int)uri_path.length, uri_path.data);
+    /* Return a 4.00 response */
+    return oc_status_code_unsafe(OC_STATUS_BAD_REQUEST);
+  }
+  if (bitmask_code & BITMASK_CODE_NOT_FOUND) {
+    OC_WRN("ocri: Could not find resource for %s: %.*s",
+           oc_method_to_str(method), (int)uri_path.length, uri_path.data);
+    /* Return a 4.04 response if the requested resource was not found */
+    return oc_status_code_unsafe(OC_STATUS_NOT_FOUND);
+  }
+  if (bitmask_code & BITMASK_CODE_METHOD_NOT_ALLOWED) {
+    OC_WRN("ocri: Could not find method for %s: %.*s", oc_method_to_str(method),
+           (int)uri_path.length, uri_path.data);
+    /* Return a 4.05 response if the resource does not implement the
+     * request method.
+     */
+    return oc_status_code_unsafe(OC_STATUS_METHOD_NOT_ALLOWED);
+  }
+  if (bitmask_code & BITMASK_CODE_NOT_MODIFIED) {
+    return oc_status_code_unsafe(OC_STATUS_NOT_MODIFIED);
+  }
+  return oc_status_code_unsafe(OC_STATUS_OK);
+}
+
+static oc_interface_mask_t
+get_iface_query(oc_string_view_t uri_query)
+{
+  /* Check if query string includes interface selection. */
+  const char *iface = NULL;
+  int iface_len = oc_ri_get_query_value_v1(
+    uri_query.data, uri_query.length, "if", OC_CHAR_ARRAY_LEN("if"), &iface);
+  if (iface_len != -1 && iface != NULL) {
+    return oc_ri_get_interface_mask(iface, (size_t)iface_len);
+  }
+  return 0;
+}
+
+static bool
+bitmask_code_to_success(bitmask_code_t bitmask_code)
+{
+  return (bitmask_code == BITMASK_CODE_OK ||
+          bitmask_code == BITMASK_CODE_NOT_MODIFIED);
+}
+
+static bool
+ri_validate_coap_set_response(coap_packet_t *response,
+                              const oc_endpoint_t *endpoint,
+                              bitmask_code_t bitmask_code, oc_method_t method,
+                              oc_string_view_t uri_path)
+{
+  coap_status_t code = bitmask_code_to_status(bitmask_code, method, uri_path);
+
+  if (oc_endpoint_is_multicast(endpoint) &&
+      code >= oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
+    /* If the server-side logic chooses to reject a request, it sends
+     * below a response code of CLEAR_TRANSACTION, which results in the
+     * messaging layer freeing the CoAP transaction associated with the request.
+     */
+    coap_set_status_code(response, CLEAR_TRANSACTION);
+    coap_set_global_status_code(CLEAR_TRANSACTION);
+    return false;
+  }
+  if (code > COAP_NO_ERROR) {
+    /* response_buffer->code at this point contains a valid CoAP status
+     *  code.
+     */
+    coap_set_status_code(response, code);
+  }
+  return bitmask_code_to_success(bitmask_code);
+}
+
+static oc_interface_mask_t
+get_iface_mask(const oc_ri_preparsed_request_obj_t *preparsed_request_obj)
+{
+  oc_interface_mask_t iface_mask = preparsed_request_obj->iface_query;
+  if (iface_mask == 0 && preparsed_request_obj->cur_resource) {
+    iface_mask = preparsed_request_obj->cur_resource->default_interface;
+  }
+  return iface_mask;
+}
+
+static bool
+ri_parse_coap_request_header(coap_make_response_ctx_t *ctx,
+                             const oc_endpoint_t *endpoint)
+{
+  assert(ctx->preparsed_request_obj != NULL);
   /* This function is a server-side entry point solely for requests.
    *  Hence, "code" contains the CoAP method code.
    */
   oc_method_t method = ctx->request->code;
 
+  // Check if the request is a multicast request and if the device id in
+  // query matches the device id
+  if (ctx->preparsed_request_obj->uri_query.length &&
+      oc_endpoint_is_multicast(endpoint) &&
+      !oc_ri_filter_request_by_device_id(
+        endpoint->device, ctx->preparsed_request_obj->uri_query.data,
+        ctx->preparsed_request_obj->uri_query.length)) {
+    coap_set_global_status_code(CLEAR_TRANSACTION);
+    coap_set_status_code(ctx->response, CLEAR_TRANSACTION);
+    // return success to avoid processing the request further
+    return false;
+  }
+
+  /* Attempt to locate the specific resource object that will handle the request
+   * using the request uri. */
+  const oc_resource_t *cur_resource = ctx->preparsed_request_obj->cur_resource;
+
+  bitmask_code_t bitmask_code = BITMASK_CODE_OK;
+  if (cur_resource) {
+    /* If there was no interface selection, pick the "default interface". */
+    oc_interface_mask_t iface_mask = get_iface_mask(ctx->preparsed_request_obj);
+
+    /* Found the matching resource object. Now verify that:
+     * 1) the selected interface is one that is supported by
+     *    the resource, and,
+     * 2) the selected interface supports the request method.
+     *
+     * If not, return a 4.00 response.
+     */
+    if (((iface_mask & ~cur_resource->interfaces) != 0) ||
+        !oc_ri_interface_supports_method(iface_mask, method)) {
+      bitmask_code |= (BITMASK_CODE_BAD_REQUEST | BITMASK_CODE_FORBIDDEN);
+#ifdef OC_SECURITY
+      oc_audit_log(endpoint->device, "COMM-1", "Operation not supported", 0x40,
+                   2, NULL, 0);
+#endif /* OC_SECURITY */
+    }
+  } else {
+    bitmask_code |= BITMASK_CODE_NOT_FOUND;
+  }
+
+  if (!bitmask_code && !oc_rep_decoder_is_supported_content_format(
+                         ctx->preparsed_request_obj->cf)) {
+    bitmask_code |= BITMASK_CODE_BAD_REQUEST;
+  }
+
+  if (!bitmask_code && cur_resource &&
+      (!get_resource_is_collection(ctx->preparsed_request_obj)) &&
+      !oc_resource_get_method_handler(cur_resource, method, NULL)) {
+    bitmask_code |= BITMASK_CODE_METHOD_NOT_ALLOWED;
+  }
+
+#ifdef OC_SECURITY
+  if (cur_resource && !oc_sec_check_acl(method, cur_resource, endpoint)) {
+    /* If resource is a coaps:// resource, then query ACL to check if
+     * the requestor (the subject) is authorized to issue this request to
+     * the resource.
+     */
+    oc_ri_audit_log(method, cur_resource, endpoint);
+    bitmask_code |= BITMASK_CODE_UNAUTHORIZED;
+  }
+#endif /* OC_SECURITY */
+
+  return ri_validate_coap_set_response(ctx->response, endpoint, bitmask_code,
+                                       method,
+                                       ctx->preparsed_request_obj->uri_path);
+}
+
+#ifdef OC_HAS_FEATURE_ETAG
+typedef struct
+{
+  const coap_packet_t *request;
+  const oc_ri_preparsed_request_obj_t *preparsed_request_obj;
+  const oc_endpoint_t *endpoint;
+  oc_method_t method;
+  oc_interface_mask_t iface_mask;
+} ri_invoke_coap_set_etag_in_t;
+
+static bitmask_code_t
+ri_invoke_coap_set_etag(const ri_invoke_coap_set_etag_in_t *in,
+                        oc_request_t *request_obj)
+{
+  bitmask_code_t bitmask_code = BITMASK_CODE_OK;
+  if (bitmask_code || in->preparsed_request_obj->cur_resource == NULL ||
+      in->method != OC_GET ||
+      !(get_resource_is_collection(in->preparsed_request_obj) ||
+        in->preparsed_request_obj->cur_resource->get_handler.cb != NULL)) {
+    return bitmask_code;
+  }
+  /* If the request is a GET request, check if the client has provided a valid
+   * ETag in the header. If so, and if the ETag matches the ETag of the
+   * resource, then the response will be a 2.03 response with an empty
+   * payload.
+   */
+  const uint8_t *req_etag_buf = NULL;
+  uint8_t req_etag_buf_len = coap_options_get_etag(in->request, &req_etag_buf);
+  uint64_t etag =
+    (in->iface_mask == OC_IF_B)
+      ? oc_ri_get_batch_etag(in->preparsed_request_obj->cur_resource,
+                             in->endpoint, in->endpoint->device)
+      : oc_ri_get_etag(in->preparsed_request_obj->cur_resource);
+  if (etag == OC_ETAG_UNINITIALIZED) {
+    return bitmask_code;
+  }
+  if (req_etag_buf_len == sizeof(etag)) {
+    uint64_t req_etag;
+    memcpy(&req_etag, &req_etag_buf[0], sizeof(etag));
+    if (req_etag == etag) {
+      bitmask_code |= BITMASK_CODE_NOT_MODIFIED;
+    }
+  }
+
+  // Store ETag to the response buffer before the method handler is invoked.
+  // A resource with a custom method handler may want to override the ETag
+  // value with oc_set_send_response_etag().
+  memcpy(&request_obj->response->response_buffer->etag.value[0], &etag,
+         sizeof(etag));
+  request_obj->response->response_buffer->etag.length = sizeof(etag);
+  return bitmask_code;
+}
+#endif /* OC_HAS_FEATURE_ETAG */
+
+void
+oc_ri_prepare_request(const coap_packet_t *request,
+                      oc_ri_preparsed_request_obj_t *preparsed_request_obj,
+                      oc_endpoint_t *endpoint)
+{
+
+  memset(preparsed_request_obj, 0, sizeof(oc_ri_preparsed_request_obj_t));
+  endpoint->version = ri_get_ocf_version_from_header(request);
+
+  /* Obtain request uri from the CoAP request. */
+  const char *uri_path = NULL;
+  size_t uri_path_len = coap_options_get_uri_path(request, &uri_path);
+  preparsed_request_obj->uri_path = oc_string_view(uri_path, uri_path_len);
+
+  /* Obtain query string from CoAP request. */
+  const char *uri_query = NULL;
+  size_t uri_query_len = coap_options_get_uri_query(request, &uri_query);
+  preparsed_request_obj->uri_query = oc_string_view(uri_query, uri_query_len);
+
+  /* Read the Content-Format CoAP option in the request */
+  preparsed_request_obj->cf = APPLICATION_NOT_DEFINED;
+  coap_options_get_content_format(request, &preparsed_request_obj->cf);
+
+  /* Read the accept CoAP option in the request */
+  preparsed_request_obj->accept = APPLICATION_NOT_DEFINED;
+  coap_options_get_accept(request, &preparsed_request_obj->accept);
+
+  /* Initialize OCF interface selector. */
+  oc_interface_mask_t iface_query = 0;
+  if (uri_query_len) {
+    /* Check if query string includes interface selection. */
+    iface_query = get_iface_query(oc_string_view(uri_query, uri_query_len));
+  }
+
+  /* Attempt to locate the specific resource object that will handle the request
+   * using the request uri. */
+  oc_resource_t *cur_resource =
+    oc_resource_get_by_uri(uri_path, uri_path_len, endpoint->device);
+  if (cur_resource != NULL) {
+    preparsed_request_obj->cur_resource = cur_resource;
+#if defined(OC_SERVER) && defined(OC_COLLECTIONS)
+    if (oc_check_if_collection(cur_resource)) {
+      preparsed_request_obj->resource_is_collection = true;
+    }
+#endif /* OC_SERVER && OC_COLLECTIONS */
+    /* If there was no interface selection, pick the "default interface". */
+  }
+  preparsed_request_obj->iface_query = iface_query;
+}
+
+static bool
+ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
+                              const oc_endpoint_t *endpoint)
+{
+  assert(ctx->preparsed_request_obj != NULL);
   /* Initialize request/response objects to be sent up to the app layer. */
   /* Postpone allocating response_state right after calling
    * oc_rep_parse_payload() in order to reduce peak memory in OC_BLOCK_WISE &
@@ -1299,47 +1748,30 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
   oc_request_t request_obj;
   memset(&request_obj, 0, sizeof(request_obj));
   request_obj.response = &response_obj;
+
+  /* This function is a server-side entry point solely for requests.
+   *  Hence, "code" contains the CoAP method code.
+   */
+  oc_method_t method = ctx->request->code;
+
   request_obj.origin = endpoint;
   request_obj.method = method;
 
-  /* Obtain request uri from the CoAP request. */
-  const char *uri_path = NULL;
-  size_t uri_path_len = coap_options_get_uri_path(ctx->request, &uri_path);
-
-  /* Obtain query string from CoAP request. */
-  const char *uri_query = NULL;
-  size_t uri_query_len = coap_options_get_uri_query(ctx->request, &uri_query);
-
-  /* Read the Content-Format CoAP option in the request */
-  oc_content_format_t cf = 0;
-  coap_options_get_content_format(ctx->request, &cf);
-
-  /* Read the accept CoAP option in the request */
-  oc_content_format_t accept = APPLICATION_NOT_DEFINED;
-  coap_options_get_accept(ctx->request, &accept);
-
   /* Initialize OCF interface selector. */
-  oc_interface_mask_t iface_query = 0;
-  if (uri_query_len) {
+  if (ctx->preparsed_request_obj->uri_query.length > 0) {
     // Check if the request is a multicast request and if the device id in
     // query matches the device id
     if (oc_endpoint_is_multicast(endpoint) &&
-        !oc_ri_filter_request_by_device_id(endpoint->device, uri_query,
-                                           uri_query_len)) {
+        !oc_ri_filter_request_by_device_id(
+          endpoint->device, ctx->preparsed_request_obj->uri_query.data,
+          ctx->preparsed_request_obj->uri_query.length)) {
       coap_set_global_status_code(CLEAR_TRANSACTION);
       coap_set_status_code(ctx->response, CLEAR_TRANSACTION);
       return false;
     }
 
-    request_obj.query = uri_query;
-    request_obj.query_len = uri_query_len;
-    /* Check if query string includes interface selection. */
-    const char *iface = NULL;
-    int iface_len = oc_ri_get_query_value_v1(uri_query, uri_query_len, "if",
-                                             OC_CHAR_ARRAY_LEN("if"), &iface);
-    if (iface_len != -1 && iface != NULL) {
-      iface_query |= oc_ri_get_interface_mask(iface, (size_t)iface_len);
-    }
+    request_obj.query = ctx->preparsed_request_obj->uri_query.data;
+    request_obj.query_len = ctx->preparsed_request_obj->uri_query.length;
   }
 
   /* Obtain handle to buffer containing the serialized payload */
@@ -1355,8 +1787,8 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
 #endif /* !OC_BLOCK_WISE */
   request_obj._payload = payload;
   request_obj._payload_len = payload_len;
-  request_obj.content_format = cf;
-  request_obj.accept = accept;
+  request_obj.content_format = ctx->preparsed_request_obj->cf;
+  request_obj.accept = ctx->preparsed_request_obj->accept;
 #ifdef OC_HAS_FEATURE_ETAG
   request_obj.etag = NULL;
   request_obj.etag_len = coap_options_get_etag(ctx->request, &request_obj.etag);
@@ -1364,266 +1796,50 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
 
   /* Attempt to locate the specific resource object that will handle the request
    * using the request uri. */
-  bool resource_is_collection = false;
-  oc_resource_t *cur_resource =
-    oc_resource_get_by_uri(uri_path, uri_path_len, endpoint->device);
+  oc_resource_t *cur_resource = ctx->preparsed_request_obj->cur_resource;
   if (cur_resource != NULL) {
     request_obj.resource = cur_resource;
-#if defined(OC_SERVER) && defined(OC_COLLECTIONS)
-    if (oc_check_if_collection(cur_resource)) {
-      resource_is_collection = true;
-    }
-#endif /* OC_SERVER && OC_COLLECTIONS */
   }
 
-  bool forbidden = false;
-  bool bad_request = false;
-  oc_interface_mask_t iface_mask = 0;
-  if (cur_resource) {
-    /* If there was no interface selection, pick the "default interface". */
-    iface_mask = iface_query;
-    if (iface_mask == 0)
-      iface_mask = cur_resource->default_interface;
-
-    /* Found the matching resource object. Now verify that:
-     * 1) the selected interface is one that is supported by
-     *    the resource, and,
-     * 2) the selected interface supports the request method.
-     *
-     * If not, return a 4.00 response.
-     */
-    if (((iface_mask & ~cur_resource->interfaces) != 0) ||
-        !oc_ri_interface_supports_method(iface_mask, method)) {
-      forbidden = true;
-      bad_request = true;
-#ifdef OC_SECURITY
-      oc_audit_log(endpoint->device, "COMM-1", "Operation not supported", 0x40,
-                   2, NULL, 0);
-#endif
-    }
+  bitmask_code_t bitmask_code = BITMASK_CODE_OK;
+  oc_interface_mask_t iface_mask = get_iface_mask(ctx->preparsed_request_obj);
+  if (!cur_resource) {
+    bitmask_code |= BITMASK_CODE_NOT_FOUND;
   }
 
-  bool not_authorized = false;
-#ifdef OC_SECURITY
-  if (cur_resource && !bad_request) {
-    /* If resource is a coaps:// resource, then query ACL to check if
-     * the requestor (the subject) is authorized to issue this request to
-     * the resource.
-     */
-    not_authorized = !oc_sec_check_acl(method, cur_resource, endpoint);
-    if (not_authorized) {
-      oc_ri_audit_log(method, cur_resource, endpoint);
-    }
-  }
-#endif /* OC_SECURITY */
-
-  bool not_modified = false;
 #ifdef OC_HAS_FEATURE_ETAG
-  if (cur_resource != NULL && !bad_request && !not_authorized &&
-      method == OC_GET &&
-      (resource_is_collection || cur_resource->get_handler.cb != NULL)) {
-    /* If the request is a GET request, check if the client has provided a valid
-     * ETag in the header. If so, and if the ETag matches the ETag of the
-     * resource, then the response will be a 2.03 response with an empty
-     * payload.
-     */
-    const uint8_t *req_etag_buf = NULL;
-    uint8_t req_etag_buf_len =
-      coap_options_get_etag(ctx->request, &req_etag_buf);
-    uint64_t etag =
-      (iface_mask == OC_IF_B)
-        ? oc_ri_get_batch_etag(cur_resource, endpoint, endpoint->device)
-        : oc_ri_get_etag(cur_resource);
-    if (etag != OC_ETAG_UNINITIALIZED) {
-      if (req_etag_buf_len == sizeof(etag)) {
-        uint64_t req_etag;
-        memcpy(&req_etag, &req_etag_buf[0], sizeof(etag));
-        not_modified = req_etag == etag;
-      }
-
-      // Store ETag to the response buffer before the method handler is invoked.
-      // A resource with a custom method handler may want to override the ETag
-      // value with oc_set_send_response_etag().
-      memcpy(&response_buffer.etag.value[0], &etag, sizeof(etag));
-      response_buffer.etag.length = sizeof(etag);
-    }
-  }
+  bitmask_code |= ri_invoke_coap_set_etag(
+    &(ri_invoke_coap_set_etag_in_t){
+      .request = ctx->request,
+      .preparsed_request_obj = ctx->preparsed_request_obj,
+      .endpoint = endpoint,
+      .method = method,
+      .iface_mask = iface_mask,
+    },
+    &request_obj);
 #endif /* OC_HAS_FEATURE_ETAG */
 
-/* Alloc response_state. It also affects request_obj.response.
- */
-#ifdef OC_BLOCK_WISE
-#ifdef OC_DYNAMIC_ALLOCATION
-  bool response_state_allocated = false;
-  bool enable_realloc_rep = false;
-#endif /* OC_DYNAMIC_ALLOCATION */
-  if (cur_resource != NULL && !bad_request && !not_authorized &&
-      !not_modified) {
-    if (*ctx->response_state == NULL) {
-#ifdef OC_HAS_FEATURE_ETAG
-      bool generate_etag = false;
-#else  /* OC_HAS_FEATURE_ETAG */
-      bool generate_etag = true;
-#endif /* OC_HAS_FEATURE_ETAG */
-      OC_DBG("creating new block-wise response state");
-      *ctx->response_state = oc_blockwise_alloc_response_buffer(
-        uri_path, uri_path_len, endpoint, method, OC_BLOCKWISE_SERVER,
-        (uint32_t)OC_MIN_APP_DATA_SIZE, CONTENT_2_05, generate_etag);
-      if (*ctx->response_state == NULL) {
-        OC_ERR("failure to alloc response state");
-        bad_request = true;
-      } else {
-#ifdef OC_DYNAMIC_ALLOCATION
-#ifdef OC_APP_DATA_BUFFER_POOL
-        if (!(*ctx->response_state)->block)
-#endif /* OC_APP_DATA_BUFFER_POOL */
-        {
-          response_state_allocated = true;
-        }
-#endif /* OC_DYNAMIC_ALLOCATION */
-        if (uri_query_len > 0) {
-          oc_new_string(&(*ctx->response_state)->uri_query, uri_query,
-                        uri_query_len);
-        }
-        response_buffer.buffer = (*ctx->response_state)->buffer;
-#ifdef OC_DYNAMIC_ALLOCATION
-        response_buffer.buffer_size = (*ctx->response_state)->buffer_size;
-#else  /* !OC_DYNAMIC_ALLOCATION */
-        response_buffer.buffer_size = sizeof((*ctx->response_state)->buffer);
-#endif /* OC_DYNAMIC_ALLOCATION */
-      }
-    } else {
-      OC_DBG("using existing block-wise response state");
-      response_buffer.buffer = (*ctx->response_state)->buffer;
-#ifdef OC_DYNAMIC_ALLOCATION
-      response_buffer.buffer_size = (*ctx->response_state)->buffer_size;
-#else  /* !OC_DYNAMIC_ALLOCATION */
-      response_buffer.buffer_size = sizeof((*ctx->response_state)->buffer);
-#endif /* OC_DYNAMIC_ALLOCATION */
-    }
-  }
-#else  /* OC_BLOCK_WISE */
-  response_buffer.buffer = ctx->buffer;
-  response_buffer.buffer_size = OC_BLOCK_SIZE;
-#endif /* !OC_BLOCK_WISE */
-
-  OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
-
-  bool method_not_allowed = false;
-  bool entity_too_large = false;
-  if (cur_resource && !bad_request && !not_authorized && !not_modified) {
-    oc_status_t status = ri_invoke_coap_entity_get_payload_rep(
-      payload, payload_len, cf, &request_obj.request_payload);
-    if (status != OC_STATUS_OK) {
-      bad_request = true;
-      entity_too_large = status == OC_STATUS_REQUEST_ENTITY_TOO_LARGE;
-    }
-
-    if (!bad_request) {
-      /* Initialize oc_rep with a buffer to hold the response payload. "buffer"
-       * points to memory allocated in the messaging layer for the "CoAP
-       * Transaction" to service this request.
-       */
-#if defined(OC_BLOCK_WISE) && defined(OC_DYNAMIC_ALLOCATION)
-      if (response_state_allocated) {
-        oc_rep_new_realloc_v1(&response_buffer.buffer,
-                              response_buffer.buffer_size,
-                              OC_MAX_APP_DATA_SIZE);
-        enable_realloc_rep = true;
-      } else {
-        oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
-      }
-#else  /* OC_DYNAMIC_ALLOCATION */
-      oc_rep_new_v1(response_buffer.buffer, response_buffer.buffer_size);
-#endif /* !OC_DYNAMIC_ALLOCATION */
-      oc_rep_encoder_set_type_by_accept(accept);
-
-      /* Process a request against a valid resource, request payload, and
-       * interface. */
-      oc_status_t ret = ri_invoke_request_handler(
-        cur_resource, method, &request_obj, iface_mask, resource_is_collection);
-      switch (ret) {
-      case OC_STATUS_OK:
-        break;
-      case OC_STATUS_METHOD_NOT_ALLOWED:
-        method_not_allowed = true;
-        break;
-      default:
-        bad_request = true;
-        break;
-      }
-    }
+  if (!bitmask_code && cur_resource != NULL) {
+    bitmask_code |=
+      ri_invoke_handler(ctx,
+                        &(ri_invoke_handler_in_t){
+                          .request_obj = &request_obj,
+                          .preparsed_request_obj = ctx->preparsed_request_obj,
+                          .endpoint = endpoint,
+                          .method = method,
+                          .iface_mask = iface_mask,
+                          .payload = payload,
+                          .payload_len = payload_len,
+                        },
+                        &response_buffer);
   }
 
-#ifdef OC_BLOCK_WISE
-  oc_blockwise_free_request_buffer(*ctx->request_state);
-  *ctx->request_state = NULL;
-#ifdef OC_DYNAMIC_ALLOCATION
-  // for realloc we need reassign memory again.
-  if (enable_realloc_rep) {
-    response_buffer.buffer = oc_rep_shrink_encoder_buf(response_buffer.buffer);
-    if ((*ctx->response_state) != NULL) {
-      (*ctx->response_state)->buffer = response_buffer.buffer;
-    }
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
-#endif /* OC_BLOCK_WISE */
-
-  if (request_obj.request_payload != NULL) {
-    /* To the extent that the request payload was parsed, free the payload
-     * structure (and return its memory to the pool).
-     */
-    oc_free_rep(request_obj.request_payload);
-  }
-  oc_rep_set_pool(prev_rep_objects);
-
-  bool success = false;
-  if (forbidden) {
-    OC_WRN("ocri: Forbidden request");
+  if (bitmask_code != BITMASK_CODE_OK) {
     response_buffer.response_length = 0;
-    response_buffer.code = oc_status_code_unsafe(OC_STATUS_FORBIDDEN);
-  } else if (entity_too_large) {
-    OC_WRN("ocri: Request payload too large (hence incomplete)");
-    response_buffer.response_length = 0;
-    response_buffer.code =
-      oc_status_code_unsafe(OC_STATUS_REQUEST_ENTITY_TOO_LARGE);
-  } else if (bad_request) {
-    OC_WRN("ocri: Bad request");
-    /* Return a 4.00 response */
-    response_buffer.response_length = 0;
-    response_buffer.code = oc_status_code_unsafe(OC_STATUS_BAD_REQUEST);
-  } else if (!cur_resource) {
-    OC_WRN("ocri: Could not find resource");
-    /* Return a 4.04 response if the requested resource was not found */
-    response_buffer.response_length = 0;
-    response_buffer.code = oc_status_code_unsafe(OC_STATUS_NOT_FOUND);
-  } else if (method_not_allowed) {
-    OC_WRN("ocri: Could not find method");
-    /* Return a 4.05 response if the resource does not implement the
-     * request method.
-     */
-    response_buffer.response_length = 0;
-    response_buffer.code = oc_status_code_unsafe(OC_STATUS_METHOD_NOT_ALLOWED);
+    response_buffer.code = bitmask_code_to_status(
+      bitmask_code, method, ctx->preparsed_request_obj->uri_path);
   }
-#ifdef OC_SECURITY
-  else if (not_authorized) {
-    OC_WRN("ocri: Subject not authorized");
-    /* If the requestor (subject) does not have access granted via an
-     * access control entry in the ACL, then it is not authorized to
-     * access the resource. A 4.01 response is sent.
-     */
-    response_buffer.response_length = 0;
-    response_buffer.code = oc_status_code_unsafe(OC_STATUS_UNAUTHORIZED);
-  }
-#endif /* OC_SECURITY */
-  else {
-    if (not_modified) {
-      response_buffer.response_length = 0;
-      response_buffer.code = oc_status_code_unsafe(OC_STATUS_NOT_MODIFIED);
-    }
-    success = true;
-  }
+  bool success = bitmask_code_to_success(bitmask_code);
 
 #ifdef OC_SERVER
   int32_t observe = OC_COAP_OPTION_OBSERVE_NOT_SET;
@@ -1633,20 +1849,23 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
   uint16_t block2_size = 0;
 #endif /* OC_BLOCK_WISE */
   if (success && method == OC_GET &&
-      response_buffer.code < oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
-    observe = ri_handle_observation(ctx->request, ctx->response, cur_resource,
-                                    resource_is_collection, block2_size,
-                                    endpoint, iface_query);
+      request_obj.response->response_buffer->code <
+        oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
+    observe = ri_handle_observation(
+      ctx->request, ctx->response, cur_resource,
+      get_resource_is_collection(ctx->preparsed_request_obj), block2_size,
+      endpoint, ctx->preparsed_request_obj->iface_query);
   }
 #endif /* OC_SERVER */
 
   if (oc_endpoint_is_multicast(request_obj.origin) &&
-      response_buffer.code >= oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
-    response_buffer.code = CLEAR_TRANSACTION;
+      request_obj.response->response_buffer->code >=
+        oc_status_code_unsafe(OC_STATUS_BAD_REQUEST)) {
+    request_obj.response->response_buffer->code = CLEAR_TRANSACTION;
   }
 
   ri_invoke_coap_entity_set_response_ctx_t resp_ctx = {
-    .response_obj = &response_obj,
+    .response_obj = request_obj.response,
 #ifdef OC_BLOCK_WISE
     .response_state = ctx->response_state,
 #endif /* OC_BLOCK_WISE */
@@ -1659,12 +1878,29 @@ oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
     .block2_size = block2_size,
     .resource = cur_resource,
 #ifdef OC_COLLECTIONS
-    .resource_is_collection = resource_is_collection,
+    .resource_is_collection =
+      get_resource_is_collection(ctx->preparsed_request_obj),
 #endif /* OC_COLLECTIONS */
 #endif /* OC_SERVER */
   };
   ri_invoke_coap_entity_set_response(ctx->response, resp_ctx);
   return success;
+}
+
+bool
+oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
+                                 const oc_endpoint_t *endpoint, void *user_data)
+{
+  (void)user_data;
+  return ri_invoke_coap_entity_handler(ctx, endpoint);
+}
+
+bool
+oc_ri_parse_coap_request_header(coap_make_response_ctx_t *ctx,
+                                const oc_endpoint_t *endpoint, void *user_data)
+{
+  (void)user_data;
+  return ri_parse_coap_request_header(ctx, endpoint);
 }
 
 void
