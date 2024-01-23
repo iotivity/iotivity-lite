@@ -142,8 +142,8 @@ oc_core_shutdown(void)
       oc_resource_t *core_resource = &g_core_resources[i];
 
 #ifdef OC_HAS_FEATURE_BRIDGE
-      if ( (i >= OC_NUM_CORE_PLATFORM_RESOURCES)
-          && (oc_core_get_device_info((i-OC_NUM_CORE_PLATFORM_RESOURCES)/OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES)->is_removed == false) ) {
+      if ( (i < OC_NUM_CORE_PLATFORM_RESOURCES)
+          || ((i >= OC_NUM_CORE_PLATFORM_RESOURCES) && (oc_core_get_device_info((i-OC_NUM_CORE_PLATFORM_RESOURCES)/OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES)->is_removed == false)) ) {
 #endif /* OC_HAS_FEATURE_BRIDGE */
         oc_ri_free_resource_properties(core_resource);
 #ifdef OC_HAS_FEATURE_BRIDGE

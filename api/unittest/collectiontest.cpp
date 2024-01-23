@@ -1016,6 +1016,7 @@ TEST_F(TestCollectionsWithServer, GetRequest_Batch)
 
 #endif // !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
 
+//#if 0
 #ifdef OC_HAS_FEATURE_BRIDGE
 /*
  * Done:

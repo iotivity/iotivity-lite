@@ -88,6 +88,7 @@ public:
   }
 };
 
+//#if 0
 #ifdef OC_HAS_FEATURE_BRIDGE
 /*
  * Not testable (static functioins) :
