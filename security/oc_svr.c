@@ -86,11 +86,6 @@ oc_sec_svr_create_new_device(size_t device_index, bool need_realloc)
   oc_sec_sdi_new_device(device_index, need_realloc);
 
   oc_sec_doxm_create_resource(device_index);
-#if 0
-  oc_core_populate_resource(
-      OCF_SEC_DOXM, device_index, "/oic/sec/doxm", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-      OC_DISCOVERABLE, get_doxm, 0, post_doxm, 0, 1, "oic.r.doxm");
-#endif
   oc_core_populate_resource(OCF_SEC_PSTAT, device_index, "/oic/sec/pstat",
                             OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
                             OC_DISCOVERABLE | OC_OBSERVABLE, get_pstat, 0,
@@ -100,12 +95,6 @@ oc_sec_svr_create_new_device(size_t device_index, bool need_realloc)
                             OC_DISCOVERABLE | OC_SECURE, get_acl, 0, post_acl,
                             delete_acl, 1, "oic.r.acl2");
   oc_sec_cred_create_resource(device_index);
-#if 0
-  oc_core_populate_resource(OCF_SEC_CRED, device_index, "/oic/sec/cred",
-      OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-      OC_DISCOVERABLE | OC_SECURE, get_cred, 0,
-      post_cred, delete_cred, 1, "oic.r.cred");
-#endif
   oc_core_populate_resource(OCF_SEC_AEL, device_index, "/oic/sec/ael",
                             OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
                             OC_DISCOVERABLE | OC_SECURE, get_ael, 0, post_ael,
@@ -123,23 +112,23 @@ void
 oc_sec_svr_init_new_device(size_t device_index)
 {
   oc_sec_load_unique_ids(device_index);
-  OC_DBG("oc_main_init(): loading pstat(%zu)", device_index);
+  OC_DBG("oc_core_add_new_device_at_index(): loading pstat(%zu)", device_index);
   oc_sec_load_pstat(device_index);
-  OC_DBG("oc_main_init(): loading doxm(%zu)", device_index);
+  OC_DBG("oc_core_add_new_device_at_index(): loading doxm(%zu)", device_index);
   oc_sec_load_doxm(device_index);
-  OC_DBG("oc_main_init(): loading cred(%zu)", device_index);
+  OC_DBG("oc_core_add_new_device_at_index(): loading cred(%zu)", device_index);
   oc_sec_load_cred(device_index);
-  OC_DBG("oc_main_init(): loading acl(%zu)", device_index);
+  OC_DBG("oc_core_add_new_device_at_index(): loading acl(%zu)", device_index);
   oc_sec_load_acl(device_index);
-  OC_DBG("oc_main_init(): loading sp(%zu)", device_index);
+  OC_DBG("oc_core_add_new_device_at_index(): loading sp(%zu)", device_index);
   oc_sec_load_sp(device_index);
-  OC_DBG("oc_main_init(): loading ael(%zu)", device_index);
+  OC_DBG("oc_core_add_new_device_at_index(): loading ael(%zu)", device_index);
   oc_sec_load_ael(device_index);
 #ifdef OC_PKI
-  OC_DBG("oc_main_init(): loading ECDSA keypair(%zu)", device_index);
+  OC_DBG("oc_core_add_new_device_at_index(): loading ECDSA keypair(%zu)", device_index);
   oc_sec_load_ecdsa_keypair(device_index);
 #endif /* OC_PKI */
-  OC_DBG("oc_main_init(): loading sdi(%zu)", device_index);
+  OC_DBG("oc_core_add_new_device_at_index(): loading sdi(%zu)", device_index);
   oc_sec_load_sdi(device_index);
 }
 

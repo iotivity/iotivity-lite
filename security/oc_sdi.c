@@ -66,9 +66,13 @@ oc_sec_sdi_new_device(size_t device_index, bool need_realloc)
     if (!g_sdi) {
       oc_abort("Insufficient memory");
     }
+    memset(&g_sdi[device_index], 0, sizeof(oc_sec_sdi_t));
+  } else if (device_index < oc_core_get_num_devices()) {
+    oc_free_string(&(g_sdi[device_index].name));
+    memset(&g_sdi[device_index], 0, sizeof(oc_sec_sdi_t));
+  } else {
+    OC_ERR("device index error ! (%zu)", device_index);
   }
-
-  memset(&g_sdi[device_index], 0, sizeof(oc_sec_sdi_t));
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 #endif /* OC_HAS_FEATURE_BRIDGE */
@@ -82,7 +86,13 @@ oc_sec_sdi_free(void)
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
   for (size_t device = 0; device < oc_core_get_num_devices(); ++device) {
-    oc_free_string(&(g_sdi[device].name));
+#ifdef OC_HAS_FEATURE_BRIDGE
+    if (oc_core_get_device_info(device)->is_removed == false) {
+#endif /* OC_HAS_FEATURE_BRIDGE */
+      oc_free_string(&(g_sdi[device].name));
+#ifdef OC_HAS_FEATURE_BRIDGE
+    }
+#endif /* OC_HAS_FEATURE_BRIDGE */
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION

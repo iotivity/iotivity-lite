@@ -32,12 +32,17 @@
 #include "oc_core_res.h"
 #include "security/oc_svr_internal.h"
 #include "api/oc_core_res_internal.h"
+#include "api/oc_swupdate_internal.h"
 #include <set>
 #endif /* OC_HAS_FEATURE_BRIDGE */
 
 #ifdef OC_TCP
 #include "messaging/coap/signal_internal.h"
 #endif /* OC_TCP */
+
+#ifdef OC_HAS_FEATURE_PUSH
+#include "api/oc_push_internal.h"
+#endif /* OC_HAS_FEATURE_PUSH */
 
 #include <gtest/gtest.h>
 #include <limits>
@@ -56,10 +61,20 @@ public:
     oc_core_init();
     oc_sec_svr_create();
 #endif /* OC_HAS_FEATURE_BRIDGE */
+
+#ifdef OC_SOFTWARE_UPDATE
+    oc_swupdate_create();
+#endif
   }
 
   void TearDown() override
   {
+#ifdef OC_HAS_FEATURE_BRIDGE
+    oc_sec_svr_free();
+#endif /* OC_HAS_FEATURE_BRIDGE */
+#ifdef OC_HAS_FEATURE_PUSH
+    oc_push_free();
+#endif /* OC_HAS_FEATURE_PUSH */
 #ifdef OC_HAS_FEATURE_BRIDGE
     oc_core_shutdown();
 #endif /* OC_HAS_FEATURE_BRIDGE */
@@ -76,13 +91,21 @@ get_handler(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
 }
 
+static const std::string kDeviceName{ "Table Lamp" };
+static const std::string kDeviceURI{ "/oic/d" };
+static const std::string kDeviceType{ "oic.d.light" };
+static const std::string kOCFSpecVersion{ "ocf.1.0.0" };
+static const std::string kOCFDataModelVersion{ "ocf.res.1.0.0" };
+
 TEST_F(TestOcRi, GetNDeleteAppResourceByIndex)
 {
-  std::string deviceName{ "Device1" };
-  std::string deviceURI{ "/oic/d" };
-  std::string deviceType{ "oic.d.light" };
-  std::string OCFSpecVersion{ "ocf.2.2.6" };
-  std::string OCFDataModelVersion{ "ocf.res.1.0.0" };
+  oc_add_new_device_t cfg{};
+  cfg.name = kDeviceName.c_str();
+  cfg.uri = kDeviceURI.c_str();
+  cfg.rt = kDeviceType.c_str();
+  cfg.spec_version = kOCFSpecVersion.c_str();
+  cfg.data_model_version = kOCFDataModelVersion.c_str();
+  size_t device_count;
 
   /* -------------------------------------------------*/
   /*
@@ -90,14 +113,13 @@ TEST_F(TestOcRi, GetNDeleteAppResourceByIndex)
    */
   /*--------------------------------------------------*/
 
-  auto deviceIndex = oc_add_device(
-    deviceURI.c_str(), deviceType.c_str(), deviceName.c_str(),
-    OCFSpecVersion.c_str(), OCFDataModelVersion.c_str(), nullptr, nullptr);
+  auto deviceIndex = oc_core_get_num_devices();
+  EXPECT_NE(oc_core_add_new_device_at_index(cfg, deviceIndex), nullptr);
 
   auto deviceInfo = oc_core_get_device_info(deviceIndex);
 
   ASSERT_NE(deviceInfo, nullptr);
-  EXPECT_STREQ(deviceName.c_str(), oc_string(deviceInfo->name));
+  EXPECT_STREQ(kDeviceName.c_str(), oc_string(deviceInfo->name));
   EXPECT_EQ(0, deviceIndex);
 
   /*

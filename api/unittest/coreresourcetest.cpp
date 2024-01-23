@@ -21,6 +21,7 @@
 #include "api/oc_core_res_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_runtime_internal.h"
+#include "api/oc_swupdate_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_helpers.h"
@@ -28,6 +29,7 @@
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
 #include "util/oc_macros_internal.h"
+
 
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
@@ -66,6 +68,10 @@ public:
     oc_core_init();
 #ifdef OC_HAS_FEATURE_BRIDGE
     oc_sec_svr_create();
+#endif
+
+#ifdef OC_SOFTWARE_UPDATE
+    oc_swupdate_create();
 #endif
   }
 
