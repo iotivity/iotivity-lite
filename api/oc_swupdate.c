@@ -353,6 +353,36 @@ oc_swupdate_create(void)
   }
 }
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+static void
+_init_swupdate(size_t device_index)
+{
+  memset(&g_sw[device_index], 0, sizeof(oc_swupdate_t));
+  swupdate_create_resource(device_index);
+}
+
+void
+oc_swupdate_create_new_device(size_t device_index, bool need_realloc)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  if ((device_index == (oc_core_get_num_devices() - 1)) && need_realloc) {
+    g_sw = (oc_swupdate_t *)realloc(g_sw, oc_core_get_num_devices() * sizeof(oc_swupdate_t));
+    if (g_sw == NULL) {
+      oc_abort("Insufficient memory");
+    }
+    _init_swupdate(device_index);
+  } else if (device_index < oc_core_get_num_devices()) {
+    oc_free_string(&g_sw[device_index].purl);
+    oc_free_string(&g_sw[device_index].nv);
+    oc_free_string(&g_sw[device_index].signage);
+    _init_swupdate(device_index);
+  } else {
+    OC_ERR("device index error ! (%zu)", device_index);
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 const char *
 oc_swupdate_action_to_str(oc_swupdate_action_t action)
 {

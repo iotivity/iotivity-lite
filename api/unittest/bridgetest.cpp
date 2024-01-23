@@ -30,6 +30,7 @@
 #include "api/oc_ri_internal.h"
 #include "api/oc_runtime_internal.h"
 #include "api/oc_core_res_internal.h"
+#include "api/oc_swupdate_internal.h"
 #include "security/oc_svr_internal.h"
 #include "security/oc_doxm_internal.h"
 #include "port/oc_network_event_handler_internal.h"
@@ -45,29 +46,6 @@ void bridge_owned_changed(const oc_uuid_t *device_uuid, size_t device_index,
                           bool owned, void *user_data);
 }
 
-class TestBridge : public testing::Test {
-public:
-  void SetUp() override
-  {
-    oc_network_event_handler_mutex_init();
-    oc_runtime_init();
-    oc_ri_init();
-    oc_core_init();
-    oc_sec_svr_create();
-  }
-
-  void TearDown() override
-  {
-#ifdef OC_HAS_FEATURE_PUSH
-    oc_push_free();
-#endif /* OC_HAS_FEATURE_PUSH */
-    oc_core_shutdown();
-    oc_ri_shutdown();
-    oc_runtime_shutdown();
-    oc_network_event_handler_mutex_destroy();
-  }
-};
-
 static const oc::DeviceToAdd kBridgeDevice = { "oic.d.bridge", "BridgeDevice",
                                                "ocf.1.0.0", "ocf.res.1.0.0",
                                                "/oic/d" };
@@ -82,6 +60,47 @@ static const std::string kVODDeviceID{ "vod1" };
 static const std::string kVODEconame{ "matter" };
 static const std::string kVODlistRscURI{ "/bridge/vodlist" };
 
+class TestBridge : public testing::Test {
+private:
+  void RunBridgeDevice()
+  {
+    /*
+     * add bridge device (oic.d.bridge)
+     */
+    ASSERT_EQ(oc_bridge_add_bridge_device(
+        kBridgeDevice.name.c_str(), kBridgeDevice.spec_version.c_str(),
+        kBridgeDevice.data_model_version.c_str(), nullptr, nullptr),
+        0);
+
+  }
+public:
+  void SetUp() override
+  {
+    oc_network_event_handler_mutex_init();
+    oc_runtime_init();
+    oc_ri_init();
+    oc_core_init();
+    RunBridgeDevice();
+    oc_sec_svr_create();
+#ifdef OC_SOFTWARE_UPDATE
+    oc_swupdate_create();
+#endif
+  }
+
+  void TearDown() override
+  {
+    oc_sec_svr_free();
+#ifdef OC_HAS_FEATURE_PUSH
+    oc_push_free();
+#endif /* OC_HAS_FEATURE_PUSH */
+    oc_core_shutdown();
+    oc_ri_shutdown();
+    oc_runtime_shutdown();
+    oc_network_event_handler_mutex_destroy();
+  }
+};
+
+
 TEST_F(TestBridge, BridgeAPITest)
 {
   /* -------------------------------------------------*/
@@ -89,13 +108,6 @@ TEST_F(TestBridge, BridgeAPITest)
    * oc_bridge_add_bridge_device()
    */
   /* -------------------------------------------------*/
-  /*
-   * add bridge device (oic.d.bridge)
-   */
-  ASSERT_EQ(oc_bridge_add_bridge_device(
-              kBridgeDevice.name.c_str(), kBridgeDevice.spec_version.c_str(),
-              kBridgeDevice.data_model_version.c_str(), nullptr, nullptr),
-            0);
 
   auto bridgeDeviceInfo = oc_core_get_device_info(kBridgeDeviceID);
   ASSERT_NE(bridgeDeviceInfo, nullptr);

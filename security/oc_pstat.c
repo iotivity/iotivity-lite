@@ -108,10 +108,14 @@ oc_sec_pstat_new_device(size_t device_index, bool need_realloc)
     if (!g_pstat) {
       oc_abort("Insufficient memory");
     }
+    memset(&g_pstat[device_index], 0, sizeof(oc_sec_pstat_t));
+  } else if (device_index < oc_core_get_num_devices()) {
+    memset(&g_pstat[device_index], 0, sizeof(oc_sec_pstat_t));
+  } else {
+    OC_ERR("device index error ! (%zu)", device_index);
   }
-
-  memset(&g_pstat[device_index], 0, sizeof(oc_sec_pstat_t));
 #endif /* OC_DYNAMIC_ALLOCATION */
+
 }
 #endif /* OC_HAS_FEATURE_BRIDGE */
 

@@ -68,6 +68,13 @@ typedef struct oc_swupdate_t
  */
 void oc_swupdate_create(void);
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+/**
+ * @brief Allocate and initialize Software Update (SWU) resources and data for specific Device.
+ */
+void oc_swupdate_create_new_device(size_t device_index, bool need_realloc);
+#endif
+
 /**
  * @brief Deallocate all SWU resource data.
  */

@@ -117,7 +117,7 @@ remove_virtual_device_from_vods_list(const oc_uuid_t *di)
       } else {
         char uuid[OC_UUID_LEN];
         oc_uuid_to_str(&vod_item->di, uuid, OC_UUID_LEN);
-        OC_DBG("oc_bridge: failed to find Device whose ID is (%s)", uuid);
+        OC_ERR("oc_bridge: failed to find Device whose ID is (%s)", uuid);
       }
 
       oc_list_remove(g_vods, vod_item);
