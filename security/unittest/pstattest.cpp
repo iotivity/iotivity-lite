@@ -35,6 +35,10 @@
 #include "tests/gtest/Resource.h"
 #include "util/oc_features.h"
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+#include <memory>
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 #ifdef OC_SOFTWARE_UPDATE
 #include "api/oc_swupdate_internal.h"
 #endif /* OC_SOFTWARE_UPDATE */

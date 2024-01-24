@@ -37,6 +37,7 @@
 
 #ifdef OC_HAS_FEATURE_BRIDGE
 #include "oc_bridge.h"
+#include <memory>
 #endif /* OC_HAS_FEATURE_BRIDGE */
 
 #include "gtest/gtest.h"
@@ -248,8 +249,7 @@ TEST_F(TestAcl, AclNewDevice)
    * overwrite entry in the existing position
    */
   auto aclEntry = oc_sec_get_acl(device_id_);
-//  auto orgAcl = std::make_unique<oc_sec_acl_t>();
-  std::unique_ptr<oc_sec_acl_t> orgAcl(new oc_sec_acl_t());
+  auto orgAcl = std::make_unique<oc_sec_acl_t>();
 
   memcpy(orgAcl.get(), aclEntry, sizeof(oc_sec_acl_t));
 
