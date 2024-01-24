@@ -41,6 +41,10 @@
 #include "tests/gtest/Storage.h"
 #include "util/oc_macros_internal.h"
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+#include <memory>
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */

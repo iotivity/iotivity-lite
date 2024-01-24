@@ -39,6 +39,7 @@
 
 #ifdef OC_HAS_FEATURE_BRIDGE
 #include "oc_bridge.h"
+#include <memory>
 #endif /* OC_HAS_FEATURE_BRIDGE */
 
 #include <algorithm>
@@ -1103,17 +1104,6 @@ TEST_F(TestDoxmWithServer, DoxmNewDevice)
   /*
    * add new acl entry to the end of the array
    */
-  //  oc_add_device(oc::DefaultDevice.uri.c_str(),
-  //      oc::DefaultDevice.rt.c_str(),
-  //      oc::DefaultDevice.name.c_str(),
-  //      oc::DefaultDevice.spec_version.c_str(),
-  //      oc::DefaultDevice.data_model_version.c_str(),
-  //      nullptr, nullptr);
-
-  //  auto deviceCount = oc_core_get_num_devices();
-  //  oc_sec_doxm_new_device(deviceCount-1, false);
-  //  auto doxmEntry = oc_sec_get_doxm(deviceCount-1);
-
   auto doxmEntry = oc_sec_get_doxm(kDeviceID);
   auto orgDoxm = std::make_unique<oc_sec_doxm_t>();
 

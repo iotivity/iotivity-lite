@@ -42,6 +42,10 @@
 #include <gtest/gtest.h>
 #include <string>
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+#include <memory>
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 using namespace std::chrono_literals;
 
 static const std::string testStorage{ "storage_test" };
