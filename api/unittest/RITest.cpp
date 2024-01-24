@@ -62,7 +62,9 @@ public:
     oc_ri_init();
 #ifdef OC_HAS_FEATURE_BRIDGE
     oc_core_init();
+#ifdef OC_SECURITY
     oc_sec_svr_create();
+#endif /* OC_SECURITY */
 #endif /* OC_HAS_FEATURE_BRIDGE */
 
 #ifdef OC_SOFTWARE_UPDATE
@@ -73,7 +75,9 @@ public:
   void TearDown() override
   {
 #ifdef OC_HAS_FEATURE_BRIDGE
+#ifdef OC_SECURITY
     oc_sec_svr_free();
+#endif /* OC_SECURITY */
 #endif /* OC_HAS_FEATURE_BRIDGE */
 #ifdef OC_HAS_FEATURE_PUSH
     oc_push_free();

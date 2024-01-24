@@ -112,6 +112,7 @@ oc_core_init(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
+#ifdef OC_DYNAMIC_ALLOCATION
 static void
 oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
 {
@@ -121,6 +122,7 @@ oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
     oc_free_string(&(oc_device_info_item->dmv));
   }
 }
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 void
 oc_core_shutdown(void)

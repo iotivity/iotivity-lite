@@ -248,7 +248,9 @@ TEST_F(TestAcl, AclNewDevice)
    * overwrite entry in the existing position
    */
   auto aclEntry = oc_sec_get_acl(device_id_);
-  auto orgAcl = std::make_unique<oc_sec_acl_t>();
+//  auto orgAcl = std::make_unique<oc_sec_acl_t>();
+  std::unique_ptr<oc_sec_acl_t> orgAcl(new oc_sec_acl_t());
+
   memcpy(orgAcl.get(), aclEntry, sizeof(oc_sec_acl_t));
 
   oc_sec_acl_new_device(device_id_, false);
