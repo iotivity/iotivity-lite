@@ -432,7 +432,9 @@ TEST_F(TestCreds, CredNewDevice)
    * overwrite entry in the existing position
    */
   auto credsEntry = oc_sec_get_creds(kDeviceID);
-  auto orgCreds = std::make_unique<oc_sec_creds_t>();
+//  auto orgCreds = std::make_unique<oc_sec_creds_t>();
+  std::unique_ptr<oc-sec_creds_t> orgCreds(new oc_sec_creds_t());
+
   memcpy(orgCreds.get(), credsEntry, sizeof(oc_sec_creds_t));
 
   oc_sec_cred_new_device(kDeviceID, false);

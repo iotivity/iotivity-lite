@@ -66,9 +66,9 @@ public:
     oc_runtime_init();
     oc_ri_init();
     oc_core_init();
-#ifdef OC_HAS_FEATURE_BRIDGE
+#if defined(OC_HAS_FEATURE_BRIDGE) && defined(OC_SECURITY)
     oc_sec_svr_create();
-#endif
+#endif /* defined(OC_HAS_FEATURE_BRIDGE) && defined(OC_SECURITY) */
 
 #ifdef OC_SOFTWARE_UPDATE
     oc_swupdate_create();

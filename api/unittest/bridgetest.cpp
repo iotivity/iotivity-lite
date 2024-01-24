@@ -87,7 +87,9 @@ public:
     oc_core_init();
     oc_network_event_handler_mutex_init();
     RunBridgeDevice();
+#ifdef OC_SECURITY
     oc_sec_svr_create();
+#endif /* OC_SECURITY */
 #ifdef OC_SOFTWARE_UPDATE
     oc_swupdate_create();
 #endif
@@ -95,7 +97,9 @@ public:
 
   void TearDown() override
   {
+#ifdef OC_SECURITY
     oc_sec_svr_free();
+#endif /* OC_SECURITY */
 
 #ifdef OC_SOFTWARE_UPDATE
     oc_swupdate_free();
@@ -211,6 +215,7 @@ TEST_F(TestBridge, BridgeAPITest)
   vodItem = oc_bridge_get_vod_list();
   EXPECT_EQ(vodItem, nullptr);
 
+#ifdef OC_SECURITY
   /* own bridge device */
   bridge_owned_changed(&bridgeDeviceInfo->di, kBridgeDeviceID, true, nullptr);
   auto bridgeDoxm = oc_sec_get_doxm(kBridgeDeviceID);
@@ -244,6 +249,11 @@ TEST_F(TestBridge, BridgeAPITest)
   /* get vodlist */
   vodItem = oc_bridge_get_vod_list();
   EXPECT_EQ(vodItem, nullptr);
+#else
+  /* try to get vod map entry */
+  auto vodMapEntry1 = oc_bridge_get_vod_mapping_info(vodIndex);
+  EXPECT_NE(vodMapEntry1, nullptr);
+#endif /* OC_SECURITY */
 
   /* -------------------------------------------------*/
   /*
@@ -252,6 +262,7 @@ TEST_F(TestBridge, BridgeAPITest)
   /* -------------------------------------------------*/
   ASSERT_EQ(oc_bridge_add_vod(vodIndex), 0);
 
+#ifdef OC_SECURITY
   /* get vod item for VOD */
   vodItem = oc_bridge_get_vod(vodDeviceInfo->di);
   EXPECT_NE(vodItem, nullptr);
@@ -259,6 +270,15 @@ TEST_F(TestBridge, BridgeAPITest)
   /* get vodlist */
   vodItem = oc_bridge_get_vod_list();
   EXPECT_NE(vodItem, nullptr);
+#else
+  /* get vod item for VOD */
+  vodItem = oc_bridge_get_vod(vodDeviceInfo->di);
+  EXPECT_EQ(vodItem, nullptr);
+
+  /* get vodlist */
+  vodItem = oc_bridge_get_vod_list();
+  EXPECT_EQ(vodItem, nullptr);
+#endif /* OC_SECURITY */
 
   /* -------------------------------------------------*/
   /*
@@ -268,7 +288,6 @@ TEST_F(TestBridge, BridgeAPITest)
   oc_uuid_t vodDi;
   memcpy(vodDi.id, vodDeviceInfo->di.id, OC_UUID_ID_SIZE);
 
-//  ASSERT_EQ(oc_bridge_delete_virtual_device(vodIndex), 0);
   auto result = oc_bridge_delete_virtual_device(vodIndex);
   EXPECT_EQ(result, 0);
 
