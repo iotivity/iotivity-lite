@@ -66,9 +66,6 @@ typedef struct oc_device_info_t
   void *data;                            ///< user data
 
 #ifdef OC_HAS_FEATURE_BRIDGE
-  oc_string_t
-    ecoversion; ///< Version of ecosystem that a Bridged Device belongs to.
-                ///< Typical version string format is like n.n (e.g. 5.0)
   bool
     is_removed; ///< true: this device was previously allocated and then removed
 #endif

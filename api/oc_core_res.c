@@ -40,11 +40,13 @@
 #include "util/oc_secure_string_internal.h"
 
 #ifdef OC_HAS_FEATURE_BRIDGE
-#include "security/oc_svr_internal.h"
-#include "security/oc_ael_internal.h"
 #include "oc_acl.h"
 #include "oc_cred.h"
-#endif
+#ifdef OC_SECURITY
+#include "security/oc_ael_internal.h"
+#include "security/oc_svr_internal.h"
+#endif /* OC_SECURITY*/
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 #ifdef OC_CLOUD
 #include "api/cloud/oc_cloud_resource_internal.h"
@@ -468,7 +470,7 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
   if (index > device_count) {
     OC_ERR(
       "designated device index (%d) is bigger than current number of all Devices",
-      g_device_count);
+      device_count);
     return NULL;
   } else if (index < device_count) {
     /*
@@ -552,7 +554,7 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
    * Do what "main_init_resources()" does for all Devices here...
    * refer to "main_init_resources()"
    */
-  if ((g_device_count == (device_count + 1)) && is_realloc) {
+  if ((OC_ATOMIC_LOAD32(g_device_count) == (device_count + 1)) && is_realloc) {
     /* realloc memory and populate SVR Resources
      * only if new Device is attached to the end of `g_oc_device_info[]` */
     oc_sec_svr_create_new_device(device_count, true);
@@ -566,7 +568,7 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
    * Do what "main_init_resources()" does for all Devices here...
    * refer to "main_init_resources()"
    */
-  if ((g_device_count == (device_count + 1)) && is_realloc) {
+  if ((OC_ATOMIC_LOAD32(g_device_count) == (device_count + 1)) && is_realloc) {
     /* realloc memory and populate SVR Resources
      * only if new Device is attached to the end of `g_oc_device_info[]` */
     oc_swupdate_create_new_device(device_count, true);
@@ -597,6 +599,7 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
   return &g_oc_device_info[device_count];
 }
 
+#if 0
 static void
 core_delete_app_resources_per_device(size_t index)
 {
@@ -604,11 +607,12 @@ core_delete_app_resources_per_device(size_t index)
 
   return;
 }
+#endif
 
 bool
 oc_core_remove_device_at_index(size_t index)
 {
-  if (index >= g_device_count) {
+  if (!oc_core_device_is_valid(index)) {
     OC_ERR("Device index value is out of valid range! : \
         Device index %zu, current Device count %d",
            index, g_device_count);
@@ -656,7 +660,8 @@ oc_core_remove_device_at_index(size_t index)
    * TODO4ME <2023/12/11> oc_core_remove_device_at_index() : do we need to
    * delete observer too? (e.g. oc_ri_reset())
    */
-  core_delete_app_resources_per_device(index);
+//  core_delete_app_resources_per_device(index);
+  oc_ri_delete_app_resources_per_device(index);
 
   /* 3. clean all Properties of this Device */
   oc_core_free_device_info_properties(&g_oc_device_info[index]);
@@ -671,7 +676,8 @@ oc_core_remove_device_at_index(size_t index)
 int
 oc_core_get_device_index(oc_uuid_t di, size_t *device)
 {
-  for (size_t i = 0; i < g_device_count; i++) {
+  uint32_t device_count = OC_ATOMIC_LOAD32(g_device_count);
+  for (size_t i = 0; i < device_count; i++) {
     if (oc_uuid_is_equal(g_oc_device_info[i].di, di)) {
       *device = i;
       return 0;

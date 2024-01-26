@@ -542,7 +542,9 @@ oc_ri_delete_app_resources_per_device(size_t index)
     res = res->next;
   }
 
+#ifdef OC_COLLECTIONS
   oc_collections_free_per_device(index);
+#endif /* OC_COLLECTIONS */
 }
 #endif /* OC_HAS_FEATURE_BRIDGE */
 

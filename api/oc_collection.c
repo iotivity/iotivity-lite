@@ -630,24 +630,6 @@ oc_get_next_collection_with_link(const oc_resource_t *resource,
     collection = (oc_collection_t *)collection->res.next;
   }
 
-  /*
-   * FIXED <2024/01/23> oc_get_next_collection_with_link() : 
-   * wrong search logic... ? (by Joo-Chul Kevin Lee)
-   */
-#if 0
-  /* original code <2024/01/23> */
-  while (collection != NULL && collection->res.device == resource->device) {
-    const oc_link_t *link = (oc_link_t *)oc_list_head(collection->links);
-    while (link != NULL) {
-      if (link->resource == resource) {
-        return collection;
-      }
-      link = link->next;
-    }
-    collection = (oc_collection_t *)collection->res.next;
-  }
-#endif
-
   while (collection != NULL) {
     if (collection->res.device == resource->device) {
       const oc_link_t *link = (oc_link_t *)oc_list_head(collection->links);
