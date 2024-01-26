@@ -70,7 +70,8 @@ public:
     oc_sec_svr_create();
 #endif /* OC_SECURITY */
 
-#ifdef OC_SOFTWARE_UPDATE
+//#ifdef OC_SOFTWARE_UPDATE
+#if defined(OC_SOFTWARE_UPDATE) && defined(OC_HAS_FEATURE_BRIDGE)
     oc_swupdate_create();
 #endif
   }
@@ -81,7 +82,8 @@ public:
     oc_sec_svr_free();
 #endif /* defined(OC_HAS_FEATURE_BRIDGE) && defined(OC_SECURITY) */
 
-#ifdef OC_SOFTWARE_UPDATE
+//#ifdef OC_SOFTWARE_UPDATE
+#if defined(OC_SOFTWARE_UPDATE) && defined(OC_HAS_FEATURE_BRIDGE)
     oc_swupdate_free();
 #endif /* OC_SOFTWARE_UPDATE */
 
