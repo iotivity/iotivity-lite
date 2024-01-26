@@ -175,7 +175,7 @@ TEST_F(TestCoreResource, CoreDevice_P)
   cfg.spec_version = kOCFSpecVersion.c_str();
   cfg.data_model_version = kOCFDataModelVersion.c_str();
 
-#if defined(OC_HAS_FEATURE_BRIDGE) && defined(OC_SECURITY)
+#ifdef OC_HAS_FEATURE_BRIDGE
   oc_device_info_t *addcoredevice =
     oc_core_add_new_device_at_index(cfg, oc_core_get_num_devices());
 #else
