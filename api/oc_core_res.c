@@ -467,7 +467,8 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
 
   if (index > device_count) {
     OC_ERR(
-      "designated device index is bigger than current number of all Devices");
+      "designated device index (%d) is bigger than current number of all Devices",
+      g_device_count);
     return NULL;
   } else if (index < device_count) {
     /*
