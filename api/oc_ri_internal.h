@@ -144,8 +144,14 @@ bool oc_ri_URI_is_in_use(size_t device, const char *uri, size_t uri_len)
 
 /** @brief Handle a coap request. */
 bool oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
-                                      oc_endpoint_t *endpoint, void *user_data)
-  OC_NONNULL(1, 2);
+                                      const oc_endpoint_t *endpoint,
+                                      void *user_data) OC_NONNULL(1, 2);
+
+/** @brief Validate and parse a coap request header. When fails it will set
+ * error message for the peer. This function doesn't validate body content. */
+bool oc_ri_parse_coap_request_header(coap_make_response_ctx_t *ctx,
+                                     const oc_endpoint_t *endpoint,
+                                     void *user_data) OC_NONNULL(1, 2);
 
 /** Check if the value is an internal oc_status_t code */
 bool oc_status_is_internal_code(oc_status_t code);

@@ -73,6 +73,16 @@ oc_rep_decoder_type_t oc_rep_decoder_get_type(void);
  */
 bool oc_rep_decoder_set_by_content_format(oc_content_format_t content_format);
 
+/**
+ * @brief Check if the decoder type is supported for the content format.
+ *
+ * @param content_format the content format
+ * @return true if the decoder type is supported
+ * @return false otherwise
+ */
+bool oc_rep_decoder_is_supported_content_format(
+  oc_content_format_t content_format);
+
 #ifdef __cplusplus
 }
 #endif

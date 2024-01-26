@@ -56,23 +56,31 @@ oc_resource_get_method_handler(const oc_resource_t *resource,
                                oc_request_handler_t *handler)
 {
   assert(resource != NULL);
-  if (method == OC_GET) {
-    *handler = resource->get_handler;
-    return true;
+  const oc_request_handler_t *h = NULL;
+  switch (method) {
+  case OC_FETCH:
+    // TODO: implement fetch
+    break;
+  case OC_GET:
+    h = &resource->get_handler;
+    break;
+  case OC_POST:
+    h = &resource->post_handler;
+    break;
+  case OC_PUT:
+    h = &resource->put_handler;
+    break;
+  case OC_DELETE:
+    h = &resource->delete_handler;
+    break;
   }
-  if (method == OC_POST) {
-    *handler = resource->post_handler;
-    return true;
+  if (h == NULL || h->cb == NULL) {
+    return false;
   }
-  if (method == OC_PUT) {
-    *handler = resource->put_handler;
-    return true;
+  if (handler) {
+    *handler = *h;
   }
-  if (method == OC_DELETE) {
-    *handler = resource->delete_handler;
-    return true;
-  }
-  return false;
+  return true;
 }
 
 bool
