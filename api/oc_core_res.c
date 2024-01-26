@@ -144,14 +144,15 @@ oc_core_shutdown(void)
       oc_resource_t *core_resource = &g_core_resources[i];
 
 #ifdef OC_HAS_FEATURE_BRIDGE
-      if ( (i < OC_NUM_CORE_PLATFORM_RESOURCES)
-          || ((i >= OC_NUM_CORE_PLATFORM_RESOURCES) && (oc_core_get_device_info((i-OC_NUM_CORE_PLATFORM_RESOURCES)/OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES)->is_removed == false)) ) {
+      if ((i < OC_NUM_CORE_PLATFORM_RESOURCES) ||
+          (oc_core_get_device_info((i - OC_NUM_CORE_PLATFORM_RESOURCES) /
+                                   OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES)
+             ->is_removed == false)) {
 #endif /* OC_HAS_FEATURE_BRIDGE */
         oc_ri_free_resource_properties(core_resource);
 #ifdef OC_HAS_FEATURE_BRIDGE
       }
 #endif /* OC_HAS_FEATURE_BRIDGE */
-
     }
 #ifdef OC_DYNAMIC_ALLOCATION
     free(g_core_resources);
@@ -586,7 +587,8 @@ oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
    * Do what "main_load_resources()" does for all Devices here...
    * refer to "main_load_resources()"
    */
-  OC_DBG("oc_core_add_new_device_at_index(): loading swupdate(%d)", device_count);
+  OC_DBG("oc_core_add_new_device_at_index(): loading swupdate(%d)",
+         device_count);
   oc_swupdate_load(device_count);
 #endif /* OC_SOFTWARE_UPDATE */
 
@@ -627,8 +629,11 @@ oc_core_remove_device_at_index(size_t index)
 #endif /* OC_SECURITY */
 
   /* 1. remove core Resources mapped to this Device */
-  for (size_t i = OC_NUM_CORE_PLATFORM_RESOURCES + (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * index);
-      i < OC_NUM_CORE_PLATFORM_RESOURCES + (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * (index + 1)); ++i) {
+  for (size_t i = OC_NUM_CORE_PLATFORM_RESOURCES +
+                  (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * index);
+       i < OC_NUM_CORE_PLATFORM_RESOURCES +
+             (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * (index + 1));
+       ++i) {
     oc_resource_t *core_resource = &g_core_resources[i];
     oc_ri_free_resource_properties(core_resource);
     memset(core_resource, 0, sizeof(oc_resource_t));

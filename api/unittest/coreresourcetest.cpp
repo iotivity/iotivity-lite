@@ -30,7 +30,6 @@
 #include "tests/gtest/RepPool.h"
 #include "util/oc_macros_internal.h"
 
-
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
@@ -77,18 +76,25 @@ public:
 
   void TearDown() override
   {
+#if defined(OC_HAS_FEATURE_BRIDGE) && defined(OC_SECURITY)
+    oc_sec_svr_free();
+#endif /* defined(OC_HAS_FEATURE_BRIDGE) && defined(OC_SECURITY) */
+
+#ifdef OC_SOFTWARE_UPDATE
+    oc_swupdate_free();
+#endif
+
 #ifdef OC_HAS_FEATURE_PUSH
     oc_push_free();
 #endif /* OC_HAS_FEATURE_PUSH */
 
-    oc_core_shutdown();
     oc_ri_shutdown();
-    oc_runtime_shutdown();
     oc_network_event_handler_mutex_destroy();
+    oc_core_shutdown();
+    oc_runtime_shutdown();
   }
 };
 
-//#if 0
 #ifdef OC_HAS_FEATURE_BRIDGE
 /*
  * Not testable (static functioins) :
@@ -168,7 +174,14 @@ TEST_F(TestCoreResource, CoreDevice_P)
   cfg.rt = kDeviceType.c_str();
   cfg.spec_version = kOCFSpecVersion.c_str();
   cfg.data_model_version = kOCFDataModelVersion.c_str();
+
+#if defined(OC_HAS_FEATURE_BRIDGE) && defined(OC_SECURITY)
+  oc_device_info_t *addcoredevice =
+    oc_core_add_new_device_at_index(cfg, oc_core_get_num_devices());
+#else
   oc_device_info_t *addcoredevice = oc_core_add_new_device(cfg);
+#endif /* defined(OC_HAS_FEATURE_BRIDGE) && defined(OC_SECURITY) */
+
   ASSERT_NE(addcoredevice, nullptr);
   size_t numcoredevice = oc_core_get_num_devices();
   EXPECT_EQ(1, numcoredevice);

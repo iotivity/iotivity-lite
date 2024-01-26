@@ -57,15 +57,18 @@ class TestOcRi : public testing::Test {
 public:
   void SetUp() override
   {
-    oc_network_event_handler_mutex_init();
     oc_runtime_init();
     oc_ri_init();
+
 #ifdef OC_HAS_FEATURE_BRIDGE
     oc_core_init();
-#ifdef OC_SECURITY
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
+    oc_network_event_handler_mutex_init();
+
+#if defined(OC_HAS_FEATURE_BRIDGE) && defined(OC_SECURITY)
     oc_sec_svr_create();
 #endif /* OC_SECURITY */
-#endif /* OC_HAS_FEATURE_BRIDGE */
 
 #ifdef OC_SOFTWARE_UPDATE
     oc_swupdate_create();
@@ -74,20 +77,26 @@ public:
 
   void TearDown() override
   {
-#ifdef OC_HAS_FEATURE_BRIDGE
-#ifdef OC_SECURITY
+#if defined(OC_HAS_FEATURE_BRIDGE) && defined(OC_SECURITY)
     oc_sec_svr_free();
-#endif /* OC_SECURITY */
-#endif /* OC_HAS_FEATURE_BRIDGE */
+#endif /* defined(OC_HAS_FEATURE_BRIDGE) && defined(OC_SECURITY) */
+
+#ifdef OC_SOFTWARE_UPDATE
+    oc_swupdate_free();
+#endif /* OC_SOFTWARE_UPDATE */
+
 #ifdef OC_HAS_FEATURE_PUSH
     oc_push_free();
 #endif /* OC_HAS_FEATURE_PUSH */
+
+    oc_ri_shutdown();
+    oc_network_event_handler_mutex_destroy();
+
 #ifdef OC_HAS_FEATURE_BRIDGE
     oc_core_shutdown();
 #endif /* OC_HAS_FEATURE_BRIDGE */
-    oc_ri_shutdown();
+
     oc_runtime_shutdown();
-    oc_network_event_handler_mutex_destroy();
   }
 };
 
@@ -200,6 +209,9 @@ TEST_F(TestOcRi, GetNDeleteAppResourceByIndex)
   rsc1 = oc_ri_get_app_resource_by_device(deviceIndex, true);
 
   EXPECT_EQ(nullptr, rsc1);
+
+  /* remove device */
+  oc_core_remove_device_at_index(deviceIndex);
 }
 
 #endif /* OC_HAS_FEATURE_BRIDGE */
