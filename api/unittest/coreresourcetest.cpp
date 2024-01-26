@@ -185,7 +185,12 @@ TEST_F(TestCoreResource, CoreDevice_P)
   ASSERT_NE(addcoredevice, nullptr);
   size_t numcoredevice = oc_core_get_num_devices();
   EXPECT_EQ(1, numcoredevice);
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+  oc_core_remove_device_at_index(numcoredevice-1);
+#else
   oc_connectivity_shutdown(kDevice1ID);
+#endif
 }
 
 static void
