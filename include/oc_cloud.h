@@ -118,6 +118,57 @@ typedef struct oc_cloud_keepalive_t
   uint16_t ping_timeout; /**< Timeout for keepalive ping in seconds */
 } oc_cloud_keepalive_t;
 
+/**
+ * @brief Enumeration defining cloud actions.
+ */
+typedef enum {
+  OC_CLOUD_ACTION_UNKNOWN = 0,       /**< Unknown cloud action. */
+  OC_CLOUD_ACTION_REGISTER = 1,      /**< Cloud registration action. */
+  OC_CLOUD_ACTION_LOGIN = 2,         /**< Cloud login action. */
+  OC_CLOUD_ACTION_REFRESH_TOKEN = 3, /**< Cloud token refresh action. */
+} oc_cloud_action_t;
+
+/**
+ * @brief Convert cloud action to a string representation.
+ *
+ * @param action Cloud action to convert.
+ * @return const char* String representation of the cloud action.
+ */
+const char *oc_cloud_action_to_str(oc_cloud_action_t action);
+
+/**
+ * @brief Callback invoked by the cloud manager when the cloud wants to schedule
+ * an action.
+ *
+ * @param action Cloud action to schedule.
+ * @param retry_count Retries count - 0 means the first attempt to perform the
+ * action.
+ * @param delay Delay the action in milliseconds before executing it.
+ * @param timeout Timeout in seconds for the action.
+ * @param user_data User data passed from the caller.
+ *
+ * @return true if the cloud manager should continue to schedule the action,
+ *         false if the cloud manager should stop for OC_CLOUD_ACTION_REGISTER
+ * or restart for other actions.
+ */
+typedef bool (*oc_cloud_schedule_action_cb_t)(oc_cloud_action_t action,
+                                              uint8_t retry_count,
+                                              uint64_t *delay,
+                                              uint16_t *timeout,
+                                              void *user_data) OC_NONNULL(3, 4);
+
+/**
+ * @brief Cloud retry configuration structure.
+ */
+typedef struct oc_cloud_schedule_action_t
+{
+  oc_cloud_schedule_action_cb_t
+    on_schedule_action; /**< Callback invoked to set delay
+                      and timeout for the action. */
+  void *user_data;  /**< User data provided to the schedule action callback. */
+  uint16_t timeout; /**< Timeout for the action in seconds. */
+} oc_cloud_schedule_action_t;
+
 typedef struct oc_cloud_context_t
 {
   struct oc_cloud_context_t *next;
@@ -147,6 +198,8 @@ typedef struct oc_cloud_context_t
   bool cloud_manager;
 
   oc_cloud_keepalive_t keepalive; /**< Keepalive configuration */
+  oc_cloud_schedule_action_t
+    schedule_action; /**< Schedule action configuration */
 } oc_cloud_context_t;
 
 /**
@@ -180,6 +233,8 @@ int oc_cloud_manager_stop(oc_cloud_context_t *ctx);
 
 /**
  * @brief Restart cloud registration process with the current configuration.
+ *
+ * @note The cloud manager must be started before calling this function.
  *
  * @param ctx cloud context (cannot be NULL)
  */
@@ -355,6 +410,27 @@ OC_API
 void oc_cloud_set_keepalive(
   oc_cloud_context_t *ctx,
   oc_cloud_on_keepalive_response_cb_t on_keepalive_response, void *user_data);
+
+/**
+ * @brief Set a custom scheduler for actions in the cloud manager. By default,
+ * the cloud manager uses its own scheduler.
+ *
+ * This function allows you to set a custom scheduler to define delay and
+ * timeout for actions.
+ *
+ * @param ctx Cloud context to update. Must not be NULL.
+ * @param on_schedule_action Callback invoked by the cloud manager when the
+ * cloud wants to schedule an action.
+ * @param user_data User data passed from the caller to be provided during the
+ * callback.
+ *
+ * @note The provided cloud context (`ctx`) must not be NULL.
+ * @see oc_cloud_schedule_action_cb_t
+ */
+OC_API
+void oc_cloud_set_schedule_action(
+  oc_cloud_context_t *ctx, oc_cloud_schedule_action_cb_t on_schedule_action,
+  void *user_data) OC_NONNULL(1);
 
 /**
  * @brief Remove cloud context values, disconnect, and stop the cloud manager,

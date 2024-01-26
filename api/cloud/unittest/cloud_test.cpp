@@ -18,9 +18,15 @@
 
 #include "api/cloud/oc_cloud_internal.h"
 #include "oc_api.h"
+#include "oc_cloud.h"
 #include "tests/gtest/Device.h"
 
 #include <gtest/gtest.h>
+#include <string>
+
+#ifdef OC_SECURITY
+#include "security/oc_pstat_internal.h"
+#endif
 
 static constexpr size_t kDeviceID{ 0 };
 
@@ -101,4 +107,125 @@ TEST_F(TestCloud, oc_cloud_provision_conf_resource)
   EXPECT_STREQ(ci_server, oc_string(ctx->store.ci_server));
   EXPECT_STREQ(sid, oc_string(ctx->store.sid));
   EXPECT_EQ(OC_CLOUD_INITIALIZED, ctx->store.status);
+}
+
+TEST_F(TestCloud, oc_cloud_action_to_str)
+{
+  std::string v;
+  v.assign(oc_cloud_action_to_str(OC_CLOUD_ACTION_REGISTER));
+  EXPECT_EQ(OC_CLOUD_ACTION_REGISTER_STR, v);
+  v.assign(oc_cloud_action_to_str(OC_CLOUD_ACTION_REFRESH_TOKEN));
+  EXPECT_EQ(OC_CLOUD_ACTION_REFRESH_TOKEN_STR, v);
+  v.assign(oc_cloud_action_to_str(OC_CLOUD_ACTION_LOGIN));
+  EXPECT_EQ(OC_CLOUD_ACTION_LOGIN_STR, v);
+  v.assign(oc_cloud_action_to_str(OC_CLOUD_ACTION_UNKNOWN));
+  EXPECT_EQ(OC_CLOUD_ACTION_UNKNOWN_STR, v);
+}
+
+TEST_F(TestCloud, cloud_register)
+{
+#ifdef OC_SECURITY
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(kDeviceID);
+  ASSERT_NE(nullptr, pstat);
+  pstat->s = OC_DOS_RFNOP;
+#endif
+
+  oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
+  ASSERT_NE(nullptr, ctx);
+  const char *access_token = "access_token";
+  const char *auth_provider = "auth_provider";
+  const char *ci_server = "coap://224.0.1.187:5683";
+  const char *sid = "sid";
+  ASSERT_EQ(0, oc_cloud_provision_conf_resource(ctx, ci_server, access_token,
+                                                sid, auth_provider));
+  bool cbk_called = false;
+  auto cbk = [](oc_cloud_context_t *, oc_cloud_status_t status,
+                void *user_data) {
+    auto called = static_cast<bool *>(user_data);
+    EXPECT_EQ(OC_CLOUD_FAILURE, (status & OC_CLOUD_FAILURE));
+    *called = true;
+  };
+
+  int ret = cloud_register(ctx, cbk, &cbk_called, 1);
+  EXPECT_EQ(0, ret);
+
+  oc::TestDevice::PoolEvents(2);
+  EXPECT_TRUE(cbk_called);
+}
+
+TEST_F(TestCloud, cloud_login)
+{
+#ifdef OC_SECURITY
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(kDeviceID);
+  ASSERT_NE(nullptr, pstat);
+  pstat->s = OC_DOS_RFNOP;
+#endif
+
+  oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
+  ASSERT_NE(nullptr, ctx);
+  const char *access_token = "access_token";
+  const char *auth_provider = "auth_provider";
+  const char *ci_server = "coap://224.0.1.187:5683";
+  const char *sid = "sid";
+  ASSERT_EQ(0, oc_cloud_provision_conf_resource(ctx, ci_server, access_token,
+                                                sid, auth_provider));
+  ctx->store.status = OC_CLOUD_REGISTERED;
+  oc_free_string(&ctx->store.uid);
+  oc_new_string(&ctx->store.uid, "uid", 3);
+
+  bool cbk_called = false;
+  auto cbk = [](oc_cloud_context_t *, oc_cloud_status_t status,
+                void *user_data) {
+    auto called = static_cast<bool *>(user_data);
+    EXPECT_EQ(OC_CLOUD_FAILURE, (status & OC_CLOUD_FAILURE));
+    *called = true;
+  };
+
+  int ret = cloud_login(ctx, cbk, &cbk_called, 1);
+  EXPECT_EQ(0, ret);
+
+  oc::TestDevice::PoolEvents(2);
+  EXPECT_TRUE(cbk_called);
+}
+
+TEST_F(TestCloud, cloud_refresh_token)
+{
+#ifdef OC_SECURITY
+  oc_sec_pstat_t *pstat = oc_sec_get_pstat(kDeviceID);
+  ASSERT_NE(nullptr, pstat);
+  pstat->s = OC_DOS_RFNOP;
+#endif
+
+  oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
+  ASSERT_NE(nullptr, ctx);
+  const char *access_token = "access_token";
+  const char *auth_provider = "auth_provider";
+  const char *ci_server = "coap://224.0.1.187:5683";
+  const char *sid = "sid";
+  ASSERT_EQ(0, oc_cloud_provision_conf_resource(ctx, ci_server, access_token,
+                                                sid, auth_provider));
+  ctx->store.status = OC_CLOUD_REGISTERED;
+
+  oc_free_string(&ctx->store.uid);
+#define UID "501"
+  oc_new_string(&ctx->store.uid, UID, strlen(UID));
+
+  oc_free_string(&ctx->store.refresh_token);
+#define REFRESH_TOKEN "refresh_token"
+  oc_new_string(&ctx->store.refresh_token, REFRESH_TOKEN,
+                strlen(REFRESH_TOKEN));
+
+  bool cbk_called = false;
+  auto cbk = [](oc_cloud_context_t *, oc_cloud_status_t status,
+                void *user_data) {
+    auto called = static_cast<bool *>(user_data);
+    EXPECT_EQ(OC_CLOUD_FAILURE, (status & OC_CLOUD_FAILURE));
+    *called = true;
+  };
+
+  int ret = cloud_refresh_token(ctx, cbk, &cbk_called, 1);
+  EXPECT_EQ(0, ret);
+
+  oc::TestDevice::PoolEvents(2);
+  EXPECT_TRUE(cbk_called);
 }

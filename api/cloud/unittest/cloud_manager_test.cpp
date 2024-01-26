@@ -24,6 +24,7 @@
 #include "messaging/coap/transactions_internal.h"
 #include "oc_api.h"
 #include "oc_rep.h"
+#include "oc_cloud.h"
 #include "port/oc_log_internal.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
@@ -66,19 +67,101 @@ public:
     oc::TestDevice::Reset();
     oc::TestDevice::StopServer();
   }
+
+  static void schedule_stop_cloud_manager(oc_cloud_context_t *ctx)
+  {
+    oc_set_delayed_callback(
+      ctx,
+      [](void *data) -> oc_event_callback_retval_t {
+        auto *ctx = static_cast<oc_cloud_context_t *>(data);
+        cloud_manager_stop(ctx);
+        return OC_EVENT_DONE;
+      },
+      0);
+  }
 };
+
+TEST_F(TestCloudManager, cloud_manager_start_initialized_schedule_turnoff)
+{
+  // When
+  oc_cloud_set_schedule_action(
+    &m_context,
+    [](oc_cloud_action_t, uint8_t, uint64_t *, uint16_t *, void *) -> bool {
+      return false;
+    },
+    nullptr);
+
+  m_context.store.status = OC_CLOUD_INITIALIZED;
+  m_context.store.cps = OC_CPS_READYTOREGISTER;
+  cloud_manager_start(&m_context);
+  oc::TestDevice::PoolEvents(5);
+  cloud_manager_stop(&m_context);
+
+  // Then
+  EXPECT_EQ(0, m_context.retry_count);
+  EXPECT_EQ(0, m_context.retry_refresh_token_count);
+  EXPECT_EQ(CLOUD_ERROR_CONNECT, m_context.last_error);
+  EXPECT_EQ(OC_CLOUD_INITIALIZED, m_context.store.status);
+
+  oc_cloud_set_schedule_action(&m_context, nullptr, nullptr);
+}
+
+TEST_F(TestCloudManager,
+       cloud_manager_start_initialized_schedule_without_retry_and_access_token)
+{
+  // When
+  oc_cloud_set_schedule_action(
+    &m_context,
+    [](oc_cloud_action_t action, uint8_t retry, uint64_t *delay,
+       uint16_t *timeout, void *data) -> bool {
+      auto *ctx = static_cast<oc_cloud_context_t *>(data);
+      if (action == OC_CLOUD_ACTION_REGISTER && retry == 0) {
+        *delay = 0;
+        *timeout = 1;
+        return true;
+      }
+      // to avoid override m_context.last_error and m_context.store.status
+      schedule_stop_cloud_manager(ctx);
+      return false;
+    },
+    &m_context);
+
+  m_context.store.status = OC_CLOUD_INITIALIZED;
+  m_context.store.cps = OC_CPS_READYTOREGISTER;
+  oc_free_string(&m_context.store.access_token);
+
+  cloud_manager_start(&m_context);
+  oc::TestDevice::PoolEvents(5);
+  cloud_manager_stop(&m_context);
+
+  // Then
+  EXPECT_EQ(1, m_context.retry_count);
+  EXPECT_EQ(0, m_context.retry_refresh_token_count);
+  EXPECT_EQ(CLOUD_ERROR_CONNECT, m_context.last_error);
+  EXPECT_EQ(OC_CLOUD_INITIALIZED, m_context.store.status);
+
+  oc_cloud_set_schedule_action(&m_context, nullptr, nullptr);
+}
 
 TEST_F(TestCloudManager, cloud_manager_start_initialized_without_retry_f)
 {
-  uint8_t retry_original[6]{};
-  size_t retry_original_size = cloud_manager_get_retry(
-    retry_original, sizeof(retry_original) / sizeof(retry_original[0]));
-  EXPECT_NE((size_t)-1, retry_original_size);
-  EXPECT_LT(0, retry_original_size);
-
   // When
-  uint8_t retry[] = { 2 }; // Only a single try
-  EXPECT_TRUE(cloud_manager_set_retry(retry, sizeof(retry) / sizeof(retry[0])));
+  oc_cloud_set_schedule_action(
+    &m_context,
+    [](oc_cloud_action_t, uint8_t retry_count, uint64_t *delay,
+       uint16_t *timeout, void *data) -> bool {
+      auto *ctx = static_cast<oc_cloud_context_t *>(data);
+      if (retry_count == 0) {
+        *delay = 0;
+        *timeout = 1;
+        return true;
+      }
+      // to avoid override m_context.last_error and m_context.store.status
+      schedule_stop_cloud_manager(ctx);
+      return false;
+    },
+    &m_context);
+
   m_context.store.status = OC_CLOUD_INITIALIZED;
   m_context.store.cps = OC_CPS_READYTOREGISTER;
   cloud_manager_start(&m_context);
@@ -91,7 +174,7 @@ TEST_F(TestCloudManager, cloud_manager_start_initialized_without_retry_f)
   EXPECT_EQ(CLOUD_ERROR_CONNECT, m_context.last_error);
   EXPECT_EQ(OC_CLOUD_INITIALIZED, m_context.store.status);
 
-  EXPECT_TRUE(cloud_manager_set_retry(retry_original, retry_original_size));
+  oc_cloud_set_schedule_action(&m_context, nullptr, nullptr);
 }
 
 TEST_F(TestCloudManager, cloud_manager_start_initialized_f)
@@ -110,6 +193,41 @@ TEST_F(TestCloudManager, cloud_manager_start_initialized_f)
   EXPECT_EQ(OC_CLOUD_INITIALIZED, m_context.store.status);
 }
 
+TEST_F(TestCloudManager, cloud_manager_start_registered_without_retry_and_uid_f)
+{
+  // When
+  oc_cloud_set_schedule_action(
+    &m_context,
+    [](oc_cloud_action_t action, uint8_t retry, uint64_t *delay,
+       uint16_t *timeout, void *data) -> bool {
+      auto *ctx = static_cast<oc_cloud_context_t *>(data);
+      if (action == OC_CLOUD_ACTION_LOGIN && retry == 0) {
+        *delay = 0;
+        *timeout = 1;
+        return true;
+      }
+      // to avoid override m_context.last_error and m_context.store.status
+      schedule_stop_cloud_manager(ctx);
+      return false;
+    },
+    &m_context);
+  m_context.store.status = OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED;
+  m_context.store.expires_in = -1;
+  oc_free_string(&m_context.store.uid);
+  cloud_manager_start(&m_context);
+  oc::TestDevice::PoolEvents(5);
+  cloud_manager_stop(&m_context);
+
+  // Then
+  EXPECT_LT(0, m_context.retry_count);
+  EXPECT_EQ(0, m_context.retry_refresh_token_count);
+  EXPECT_EQ(CLOUD_ERROR_CONNECT, m_context.last_error);
+  EXPECT_EQ(OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED | OC_CLOUD_FAILURE,
+            m_context.store.status);
+
+  oc_cloud_set_schedule_action(&m_context, nullptr, nullptr);
+}
+
 TEST_F(TestCloudManager, cloud_manager_start_registered_f)
 {
   // When
@@ -124,6 +242,41 @@ TEST_F(TestCloudManager, cloud_manager_start_registered_f)
   EXPECT_EQ(0, m_context.retry_refresh_token_count);
   EXPECT_EQ(CLOUD_OK, m_context.last_error);
   EXPECT_EQ(OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED, m_context.store.status);
+}
+
+TEST_F(TestCloudManager,
+       cloud_manager_start_with_refresh_token_without_uid_and_retry_f)
+{
+  // When
+  oc_cloud_set_schedule_action(
+    &m_context,
+    [](oc_cloud_action_t action, uint8_t retry, uint64_t *delay,
+       uint16_t *timeout, void *data) -> bool {
+      auto *ctx = static_cast<oc_cloud_context_t *>(data);
+      if (action == OC_CLOUD_ACTION_REFRESH_TOKEN && retry == 0) {
+        *delay = 0;
+        *timeout = 1;
+        return true;
+      }
+      // to avoid override m_context.last_error and m_context.store.status
+      schedule_stop_cloud_manager(ctx);
+      return false;
+    },
+    &m_context);
+  m_context.store.status = OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED;
+  oc_free_string(&m_context.store.uid);
+  cloud_manager_start(&m_context);
+  oc::TestDevice::PoolEvents(7);
+  cloud_manager_stop(&m_context);
+
+  // Then
+  EXPECT_EQ(0, m_context.retry_count);
+  EXPECT_LT(0, m_context.retry_refresh_token_count);
+  EXPECT_EQ(CLOUD_ERROR_REFRESH_ACCESS_TOKEN, m_context.last_error);
+  EXPECT_EQ(OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED | OC_CLOUD_FAILURE,
+            m_context.store.status);
+
+  oc_cloud_set_schedule_action(&m_context, nullptr, nullptr);
 }
 
 TEST_F(TestCloudManager, cloud_manager_start_with_refresh_token_f)

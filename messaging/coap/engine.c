@@ -656,14 +656,16 @@ send_transaction:
 }
 
 static uint8_t
-coap_receive_set_response_by_handler(coap_receive_ctx_t *ctx,
-                                     oc_endpoint_t *endpoint,
-                                     coap_make_response_fn_t response_fn,
-                                     void *response_fn_data)
+coap_receive_set_response_by_handler(
+  coap_receive_ctx_t *ctx,
+  const oc_ri_preparsed_request_obj_t *preparsed_request_obj,
+  const oc_endpoint_t *endpoint, coap_make_response_fn_t response_fn,
+  void *response_fn_data)
 {
   coap_make_response_ctx_t handler_ctx;
   handler_ctx.request = ctx->message;
   handler_ctx.response = ctx->response;
+  handler_ctx.preparsed_request_obj = preparsed_request_obj;
 #ifdef OC_BLOCK_WISE
   handler_ctx.request_state = &ctx->request_buffer;
   handler_ctx.response_state = &ctx->response_buffer;
@@ -741,9 +743,43 @@ coap_receive_set_response_by_handler(coap_receive_ctx_t *ctx,
   return ctx->response->code;
 }
 
+static uint8_t
+coap_parse_request_header(
+  coap_receive_ctx_t *ctx,
+  const oc_ri_preparsed_request_obj_t *preparsed_request_obj,
+  const oc_endpoint_t *endpoint, coap_parse_request_header_fn_t parse_header_fn,
+  void *parse_header_data)
+{
+  coap_make_response_ctx_t handler_ctx;
+  handler_ctx.request = ctx->message;
+  handler_ctx.response = ctx->response;
+  handler_ctx.preparsed_request_obj = preparsed_request_obj;
+#ifdef OC_BLOCK_WISE
+  handler_ctx.request_state = &ctx->request_buffer;
+  handler_ctx.response_state = &ctx->response_buffer;
+  handler_ctx.block2_size = ctx->block2.size;
+#else  /* !OC_BLOCK_WISE */
+  handler_ctx.buffer = ctx->transaction->message->data + COAP_MAX_HEADER_SIZE;
+#endif /* OC_BLOCK_WISE */
+  if (!parse_header_fn(&handler_ctx, endpoint, parse_header_data)) {
+#ifdef OC_BLOCK_WISE
+    if (ctx->request_buffer != NULL) {
+      ctx->request_buffer->ref_count = 0;
+    }
+    if (ctx->response_buffer != NULL) {
+      ctx->response_buffer->ref_count = 0;
+    }
+#endif /* OC_BLOCK_WISE */
+    return ctx->response->code;
+  }
+  return 0;
+}
+
 static coap_receive_status_t
 coap_receive_request_with_method(coap_receive_ctx_t *ctx,
                                  oc_endpoint_t *endpoint,
+                                 coap_parse_request_header_fn_t parse_header_fn,
+                                 void *parse_header_data,
                                  coap_make_response_fn_t response_fn,
                                  void *response_fn_data)
 {
@@ -772,6 +808,20 @@ coap_receive_request_with_method(coap_receive_ctx_t *ctx,
     return COAP_RECEIVE_ERROR;
   }
 
+  oc_ri_preparsed_request_obj_t preparsed_request_obj;
+  oc_ri_prepare_request(ctx->message, &preparsed_request_obj, endpoint);
+
+  /* validate request
+   * - check if resource is found
+   * - check if method is allowed for resource
+   * - check ACLs
+   * - check resource interface
+   */
+  if (coap_parse_request_header(ctx, &preparsed_request_obj, endpoint,
+                                parse_header_fn, parse_header_data) != 0) {
+    return COAP_RECEIVE_SUCCESS;
+  }
+
 #ifdef OC_BLOCK_WISE
   coap_receive_status_t ret =
     coap_receive_method_payload(ctx, href, href_len, endpoint);
@@ -779,7 +829,8 @@ coap_receive_request_with_method(coap_receive_ctx_t *ctx,
     return ret;
   }
 #endif /* OC_BLOCK_WISE */
-  if (coap_receive_set_response_by_handler(ctx, endpoint, response_fn,
+  if (coap_receive_set_response_by_handler(ctx, &preparsed_request_obj,
+                                           endpoint, response_fn,
                                            response_fn_data) != 0) {
     return COAP_RECEIVE_SUCCESS;
   }
@@ -1015,11 +1066,14 @@ coap_receive_request_with_code(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint)
 
 coap_receive_status_t
 coap_receive(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint,
-             coap_make_response_fn_t response_fn, void *response_fn_data)
+             coap_parse_request_header_fn_t parse_header_fn,
+             void *parse_header_data, coap_make_response_fn_t response_fn,
+             void *response_fn_data)
 {
   /* handle requests */
   if (ctx->message->code >= COAP_GET && ctx->message->code <= COAP_DELETE) {
-    return coap_receive_request_with_method(ctx, endpoint, response_fn,
+    return coap_receive_request_with_method(ctx, endpoint, parse_header_fn,
+                                            parse_header_data, response_fn,
                                             response_fn_data);
   }
   return coap_receive_request_with_code(ctx, endpoint);
@@ -1130,8 +1184,8 @@ coap_process_inbound_message(oc_message_t *msg)
 #endif /* OC_BLOCK_WISE */
   };
 
-  ret =
-    coap_receive(&ctx, &msg->endpoint, oc_ri_invoke_coap_entity_handler, NULL);
+  ret = coap_receive(&ctx, &msg->endpoint, oc_ri_parse_coap_request_header,
+                     NULL, oc_ri_invoke_coap_entity_handler, NULL);
 
 #if !defined(OC_BLOCK_WISE) || defined(OC_TCP)
 receive_result:

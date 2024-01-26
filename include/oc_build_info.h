@@ -30,15 +30,15 @@
 #define IOTIVITY_LITE_VERSION_MAJOR 2
 #define IOTIVITY_LITE_VERSION_MINOR 2
 #define IOTIVITY_LITE_VERSION_PATCH 5
-#define IOTIVITY_LITE_VERSION_BUILD 12
+#define IOTIVITY_LITE_VERSION_BUILD 13
 
 /**
  * The IoTivity-lite version number has the following structure:
  *    MMNNPPBB
  *    Major version | Minor version | Patch version | Build version
  */
-#define IOTIVITY_LITE_VERSION 0x0202050C
-#define IOTIVITY_LITE_VERSION_STRING "2.2.5.12"
+#define IOTIVITY_LITE_VERSION 0x0202050D
+#define IOTIVITY_LITE_VERSION_STRING "2.2.5.13"
 
 /**
  * OCF Specification
