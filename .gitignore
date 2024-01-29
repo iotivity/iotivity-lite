@@ -106,12 +106,18 @@ service/resource-directory/client/unittest/obj
 #vscode setting files
 .vscode
 
-.clang-tidy
-
-build
-
-python/plgd_headers.config
-
-# eclipse config file
-.cproject
+# eclipse
+.settings
 .project
+.cproject
+
+# cmake build folder
+build
+build4test
+
+# sonarqube
+.scannerwork
+
+# clang-tidy
+.clang-tidy
+compile_commands.json

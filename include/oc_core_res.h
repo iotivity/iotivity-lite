@@ -64,6 +64,11 @@ typedef struct oc_device_info_t
   oc_string_t dmv;                       ///< data model version
   oc_core_add_device_cb_t add_device_cb; ///< callback when device is changed
   void *data;                            ///< user data
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+  bool
+    is_removed; ///< true: this device was previously allocated and then removed
+#endif
 } oc_device_info_t;
 
 /**
@@ -88,6 +93,18 @@ oc_uuid_t *oc_core_get_device_id(size_t device);
  * @return oc_device_info_t* the device info
  */
 oc_device_info_t *oc_core_get_device_info(size_t device);
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+/**
+ * @brief retrieve the device whose device is di
+ *
+ * @param di device id to be used for search
+ * @param device device index (index of g_oc_device_info[])
+ *        of the device whose device id is di
+ * @return 0 if found
+ */
+int oc_core_get_device_index(oc_uuid_t di, size_t *device);
+#endif
 
 /**
  * @brief retrieve the platform information

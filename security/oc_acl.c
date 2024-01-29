@@ -77,6 +77,48 @@ oc_sec_acl_init(void)
   }
 }
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+static void
+_init_acl(size_t device_index)
+{
+  memset(&g_aclist[device_index], 0, sizeof(oc_sec_acl_t));
+  OC_LIST_STRUCT_INIT(&g_aclist[device_index], subjects);
+}
+
+void
+oc_sec_acl_new_device(size_t device_index, bool need_realloc)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  if ((device_index == (oc_core_get_num_devices() - 1)) && need_realloc) {
+    /*
+     * if `g_oc_device_info[device_index]` is newly allocated entry...
+     */
+    g_aclist = (oc_sec_acl_t *)realloc(g_aclist, oc_core_get_num_devices() *
+                                                   sizeof(oc_sec_acl_t));
+    if (!g_aclist) {
+      oc_abort("Insufficient memory");
+    }
+
+    _init_acl(device_index);
+
+    size_t i = 0;
+    while (i < device_index) {
+      OC_LIST_STRUCT_REINIT(&g_aclist[i], subjects);
+      i++;
+    }
+  } else if (device_index < oc_core_get_num_devices()) {
+    /*
+     * if `g_oc_device_info[device_index]` is an existing entry...
+     */
+    oc_sec_acl_clear(device_index, NULL, NULL);
+    _init_acl(device_index);
+  } else {
+    OC_ERR("device index error ! (%zu)", device_index);
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 oc_sec_acl_t *
 oc_sec_get_acl(size_t device)
 {
@@ -1011,7 +1053,13 @@ void
 oc_sec_acl_free(void)
 {
   for (size_t device = 0; device < oc_core_get_num_devices(); ++device) {
-    oc_sec_acl_clear(device, NULL, NULL);
+#ifdef OC_HAS_FEATURE_BRIDGE
+    if (oc_core_get_device_info(device)->is_removed == false) {
+#endif /* OC_HAS_FEATURE_BRIDGE */
+      oc_sec_acl_clear(device, NULL, NULL);
+#ifdef OC_HAS_FEATURE_BRIDGE
+    }
+#endif /* OC_HAS_FEATURE_BRIDGE */
   }
 #ifdef OC_DYNAMIC_ALLOCATION
   if (g_aclist != NULL) {

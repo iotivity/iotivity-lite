@@ -152,7 +152,11 @@ naming convention:
 - ### push_targetserver_multithread_linux.c:
   PUSH target server which receives PUSH update request from PUSH origin server.
   It plays the role of PUSH configurator at the same time.
-  - for more detail see [OCF Push Notification](./docs/push.md)
+  - for more detail see [Push Notification](./docs/push.md)
+
+- ### dummy_bridge_linux.c:
+  VOD testing sample for Bridging feature.
+  - for more detail see [Bridging](./docs/bridging.md)
 
 - ### Other files:
   The JSON files are the introspection files in JSON.

@@ -206,6 +206,27 @@ oc_sec_doxm_init(void)
   oc_set_select_oxms_cb(NULL, NULL);
 }
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+void
+oc_sec_doxm_new_device(size_t device_index, bool need_realloc)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  if ((device_index == (oc_core_get_num_devices() - 1)) && need_realloc) {
+    g_doxm = (oc_sec_doxm_t *)realloc(g_doxm, oc_core_get_num_devices() *
+                                                sizeof(oc_sec_doxm_t));
+    if (!g_doxm) {
+      oc_abort("Insufficient memory");
+    }
+    memset(&g_doxm[device_index], 0, sizeof(oc_sec_doxm_t));
+  } else if (device_index < oc_core_get_num_devices()) {
+    memset(&g_doxm[device_index], 0, sizeof(oc_sec_doxm_t));
+  } else {
+    OC_ERR("device index error ! (%zu)", device_index);
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 static void
 doxm_evaluate_supported_oxms(size_t device)
 {
