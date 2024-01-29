@@ -75,6 +75,45 @@ oc_sec_sp_init(void)
   }
 }
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+static void
+_init_sp(size_t device_index)
+{
+  memset(&g_sp[device_index], 0, sizeof(oc_sec_sp_t));
+  memset(&g_sp_mfg_default[device_index], 0, sizeof(oc_sec_sp_t));
+
+  g_sp_mfg_default[device_index].current_profile = OC_SP_BASELINE;
+  g_sp_mfg_default[device_index].supported_profiles = OC_SP_BASELINE;
+  g_sp_mfg_default[device_index].credid = -1;
+}
+
+void
+oc_sec_sp_new_device(size_t device_index, bool need_realloc)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  if ((device_index == (oc_core_get_num_devices() - 1)) && need_realloc) {
+    g_sp = (oc_sec_sp_t *)realloc(g_sp, oc_core_get_num_devices() *
+                                          sizeof(oc_sec_sp_t));
+    if (!g_sp) {
+      oc_abort("Insufficient memory");
+    }
+
+    g_sp_mfg_default = (oc_sec_sp_t *)realloc(
+      g_sp_mfg_default, oc_core_get_num_devices() * sizeof(oc_sec_sp_t));
+    if (!g_sp_mfg_default) {
+      oc_abort("Insufficient memory");
+    }
+
+    _init_sp(device_index);
+  } else if (device_index < oc_core_get_num_devices()) {
+    _init_sp(device_index);
+  } else {
+    OC_ERR("device index error ! (%zu)", device_index);
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 void
 oc_sec_sp_free(void)
 {

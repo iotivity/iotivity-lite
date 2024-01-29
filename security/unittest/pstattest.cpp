@@ -1,6 +1,7 @@
 /******************************************************************
  *
  * Copyright 2023 Daniel Adam, All Rights Reserved.
+ * Copyright 2024 ETRI Joo-Chul Kevin Lee, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -33,6 +34,10 @@
 #include "tests/gtest/Device.h"
 #include "tests/gtest/Resource.h"
 #include "util/oc_features.h"
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+#include <memory>
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 #ifdef OC_SOFTWARE_UPDATE
 #include "api/oc_swupdate_internal.h"
@@ -217,5 +222,35 @@ TEST_F(TestPstatWithServer, DeleteRequest_Fail)
   oc::testNotSupportedMethod(OC_DELETE, &ep, "/oic/sec/pstat", nullptr,
                              error_code);
 }
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+static bool
+IsPstatEntryInitialized(const oc_sec_pstat_t *pstatEntry)
+{
+  auto emptyPstat = std::make_unique<oc_sec_pstat_t>();
+  memset(emptyPstat.get(), 0, sizeof(oc_sec_pstat_t));
+
+  if (!memcmp(pstatEntry, emptyPstat.get(), sizeof(oc_sec_pstat_t))) {
+    return true;
+  }
+  return false;
+}
+
+TEST_F(TestPstatWithServer, PstatNewDevice)
+{
+  /*
+   * overwrite entry in the existing position
+   */
+  auto pstatEntry = oc_sec_get_pstat(kDeviceID);
+  auto orgPstat = std::make_unique<oc_sec_pstat_t>();
+
+  memcpy(orgPstat.get(), pstatEntry, sizeof(oc_sec_pstat_t));
+  oc_sec_pstat_new_device(kDeviceID, false);
+
+  EXPECT_EQ(true, IsPstatEntryInitialized(pstatEntry));
+
+  memcpy(pstatEntry, orgPstat.get(), sizeof(oc_sec_pstat_t));
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 #endif /* OC_SECURITY */

@@ -1,6 +1,7 @@
 /****************************************************************************
  *
  * Copyright (c) 2023 plgd.dev s.r.o.
+ * Copyright (c) 2024 ETRI Joo-Chul Kevin Lee
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -40,6 +41,11 @@
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+#include "oc_bridge.h"
+#include <memory>
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 #include <algorithm>
 #include <array>
@@ -404,5 +410,41 @@ TEST_F(TestCreds, Serialize_Fail)
 }
 
 #endif /* OC_PKI && (OC_DYNAMIC_ALLOCATION || OC_TEST) */
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+static bool
+IsCredsEntryInitialized(const oc_sec_creds_t *credsEntry)
+{
+  /*
+   * resource owner should be null
+   * subject list should be empty
+   */
+  if ((oc_uuid_is_empty(credsEntry->rowneruuid)) &&
+      !oc_list_length(credsEntry->creds)) {
+    return true;
+  }
+
+  return false;
+}
+
+/*
+ * oc_sec_cred_new_device(device_index, need_realloc)
+ */
+TEST_F(TestCreds, CredNewDevice)
+{
+  /*
+   * overwrite entry in the existing position
+   */
+  auto credsEntry = oc_sec_get_creds(kDeviceID);
+  auto orgCreds = std::make_unique<oc_sec_creds_t>();
+
+  memcpy(orgCreds.get(), credsEntry, sizeof(oc_sec_creds_t));
+
+  oc_sec_cred_new_device(kDeviceID, false);
+  EXPECT_EQ(true, IsCredsEntryInitialized(credsEntry));
+
+  memcpy(credsEntry, orgCreds.get(), sizeof(oc_sec_creds_t));
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 #endif /* OC_SECURITY */

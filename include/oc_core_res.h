@@ -64,6 +64,11 @@ typedef struct oc_device_info_t
   oc_string_t dmv;                       ///< data model version
   oc_core_add_device_cb_t add_device_cb; ///< callback when device is changed
   void *data;                            ///< user data
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+  bool
+    is_removed; ///< true: this device was previously allocated and then removed
+#endif
 } oc_device_info_t;
 
 /**

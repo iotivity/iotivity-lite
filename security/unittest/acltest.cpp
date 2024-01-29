@@ -1,6 +1,7 @@
 /******************************************************************
  *
  * Copyright 2022 Daniel Adam, All Rights Reserved.
+ * Copyright 2024 ETRI Joo-Chul Kevin Lee, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -33,6 +34,11 @@
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+#include "oc_bridge.h"
+#include <memory>
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 #include "gtest/gtest.h"
 #include <string>
@@ -218,5 +224,40 @@ TEST_F(TestAcl, oc_sec_check_acl_in_RFOTM)
   oc_sec_pstat_free();
 }
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+static bool
+IsAclEntryInitialized(const oc_sec_acl_t *aclEntry)
+{
+  /*
+   * resource owner should be null
+   * subject list should be empty
+   */
+  if ((oc_uuid_is_empty(aclEntry->rowneruuid)) &&
+      !oc_list_length(aclEntry->subjects)) {
+    return true;
+  }
+  return false;
+}
+
+/*
+ * oc_sec_acl_new_device(device_index, need_realloc)
+ */
+TEST_F(TestAcl, AclNewDevice)
+{
+  /*
+   * overwrite entry in the existing position
+   */
+  auto aclEntry = oc_sec_get_acl(device_id_);
+  auto orgAcl = std::make_unique<oc_sec_acl_t>();
+
+  memcpy(orgAcl.get(), aclEntry, sizeof(oc_sec_acl_t));
+
+  oc_sec_acl_new_device(device_id_, false);
+  EXPECT_EQ(true, IsAclEntryInitialized(aclEntry));
+
+  memcpy(aclEntry, orgAcl.get(), sizeof(oc_sec_acl_t));
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 #endif /* OC_SECURITY */

@@ -158,6 +158,27 @@ oc_collections_free_all(void)
   }
 }
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+void
+oc_collections_free_per_device(size_t device)
+{
+  oc_collection_t *col = (oc_collection_t *)oc_list_head(g_collections);
+  oc_collection_t *t;
+
+  while (col) {
+    if (col->res.device == device) {
+      OC_DBG("found collection (\"%s\") for %zu", oc_string(col->res.name),
+             device);
+      t = col;
+      col = (oc_collection_t *)(col->res.next);
+      collection_free(t, false);
+      continue;
+    }
+    col = (oc_collection_t *)(col->res.next);
+  }
+}
+#endif
+
 void
 oc_collection_notify_resource_changed(oc_collection_t *collection,
                                       bool discoveryBatchDispatch)

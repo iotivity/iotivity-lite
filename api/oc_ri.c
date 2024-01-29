@@ -473,7 +473,80 @@ oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len, size_t device)
 #endif /* OC_COLLECTIONS */
   return NULL;
 }
+
 #endif /* OC_SERVER */
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+oc_resource_t *
+oc_ri_get_app_resource_by_device(size_t device, bool reset)
+{
+  static oc_resource_t *rsc;
+#ifdef OC_COLLECTIONS
+  static oc_resource_t *coll_rsc;
+#endif
+  oc_resource_t *found;
+
+  if (reset) {
+    rsc = oc_ri_get_app_resources();
+#ifdef OC_COLLECTIONS
+    coll_rsc = oc_collection_get_collections();
+#endif
+  }
+
+#ifdef OC_COLLECTIONS
+  while (rsc || coll_rsc) {
+    if (rsc && (rsc->device == device)) {
+      found = rsc;
+      rsc = rsc->next;
+      return found;
+    } else {
+      if (rsc)
+        rsc = rsc->next;
+      if (coll_rsc && (coll_rsc->device == device)) {
+        found = coll_rsc;
+        coll_rsc = coll_rsc->next;
+        return found;
+      } else if (coll_rsc) {
+        coll_rsc = coll_rsc->next;
+      }
+    }
+  }
+#else
+  while (rsc) {
+    if (rsc->device == device) {
+      found = rsc;
+      rsc = rsc->next;
+      return found;
+    }
+
+    rsc = rsc->next;
+  }
+#endif
+
+  return NULL;
+}
+
+void
+oc_ri_delete_app_resources_per_device(size_t index)
+{
+  oc_resource_t *res = oc_ri_get_app_resources();
+  oc_resource_t *t;
+
+  while (res) {
+    if (res->device == index) {
+      t = res;
+      res = res->next;
+      oc_ri_delete_resource(t);
+      continue;
+    }
+    res = res->next;
+  }
+
+#ifdef OC_COLLECTIONS
+  oc_collections_free_per_device(index);
+#endif /* OC_COLLECTIONS */
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 void
 oc_ri_init(void)
