@@ -1,0 +1,22 @@
+import("//build/config/args.gni")
+
+
+shared_library("bridge_manager") {
+  sources = [
+    "bridge_manager.c"
+  ]
+
+  defines = [
+    "OC_CLIENT",
+    "OC_SERVER",
+    "OC_DYNAMIC_ALLOCATION",
+    "OC_BRIDGE",
+    "OC_SECURITY",
+    # "OC_BRG_DEBUG"
+  ]
+
+  configs += [
+    "//build/config/defaults:iotivity_header",
+    "//build/config/defaults:iotivity_library"
+  ]
+}
