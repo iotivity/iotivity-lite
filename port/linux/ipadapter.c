@@ -18,6 +18,7 @@
 
 #include "api/oc_endpoint_internal.h"
 #include "api/oc_network_events_internal.h"
+#include "api/oc_message_internal.h"
 #include "ip.h"
 #include "ipadapter.h"
 #include "ipcontext.h"
@@ -245,25 +246,6 @@ oc_get_ip_context_for_device(size_t device)
 }
 
 static ssize_t
-get_data_size(int sock)
-{
-  size_t guess = 512;
-  ssize_t response_len;
-  do {
-    guess <<= 1;
-    uint8_t dummy[guess];
-    response_len = recv(sock, dummy, guess, MSG_PEEK);
-    if (response_len < 0) {
-      if (errno == EINTR) {
-        continue;
-      }
-      return -errno;
-    }
-  } while ((size_t)response_len == guess);
-  return response_len;
-}
-
-static ssize_t
 get_data(int sock, uint8_t *buffer, size_t buffer_size)
 {
   ssize_t response_len;
@@ -327,24 +309,28 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, int port,
 
   long prev_interface_index = -1;
   bool done = false;
+  // message used to read data from netlink socket
+  oc_message_t *message = oc_allocate_message();
+  if (!message) {
+    close(nl_sock);
+    return false;
+  }
   while (!done) {
-    ssize_t response_len = get_data_size(nl_sock);
-    if (response_len < 0) {
-      OC_ERR("failed to get data size (error %d)", (int)-response_len);
-      close(nl_sock);
-      return false;
-    }
-    uint8_t buffer[response_len];
-    response_len = get_data(nl_sock, buffer, sizeof(buffer));
+    ssize_t response_len =
+      get_data(nl_sock, message->data, oc_message_buffer_size(message));
     if (response_len < 0) {
       OC_ERR("failed to get data (error %d)", (int)-response_len);
       close(nl_sock);
+      oc_message_unref(message);
       return false;
     }
-
-    response = (struct nlmsghdr *)buffer;
+    CLANG_IGNORE_WARNING_START
+    CLANG_IGNORE_WARNING("-Wcast-align")
+    response = (struct nlmsghdr *)message->data;
+    CLANG_IGNORE_WARNING_END
     if (response->nlmsg_type == NLMSG_ERROR) {
       close(nl_sock);
+      oc_message_unref(message);
       return false;
     }
 
@@ -416,6 +402,7 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, int port,
 #endif /* OC_TCP */
         oc_endpoint_t *new_ep = oc_memb_alloc(&g_device_eps);
         if (!new_ep) {
+          oc_message_unref(message);
           close(nl_sock);
           return false;
         }
@@ -431,6 +418,7 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, int port,
     }
   }
   close(nl_sock);
+  oc_message_unref(message);
   return true;
 }
 
@@ -549,23 +537,25 @@ oc_connectivity_get_endpoints(size_t device)
 static int
 process_interface_change_event(void)
 {
-  ssize_t response_len = get_data_size(g_ifchange_sock);
-  if (response_len < 0) {
-    OC_ERR("failed reading payload size from netlink interface (error %d)",
-           (int)-response_len);
+  oc_message_t *message = oc_allocate_message();
+  if (!message) {
     return -1;
   }
-  uint8_t buffer[response_len];
-  response_len = get_data(g_ifchange_sock, buffer, sizeof(buffer));
+  ssize_t response_len =
+    get_data(g_ifchange_sock, message->data, oc_message_buffer_size(message));
   if (response_len < 0) {
     OC_ERR("failed reading payload from netlink interface (error %d)",
            (int)-response_len);
+    oc_message_unref(message);
     return -1;
   }
-
-  struct nlmsghdr *response = (struct nlmsghdr *)buffer;
+  CLANG_IGNORE_WARNING_START
+  CLANG_IGNORE_WARNING("-Wcast-align")
+  struct nlmsghdr *response = (struct nlmsghdr *)message->data;
+  CLANG_IGNORE_WARNING_END
   if (response->nlmsg_type == NLMSG_ERROR) {
     OC_ERR("caught NLMSG_ERROR in payload from netlink interface");
+    oc_message_unref(message);
     return -1;
   }
 
@@ -662,7 +652,7 @@ process_interface_change_event(void)
       }
     }
   }
-
+  oc_message_unref(message);
   return success ? 0 : -1;
 }
 
