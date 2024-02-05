@@ -1536,6 +1536,20 @@ cloud_server_log(oc_log_level_t log_level, oc_log_component_t component,
 }
 
 static void
+cloud_provision_conf_resource(oc_cloud_context_t *ctx)
+{
+  if (cis == NULL || auth_code == NULL || sid == NULL) {
+    return;
+  }
+  size_t cis_len = strlen(cis);
+  size_t auth_code_len = strlen(auth_code);
+  size_t sid_len = strlen(sid);
+  size_t apn_len = apn ? strlen(apn) : 0;
+  oc_cloud_provision_conf_resource_v1(
+    ctx, cis, cis_len, auth_code, auth_code_len, sid, sid_len, apn, apn_len);
+}
+
+static void
 cloud_server_send_response_cb(oc_request_t *request, oc_status_t response_code)
 {
   const char *uri = "???";
@@ -1698,9 +1712,7 @@ main(int argc, char *argv[])
     oc_cloud_context_t *ctx = oc_cloud_get_context(i);
     if (ctx) {
       oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
-      if (cis) {
-        oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
-      }
+      cloud_provision_conf_resource(ctx);
     }
     display_device_uuid(i);
   }

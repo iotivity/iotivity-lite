@@ -50,6 +50,21 @@ typedef struct oc_string_view_t
 
 #ifdef __cplusplus
 
+#ifdef OC_DYNAMIC_ALLOCATION
+#define OC_STRING_LOCAL(str)                                                   \
+  oc_string_t                                                                  \
+  {                                                                            \
+    OC_CHAR_ARRAY_LEN(str), (void *)(str),                                     \
+  }
+
+#else /* !OC_DYNAMIC_ALLOCATION */
+#define OC_STRING_LOCAL(str)                                                   \
+  oc_string_t                                                                  \
+  {                                                                            \
+    nullptr, OC_CHAR_ARRAY_LEN(str), (void *)(str),                            \
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
 #define OC_STRING_VIEW(str)                                                    \
   oc_string_view_t                                                             \
   {                                                                            \
@@ -64,6 +79,12 @@ typedef struct oc_string_view_t
   }
 
 #else /* !__cplusplus */
+
+#define OC_STRING_LOCAL(str)                                                   \
+  (oc_string_t)                                                                \
+  {                                                                            \
+    .size = OC_CHAR_ARRAY_LEN(str), .data = (void *)(str),                     \
+  }
 
 #define OC_STRING_VIEW(str)                                                    \
   (oc_string_view_t)                                                           \

@@ -16,10 +16,12 @@
  *
  ******************************************************************/
 
+#include "api/cloud/oc_cloud_context_internal.h"
 #include "api/cloud/oc_cloud_internal.h"
 #include "oc_api.h"
 #include "oc_cloud.h"
 #include "tests/gtest/Device.h"
+#include "util/oc_secure_string_internal.h"
 
 #include <gtest/gtest.h>
 #include <string>
@@ -42,7 +44,7 @@ public:
 TEST_F(TestCloud, oc_cloud_get_context)
 {
   EXPECT_NE(nullptr, oc_cloud_get_context(kDeviceID));
-  EXPECT_EQ(nullptr, oc_cloud_get_context(1));
+  EXPECT_EQ(nullptr, oc_cloud_get_context(42));
 }
 
 TEST_F(TestCloud, cloud_status)
@@ -72,21 +74,25 @@ TEST_F(TestCloud, cloud_update_by_resource)
   ctx->store.status = OC_CLOUD_FAILURE;
 
   cloud_conf_update_t data;
-  data.access_token = "access_token";
-  data.access_token_len = strlen(data.access_token);
-  data.auth_provider = "auth_provider";
-  data.auth_provider_len = strlen(data.auth_provider);
-  data.ci_server = "ci_server";
-  data.ci_server_len = strlen("ci_server");
-  data.sid = "sid";
-  data.sid_len = strlen(data.sid);
+  std::string access_token = "access_token";
+  data.access_token = access_token.c_str();
+  data.access_token_len = access_token.length();
+  std::string auth_provider = "auth_provider";
+  data.auth_provider = auth_provider.c_str();
+  data.auth_provider_len = auth_provider.length();
+  std::string ci_server = "ci_server";
+  data.ci_server = ci_server.c_str();
+  data.ci_server_len = ci_server.length();
+  std::string sid = "sid";
+  data.sid = sid.c_str();
+  data.sid_len = sid.length();
 
   cloud_update_by_resource(ctx, &data);
 
-  EXPECT_STREQ(data.access_token, oc_string(ctx->store.access_token));
-  EXPECT_STREQ(data.auth_provider, oc_string(ctx->store.auth_provider));
-  EXPECT_STREQ(data.ci_server, oc_string(ctx->store.ci_server));
-  EXPECT_STREQ(data.sid, oc_string(ctx->store.sid));
+  EXPECT_STREQ(data.access_token, oc_cloud_get_at(ctx));
+  EXPECT_STREQ(data.auth_provider, oc_cloud_get_apn(ctx));
+  EXPECT_STREQ(data.ci_server, oc_cloud_get_cis(ctx));
+  EXPECT_STREQ(data.sid, oc_cloud_get_sid(ctx));
   EXPECT_EQ(OC_CLOUD_INITIALIZED, ctx->store.status);
 }
 
@@ -95,18 +101,47 @@ TEST_F(TestCloud, oc_cloud_provision_conf_resource)
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
 
-  const char *access_token = "access_token";
-  const char *auth_provider = "auth_provider";
+  EXPECT_EQ(-1, oc_cloud_provision_conf_resource(ctx, nullptr, nullptr, nullptr,
+                                                 nullptr));
+
+  std::string invalid = std::string(OC_MAX_STRING_LENGTH, 'a');
   const char *ci_server = "ci_server";
+  EXPECT_EQ(-1, oc_cloud_provision_conf_resource(ctx, ci_server, nullptr,
+                                                 nullptr, nullptr));
+
+  const char *access_token = "access_token";
+  EXPECT_EQ(-1, oc_cloud_provision_conf_resource(ctx, ci_server, access_token,
+                                                 nullptr, nullptr));
+
   const char *sid = "sid";
+  EXPECT_EQ(0, oc_cloud_provision_conf_resource(ctx, ci_server, access_token,
+                                                sid, nullptr));
+
+  const char *auth_provider = "auth_provider";
   ASSERT_EQ(0, oc_cloud_provision_conf_resource(ctx, ci_server, access_token,
                                                 sid, auth_provider));
+
+  EXPECT_EQ(-1, oc_cloud_provision_conf_resource(
+                  ctx, invalid.c_str(), access_token, sid, auth_provider));
+  EXPECT_EQ(-1, oc_cloud_provision_conf_resource(
+                  ctx, ci_server, invalid.c_str(), sid, auth_provider));
+  EXPECT_EQ(-1,
+            oc_cloud_provision_conf_resource(ctx, ci_server, access_token,
+                                             invalid.c_str(), auth_provider));
+  EXPECT_EQ(-1, oc_cloud_provision_conf_resource(ctx, ci_server, access_token,
+                                                 sid, invalid.c_str()));
 
   EXPECT_STREQ(access_token, oc_string(ctx->store.access_token));
   EXPECT_STREQ(auth_provider, oc_string(ctx->store.auth_provider));
   EXPECT_STREQ(ci_server, oc_string(ctx->store.ci_server));
   EXPECT_STREQ(sid, oc_string(ctx->store.sid));
   EXPECT_EQ(OC_CLOUD_INITIALIZED, ctx->store.status);
+}
+
+TEST_F(TestCloud, oc_cloud_provision_conf_resource_v1)
+{
+  oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
+  ASSERT_NE(nullptr, ctx);
 }
 
 TEST_F(TestCloud, oc_cloud_action_to_str)
@@ -207,13 +242,13 @@ TEST_F(TestCloud, cloud_refresh_token)
   ctx->store.status = OC_CLOUD_REGISTERED;
 
   oc_free_string(&ctx->store.uid);
-#define UID "501"
-  oc_new_string(&ctx->store.uid, UID, strlen(UID));
+  std::string uid = "501";
+  oc_new_string(&ctx->store.uid, uid.c_str(), uid.length());
 
   oc_free_string(&ctx->store.refresh_token);
-#define REFRESH_TOKEN "refresh_token"
-  oc_new_string(&ctx->store.refresh_token, REFRESH_TOKEN,
-                strlen(REFRESH_TOKEN));
+  std::string refresh_token = "refresh_token";
+  oc_new_string(&ctx->store.refresh_token, refresh_token.c_str(),
+                refresh_token.length());
 
   bool cbk_called = false;
   auto cbk = [](oc_cloud_context_t *, oc_cloud_status_t status,

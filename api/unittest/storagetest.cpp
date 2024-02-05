@@ -47,7 +47,7 @@ public:
   {
     ASSERT_EQ(0, oc_storage_config(testStorage.c_str()));
 
-    auto encode = [](size_t, void *) {
+    auto encode = [](size_t, const void *) {
       oc_rep_start_root_object();
       oc_rep_set_boolean(root, ok, true);
       oc_rep_end_root_object();
@@ -137,10 +137,10 @@ TEST_F(TestCommonStorage, LoadResourceFail)
 
 TEST_F(TestCommonStorage, SaveResourceFail)
 {
-  auto encodeFail = [](size_t, void *) { return -1; };
+  auto encodeFail = [](size_t, const void *) { return -1; };
   EXPECT_EQ(-1, oc_storage_data_save("fail", 0, encodeFail, nullptr));
 
-  auto encodeTooLarge = [](size_t, void *) {
+  auto encodeTooLarge = [](size_t, const void *) {
     std::string str(OC_MAX_APP_DATA_SIZE, 'a');
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, too_long, str.c_str());
@@ -163,8 +163,8 @@ TEST_F(TestCommonStorage, SaveAndLoad)
   td.str = "Hello world";
   td.num = 42;
 
-  auto encode = [](size_t, void *data) {
-    const auto *d = static_cast<TestData *>(data);
+  auto encode = [](size_t, const void *data) {
+    const auto *d = static_cast<const TestData *>(data);
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, str, d->str.c_str());
     oc_rep_set_int(root, num, d->num);

@@ -35,6 +35,7 @@
 #include "oc_core_res.h"
 #include "oc_network_monitor.h"
 #include "port/oc_assert.h"
+#include "util/oc_secure_string_internal.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_tls_internal.h"
@@ -60,8 +61,9 @@ cloud_manager_cb(oc_cloud_context_t *ctx)
   OC_CLOUD_DBG("cloud manager status changed %d", (int)ctx->store.status);
   cloud_rd_manager_status_changed(ctx);
 
-  if (ctx->callback != NULL) {
-    ctx->callback(ctx, ctx->store.status, ctx->user_data);
+  if (ctx->on_status_change.cb != NULL) {
+    ctx->on_status_change.cb(ctx, ctx->store.status,
+                             ctx->on_status_change.user_data);
   }
 }
 
@@ -99,20 +101,20 @@ restart_manager(void *user_data)
 }
 
 void
-cloud_close_endpoint(const oc_endpoint_t *cloud_ep)
+cloud_close_endpoint(const oc_endpoint_t *ep)
 {
   OC_CLOUD_DBG("cloud_close_endpoint");
 #ifdef OC_SECURITY
-  const oc_tls_peer_t *peer = oc_tls_get_peer(cloud_ep);
+  const oc_tls_peer_t *peer = oc_tls_get_peer(ep);
   if (peer != NULL) {
     OC_CLOUD_DBG("cloud_close_endpoint: oc_tls_close_connection");
-    oc_tls_close_connection(cloud_ep);
+    oc_tls_close_connection(ep);
   } else
 #endif /* OC_SECURITY */
   {
 #ifdef OC_TCP
     OC_CLOUD_DBG("cloud_close_endpoint: oc_connectivity_end_session");
-    oc_connectivity_end_session(cloud_ep);
+    oc_connectivity_end_session(ep);
 #endif /* OC_TCP */
   }
 }
@@ -146,30 +148,35 @@ cloud_set_cloudconf(oc_cloud_context_t *ctx, const cloud_conf_update_t *data)
 {
   assert(ctx != NULL);
   assert(data != NULL);
-  if (data->auth_provider && data->auth_provider_len) {
+  if (data->auth_provider_len > 0) {
     oc_set_string(&ctx->store.auth_provider, data->auth_provider,
                   data->auth_provider_len);
   }
-  if (data->access_token && data->access_token_len) {
+  if (data->access_token_len > 0) {
     oc_set_string(&ctx->store.access_token, data->access_token,
                   data->access_token_len);
   }
-  if (data->ci_server && data->ci_server_len) {
+  if (data->ci_server_len > 0) {
     oc_set_string(&ctx->store.ci_server, data->ci_server, data->ci_server_len);
   }
-  if (data->sid && data->sid_len) {
+  if (data->sid_len > 0) {
     oc_set_string(&ctx->store.sid, data->sid, data->sid_len);
   }
 }
 
 int
-oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx, const char *server,
-                                 const char *access_token,
-                                 const char *server_id,
-                                 const char *auth_provider)
+oc_cloud_provision_conf_resource_v1(oc_cloud_context_t *ctx, const char *server,
+                                    size_t server_len, const char *access_token,
+                                    size_t access_token_len,
+                                    const char *server_id, size_t server_id_len,
+                                    const char *auth_provider,
+                                    size_t auth_provider_len)
 {
   assert(ctx != NULL);
-  if (!server || !access_token || !server_id) {
+  if (server_len >= OC_MAX_STRING_LENGTH ||
+      access_token_len >= OC_MAX_STRING_LENGTH ||
+      server_id_len >= OC_MAX_STRING_LENGTH ||
+      auth_provider_len >= OC_MAX_STRING_LENGTH) {
     return -1;
   }
 
@@ -182,13 +189,13 @@ oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx, const char *server,
 
   cloud_conf_update_t data = {
     .access_token = access_token,
-    .access_token_len = strlen(access_token),
+    .access_token_len = access_token_len,
     .ci_server = server,
-    .ci_server_len = strlen(server),
+    .ci_server_len = server_len,
     .sid = server_id,
-    .sid_len = strlen(server_id),
+    .sid_len = server_id_len,
     .auth_provider = auth_provider,
-    .auth_provider_len = auth_provider != NULL ? strlen(auth_provider) : 0,
+    .auth_provider_len = auth_provider_len,
   };
   cloud_set_cloudconf(ctx, &data);
   cloud_rd_reset_context(ctx);
@@ -201,8 +208,26 @@ oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx, const char *server,
   if (ctx->cloud_manager) {
     oc_cloud_manager_restart(ctx);
   }
-
   return 0;
+}
+
+int
+oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx, const char *server,
+                                 const char *access_token,
+                                 const char *server_id,
+                                 const char *auth_provider)
+{
+  assert(ctx != NULL);
+  if (server == NULL || access_token == NULL || server_id == NULL) {
+    return -1;
+  }
+  size_t server_len = oc_strnlen(server, OC_MAX_STRING_LENGTH);
+  size_t access_token_len = oc_strnlen_s(access_token, OC_MAX_STRING_LENGTH);
+  size_t server_id_len = oc_strnlen_s(server_id, OC_MAX_STRING_LENGTH);
+  size_t auth_provider_len = oc_strnlen_s(auth_provider, OC_MAX_STRING_LENGTH);
+  return oc_cloud_provision_conf_resource_v1(
+    ctx, server, server_len, access_token, access_token_len, server_id,
+    server_id_len, auth_provider, auth_provider_len);
 }
 
 void
@@ -290,8 +315,10 @@ cloud_set_last_error(oc_cloud_context_t *ctx, oc_cloud_error_t error)
 {
   if (error != ctx->last_error) {
     ctx->last_error = error;
-    if (ctx->cloud_conf != NULL) {
-      oc_notify_resource_changed(ctx->cloud_conf);
+    oc_resource_t *cloud_conf =
+      oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, ctx->device);
+    if (cloud_conf != NULL) {
+      oc_notify_resource_changed(cloud_conf);
     }
   }
 }
@@ -301,8 +328,10 @@ cloud_set_cps(oc_cloud_context_t *ctx, oc_cps_t cps)
 {
   if (cps != ctx->store.cps) {
     ctx->store.cps = cps;
-    if (ctx->cloud_conf != NULL) {
-      oc_notify_resource_changed(ctx->cloud_conf);
+    oc_resource_t *cloud_conf =
+      oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, ctx->device);
+    if (cloud_conf != NULL) {
+      oc_notify_resource_changed(cloud_conf);
     }
   }
 }
@@ -314,8 +343,10 @@ cloud_set_cps_and_last_error(oc_cloud_context_t *ctx, oc_cps_t cps,
   if ((error != ctx->last_error) || (cps != ctx->store.cps)) {
     ctx->store.cps = cps;
     ctx->last_error = error;
-    if (ctx->cloud_conf != NULL) {
-      oc_notify_resource_changed(ctx->cloud_conf);
+    oc_resource_t *cloud_conf =
+      oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, ctx->device);
+    if (cloud_conf != NULL) {
+      oc_notify_resource_changed(cloud_conf);
     }
   }
 }
@@ -353,8 +384,8 @@ oc_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
     return -1;
   }
 
-  ctx->callback = cb;
-  ctx->user_data = data;
+  ctx->on_status_change.cb = cb;
+  ctx->on_status_change.user_data = data;
 
   cloud_manager_start(ctx);
   ctx->cloud_manager = true;
@@ -374,9 +405,10 @@ oc_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 int
 oc_cloud_manager_stop(oc_cloud_context_t *ctx)
 {
-  if (!ctx) {
+  if (ctx == NULL) {
     return -1;
   }
+
 #ifdef OC_SESSION_EVENTS
   oc_remove_session_event_callback_v1(cloud_ep_session_event_handler, ctx,
                                       false);
@@ -395,6 +427,7 @@ oc_cloud_manager_stop(oc_cloud_context_t *ctx)
   memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
   ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
   ctx->cloud_manager = false;
+
   return 0;
 }
 
@@ -433,4 +466,5 @@ oc_cloud_shutdown(void)
   }
   oc_ri_on_delete_resource_remove_callback(oc_cloud_delete_resource);
 }
+
 #endif /* OC_CLOUD */

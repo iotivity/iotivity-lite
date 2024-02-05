@@ -62,7 +62,7 @@ oc_sec_load_doxm(size_t device)
 }
 
 static int
-store_encode_doxm(size_t device, void *data)
+store_encode_doxm(size_t device, const void *data)
 {
   (void)data;
   return oc_sec_encode_doxm(device, /*iface_mask*/ 0, true);
@@ -100,7 +100,7 @@ oc_sec_load_pstat(size_t device)
 }
 
 static int
-store_encode_pstat(size_t device, void *data)
+store_encode_pstat(size_t device, const void *data)
 {
   (void)data;
   oc_sec_encode_pstat(device, /*iface_mask*/ 0, /*to_storage*/ true);
@@ -140,7 +140,7 @@ oc_sec_load_sp(size_t device)
 }
 
 static int
-store_encode_sp(size_t device, void *data)
+store_encode_sp(size_t device, const void *data)
 {
   (void)data;
   return oc_sec_sp_encode_for_device(device, /*flags*/ 0) ? 0 : -1;
@@ -504,7 +504,7 @@ oc_sec_load_sdi(size_t device)
 }
 
 static int
-store_encode_sdi(size_t device, void *data)
+store_encode_sdi(size_t device, const void *data)
 {
   (void)data;
   return oc_sec_sdi_encode(device, /*iface_mask*/ 0);

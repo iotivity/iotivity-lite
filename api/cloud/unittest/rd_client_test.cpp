@@ -401,6 +401,8 @@ TEST_F(TestRDClient, DeleteIterateLinks_FailToSendSingle)
   oc_delete_link(link_p);
 }
 
+#ifdef OC_DYNAMIC_ALLOCATION
+
 TEST_F(TestRDClient, DeleteIterateLinks_PartialBuffer)
 {
   // query: di=${deviceUUID}&ins=${instanceID}
@@ -461,3 +463,5 @@ TEST_F(TestRDClient, DeleteIterateLinks_PartialBuffer)
     link = next;
   }
 }
+
+#endif // OC_DYNAMIC_ALLOCATION

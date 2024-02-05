@@ -24,6 +24,8 @@
 
 %{
 #include "oc_iotivity_lite_jni.h"
+#include "api/cloud/oc_cloud_context_internal.h"
+#include "api/cloud/oc_cloud_store_internal.h"
 #include "oc_cloud.h"
 #include "port/oc_log_internal.h"
 
@@ -99,6 +101,17 @@ static void jni_cloud_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void
 %ignore oc_cloud_keepalive_t;
 %ignore oc_cloud_set_keepalive;
 
+// TODO: implement
+%ignore cloud_context_iterator_cb_t;
+%ignore cloud_context_iterate;
+
+// TODO: implement
+%ignore oc_cloud_set_schedule_action;
+%ignore oc_cloud_schedule_action_cb_t;
+%ignore oc_cloud_schedule_action_t;
+%ignore oc_cloud_action_to_str;
+%ignore oc_cloud_action_t;
+
 // oc_cloud_status is a bitmask exposed through OCCloudStatusMask.java as ints
 %ignore oc_cloud_status_t;
 %rename (OCCloudPrivisoningStatus) oc_cps_t;
@@ -108,24 +121,27 @@ static void jni_cloud_cb(oc_cloud_context_t *ctx, oc_cloud_status_t status, void
 %rename (REGISTERED) OC_CPS_REGISTERED;
 %rename (FAILED) OC_CPS_FAILED;
 
-%rename (OCCloudStore) oc_cloud_store_t;
 %rename (OCCloudError) oc_cloud_error_t;
+%ignore oc_cloud_on_status_change_cb_t;
+
 %rename (OCCloudContext) oc_cloud_context_t;
-%ignore oc_cloud_context_t::callback;
-%ignore oc_cloud_context_t::user_data;
+%ignore oc_cloud_context_t::next;
+%ignore oc_cloud_context_t::device;
+%ignore oc_cloud_context_t::on_status_change;
+%ignore oc_cloud_context_t::store;
 %ignore oc_cloud_context_t::keepalive;
-%rename (cloudEndpointState) oc_cloud_context_t::cloud_ep_state;
-%rename (cloudEndpoint) oc_cloud_context_t::cloud_ep;
-%rename (retryCount) oc_cloud_context_t::retry_count;
-%rename (retryRefreshTokenCount) oc_cloud_context_t::retry_refresh_token_count;
-%rename (lastError) oc_cloud_context_t::last_error;
-%rename (expiresIn) oc_cloud_context_t::expires_in;
-%rename (rdPublishResources) oc_cloud_context_t::rd_publish_resources;
-%rename (rdPublishedResources) oc_cloud_context_t::rd_published_resources;
-%rename (rdDeleteResources) oc_cloud_context_t::rd_delete_resources;
-%ignore oc_cloud_context_t::cps;
-%rename (cloudConf) oc_cloud_context_t::cloud_conf;
-%rename (cloudManager) oc_cloud_context_t::cloud_manager;
+%ignore oc_cloud_context_t::schedule_action;
+%ignore oc_cloud_context_t::cloud_ep_state;
+%ignore oc_cloud_context_t::cloud_ep;
+%ignore oc_cloud_context_t::rd_publish_resources;
+%ignore oc_cloud_context_t::rd_published_resources;
+%ignore oc_cloud_context_t::rd_delete_resources;
+%ignore oc_cloud_context_t::selected_identity_cred_id;
+%ignore oc_cloud_context_t::last_error;
+%ignore oc_cloud_context_t::time_to_live;
+%ignore oc_cloud_context_t::retry_count;
+%ignore oc_cloud_context_t::cloud_manager;
+%ignore oc_cloud_context_t::retry_refresh_token_count;
 
 %ignore oc_cloud_get_context;
 %rename (getContext) jni_cloud_get_context;
@@ -137,6 +153,96 @@ oc_cloud_context_t *jni_cloud_get_context(size_t device)
 #else /* OC_CLOUD*/
   OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
   (void)device;
+  return NULL;
+#endif /* !OC_CLOUD */
+}
+%}
+
+%ignore oc_cloud_get_device;
+%rename (getDevice) jni_cloud_get_device;
+%inline %{
+size_t jni_cloud_get_device(const oc_cloud_context_t *ctx)
+{
+#ifdef OC_CLOUD
+  return oc_cloud_get_device(ctx);
+#else /* OC_CLOUD*/
+  OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  return 0;
+#endif /* !OC_CLOUD */
+}
+%}
+
+%ignore oc_cloud_get_apn;
+%rename (getAuthorizationProviderName) jni_cloud_get_apn;
+%inline %{
+const char *jni_cloud_get_apn(const oc_cloud_context_t *ctx)
+{
+#ifdef OC_CLOUD
+  return oc_cloud_get_apn(ctx);
+#else /* OC_CLOUD*/
+  OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  return NULL;
+#endif /* !OC_CLOUD */
+}
+%}
+
+%ignore oc_cloud_get_at;
+%rename (getAccessToken) jni_cloud_get_at;
+%inline %{
+const char *jni_cloud_get_at(const oc_cloud_context_t *ctx)
+{
+#ifdef OC_CLOUD
+  return oc_cloud_get_at(ctx);
+#else /* OC_CLOUD*/
+  OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  return NULL;
+#endif /* !OC_CLOUD */
+}
+%}
+
+%ignore oc_cloud_get_cis;
+%rename (getAddress) jni_cloud_get_cis;
+%inline %{
+const char *jni_cloud_get_cis(const oc_cloud_context_t *ctx)
+{
+#ifdef OC_CLOUD
+  return oc_cloud_get_cis(ctx);
+#else /* OC_CLOUD*/
+  OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  return NULL;
+#endif /* !OC_CLOUD */
+}
+%}
+
+%ignore oc_cloud_get_sid;
+%rename (getId) jni_cloud_get_sid;
+%inline %{
+const char *jni_cloud_get_sid(const oc_cloud_context_t *ctx)
+{
+#ifdef OC_CLOUD
+  return oc_cloud_get_sid(ctx);
+#else /* OC_CLOUD*/
+  OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  return NULL;
+#endif /* !OC_CLOUD */
+}
+%}
+
+%ignore oc_cloud_get_uid;
+%rename (getUserId) jni_cloud_get_uid;
+%inline %{
+const char *jni_cloud_get_uid(const oc_cloud_context_t *ctx)
+{
+#ifdef OC_CLOUD
+  return oc_cloud_get_uid(ctx);
+#else /* OC_CLOUD*/
+  OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
   return NULL;
 #endif /* !OC_CLOUD */
 }
@@ -442,6 +548,38 @@ int jni_cloud_provision_conf_resource(oc_cloud_context_t *ctx,
 }
 %}
 
+%ignore oc_cloud_provision_conf_resource_v1;
+%rename(provisionConfResourceV1) jni_cloud_provision_conf_resource_v1;
+%inline %{
+int jni_cloud_provision_conf_resource_v1(oc_cloud_context_t *ctx,
+                                         const char *server,
+                                         size_t server_len,
+                                         const char *accessToken,
+                                         size_t accessToken_len,
+                                         const char *serverId,
+                                         size_t serverId_len,
+                                         const char *authProvider,
+                                         size_t authProvider_len)
+{
+#ifdef OC_CLOUD
+  return oc_cloud_provision_conf_resource_v1(ctx, server, server_len, accessToken, accessToken_len,
+    serverId, serverId_len, authProvider, authProvider_len);
+#else /* OC_CLOUD*/
+  OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  (void)server;
+  (void)server_len;
+  (void)accessToken;
+  (void)accessToken_len;
+  (void)serverId;
+  (void)serverId_len;
+  (void)authProvider;
+  (void)authProvider_len;
+  return -1;
+#endif /* !OC_CLOUD */
+}
+%}
+
 %ignore oc_cloud_set_identity_cert_chain;
 %rename(setIdentityCertChain) jni_cloud_set_identity_cert_chain;
 %inline %{
@@ -461,7 +599,7 @@ void jni_cloud_set_identity_cert_chain(oc_cloud_context_t *ctx,
 %ignore oc_cloud_get_identity_cert_chain;
 %rename(getIdentityCertChain) jni_cloud_get_identity_cert_chain;
 %inline %{
-int jni_cloud_get_identity_cert_chain(oc_cloud_context_t *ctx)
+int jni_cloud_get_identity_cert_chain(const oc_cloud_context_t *ctx)
 {
 #ifdef OC_CLOUD
   return oc_cloud_get_identity_cert_chain(ctx);
@@ -472,4 +610,36 @@ int jni_cloud_get_identity_cert_chain(oc_cloud_context_t *ctx)
 #endif /* !OC_CLOUD */
 }
 %}
+
+%ignore oc_cloud_context_clear;
+%rename(clearContext) jni_cloud_context_clear;
+%inline %{
+void jni_cloud_context_clear(oc_cloud_context_t *ctx, bool dump_async)
+{
+#ifdef OC_CLOUD
+  oc_cloud_context_clear(ctx, dump_async);
+#else /* OC_CLOUD*/
+  OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  (void)dump_async;
+#endif /* !OC_CLOUD */
+}
+%}
+
+#define OC_NONNULL(...)
+
+// get oc_cloud_context_t definition, but ignore all other definitions
+%ignore cloud_context_init;
+%ignore cloud_context_deinit;
+%ignore cloud_context_size;
+%ignore cloud_context_iterator_cb_t;
+%ignore cloud_context_has_access_token;
+%ignore cloud_context_iterate;
+%ignore cloud_context_clear;
+%ignore cloud_context_has_permanent_access_token;
+%ignore cloud_context_clear_access_token;
+%ignore cloud_context_has_refresh_token;
+%include "api/cloud/oc_cloud_context_internal.h"
+
+#define OC_API
 %include "oc_cloud.h"

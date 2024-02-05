@@ -28,14 +28,39 @@
 extern "C" {
 #endif
 
+typedef struct oc_cloud_store_t
+{
+  oc_string_t ci_server;     ///< URL of the OCF Cloud.
+  oc_string_t auth_provider; ///< The name of the Authorisation Provider through
+                             // which access token was obtained.
+  oc_string_t uid;           ///< Unique OCF Cloud User identifier
+  oc_string_t access_token;  ///< Access token which is returned by an
+                             ///< Authorisation Provider or OCF Cloud.
+  oc_string_t refresh_token; ///< Refresh token used to refresh the access token
+                             ///< before it expires.
+  oc_string_t sid;           ///< The identity of the OCF Cloud
+  int64_t expires_in; ///< The time in seconds for which the access token is
+                      ///< valid.
+  uint8_t status;
+  oc_cps_t cps; ///< Cloud provisioning status of the device.
+  size_t device;
+} oc_cloud_store_t;
+
+/**  @brief Encode cloud store to the global encoder. */
+void cloud_store_encode(const oc_cloud_store_t *store) OC_NONNULL();
+
+/** @brief Decode representation to store. */
+bool cloud_store_decode(const oc_rep_t *rep, oc_cloud_store_t *store)
+  OC_NONNULL(2);
+
 /**
  * @brief Load store data from storage
  *
  * @param[out] store store to save data to (cannot be NULL)
- * @return 0 on success
- * @return <0 on failure
+ * @return true on success
+ * @return false on failure
  */
-int cloud_store_load(oc_cloud_store_t *store) OC_NONNULL();
+bool cloud_store_load(oc_cloud_store_t *store) OC_NONNULL();
 
 /**
  * @brief Save store data to storage

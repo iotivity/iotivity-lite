@@ -360,6 +360,20 @@ factory_presets_cb(size_t device, void *data)
 #endif /* OC_SECURITY && OC_PKI */
 }
 
+static void
+cloud_provision_conf_resource(oc_cloud_context_t *ctx)
+{
+  if (cis == NULL || auth_code == NULL || sid == NULL) {
+    return;
+  }
+  size_t cis_len = strlen(cis);
+  size_t auth_code_len = strlen(auth_code);
+  size_t sid_len = strlen(sid);
+  size_t apn_len = apn ? strlen(apn) : 0;
+  oc_cloud_provision_conf_resource_v1(
+    ctx, cis, cis_len, auth_code, auth_code_len, sid, sid_len, apn, apn_len);
+}
+
 #if defined(_WIN32)
 static DWORD WINAPI
 ocf_event_thread(LPVOID lpParam)
@@ -383,9 +397,7 @@ ocf_event_thread(LPVOID lpParam)
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (ctx) {
     oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
-    if (cis) {
-      oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
-    }
+    cloud_provision_conf_resource(ctx);
   }
   oc_clock_time_t next_event_mt;
   while (OC_ATOMIC_LOAD8(quit) != 1) {
@@ -430,9 +442,7 @@ ocf_event_thread(void *data)
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (ctx) {
     oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
-    if (cis) {
-      oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
-    }
+    cloud_provision_conf_resource(ctx);
   }
   oc_clock_time_t next_event_mt;
   while (OC_ATOMIC_LOAD8(quit) != 1) {
