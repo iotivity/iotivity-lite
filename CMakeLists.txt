@@ -25,6 +25,7 @@ set(BUILD_MBEDTLS_FORCE_3_5_0 OFF CACHE BOOL "Force v3.5.0 of the MbedTLS librar
 set(OC_INSTALL_MBEDTLS ON CACHE BOOL "Include Mbed TLS in installation")
 set(BUILD_TINYCBOR ON CACHE BOOL "Build TinyCBOR library. When set to OFF, the TinyCBOR library has to be provided.")
 set(OC_INSTALL_TINYCBOR ON CACHE BOOL "Include TinyCBOR in installation")
+set(BUILD_PYTHON ON CACHE BOOL "Build Python bindings.")
 
 if(NOT BUILD_MBEDTLS_FORCE_3_5_0)
     message(WARNING "MbedTLS v3.1.0 is deprecated and support will be removed in a future release")
@@ -587,14 +588,19 @@ if(OC_SECURITY_ENABLED)
         list(APPEND CLIENT_SRC ${SECURITY_OBT_SRC})
     endif()
 
-    # fix oc_python compilation when OC_SECURITY is disabled
-    file(GLOB PYTHON_SRC python/*.c)
+    if(BUILD_PYTHON)
+        # fix oc_python compilation when OC_SECURITY is disabled
+        file(GLOB PYTHON_SRC python/*.c)
+    endif()
 endif()
 
 if(OC_CLOUD_ENABLED)
     file(GLOB CLOUD_SRC api/cloud/*.c)
     set(CLOUD_INCLUDE_DIR ${PROJECT_SOURCE_DIR}/api/cloud)
 endif()
+
+include(CheckSymbolExists)
+check_symbol_exists(OC_HAVE_TIME_H ${PORT_INCLUDE_DIR}/oc_config.h HAVE_OC_TIME_H)
 
 # ####### Define link dependencies ########
 set(PRIVATE_LINK_LIBS "")
@@ -709,7 +715,7 @@ if(OC_CLOUD_ENABLED)
     endif()
 endif()
 
-if(OC_SECURITY_ENABLED)
+if(BUILD_PYTHON AND OC_SECURITY_ENABLED)
     add_library(python-obj OBJECT ${PYTHON_SRC})
     target_compile_definitions(python-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} OC_LIBRARY_EXPORT PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_LIBRARY" "OC_CLIENT")
     target_compile_options(python-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
@@ -903,7 +909,7 @@ if(NOT MSVC)
     )
 endif()
 
-if(OC_SECURITY_ENABLED AND (NOT MSVC))
+if(BUILD_PYTHON AND OC_SECURITY_ENABLED AND (NOT MSVC))
     # Python client
     set(client-python-lib-obj
         $<TARGET_OBJECTS:client-common-obj>
@@ -932,7 +938,7 @@ if(OC_SECURITY_ENABLED AND (NOT MSVC))
 endif()
 
 # ####### Units tests ########
-if(BUILD_TESTING AND (NOT MSVC))
+if(BUILD_TESTING AND ((WIN32 AND NOT MSVC) OR (UNIX AND HAVE_OC_TIME_H)))
     include(CTest)
     enable_language(CXX)
     set(CMAKE_CXX_STANDARD 17)
@@ -1106,7 +1112,7 @@ if(BUILD_TESTING AND (NOT MSVC))
         )
     endif()
 
-    if(OC_SECURITY_ENABLED AND OC_DYNAMIC_ALLOCATION_ENABLED)
+    if(BUILD_PYTHON AND OC_SECURITY_ENABLED AND OC_DYNAMIC_ALLOCATION_ENABLED)
         file(GLOB PYTHONLIBTEST_SRC python/oc_python.c python/unittest/*.cpp)
         oc_package_add_test(TARGET pythonlibtest SOURCES ${PYTHONLIBTEST_SRC})
     endif()
@@ -1321,11 +1327,11 @@ if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
 endif()
 
 # ####### Sub-projects ########
-if(BUILD_EXAMPLE_APPLICATIONS)
+if(BUILD_EXAMPLE_APPLICATIONS AND (WIN32 OR (UNIX AND HAVE_OC_TIME_H)))
     add_subdirectory(onboarding_tool)
     add_subdirectory(apps)
 endif()
 
-if(BUILD_TESTING AND UNIX)
+if(BUILD_TESTING AND (UNIX AND HAVE_OC_TIME_H))
     add_subdirectory(tests)
 endif()

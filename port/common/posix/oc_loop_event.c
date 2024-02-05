@@ -23,7 +23,7 @@
 
 #include "util/oc_features.h"
 
-#ifdef OC_HAS_FEATURE_LOOP_EVENT
+#if defined(OC_HAS_FEATURE_LOOP_EVENT) && defined(OC_HAVE_TIME_H)
 
 #include "oc_config.h"
 #include "port/common/posix/oc_poll_internal.h"
@@ -243,4 +243,4 @@ oc_loop_event_signal(const oc_loop_event_t *event)
 
 #endif /* __linux__ || __ANDROID_API__ */
 
-#endif /* OC_HAS_FEATURE_LOOP_EVENT */
+#endif /* OC_HAS_FEATURE_LOOP_EVENT && OC_HAVE_TIME_H */

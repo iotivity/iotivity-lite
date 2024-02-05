@@ -21,6 +21,7 @@
 
 #include "port/oc_clock.h"
 #include "util/oc_compiler.h"
+#include "util/oc_features.h"
 
 #include <poll.h>
 #include <stdbool.h>
@@ -28,6 +29,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#ifdef OC_HAVE_TIME_H
 
 /**
  * @brief Callback invoked when an event occurs on a file descriptor.
@@ -72,6 +75,8 @@ int oc_poll_timedwait(struct pollfd *fds, nfds_t nfds, oc_clock_time_t timeout,
  */
 int oc_poll_wait(struct pollfd *fds, nfds_t nfds,
                  oc_poll_event_handler_t on_event, void *data) OC_NONNULL(1, 3);
+
+#endif /* OC_HAVE_TIME_H */
 
 #ifdef __cplusplus
 }

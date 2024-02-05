@@ -21,6 +21,10 @@
 #define _GNU_SOURCE
 #endif
 
+#include "util/oc_features.h"
+
+#ifdef OC_HAVE_TIME_H
+
 #include "port/common/posix/oc_poll_internal.h"
 #include "oc_clock_util.h"
 
@@ -65,3 +69,5 @@ oc_poll_wait(struct pollfd *fds, nfds_t nfds, oc_poll_event_handler_t on_event,
 {
   return ppoll_wait(fds, nfds, NULL, on_event, data);
 }
+
+#endif /* OC_HAVE_TIME_H */
