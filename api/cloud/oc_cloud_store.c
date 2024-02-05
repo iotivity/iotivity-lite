@@ -21,12 +21,16 @@
 
 #ifdef OC_CLOUD
 
+#include "api/oc_storage_internal.h"
+#include "api/oc_helpers_internal.h"
 #include "api/oc_rep_internal.h"
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
 #include "oc_cloud_log_internal.h"
+#include "oc_cloud_resource_internal.h"
 #include "oc_cloud_store_internal.h"
 #include "port/oc_connectivity.h"
+#include "util/oc_macros_internal.h"
 
 #include <stdint.h>
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -39,126 +43,102 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_CLOUD is defined.
 #endif
 
 #define CLOUD_STORE_NAME "cloud"
-#define CLOUD_CI_SERVER ci_server
-#define CLOUD_SID sid
-#define CLOUD_AUTH_PROVIDER auth_provider
-#define CLOUD_UID uid
-#define CLOUD_ACCESS_TOKEN access_token
-#define CLOUD_REFRESH_TOKEN refresh_token
-#define CLOUD_EXPIRES_IN expires_in
-#define CLOUD_STATUS status
-#define CLOUD_CPS cps
+#define CLOUD_CI_SERVER "ci_server"
+#define CLOUD_SID "sid"
+#define CLOUD_AUTH_PROVIDER "auth_provider"
+#define CLOUD_UID "uid"
+#define CLOUD_ACCESS_TOKEN "access_token"
+#define CLOUD_REFRESH_TOKEN "refresh_token"
+#define CLOUD_EXPIRES_IN "expires_in"
+#define CLOUD_STATUS "status"
+#define CLOUD_CPS "cps"
 
-#define CLOUD_STR(s) #s
-#define CLOUD_XSTR(s) CLOUD_STR(s)
-#define CLOUD_XSTRLEN(s) (sizeof(CLOUD_STR(s)) - 1)
+static int
+store_decode_cloud(const oc_rep_t *rep, size_t device, void *data)
+{
+  (void)device;
+  oc_cloud_store_t *store = (oc_cloud_store_t *)data;
+  if (!cloud_store_decode(rep, store)) {
+    OC_ERR("cannot load cloud: cannot decode representation");
+    return -1;
+  }
+  return 0;
+}
 
-#define CLOUD_TAG_MAX (32)
-
-static int cloud_store_load_internal(const char *store_name,
-                                     oc_cloud_store_t *store);
-static void gen_cloud_tag(const char *name, size_t device, char *cloud_tag);
-
-int
+bool
 cloud_store_load(oc_cloud_store_t *store)
 {
-  char cloud_tag[CLOUD_TAG_MAX] = { 0 };
-  gen_cloud_tag(CLOUD_STORE_NAME, store->device, cloud_tag);
-  return cloud_store_load_internal(cloud_tag, store);
+  if (oc_storage_data_load(CLOUD_STORE_NAME, store->device, store_decode_cloud,
+                           store) <= 0) {
+    OC_DBG("failed to load cloud from storage");
+    cloud_store_initialize(store);
+    return false;
+  }
+  OC_DBG("cloud loaded from storage");
+  return true;
 }
 
 static void
-rep_set_text_string(CborEncoder *object_map, const char *key, const char *value)
+rep_set_text_string(CborEncoder *object_map, oc_string_view_t key,
+                    oc_string_view_t value)
 {
-  g_err |= oc_rep_encode_text_string(object_map, key, strlen(key));
-  if (value != NULL) {
-    g_err |= oc_rep_encode_text_string(object_map, value, strlen(value));
+  g_err |= oc_rep_encode_text_string(object_map, key.data, key.length);
+  if (value.data != NULL) {
+    g_err |= oc_rep_encode_text_string(object_map, value.data, value.length);
   } else {
     g_err |= oc_rep_encode_text_string(object_map, "", 0);
   }
 }
 
 static void
-rep_set_int(CborEncoder *object_map, const char *key, int64_t value)
+rep_set_int(CborEncoder *object_map, oc_string_view_t key, int64_t value)
 {
-  g_err |= oc_rep_encode_text_string(object_map, key, strlen(key));
+  g_err |= oc_rep_encode_text_string(object_map, key.data, key.length);
   g_err |= oc_rep_encode_int(object_map, value);
 }
 
-static void
-gen_cloud_tag(const char *name, size_t device, char *cloud_tag)
-{
-  int cloud_tag_len =
-    snprintf(cloud_tag, CLOUD_TAG_MAX, "%s_%zd", name, device);
-  cloud_tag_len =
-    (cloud_tag_len < CLOUD_TAG_MAX - 1) ? cloud_tag_len + 1 : CLOUD_TAG_MAX - 1;
-  cloud_tag[cloud_tag_len] = '\0';
-}
-
-static void
-encode_cloud_with_map(CborEncoder *object_map, const oc_cloud_store_t *store)
-{
-  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_CI_SERVER),
-                      oc_string(store->ci_server));
-  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_AUTH_PROVIDER),
-                      oc_string(store->auth_provider));
-  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_UID), oc_string(store->uid));
-  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_SID), oc_string(store->sid));
-  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_ACCESS_TOKEN),
-                      oc_string(store->access_token));
-  rep_set_text_string(object_map, CLOUD_XSTR(CLOUD_REFRESH_TOKEN),
-                      oc_string(store->refresh_token));
-  rep_set_int(object_map, CLOUD_XSTR(CLOUD_STATUS), store->status);
-  rep_set_int(object_map, CLOUD_XSTR(CLOUD_CPS), store->cps);
-  rep_set_int(object_map, CLOUD_XSTR(CLOUD_EXPIRES_IN), store->expires_in);
-}
-
-static void
+void
 cloud_store_encode(const oc_cloud_store_t *store)
 {
   oc_rep_start_root_object();
-  encode_cloud_with_map(&root_map, store);
+  rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_CI_SERVER),
+                      oc_string_view2(&store->ci_server));
+  rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_AUTH_PROVIDER),
+                      oc_string_view2(&store->auth_provider));
+  rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_UID),
+                      oc_string_view2(&store->uid));
+  rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_SID),
+                      oc_string_view2(&store->sid));
+  rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_ACCESS_TOKEN),
+                      oc_string_view2(&store->access_token));
+  rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_REFRESH_TOKEN),
+                      oc_string_view2(&store->refresh_token));
+  rep_set_int(oc_rep_object(root), OC_STRING_VIEW(CLOUD_STATUS), store->status);
+  rep_set_int(oc_rep_object(root), OC_STRING_VIEW(CLOUD_CPS), store->cps);
+  rep_set_int(oc_rep_object(root), OC_STRING_VIEW(CLOUD_EXPIRES_IN),
+              store->expires_in);
   oc_rep_end_root_object();
 }
 
-static long
-cloud_store_dump_internal(const char *store_name, const oc_cloud_store_t *store)
+static int
+store_encode_cloud(size_t device, const void *data)
 {
-#ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *buf = malloc(OC_MIN_APP_DATA_SIZE);
-  if (buf == NULL) {
-    return -1;
-  }
-  oc_rep_new_realloc_v1(&buf, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
-#else  /* OC_DYNAMIC_ALLOCATION */
-  uint8_t buf[OC_MIN_APP_DATA_SIZE] = { 0 };
-  oc_rep_new_v1(buf, sizeof(buf));
-#endif /* !OC_DYNAMIC_ALLOCATION */
-
-  // Dumping cloud and accesspoint information.
+  (void)device;
+  const oc_cloud_store_t *store = (const oc_cloud_store_t *)data;
   cloud_store_encode(store);
-#ifdef OC_DYNAMIC_ALLOCATION
-  buf = oc_rep_shrink_encoder_buf(buf);
-#endif /* OC_DYNAMIC_ALLOCATION */
-  long size = oc_rep_get_encoded_payload_size();
-  if (size > 0) {
-    size = oc_storage_write(store_name, buf, size);
-  }
-
-#ifdef OC_DYNAMIC_ALLOCATION
-  free(buf);
-#endif /* OC_DYNAMIC_ALLOCATION */
-
-  return size;
+  return 0;
 }
 
 long
 cloud_store_dump(const oc_cloud_store_t *store)
 {
-  char cloud_tag[CLOUD_TAG_MAX] = { 0 };
-  gen_cloud_tag(CLOUD_STORE_NAME, store->device, cloud_tag);
-  // Calling dump for cloud and access point info
-  return cloud_store_dump_internal(cloud_tag, store);
+  long ret = oc_storage_data_save(CLOUD_STORE_NAME, store->device,
+                                  store_encode_cloud, store);
+  if (ret <= 0) {
+    OC_ERR("cannot dump cloud to storage: error(%ld)", ret);
+    return false;
+  }
+  return true;
 }
 
 static oc_event_callback_retval_t
@@ -174,9 +154,9 @@ cloud_store_dump_handler(void *data)
 void
 cloud_store_dump_async(const oc_cloud_store_t *store)
 {
+  oc_remove_delayed_callback(store, cloud_store_dump_handler);
   // ensure that cloud_store_dump_handler uses a const oc_cloud_store_t*
   // so this void* cast which drops const is safe
-  oc_remove_delayed_callback((void *)store, cloud_store_dump_handler);
   oc_set_delayed_callback((void *)store, cloud_store_dump_handler, 0);
   _oc_signal_event_loop();
 }
@@ -185,40 +165,32 @@ static bool
 cloud_store_parse_string_property(const oc_rep_t *rep, oc_cloud_store_t *store)
 {
   assert(rep->type == OC_REP_STRING);
-  if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_CI_SERVER),
-                         CLOUD_XSTRLEN(CLOUD_CI_SERVER))) {
-    oc_set_string(&store->ci_server, oc_string(rep->value.string),
-                  oc_string_len(rep->value.string));
+  if (oc_rep_is_property(rep, CLOUD_CI_SERVER,
+                         OC_CHAR_ARRAY_LEN(CLOUD_CI_SERVER))) {
+    oc_copy_string(&store->ci_server, &rep->value.string);
     return true;
   }
-  if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_SID),
-                         CLOUD_XSTRLEN(CLOUD_SID))) {
-    oc_set_string(&store->sid, oc_string(rep->value.string),
-                  oc_string_len(rep->value.string));
+  if (oc_rep_is_property(rep, CLOUD_SID, OC_CHAR_ARRAY_LEN(CLOUD_SID))) {
+    oc_copy_string(&store->sid, &rep->value.string);
     return true;
   }
-  if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_AUTH_PROVIDER),
-                         CLOUD_XSTRLEN(CLOUD_AUTH_PROVIDER))) {
-    oc_set_string(&store->auth_provider, oc_string(rep->value.string),
-                  oc_string_len(rep->value.string));
+  if (oc_rep_is_property(rep, CLOUD_AUTH_PROVIDER,
+                         OC_CHAR_ARRAY_LEN(CLOUD_AUTH_PROVIDER))) {
+    oc_copy_string(&store->auth_provider, &rep->value.string);
     return true;
   }
-  if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_UID),
-                         CLOUD_XSTRLEN(CLOUD_UID))) {
-    oc_set_string(&store->uid, oc_string(rep->value.string),
-                  oc_string_len(rep->value.string));
+  if (oc_rep_is_property(rep, CLOUD_UID, OC_CHAR_ARRAY_LEN(CLOUD_UID))) {
+    oc_copy_string(&store->uid, &rep->value.string);
     return true;
   }
-  if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_ACCESS_TOKEN),
-                         CLOUD_XSTRLEN(CLOUD_ACCESS_TOKEN))) {
-    oc_set_string(&store->access_token, oc_string(rep->value.string),
-                  oc_string_len(rep->value.string));
+  if (oc_rep_is_property(rep, CLOUD_ACCESS_TOKEN,
+                         OC_CHAR_ARRAY_LEN(CLOUD_ACCESS_TOKEN))) {
+    oc_copy_string(&store->access_token, &rep->value.string);
     return true;
   }
-  if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_REFRESH_TOKEN),
-                         CLOUD_XSTRLEN(CLOUD_REFRESH_TOKEN))) {
-    oc_set_string(&store->refresh_token, oc_string(rep->value.string),
-                  oc_string_len(rep->value.string));
+  if (oc_rep_is_property(rep, CLOUD_REFRESH_TOKEN,
+                         OC_CHAR_ARRAY_LEN(CLOUD_REFRESH_TOKEN))) {
+    oc_copy_string(&store->refresh_token, &rep->value.string);
     return true;
   }
 
@@ -231,20 +203,18 @@ cloud_store_parse_int_property(const oc_rep_t *rep, oc_cloud_store_t *store)
 {
   assert(rep->type == OC_REP_INT);
 
-  if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_STATUS),
-                         CLOUD_XSTRLEN(CLOUD_STATUS))) {
+  if (oc_rep_is_property(rep, CLOUD_STATUS, OC_CHAR_ARRAY_LEN(CLOUD_STATUS))) {
     assert(rep->value.integer <= UINT8_MAX);
     store->status = (uint8_t)rep->value.integer;
     return true;
   }
-  if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_CPS),
-                         CLOUD_XSTRLEN(CLOUD_CPS))) {
+  if (oc_rep_is_property(rep, CLOUD_CPS, OC_CHAR_ARRAY_LEN(CLOUD_CPS))) {
     assert(rep->value.integer <= UINT8_MAX);
     store->cps = (uint8_t)rep->value.integer;
     return true;
   }
-  if (oc_rep_is_property(rep, CLOUD_XSTR(CLOUD_EXPIRES_IN),
-                         CLOUD_XSTRLEN(CLOUD_EXPIRES_IN))) {
+  if (oc_rep_is_property(rep, CLOUD_EXPIRES_IN,
+                         OC_CHAR_ARRAY_LEN(CLOUD_EXPIRES_IN))) {
     store->expires_in = rep->value.integer;
     return true;
   }
@@ -253,7 +223,7 @@ cloud_store_parse_int_property(const oc_rep_t *rep, oc_cloud_store_t *store)
   return false;
 }
 
-static bool
+bool
 cloud_store_decode(const oc_rep_t *rep, oc_cloud_store_t *store)
 {
   while (rep != NULL) {
@@ -277,50 +247,14 @@ cloud_store_decode(const oc_rep_t *rep, oc_cloud_store_t *store)
   return true;
 }
 
-static int
-cloud_store_load_internal(const char *store_name, oc_cloud_store_t *store)
-{
-  int ret = 0;
-
-#ifdef OC_DYNAMIC_ALLOCATION
-  uint8_t *buf = malloc(OC_MAX_APP_DATA_SIZE);
-  if (!buf) {
-    OC_CLOUD_ERR("alloc failed!");
-    return -1;
-  }
-#else  /* OC_DYNAMIC_ALLOCATION */
-  uint8_t buf[OC_MAX_APP_DATA_SIZE] = { 0 };
-#endif /* !OC_DYNAMIC_ALLOCATION */
-  long size = oc_storage_read(store_name, buf, OC_MAX_APP_DATA_SIZE);
-  if (size > 0) {
-    OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-    struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
-    oc_rep_t *rep = oc_parse_rep(buf, (size_t)size);
-    if (rep == NULL || !cloud_store_decode(rep, store)) {
-      OC_CLOUD_ERR("failed to parse cloud store buffer");
-      ret = -1;
-    }
-    oc_free_rep(rep);
-    oc_rep_set_pool(prev_rep_objects);
-  } else {
-    cloud_store_initialize(store);
-    ret = -2;
-  }
-#ifdef OC_DYNAMIC_ALLOCATION
-  free(buf);
-#endif /* OC_DYNAMIC_ALLOCATION */
-  return ret;
-}
-
 void
 cloud_store_initialize(oc_cloud_store_t *store)
 {
   cloud_store_deinitialize(store);
-#define DEFAULT_CLOUD_CIS "coaps+tcp://127.0.0.1"
-  oc_set_string(&store->ci_server, DEFAULT_CLOUD_CIS,
-                strlen(DEFAULT_CLOUD_CIS));
-#define DEFAULT_CLOUD_SID "00000000-0000-0000-0000-000000000000"
-  oc_set_string(&store->sid, DEFAULT_CLOUD_SID, strlen(DEFAULT_CLOUD_SID));
+  oc_set_string(&store->ci_server, OCF_COAPCLOUDCONF_DEFAULT_CIS,
+                OC_CHAR_ARRAY_LEN(OCF_COAPCLOUDCONF_DEFAULT_CIS));
+  oc_set_string(&store->sid, OCF_COAPCLOUDCONF_DEFAULT_SID,
+                OC_CHAR_ARRAY_LEN(OCF_COAPCLOUDCONF_DEFAULT_SID));
 }
 
 void

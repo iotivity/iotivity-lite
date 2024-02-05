@@ -1680,13 +1680,13 @@ cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
   }
 
   if (ctx != NULL) {
-    const char *at = oc_string(ctx->store.access_token);
+    const char *at = oc_cloud_get_at(ctx);
     OC_PRINTF("   AC   = %s\n", at != NULL ? at : "");
-    const char *ap = oc_string(ctx->store.auth_provider);
+    const char *ap = oc_cloud_get_apn(ctx);
     OC_PRINTF("   AP   = %s\n", ap != NULL ? ap : "");
-    const char *ci = oc_string(ctx->store.ci_server);
+    const char *ci = oc_cloud_get_cis(ctx);
     OC_PRINTF("   CI   = %s\n", ci != NULL ? ci : "");
-    const char *uid = oc_string(ctx->store.uid);
+    const char *uid = oc_cloud_get_uid(ctx);
     OC_PRINTF("   UUID = %s\n", uid != NULL ? uid : "");
   }
 }
@@ -1913,6 +1913,30 @@ run_loop(void)
 #endif /* __linux__ */
 }
 
+#ifdef OC_CLOUD
+static void
+cloud_provision_conf_resource(oc_cloud_context_t *ctx)
+{
+  if (cis == NULL || auth_code == NULL || sid == NULL) {
+    return;
+  }
+
+  size_t cis_len = strlen(cis);
+  size_t auth_code_len = strlen(auth_code);
+  size_t sid_len = strlen(sid);
+  size_t apn_len = apn ? strlen(apn) : 0;
+  oc_cloud_provision_conf_resource_v1(
+    ctx, cis, cis_len, auth_code, auth_code_len, sid, sid_len, apn, apn_len);
+  OC_PRINTF("   config status  %d\n", 0);
+
+  OC_PRINTF("Conf Cloud Manager\n");
+  OC_PRINTF("   cis       %s\n", cis);
+  OC_PRINTF("   auth_code %s\n", auth_code);
+  OC_PRINTF("   sid       %s\n", sid);
+  OC_PRINTF("   apn       %s\n", apn);
+}
+#endif /* OC_CLOUD */
+
 /**
  * main application.
  * intializes the global variables
@@ -2020,29 +2044,16 @@ main(int argc, char *argv[])
   /* get the cloud context and start the cloud */
   oc_cloud_context_t *ctx = oc_cloud_get_context(0);
   if (ctx) {
-    int retval;
     OC_PRINTF("Start Cloud Manager\n");
-    retval = oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
+    int retval = oc_cloud_manager_start(ctx, cloud_status_handler, NULL);
     OC_PRINTF("   manager status %d\n", retval);
-    if (cis) {
-      if (argc == 6) {
-        int retval;
-        /* configure the */
-        retval =
-          oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
-        OC_PRINTF("   config status  %d\n", retval);
-
-        OC_PRINTF("Conf Cloud Manager\n");
-        OC_PRINTF("   cis       %s\n", cis);
-        OC_PRINTF("   auth_code %s\n", auth_code);
-        OC_PRINTF("   sid       %s\n", sid);
-        OC_PRINTF("   apn       %s\n", apn);
-      } else {
-        OC_PRINTF("Conf Cloud Manager: waiting to be provisioned by an OBT\n");
-      }
+    if (argc == 6) {
+      cloud_provision_conf_resource(ctx);
+    } else {
+      OC_PRINTF("Conf Cloud Manager: waiting to be provisioned by an OBT\n");
     }
   }
-#endif
+#endif /* OC_CLOUD */
 
   oc_uuid_to_str(oc_core_get_device_id(0), proxy_di, OC_UUID_LEN);
   OC_PRINTF(" UUID: '%s'\n", proxy_di);

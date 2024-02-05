@@ -475,10 +475,10 @@ plgd_time_decode(const oc_rep_t *rep, plgd_time_t *pt)
 }
 
 static int
-store_encode_plgd_time(size_t device, void *data)
+store_encode_plgd_time(size_t device, const void *data)
 {
   (void)device;
-  const plgd_time_t *pt = (plgd_time_t *)data;
+  const plgd_time_t *pt = (const plgd_time_t *)data;
   return plgd_time_encode(*pt, OC_IF_RW, PLGD_TIME_ENCODE_FLAG_TO_STORAGE);
 }
 

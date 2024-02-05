@@ -183,7 +183,7 @@ storage_print_data(const uint8_t *buf, size_t size)
 
 long
 oc_storage_data_save(const char *name, size_t device,
-                     oc_encode_to_storage_fn_t encode, void *encode_data)
+                     oc_encode_to_storage_fn_t encode, const void *encode_data)
 {
   assert(encode != NULL);
 

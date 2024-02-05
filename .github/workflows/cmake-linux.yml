@@ -52,10 +52,10 @@ jobs:
           - args: "-DOC_TCP_ENABLED=ON"
           # ipv4 on, tcp on
           - args: "-DOC_IPV4_ENABLED=ON -DOC_TCP_ENABLED=ON"
-          # ipv4 on, tcp on, dynamic allocation off
-          - args: "-DOC_IPV4_ENABLED=ON -DOC_TCP_ENABLED=ON -DOC_DYNAMIC_ALLOCATION_ENABLED=OFF"
           # ipv4 on, tcp on, pki off
           - args: "-DOC_IPV4_ENABLED=ON -DOC_TCP_ENABLED=ON -DOC_PKI_ENABLED=OFF"
+          # cloud on (ipv4+tcp on), dynamic allocation off
+          - args: "-DOC_CLOUD_ENABLED=ON -DOC_DYNAMIC_ALLOCATION_ENABLED=OFF"
           # cloud on (ipv4+tcp on), collections create on
           - args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON"
           # cloud on (ipv4+tcp on), collections create on, custom message buffer size, custom message buffer pool size, custom app data buffer size, custom app data buffer pool size

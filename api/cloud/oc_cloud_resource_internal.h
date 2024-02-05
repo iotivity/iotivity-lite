@@ -19,11 +19,40 @@
 #ifndef OC_CLOUD_RESOURCE_INTERNAL_H
 #define OC_CLOUD_RESOURCE_INTERNAL_H
 
+#include "api/oc_helpers_internal.h"
+#include "oc_cloud.h"
+#include "oc_ri.h"
+
 #include <stddef.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#define OCF_COAPCLOUDCONF_URI "/CoapCloudConfResURI"
+#define OCF_COAPCLOUDCONF_RT "oic.r.coapcloudconf"
+#define OCF_COAPCLOUDCONF_IF_MASK (OC_IF_RW | OC_IF_BASELINE)
+#define OCF_COAPCLOUDCONF_DEFAULT_IF (OC_IF_RW)
+
+#define OCF_COAPCLOUDCONF_DEFAULT_CIS "coaps+tcp://127.0.0.1"
+#define OCF_COAPCLOUDCONF_DEFAULT_SID "00000000-0000-0000-0000-000000000000"
+
+#define OCF_COAPCLOUDCONF_PROP_ACCESSTOKEN "at"
+#define OCF_COAPCLOUDCONF_PROP_AUTHPROVIDER "apn"
+#define OCF_COAPCLOUDCONF_PROP_CISERVER "cis"
+#define OCF_COAPCLOUDCONF_PROP_SERVERID "sid"
+#define OCF_COAPCLOUDCONF_PROP_LASTERRORCODE "clec"
+#define OCF_COAPCLOUDCONF_PROP_PROVISIONINGSTATUS "cps"
+
+#define OC_CPS_UNINITIALIZED_STR "uninitialized"
+#define OC_CPS_READYTOREGISTER_STR "readytoregister"
+#define OC_CPS_REGISTERING_STR "registering"
+#define OC_CPS_REGISTERED_STR "registered"
+#define OC_CPS_FAILED_STR "failed"
+#define OC_CPS_DEREGISTERING_STR "deregistering"
+
+/// Convert oc_cps_t to string
+oc_string_view_t oc_cps_to_string(oc_cps_t cps);
 
 /// Create CoAPCloudConf resource
 void oc_create_cloudconf_resource(size_t device);

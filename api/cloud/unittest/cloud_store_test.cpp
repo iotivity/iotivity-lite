@@ -17,51 +17,48 @@
  *
  ******************************************************************/
 
+#include "api/cloud/oc_cloud_context_internal.h"
+#include "api/cloud/oc_cloud_internal.h"
+#include "api/cloud/oc_cloud_resource_internal.h"
+#include "api/cloud/oc_cloud_store_internal.h"
 #include "oc_api.h"
 #include "oc_config.h"
-#include "oc_cloud_internal.h"
-#include "oc_cloud_store_internal.h"
 #include "oc_collection.h"
 #include "port/oc_storage.h"
 #include "port/oc_storage_internal.h"
 #include "tests/gtest/Device.h"
+#include "tests/gtest/RepPool.h"
 
 #include <filesystem>
 #include <gtest/gtest.h>
+#include <string_view>
 
-#define ACCESS_TOKEN ("access_token")
-#define AUTH_PROVIDER ("auth_provider")
-#define CI_SERVER ("ci_server")
-#define DEVICE (1234)
-#define EXPIRES_IN (5678)
-#define REFRESH_TOKEN ("refresh_token")
-#define SID ("sid")
-#define STATUS (OC_CLOUD_LOGGED_IN)
-#define UID ("uid")
-#define CPS (OC_CPS_READYTOREGISTER)
-#define CLOUD_STORAGE ("storage_cloud")
+using namespace std::chrono_literals;
 
-#define DEFAULT_CLOUD_CIS ("coaps+tcp://127.0.0.1")
-#define DEFAULT_CLOUD_SID ("00000000-0000-0000-0000-000000000000")
+static constexpr std::string_view access_token = "access_token";
+static constexpr std::string_view auth_provider = "auth_provider";
+static constexpr std::string_view ci_server = "ci_server";
+static constexpr std::string_view refresh_token = "refresh_token";
+static constexpr std::string_view sid = "sid";
+static constexpr std::string_view uid = "uid";
+static constexpr size_t kDevice = 1234;
+static constexpr int64_t kExpiresIn = 5678;
+static constexpr oc_cloud_status_t kStatus = OC_CLOUD_LOGGED_IN;
+static constexpr oc_cps_t kCps = OC_CPS_READYTOREGISTER;
+static constexpr std::string_view kCloudStoragePath = "storage_cloud";
 
 class TestCloudStore : public testing::Test {
 public:
-  static oc_cloud_context_t s_context;
-
-  static void validateDefaults(const oc_cloud_store_t *store)
+  static void clean()
   {
-    EXPECT_STREQ(DEFAULT_CLOUD_CIS, oc_string(store->ci_server));
-    EXPECT_EQ(nullptr, oc_string(store->auth_provider));
-    EXPECT_EQ(nullptr, oc_string(store->uid));
-    EXPECT_EQ(nullptr, oc_string(store->access_token));
-    EXPECT_EQ(nullptr, oc_string(store->refresh_token));
-    EXPECT_STREQ(DEFAULT_CLOUD_SID, oc_string(store->sid));
-    EXPECT_EQ(0, store->expires_in);
-    EXPECT_EQ(0, store->status);
-    EXPECT_EQ(0, store->cps);
+#ifdef OC_STORAGE
+    for (const auto &entry :
+         std::filesystem::directory_iterator(kCloudStoragePath.data())) {
+      std::filesystem::remove_all(entry.path());
+    }
+#endif /* OC_STORAGE */
   }
 
-#ifdef OC_STORAGE
   static void compareStores(const oc_cloud_store_t *s1,
                             const oc_cloud_store_t *s2)
   {
@@ -76,7 +73,34 @@ public:
     EXPECT_EQ(s1->cps, s2->cps);
     EXPECT_EQ(s1->status, s2->status);
   }
-#endif /* OC_STORAGE */
+
+  static void validateDefaults(const oc_cloud_store_t *store)
+  {
+    oc_cloud_store_t def{};
+    cloud_store_initialize(&def);
+    compareStores(&def, store);
+    freeStore(&def);
+  }
+
+  static oc_cloud_store_t makeStore()
+  {
+    oc_cloud_store_t store;
+    memset(&store, 0, sizeof(store));
+    oc_new_string(&store.ci_server, ci_server.data(), ci_server.length());
+    oc_new_string(&store.auth_provider, auth_provider.data(),
+                  auth_provider.length());
+    oc_new_string(&store.uid, uid.data(), uid.length());
+    oc_new_string(&store.access_token, access_token.data(),
+                  access_token.length());
+    oc_new_string(&store.refresh_token, refresh_token.data(),
+                  refresh_token.length());
+    oc_new_string(&store.sid, sid.data(), sid.length());
+    store.expires_in = kExpiresIn;
+    store.device = kDevice;
+    store.cps = kCps;
+    store.status = kStatus;
+    return store;
+  }
 
   static void freeStore(oc_cloud_store_t *store)
   {
@@ -90,11 +114,97 @@ public:
 
   static void SetUpTestCase()
   {
+    clean();
 #ifdef OC_STORAGE
-    ASSERT_EQ(0, oc_storage_config(CLOUD_STORAGE));
+    ASSERT_EQ(0, oc_storage_config(kCloudStoragePath.data()));
+#endif /* OC_STORAGE */
+  }
+
+  static void TearDownTestCase()
+  {
+#ifdef OC_STORAGE
+    EXPECT_EQ(0, oc_storage_reset());
+#endif /* OC_STORAGE */
+    clean();
+  }
+
+  void TearDown() override
+  {
+    clean();
+  }
+};
+
+TEST_F(TestCloudStore, Decode_FailUnknownProperty)
+{
+  oc::RepPool pool{};
+  oc_rep_start_root_object();
+  oc_rep_set_boolean(root, plgd, true);
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  oc_cloud_store_t store{};
+  EXPECT_FALSE(cloud_store_decode(pool.ParsePayload().get(), &store));
+  freeStore(&store);
+}
+
+TEST_F(TestCloudStore, Decode_FailUnknownIntProperty)
+{
+  oc::RepPool pool{};
+  oc_rep_start_root_object();
+  oc_rep_set_int(root, plgd, 42);
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  oc_cloud_store_t store{};
+  EXPECT_FALSE(cloud_store_decode(pool.ParsePayload().get(), &store));
+  freeStore(&store);
+}
+
+TEST_F(TestCloudStore, Decode_FailUnknownStringProperty)
+{
+  oc::RepPool pool{};
+  oc_rep_start_root_object();
+  oc_rep_set_text_string(root, plgd, "plgd");
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  oc_cloud_store_t store{};
+  EXPECT_FALSE(cloud_store_decode(pool.ParsePayload().get(), &store));
+  freeStore(&store);
+}
+
+TEST_F(TestCloudStore, LoadDefaults)
+{
+  oc_cloud_store_t store{};
+  EXPECT_FALSE(cloud_store_load(&store));
+
+  validateDefaults(&store);
+  freeStore(&store);
+}
+
+TEST_F(TestCloudStore, DumpAndLoad)
+{
+  oc_cloud_store_t store = makeStore();
+  ASSERT_LT(0, cloud_store_dump(&store));
+
+  oc_cloud_store_t store2{};
+  store2.device = store.device;
+  ASSERT_TRUE(cloud_store_load(&store2));
+  compareStores(&store, &store2);
+
+  freeStore(&store2);
+  freeStore(&store);
+}
+
+class TestCloudStoreWithServer : public testing::Test {
+public:
+  static void SetUpTestCase()
+  {
+    TestCloudStore::clean();
+#ifdef OC_STORAGE
+    ASSERT_EQ(0, oc_storage_config(kCloudStoragePath.data()));
 #endif /* OC_STORAGE */
     ASSERT_TRUE(oc::TestDevice::StartServer());
-    memset(&s_context, 0, sizeof(s_context));
   }
 
   static void TearDownTestCase()
@@ -102,74 +212,44 @@ public:
     oc::TestDevice::StopServer();
 #ifdef OC_STORAGE
     EXPECT_EQ(0, oc_storage_reset());
-    for (const auto &entry :
-         std::filesystem::directory_iterator(CLOUD_STORAGE)) {
-      std::filesystem::remove_all(entry.path());
-    }
 #endif /* OC_STORAGE */
   }
 
   void SetUp() override
   {
-    oc_new_string(&m_store.ci_server, CI_SERVER, strlen(CI_SERVER));
-    oc_new_string(&m_store.auth_provider, AUTH_PROVIDER, strlen(AUTH_PROVIDER));
-    oc_new_string(&m_store.uid, UID, strlen(UID));
-    oc_new_string(&m_store.access_token, ACCESS_TOKEN, strlen(ACCESS_TOKEN));
-    oc_new_string(&m_store.refresh_token, REFRESH_TOKEN, strlen(REFRESH_TOKEN));
-    oc_new_string(&m_store.sid, SID, strlen(SID));
-    m_store.expires_in = EXPIRES_IN;
-    m_store.device = DEVICE;
-    m_store.cps = CPS;
-    m_store.status = STATUS;
+    m_store = TestCloudStore::makeStore();
   }
 
   void TearDown() override
   {
-    freeStore(&m_store);
-#ifdef OC_STORAGE
-    for (const auto &entry :
-         std::filesystem::directory_iterator(CLOUD_STORAGE)) {
-      std::filesystem::remove_all(entry.path());
-    }
-#endif /* OC_STORAGE */
+    TestCloudStore::freeStore(&m_store);
+    TestCloudStore::clean();
     oc::TestDevice::Reset();
   }
 
   oc_cloud_store_t m_store;
 };
 
-oc_cloud_context_t TestCloudStore::s_context;
-
-TEST_F(TestCloudStore, dump_async)
+TEST_F(TestCloudStoreWithServer, DumpAsync)
 {
   cloud_store_dump_async(&m_store);
-  oc::TestDevice::PoolEvents(1);
+  oc::TestDevice::PoolEventsMsV1(50ms);
 
   oc_cloud_store_t store1;
   memset(&store1, 0, sizeof(store1));
   store1.device = m_store.device;
 #ifdef OC_STORAGE
-  EXPECT_EQ(0, cloud_store_load(&store1));
-  compareStores(&m_store, &store1);
+  ASSERT_TRUE(cloud_store_load(&store1));
+  TestCloudStore::compareStores(&m_store, &store1);
 #else  /* !OC_STORAGE */
-  EXPECT_NE(0, cloud_store_load(&store1));
-  validateDefaults(&store1);
+  EXPECT_FALSE(cloud_store_load(&store1));
+  TestCloudStore::validateDefaults(&store1);
 #endif /* OC_STORAGE */
 
-  freeStore(&store1);
+  TestCloudStore::freeStore(&store1);
 }
 
-TEST_F(TestCloudStore, load_defaults)
-{
-  oc_cloud_store_t store;
-  memset(&store, 0, sizeof(store));
-  EXPECT_NE(0, cloud_store_load(&store));
-
-  validateDefaults(&store);
-  freeStore(&store);
-}
-
-TEST_F(TestCloudStore, dump)
+TEST_F(TestCloudStoreWithServer, Dump)
 {
 #ifdef OC_STORAGE
   EXPECT_LE(0, cloud_store_dump(&m_store));
@@ -180,12 +260,12 @@ TEST_F(TestCloudStore, dump)
   memset(&store1, 0, sizeof(store1));
   store1.device = m_store.device;
 #ifdef OC_STORAGE
-  EXPECT_EQ(0, cloud_store_load(&store1));
-  compareStores(&m_store, &store1);
+  ASSERT_TRUE(cloud_store_load(&store1));
+  TestCloudStore::compareStores(&m_store, &store1);
 #else  /* !OC_STORAGE */
-  EXPECT_NE(0, cloud_store_load(&store1));
-  validateDefaults(&store1);
+  EXPECT_FALSE(cloud_store_load(&store1));
+  TestCloudStore::validateDefaults(&store1);
 #endif /* OC_STORAGE */
 
-  freeStore(&store1);
+  TestCloudStore::freeStore(&store1);
 }

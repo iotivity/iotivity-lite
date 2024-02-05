@@ -284,7 +284,8 @@ TEST_F(TestCSRWithDevice, RegenerateDeviceKeypair)
   ASSERT_LT(0, oc_sec_ecdsa_count_keypairs());
 }
 
-#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+#if defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM) &&                        \
+  defined(OC_DYNAMIC_ALLOCATION)
 
 TEST_F(TestCSRWithDevice, GetResourceBaseline)
 {
@@ -315,7 +316,7 @@ TEST_F(TestCSRWithDevice, GetResourceBaseline)
   EXPECT_TRUE(invoked);
 }
 
-#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM && OC_DYNAMIC_ALLOCATION */
 
 class TestCSRWithDeviceTPM : public TestCSRWithDevice {
 public:

@@ -956,7 +956,7 @@ oc_swupdate_load(size_t device)
 }
 
 static int
-swupdate_store_encode(size_t device, void *data)
+swupdate_store_encode(size_t device, const void *data)
 {
   (void)data;
   return oc_swupdate_encode_for_device(device,

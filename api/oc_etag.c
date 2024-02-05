@@ -285,9 +285,9 @@ typedef struct etag_encode_data_t
 } etag_encode_data_t;
 
 static int
-etag_store_encode(size_t device, void *data)
+etag_store_encode(size_t device, const void *data)
 {
-  etag_encode_data_t *encode_data = (etag_encode_data_t *)data;
+  const etag_encode_data_t *encode_data = (const etag_encode_data_t *)data;
   oc_rep_start_root_object();
   oc_resources_iterate(device, encode_data->platform_only,
                        !encode_data->platform_only, !encode_data->platform_only,

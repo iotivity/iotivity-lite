@@ -16,6 +16,7 @@
  *
  ******************************************************************/
 
+#include "api/cloud/oc_cloud_context_internal.h"
 #include "api/cloud/oc_cloud_internal.h"
 #include "api/oc_link_internal.h"
 #include "oc_api.h"

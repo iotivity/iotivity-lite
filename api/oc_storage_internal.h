@@ -108,7 +108,7 @@ long oc_storage_data_load(const char *name, size_t device,
  *
  * @return 0 on success
  */
-typedef int (*oc_encode_to_storage_fn_t)(size_t device, void *data);
+typedef int (*oc_encode_to_storage_fn_t)(size_t device, const void *data);
 
 /**
  * @brief Save data of resource to storage.
@@ -117,12 +117,13 @@ typedef int (*oc_encode_to_storage_fn_t)(size_t device, void *data);
  * @param device device index
  * @param encode callback function invoked before saving the global encoder to
  * storage (cannot be NULL)
+ * @param encode_data custom user data provided to \p encode
  * @return >= 0 number of written bytes
  * @return -1 on error
  */
 long oc_storage_data_save(const char *name, size_t device,
-                          oc_encode_to_storage_fn_t encode, void *encode_data)
-  OC_NONNULL(1, 3);
+                          oc_encode_to_storage_fn_t encode,
+                          const void *encode_data) OC_NONNULL(1, 3);
 
 /** @brief Truncate store with given name. */
 bool oc_storage_data_clear(const char *name, size_t device) OC_NONNULL();

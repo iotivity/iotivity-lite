@@ -31,8 +31,8 @@ jobs:
           - build_args: "-DOC_SECURITY_ENABLED=OFF -DOC_IPV4_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON"
           # ipv6 dns on, oscore off, rep realloc on, json encoder on
           - build_args: "-DOC_DNS_LOOKUP_IPV6_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_JSON_ENCODER_ENABLED=ON"
-          # ipv4 on, tcp on, dynamic allocation off, rfotm on, push off (because it forces dynamic allocation)
-          - build_args: "-DOC_IPV4_ENABLED=ON -DOC_TCP_ENABLED=ON -DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+          # cloud (ipv4+tcp) on, dynamic allocation off, rfotm on, push off (because it forces dynamic allocation)
+          - build_args: "-DOC_CLOUD_ENABLED=ON -DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
           # security off, dynamic allocation off, push off (because it forces dynamic allocation), json encoder on
           - build_args: "-DOC_SECURITY_ENABLED=OFF -DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_JSON_ENCODER_ENABLED=ON"
           # security off, cloud (ipv4+tcp), collection create on, introspection IDD off

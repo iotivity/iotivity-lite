@@ -47,9 +47,11 @@ static const std::string kOCFSpecVersion{ "ocf.1.0.0" };
 static const std::string kOCFDataModelVersion{ "ocf.res.1.0.0" };
 
 static constexpr size_t kDevice1ID{ 0 };
-static constexpr size_t kDevice2ID{ 1 };
 static constexpr std::string_view kDevice1Name{ "Test Device 1" };
+#if defined(OC_SERVER) && defined(OC_DYNAMIC_ALLOCATION)
+static constexpr size_t kDevice2ID{ 1 };
 static constexpr std::string_view kDevice2Name{ "Test Device 2" };
+#endif /* OC_SERVER && OC_DYNAMIC_ALLOCATION */
 
 class TestCoreResource : public testing::Test {
 public:
@@ -240,13 +242,15 @@ public:
         /*data_model_version=*/"ocf.res.1.0.0",
         /*uri=*/"/oic/d",
       },
-      {
-        /*rt=*/OCF_D_RT,
-        /*name=*/std::string(kDevice2Name),
-        /*spec_version=*/"ocf.1.0.0",
-        /*data_model_version=*/"ocf.res.1.0.0",
-        /*uri=*/"/oic/d",
-      },
+#if defined(OC_SERVER) && defined(OC_DYNAMIC_ALLOCATION)
+        {
+          /*rt=*/OCF_D_RT,
+          /*name=*/std::string(kDevice2Name),
+          /*spec_version=*/"ocf.1.0.0",
+          /*data_model_version=*/"ocf.res.1.0.0",
+          /*uri=*/"/oic/d",
+        },
+#endif /* OC_SERVER && OC_DYNAMIC_ALLOCATION */
     });
     EXPECT_TRUE(oc::TestDevice::StartServer());
 
@@ -352,12 +356,14 @@ TEST_F(TestCoreResourceWithDevice, CoreGetResourceByURI_P)
     check_uri(uri, kDevice1ID);
   }
 
+#if defined(OC_SERVER) && defined(OC_DYNAMIC_ALLOCATION)
   // add leading '/' and recheck
   std::transform(uris.cbegin(), uris.cend(), uris.begin(),
                  [](const std::string &str) { return "/" + str; });
   for (const auto &uri : uris) {
-    check_uri(uri, /*device*/ 1);
+    check_uri(uri, kDevice2ID);
   }
+#endif /* OC_SERVER && OC_DYNAMIC_ALLOCATION */
 }
 
 TEST_F(TestCoreResourceWithDevice, CoreGetResourceIsDCR_P)

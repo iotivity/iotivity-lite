@@ -146,6 +146,8 @@ struct oc_response_s
 // get/set properties callbacks are not expected to be read or writen directly to by Java code.
 %ignore oc_resource_s::get_properties;
 %ignore oc_resource_s::set_properties;
+%ignore oc_ri_on_delete_resource_add_callback;
+%ignore oc_ri_on_delete_resource_remove_callback;
 
 %rename(OCEventCallbackResult) oc_event_callback_retval_t;
 %ignore oc_event_callback_s;

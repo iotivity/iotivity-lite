@@ -86,7 +86,6 @@ cloud_context_init(size_t device)
   // remain on the device when the device is shut down during de-registration.
   reinitialize_cloud_storage(ctx);
   ctx->time_to_live = RD_PUBLISH_TTL_UNLIMITED;
-  ctx->cloud_conf = oc_core_get_resource_by_index(OCF_COAPCLOUDCONF, device);
   ctx->cloud_manager = false;
   ctx->keepalive.ping_timeout = 4;
   oc_list_add(g_cloud_context_list, ctx);
@@ -116,6 +115,42 @@ oc_cloud_get_context(size_t device)
     ctx = ctx->next;
   }
   return ctx;
+}
+
+size_t
+oc_cloud_get_device(const oc_cloud_context_t *ctx)
+{
+  return ctx->device;
+}
+
+const char *
+oc_cloud_get_apn(const oc_cloud_context_t *ctx)
+{
+  return oc_string(ctx->store.auth_provider);
+}
+
+const char *
+oc_cloud_get_at(const oc_cloud_context_t *ctx)
+{
+  return oc_string(ctx->store.access_token);
+}
+
+const char *
+oc_cloud_get_cis(const oc_cloud_context_t *ctx)
+{
+  return oc_string(ctx->store.ci_server);
+}
+
+const char *
+oc_cloud_get_sid(const oc_cloud_context_t *ctx)
+{
+  return oc_string(ctx->store.sid);
+}
+
+const char *
+oc_cloud_get_uid(const oc_cloud_context_t *ctx)
+{
+  return oc_string(ctx->store.uid);
 }
 
 void
@@ -165,8 +200,7 @@ cloud_context_size(void)
 bool
 cloud_context_has_access_token(const oc_cloud_context_t *ctx)
 {
-  return oc_string(ctx->store.access_token) != NULL &&
-         oc_string_len(ctx->store.access_token) > 0;
+  return !oc_string_is_empty(&ctx->store.access_token);
 }
 
 bool
@@ -185,8 +219,7 @@ cloud_context_clear_access_token(oc_cloud_context_t *ctx)
 bool
 cloud_context_has_refresh_token(const oc_cloud_context_t *ctx)
 {
-  return oc_string(ctx->store.refresh_token) != NULL &&
-         oc_string_len(ctx->store.refresh_token) > 0;
+  return !oc_string_is_empty(&ctx->store.refresh_token);
 }
 
 void

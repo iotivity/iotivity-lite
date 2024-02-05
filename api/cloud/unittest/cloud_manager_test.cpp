@@ -17,6 +17,7 @@
  *
  ******************************************************************/
 
+#include "api/cloud/oc_cloud_context_internal.h"
 #include "api/cloud/oc_cloud_internal.h"
 #include "api/cloud/oc_cloud_manager_internal.h"
 #include "api/cloud/oc_cloud_store_internal.h"
@@ -44,16 +45,18 @@ public:
     ASSERT_TRUE(oc::TestDevice::StartServer());
 
     memset(&m_context, 0, sizeof(m_context));
-#define UID "501"
-    oc_new_string(&m_context.store.uid, UID, strlen(UID));
+    std::string uid = "501";
+    oc_new_string(&m_context.store.uid, uid.c_str(), uid.length());
     m_context.cloud_ep = oc_new_endpoint();
     memset(m_context.cloud_ep, 0, sizeof(oc_endpoint_t));
-#define ENDPOINT "coap://224.0.1.187:5683"
-    oc_new_string(&m_context.store.ci_server, ENDPOINT, strlen(ENDPOINT));
-#define TOKEN "access_token"
-    oc_new_string(&m_context.store.access_token, TOKEN, strlen(TOKEN));
-#define RTOKEN "refresh_token"
-    oc_new_string(&m_context.store.refresh_token, RTOKEN, strlen(RTOKEN));
+    std::string endpoint = "coap://224.0.1.187:5683";
+    oc_new_string(&m_context.store.ci_server, endpoint.c_str(),
+                  endpoint.length());
+    std::string token = "access_token";
+    oc_new_string(&m_context.store.access_token, token.c_str(), token.length());
+    std::string rtoken = "refresh_token";
+    oc_new_string(&m_context.store.refresh_token, rtoken.c_str(),
+                  rtoken.length());
   }
 
   void TearDown() override

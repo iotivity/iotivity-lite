@@ -28,6 +28,7 @@
 #include "oc_link.h"
 #include "oc_ri.h"
 #include "oc_session_events.h"
+#include "util/oc_compiler.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -56,20 +57,6 @@ typedef enum oc_cps_t {
   OC_CPS_DEREGISTERING
 } oc_cps_t;
 
-typedef struct oc_cloud_store_t
-{
-  oc_string_t ci_server;
-  oc_string_t auth_provider;
-  oc_string_t uid;
-  oc_string_t access_token;
-  oc_string_t refresh_token;
-  oc_string_t sid;
-  int64_t expires_in;
-  uint8_t status;
-  oc_cps_t cps;
-  size_t device;
-} oc_cloud_store_t;
-
 typedef enum {
   CLOUD_OK = 0,
   CLOUD_ERROR_RESPONSE = 1,
@@ -78,7 +65,7 @@ typedef enum {
   CLOUD_ERROR_UNAUTHORIZED = 4,
 } oc_cloud_error_t;
 
-struct oc_cloud_context_t;
+typedef struct oc_cloud_context_t oc_cloud_context_t;
 
 /**
   @brief A function pointer for handling the cloud status.
@@ -87,7 +74,8 @@ struct oc_cloud_context_t;
   @param user_data User data
 */
 typedef void (*oc_cloud_cb_t)(struct oc_cloud_context_t *ctx,
-                              oc_cloud_status_t status, void *user_data);
+                              oc_cloud_status_t status, void *user_data)
+  OC_NONNULL(1);
 
 /**
  * @brief Callback invoked by the cloud manager when cloud change state to
@@ -105,18 +93,8 @@ typedef void (*oc_cloud_cb_t)(struct oc_cloud_context_t *ctx,
 typedef bool (*oc_cloud_on_keepalive_response_cb_t)(bool response_received,
                                                     uint64_t *next_ping,
                                                     uint16_t *next_ping_timeout,
-                                                    void *user_data);
-
-/**
- * @brief Cloud keepalive configuration.
- */
-typedef struct oc_cloud_keepalive_t
-{
-  oc_cloud_on_keepalive_response_cb_t
-    on_response;   /**< Callback invoked on keepalive response */
-  void *user_data; /**< User data provided to the keepalive response callback */
-  uint16_t ping_timeout; /**< Timeout for keepalive ping in seconds */
-} oc_cloud_keepalive_t;
+                                                    void *user_data)
+  OC_NONNULL(2, 3);
 
 /**
  * @brief Enumeration defining cloud actions.
@@ -134,7 +112,7 @@ typedef enum {
  * @param action Cloud action to convert.
  * @return const char* String representation of the cloud action.
  */
-const char *oc_cloud_action_to_str(oc_cloud_action_t action);
+const char *oc_cloud_action_to_str(oc_cloud_action_t action) OC_RETURNS_NONNULL;
 
 /**
  * @brief Callback invoked by the cloud manager when the cloud wants to schedule
@@ -158,55 +136,82 @@ typedef bool (*oc_cloud_schedule_action_cb_t)(oc_cloud_action_t action,
                                               void *user_data) OC_NONNULL(3, 4);
 
 /**
- * @brief Cloud retry configuration structure.
- */
-typedef struct oc_cloud_schedule_action_t
-{
-  oc_cloud_schedule_action_cb_t
-    on_schedule_action; /**< Callback invoked to set delay
-                      and timeout for the action. */
-  void *user_data;  /**< User data provided to the schedule action callback. */
-  uint16_t timeout; /**< Timeout for the action in seconds. */
-} oc_cloud_schedule_action_t;
-
-typedef struct oc_cloud_context_t
-{
-  struct oc_cloud_context_t *next;
-
-  size_t device;
-
-  oc_cloud_cb_t callback;
-  void *user_data;
-
-  oc_cloud_store_t store;
-
-  oc_session_state_t cloud_ep_state;
-  oc_endpoint_t *cloud_ep;
-  uint8_t retry_count;
-  uint8_t retry_refresh_token_count;
-  oc_cloud_error_t last_error;
-  uint32_t time_to_live; /**< Time to live of published resources in seconds */
-
-  oc_link_t *rd_publish_resources;   /**< Resource links to publish */
-  oc_link_t *rd_published_resources; /**< Resource links already published */
-  oc_link_t *rd_delete_resources;    /**< Resource links to delete */
-
-  oc_resource_t *cloud_conf;
-
-  int selected_identity_cred_id; /**< Selected identity cert chain. -1(default)
-                                    means any*/
-  bool cloud_manager;
-
-  oc_cloud_keepalive_t keepalive; /**< Keepalive configuration */
-  oc_cloud_schedule_action_t
-    schedule_action; /**< Schedule action configuration */
-} oc_cloud_context_t;
-
-/**
  * @brief Get cloud context for device.
  */
 OC_API
 oc_cloud_context_t *oc_cloud_get_context(size_t device);
+
+/**
+ * @brief Get device index from cloud context.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @return size_t device index
+ */
+size_t oc_cloud_get_device(const oc_cloud_context_t *ctx) OC_NONNULL();
+
+/**
+ * @brief Get authorization provider name.
+ *
+ * The name of the Authorisation Provider through which access token was
+ * obtained.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @return auth provider ID
+ *
+ * @see `apn` property in the cloud configuration resource
+ */
+OC_API
+const char *oc_cloud_get_apn(const oc_cloud_context_t *ctx) OC_NONNULL();
+
+/**
+ * @brief Get the URL of the OCF Cloud.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @return cloud interface server URL
+ *
+ * @see `cis` property in the cloud configuration resource
+ */
+OC_API
+const char *oc_cloud_get_cis(const oc_cloud_context_t *ctx) OC_NONNULL();
+
+/**
+ * @brief Get the access token.
+ *
+ * Access token is returned by an Authorisation Provider or an OCF Cloud.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @return access token
+ *
+ * @see `at` property in the cloud configuration resource
+ */
+OC_API
+const char *oc_cloud_get_at(const oc_cloud_context_t *ctx) OC_NONNULL();
+
+/**
+ * @brief Get the identity of the OCF Cloud.
+ *
+ * The ID is in the string form of a UUID.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @return identity of the OCF Cloud
+ *
+ * @see `sid` property in the cloud configuration resource
+ */
+OC_API
+const char *oc_cloud_get_sid(const oc_cloud_context_t *ctx) OC_NONNULL();
+
+/**
+ * @brief Get the OCF Cloud User identifier
+ *
+ * The ID is in the string form of a UUID.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @return identity of the OCF Cloud
+ *
+ * @see `uid` property in the cloud configuration resource
+ */
+OC_API
+const char *oc_cloud_get_uid(const oc_cloud_context_t *ctx) OC_NONNULL();
 
 /**
  * @brief Start cloud registration process.
@@ -239,7 +244,7 @@ int oc_cloud_manager_stop(oc_cloud_context_t *ctx);
  * @param ctx cloud context (cannot be NULL)
  */
 OC_API
-void oc_cloud_manager_restart(oc_cloud_context_t *ctx);
+void oc_cloud_manager_restart(oc_cloud_context_t *ctx) OC_NONNULL();
 
 /**
  * @brief Send request to register device to cloud.
@@ -313,7 +318,7 @@ int oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb,
                            void *data);
 
 OC_API
-int oc_cloud_get_token_expiry(const oc_cloud_context_t *ctx);
+int oc_cloud_get_token_expiry(const oc_cloud_context_t *ctx) OC_NONNULL();
 
 /**
  * @brief Set Time to Live value in the provided cloud context.
@@ -322,8 +327,8 @@ int oc_cloud_get_token_expiry(const oc_cloud_context_t *ctx);
  * @param ttl Time to live value in seconds.
  */
 OC_API
-void oc_cloud_set_published_resources_ttl(oc_cloud_context_t *ctx,
-                                          uint32_t ttl);
+void oc_cloud_set_published_resources_ttl(oc_cloud_context_t *ctx, uint32_t ttl)
+  OC_NONNULL();
 
 /**
  * @brief Publish resource to cloud.
@@ -362,23 +367,43 @@ int oc_cloud_discover_resources(const oc_cloud_context_t *ctx,
 /**
  * @brief Configure cloud properties.
  *
- * @param ctx Cloud context to update (cannot be be NULL)
- * @param server Cloud server URL
- * @param access_token Access token from an Authorisation Provider
- * @param server_id Cloud server ID
- * @param auth_provider Name of the Authorization Provider which provided the
- * access token
- * @return 0 on success
- * @return -1 on failure
- *
- * @note Cloud manager will be restarted if is was started previously
+ * @deprecated replaced by oc_cloud_provision_conf_resource_v1 in v2.2.5.13
  */
 OC_API
 int oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx,
                                      const char *server,
                                      const char *access_token,
                                      const char *server_id,
-                                     const char *auth_provider);
+                                     const char *auth_provider) OC_NONNULL(1)
+  OC_DEPRECATED("replaced by oc_cloud_provision_conf_resource_v1 in v2.2.5.13");
+
+/**
+ * @brief Configure cloud properties.
+ *
+ * @param ctx Cloud context to update (cannot be be NULL)
+ * @param server Cloud server URL (cannot be be NULL)
+ * @param server_len Length of the server URL
+ * @param access_token Access token from an Authorization Provider (cannot be be
+ * NULL)
+ * @param access_token_len Length of the access token
+ * @param server_id Cloud server ID (cannot be be NULL)
+ * @param server_id_len Length of the server ID
+ * @param auth_provider Name of the Authorization Provider which provided the
+ * access token
+ * @param auth_provider_len Length of the Authorization Provider name
+ *
+ * @return int 0 on success
+ * @return int -1 on error
+ *
+ * @note Cloud manager will be restarted if is was started previously
+ */
+OC_API
+int oc_cloud_provision_conf_resource_v1(
+  oc_cloud_context_t *ctx, const char *server, size_t server_len,
+  const char *access_token, size_t access_token_len, const char *server_id,
+  size_t server_id_len, const char *auth_provider, size_t auth_provider_len)
+  OC_NONNULL(1, 2, 4, 6);
+
 /**
  * @brief Set identity certificate chain to establish TLS connection.
  *
@@ -388,7 +413,8 @@ int oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx,
  */
 OC_API
 void oc_cloud_set_identity_cert_chain(oc_cloud_context_t *ctx,
-                                      int selected_identity_cred_id);
+                                      int selected_identity_cred_id)
+  OC_NONNULL();
 /**
  * @brief Get selected identity certificate chain to establish TLS connection.
  *
@@ -396,7 +422,8 @@ void oc_cloud_set_identity_cert_chain(oc_cloud_context_t *ctx,
  * @return Selected identity certificate chain id. -1 means any.
  */
 OC_API
-int oc_cloud_get_identity_cert_chain(const oc_cloud_context_t *ctx);
+int oc_cloud_get_identity_cert_chain(const oc_cloud_context_t *ctx)
+  OC_NONNULL();
 
 /**
  * @brief Set keepalive parameters for the cloud manager.
@@ -409,7 +436,8 @@ int oc_cloud_get_identity_cert_chain(const oc_cloud_context_t *ctx);
 OC_API
 void oc_cloud_set_keepalive(
   oc_cloud_context_t *ctx,
-  oc_cloud_on_keepalive_response_cb_t on_keepalive_response, void *user_data);
+  oc_cloud_on_keepalive_response_cb_t on_keepalive_response, void *user_data)
+  OC_NONNULL(1);
 
 /**
  * @brief Set a custom scheduler for actions in the cloud manager. By default,
@@ -441,7 +469,8 @@ void oc_cloud_set_schedule_action(
  * manner; otherwise, perform the dump while executing this function.
  */
 OC_API
-void oc_cloud_context_clear(oc_cloud_context_t *ctx, bool dump_async);
+void oc_cloud_context_clear(oc_cloud_context_t *ctx, bool dump_async)
+  OC_NONNULL();
 
 #ifdef __cplusplus
 }

@@ -822,7 +822,7 @@ TEST_F(TestETagWithServer, IgnoreInvalidStorageData)
   // set all etags to 1337
   setAllETags(kETag);
 
-  auto empty_storage = [](size_t, void *) {
+  auto empty_storage = [](size_t, const void *) {
     oc_rep_start_root_object();
     oc_rep_end_root_object();
     return 0;
@@ -844,7 +844,7 @@ TEST_F(TestETagWithServer, IgnoreInvalidStorageData)
   //   ...
   // }
 
-  auto store_encode_single_string = [](size_t, void *) {
+  auto store_encode_single_string = [](size_t, const void *) {
     oc_rep_start_root_object();
     oc_rep_set_text_string(root, uri, "/oic/d");
     oc_rep_end_root_object();
@@ -858,7 +858,7 @@ TEST_F(TestETagWithServer, IgnoreInvalidStorageData)
     EXPECT_EQ(kETag, oc_resource_get_etag(resource));
   });
 
-  auto store_encode_invalid_type = [](size_t, void *) {
+  auto store_encode_invalid_type = [](size_t, const void *) {
     oc_rep_start_root_object();
     std::string uri = "/oic/d";
     int err =
@@ -883,7 +883,7 @@ TEST_F(TestETagWithServer, IgnoreInvalidStorageData)
     EXPECT_EQ(kETag, oc_resource_get_etag(resource));
   });
 
-  auto store_encode_invalid_value = [](size_t, void *) {
+  auto store_encode_invalid_value = [](size_t, const void *) {
     oc_rep_start_root_object();
     int err = encodeResourceETag(oc_rep_object(root), "/oic/p", 0);
     err |= encodeResourceETag(oc_rep_object(root), "/oic/d", -1);

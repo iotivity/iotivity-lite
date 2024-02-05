@@ -19,12 +19,76 @@
 #ifndef OC_CLOUD_CONTEXT_INTERNAL_H
 #define OC_CLOUD_CONTEXT_INTERNAL_H
 
+#include "api/cloud/oc_cloud_store_internal.h"
 #include "oc_cloud.h"
+#include "util/oc_compiler.h"
+
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @brief Cloud keepalive configuration.
+ */
+typedef struct oc_cloud_keepalive_t
+{
+  oc_cloud_on_keepalive_response_cb_t
+    on_response;   /**< Callback invoked on keepalive response */
+  void *user_data; /**< User data provided to the keepalive response callback */
+  uint16_t ping_timeout; /**< Timeout for keepalive ping in seconds */
+} oc_cloud_keepalive_t;
+
+typedef struct oc_cloud_on_status_change_cb_t
+{
+  oc_cloud_cb_t cb;
+  void *user_data;
+} oc_cloud_on_status_change_cb_t;
+
+/**
+ * @brief Cloud retry configuration structure.
+ */
+typedef struct oc_cloud_schedule_action_t
+{
+  oc_cloud_schedule_action_cb_t
+    on_schedule_action; /**< Callback invoked to set delay
+                      and timeout for the action. */
+  void *user_data;  /**< User data provided to the schedule action callback. */
+  uint16_t timeout; /**< Timeout for the action in seconds. */
+} oc_cloud_schedule_action_t;
+
+struct oc_cloud_context_t
+{
+  struct oc_cloud_context_t *next;
+
+  size_t device;
+  oc_cloud_on_status_change_cb_t on_status_change;
+  oc_cloud_store_t store;
+
+  oc_cloud_keepalive_t keepalive; /**< Keepalive configuration */
+  oc_cloud_schedule_action_t
+    schedule_action; /**< Schedule action configuration */
+
+  oc_session_state_t cloud_ep_state;
+  oc_endpoint_t *cloud_ep;
+
+  oc_link_t *rd_publish_resources;   /**< Resource links to publish */
+  oc_link_t *rd_published_resources; /**< Resource links already published */
+  oc_link_t *rd_delete_resources;    /**< Resource links to delete */
+
+  int selected_identity_cred_id; /**< Selected identity cert chain. -1(default)
+                                    means any*/
+  oc_cloud_error_t last_error;
+
+  uint32_t time_to_live; /**< Time to live of published resources in seconds */
+
+  bool cloud_manager; /**< cloud manager has been started */
+
+  uint8_t retry_count;
+  uint8_t retry_refresh_token_count;
+};
 
 /**
  * @brief Allocate and initialize cloud context for device
@@ -40,7 +104,7 @@ oc_cloud_context_t *cloud_context_init(size_t device);
  *
  * @param ctx context to deinitialize (cannot be NULL)
  */
-void cloud_context_deinit(oc_cloud_context_t *ctx);
+void cloud_context_deinit(oc_cloud_context_t *ctx) OC_NONNULL();
 
 /// @brief Count number of allocated contexts
 size_t cloud_context_size(void);
@@ -52,13 +116,14 @@ size_t cloud_context_size(void);
  * @param user_data user data
  */
 typedef void (*cloud_context_iterator_cb_t)(oc_cloud_context_t *ctx,
-                                            void *user_data);
+                                            void *user_data) OC_NONNULL(1);
 
 /// Iterate over allocated cloud contexts;
-void cloud_context_iterate(cloud_context_iterator_cb_t cb, void *user_data);
+void cloud_context_iterate(cloud_context_iterator_cb_t cb, void *user_data)
+  OC_NONNULL(1);
 
 /// @brief Clear cloud context values
-void cloud_context_clear(oc_cloud_context_t *ctx);
+void cloud_context_clear(oc_cloud_context_t *ctx) OC_NONNULL();
 
 /**
  * @brief Check whether access token is set.
@@ -67,7 +132,7 @@ void cloud_context_clear(oc_cloud_context_t *ctx);
  * @return false otherwise
  */
 
-bool cloud_context_has_access_token(const oc_cloud_context_t *ctx);
+bool cloud_context_has_access_token(const oc_cloud_context_t *ctx) OC_NONNULL();
 
 /**
  * @brief Checks whether the access token is set and whether it is permanent
@@ -77,10 +142,11 @@ bool cloud_context_has_access_token(const oc_cloud_context_t *ctx);
  * @return true access token is permanent
  * @return false otherwise
  */
-bool cloud_context_has_permanent_access_token(const oc_cloud_context_t *ctx);
+bool cloud_context_has_permanent_access_token(const oc_cloud_context_t *ctx)
+  OC_NONNULL();
 
 /** @brief Clear access token from context */
-void cloud_context_clear_access_token(oc_cloud_context_t *ctx);
+void cloud_context_clear_access_token(oc_cloud_context_t *ctx) OC_NONNULL();
 
 /**
  * @brief Check whether refresh token is set.
@@ -88,7 +154,8 @@ void cloud_context_clear_access_token(oc_cloud_context_t *ctx);
  * @return true refresh token is set
  * @return false otherwise
  */
-bool cloud_context_has_refresh_token(const oc_cloud_context_t *ctx);
+bool cloud_context_has_refresh_token(const oc_cloud_context_t *ctx)
+  OC_NONNULL();
 
 #ifdef __cplusplus
 }
