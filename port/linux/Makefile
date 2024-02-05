@@ -32,6 +32,8 @@ endif
 ifeq ($(TSAN),1)
 	EXTRA_CFLAGS += -fsanitize=thread
 endif
+BUILD_SAMPLES ?= 1
+TEST ?= 1
 # for now use v3.1.0 as default
 MBEDTLS_FORCE_3_5_0 ?= 0
 
@@ -201,6 +203,9 @@ VPATH+=../../util/:../../util/jsmn/:
 VPATH+=../../deps/tinycbor/src/:../../deps/mbedtls/library:
 LIBS?= -lm -pthread -lrt
 
+# check OC_HAVE_TIME_H in oc_config.h
+HAVE_OC_TIME_H := $(shell ($(CC) -include ../../port/linux/oc_config.h -E -dM - < /dev/null | grep -w OC_HAVE_TIME_H > /dev/null) && echo 1 || echo 0)
+
 SAMPLES = server client temp_sensor simpleserver simpleserver_pki simpleclient client_collections_linux server_collections_linux server_block_linux client_block_linux \
 	server_certification_tests smart_home_server_linux multi_device_server multi_device_client smart_lock server_multithread_linux client_multithread_linux client_certification_tests \
 	server_rules secure_mcast_client secure_mcast_server1 secure_mcast_server2 simpleserver-resourcedefaults
@@ -354,8 +359,6 @@ endif
 CFLAGS += $(EXTRA_CFLAGS)
 CXXFLAGS += $(EXTRA_CFLAGS)
 
-SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
-
 CONSTRAINED_LIBS = libiotivity-lite-server.a libiotivity-lite-client.a \
 		   libiotivity-lite-server.so libiotivity-lite-client.so \
 		   libiotivity-lite-client-server.so libiotivity-lite-client-server.a
@@ -363,7 +366,19 @@ CONSTRAINED_LIBS = libiotivity-lite-server.a libiotivity-lite-client.a \
 PC = iotivity-lite-client.pc iotivity-lite-server.pc \
      iotivity-lite-client-server.pc
 
-all: $(CONSTRAINED_LIBS) $(SAMPLES) $(PC) $(UNIT_TESTS) $(SWIG)
+all: $(CONSTRAINED_LIBS) $(PC) $(SWIG)
+
+ifeq ($(HAVE_OC_TIME_H),1)
+
+ifeq ($(BUILD_SAMPLES),1)
+SAMPLES_CREDS = $(addsuffix _creds, ${SAMPLES} ${OBT})
+
+all: $(SAMPLES)
+endif # BUILD_SAMPLES
+
+ifeq ($(TEST),1)
+
+all: $(UNIT_TESTS)
 
 test: all
 	LD_LIBRARY_PATH=./ ./apitest
@@ -373,6 +388,10 @@ test: all
 ifeq ($(CLOUD),1)
 	LD_LIBRARY_PATH=./ ./cloudtest
 endif
+
+endif # TEST
+
+endif # HAVE_OC_TIME_H
 
 .PHONY: test clean
 

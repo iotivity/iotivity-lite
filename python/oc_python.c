@@ -45,6 +45,10 @@
 #if defined(_WIN32)
 #include <windows.h>
 #elif defined(__linux__)
+#ifndef OC_HAVE_TIME_H
+#error                                                                         \
+  "Header time.h is required, if it is available please add OC_HAVE_TIME_H definitions to your oc_config.h"
+#endif /* !OC_HAVE_TIME_H */
 #include <unistd.h>
 #include <pthread.h>
 #else
