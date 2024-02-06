@@ -22,17 +22,21 @@
 
 #ifdef OC_CLOUD
 
+#include "api/cloud/oc_cloud_apis_internal.h"
+#include "api/cloud/oc_cloud_context_internal.h"
+#include "api/cloud/oc_cloud_deregister_internal.h"
+#include "api/cloud/oc_cloud_internal.h"
+#include "api/cloud/oc_cloud_log_internal.h"
+#include "api/cloud/oc_cloud_manager_internal.h"
+#include "api/cloud/oc_cloud_store_internal.h"
+#include "api/oc_endpoint_internal.h"
 #include "oc_api.h"
 #include "oc_client_state.h"
 #include "oc_cloud.h"
 #include "oc_cloud_access.h"
-#include "oc_cloud_context_internal.h"
-#include "oc_cloud_deregister_internal.h"
-#include "oc_cloud_internal.h"
-#include "oc_cloud_log_internal.h"
-#include "oc_cloud_store_internal.h"
 #include "oc_core_res.h"
 #include "port/oc_connectivity.h"
+#include "port/oc_log_internal.h"
 #include "rd_client_internal.h"
 
 #ifdef OC_SECURITY
@@ -41,37 +45,29 @@
 
 #include <assert.h>
 
-// cloud_deregister might invoke cloud_refresh_token or cloud_login so we might
-// have 2 concurrent allocations per device
+// oc_cloud_do_deregister might invoke oc_cloud_do_refresh_token or
+// oc_cloud_do_login so we might have 2 concurrent allocations per device
 OC_MEMB(g_api_params, cloud_api_param_t, OC_MAX_NUM_DEVICES * 2);
 
 cloud_api_param_t *
-alloc_api_param(void)
+oc_cloud_api_new_param(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
+                       uint16_t timeout)
 {
-  return (cloud_api_param_t *)oc_memb_alloc(&g_api_params);
+  cloud_api_param_t *ap = oc_memb_alloc(&g_api_params);
+  if (ap == NULL) {
+    return NULL;
+  }
+  ap->ctx = ctx;
+  ap->cb = cb;
+  ap->data = data;
+  ap->timeout = timeout;
+  return ap;
 }
 
 void
-free_api_param(cloud_api_param_t *p)
+oc_cloud_api_free_param(cloud_api_param_t *p)
 {
   oc_memb_free(&g_api_params, p);
-}
-
-int
-conv_cloud_endpoint(oc_cloud_context_t *ctx)
-{
-  int ret = 0;
-  if (ctx->cloud_ep != NULL && oc_endpoint_is_empty(ctx->cloud_ep)) {
-    ret = oc_string_to_endpoint(&ctx->store.ci_server, ctx->cloud_ep, NULL);
-    if (ret == 0) {
-      // set device id to cloud endpoint for multiple servers
-      ctx->cloud_ep->device = ctx->device;
-    }
-#ifdef OC_DNS_CACHE
-    oc_dns_clear_cache();
-#endif /* OC_DNS_CACHE */
-  }
-  return ret;
 }
 
 #ifdef OC_SECURITY
@@ -86,47 +82,53 @@ cloud_tls_connected(const oc_endpoint_t *endpoint)
 
 #endif /* OC_SECURITY */
 
+bool
+oc_cloud_set_access_conf(oc_cloud_context_t *ctx, oc_response_handler_t handler,
+                         void *user_data, uint16_t timeout,
+                         oc_cloud_access_conf_t *conf)
+{
+  if (!oc_cloud_set_endpoint(ctx)) {
+    OC_CLOUD_ERR("invalid cloud server");
+    return false;
+  }
+
+  *conf = (oc_cloud_access_conf_t){
+    .endpoint = ctx->cloud_ep,
+    .device = ctx->device,
+    .selected_identity_cred_id = ctx->selected_identity_cred_id,
+    .handler = handler,
+    .user_data = user_data,
+    .timeout = timeout,
+  };
+  return true;
+}
+
 int
-cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
-               uint16_t timeout)
+oc_cloud_do_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
+                     uint16_t timeout)
 {
   if ((ctx->store.status & OC_CLOUD_REGISTERED) != 0) {
     cb(ctx, ctx->store.status, data);
     return 0;
   }
 
-  cloud_api_param_t *p = alloc_api_param();
+  if (ctx->store.status != OC_CLOUD_INITIALIZED) {
+    OC_CLOUD_ERR("invalid cloud status(%d)", (int)ctx->store.status);
+    return -1;
+  }
+
+  cloud_api_param_t *p = oc_cloud_api_new_param(ctx, cb, data, timeout);
   if (p == NULL) {
     OC_CLOUD_ERR("cannot allocate cloud parameters");
     return -1;
   }
-  p->ctx = ctx;
-  p->cb = cb;
-  p->data = data;
-  p->timeout = timeout;
-
-  if (ctx->store.status != OC_CLOUD_INITIALIZED) {
-    OC_CLOUD_ERR("invalid cloud status(%d)", (int)ctx->store.status);
-    free_api_param(p);
-    return -1;
-  }
 
   OC_CLOUD_DBG("try register device %zu", ctx->device);
-  if (oc_string(ctx->store.ci_server) == NULL ||
-      conv_cloud_endpoint(ctx) != 0) {
-    cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
-    free_api_param(p);
-    return -1;
+  oc_cloud_access_conf_t conf;
+  if (!oc_cloud_set_access_conf(ctx, oc_cloud_register_handler, p, timeout,
+                                &conf)) {
+    goto error;
   }
-
-  oc_cloud_access_conf_t conf = {
-    .endpoint = ctx->cloud_ep,
-    .device = ctx->device,
-    .selected_identity_cred_id = ctx->selected_identity_cred_id,
-    .handler = oc_cloud_register_handler,
-    .user_data = p,
-    .timeout = timeout,
-  };
   if (oc_cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
                                oc_string(ctx->store.uid),
                                oc_string(ctx->store.access_token))) {
@@ -134,8 +136,9 @@ cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
     return 0;
   }
 
+error:
   cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
-  free_api_param(p);
+  oc_cloud_api_free_param(p);
   return -1;
 }
 
@@ -145,47 +148,35 @@ oc_cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   if (ctx == NULL || cb == NULL) {
     return -1;
   }
-  return cloud_register(ctx, cb, data, /*timeout*/ 0);
+  return oc_cloud_do_register(ctx, cb, data, /*timeout*/ 0);
 }
 
 int
-cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
-            uint16_t timeout)
+oc_cloud_do_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
+                  uint16_t timeout)
 {
   if ((ctx->store.status & OC_CLOUD_LOGGED_IN) != 0) {
     cb(ctx, ctx->store.status, data);
     return 0;
   }
 
-  cloud_api_param_t *p = alloc_api_param();
+  if ((ctx->store.status & OC_CLOUD_REGISTERED) == 0) {
+    OC_CLOUD_ERR("invalid cloud status(%d)", (int)ctx->store.status);
+    return -1;
+  }
+
+  cloud_api_param_t *p = oc_cloud_api_new_param(ctx, cb, data, timeout);
   if (p == NULL) {
     OC_CLOUD_ERR("cannot allocate cloud parameters");
     return -1;
   }
-  p->ctx = ctx;
-  p->cb = cb;
-  p->data = data;
-  p->timeout = timeout;
-
-  if ((ctx->store.status & OC_CLOUD_REGISTERED) == 0) {
-    OC_CLOUD_ERR("invalid cloud status(%d)", (int)ctx->store.status);
-    free_api_param(p);
-    return -1;
-  }
 
   OC_CLOUD_DBG("try login device %zu", ctx->device);
-  oc_cloud_access_conf_t conf = {
-    .device = ctx->device,
-    .selected_identity_cred_id = ctx->selected_identity_cred_id,
-    .handler = oc_cloud_login_handler,
-    .user_data = p,
-    .timeout = timeout,
-  };
-  if (conv_cloud_endpoint(ctx) != 0) {
+  oc_cloud_access_conf_t conf;
+  if (!oc_cloud_set_access_conf(ctx, oc_cloud_login_handler, p, timeout,
+                                &conf)) {
     goto error;
   }
-  conf.endpoint = ctx->cloud_ep;
-
   if (oc_cloud_access_login(conf, oc_string(ctx->store.uid),
                             oc_string(ctx->store.access_token))) {
     return 0;
@@ -193,7 +184,7 @@ cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
 
 error:
   cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
-  free_api_param(p);
+  oc_cloud_api_free_param(p);
   return -1;
 }
 
@@ -203,7 +194,7 @@ oc_cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   if (ctx == NULL || cb == NULL) {
     return -1;
   }
-  return cloud_login(ctx, cb, data, /*timeout*/ 0);
+  return oc_cloud_do_login(ctx, cb, data, /*timeout*/ 0);
 }
 
 int
@@ -237,41 +228,31 @@ cloud_logout_internal(oc_client_response_t *data)
   if (p->cb) {
     p->cb(ctx, ctx->store.status, p->data);
   }
-  free_api_param(p);
+  oc_cloud_api_free_param(p);
 
   ctx->store.status &= ~(OC_CLOUD_FAILURE | OC_CLOUD_LOGGED_OUT);
 }
 
 int
-cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
-             uint16_t timeout)
+oc_cloud_do_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
+                   uint16_t timeout)
 {
   if ((ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
     OC_CLOUD_ERR("invalid cloud status(%d)", (int)ctx->store.status);
     return -1;
   }
-  cloud_api_param_t *p = alloc_api_param();
+  cloud_api_param_t *p = oc_cloud_api_new_param(ctx, cb, data, timeout);
   if (p == NULL) {
     OC_CLOUD_ERR("cannot allocate cloud parameters");
     return -1;
   }
-  p->ctx = ctx;
-  p->cb = cb;
-  p->data = data;
-  p->timeout = timeout;
 
   OC_CLOUD_DBG("try logout device %zu", ctx->device);
-  oc_cloud_access_conf_t conf = {
-    .device = ctx->device,
-    .selected_identity_cred_id = ctx->selected_identity_cred_id,
-    .handler = cloud_logout_internal,
-    .user_data = p,
-    .timeout = timeout,
-  };
-  if (conv_cloud_endpoint(ctx) != 0) {
+  oc_cloud_access_conf_t conf;
+  if (!oc_cloud_set_access_conf(ctx, cloud_logout_internal, p, timeout,
+                                &conf)) {
     goto error;
   }
-  conf.endpoint = ctx->cloud_ep;
   if (oc_cloud_access_logout(conf, oc_string(ctx->store.uid),
                              oc_string(ctx->store.access_token))) {
     return 0;
@@ -279,7 +260,7 @@ cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
 
 error:
   cloud_set_last_error(ctx, CLOUD_ERROR_CONNECT);
-  free_api_param(p);
+  oc_cloud_api_free_param(p);
   return -1;
 }
 
@@ -289,7 +270,7 @@ oc_cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   if (ctx == NULL || cb == NULL) {
     return -1;
   }
-  return cloud_logout(ctx, cb, data, /*timeout*/ 0);
+  return oc_cloud_do_logout(ctx, cb, data, /*timeout*/ 0);
 }
 
 int
@@ -298,39 +279,35 @@ oc_cloud_deregister(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   if (!ctx || !cb) {
     return -1;
   }
-  return cloud_deregister(ctx, /*sync*/ true, /*timeout*/ 0, cb, data);
+  return oc_cloud_do_deregister(ctx, /*sync*/ true, /*timeout*/ 0, cb, data);
 }
 
 int
-cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
-                    uint16_t timeout)
+oc_cloud_do_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
+                          uint16_t timeout)
 {
   if ((ctx->store.status & OC_CLOUD_REGISTERED) == 0) {
     return -1;
   }
 
-  cloud_api_param_t *p = alloc_api_param();
+  cloud_api_param_t *p = oc_cloud_api_new_param(ctx, cb, data, timeout);
   if (p == NULL) {
     OC_CLOUD_ERR("cannot allocate cloud parameters");
     return -1;
   }
-  p->ctx = ctx;
-  p->cb = cb;
-  p->data = data;
-  p->timeout = timeout;
 
   OC_CLOUD_DBG("try refresh token for device %zu", ctx->device);
+  if (!oc_cloud_set_endpoint(ctx)) {
+    goto error;
+  }
   oc_cloud_access_conf_t conf = {
+    .endpoint = ctx->cloud_ep,
     .device = ctx->device,
     .selected_identity_cred_id = ctx->selected_identity_cred_id,
     .handler = oc_cloud_refresh_token_handler,
     .user_data = p,
     .timeout = timeout,
   };
-  if (conv_cloud_endpoint(ctx) != 0) {
-    goto error;
-  }
-  conf.endpoint = ctx->cloud_ep;
   if (oc_cloud_access_refresh_access_token(
         conf, oc_string(ctx->store.auth_provider), oc_string(ctx->store.uid),
         oc_string(ctx->store.refresh_token))) {
@@ -339,7 +316,7 @@ cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
 
 error:
   cloud_set_last_error(ctx, CLOUD_ERROR_REFRESH_ACCESS_TOKEN);
-  free_api_param(p);
+  oc_cloud_api_free_param(p);
   return -1;
 }
 
@@ -349,25 +326,19 @@ oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   if (!ctx || !cb) {
     return -1;
   }
-  return cloud_refresh_token(ctx, cb, data, 0);
+  return oc_cloud_do_refresh_token(ctx, cb, data, 0);
 }
 
 int
 oc_cloud_discover_resources(const oc_cloud_context_t *ctx,
                             oc_discovery_all_handler_t handler, void *user_data)
 {
-  if (!ctx) {
+  if (ctx == NULL || (ctx->store.status & OC_CLOUD_LOGGED_IN) == 0) {
     return -1;
   }
-
-  if (!(ctx->store.status & OC_CLOUD_LOGGED_IN)) {
-    return -1;
-  }
-
   if (oc_do_ip_discovery_all_at_endpoint(handler, ctx->cloud_ep, user_data)) {
     return 0;
   }
-
   return -1;
 }
 

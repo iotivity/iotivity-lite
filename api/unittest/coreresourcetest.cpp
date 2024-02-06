@@ -467,10 +467,12 @@ TEST_F(TestCoreResourceWithDevice, GetDeviceIndex_P)
 {
   EXPECT_TRUE(
     oc_core_get_device_index(oc_core_get_device_info(kDevice1ID)->di, nullptr));
+#if defined(OC_SERVER) && defined(OC_DYNAMIC_ALLOCATION)
   size_t index{};
   EXPECT_TRUE(
     oc_core_get_device_index(oc_core_get_device_info(kDevice2ID)->di, &index));
   EXPECT_EQ(kDevice2ID, index);
+#endif /* OC_SERVER && OC_DYNAMIC_ALLOCATION */
 }
 
 TEST_F(TestCoreResourceWithDevice, GetDeviceIndex_F)

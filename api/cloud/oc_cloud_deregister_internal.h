@@ -35,6 +35,10 @@ extern "C" {
 /// Error when attempting to multiple deregistrations concurrently
 #define CLOUD_DEREGISTER_ERROR_ALREADY_DEREGISTERING (-2)
 
+/** Check if the access tokens fits inside the deregister request */
+bool oc_cloud_check_accesstoken_for_deregister(const oc_cloud_context_t *ctx)
+  OC_NONNULL();
+
 /**
  * @brief Execute cloud deregister
  *
@@ -55,8 +59,8 @@ extern "C" {
  * being executed for given device
  * @return -1 on other errors
  */
-int cloud_deregister(oc_cloud_context_t *ctx, bool sync, uint16_t timeout,
-                     oc_cloud_cb_t cb, void *data) OC_NONNULL(1);
+int oc_cloud_do_deregister(oc_cloud_context_t *ctx, bool sync, uint16_t timeout,
+                           oc_cloud_cb_t cb, void *data) OC_NONNULL(1);
 
 /**
  * @brief Execute cloud deregister triggered by cloud_reset.
@@ -68,15 +72,15 @@ int cloud_deregister(oc_cloud_context_t *ctx, bool sync, uint16_t timeout,
  * @return true on success
  * @return false on failure
  */
-bool cloud_deregister_on_reset(oc_cloud_context_t *ctx, bool sync,
-                               uint16_t timeout) OC_NONNULL();
+bool oc_cloud_deregister_on_reset(oc_cloud_context_t *ctx, bool sync,
+                                  uint16_t timeout) OC_NONNULL();
 
 /**
  * @brief Clean-up all events by deregister.
  *
  * @param ctx device context (cannot be NULL);
  */
-void cloud_deregister_stop(const oc_cloud_context_t *ctx) OC_NONNULL();
+void oc_cloud_deregister_stop(const oc_cloud_context_t *ctx) OC_NONNULL();
 
 #ifdef __cplusplus
 }

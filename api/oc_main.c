@@ -80,7 +80,7 @@
 #include <stdlib.h>
 
 static bool g_initialized = false;
-static const oc_handler_t *g_app_callbacks;
+static void (*g_signal_event_loop)(void) = NULL;
 static oc_factory_presets_t g_factory_presets;
 
 void
@@ -310,6 +310,24 @@ main_load_resources(void)
 #endif /* OC_SECURITY || OC_SOFTWARE_UPDATE */
 }
 
+static void
+main_free_resources(void)
+{
+#ifdef OC_SOFTWARE_UPDATE
+  oc_swupdate_free();
+#endif /* OC_SOFTWARE_UPDATE */
+
+#ifdef OC_SECURITY
+  oc_sec_svr_free();
+#ifdef OC_PKI
+#ifdef OC_CLIENT
+  oc_sec_role_creds_free();
+#endif /* OC_CLIENT */
+  oc_sec_ecdsa_free_keypairs();
+#endif /* OC_PKI */
+#endif /* OC_SECURITY */
+}
+
 int
 oc_main_init(const oc_handler_t *handler)
 {
@@ -317,7 +335,7 @@ oc_main_init(const oc_handler_t *handler)
     return 0;
   }
 
-  g_app_callbacks = handler;
+  g_signal_event_loop = handler->signal_event_loop;
 
 #ifdef OC_MEMORY_TRACE
   oc_mem_trace_init();
@@ -332,20 +350,14 @@ oc_main_init(const oc_handler_t *handler)
 
   oc_network_event_handler_mutex_init();
 
-  int ret = g_app_callbacks->init();
+  int ret = handler->init();
   if (ret < 0) {
-    oc_ri_shutdown();
-    oc_shutdown_all_devices();
-    oc_runtime_shutdown();
     goto err;
   }
 
 #ifdef OC_SECURITY
   ret = oc_tls_init_context();
   if (ret < 0) {
-    oc_ri_shutdown();
-    oc_shutdown_all_devices();
-    oc_runtime_shutdown();
     goto err;
   }
 #endif /* OC_SECURITY */
@@ -354,15 +366,21 @@ oc_main_init(const oc_handler_t *handler)
   main_load_resources();
 
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
-  // initialize cloud after load pstat
-  oc_cloud_init();
+  // initialize cloud after load of pstat
+  if (!oc_cloud_init()) {
+    main_free_resources();
+#ifdef OC_SECURITY
+    oc_tls_shutdown();
+#endif /* OC_SECURITY */
+    goto err;
+  }
   OC_DBG("oc_main_init(): loading cloud");
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
 #ifdef OC_SERVER
   // initialize after cloud because their can be registered to cloud.
-  if (g_app_callbacks->register_resources) {
-    g_app_callbacks->register_resources();
+  if (handler->register_resources) {
+    handler->register_resources();
   }
 #endif /* OC_SERVER */
 
@@ -370,8 +388,8 @@ oc_main_init(const oc_handler_t *handler)
   g_initialized = true;
 
 #ifdef OC_CLIENT
-  if (g_app_callbacks->requests_entry) {
-    g_app_callbacks->requests_entry();
+  if (handler->requests_entry) {
+    handler->requests_entry();
   }
 #endif /* OC_CLIENT */
 
@@ -379,6 +397,9 @@ oc_main_init(const oc_handler_t *handler)
 
 err:
   OC_ERR("oc_main: error in stack initialization");
+  oc_ri_shutdown();
+  oc_shutdown_all_devices();
+  oc_runtime_shutdown();
   return ret;
 }
 
@@ -444,23 +465,12 @@ oc_main_shutdown(void)
   // In case that the device is still in onboarding state(RFOTM), it will be
   // reset to allow re-onboarding.
   oc_reset_devices_in_RFOTM();
-
-  oc_sec_svr_free();
-#ifdef OC_PKI
-#ifdef OC_CLIENT
-  oc_sec_role_creds_free();
-#endif /* OC_CLIENT */
-  oc_sec_ecdsa_free_keypairs();
-#endif /* OC_PKI */
 #endif /* OC_SECURITY */
 
-#ifdef OC_SOFTWARE_UPDATE
-  oc_swupdate_free();
-#endif /* OC_SOFTWARE_UPDATE */
-
+  main_free_resources();
   oc_shutdown_all_devices();
 
-  g_app_callbacks = NULL;
+  g_signal_event_loop = NULL;
 
 #ifdef OC_MEMORY_TRACE
   oc_mem_trace_shutdown();
@@ -478,7 +488,7 @@ oc_main_initialized(void)
 void
 _oc_signal_event_loop(void)
 {
-  if (g_app_callbacks != NULL) {
-    g_app_callbacks->signal_event_loop();
+  if (g_signal_event_loop != NULL) {
+    g_signal_event_loop();
   }
 }

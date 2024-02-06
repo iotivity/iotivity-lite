@@ -18,10 +18,17 @@
 
 #include "api/cloud/oc_cloud_context_internal.h"
 #include "api/oc_helpers_internal.h"
+#include "oc_uuid.h"
+#include "port/oc_random.h"
 
 #include <gtest/gtest.h>
 
-class TestCloudContext : public testing::Test {};
+class TestCloudContext : public testing::Test {
+public:
+  static void SetUpTestCase() { oc_random_init(); }
+
+  static void TearDownTestCase() { oc_random_destroy(); }
+};
 
 TEST_F(TestCloudContext, GetDevice)
 {
@@ -37,11 +44,19 @@ TEST_F(TestCloudContext, GetApn)
   EXPECT_STREQ("apn", oc_cloud_get_apn(&ctx));
 }
 
-TEST_F(TestCloudContext, GetCis)
+TEST_F(TestCloudContext, GetCisAndSid)
 {
   oc_cloud_context_t ctx{};
-  ctx.store.ci_server = OC_STRING_LOCAL("cis");
-  EXPECT_STREQ("cis", oc_cloud_get_cis(&ctx));
+
+  oc_cloud_store_initialize(&ctx.store);
+  auto cis = OC_STRING_VIEW("cis");
+  oc_uuid_t sid;
+  oc_gen_uuid(&sid);
+  ASSERT_TRUE(oc_cloud_endpoints_reinit(&ctx.store.ci_servers, cis, sid));
+  EXPECT_STREQ(cis.data, oc_cloud_get_cis(&ctx));
+  EXPECT_TRUE(oc_uuid_is_equal(sid, *oc_cloud_get_sid(&ctx)));
+
+  oc_cloud_store_deinitialize(&ctx.store);
 }
 
 TEST_F(TestCloudContext, GetUid)
@@ -56,13 +71,6 @@ TEST_F(TestCloudContext, GetAccessToken)
   oc_cloud_context_t ctx{};
   ctx.store.access_token = OC_STRING_LOCAL("access_token");
   EXPECT_STREQ("access_token", oc_cloud_get_at(&ctx));
-}
-
-TEST_F(TestCloudContext, GetSid)
-{
-  oc_cloud_context_t ctx{};
-  ctx.store.sid = OC_STRING_LOCAL("sid");
-  EXPECT_STREQ("sid", oc_cloud_get_sid(&ctx));
 }
 
 TEST_F(TestCloudContext, HasAccesToken)

@@ -166,7 +166,8 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
  * @param str1 first string (cannot be NULL)
  * @param str2 second string (cannot be NULL)
  */
-void oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2);
+void oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2)
+  OC_NONNULL();
 #define oc_string_len(ocstring) ((ocstring).size != 0 ? (ocstring).size - 1 : 0)
 
 #define oc_int_array_size(ocintarray) ((ocintarray).size)

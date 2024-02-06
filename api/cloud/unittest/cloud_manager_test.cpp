@@ -20,6 +20,7 @@
 #include "api/cloud/oc_cloud_context_internal.h"
 #include "api/cloud/oc_cloud_internal.h"
 #include "api/cloud/oc_cloud_manager_internal.h"
+#include "api/cloud/oc_cloud_resource_internal.h"
 #include "api/cloud/oc_cloud_store_internal.h"
 #include "api/oc_rep_internal.h"
 #include "messaging/coap/transactions_internal.h"
@@ -31,44 +32,50 @@
 #include "tests/gtest/RepPool.h"
 
 #include <gtest/gtest.h>
+#include <optional>
 #include <string>
 #include <vector>
 
+using namespace std::chrono_literals;
+
 #ifndef OC_SECURITY
+
+static constexpr auto kTimeout = 1s;
 
 class TestCloudManager : public testing::Test {
 public:
   oc_cloud_context_t m_context;
 
+  static void SetUpTestCase() { ASSERT_TRUE(oc::TestDevice::StartServer()); }
+
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
+
   void SetUp() override
   {
-    ASSERT_TRUE(oc::TestDevice::StartServer());
-
     memset(&m_context, 0, sizeof(m_context));
-    std::string uid = "501";
-    oc_new_string(&m_context.store.uid, uid.c_str(), uid.length());
     m_context.cloud_ep = oc_new_endpoint();
     memset(m_context.cloud_ep, 0, sizeof(oc_endpoint_t));
-    std::string endpoint = "coap://224.0.1.187:5683";
-    oc_new_string(&m_context.store.ci_server, endpoint.c_str(),
-                  endpoint.length());
+    oc_cloud_store_initialize(&m_context.store);
+    oc_string_view_t ep = OC_STRING_VIEW("coap://224.0.1.187:5683");
+    oc_uuid_t sid;
+    oc_gen_uuid(&sid);
+    ASSERT_TRUE(oc_cloud_endpoint_add(&m_context.store.ci_servers, ep, sid));
+    ASSERT_TRUE(
+      oc_cloud_endpoint_select_by_uri(&m_context.store.ci_servers, ep));
+    std::string uid = "501";
+    oc_set_string(&m_context.store.uid, uid.c_str(), uid.length());
     std::string token = "access_token";
-    oc_new_string(&m_context.store.access_token, token.c_str(), token.length());
+    oc_set_string(&m_context.store.access_token, token.c_str(), token.length());
     std::string rtoken = "refresh_token";
-    oc_new_string(&m_context.store.refresh_token, rtoken.c_str(),
+    oc_set_string(&m_context.store.refresh_token, rtoken.c_str(),
                   rtoken.length());
   }
 
   void TearDown() override
   {
-    oc_free_string(&m_context.store.refresh_token);
-    oc_free_string(&m_context.store.access_token);
-    oc_free_string(&m_context.store.ci_server);
     oc_free_endpoint(m_context.cloud_ep);
-    oc_free_string(&m_context.store.uid);
-
+    oc_cloud_store_deinitialize(&m_context.store);
     oc::TestDevice::Reset();
-    oc::TestDevice::StopServer();
   }
 
   static void schedule_stop_cloud_manager(oc_cloud_context_t *ctx)
@@ -97,7 +104,7 @@ TEST_F(TestCloudManager, cloud_manager_start_initialized_schedule_turnoff)
   m_context.store.status = OC_CLOUD_INITIALIZED;
   m_context.store.cps = OC_CPS_READYTOREGISTER;
   cloud_manager_start(&m_context);
-  oc::TestDevice::PoolEvents(5);
+  oc::TestDevice::PoolEventsMsV1(100ms);
   cloud_manager_stop(&m_context);
 
   // Then
@@ -120,7 +127,7 @@ TEST_F(TestCloudManager,
       auto *ctx = static_cast<oc_cloud_context_t *>(data);
       if (action == OC_CLOUD_ACTION_REGISTER && retry == 0) {
         *delay = 0;
-        *timeout = 1;
+        *timeout = kTimeout.count();
         return true;
       }
       // to avoid override m_context.last_error and m_context.store.status
@@ -134,7 +141,7 @@ TEST_F(TestCloudManager,
   oc_free_string(&m_context.store.access_token);
 
   cloud_manager_start(&m_context);
-  oc::TestDevice::PoolEvents(5);
+  oc::TestDevice::PoolEventsMsV1(kTimeout, true);
   cloud_manager_stop(&m_context);
 
   // Then
@@ -156,7 +163,7 @@ TEST_F(TestCloudManager, cloud_manager_start_initialized_without_retry_f)
       auto *ctx = static_cast<oc_cloud_context_t *>(data);
       if (retry_count == 0) {
         *delay = 0;
-        *timeout = 1;
+        *timeout = kTimeout.count();
         return true;
       }
       // to avoid override m_context.last_error and m_context.store.status
@@ -168,7 +175,7 @@ TEST_F(TestCloudManager, cloud_manager_start_initialized_without_retry_f)
   m_context.store.status = OC_CLOUD_INITIALIZED;
   m_context.store.cps = OC_CPS_READYTOREGISTER;
   cloud_manager_start(&m_context);
-  oc::TestDevice::PoolEvents(5);
+  oc::TestDevice::PoolEventsMsV1(kTimeout, true);
   cloud_manager_stop(&m_context);
 
   // Then
@@ -186,7 +193,10 @@ TEST_F(TestCloudManager, cloud_manager_start_initialized_f)
   m_context.store.status = OC_CLOUD_INITIALIZED;
   m_context.store.cps = OC_CPS_READYTOREGISTER;
   cloud_manager_start(&m_context);
-  oc::TestDevice::PoolEvents(5);
+  // by default: first retry should happen after 2 seconds + jitter
+  // ([timeout/2..timeout])  (see default_schedule_action)
+  oc::TestDevice::PoolEventsMsV1(/*timeout*/ 2s + /*max possible jitter*/ 2s,
+                                 true);
   cloud_manager_stop(&m_context);
 
   // Then
@@ -206,7 +216,7 @@ TEST_F(TestCloudManager, cloud_manager_start_registered_without_retry_and_uid_f)
       auto *ctx = static_cast<oc_cloud_context_t *>(data);
       if (action == OC_CLOUD_ACTION_LOGIN && retry == 0) {
         *delay = 0;
-        *timeout = 1;
+        *timeout = kTimeout.count();
         return true;
       }
       // to avoid override m_context.last_error and m_context.store.status
@@ -218,7 +228,7 @@ TEST_F(TestCloudManager, cloud_manager_start_registered_without_retry_and_uid_f)
   m_context.store.expires_in = -1;
   oc_free_string(&m_context.store.uid);
   cloud_manager_start(&m_context);
-  oc::TestDevice::PoolEvents(5);
+  oc::TestDevice::PoolEventsMsV1(kTimeout, true);
   cloud_manager_stop(&m_context);
 
   // Then
@@ -237,7 +247,10 @@ TEST_F(TestCloudManager, cloud_manager_start_registered_f)
   m_context.store.status = OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED;
   m_context.store.expires_in = -1;
   cloud_manager_start(&m_context);
-  oc::TestDevice::PoolEvents(5);
+  // by default: first retry should happen after 2 seconds + jitter
+  // ([timeout/2..timeout])  (see default_schedule_action)
+  oc::TestDevice::PoolEventsMsV1(/*timeout*/ 2s + /*max possible jitter*/ 2s,
+                                 true);
   cloud_manager_stop(&m_context);
 
   // Then
@@ -258,7 +271,7 @@ TEST_F(TestCloudManager,
       auto *ctx = static_cast<oc_cloud_context_t *>(data);
       if (action == OC_CLOUD_ACTION_REFRESH_TOKEN && retry == 0) {
         *delay = 0;
-        *timeout = 1;
+        *timeout = kTimeout.count();
         return true;
       }
       // to avoid override m_context.last_error and m_context.store.status
@@ -269,7 +282,7 @@ TEST_F(TestCloudManager,
   m_context.store.status = OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED;
   oc_free_string(&m_context.store.uid);
   cloud_manager_start(&m_context);
-  oc::TestDevice::PoolEvents(7);
+  oc::TestDevice::PoolEventsMsV1(kTimeout, true);
   cloud_manager_stop(&m_context);
 
   // Then
@@ -287,7 +300,10 @@ TEST_F(TestCloudManager, cloud_manager_start_with_refresh_token_f)
   // When
   m_context.store.status = OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED;
   cloud_manager_start(&m_context);
-  oc::TestDevice::PoolEvents(7);
+  // by default: first retry should happen after 2 seconds + jitter
+  // ([timeout/2..timeout])  (see default_schedule_action)
+  oc::TestDevice::PoolEventsMsV1(/*timeout*/ 2s + /*max possible jitter*/ 2s,
+                                 true);
   cloud_manager_stop(&m_context);
 
   // Then
@@ -301,9 +317,18 @@ TEST_F(TestCloudManager, cloud_manager_start_with_refresh_token_f)
 
 class TestCloudManagerData : public testing::Test {
 public:
-  void SetUp() override { memset(&m_context, 0, sizeof(m_context)); }
+  void SetUp() override
+  {
+    memset(&m_context, 0, sizeof(m_context));
+    oc_cloud_endpoints_init(&m_context.store.ci_servers, nullptr, nullptr,
+                            OC_STRING_VIEW_NULL, {});
+  }
 
-  void TearDown() override { cloud_store_deinitialize(&m_context.store); }
+  void TearDown() override
+  {
+    Clear();
+    oc_cloud_store_deinitialize(&m_context.store);
+  }
 
   void Clear() { pool_.Clear(); }
 
@@ -321,9 +346,10 @@ public:
 #endif /* OC_DBG_IS_ENABLED */
   }
 
-  oc::oc_rep_unique_ptr GetPayload(const std::string &access_token,
-                                   const std::string &refresh_token,
-                                   const std::string &uid, int64_t expires_in);
+  oc::oc_rep_unique_ptr GetPayload(
+    std::optional<std::string> access_token,
+    std::optional<std::string> refresh_token = {},
+    std::optional<std::string> uid = {}, int64_t expires_in = -1);
 
   oc_cloud_context_t *GetContext()
   {
@@ -332,7 +358,7 @@ public:
 
   bool IsEmptyContext() const
   {
-    return oc_string(m_context.store.ci_server) == nullptr &&
+    return oc_cloud_endpoints_is_empty(&m_context.store.ci_servers) &&
            oc_string(m_context.store.access_token) == nullptr &&
            oc_string(m_context.store.refresh_token) == nullptr &&
            oc_string(m_context.store.uid) == nullptr &&
@@ -345,28 +371,23 @@ private:
 };
 
 oc::oc_rep_unique_ptr
-TestCloudManagerData::GetPayload(const std::string &access_token,
-                                 const std::string &refresh_token = {},
-                                 const std::string &uid = {},
-                                 int64_t expires_in = -1)
+TestCloudManagerData::GetPayload(std::optional<std::string> access_token,
+                                 std::optional<std::string> refresh_token,
+                                 std::optional<std::string> uid,
+                                 int64_t expires_in)
 {
   oc_rep_begin_root_object();
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
-  if (!access_token.empty()) {
-    oc_rep_set_text_string(root, accesstoken, access_token.c_str());
-    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  if (access_token.has_value()) {
+    oc_rep_set_text_string(root, accesstoken, access_token->c_str());
   }
-  if (!refresh_token.empty()) {
-    oc_rep_set_text_string(root, refreshtoken, refresh_token.c_str());
-    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  if (refresh_token.has_value()) {
+    oc_rep_set_text_string(root, refreshtoken, refresh_token->c_str());
   }
-  if (!uid.empty()) {
-    oc_rep_set_text_string(root, uid, uid.c_str());
-    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  if (uid.has_value()) {
+    oc_rep_set_text_string(root, uid, uid->c_str());
   }
   if (expires_in >= 0) {
     oc_rep_set_int(root, expiresin, expires_in);
-    EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   }
   oc_rep_end_root_object();
   EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
@@ -378,6 +399,27 @@ TestCloudManagerData::GetPayload(const std::string &access_token,
 TEST_F(TestCloudManagerData, cloud_manager_parse_register_data_invalid)
 {
   // {
+  //   plgd: "dev",
+  // }
+  oc_rep_begin_root_object();
+  oc_rep_set_text_string(root, plgd, "dev");
+  oc_rep_end_root_object();
+  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc::oc_rep_unique_ptr rep = ParsePayload();
+  EXPECT_FALSE(cloud_manager_handle_register_response(GetContext(), rep.get()));
+  EXPECT_TRUE(IsEmptyContext());
+  rep.reset();
+  Clear();
+
+  // {
+  //   accesstoken: "",
+  // }
+  EXPECT_FALSE(
+    cloud_manager_handle_register_response(GetContext(), GetPayload("").get()));
+  EXPECT_TRUE(IsEmptyContext());
+  Clear();
+
+  // {
   //   accesstoken: "accesstoken",
   // }
   EXPECT_FALSE(cloud_manager_handle_register_response(
@@ -386,10 +428,11 @@ TEST_F(TestCloudManagerData, cloud_manager_parse_register_data_invalid)
   Clear();
 
   // {
-  //   refreshtoken: "refreshtoken",
+  //   accesstoken: "accesstoken",
+  //   refreshtoken: "",
   // }
   EXPECT_FALSE(cloud_manager_handle_register_response(
-    GetContext(), GetPayload("", "refreshtoken").get()));
+    GetContext(), GetPayload("accesstoken", "").get()));
   EXPECT_TRUE(IsEmptyContext());
   Clear();
 
@@ -399,6 +442,16 @@ TEST_F(TestCloudManagerData, cloud_manager_parse_register_data_invalid)
   // }
   EXPECT_FALSE(cloud_manager_handle_register_response(
     GetContext(), GetPayload("accesstoken", "refreshtoken").get()));
+  EXPECT_TRUE(IsEmptyContext());
+  Clear();
+
+  // {
+  //   accesstoken: "accesstoken",
+  //   refreshtoken: "refreshtoken",
+  //   uid: "",
+  // }
+  EXPECT_FALSE(cloud_manager_handle_register_response(
+    GetContext(), GetPayload("accesstoken", "refreshtoken", "").get()));
   EXPECT_TRUE(IsEmptyContext());
   Clear();
 
@@ -424,7 +477,7 @@ TEST_F(TestCloudManagerData, cloud_manager_parse_register_data)
   std::string at{ "accesstoken" };
   std::string rt{ "refreshtoken" };
   std::string uid{ "uid" };
-  int64_t expiresin = 42;
+  int64_t expiresin = 0;
   oc::oc_rep_unique_ptr rep = GetPayload(at, rt, uid, expiresin);
   EXPECT_TRUE(cloud_manager_handle_register_response(GetContext(), rep.get()));
   EXPECT_FALSE(IsEmptyContext());
@@ -433,23 +486,87 @@ TEST_F(TestCloudManagerData, cloud_manager_parse_register_data)
   EXPECT_STREQ(rt.c_str(), oc_string(GetContext()->store.refresh_token));
   EXPECT_STREQ(uid.c_str(), oc_string(GetContext()->store.uid));
   EXPECT_EQ(expiresin, GetContext()->store.expires_in);
+  EXPECT_FALSE((GetContext()->store.status & OC_CLOUD_TOKEN_EXPIRY) != 0);
+  rep.reset();
+  Clear();
+
+  at = "accesstoken42";
+  rt = "refreshtoken42";
+  uid = "uid42";
+  expiresin = 42;
+  rep = GetPayload(at, rt, uid, expiresin);
+  EXPECT_TRUE(cloud_manager_handle_register_response(GetContext(), rep.get()));
+  EXPECT_FALSE(IsEmptyContext());
+  EXPECT_EQ(expiresin, GetContext()->store.expires_in);
+  EXPECT_STREQ(at.c_str(), oc_string(GetContext()->store.access_token));
+  EXPECT_STREQ(rt.c_str(), oc_string(GetContext()->store.refresh_token));
+  EXPECT_STREQ(uid.c_str(), oc_string(GetContext()->store.uid));
+  EXPECT_TRUE((GetContext()->store.status & OC_CLOUD_TOKEN_EXPIRY) != 0);
+  rep.reset();
+  Clear();
 }
 
 TEST_F(TestCloudManagerData, cloud_manager_parse_redirect)
 {
   std::string redirect{ "coap://mock.plgd.dev" };
   oc_rep_begin_root_object();
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_set_text_string(root, redirecturi, redirect.c_str());
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc_rep_end_root_object();
-  EXPECT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc::oc_rep_unique_ptr rep = ParsePayload();
   PrintJson(rep.get());
 
+  oc_cloud_endpoints_reinit(&GetContext()->store.ci_servers,
+                            OC_STRING_VIEW(OCF_COAPCLOUDCONF_DEFAULT_CIS),
+                            OCF_COAPCLOUDCONF_DEFAULT_SID);
   EXPECT_TRUE(cloud_manager_handle_redirect_response(GetContext(), rep.get()));
   EXPECT_FALSE(IsEmptyContext());
-  EXPECT_STREQ(redirect.c_str(), oc_string(GetContext()->store.ci_server));
+  EXPECT_TRUE(oc_cloud_endpoint_is_selected(
+    &GetContext()->store.ci_servers,
+    oc_string_view(redirect.c_str(), redirect.length())));
+
+  GetContext()->cloud_ep = oc_new_endpoint();
+  oc_cloud_endpoints_reinit(&GetContext()->store.ci_servers,
+                            OC_STRING_VIEW_NULL, {});
+  EXPECT_TRUE(cloud_manager_handle_redirect_response(GetContext(), rep.get()));
+  EXPECT_FALSE(IsEmptyContext());
+  EXPECT_TRUE(oc_cloud_endpoint_is_selected(
+    &GetContext()->store.ci_servers,
+    oc_string_view(redirect.c_str(), redirect.length())));
+  oc_cloud_set_endpoint(GetContext());
+  oc_free_endpoint(GetContext()->cloud_ep);
+  GetContext()->cloud_ep = nullptr;
+
+  EXPECT_TRUE(cloud_manager_handle_redirect_response(GetContext(), rep.get()));
+  EXPECT_FALSE(IsEmptyContext());
+  EXPECT_TRUE(oc_cloud_endpoint_is_selected(
+    &GetContext()->store.ci_servers,
+    oc_string_view(redirect.c_str(), redirect.length())));
+}
+
+TEST_F(TestCloudManagerData, cloud_manager_parse_redirect_fail_invalid_payload)
+{
+  oc_rep_begin_root_object();
+  oc_rep_set_text_string(root, plgd, "dev");
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc::oc_rep_unique_ptr rep1 = ParsePayload();
+  PrintJson(rep1.get());
+  EXPECT_FALSE(
+    cloud_manager_handle_redirect_response(GetContext(), rep1.get()));
+  rep1.reset();
+  Clear();
+
+  oc_rep_begin_root_object();
+  oc_rep_set_text_string(root, redirecturi, "");
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  oc::oc_rep_unique_ptr rep2 = ParsePayload();
+  PrintJson(rep2.get());
+  EXPECT_FALSE(
+    cloud_manager_handle_redirect_response(GetContext(), rep2.get()));
+  rep2.reset();
+  Clear();
 }
 
 TEST_F(TestCloudManagerData, cloud_manager_parse_refresh_token_data_invalid)

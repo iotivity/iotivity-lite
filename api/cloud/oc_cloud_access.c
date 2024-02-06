@@ -148,6 +148,7 @@ void
 cloud_access_deregister_query(const char *uid, const char *access_token,
                               size_t device, oc_string_t *query)
 {
+  assert(uid != NULL);
   assert(query != NULL);
   oc_string_t q_uid;
   oc_concat_strings(&q_uid, "uid=", uid);

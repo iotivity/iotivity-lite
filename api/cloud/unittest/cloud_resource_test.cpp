@@ -16,10 +16,13 @@
  *
  ******************************************************************/
 
+#include "api/cloud/oc_cloud_context_internal.h"
+#include "api/cloud/oc_cloud_internal.h"
 #include "api/cloud/oc_cloud_resource_internal.h"
 #include "api/oc_rep_internal.h"
 #include "oc_core_res.h"
 #include "oc_ri.h"
+#include "oc_uuid.h"
 #include "port/oc_log_internal.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
@@ -34,13 +37,52 @@ using namespace std::chrono_literals;
 
 static constexpr size_t kDeviceID{ 0 };
 
+struct CloudEndpointData
+{
+  std::string uri;
+  std::string id;
+};
+
 struct CloudResourceData
 {
   std::string apn;
   std::string cis;
-  std::string sid;
+  std::vector<CloudEndpointData> servers;
+  oc_uuid_t sid;
   int clec;
   std::string cps;
+
+  static std::vector<CloudEndpointData> decodeArray(const oc_rep_t *servers)
+  {
+    std::vector<CloudEndpointData> result{};
+    for (const oc_rep_t *server = servers; server != NULL;
+         server = server->next) {
+      const oc_rep_t *rep = oc_rep_get(server->value.object, OC_REP_STRING,
+                                       "uri", OC_CHAR_ARRAY_LEN("uri"));
+      if (rep == nullptr) {
+        continue;
+      }
+      std::string uri = oc_string(rep->value.string);
+
+      rep = oc_rep_get(server->value.object, OC_REP_STRING, "id",
+                       OC_CHAR_ARRAY_LEN("id"));
+      if (rep == nullptr) {
+        continue;
+      }
+      std::string id = oc_string(rep->value.string);
+
+      result.emplace_back(CloudEndpointData{ uri, id });
+    }
+
+    return result;
+  }
+
+  static oc_uuid_t decodeSid(const oc_string_t &sid)
+  {
+    oc_uuid_t result{};
+    oc_str_to_uuid(oc_string(sid), &result);
+    return result;
+  }
 
   static CloudResourceData decode(const oc_rep_t *rep)
   {
@@ -59,9 +101,15 @@ struct CloudResourceData
         continue;
       }
       if (oc_rep_is_property_with_type(
+            rep, OC_REP_OBJECT_ARRAY, OCF_COAPCLOUDCONF_PROP_CISERVERS,
+            OC_CHAR_ARRAY_LEN(OCF_COAPCLOUDCONF_PROP_CISERVERS))) {
+        crd.servers = decodeArray(rep->value.object_array);
+        continue;
+      }
+      if (oc_rep_is_property_with_type(
             rep, OC_REP_STRING, OCF_COAPCLOUDCONF_PROP_SERVERID,
             OC_CHAR_ARRAY_LEN(OCF_COAPCLOUDCONF_PROP_SERVERID))) {
-        crd.sid = std::string(oc_string(rep->value.string));
+        crd.sid = decodeSid(rep->value.string);
         continue;
       }
       if (oc_rep_is_property_with_type(
@@ -115,16 +163,9 @@ public:
     oc::TestDevice::StopServer();
   }
 
-  void SetUp() override
-  {
-    // TODO: rm
-    oc_log_set_level(OC_LOG_LEVEL_DEBUG);
-  }
-
   void TearDown() override
   {
-    // TODO: rm
-    oc_log_set_level(OC_LOG_LEVEL_INFO);
+    oc::TestDevice::Reset();
   }
 };
 
@@ -159,37 +200,211 @@ TEST_F(TestCloudResourceWithServer, GetResourceByURI)
 
 #if !defined(OC_SECURITY) || defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM)
 
-TEST_F(TestCloudResourceWithServer, GetRequest)
+template<oc_status_t CODE = OC_STATUS_OK>
+static void
+getRequest(CloudResourceData *crd = nullptr)
 {
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
   ASSERT_TRUE(epOpt.has_value());
   auto ep = std::move(*epOpt);
 
+  struct get_handler_data
+  {
+    bool invoked;
+    CloudResourceData *crd;
+  };
   auto get_handler = [](oc_client_response_t *data) {
     EXPECT_EQ(OC_STATUS_OK, data->code);
     oc::TestDevice::Terminate();
-    OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
-    *static_cast<CloudResourceData *>(data->user_data) =
-      CloudResourceData::decode(data->payload);
+    OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload, true).data());
+    auto ghd = static_cast<get_handler_data *>(data->user_data);
+    ghd->invoked = true;
+    ASSERT_EQ(CODE, data->code);
+    if (data->code == OC_STATUS_OK && ghd->crd != nullptr) {
+      *ghd->crd = CloudResourceData::decode(data->payload);
+    }
   };
 
   auto timeout = 1s;
-  CloudResourceData crd{};
+  get_handler_data ghd{ false, crd };
   ASSERT_TRUE(oc_do_get_with_timeout(OCF_COAPCLOUDCONF_URI, &ep, nullptr,
                                      timeout.count(), get_handler, LOW_QOS,
-                                     &crd));
+                                     &ghd));
+
   oc::TestDevice::PoolEventsMsV1(timeout, true);
+  EXPECT_TRUE(ghd.invoked);
+}
+
+TEST_F(TestCloudResourceWithServer, GetRequest)
+{
+  CloudResourceData crd{};
+  getRequest(&crd);
 
   EXPECT_TRUE(crd.apn.empty());
   EXPECT_STREQ(OCF_COAPCLOUDCONF_DEFAULT_CIS, crd.cis.c_str());
-  EXPECT_STREQ(OCF_COAPCLOUDCONF_DEFAULT_SID, crd.sid.c_str());
+  EXPECT_TRUE(oc_uuid_is_equal(OCF_COAPCLOUDCONF_DEFAULT_SID, crd.sid));
   EXPECT_EQ(OC_CPS_UNINITIALIZED_STR, crd.cps);
   EXPECT_EQ(0, crd.clec);
 }
 
-TEST_F(TestCloudResourceWithServer, PostRequest)
+TEST_F(TestCloudResourceWithServer, GetRequest_NoCloudServers)
 {
-  // TODO
+  // remove default
+  auto *ctx = oc_cloud_get_context(kDeviceID);
+  ASSERT_NE(nullptr, ctx);
+  oc_cloud_endpoints_clear(&ctx->store.ci_servers);
+
+  CloudResourceData crd{};
+  getRequest(&crd);
+
+  EXPECT_TRUE(crd.apn.empty());
+  EXPECT_TRUE(crd.cis.empty());
+  EXPECT_TRUE(oc_uuid_is_equal(OCF_COAPCLOUDCONF_DEFAULT_SID, crd.sid));
+  EXPECT_EQ(OC_CPS_UNINITIALIZED_STR, crd.cps);
+  EXPECT_EQ(0, crd.clec);
+
+  // restore default store
+  oc_cloud_store_initialize(&ctx->store);
+}
+
+template<typename Fn, oc_status_t CODE = OC_STATUS_BAD_REQUEST>
+static void
+postRequest(const Fn &encodeFn, CloudResourceData *crd = nullptr)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  struct post_handler_data
+  {
+    bool invoked;
+    CloudResourceData *crd;
+  };
+  auto post_handler = [](oc_client_response_t *data) {
+    oc::TestDevice::Terminate();
+    OC_DBG("POST payload: %s",
+           oc::RepPool::GetJson(data->payload, true).data());
+    auto phd = static_cast<post_handler_data *>(data->user_data);
+    phd->invoked = true;
+    ASSERT_EQ(CODE, data->code);
+    if (data->code == OC_STATUS_CHANGED && phd->crd != nullptr) {
+      *phd->crd = CloudResourceData::decode(data->payload);
+    }
+  };
+
+  post_handler_data phd{ false, crd };
+  ASSERT_TRUE(oc_init_post(OCF_COAPCLOUDCONF_URI, &ep, nullptr, post_handler,
+                           LOW_QOS, &phd));
+
+  if (encodeFn != nullptr) {
+    encodeFn();
+  }
+
+  auto timeout = 1s;
+  ASSERT_TRUE(oc_do_post_with_timeout(timeout.count()));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  EXPECT_TRUE(phd.invoked);
+}
+
+TEST_F(TestCloudResourceWithServer, PostRequest_FailMissingCis)
+{
+  auto encode = []() {
+    oc_rep_begin_root_object();
+    oc_rep_set_text_string(root, at, "access_token");
+    oc_rep_set_text_string(root, sid, "00000000-0000-0000-0000-000000000000");
+    oc_rep_end_root_object();
+  };
+  postRequest(encode);
+}
+
+TEST_F(TestCloudResourceWithServer, PostRequest_FailMissingAccessToken)
+{
+  auto encode = []() {
+    oc_rep_begin_root_object();
+    oc_rep_set_text_string(root, cis, "coap://mock.plgd.dev");
+    oc_rep_set_text_string(root, sid, "00000000-0000-0000-0000-000000000000");
+    oc_rep_end_root_object();
+  };
+  postRequest(encode);
+}
+
+/// for sid and at properties, missing and empty values are equivalent
+TEST_F(TestCloudResourceWithServer, PostRequest_FailMissingSid)
+{
+  auto encode = []() {
+    oc_rep_begin_root_object();
+    oc_rep_set_text_string(root, cis, "coap://mock.plgd.dev");
+    oc_rep_set_text_string(root, at, "access_token");
+    oc_rep_set_text_string(root, sid, "");
+    oc_rep_end_root_object();
+  };
+  postRequest(encode);
+}
+
+TEST_F(TestCloudResourceWithServer, PostRequest_InvalidSid)
+{
+  auto encode = []() {
+    oc_rep_begin_root_object();
+    oc_rep_set_text_string(root, cis, "coap://mock.plgd.dev");
+    oc_rep_set_text_string(root, at, "access_token");
+    oc_rep_set_text_string(root, sid, "invalid"); // not a valid UUID
+    oc_rep_end_root_object();
+  };
+  postRequest(encode);
+}
+
+TEST_F(TestCloudResourceWithServer, PostRequest_FailSetCps)
+{
+  auto encode = []() {
+    oc_rep_begin_root_object();
+    oc_rep_set_text_string(root, cps, OC_CPS_REGISTERED_STR);
+    oc_rep_end_root_object();
+  };
+  postRequest(encode);
+}
+
+TEST_F(TestCloudResourceWithServer, PostRequest_FailInvalidState)
+{
+  // in registering or registered state, the only allowed change is to request
+  // deregistration by sending a POST request with the cis property set to an
+  // empty string OC_CPS_REGISTERING OC_CPS_REGISTERED
+  auto *ctx = oc_cloud_get_context(kDeviceID);
+  ASSERT_NE(nullptr, ctx);
+  cloud_set_cps(ctx, OC_CPS_REGISTERING);
+  postRequest([]() {
+    // no-op
+  });
+
+  cloud_set_cps(ctx, OC_CPS_REGISTERED);
+  postRequest([]() {
+    oc_rep_begin_root_object();
+    oc_rep_set_text_string(root, cis, "coap://mock.plgd.dev");
+    oc_rep_end_root_object();
+  });
+
+  cloud_context_clear(ctx);
+}
+
+TEST_F(TestCloudResourceWithServer, PostRequest_Deregister)
+{
+  auto *ctx = oc_cloud_get_context(kDeviceID);
+  ASSERT_NE(nullptr, ctx);
+  cloud_set_cps(ctx, OC_CPS_REGISTERED);
+
+  auto encode = []() {
+    oc_rep_begin_root_object();
+    oc_rep_set_text_string(root, cis, "");
+    oc_rep_end_root_object();
+  };
+  CloudResourceData crd{};
+  postRequest<decltype(encode), OC_STATUS_CHANGED>(encode, &crd);
+
+  // resource should be reset to default values
+  EXPECT_TRUE(crd.apn.empty());
+  EXPECT_STREQ(OCF_COAPCLOUDCONF_DEFAULT_CIS, crd.cis.c_str());
+  EXPECT_TRUE(oc_uuid_is_equal(OCF_COAPCLOUDCONF_DEFAULT_SID, crd.sid));
+  EXPECT_EQ(OC_CPS_UNINITIALIZED_STR, crd.cps);
+  EXPECT_EQ(0, crd.clec);
 }
 
 TEST_F(TestCloudResourceWithServer, PutRequest_FailMethodNotSupported)

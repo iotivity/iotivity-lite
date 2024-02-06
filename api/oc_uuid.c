@@ -21,6 +21,8 @@
 #include "port/oc_random.h"
 #include "util/oc_macros_internal.h"
 #include "util/oc_secure_string_internal.h"
+
+#include <assert.h>
 #include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -31,21 +33,22 @@
  * to convert between their string and binary representations.
  */
 
-void
-oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
+static int
+str_to_uuid(const char *str, size_t str_len, oc_uuid_t *uuid)
 {
-  if (str == NULL) {
-    return;
+  if (str_len == 1 && str[0] == '*') {
+    if (uuid != NULL) {
+      memset(uuid, 0, sizeof(*uuid));
+      uuid->id[0] = '*';
+    }
+    return 1;
   }
-  size_t str_len = oc_strnlen(str, OC_UUID_LEN);
-  memset(uuid, 0, sizeof(*uuid));
-  if (str[0] == '*' && str_len == 1) {
-    uuid->id[0] = '*';
-    return;
-  }
+
+  oc_uuid_t uid = { 0 };
+  size_t j = 0;
   size_t k = 1;
   uint8_t c = 0;
-  for (size_t i = 0, j = 0; i < (OC_UUID_LEN - 1) && i < str_len; ++i) {
+  for (size_t i = 0; i < (OC_UUID_LEN - 1) && i < str_len; ++i) {
     if (str[i] == '-') {
       continue;
     }
@@ -80,13 +83,46 @@ oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
       c |= str[i] - 48;
     }
     if ((j + 1) * 2 == k) {
-      uuid->id[j++] = c;
+      if (j == OC_UUID_ID_SIZE) {
+        return -1;
+      }
+      uid.id[j] = c;
+      j++;
       c = 0;
     } else {
       c = (uint8_t)(c << 4);
     }
     k++;
   }
+  if (uuid != NULL) {
+    memcpy(uuid, &uid, sizeof(oc_uuid_t));
+  }
+  return (int)j;
+}
+
+int
+oc_str_to_uuid_v1(const char *str, size_t str_len, oc_uuid_t *uuid)
+{
+  int ret = str_to_uuid(str, str_len, uuid);
+  if (str_len == 1 && str[0] == '*') {
+    assert(ret == 1);
+    return ret;
+  }
+  if (ret != OC_UUID_ID_SIZE) {
+    OC_ERR("oc_str_to_uuid: invalid UUID string (%s, size: %d)", str, ret);
+    return -1;
+  }
+  return OC_UUID_ID_SIZE;
+}
+
+void
+oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
+{
+  if (str == NULL) {
+    return;
+  }
+  size_t str_len = oc_strnlen(str, OC_UUID_LEN);
+  oc_str_to_uuid_v1(str, str_len, uuid);
 }
 
 int

@@ -21,12 +21,15 @@
 #ifndef OC_CLOUD_INTERNAL_H
 #define OC_CLOUD_INTERNAL_H
 
+#include "api/oc_helpers_internal.h"
+#include "oc_api.h"
+#include "oc_cloud.h"
+#include "oc_uuid.h"
+#include "util/oc_compiler.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
-
-#include "oc_api.h"
-#include "oc_cloud.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -44,42 +47,33 @@ extern "C" {
 #define OC_CLOUD_ACTION_REFRESH_TOKEN_STR "refreshtoken"
 #define OC_CLOUD_ACTION_UNKNOWN_STR "unknown"
 
-typedef struct cloud_conf_update_t
+typedef struct
 {
-  const char *access_token; /**< Access Token resolved with an auth code. */
-  size_t access_token_len;
-  const char *auth_provider; /**< Auth Provider ID*/
-  size_t auth_provider_len;
-  const char *ci_server; /**< Cloud Interface Server URL which an Enrollee is
-                      going to registered. */
-  size_t ci_server_len;
-  const char *sid; /**< OCF Cloud Identity as defined in OCF CNC 2.0 Spec. */
-  size_t sid_len;
-} cloud_conf_update_t;
+  const oc_string_t
+    *access_token; /**< Access Token resolved with an auth code. */
+  const oc_string_t *auth_provider; /**< Auth Provider ID*/
+  const oc_string_t *ci_server;     /**< Cloud Interface Server URL which an a
+                                       enrollee is going to registered. */
+  oc_uuid_t sid; /**< OCF Cloud Identity as defined in OCF CNC 2.0 Spec. */
+} oc_cloud_conf_update_t;
 
-typedef struct cloud_api_param_t
-{
-  oc_cloud_context_t *ctx;
-  oc_cloud_cb_t cb;
-  void *data;
-  uint16_t timeout;
-} cloud_api_param_t;
+/** Set cloud endpoint from currently selected cloud server address */
+bool oc_cloud_set_endpoint(oc_cloud_context_t *ctx) OC_NONNULL();
 
-cloud_api_param_t *alloc_api_param(void);
-void free_api_param(cloud_api_param_t *p);
-int conv_cloud_endpoint(oc_cloud_context_t *ctx);
+/** Close connection to currently selected cloud server address  */
+void oc_cloud_close_endpoint(const oc_endpoint_t *ep) OC_NONNULL();
 
-int oc_cloud_init(void);
+/** Initialize cloud data for devices */
+bool oc_cloud_init(void);
+
+/** Deinitialize cloud data for devices */
 void oc_cloud_shutdown(void);
 
+/** Check if the status code is one of the connection error codes */
 bool cloud_is_connection_error_code(oc_status_t code);
+
+/** Check if the status code is the timeout error code */
 bool cloud_is_timeout_error_code(oc_status_t code);
-
-void oc_cloud_register_handler(oc_client_response_t *data);
-void oc_cloud_login_handler(oc_client_response_t *data);
-void oc_cloud_refresh_token_handler(oc_client_response_t *data);
-
-void cloud_close_endpoint(const oc_endpoint_t *cloud_ep);
 
 void cloud_manager_cb(oc_cloud_context_t *ctx);
 void cloud_set_last_error(oc_cloud_context_t *ctx, oc_cloud_error_t error);
@@ -112,67 +106,12 @@ int cloud_reset(size_t device, bool force, bool sync, uint16_t timeout);
  * @param data configuration update (cannot be NULL)
  */
 void cloud_set_cloudconf(oc_cloud_context_t *ctx,
-                         const cloud_conf_update_t *data);
+                         const oc_cloud_conf_update_t *data) OC_NONNULL();
 
-void cloud_update_by_resource(oc_cloud_context_t *ctx,
-                              const cloud_conf_update_t *data);
-/**
- * @brief Update resource links after manager status change.
- *
- * If cloud is in logged in state the function executes several resource links
- * updates: deletes links scheduled to be deleted, publishes links scheduled
- * to be published and republishes links that were already published.
- * Additionally, if Time to Live property is not equal to
- * RD_PUBLISH_TTL_UNLIMITED then published links are scheduled to be republished
- * each hour. (If cloud_rd_manager_status_changed function is triggered again
- * before the scheduled time passes the republishing is rescheduled with updated
- * time.)
- *
- * @param ctx Cloud context, must not be NULL
- */
-void cloud_rd_manager_status_changed(oc_cloud_context_t *ctx);
-
-/**
- * @brief Deallocate all resource directory context member variables.
- *
- * Deallocate the list of to be published resources, the list of published
- * resources and the list of to be deleted resources. Remove delayed callback
- * that republishes resources (if it's active).
- *
- * @param ctx Cloud context, must not be NULL
- */
-void cloud_rd_deinit(oc_cloud_context_t *ctx);
-
-/**
- * @brief Reset resource directory context member variables.
- *
- * Items in the list of published resources are moved to the list of to be
- * published resources. The list of to be deleted resources is cleared.
- *
- * @param ctx Cloud context, must not be NULL
- */
-void cloud_rd_reset_context(oc_cloud_context_t *ctx);
-
-int cloud_register(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
-                   uint16_t timeout);
-int cloud_login(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
-                uint16_t timeout);
-int cloud_logout(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
-                 uint16_t timeout);
-int cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data,
-                        uint16_t timeout);
-
-/**
- * @brief Send a ping over the cloud connected connection
- *
- * @param endpoint endpoint to be used (cannot be NULL)
- * @param timeout_seconds timeout for the ping
- * @param handler the response handler
- * @param user_data the user data to be conveyed to the response handler
- * @return true on success
- */
-bool cloud_send_ping(const oc_endpoint_t *endpoint, uint16_t timeout_seconds,
-                     oc_response_handler_t handler, void *user_data);
+/** Update cloud based on update data */
+void oc_cloud_update_by_resource(oc_cloud_context_t *ctx,
+                                 const oc_cloud_conf_update_t *data)
+  OC_NONNULL();
 
 #ifdef __cplusplus
 }
