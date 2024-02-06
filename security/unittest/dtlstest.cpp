@@ -99,7 +99,7 @@ dtls_thread_win32(void *data)
 TEST_F(TestDTLSWithServer, DTLSInactivityMonitor)
 {
   oc_clock_time_t timeout_default = oc_dtls_inactivity_timeout();
-  oc_dtls_set_inactivity_timeout(2 * OC_CLOCK_SECOND);
+  oc_dtls_set_inactivity_timeout(OC_CLOCK_SECOND);
 
   // DTLS endpoint
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID, SECURED, TCP);
@@ -139,7 +139,7 @@ TEST_F(TestDTLSWithServer, DTLSInactivityMonitor)
 #endif /* MINGW_WINTHREAD */
 
   while (dtls_status.load() == DTLS_STATUS::DTLS_INIT) {
-    oc::TestDevice::PoolEventsMs(200);
+    oc::TestDevice::PoolEventsMs(50);
   }
 
   ASSERT_EQ(1, oc_tls_num_peers(kDeviceID));

@@ -581,10 +581,14 @@ public:
     // allow all ocf-supported MDs and ECs
     oc_sec_certs_md_set_algorithms_allowed(OCF_CERTS_SUPPORTED_MDS);
     oc_sec_certs_ecp_set_group_ids_allowed(OCF_CERTS_SUPPORTED_ELLIPTIC_CURVES);
+
+    EXPECT_TRUE(oc::TestDevice::StartServer());
   }
 
   static void TearDownTestCase()
   {
+    oc::TestDevice::StopServer();
+
     // restore defaults
     oc_sec_certs_md_set_algorithms_allowed(
       MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256));
@@ -594,8 +598,6 @@ public:
 
   void SetUp() override
   {
-    EXPECT_TRUE(oc::TestDevice::StartServer());
-
     oc_uuid_t uuid{};
     oc_gen_uuid(&uuid);
     std::array<char, 50> buf;
@@ -606,11 +608,7 @@ public:
     roles_.Add("user", "");
   }
 
-  void TearDown() override
-  {
-    oc::TestDevice::Reset();
-    oc::TestDevice::StopServer();
-  }
+  void TearDown() override { oc::TestDevice::Reset(); }
 
   std::string uuid_{};
   oc::Roles roles_{};

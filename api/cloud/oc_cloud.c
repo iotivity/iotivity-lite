@@ -21,20 +21,23 @@
 
 #ifdef OC_CLOUD
 
+#include "api/cloud/oc_cloud_context_internal.h"
+#include "api/cloud/oc_cloud_deregister_internal.h"
+#include "api/cloud/oc_cloud_internal.h"
+#include "api/cloud/oc_cloud_log_internal.h"
+#include "api/cloud/oc_cloud_manager_internal.h"
+#include "api/cloud/oc_cloud_rd_internal.h"
+#include "api/cloud/oc_cloud_resource_internal.h"
+#include "api/cloud/oc_cloud_store_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_ri_server_internal.h"
 #include "api/oc_server_api_internal.h"
 #include "oc_api.h"
-#include "oc_cloud_context_internal.h"
-#include "oc_cloud_deregister_internal.h"
-#include "oc_cloud_internal.h"
-#include "oc_cloud_log_internal.h"
-#include "oc_cloud_manager_internal.h"
-#include "oc_cloud_store_internal.h"
 #include "oc_collection.h"
 #include "oc_core_res.h"
 #include "oc_network_monitor.h"
 #include "port/oc_assert.h"
+#include "util/oc_mmem_internal.h"
 #include "util/oc_secure_string_internal.h"
 
 #ifdef OC_SECURITY
@@ -87,7 +90,7 @@ cloud_manager_restart(oc_cloud_context_t *ctx)
     return;
   }
   cloud_manager_stop(ctx);
-  cloud_deregister_stop(ctx);
+  oc_cloud_deregister_stop(ctx);
   oc_remove_delayed_callback(ctx, start_manager);
   oc_set_delayed_callback(ctx, start_manager, 0);
 }
@@ -100,20 +103,43 @@ restart_manager(void *user_data)
   return OC_EVENT_DONE;
 }
 
-void
-cloud_close_endpoint(const oc_endpoint_t *ep)
+bool
+oc_cloud_set_endpoint(oc_cloud_context_t *ctx)
 {
-  OC_CLOUD_DBG("cloud_close_endpoint");
+  assert(ctx->cloud_ep != NULL);
+  if (!oc_endpoint_is_empty(ctx->cloud_ep)) {
+    return true;
+  }
+
+  bool success = false;
+  const oc_string_t *ep_addr =
+    oc_cloud_endpoint_selected_address(&ctx->store.ci_servers);
+  if (oc_string_to_endpoint(ep_addr, ctx->cloud_ep, NULL) == 0) {
+    // set device id to cloud endpoint for multiple servers
+    ctx->cloud_ep->device = ctx->device;
+    success = true;
+  }
+#ifdef OC_DNS_CACHE
+  oc_dns_clear_cache();
+#endif /* OC_DNS_CACHE */
+
+  return success;
+}
+
+void
+oc_cloud_close_endpoint(const oc_endpoint_t *ep)
+{
+  OC_CLOUD_DBG("oc_cloud_close_endpoint");
 #ifdef OC_SECURITY
   const oc_tls_peer_t *peer = oc_tls_get_peer(ep);
   if (peer != NULL) {
-    OC_CLOUD_DBG("cloud_close_endpoint: oc_tls_close_connection");
+    OC_CLOUD_DBG("oc_cloud_close_endpoint: oc_tls_close_connection");
     oc_tls_close_connection(ep);
   } else
 #endif /* OC_SECURITY */
   {
 #ifdef OC_TCP
-    OC_CLOUD_DBG("cloud_close_endpoint: oc_connectivity_end_session");
+    OC_CLOUD_DBG("oc_cloud_close_endpoint: oc_connectivity_end_session");
     oc_connectivity_end_session(ep);
 #endif /* OC_TCP */
   }
@@ -130,7 +156,7 @@ cloud_reset(size_t device, bool force, bool sync, uint16_t timeout)
 
 #ifdef OC_SECURITY
   if (!force && oc_tls_connected(ctx->cloud_ep) &&
-      cloud_deregister_on_reset(ctx, sync, timeout)) {
+      oc_cloud_deregister_on_reset(ctx, sync, timeout)) {
     return 0;
   }
 #else  /* !OC_SECURITY */
@@ -144,71 +170,35 @@ cloud_reset(size_t device, bool force, bool sync, uint16_t timeout)
 }
 
 void
-cloud_set_cloudconf(oc_cloud_context_t *ctx, const cloud_conf_update_t *data)
+cloud_set_cloudconf(oc_cloud_context_t *ctx, const oc_cloud_conf_update_t *data)
 {
   assert(ctx != NULL);
   assert(data != NULL);
-  if (data->auth_provider_len > 0) {
-    oc_set_string(&ctx->store.auth_provider, data->auth_provider,
-                  data->auth_provider_len);
+  if (!oc_string_is_null_or_empty(data->access_token)) {
+    oc_copy_string(&ctx->store.access_token, data->access_token);
   }
-  if (data->access_token_len > 0) {
-    oc_set_string(&ctx->store.access_token, data->access_token,
-                  data->access_token_len);
+  if (!oc_string_is_null_or_empty(data->auth_provider)) {
+    oc_copy_string(&ctx->store.auth_provider, data->auth_provider);
   }
-  if (data->ci_server_len > 0) {
-    oc_set_string(&ctx->store.ci_server, data->ci_server, data->ci_server_len);
-  }
-  if (data->sid_len > 0) {
-    oc_set_string(&ctx->store.sid, data->sid, data->sid_len);
+  if (!oc_string_is_null_or_empty(data->ci_server)) {
+    // cannot oc_cloud_endpoints_reinit, because the deinit might deallocate
+    // oc_string_t values and relocate memory, thus invalidating the
+    // oc_string_view
+    oc_cloud_endpoints_deinit(&ctx->store.ci_servers);
+    // oc_cloud_endpoints_init only allocates, so the oc_string_view_t is valid
+    oc_string_view_t cis = oc_string_view2(data->ci_server);
+    if (!oc_cloud_endpoints_init(
+          &ctx->store.ci_servers, ctx->store.ci_servers.on_selected_change,
+          ctx->store.ci_servers.on_selected_change_data, cis, data->sid)) {
+      OC_WRN("Failed to reinitialize cloud server endpoints");
+    }
   }
 }
 
-int
-oc_cloud_provision_conf_resource_v1(oc_cloud_context_t *ctx, const char *server,
-                                    size_t server_len, const char *access_token,
-                                    size_t access_token_len,
-                                    const char *server_id, size_t server_id_len,
-                                    const char *auth_provider,
-                                    size_t auth_provider_len)
+static oc_string_t
+cloud_cstring_to_temp_oc_string(const char *str, size_t len)
 {
-  assert(ctx != NULL);
-  if (server_len >= OC_MAX_STRING_LENGTH ||
-      access_token_len >= OC_MAX_STRING_LENGTH ||
-      server_id_len >= OC_MAX_STRING_LENGTH ||
-      auth_provider_len >= OC_MAX_STRING_LENGTH) {
-    return -1;
-  }
-
-  cloud_close_endpoint(ctx->cloud_ep);
-  memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
-  ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
-  cloud_store_initialize(&ctx->store);
-  cloud_manager_stop(ctx);
-  cloud_deregister_stop(ctx);
-
-  cloud_conf_update_t data = {
-    .access_token = access_token,
-    .access_token_len = access_token_len,
-    .ci_server = server,
-    .ci_server_len = server_len,
-    .sid = server_id,
-    .sid_len = server_id_len,
-    .auth_provider = auth_provider,
-    .auth_provider_len = auth_provider_len,
-  };
-  cloud_set_cloudconf(ctx, &data);
-  cloud_rd_reset_context(ctx);
-
-  ctx->store.status = OC_CLOUD_INITIALIZED;
-  ctx->store.cps = OC_CPS_READYTOREGISTER;
-
-  cloud_store_dump_async(&ctx->store);
-
-  if (ctx->cloud_manager) {
-    oc_cloud_manager_restart(ctx);
-  }
-  return 0;
+  return OC_MMEM((void *)str, len + 1, NULL); // +1 for null terminator
 }
 
 int
@@ -222,19 +212,67 @@ oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx, const char *server,
     return -1;
   }
   size_t server_len = oc_strnlen(server, OC_MAX_STRING_LENGTH);
-  size_t access_token_len = oc_strnlen_s(access_token, OC_MAX_STRING_LENGTH);
-  size_t server_id_len = oc_strnlen_s(server_id, OC_MAX_STRING_LENGTH);
+  if (server_len >= OC_MAX_STRING_LENGTH) {
+    return -1;
+  }
+  size_t access_token_len = oc_strnlen(access_token, OC_MAX_STRING_LENGTH);
+  if (access_token_len >= OC_MAX_STRING_LENGTH) {
+    return -1;
+  }
+  size_t server_id_len = oc_strnlen(server_id, OC_UUID_LEN);
+  oc_uuid_t sid = OCF_COAPCLOUDCONF_DEFAULT_SID;
+  if (server_id_len > 0 &&
+      oc_str_to_uuid_v1(server_id, server_id_len, &sid) != OC_UUID_ID_SIZE) {
+    OC_ERR("invalid sid(%s)", server_id);
+    return -1;
+  }
   size_t auth_provider_len = oc_strnlen_s(auth_provider, OC_MAX_STRING_LENGTH);
-  return oc_cloud_provision_conf_resource_v1(
-    ctx, server, server_len, access_token, access_token_len, server_id,
-    server_id_len, auth_provider, auth_provider_len);
+  if (auth_provider_len >= OC_MAX_STRING_LENGTH) {
+    return -1;
+  }
+
+  oc_cloud_close_endpoint(ctx->cloud_ep);
+  memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
+  ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
+  oc_cloud_store_initialize(&ctx->store);
+  cloud_manager_stop(ctx);
+  oc_cloud_deregister_stop(ctx);
+
+  const oc_string_t at =
+    cloud_cstring_to_temp_oc_string(access_token, access_token_len);
+  const oc_string_t s = cloud_cstring_to_temp_oc_string(server, server_len);
+  oc_cloud_conf_update_t data = {
+    .access_token = &at,
+    .ci_server = &s,
+    .sid = sid,
+  };
+
+  const oc_string_t ap =
+    cloud_cstring_to_temp_oc_string(auth_provider, auth_provider_len);
+  if (auth_provider != NULL) {
+    data.auth_provider = &ap;
+  }
+
+  cloud_set_cloudconf(ctx, &data);
+  cloud_rd_reset_context(ctx);
+
+  ctx->store.status = OC_CLOUD_INITIALIZED;
+  ctx->store.cps = OC_CPS_READYTOREGISTER;
+
+  oc_cloud_store_dump_async(&ctx->store);
+
+  if (ctx->cloud_manager) {
+    oc_cloud_manager_restart(ctx);
+  }
+  return 0;
 }
 
 void
-cloud_update_by_resource(oc_cloud_context_t *ctx,
-                         const cloud_conf_update_t *data)
+oc_cloud_update_by_resource(oc_cloud_context_t *ctx,
+                            const oc_cloud_conf_update_t *data)
 {
-  if (data->ci_server_len == 0) {
+  assert(data->ci_server != NULL);
+  if (oc_string_is_empty(data->ci_server)) {
     OC_CLOUD_DBG("got forced deregister via provisioning of empty cis");
     if (cloud_reset(ctx->device, false, false, CLOUD_DEREGISTER_TIMEOUT) != 0) {
       OC_CLOUD_DBG("reset failed");
@@ -245,12 +283,12 @@ cloud_update_by_resource(oc_cloud_context_t *ctx,
   // if deregistering or other cloud API was active then closing of the endpoint
   // triggers the handler with timeout error, which ensures that/ the operation
   // is interrupted
-  cloud_close_endpoint(ctx->cloud_ep);
+  oc_cloud_close_endpoint(ctx->cloud_ep);
   memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
   ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
-  cloud_store_initialize(&ctx->store);
+  oc_cloud_store_initialize(&ctx->store);
   cloud_manager_stop(ctx);
-  cloud_deregister_stop(ctx);
+  oc_cloud_deregister_stop(ctx);
 
   cloud_set_cloudconf(ctx, data);
   cloud_rd_reset_context(ctx);
@@ -368,7 +406,7 @@ oc_cloud_manager_restart(oc_cloud_context_t *ctx)
 #ifdef OC_SESSION_EVENTS
   if (ctx->cloud_ep_state == OC_SESSION_CONNECTED) {
     bool is_tcp = (ctx->cloud_ep->flags & TCP) != 0;
-    cloud_close_endpoint(ctx->cloud_ep);
+    oc_cloud_close_endpoint(ctx->cloud_ep);
     if (is_tcp) {
       return;
     }
@@ -422,8 +460,8 @@ oc_cloud_manager_stop(oc_cloud_context_t *ctx)
   oc_remove_delayed_callback(ctx, start_manager);
   cloud_rd_reset_context(ctx);
   cloud_manager_stop(ctx);
-  cloud_store_initialize(&ctx->store);
-  cloud_close_endpoint(ctx->cloud_ep);
+  oc_cloud_store_initialize(&ctx->store);
+  oc_cloud_close_endpoint(ctx->cloud_ep);
   memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
   ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
   ctx->cloud_manager = false;
@@ -431,20 +469,20 @@ oc_cloud_manager_stop(oc_cloud_context_t *ctx)
   return 0;
 }
 
-int
+bool
 oc_cloud_init(void)
 {
   if (!oc_ri_on_delete_resource_add_callback(oc_cloud_delete_resource)) {
-    return -1;
+    return false;
   }
   for (size_t device = 0; device < oc_core_get_num_devices(); ++device) {
     if (cloud_context_init(device) == NULL) {
-      return -1;
+      return false;
     }
     oc_cloud_add_resource(oc_core_get_resource_by_index(OCF_P, 0));
     oc_cloud_add_resource(oc_core_get_resource_by_index(OCF_D, device));
   }
-  return 0;
+  return true;
 }
 
 void

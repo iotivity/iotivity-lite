@@ -259,7 +259,7 @@ TEST_F(TestClientCBWithServer, RemoveAsync)
 
   oc_set_delayed_callback(cb, &oc_client_cb_remove_async, 0);
   EXPECT_TRUE(oc_has_delayed_callback(cb, &oc_client_cb_remove_async, false));
-  oc::TestDevice::PoolEventsMsV1(1s);
+  oc::TestDevice::PoolEventsMsV1(50ms);
 
   EXPECT_FALSE(oc_ri_is_client_cb_valid(cb));
 }
@@ -275,7 +275,7 @@ TEST_F(TestClientCBWithServer, RemoveWithTimeoutAsync)
                              0);
   EXPECT_TRUE(oc_has_delayed_callback(
     cb, &oc_client_cb_remove_with_notify_timeout_async, false));
-  oc::TestDevice::PoolEventsMsV1(1s);
+  oc::TestDevice::PoolEventsMsV1(50ms);
 
   EXPECT_TRUE(TestClientCB::responseHandlerInvoked);
   EXPECT_FALSE(oc_ri_is_client_cb_valid(cb));

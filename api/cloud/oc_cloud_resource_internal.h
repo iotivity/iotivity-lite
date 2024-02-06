@@ -22,6 +22,8 @@
 #include "api/oc_helpers_internal.h"
 #include "oc_cloud.h"
 #include "oc_ri.h"
+#include "oc_uuid.h"
+#include "util/oc_compiler.h"
 
 #include <stddef.h>
 
@@ -34,12 +36,29 @@ extern "C" {
 #define OCF_COAPCLOUDCONF_IF_MASK (OC_IF_RW | OC_IF_BASELINE)
 #define OCF_COAPCLOUDCONF_DEFAULT_IF (OC_IF_RW)
 
+/// Default cis value from OCF Device to Cloud Services Specification
 #define OCF_COAPCLOUDCONF_DEFAULT_CIS "coaps+tcp://127.0.0.1"
-#define OCF_COAPCLOUDCONF_DEFAULT_SID "00000000-0000-0000-0000-000000000000"
+
+/// Default sid value from OCF Device to Cloud Services Specification,
+/// equivalent to "00000000-0000-0000-0000-000000000000"
+#ifdef __cplusplus
+#define OCF_COAPCLOUDCONF_DEFAULT_SID                                          \
+  oc_uuid_t                                                                    \
+  {                                                                            \
+    0                                                                          \
+  }
+#else /* !__cplusplus */
+#define OCF_COAPCLOUDCONF_DEFAULT_SID                                          \
+  (oc_uuid_t)                                                                  \
+  {                                                                            \
+    0                                                                          \
+  }
+#endif /* __cplusplus */
 
 #define OCF_COAPCLOUDCONF_PROP_ACCESSTOKEN "at"
 #define OCF_COAPCLOUDCONF_PROP_AUTHPROVIDER "apn"
 #define OCF_COAPCLOUDCONF_PROP_CISERVER "cis"
+#define OCF_COAPCLOUDCONF_PROP_CISERVERS "x.org.iotivity.servers"
 #define OCF_COAPCLOUDCONF_PROP_SERVERID "sid"
 #define OCF_COAPCLOUDCONF_PROP_LASTERRORCODE "clec"
 #define OCF_COAPCLOUDCONF_PROP_PROVISIONINGSTATUS "cps"
@@ -56,6 +75,9 @@ oc_string_view_t oc_cps_to_string(oc_cps_t cps);
 
 /// Create CoAPCloudConf resource
 void oc_create_cloudconf_resource(size_t device);
+
+/// Encode CoAPCloudConf resource to global encoder
+bool oc_cloud_encode(const oc_cloud_context_t *ctx) OC_NONNULL();
 
 #ifdef __cplusplus
 }

@@ -201,3 +201,10 @@ TEST_F(TestMain, NeedsPoll)
     // no-op
   }
 }
+
+TEST(TestMainInit, Init_Fail)
+{
+  oc_handler_t handler{};
+  handler.init = []() { return -1; };
+  EXPECT_EQ(-1, oc_main_init(&handler));
+}

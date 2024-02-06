@@ -23,6 +23,7 @@
 #include "api/cloud/oc_cloud_context_internal.h"
 #include "api/cloud/oc_cloud_resource_internal.h"
 #include "api/oc_core_res_internal.h"
+#include "api/oc_rep_internal.h"
 #include "oc_api.h"
 #include "oc_cloud_internal.h"
 #include "oc_cloud_log_internal.h"
@@ -51,8 +52,8 @@ oc_cps_to_string(oc_cps_t cps)
   return OC_STRING_VIEW_NULL;
 }
 
-static bool
-cloud_encode(const oc_cloud_context_t *ctx)
+bool
+oc_cloud_encode(const oc_cloud_context_t *ctx)
 {
   OC_CLOUD_DBG("Creating Cloud Response");
   oc_rep_start_root_object();
@@ -65,19 +66,29 @@ cloud_encode(const oc_cloud_context_t *ctx)
   oc_rep_set_text_string_v1(root, apn, auth_provider.data,
                             auth_provider.length);
 
-  oc_string_view_t cis = oc_string_view2(&ctx->store.ci_server);
+  oc_string_view_t cis =
+    oc_string_view2(oc_cloud_endpoint_selected_address(&ctx->store.ci_servers));
   oc_rep_set_text_string_v1(root, cis, cis.data, cis.length);
 
-  oc_string_view_t sid = oc_string_view2(&ctx->store.sid);
-  oc_rep_set_text_string_v1(root, sid, sid.data, sid.length);
+  const oc_uuid_t *sid = oc_cloud_endpoint_selected_id(&ctx->store.ci_servers);
+  char sid_str[OC_UUID_LEN] = { 0 };
+  int sid_str_len = 0;
+  if (sid != NULL) {
+    sid_str_len = oc_uuid_to_str_v1(sid, sid_str, OC_ARRAY_SIZE(sid_str));
+    assert(sid_str_len > 0);
+  }
+  oc_rep_set_text_string_v1(root, sid, sid_str, sid_str_len);
+
+  g_err |= oc_cloud_endpoints_encode(
+    oc_rep_object(root), &ctx->store.ci_servers,
+    OC_STRING_VIEW(OCF_COAPCLOUDCONF_PROP_CISERVERS), true);
 
   oc_rep_set_int(root, clec, (int)ctx->last_error);
 
   OC_CLOUD_DBG(
     "Creating Cloud Response: auth provider=%s, cis=%s, sid=%s, clec=%d",
     auth_provider.data != NULL ? auth_provider.data : "",
-    cis.data != NULL ? cis.data : "", sid.data != NULL ? sid.data : "",
-    (int)ctx->last_error);
+    cis.data != NULL ? cis.data : "", sid_str, (int)ctx->last_error);
 
   oc_string_view_t cps = oc_cps_to_string(ctx->store.cps);
   if (cps.length > 0) {
@@ -99,7 +110,7 @@ cloud_resource_get(oc_request_t *request, oc_interface_mask_t interface,
 
   const oc_cloud_context_t *ctx =
     oc_cloud_get_context(request->resource->device);
-  if (ctx == NULL || !cloud_encode(ctx)) {
+  if (ctx == NULL || !oc_cloud_encode(ctx)) {
     oc_send_response_with_callback(request, OC_STATUS_INTERNAL_SERVER_ERROR,
                                    true);
     return;
@@ -108,46 +119,50 @@ cloud_resource_get(oc_request_t *request, oc_interface_mask_t interface,
   oc_send_response_with_callback(request, OC_STATUS_OK, true);
 }
 
+static const oc_string_t *
+resource_payload_get_string_property(const oc_rep_t *payload,
+                                     oc_string_view_t key, bool cannotBeEmpty)
+{
+  const oc_rep_t *rep =
+    oc_rep_get(payload, OC_REP_STRING, key.data, key.length);
+  if (rep == NULL ||
+      (cannotBeEmpty && oc_string_is_empty(&rep->value.string))) {
+    return NULL;
+  }
+  return &rep->value.string;
+}
+
 static bool
 cloud_update_from_request(oc_cloud_context_t *ctx, const oc_request_t *request)
 {
-  cloud_conf_update_t data;
+  oc_cloud_conf_update_t data;
   memset(&data, 0, sizeof(data));
 
-  char *access_token = NULL;
-  bool has_at = oc_rep_get_string(request->request_payload,
-                                  OCF_COAPCLOUDCONF_PROP_ACCESSTOKEN,
-                                  &access_token, &data.access_token_len);
-  if (has_at) {
-    data.access_token = access_token;
-  }
-
-  char *auth_provider = NULL;
-  if (oc_rep_get_string(request->request_payload,
-                        OCF_COAPCLOUDCONF_PROP_AUTHPROVIDER, &auth_provider,
-                        &data.auth_provider_len)) {
-    data.auth_provider = auth_provider;
-  }
-
-  char *ci_server = NULL;
-  bool has_cis =
-    oc_rep_get_string(request->request_payload, OCF_COAPCLOUDCONF_PROP_CISERVER,
-                      &ci_server, &data.ci_server_len);
-  if (has_cis) {
-    data.ci_server = ci_server;
-  }
+  data.access_token = resource_payload_get_string_property(
+    request->request_payload,
+    OC_STRING_VIEW(OCF_COAPCLOUDCONF_PROP_ACCESSTOKEN), true);
+  data.auth_provider = resource_payload_get_string_property(
+    request->request_payload,
+    OC_STRING_VIEW(OCF_COAPCLOUDCONF_PROP_AUTHPROVIDER), true);
+  data.ci_server = resource_payload_get_string_property(
+    request->request_payload, OC_STRING_VIEW(OCF_COAPCLOUDCONF_PROP_CISERVER),
+    false);
 
   // OCF 2.0 spec version added sid property.
-  char *sid = NULL;
-  bool has_sid =
-    oc_rep_get_string(request->request_payload, OCF_COAPCLOUDCONF_PROP_SERVERID,
-                      &sid, &data.sid_len);
-  if (has_sid) {
-    data.sid = sid;
+  const oc_string_t *sid = resource_payload_get_string_property(
+    request->request_payload, OC_STRING_VIEW(OCF_COAPCLOUDCONF_PROP_SERVERID),
+    true);
+  if (sid != NULL) {
+    oc_string_view_t sidv = oc_string_view2(sid);
+    if (oc_str_to_uuid_v1(sidv.data, sidv.length, &data.sid) < 0) {
+      OC_ERR("failed parsing sid(%s)", sidv.data);
+      return false;
+    }
   }
 
-  if (has_cis && (data.ci_server_len == 0 || (has_at && has_sid))) {
-    cloud_update_by_resource(ctx, &data);
+  if (data.ci_server != NULL && (oc_string_is_empty(data.ci_server) ||
+                                 (data.access_token != NULL && sid != NULL))) {
+    oc_cloud_update_by_resource(ctx, &data);
     return true;
   }
   return false;
@@ -159,13 +174,15 @@ cloud_resource_post(oc_request_t *request, oc_interface_mask_t interface,
 {
   (void)user_data;
   (void)interface;
+  OC_CLOUD_DBG("POST request received");
+
   oc_cloud_context_t *ctx = oc_cloud_get_context(request->resource->device);
-  if (!ctx) {
+  if (ctx == NULL) {
     oc_send_response_with_callback(request, OC_STATUS_INTERNAL_SERVER_ERROR,
                                    true);
     return;
   }
-  OC_CLOUD_DBG("POST request received");
+
   bool request_invalid_in_state = true;
   switch (ctx->store.cps) {
   case OC_CPS_UNINITIALIZED:
@@ -201,13 +218,13 @@ cloud_resource_post(oc_request_t *request, oc_interface_mask_t interface,
     return;
   }
 
-  bool changed = cloud_update_from_request(ctx, request);
-  cloud_encode(ctx);
-  oc_send_response_with_callback(
-    request, changed ? OC_STATUS_CHANGED : OC_STATUS_BAD_REQUEST, true);
-  if (changed) {
-    cloud_store_dump_async(&ctx->store);
+  if (!cloud_update_from_request(ctx, request) || !oc_cloud_encode(ctx)) {
+    oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
+    return;
   }
+
+  oc_send_response_with_callback(request, OC_STATUS_CHANGED, true);
+  oc_cloud_store_dump_async(&ctx->store);
 }
 
 void

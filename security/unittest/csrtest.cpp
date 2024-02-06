@@ -50,14 +50,14 @@ public:
         g_ocf_ecs.push_back(ec);
       }
     }
+    EXPECT_TRUE(oc::TestDevice::StartServer());
   }
 
-  void SetUp() override { EXPECT_TRUE(oc::TestDevice::StartServer()); }
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 
   void TearDown() override
   {
     oc::TestDevice::Reset();
-    oc::TestDevice::StopServer();
     oc_sec_certs_default();
   }
 

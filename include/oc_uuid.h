@@ -68,11 +68,27 @@ typedef struct
  * oc_uuid_t uuid;
  * oc_str_to_uuid("1628fbcc-13ce-4e37-b883-1fd8d2ad945d", &uuid);
  * ```
- * @param[in] str the UUID string
+ * @param str the UUID string
  * @param[out] uuid the oc_uuid_t to hold the UUID bits (cannot be NULL).
  */
 OC_API
 void oc_str_to_uuid(const char *str, oc_uuid_t *uuid) OC_NONNULL(2);
+
+/**
+ * Convert a UUID string representation to a 128-bit oc_uuid_t
+ *
+ * @param str the UUID string (cannot be NULL)
+ * @param str_len the length of the UUID string
+ * @param[out] uuid the oc_uuid_t to hold the UUID bits.
+ * @return -1 if the string is not a valid UUID
+ * @return 1 if the string is the special case ("*") UUID value
+ * @return OC_UUID_ID_SIZE (size of the uuid) if the string is a valid UUID
+ *
+ * @see oc_str_to_uuid
+ */
+OC_API
+int oc_str_to_uuid_v1(const char *str, size_t str_len, oc_uuid_t *uuid)
+  OC_NONNULL(1);
 
 /**
  * Convert the 128 bit oc_uuid_t to a string representation.

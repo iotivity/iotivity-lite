@@ -1541,12 +1541,7 @@ cloud_provision_conf_resource(oc_cloud_context_t *ctx)
   if (cis == NULL || auth_code == NULL || sid == NULL) {
     return;
   }
-  size_t cis_len = strlen(cis);
-  size_t auth_code_len = strlen(auth_code);
-  size_t sid_len = strlen(sid);
-  size_t apn_len = apn ? strlen(apn) : 0;
-  oc_cloud_provision_conf_resource_v1(
-    ctx, cis, cis_len, auth_code, auth_code_len, sid, sid_len, apn, apn_len);
+  oc_cloud_provision_conf_resource(ctx, cis, auth_code, sid, apn);
 }
 
 static void

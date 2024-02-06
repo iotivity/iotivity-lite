@@ -40,6 +40,38 @@ TEST(UUID, UUIDIsNill)
   EXPECT_FALSE(oc_uuid_is_empty(uuid2));
 }
 
+TEST(UUID, StrToUUIDTestV1_P)
+{
+  oc_uuid_t uuid{};
+  oc_uuid_t uuidTemp = uuid;
+  ASSERT_EQ(OC_UUID_ID_SIZE, oc_str_to_uuid_v1(UUID, sizeof(UUID), &uuid));
+  EXPECT_NE(0, memcmp(uuid.id, uuidTemp.id, OC_UUID_ID_SIZE));
+
+  oc_uuid_t uuid2{};
+  oc_uuid_t uuid2Temp = uuid2;
+  ASSERT_EQ(OC_UUID_ID_SIZE, oc_str_to_uuid_v1(UUID2, sizeof(UUID2), &uuid2));
+  EXPECT_NE(0, memcmp(uuid2.id, uuid2Temp.id, OC_UUID_ID_SIZE));
+
+  // no output buffer
+  EXPECT_EQ(OC_UUID_ID_SIZE, oc_str_to_uuid_v1(UUID, sizeof(UUID), nullptr));
+  EXPECT_EQ(OC_UUID_ID_SIZE, oc_str_to_uuid_v1(UUID2, sizeof(UUID2), nullptr));
+
+  // wildcard string ("*")
+  ASSERT_EQ(1, oc_str_to_uuid_v1("*", 1, &uuid));
+  EXPECT_EQ('*', uuid.id[0]);
+  EXPECT_EQ(1, oc_str_to_uuid_v1("*", 1, nullptr));
+}
+
+TEST(UUID, StrToUUIDTestV1_F)
+{
+  /* only wildcard string "*" should work as a single char string */
+  EXPECT_EQ(-1, oc_str_to_uuid_v1("a", 1, nullptr));
+
+  std::string truncated_uuid = std::string(UUID).substr(1);
+  EXPECT_EQ(-1, oc_str_to_uuid_v1(truncated_uuid.c_str(), truncated_uuid.size(),
+                                  nullptr));
+}
+
 TEST(UUID, StrToUUIDTest_P)
 {
   oc_uuid_t uuid{};

@@ -20,12 +20,13 @@
 
 #ifdef OC_CLOUD
 
-#include "oc_cloud_context_internal.h"
-#include "oc_cloud_deregister_internal.h"
-#include "oc_cloud_internal.h"
-#include "oc_cloud_log_internal.h"
-#include "oc_cloud_manager_internal.h"
-#include "oc_cloud_store_internal.h"
+#include "api/cloud/oc_cloud_context_internal.h"
+#include "api/cloud/oc_cloud_deregister_internal.h"
+#include "api/cloud/oc_cloud_internal.h"
+#include "api/cloud/oc_cloud_log_internal.h"
+#include "api/cloud/oc_cloud_manager_internal.h"
+#include "api/cloud/oc_cloud_rd_internal.h"
+#include "api/cloud/oc_cloud_store_internal.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_session_events.h"
@@ -58,8 +59,8 @@ reinitialize_cloud_storage(oc_cloud_context_t *ctx)
     return;
   }
   OC_CLOUD_DBG("reinitializing cloud context in storage");
-  cloud_store_initialize(&ctx->store);
-  if (cloud_store_dump(&ctx->store) < 0) {
+  oc_cloud_store_initialize(&ctx->store);
+  if (oc_cloud_store_dump(&ctx->store) < 0) {
     OC_CLOUD_ERR("failed to dump cloud store");
   }
 }
@@ -78,7 +79,7 @@ cloud_context_init(size_t device)
   ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
   ctx->cloud_ep = oc_new_endpoint();
   ctx->selected_identity_cred_id = -1;
-  cloud_store_load(&ctx->store);
+  oc_cloud_store_load(&ctx->store);
   ctx->store.status &=
     ~(OC_CLOUD_LOGGED_IN | OC_CLOUD_TOKEN_EXPIRY | OC_CLOUD_REFRESHED_TOKEN |
       OC_CLOUD_LOGGED_OUT | OC_CLOUD_FAILURE | OC_CLOUD_DEREGISTERED);
@@ -100,8 +101,8 @@ cloud_context_deinit(oc_cloud_context_t *ctx)
   // In the case of a factory reset, the cloud data may remain on the device
   // when the device is shut down during de-registration.
   reinitialize_cloud_storage(ctx);
-  cloud_store_deinitialize(&ctx->store);
-  cloud_close_endpoint(ctx->cloud_ep);
+  oc_cloud_store_deinitialize(&ctx->store);
+  oc_cloud_close_endpoint(ctx->cloud_ep);
   oc_free_endpoint(ctx->cloud_ep);
   oc_list_remove(g_cloud_context_list, ctx);
   oc_memb_free(&g_cloud_context_pool, ctx);
@@ -138,13 +139,18 @@ oc_cloud_get_at(const oc_cloud_context_t *ctx)
 const char *
 oc_cloud_get_cis(const oc_cloud_context_t *ctx)
 {
-  return oc_string(ctx->store.ci_server);
+  return oc_string_view2(
+           oc_cloud_endpoint_selected_address(&ctx->store.ci_servers))
+    .data;
 }
 
-const char *
+const oc_uuid_t *
 oc_cloud_get_sid(const oc_cloud_context_t *ctx)
 {
-  return oc_string(ctx->store.sid);
+  if (ctx->store.ci_servers.selected == NULL) {
+    return NULL;
+  }
+  return &ctx->store.ci_servers.selected->id;
 }
 
 const char *
@@ -174,20 +180,20 @@ oc_cloud_context_clear(oc_cloud_context_t *ctx, bool dump_async)
   assert(ctx != NULL);
 
   cloud_rd_reset_context(ctx);
-  cloud_close_endpoint(ctx->cloud_ep);
+  oc_cloud_close_endpoint(ctx->cloud_ep);
   memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
   ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
   cloud_manager_stop(ctx);
-  cloud_deregister_stop(ctx);
-  cloud_store_initialize(&ctx->store);
+  oc_cloud_deregister_stop(ctx);
+  oc_cloud_store_initialize(&ctx->store);
   ctx->last_error = 0;
   ctx->store.cps = 0;
   ctx->selected_identity_cred_id = -1;
   ctx->keepalive.ping_timeout = 4;
   if (dump_async) {
-    cloud_store_dump_async(&ctx->store);
+    oc_cloud_store_dump_async(&ctx->store);
   } else {
-    cloud_store_dump(&ctx->store);
+    oc_cloud_store_dump(&ctx->store);
   }
 }
 
@@ -250,6 +256,38 @@ oc_cloud_set_schedule_action(oc_cloud_context_t *ctx,
 {
   ctx->schedule_action.on_schedule_action = on_schedule_action;
   ctx->schedule_action.user_data = user_data;
+}
+
+oc_cloud_endpoint_t *
+oc_cloud_add_server(oc_cloud_context_t *ctx, const char *uri, size_t uri_len,
+                    oc_uuid_t sid)
+{
+  return oc_cloud_endpoint_add(&ctx->store.ci_servers,
+                               oc_string_view(uri, uri_len), sid);
+}
+
+bool
+oc_cloud_remove_server(oc_cloud_context_t *ctx, const oc_cloud_endpoint_t *ce)
+{
+  return oc_cloud_endpoint_remove(&ctx->store.ci_servers, ce);
+}
+
+void
+oc_cloud_iterate_servers(const oc_cloud_context_t *ctx,
+                         oc_cloud_endpoints_iterate_fn_t fn, void *data)
+{
+  oc_cloud_endpoints_iterate(&ctx->store.ci_servers, fn, data);
+}
+
+bool
+oc_cloud_select_server(oc_cloud_context_t *ctx,
+                       const oc_cloud_endpoint_t *server)
+{
+  if (!oc_list_has_item(ctx->store.ci_servers.endpoints, server)) {
+    return false;
+  }
+  ctx->store.ci_servers.selected = server;
+  return true;
 }
 
 #endif /* OC_CLOUD */

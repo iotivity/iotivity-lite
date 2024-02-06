@@ -28,7 +28,9 @@
 #include "oc_link.h"
 #include "oc_ri.h"
 #include "oc_session_events.h"
+#include "oc_uuid.h"
 #include "util/oc_compiler.h"
+#include "util/oc_features.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -147,6 +149,7 @@ oc_cloud_context_t *oc_cloud_get_context(size_t device);
  * @param ctx cloud context (cannot be NULL)
  * @return size_t device index
  */
+OC_API
 size_t oc_cloud_get_device(const oc_cloud_context_t *ctx) OC_NONNULL();
 
 /**
@@ -198,7 +201,7 @@ const char *oc_cloud_get_at(const oc_cloud_context_t *ctx) OC_NONNULL();
  * @see `sid` property in the cloud configuration resource
  */
 OC_API
-const char *oc_cloud_get_sid(const oc_cloud_context_t *ctx) OC_NONNULL();
+const oc_uuid_t *oc_cloud_get_sid(const oc_cloud_context_t *ctx) OC_NONNULL();
 
 /**
  * @brief Get the OCF Cloud User identifier
@@ -317,6 +320,7 @@ OC_API
 int oc_cloud_refresh_token(oc_cloud_context_t *ctx, oc_cloud_cb_t cb,
                            void *data);
 
+/** @brief Get access token expiration (in seconds). */
 OC_API
 int oc_cloud_get_token_expiry(const oc_cloud_context_t *ctx) OC_NONNULL();
 
@@ -362,47 +366,28 @@ int oc_cloud_publish_resources(size_t device);
 OC_API
 int oc_cloud_discover_resources(const oc_cloud_context_t *ctx,
                                 oc_discovery_all_handler_t handler,
-                                void *user_data);
+                                void *user_data) OC_NONNULL(2);
 
 /**
  * @brief Configure cloud properties.
  *
- * @deprecated replaced by oc_cloud_provision_conf_resource_v1 in v2.2.5.13
+ * @param ctx Cloud context to update (cannot be be NULL)
+ * @param server Cloud server URL
+ * @param access_token Access token from an Authorisation Provider
+ * @param server_id Cloud server ID
+ * @param auth_provider Name of the Authorization Provider which provided the
+ * access token
+ * @return 0 on success
+ * @return -1 on failure
+ *
+ * @note Cloud manager will be restarted if is was started previously
  */
 OC_API
 int oc_cloud_provision_conf_resource(oc_cloud_context_t *ctx,
                                      const char *server,
                                      const char *access_token,
                                      const char *server_id,
-                                     const char *auth_provider) OC_NONNULL(1)
-  OC_DEPRECATED("replaced by oc_cloud_provision_conf_resource_v1 in v2.2.5.13");
-
-/**
- * @brief Configure cloud properties.
- *
- * @param ctx Cloud context to update (cannot be be NULL)
- * @param server Cloud server URL (cannot be be NULL)
- * @param server_len Length of the server URL
- * @param access_token Access token from an Authorization Provider (cannot be be
- * NULL)
- * @param access_token_len Length of the access token
- * @param server_id Cloud server ID (cannot be be NULL)
- * @param server_id_len Length of the server ID
- * @param auth_provider Name of the Authorization Provider which provided the
- * access token
- * @param auth_provider_len Length of the Authorization Provider name
- *
- * @return int 0 on success
- * @return int -1 on error
- *
- * @note Cloud manager will be restarted if is was started previously
- */
-OC_API
-int oc_cloud_provision_conf_resource_v1(
-  oc_cloud_context_t *ctx, const char *server, size_t server_len,
-  const char *access_token, size_t access_token_len, const char *server_id,
-  size_t server_id_len, const char *auth_provider, size_t auth_provider_len)
-  OC_NONNULL(1, 2, 4, 6);
+                                     const char *auth_provider) OC_NONNULL(1);
 
 /**
  * @brief Set identity certificate chain to establish TLS connection.
@@ -471,6 +456,122 @@ void oc_cloud_set_schedule_action(
 OC_API
 void oc_cloud_context_clear(oc_cloud_context_t *ctx, bool dump_async)
   OC_NONNULL();
+
+/**
+ * \defgroup cloud_servers Support for multiple cloud servers
+ * @{
+ */
+
+/** Maximum length of the cloud server URI. */
+#ifdef OC_STORAGE
+#define OC_ENDPOINT_MAX_ENDPOINT_URI_LENGTH STRING_ARRAY_ITEM_MAX_LEN
+#else /* !OC_STORAGE */
+#define OC_ENDPOINT_MAX_ENDPOINT_URI_LENGTH OC_MAX_STRING_LENGTH
+#endif /* OC_STORAGE */
+
+typedef struct oc_cloud_endpoint_t oc_cloud_endpoint_t;
+
+/**
+ * @brief Allocate and add an endpoint address to the list of cloud servers.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @param uri endpoint address (cannot be NULL; the uri must be at least 1
+ * character long and less than OC_ENDPOINT_MAX_ENDPOINT_URI_LENGTH characters
+ * long, otherwise the call will fail)
+ * @param uri_len length of \p uri
+ * @param sid identity of the cloud server
+ *
+ * @return oc_cloud_endpoint_t* pointer to the allocated cloud endpoint
+ * @return NULL on failure
+ */
+OC_API
+oc_cloud_endpoint_t *oc_cloud_add_server(oc_cloud_context_t *ctx,
+                                         const char *uri, size_t uri_len,
+                                         oc_uuid_t sid) OC_NONNULL();
+
+/**
+ * @brief Remove an endpoint address from the list of cloud servers.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @param ce cloud endpoint to remove
+ *
+ * @note The servers are stored in a list. If the selected server is removed,
+ * then next server in the list will be selected. If the selected server is the
+ * last item in the list, then the first server in the list will be selected (if
+ * it exists).
+ *
+ * @return true if the endpoint address was removed from the list of cloud
+ * servers
+ * @return false on failure
+ */
+OC_API
+bool oc_cloud_remove_server(oc_cloud_context_t *ctx,
+                            const oc_cloud_endpoint_t *ce) OC_NONNULL();
+
+/** @brief Get the address of the cloud endpoint. */
+OC_API
+const oc_string_t *oc_cloud_endpoint_uri(const oc_cloud_endpoint_t *ce)
+  OC_NONNULL();
+
+/** @brief Set the ID of the cloud endpoint. */
+OC_API
+void oc_cloud_endpoint_set_id(oc_cloud_endpoint_t *ce, oc_uuid_t id)
+  OC_NONNULL();
+
+/** @brief Get the ID of the cloud endpoint. */
+OC_API
+oc_uuid_t oc_cloud_endpoint_id(const oc_cloud_endpoint_t *ce) OC_NONNULL();
+
+/**
+ * @brief Callback invoked for each endpoint address iterated by
+ * oc_cloud_servers_iterate.
+ *
+ * @param ce cloud endpoint to process
+ * @param data custom user data provided to oc_cloud_servers_iterate
+ * @return true to continue iteration
+ * @return false to stop iteration
+ */
+typedef bool (*oc_cloud_endpoints_iterate_fn_t)(oc_cloud_endpoint_t *ce,
+                                                void *data) OC_NONNULL(1);
+
+/**
+ * @brief Iterate over cloud servers.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @param fn callback function invoked for each endpoint address (cannot be
+ * NULL)
+ * @param data custom user data provided to \p fn
+ *
+ * @note The callback function \p fn must not modify the list of cloud servers.
+ */
+OC_API
+void oc_cloud_iterate_servers(const oc_cloud_context_t *ctx,
+                              oc_cloud_endpoints_iterate_fn_t fn, void *data)
+  OC_NONNULL(1, 2);
+
+/**
+ * @brief Select a cloud server from the list of cloud servers.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @param server cloud server to select (cannot be NULL; must be in the list of
+ * cloud servers)
+ *
+ * @return true if the cloud server was selected
+ * @return false on failure to select the server, because it is not in the list
+ * of endpoints
+ *
+ * @note The address of the selected server will be returned as the cis value
+ * and the identity of the selected server will be returned as the sid value.
+ *
+ * @see oc_cloud_remove_server
+ * @see oc_cloud_get_cis
+ * @see oc_cloud_get_sid
+ */
+OC_API
+bool oc_cloud_select_server(oc_cloud_context_t *ctx,
+                            const oc_cloud_endpoint_t *server) OC_NONNULL();
+
+/** @} */ // end of cloud_servers
 
 #ifdef __cplusplus
 }

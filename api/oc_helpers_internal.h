@@ -54,14 +54,14 @@ typedef struct oc_string_view_t
 #define OC_STRING_LOCAL(str)                                                   \
   oc_string_t                                                                  \
   {                                                                            \
-    OC_CHAR_ARRAY_LEN(str), (void *)(str),                                     \
+    OC_CHAR_ARRAY_LEN(str) + 1, (void *)(str),                                 \
   }
 
 #else /* !OC_DYNAMIC_ALLOCATION */
 #define OC_STRING_LOCAL(str)                                                   \
   oc_string_t                                                                  \
   {                                                                            \
-    nullptr, OC_CHAR_ARRAY_LEN(str), (void *)(str),                            \
+    nullptr, OC_CHAR_ARRAY_LEN(str) + 1, (void *)(str),                        \
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
@@ -83,7 +83,7 @@ typedef struct oc_string_view_t
 #define OC_STRING_LOCAL(str)                                                   \
   (oc_string_t)                                                                \
   {                                                                            \
-    .size = OC_CHAR_ARRAY_LEN(str), .data = (void *)(str),                     \
+    .size = OC_CHAR_ARRAY_LEN(str) + 1, .data = (void *)(str),                 \
   }
 
 #define OC_STRING_VIEW(str)                                                    \
@@ -116,6 +116,13 @@ oc_string_view_t oc_string_view2(const oc_string_t *str);
  * @return false strings are not equal
  */
 bool oc_string_view_is_equal(oc_string_view_t str1, oc_string_view_t str2);
+
+/** Check if pointer is NULL or an empty oc_string_t */
+static inline bool
+oc_string_is_null_or_empty(const oc_string_t *ocstring)
+{
+  return ocstring == NULL || oc_string_is_empty(ocstring);
+}
 
 /**
  * @brief Compare two oc_strings.

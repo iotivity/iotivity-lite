@@ -22,17 +22,20 @@
 
 #ifdef OC_CLOUD
 
+#include "api/cloud/oc_cloud_access_internal.h"
+#include "api/cloud/oc_cloud_apis_internal.h"
+#include "api/cloud/oc_cloud_context_internal.h"
+#include "api/cloud/oc_cloud_internal.h"
+#include "api/cloud/oc_cloud_log_internal.h"
+#include "api/cloud/oc_cloud_manager_internal.h"
+#include "api/cloud/oc_cloud_resource_internal.h"
+#include "api/cloud/oc_cloud_store_internal.h"
+#include "api/cloud/rd_client_internal.h"
+#include "api/oc_rep_internal.h"
 #include "api/oc_server_api_internal.h"
 #include "oc_api.h"
 #include "oc_cloud_access.h"
-#include "oc_cloud_context_internal.h"
-#include "oc_cloud_internal.h"
-#include "oc_cloud_access_internal.h"
-#include "oc_cloud_log_internal.h"
-#include "oc_cloud_manager_internal.h"
-#include "oc_cloud_store_internal.h"
 #include "oc_endpoint.h"
-#include "rd_client_internal.h"
 #include "port/oc_random.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
@@ -262,6 +265,18 @@ _register_handler_check_data_error(const oc_client_response_t *data)
   return CLOUD_OK;
 }
 
+static const oc_string_t *
+manager_payload_get_string_property(const oc_rep_t *payload,
+                                    oc_string_view_t key)
+{
+  const oc_rep_t *rep =
+    oc_rep_get(payload, OC_REP_STRING, key.data, key.length);
+  if (rep == NULL || oc_string_is_empty(&rep->value.string)) {
+    return NULL;
+  }
+  return &rep->value.string;
+}
+
 bool
 cloud_manager_handle_register_response(oc_cloud_context_t *ctx,
                                        const oc_rep_t *payload)
@@ -269,26 +284,21 @@ cloud_manager_handle_register_response(oc_cloud_context_t *ctx,
   assert(ctx != NULL);
   assert(payload != NULL);
 
-  const char *access_token = NULL;
-  size_t access_token_size = 0;
-  if (!oc_rep_get_string(payload, ACCESS_TOKEN_KEY, (char **)&access_token,
-                         &access_token_size) ||
-      access_token_size == 0) {
+  const oc_string_t *access_token = manager_payload_get_string_property(
+    payload, OC_STRING_VIEW(ACCESS_TOKEN_KEY));
+  if (access_token == NULL) {
     return false;
   }
 
-  const char *refresh_token = NULL;
-  size_t refresh_token_size = 0;
-  if (!oc_rep_get_string(payload, REFRESH_TOKEN_KEY, (char **)&refresh_token,
-                         &refresh_token_size) ||
-      refresh_token_size == 0) {
+  const oc_string_t *refresh_token = manager_payload_get_string_property(
+    payload, OC_STRING_VIEW(REFRESH_TOKEN_KEY));
+  if (refresh_token == NULL) {
     return false;
   }
 
-  const char *uid = NULL;
-  size_t uid_size = 0;
-  if (!oc_rep_get_string(payload, USER_ID_KEY, (char **)&uid, &uid_size) ||
-      uid_size == 0) {
+  const oc_string_t *uid =
+    manager_payload_get_string_property(payload, OC_STRING_VIEW(USER_ID_KEY));
+  if (uid == NULL) {
     return false;
   }
 
@@ -297,9 +307,9 @@ cloud_manager_handle_register_response(oc_cloud_context_t *ctx,
     return false;
   }
 
-  oc_set_string(&ctx->store.access_token, access_token, access_token_size);
-  oc_set_string(&ctx->store.refresh_token, refresh_token, refresh_token_size);
-  oc_set_string(&ctx->store.uid, uid, uid_size);
+  oc_copy_string(&ctx->store.access_token, access_token);
+  oc_copy_string(&ctx->store.refresh_token, refresh_token);
+  oc_copy_string(&ctx->store.uid, uid);
   ctx->store.expires_in = expires_in;
   if (ctx->store.expires_in > 0) {
     ctx->store.status |= OC_CLOUD_TOKEN_EXPIRY;
@@ -316,20 +326,45 @@ cloud_manager_handle_redirect_response(oc_cloud_context_t *ctx,
 
   char *value = NULL;
   size_t size = 0;
-  if (oc_rep_get_string(payload, REDIRECTURI_KEY, &value, &size) && size > 0) {
-    const char *ci_server = oc_string(ctx->store.ci_server);
-    if ((ctx->cloud_ep != NULL) &&
-        (ci_server == NULL || oc_string_len(ctx->store.ci_server) != size ||
-         strcmp(ci_server, value) != 0)) {
-      cloud_close_endpoint(ctx->cloud_ep);
-      memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
-      ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
-    }
-    oc_set_string(&ctx->store.ci_server, value, size);
+  if (!oc_rep_get_string(payload, REDIRECTURI_KEY, &value, &size) ||
+      size == 0) {
+    return false;
+  }
+  oc_string_view_t cis = oc_string_view(value, size);
+  if (oc_cloud_endpoint_is_selected(&ctx->store.ci_servers, cis)) {
     return true;
   }
 
-  return false;
+  const oc_cloud_endpoint_t *originalCis = ctx->store.ci_servers.selected;
+  oc_uuid_t sid = OCF_COAPCLOUDCONF_DEFAULT_SID;
+  // OCF Cloud Security Specification, 6.2:
+  // "If OCF Cloud provides "redirecturi" Value as response during Device
+  // Registration, the redirected to OCF Cloud is assumed to have the same OCF
+  // Cloud UUID and to use the same trust anchor"
+  if (originalCis != NULL) {
+    sid = originalCis->id;
+  }
+
+  if (!oc_cloud_endpoint_contains(&ctx->store.ci_servers, cis) &&
+      oc_cloud_endpoint_add(&ctx->store.ci_servers, cis, sid) == NULL) {
+    OC_ERR("failed to add server to the list");
+    return false;
+  }
+
+  // remove the original server from the list
+  if (originalCis != NULL) {
+    oc_cloud_endpoint_remove(&ctx->store.ci_servers, originalCis);
+  }
+
+  // select the new server
+  oc_cloud_endpoint_select_by_uri(&ctx->store.ci_servers, cis);
+
+  if (ctx->cloud_ep != NULL) {
+    oc_cloud_close_endpoint(ctx->cloud_ep);
+    memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
+    ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
+  }
+  return true;
 }
 
 static oc_cloud_error_t
@@ -353,10 +388,10 @@ _register_handler(oc_cloud_context_t *ctx, const oc_client_response_t *data,
   }
 
   if (cloud_manager_handle_redirect_response(ctx, payload)) {
-    OC_CLOUD_DBG("redirect detected");
+    OC_CLOUD_DBG("redirect processed");
   }
 
-  cloud_store_dump_async(&ctx->store);
+  oc_cloud_store_dump_async(&ctx->store);
   ctx->retry_count = 0;
   ctx->store.status |= OC_CLOUD_REGISTERED;
   OC_CLOUD_INFO("Registration succeeded");
@@ -381,7 +416,7 @@ oc_cloud_register_handler(oc_client_response_t *data)
   if (p->cb) {
     p->cb(ctx, ctx->store.status, p->data);
   }
-  free_api_param(p);
+  oc_cloud_api_free_param(p);
 
   ctx->store.status &= ~(OC_CLOUD_FAILURE | OC_CLOUD_TOKEN_EXPIRY);
 }
@@ -433,20 +468,19 @@ cloud_manager_register_async(void *data)
   }
 
   OC_CLOUD_DBG("try register(%d)", ctx->retry_count);
-  oc_cloud_access_conf_t conf = {
-    .device = ctx->device,
-    .selected_identity_cred_id = ctx->selected_identity_cred_id,
-    .handler = cloud_manager_register_handler,
-    .user_data = data,
-    .timeout = ctx->schedule_action.timeout,
-  };
-  if (oc_string(ctx->store.ci_server) == NULL ||
-      conv_cloud_endpoint(ctx) != 0) {
-    OC_CLOUD_ERR("invalid cloud server");
+  oc_cloud_access_conf_t conf;
+  if (!oc_cloud_set_access_conf(ctx, cloud_manager_register_handler, ctx,
+                                ctx->schedule_action.timeout, &conf)) {
     goto retry;
   }
-  OC_CLOUD_INFO("Registering to %s", oc_string(ctx->store.ci_server));
-  conf.endpoint = ctx->cloud_ep;
+#if OC_INFO_IS_ENABLED
+  const char *ep_str = "";
+  oc_string64_t ep = { 0 };
+  if (oc_endpoint_to_string64(ctx->cloud_ep, &ep)) {
+    ep_str = oc_string(ep);
+  }
+  OC_CLOUD_INFO("Registering to %s", ep_str);
+#endif /* OC_INFO_IS_ENABLED */
   if (!oc_cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
                                 oc_string(ctx->store.uid),
                                 oc_string(ctx->store.access_token))) {
@@ -509,7 +543,7 @@ _login_handler(oc_cloud_context_t *ctx, const oc_client_response_t *data,
   if (ctx->store.expires_in > 0) {
     ctx->store.status |= OC_CLOUD_TOKEN_EXPIRY;
   }
-  cloud_store_dump_async(&ctx->store);
+  oc_cloud_store_dump_async(&ctx->store);
 
   ctx->retry_count = 0;
   ctx->store.status |= OC_CLOUD_LOGGED_IN;
@@ -541,7 +575,7 @@ oc_cloud_login_handler(oc_client_response_t *data)
   if (p->cb) {
     p->cb(ctx, ctx->store.status, p->data);
   }
-  free_api_param(p);
+  oc_cloud_api_free_param(p);
 
   ctx->store.status &= ~(OC_CLOUD_FAILURE | OC_CLOUD_TOKEN_EXPIRY);
 }
@@ -659,22 +693,20 @@ cloud_manager_login_async(void *data)
     return OC_EVENT_DONE;
   }
 
-  OC_CLOUD_DBG("try login (%d)", ctx->retry_count);
-
-  oc_cloud_access_conf_t conf = {
-    .device = ctx->device,
-    .selected_identity_cred_id = ctx->selected_identity_cred_id,
-    .handler = cloud_manager_login_handler,
-    .user_data = ctx,
-    .timeout = ctx->schedule_action.timeout,
-  };
-  if (oc_string(ctx->store.ci_server) == NULL ||
-      conv_cloud_endpoint(ctx) != 0) {
-    OC_CLOUD_ERR("invalid cloud server");
+  OC_CLOUD_DBG("try login(%d)", ctx->retry_count);
+  oc_cloud_access_conf_t conf;
+  if (!oc_cloud_set_access_conf(ctx, cloud_manager_login_handler, ctx,
+                                ctx->schedule_action.timeout, &conf)) {
     goto retry;
   }
-  OC_CLOUD_INFO("Login to %s", oc_string(ctx->store.ci_server));
-  conf.endpoint = ctx->cloud_ep;
+#if OC_INFO_IS_ENABLED
+  const char *ep_str = "";
+  oc_string64_t ep = { 0 };
+  if (oc_endpoint_to_string64(ctx->cloud_ep, &ep)) {
+    ep_str = oc_string(ep);
+  }
+  OC_CLOUD_INFO("Login to %s", ep_str);
+#endif /* OC_INFO_IS_ENABLED */
   if (!oc_cloud_access_login(conf, oc_string(ctx->store.uid),
                              oc_string(ctx->store.access_token))) {
     OC_CLOUD_ERR("failed to sent sign in request to cloud");
@@ -771,7 +803,7 @@ _refresh_token_handler(oc_cloud_context_t *ctx,
     goto error;
   }
 
-  cloud_store_dump_async(&ctx->store);
+  oc_cloud_store_dump_async(&ctx->store);
 
   ctx->retry_count = 0;
   ctx->retry_refresh_token_count = 0;
@@ -819,7 +851,7 @@ oc_cloud_refresh_token_handler(oc_client_response_t *data)
   if (p->cb) {
     p->cb(ctx, ctx->store.status, p->data);
   }
-  free_api_param(p);
+  oc_cloud_api_free_param(p);
 
   ctx->store.status &=
     ~(OC_CLOUD_FAILURE | OC_CLOUD_TOKEN_EXPIRY | OC_CLOUD_REFRESHED_TOKEN);
@@ -885,23 +917,22 @@ cloud_manager_refresh_token_async(void *data)
     return OC_EVENT_DONE;
   }
   oc_remove_delayed_callback(ctx, cloud_manager_send_ping_async);
-  OC_CLOUD_DBG("try refresh token(%d)", ctx->retry_refresh_token_count);
 
-  oc_cloud_access_conf_t conf = {
-    .device = ctx->device,
-    .selected_identity_cred_id = ctx->selected_identity_cred_id,
-    .handler = cloud_manager_refresh_token_handler,
-    .user_data = ctx,
-    .timeout = ctx->schedule_action.timeout,
-  };
-  if (oc_string(ctx->store.ci_server) == NULL ||
-      conv_cloud_endpoint(ctx) != 0) {
-    OC_CLOUD_ERR("invalid cloud server");
+  OC_CLOUD_DBG("try refresh token(%d)", ctx->retry_refresh_token_count);
+  oc_cloud_access_conf_t conf;
+  if (!oc_cloud_set_access_conf(ctx, cloud_manager_refresh_token_handler, ctx,
+                                ctx->schedule_action.timeout, &conf)) {
     goto retry;
   }
-  OC_CLOUD_INFO("Refreshing access token for %s",
-                oc_string(ctx->store.ci_server));
-  conf.endpoint = ctx->cloud_ep;
+
+#if OC_INFO_IS_ENABLED
+  const char *ep_str = "";
+  oc_string64_t ep = { 0 };
+  if (oc_endpoint_to_string64(ctx->cloud_ep, &ep)) {
+    ep_str = oc_string(ep);
+  }
+  OC_CLOUD_INFO("Refreshing access token for %s", ep_str);
+#endif /* OC_INFO_IS_ENABLED */
   if (!oc_cloud_access_refresh_access_token(
         conf, oc_string(ctx->store.auth_provider), oc_string(ctx->store.uid),
         oc_string(ctx->store.refresh_token))) {

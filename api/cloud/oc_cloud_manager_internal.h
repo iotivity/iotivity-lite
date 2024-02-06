@@ -88,6 +88,10 @@ void cloud_manager_start(oc_cloud_context_t *ctx) OC_NONNULL();
  */
 void cloud_manager_stop(const oc_cloud_context_t *ctx) OC_NONNULL();
 
+void oc_cloud_register_handler(oc_client_response_t *data) OC_NONNULL();
+void oc_cloud_login_handler(oc_client_response_t *data) OC_NONNULL();
+void oc_cloud_refresh_token_handler(oc_client_response_t *data) OC_NONNULL();
+
 #ifdef __cplusplus
 }
 #endif

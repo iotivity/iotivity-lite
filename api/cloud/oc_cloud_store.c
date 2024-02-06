@@ -42,8 +42,8 @@
 check oc_config.h and make sure OC_STORAGE is defined if OC_CLOUD is defined.
 #endif
 
-#define CLOUD_STORE_NAME "cloud"
 #define CLOUD_CI_SERVER "ci_server"
+#define CLOUD_SERVERS "x.org.iotivity.servers"
 #define CLOUD_SID "sid"
 #define CLOUD_AUTH_PROVIDER "auth_provider"
 #define CLOUD_UID "uid"
@@ -52,31 +52,8 @@ check oc_config.h and make sure OC_STORAGE is defined if OC_CLOUD is defined.
 #define CLOUD_EXPIRES_IN "expires_in"
 #define CLOUD_STATUS "status"
 #define CLOUD_CPS "cps"
-
-static int
-store_decode_cloud(const oc_rep_t *rep, size_t device, void *data)
-{
-  (void)device;
-  oc_cloud_store_t *store = (oc_cloud_store_t *)data;
-  if (!cloud_store_decode(rep, store)) {
-    OC_ERR("cannot load cloud: cannot decode representation");
-    return -1;
-  }
-  return 0;
-}
-
-bool
-cloud_store_load(oc_cloud_store_t *store)
-{
-  if (oc_storage_data_load(CLOUD_STORE_NAME, store->device, store_decode_cloud,
-                           store) <= 0) {
-    OC_DBG("failed to load cloud from storage");
-    cloud_store_initialize(store);
-    return false;
-  }
-  OC_DBG("cloud loaded from storage");
-  return true;
-}
+#define CLOUD_ENDPOINT_URI "uri"
+#define CLOUD_ENDPOINT_ID "id"
 
 static void
 rep_set_text_string(CborEncoder *object_map, oc_string_view_t key,
@@ -98,17 +75,27 @@ rep_set_int(CborEncoder *object_map, oc_string_view_t key, int64_t value)
 }
 
 void
-cloud_store_encode(const oc_cloud_store_t *store)
+oc_cloud_store_encode(const oc_cloud_store_t *store)
 {
   oc_rep_start_root_object();
-  rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_CI_SERVER),
-                      oc_string_view2(&store->ci_server));
+
+  const oc_cloud_endpoint_t *selected = store->ci_servers.selected;
+  if (selected != NULL) {
+    rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_CI_SERVER),
+                        oc_string_view2(&selected->uri));
+    char selected_uuid[OC_UUID_LEN] = { 0 };
+    int selected_uuid_len = oc_uuid_to_str_v1(&selected->id, selected_uuid,
+                                              OC_ARRAY_SIZE(selected_uuid));
+    assert(selected_uuid_len > 0);
+    rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_SID),
+                        oc_string_view(selected_uuid, selected_uuid_len));
+  }
+  g_err |= oc_cloud_endpoints_encode(oc_rep_object(root), &store->ci_servers,
+                                     OC_STRING_VIEW(CLOUD_SERVERS), true);
   rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_AUTH_PROVIDER),
                       oc_string_view2(&store->auth_provider));
   rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_UID),
                       oc_string_view2(&store->uid));
-  rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_SID),
-                      oc_string_view2(&store->sid));
   rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_ACCESS_TOKEN),
                       oc_string_view2(&store->access_token));
   rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_REFRESH_TOKEN),
@@ -125,14 +112,14 @@ store_encode_cloud(size_t device, const void *data)
 {
   (void)device;
   const oc_cloud_store_t *store = (const oc_cloud_store_t *)data;
-  cloud_store_encode(store);
+  oc_cloud_store_encode(store);
   return 0;
 }
 
 long
-cloud_store_dump(const oc_cloud_store_t *store)
+oc_cloud_store_dump(const oc_cloud_store_t *store)
 {
-  long ret = oc_storage_data_save(CLOUD_STORE_NAME, store->device,
+  long ret = oc_storage_data_save(OC_CLOUD_STORE_NAME, store->device,
                                   store_encode_cloud, store);
   if (ret <= 0) {
     OC_ERR("cannot dump cloud to storage: error(%ld)", ret);
@@ -144,15 +131,15 @@ cloud_store_dump(const oc_cloud_store_t *store)
 static oc_event_callback_retval_t
 cloud_store_dump_handler(void *data)
 {
-  const oc_cloud_store_t *store = (oc_cloud_store_t *)data;
-  if (cloud_store_dump(store) < 0) {
+  const oc_cloud_store_t *store = (const oc_cloud_store_t *)data;
+  if (oc_cloud_store_dump(store) < 0) {
     OC_CLOUD_ERR("failed to dump store");
   }
   return OC_EVENT_DONE;
 }
 
 void
-cloud_store_dump_async(const oc_cloud_store_t *store)
+oc_cloud_store_dump_async(const oc_cloud_store_t *store)
 {
   oc_remove_delayed_callback(store, cloud_store_dump_handler);
   // ensure that cloud_store_dump_handler uses a const oc_cloud_store_t*
@@ -161,36 +148,51 @@ cloud_store_dump_async(const oc_cloud_store_t *store)
   _oc_signal_event_loop();
 }
 
+typedef struct
+{
+  const oc_rep_t *ci_servers;
+  const oc_string_t *ci_server;
+  const oc_string_t *sid;
+  const oc_string_t *auth_provider;
+  const oc_string_t *uid;
+  const oc_string_t *access_token;
+  const oc_string_t *refresh_token;
+  uint8_t status;
+  uint8_t cps;
+  int64_t expires_in;
+} cloud_store_data_t;
+
 static bool
-cloud_store_parse_string_property(const oc_rep_t *rep, oc_cloud_store_t *store)
+cloud_store_parse_string_property(const oc_rep_t *rep, cloud_store_data_t *csd)
 {
   assert(rep->type == OC_REP_STRING);
+
   if (oc_rep_is_property(rep, CLOUD_CI_SERVER,
                          OC_CHAR_ARRAY_LEN(CLOUD_CI_SERVER))) {
-    oc_copy_string(&store->ci_server, &rep->value.string);
+    csd->ci_server = &rep->value.string;
     return true;
   }
   if (oc_rep_is_property(rep, CLOUD_SID, OC_CHAR_ARRAY_LEN(CLOUD_SID))) {
-    oc_copy_string(&store->sid, &rep->value.string);
+    csd->sid = &rep->value.string;
     return true;
   }
   if (oc_rep_is_property(rep, CLOUD_AUTH_PROVIDER,
                          OC_CHAR_ARRAY_LEN(CLOUD_AUTH_PROVIDER))) {
-    oc_copy_string(&store->auth_provider, &rep->value.string);
+    csd->auth_provider = &rep->value.string;
     return true;
   }
   if (oc_rep_is_property(rep, CLOUD_UID, OC_CHAR_ARRAY_LEN(CLOUD_UID))) {
-    oc_copy_string(&store->uid, &rep->value.string);
+    csd->uid = &rep->value.string;
     return true;
   }
   if (oc_rep_is_property(rep, CLOUD_ACCESS_TOKEN,
                          OC_CHAR_ARRAY_LEN(CLOUD_ACCESS_TOKEN))) {
-    oc_copy_string(&store->access_token, &rep->value.string);
+    csd->access_token = &rep->value.string;
     return true;
   }
   if (oc_rep_is_property(rep, CLOUD_REFRESH_TOKEN,
                          OC_CHAR_ARRAY_LEN(CLOUD_REFRESH_TOKEN))) {
-    oc_copy_string(&store->refresh_token, &rep->value.string);
+    csd->refresh_token = &rep->value.string;
     return true;
   }
 
@@ -199,23 +201,23 @@ cloud_store_parse_string_property(const oc_rep_t *rep, oc_cloud_store_t *store)
 }
 
 static bool
-cloud_store_parse_int_property(const oc_rep_t *rep, oc_cloud_store_t *store)
+cloud_store_parse_int_property(const oc_rep_t *rep, cloud_store_data_t *csd)
 {
   assert(rep->type == OC_REP_INT);
 
   if (oc_rep_is_property(rep, CLOUD_STATUS, OC_CHAR_ARRAY_LEN(CLOUD_STATUS))) {
     assert(rep->value.integer <= UINT8_MAX);
-    store->status = (uint8_t)rep->value.integer;
+    csd->status = (uint8_t)rep->value.integer;
     return true;
   }
   if (oc_rep_is_property(rep, CLOUD_CPS, OC_CHAR_ARRAY_LEN(CLOUD_CPS))) {
     assert(rep->value.integer <= UINT8_MAX);
-    store->cps = (uint8_t)rep->value.integer;
+    csd->cps = (uint8_t)rep->value.integer;
     return true;
   }
   if (oc_rep_is_property(rep, CLOUD_EXPIRES_IN,
                          OC_CHAR_ARRAY_LEN(CLOUD_EXPIRES_IN))) {
-    store->expires_in = rep->value.integer;
+    csd->expires_in = rep->value.integer;
     return true;
   }
 
@@ -223,49 +225,189 @@ cloud_store_parse_int_property(const oc_rep_t *rep, oc_cloud_store_t *store)
   return false;
 }
 
-bool
-cloud_store_decode(const oc_rep_t *rep, oc_cloud_store_t *store)
+static bool
+cloud_store_parse_object_array_property(const oc_rep_t *rep,
+                                        cloud_store_data_t *csd)
 {
+  assert(rep->type == OC_REP_OBJECT_ARRAY);
+
+  if (oc_rep_is_property(rep, CLOUD_SERVERS,
+                         OC_CHAR_ARRAY_LEN(CLOUD_SERVERS))) {
+    csd->ci_servers = rep->value.object_array;
+    return true;
+  }
+
+  OC_CLOUD_ERR("Unknown string array property %s", oc_string(rep->name));
+  return false;
+}
+
+static void
+cloud_store_on_server_change(void *data)
+{
+  const oc_cloud_store_t *store = (const oc_cloud_store_t *)data;
+  oc_cloud_store_dump_async(store);
+}
+
+static bool
+cloud_store_set_servers(oc_cloud_store_t *store,
+                        const oc_string_t *selected_uri,
+                        const oc_string_t *selected_id, const oc_rep_t *servers)
+{
+  oc_cloud_endpoints_deinit(&store->ci_servers);
+  oc_uuid_t uuid = OCF_COAPCLOUDCONF_DEFAULT_SID;
+  if (selected_id != NULL) {
+    oc_string_view_t selected_idv = oc_string_view2(selected_id);
+    if (oc_str_to_uuid_v1(selected_idv.data, selected_idv.length, &uuid) !=
+        OC_UUID_ID_SIZE) {
+      return false;
+    }
+  }
+  if (!oc_cloud_endpoints_init(&store->ci_servers, cloud_store_on_server_change,
+                               store, oc_string_view2(selected_uri), uuid)) {
+    return false;
+  }
+
+  if (servers == NULL) {
+    return true;
+  }
+
+  for (const oc_rep_t *server = servers; server != NULL;
+       server = server->next) {
+    const oc_rep_t *rep =
+      oc_rep_get(server->value.object, OC_REP_STRING, CLOUD_ENDPOINT_URI,
+                 OC_CHAR_ARRAY_LEN(CLOUD_ENDPOINT_URI));
+    if (rep == NULL) {
+      OC_ERR("cloud server uri missing");
+      continue;
+    }
+    oc_string_view_t uri = oc_string_view2(&rep->value.string);
+
+    rep = oc_rep_get(server->value.object, OC_REP_STRING, CLOUD_ENDPOINT_ID,
+                     OC_CHAR_ARRAY_LEN(CLOUD_ENDPOINT_ID));
+    if (rep == NULL) {
+      OC_ERR("cloud server id missing");
+      continue;
+    }
+    oc_string_view_t sid = oc_string_view2(&rep->value.string);
+    if (oc_str_to_uuid_v1(sid.data, sid.length, &uuid) < 0) {
+      continue;
+    }
+
+    if (oc_cloud_endpoint_contains(&store->ci_servers, uri)) {
+      continue;
+    }
+
+    if (!oc_cloud_endpoint_add(&store->ci_servers, uri, uuid)) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+bool
+oc_cloud_store_decode(const oc_rep_t *rep, oc_cloud_store_t *store)
+{
+  cloud_store_data_t csd;
+  memset(&csd, 0, sizeof(cloud_store_data_t));
+  // copy data from store so if given properties are not set they will not be
+  // changed
+  csd.status = store->status;
+  csd.cps = (uint8_t)store->cps;
+  csd.expires_in = store->expires_in;
+
   while (rep != NULL) {
     switch (rep->type) {
+    case OC_REP_OBJECT_ARRAY:
+      if (!cloud_store_parse_object_array_property(rep, &csd)) {
+        return false;
+      }
+      break;
     case OC_REP_STRING:
-      if (!cloud_store_parse_string_property(rep, store)) {
+      if (!cloud_store_parse_string_property(rep, &csd)) {
         return false;
       }
       break;
     case OC_REP_INT:
-      if (!cloud_store_parse_int_property(rep, store)) {
+      if (!cloud_store_parse_int_property(rep, &csd)) {
         return false;
       }
       break;
+
     default:
       OC_CLOUD_ERR("Unknown property %s", oc_string(rep->name));
       return false;
     }
     rep = rep->next;
   }
+
+  // copy data to store
+  if ((csd.ci_server != NULL || csd.ci_servers != NULL) &&
+      !cloud_store_set_servers(store, csd.ci_server, csd.sid, csd.ci_servers)) {
+    OC_WRN("failed to set cloud servers from storage");
+  }
+
+  if (csd.auth_provider != NULL) {
+    oc_copy_string(&store->auth_provider, csd.auth_provider);
+  }
+  if (csd.uid != NULL) {
+    oc_copy_string(&store->uid, csd.uid);
+  }
+  if (csd.access_token != NULL) {
+    oc_copy_string(&store->access_token, csd.access_token);
+  }
+  if (csd.refresh_token != NULL) {
+    oc_copy_string(&store->refresh_token, csd.refresh_token);
+  }
+  store->status = csd.status;
+  store->cps = csd.cps;
+  store->expires_in = csd.expires_in;
+
+  return true;
+}
+
+static int
+store_decode_cloud(const oc_rep_t *rep, size_t device, void *data)
+{
+  (void)device;
+  oc_cloud_store_t *store = (oc_cloud_store_t *)data;
+  if (!oc_cloud_store_decode(rep, store)) {
+    OC_ERR("cannot load cloud: cannot decode representation");
+    return -1;
+  }
+  return 0;
+}
+
+bool
+oc_cloud_store_load(oc_cloud_store_t *store)
+{
+  if (oc_storage_data_load(OC_CLOUD_STORE_NAME, store->device,
+                           store_decode_cloud, store) <= 0) {
+    OC_DBG("failed to load cloud from storage");
+    oc_cloud_store_initialize(store);
+    return false;
+  }
+  OC_DBG("cloud loaded from storage");
   return true;
 }
 
 void
-cloud_store_initialize(oc_cloud_store_t *store)
+oc_cloud_store_initialize(oc_cloud_store_t *store)
 {
-  cloud_store_deinitialize(store);
-  oc_set_string(&store->ci_server, OCF_COAPCLOUDCONF_DEFAULT_CIS,
-                OC_CHAR_ARRAY_LEN(OCF_COAPCLOUDCONF_DEFAULT_CIS));
-  oc_set_string(&store->sid, OCF_COAPCLOUDCONF_DEFAULT_SID,
-                OC_CHAR_ARRAY_LEN(OCF_COAPCLOUDCONF_DEFAULT_SID));
+  oc_cloud_store_deinitialize(store);
+  oc_cloud_endpoints_init(&store->ci_servers, cloud_store_on_server_change,
+                          store, OC_STRING_VIEW(OCF_COAPCLOUDCONF_DEFAULT_CIS),
+                          OCF_COAPCLOUDCONF_DEFAULT_SID);
 }
 
 void
-cloud_store_deinitialize(oc_cloud_store_t *store)
+oc_cloud_store_deinitialize(oc_cloud_store_t *store)
 {
-  oc_set_string(&store->ci_server, NULL, 0);
+  oc_cloud_endpoints_deinit(&store->ci_servers);
   oc_set_string(&store->auth_provider, NULL, 0);
   oc_set_string(&store->uid, NULL, 0);
   oc_set_string(&store->access_token, NULL, 0);
   oc_set_string(&store->refresh_token, NULL, 0);
-  oc_set_string(&store->sid, NULL, 0);
   store->status = 0;
   store->expires_in = 0;
   store->cps = OC_CPS_UNINITIALIZED;

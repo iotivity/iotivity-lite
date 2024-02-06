@@ -31,7 +31,7 @@
 
 static bool g_mmem_initialized = false;
 
-static void
+static size_t
 oc_malloc(
 #ifdef OC_MEMORY_TRACE
   const char *func,
@@ -48,6 +48,7 @@ oc_malloc(
 #endif
     block, num_items, pool_type);
   oc_assert(alloc_ret > 0);
+  return alloc_ret;
 }
 
 static void
@@ -77,11 +78,14 @@ _oc_new_string(
 #endif
   oc_string_t *ocstring, const char *str, size_t str_len)
 {
-  oc_malloc(
+  size_t size = oc_malloc(
 #ifdef OC_MEMORY_TRACE
     func,
 #endif
     ocstring, str_len + 1, BYTE_POOL);
+  if (size == 0) {
+    return;
+  }
   memcpy(oc_string(*ocstring), (const uint8_t *)str, str_len);
   memcpy(oc_string(*ocstring) + str_len, (const uint8_t *)"", 1);
 }
@@ -200,6 +204,9 @@ oc_copy_string(oc_string_t *dst, const oc_string_t *src)
 void
 oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2)
 {
+  assert(concat != NULL);
+  assert(str1 != NULL);
+  assert(str2 != NULL);
   size_t len1 = strlen(str1);
   size_t len2 = strlen(str2);
   oc_alloc_string(concat, len1 + len2 + 1);

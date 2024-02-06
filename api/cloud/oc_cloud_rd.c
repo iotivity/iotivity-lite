@@ -15,11 +15,13 @@
  * limitations under the License.
  *
  ******************************************************************/
+
 #ifdef OC_CLOUD
 
 #include "api/cloud/oc_cloud_context_internal.h"
 #include "api/cloud/oc_cloud_internal.h"
 #include "api/cloud/oc_cloud_log_internal.h"
+#include "api/cloud/oc_cloud_rd_internal.h"
 #include "api/oc_link_internal.h"
 #include "api/oc_ri_internal.h"
 #include "oc_api.h"

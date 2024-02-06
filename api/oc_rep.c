@@ -146,6 +146,29 @@ oc_free_rep(oc_rep_t *rep)
   free_rep_internal(rep);
 }
 
+const oc_rep_t *
+oc_rep_get(const oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
+           size_t key_len)
+{
+  if (key_len == 0 || key_len >= OC_MAX_STRING_LENGTH) {
+    OC_ERR("Error of input parameters: invalid key");
+    return NULL;
+  }
+  oc_string_view_t keyv = oc_string_view(key, key_len);
+
+  for (const oc_rep_t *rep_value = rep; rep_value != NULL;
+       rep_value = rep_value->next) {
+    if (rep_value->type != type) {
+      continue;
+    }
+    oc_string_view_t namev = oc_string_view2(&rep_value->name);
+    if (oc_string_view_is_equal(namev, keyv)) {
+      return rep_value;
+    }
+  }
+  return NULL;
+}
+
 static bool
 oc_rep_get_value(const oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
                  size_t key_len, void **value, size_t *size)
@@ -158,68 +181,62 @@ oc_rep_get_value(const oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
     OC_ERR("Error of input parameters: invalid value");
     return false;
   }
-  if (key_len == 0 || key_len >= OC_MAX_STRING_LENGTH) {
-    OC_ERR("Error of input parameters: invalid key");
+  const oc_rep_t *rep_value = oc_rep_get(rep, type, key, key_len);
+  if (rep_value == NULL) {
     return false;
   }
 
-  const oc_rep_t *rep_value = rep;
-  while (rep_value != NULL) {
-    if ((oc_string_len(rep_value->name) == key_len) &&
-        (strncmp(key, oc_string(rep_value->name),
-                 oc_string_len(rep_value->name)) == 0) &&
-        (rep_value->type == type)) {
-      switch (rep_value->type) {
-      case OC_REP_NIL:
-        **(bool **)value = true;
-        break;
-      case OC_REP_INT:
-        **(int64_t **)value = rep_value->value.integer;
-        break;
-      case OC_REP_BOOL:
-        **(bool **)value = rep_value->value.boolean;
-        break;
-      case OC_REP_DOUBLE:
-        **(double **)value = rep_value->value.double_p;
-        break;
-      case OC_REP_BYTE_STRING:
-      case OC_REP_STRING:
-        *(const char **)value = oc_string(rep_value->value.string);
-        *size = oc_string_len(rep_value->value.string);
-        break;
-      case OC_REP_INT_ARRAY:
-        *value = oc_int_array(rep_value->value.array);
-        *size = (int)oc_int_array_size(rep_value->value.array);
-        break;
-      case OC_REP_BOOL_ARRAY:
-        *value = oc_bool_array(rep_value->value.array);
-        *size = (int)oc_bool_array_size(rep_value->value.array);
-        break;
-      case OC_REP_DOUBLE_ARRAY:
-        *value = oc_double_array(rep_value->value.array);
-        *size = (int)oc_double_array_size(rep_value->value.array);
-        break;
-      case OC_REP_BYTE_STRING_ARRAY:
-      case OC_REP_STRING_ARRAY:
-        **(oc_string_array_t **)value = rep_value->value.array;
-        *size = (int)oc_string_array_get_allocated_size(rep_value->value.array);
-        break;
-      case OC_REP_OBJECT:
-        *value = rep_value->value.object;
-        break;
-      case OC_REP_OBJECT_ARRAY:
-        *value = rep_value->value.object_array;
-        break;
-      default:
-        return false;
-      }
-
-      return true;
-    }
-    rep_value = rep_value->next;
+  switch (rep_value->type) {
+  case OC_REP_NIL:
+    **(bool **)value = true;
+    break;
+  case OC_REP_INT:
+    **(int64_t **)value = rep_value->value.integer;
+    break;
+  case OC_REP_BOOL:
+    **(bool **)value = rep_value->value.boolean;
+    break;
+  case OC_REP_DOUBLE:
+    **(double **)value = rep_value->value.double_p;
+    break;
+  case OC_REP_BYTE_STRING:
+  case OC_REP_STRING:
+    *(const char **)value = oc_string(rep_value->value.string);
+    assert(size != NULL);
+    *size = oc_string_len(rep_value->value.string);
+    break;
+  case OC_REP_INT_ARRAY:
+    *value = oc_int_array(rep_value->value.array);
+    assert(size != NULL);
+    *size = (int)oc_int_array_size(rep_value->value.array);
+    break;
+  case OC_REP_BOOL_ARRAY:
+    *value = oc_bool_array(rep_value->value.array);
+    assert(size != NULL);
+    *size = (int)oc_bool_array_size(rep_value->value.array);
+    break;
+  case OC_REP_DOUBLE_ARRAY:
+    *value = oc_double_array(rep_value->value.array);
+    assert(size != NULL);
+    *size = (int)oc_double_array_size(rep_value->value.array);
+    break;
+  case OC_REP_BYTE_STRING_ARRAY:
+  case OC_REP_STRING_ARRAY:
+    **(oc_string_array_t **)value = rep_value->value.array;
+    assert(size != NULL);
+    *size = (int)oc_string_array_get_allocated_size(rep_value->value.array);
+    break;
+  case OC_REP_OBJECT:
+    *value = rep_value->value.object;
+    break;
+  case OC_REP_OBJECT_ARRAY:
+    *value = rep_value->value.object_array;
+    break;
+  default:
+    return false;
   }
 
-  return false;
+  return true;
 }
 
 bool
