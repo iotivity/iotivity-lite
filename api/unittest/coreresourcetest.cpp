@@ -26,6 +26,7 @@
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
 #include "util/oc_macros_internal.h"
+#include "util/oc_secure_string_internal.h"
 
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
@@ -46,6 +47,7 @@ static const std::string kOCFSpecVersion{ "ocf.1.0.0" };
 static const std::string kOCFDataModelVersion{ "ocf.res.1.0.0" };
 
 static constexpr size_t kDevice1ID{ 0 };
+static constexpr size_t kDevice2ID{ 1 };
 static constexpr std::string_view kDevice1Name{ "Test Device 1" };
 static constexpr std::string_view kDevice2Name{ "Test Device 2" };
 
@@ -184,6 +186,25 @@ TEST_F(TestCoreResource, EncodeInterfaces_P)
   encodeInterfaces(all_ifs_mask, all_ifstrs, includePrivateInterfaces);
 }
 
+TEST_F(TestCoreResource, StoreURI_P)
+{
+  oc_string_t uri;
+  ASSERT_TRUE(oc_store_uri("oic/d", &uri));
+  EXPECT_STREQ("/oic/d", oc_string(uri));
+  oc_free_string(&uri);
+
+  ASSERT_TRUE(oc_store_uri("/oic/d", &uri));
+  EXPECT_STREQ("/oic/d", oc_string(uri));
+  oc_free_string(&uri);
+}
+
+TEST_F(TestCoreResource, StoreURI_F)
+{
+  oc_string_t uri;
+  std::string tooLong(OC_MAX_STRING_LENGTH + 1, 'a');
+  ASSERT_FALSE(oc_store_uri(tooLong.c_str(), &uri));
+}
+
 class TestCoreResourceWithDevice : public testing::Test {
 public:
 #if defined(OC_SERVER) && defined(OC_DYNAMIC_ALLOCATION)
@@ -220,7 +241,7 @@ public:
         /*uri=*/"/oic/d",
       },
       {
-        /*rt=*/"oic.d.test2",
+        /*rt=*/OCF_D_RT,
         /*name=*/std::string(kDevice2Name),
         /*spec_version=*/"ocf.1.0.0",
         /*data_model_version=*/"ocf.res.1.0.0",
@@ -434,6 +455,22 @@ TEST_F(TestCoreResourceWithDevice, CoreGetResourceIsVerticalResource_P)
     EXPECT_TRUE(oc_core_is_vertical_resource(res, res->device));
   }
 #endif /* OC_SERVER */
+}
+
+TEST_F(TestCoreResourceWithDevice, GetDeviceIndex_P)
+{
+  EXPECT_TRUE(
+    oc_core_get_device_index(oc_core_get_device_info(kDevice1ID)->di, nullptr));
+  size_t index{};
+  EXPECT_TRUE(
+    oc_core_get_device_index(oc_core_get_device_info(kDevice2ID)->di, &index));
+  EXPECT_EQ(kDevice2ID, index);
+}
+
+TEST_F(TestCoreResourceWithDevice, GetDeviceIndex_F)
+{
+  oc_uuid_t invalid{};
+  EXPECT_FALSE(oc_core_get_device_index(invalid, nullptr));
 }
 
 TEST_F(TestCoreResourceWithDevice, SetName_P)

@@ -312,9 +312,10 @@ oc_create_device_resource(size_t device_count, const char *uri, const char *rt)
 #ifdef OC_CLOUD
   properties |= OC_OBSERVABLE;
 #endif /* OC_CLOUD */
-  if (oc_strnlen(rt, OC_CHAR_ARRAY_LEN(OCF_D_RT) + 1) ==
-        OC_CHAR_ARRAY_LEN(OCF_D_RT) &&
-      strncmp(rt, OCF_D_RT, OC_CHAR_ARRAY_LEN(OCF_D_RT)) == 0) {
+  oc_string_view_t rtv =
+    oc_string_view(rt, oc_strnlen(rt, OC_CHAR_ARRAY_LEN(OCF_D_RT) + 1));
+  if (oc_string_view_is_equal(
+        rtv, oc_string_view(OCF_D_RT, OC_CHAR_ARRAY_LEN(OCF_D_RT)))) {
     oc_core_populate_resource(OCF_D, device_count, uri,
                               OC_IF_R | OC_IF_BASELINE, OC_IF_R, properties,
                               oc_core_device_handler, /*put*/ NULL,
@@ -392,6 +393,21 @@ oc_core_add_new_device(oc_add_new_device_t cfg)
   return &g_oc_device_info[device_count];
 }
 
+bool
+oc_core_get_device_index(oc_uuid_t di, size_t *device)
+{
+  uint32_t device_count = OC_ATOMIC_LOAD32(g_device_count);
+  for (size_t i = 0; i < device_count; i++) {
+    if (oc_uuid_is_equal(g_oc_device_info[i].di, di)) {
+      if (device != NULL) {
+        *device = i;
+      }
+      return true;
+    }
+  }
+  return false;
+}
+
 static void
 oc_device_bind_rt(size_t device_index, const char *rt)
 {
@@ -436,18 +452,18 @@ oc_device_bind_resource_type(size_t device, const char *type)
   oc_device_bind_rt(device, type);
 }
 
-void
+bool
 oc_store_uri(const char *s_uri, oc_string_t *d_uri)
 {
   size_t s_len = oc_strnlen(s_uri, OC_MAX_STRING_LENGTH);
   if (s_len >= OC_MAX_STRING_LENGTH) {
     OC_ERR("Invalid URI");
-    return;
+    return false;
   }
 
   if (s_uri[0] == '/') {
     oc_set_string(d_uri, s_uri, s_len);
-    return;
+    return true;
   }
 
   oc_string_t uri;
@@ -455,8 +471,9 @@ oc_store_uri(const char *s_uri, oc_string_t *d_uri)
   memcpy(oc_string(uri) + 1, s_uri, s_len);
   (oc_string(uri))[0] = '/';
   (oc_string(uri))[s_len + 1] = '\0';
-  oc_new_string(d_uri, oc_string(uri), oc_string_len(uri));
+  oc_new_string(d_uri, oc_string(uri), s_len + 1);
   oc_free_string(&uri);
+  return true;
 }
 
 static oc_resource_t *
@@ -653,13 +670,15 @@ core_is_resource_uri(const char *uri, size_t uri_len, const char *r_uri,
     uri = &uri[1];
     --uri_len;
   }
+  oc_string_view_t uriv = oc_string_view(uri, uri_len);
+
   if (r_uri[0] == '/') {
     r_uri = &r_uri[1];
     --r_uri_len;
   }
+  oc_string_view_t r_uriv = oc_string_view(r_uri, r_uri_len);
 
-  return uri_len == r_uri_len &&
-         (uri_len == 0 || memcmp(uri, r_uri, uri_len) == 0);
+  return oc_string_view_is_equal(uriv, r_uriv);
 }
 
 int

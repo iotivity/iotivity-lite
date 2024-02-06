@@ -178,3 +178,10 @@ oc_uuid_is_equal(oc_uuid_t first, oc_uuid_t second)
 {
   return memcmp(first.id, second.id, OC_UUID_ID_SIZE) == 0;
 }
+
+bool
+oc_uuid_is_empty(oc_uuid_t uuid)
+{
+  oc_uuid_t nil_uuid = { { 0 } };
+  return (memcmp(&uuid, &nil_uuid, sizeof(oc_uuid_t)) == 0);
+}

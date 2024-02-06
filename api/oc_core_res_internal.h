@@ -70,8 +70,10 @@ void oc_core_encode_interfaces_mask(CborEncoder *parent, unsigned iface_mask,
  *
  * @param s_uri source string (cannot be NULL)
  * @param d_uri destination (to be allocated) to store the uri (cannot be NULL)
+ *
+ * @return true on success
  */
-void oc_store_uri(const char *s_uri, oc_string_t *d_uri) OC_NONNULL();
+bool oc_store_uri(const char *s_uri, oc_string_t *d_uri) OC_NONNULL();
 
 /**
  * @brief populate resource

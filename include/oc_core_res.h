@@ -90,6 +90,15 @@ oc_uuid_t *oc_core_get_device_id(size_t device);
 oc_device_info_t *oc_core_get_device_info(size_t device);
 
 /**
+ * @brief retrieve the index of device with given id
+ *
+ * @param di device id to be used for search
+ * @param[out] device device index of the device with the given id
+ * @return true if found
+ */
+bool oc_core_get_device_index(oc_uuid_t di, size_t *device);
+
+/**
  * @brief retrieve the platform information
  *
  * @return oc_platform_info_t* the platform information

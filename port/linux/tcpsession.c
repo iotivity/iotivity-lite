@@ -1295,7 +1295,7 @@ oc_tcp_connect(oc_endpoint_t *endpoint, on_tcp_connect_t on_tcp_connect,
 {
   ip_context_t *dev = oc_get_ip_context_for_device(endpoint->device);
   if (dev == NULL) {
-    OC_ERR("cannot find context for device(%zu)", endpoint->device);
+    OC_ERR("cannot find ip-context for device(%zu)", endpoint->device);
     return -1;
   }
   return oc_tcp_connect_to_endpoint(dev, endpoint, on_tcp_connect,

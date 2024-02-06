@@ -28,6 +28,7 @@
 
 #include "oc_export.h"
 #include "util/oc_compiler.h"
+#include "util/oc_features.h"
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -140,6 +141,17 @@ void oc_gen_uuid(oc_uuid_t *uuid) OC_NONNULL();
  */
 OC_API
 bool oc_uuid_is_equal(oc_uuid_t first, oc_uuid_t second);
+
+/**
+ * @brief Check if the uuid is empty. An empty uuid is one that has all its
+ * bytes set to zero.
+ *
+ * @param uuid A uuid to be checked
+ * @return true if the uuid is empty
+ * @return false Otherwise
+ */
+OC_API
+bool oc_uuid_is_empty(oc_uuid_t uuid);
 
 #ifdef __cplusplus
 }

@@ -59,7 +59,7 @@ public:
 
 std::atomic<bool> TestConnectivity::is_callback_received{ false };
 
-TEST(TestConnectivity_init, oc_connectivity_initDefault)
+TEST(TestConnectivity_init, Default)
 {
   oc_connectivity_ports_t ports;
   memset(&ports, 0, sizeof(oc_connectivity_ports_t));
@@ -68,7 +68,7 @@ TEST(TestConnectivity_init, oc_connectivity_initDefault)
   oc_connectivity_shutdown(kDeviceID);
 }
 
-TEST(TestConnectivity_init, oc_connectivity_initTCPDisabled)
+TEST(TestConnectivity_init, TCPDisabled)
 {
   oc_connectivity_ports_t ports;
   memset(&ports, 0, sizeof(oc_connectivity_ports_t));
@@ -91,7 +91,7 @@ TEST(TestConnectivity_init, oc_connectivity_initTCPDisabled)
   oc_connectivity_shutdown(kDeviceID);
 }
 
-TEST(TestConnectivity_init, oc_connectivity_initUDPDisabled)
+TEST(TestConnectivity_init, UDPDisabled)
 {
   oc_connectivity_ports_t ports;
   memset(&ports, 0, sizeof(oc_connectivity_ports_t));
@@ -114,7 +114,7 @@ TEST(TestConnectivity_init, oc_connectivity_initUDPDisabled)
   oc_connectivity_shutdown(kDeviceID);
 }
 
-TEST(TestConnectivity_init, oc_connectivity_initAllDisabled)
+TEST(TestConnectivity_init, AllDisabled)
 {
   oc_connectivity_ports_t ports;
   memset(&ports, 0, sizeof(oc_connectivity_ports_t));
@@ -125,6 +125,11 @@ TEST(TestConnectivity_init, oc_connectivity_initAllDisabled)
   int ret = oc_connectivity_init(kDeviceID, ports);
   EXPECT_EQ(0, ret);
   oc_connectivity_shutdown(kDeviceID);
+}
+
+TEST(TestConnectivity_shutdown, InvalidDevice)
+{
+  oc_connectivity_shutdown(42);
 }
 
 static void
