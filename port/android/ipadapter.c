@@ -261,9 +261,6 @@ get_ip_context_for_device(size_t device)
   while (dev != NULL && dev->device != device) {
     dev = dev->next;
   }
-  if (!dev) {
-    return NULL;
-  }
   return dev;
 }
 
@@ -1587,6 +1584,11 @@ void
 oc_connectivity_shutdown(size_t device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
+  if (dev == NULL) {
+    OC_WRN("no ip-context found for device(%zu)", device);
+    return;
+  }
+
   dev->terminate = 1;
   if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
     OC_WRN("cannot wakeup network thread");

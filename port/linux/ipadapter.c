@@ -505,8 +505,7 @@ oc_endpoint_t *
 oc_connectivity_get_endpoints(size_t device)
 {
   ip_context_t *dev = oc_get_ip_context_for_device(device);
-
-  if (!dev) {
+  if (dev == NULL) {
     return NULL;
   }
 
@@ -1519,6 +1518,11 @@ void
 oc_connectivity_shutdown(size_t device)
 {
   ip_context_t *dev = oc_get_ip_context_for_device(device);
+  if (dev == NULL) {
+    OC_WRN("no ip-context found for device(%zu)", device);
+    return;
+  }
+
   OC_ATOMIC_STORE8(dev->terminate, 1);
   do {
     if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {

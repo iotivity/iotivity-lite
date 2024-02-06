@@ -1,3 +1,12 @@
+# global files
+*.o
+*.cmd
+*.tmp
+*.gcda
+*.gcno
+whitespace_commit_checker.sh
+
+# android
 port/android/client
 port/android/server
 port/android/temp_sensor
@@ -19,6 +28,7 @@ port/android/libiotivity-lite-server.*
 port/android/libiotivity-lite-client-server.*
 port/android/*.so
 
+# linux
 port/linux/client
 port/linux/server
 port/linux/temp_sensor
@@ -47,34 +57,7 @@ port/linux/tests/*
 port/linux/obj/
 port/linux/onboarding_tool_creds/
 port/linux/smart_lock
-port/windows/vs2015/.vs/
-port/windows/vs2015/Debug/
-port/windows/vs2015/Release/
-port/windows/vs2015/simpleserver_creds/
-port/windows/vs2015/Win32/
-port/windows/vs2015/x64/
-port/windows/vs2015/onboarding_tool/Debug
-port/windows/vs2015/onboarding_tool/x64
-port/windows/vs2015/*.VC.opendb
-port/windows/vs2015/*.VC.db
-port/windows/vs2015/*.vcxproj.user
-port/zephyr/outdir/
-port/contiki/*.a
-port/contiki/*.map
-port/contiki/obj_native/
-port/contiki/*.native
-port/contiki/symbols.*
-port/openthread/output
-port/esp32/build/
-port/esp32/sdkconfig
-port/esp32/esp-idf/
-port/esp32/sdkconfig.old
-*.o
-*.cmd
-*.tmp
-*.gcda
-*.gcno
-whitespace_commit_checker.sh
+
 port/linux/platformtest
 port/linux/storage_test
 port/linux/apitest
@@ -85,7 +68,7 @@ port/linux/securitytest
 port/linux/simpleserver_pki
 port/linux/stapptest
 
-#creds files
+# creds files
 port/linux/client_creds
 port/linux/server_creds
 port/linux/temp_sensor_creds
@@ -99,19 +82,45 @@ port/linux/multi_device_server_creds
 port/linux/server_multithread_linux_creds
 port/linux/client_multithread_linux_creds
 
-#service
-service/cloud-access/unittest/obj
-service/resource-directory/client/unittest/obj
+port/windows/vs2015/.vs/
+port/windows/vs2015/Debug/
+port/windows/vs2015/Release/
+port/windows/vs2015/simpleserver_creds/
+port/windows/vs2015/Win32/
+port/windows/vs2015/x64/
+port/windows/vs2015/onboarding_tool/Debug
+port/windows/vs2015/onboarding_tool/x64
+port/windows/vs2015/*.VC.opendb
+port/windows/vs2015/*.VC.db
+port/windows/vs2015/*.vcxproj.user
 
-#vscode setting files
+# zephyr
+port/zephyr/outdir/
+
+# openthread
+port/openthread/output
+
+# esp32
+port/esp32/build/
+port/esp32/sdkconfig
+port/esp32/esp-idf/
+port/esp32/sdkconfig.old
+
+# vscode setting files
 .vscode
 
-.clang-tidy
-
-build
-
-python/plgd_headers.config
-
-# eclipse config file
-.cproject
+# eclipse
+.settings
 .project
+.cproject
+
+# cmake build folder
+build
+build4test
+
+# sonarqube
+.scannerwork
+
+# clang-tidy
+.clang-tidy
+compile_commands.json

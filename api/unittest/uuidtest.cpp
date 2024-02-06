@@ -1,6 +1,7 @@
 /******************************************************************
  *
  * Copyright 2018 Samsung Electronics All Rights Reserved.
+ * Copyright 2024 ETRI                All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -28,6 +29,16 @@ constexpr const char UUID[] = "0123456789ABCDEFGHIJKLMNOPQRSTUV";
 constexpr const char UUID2[] = "XYZabcdefghijklmnopqrstuvwxyz012";
 
 using uuid_buffer_t = std::array<char, OC_UUID_LEN>;
+
+TEST(UUID, UUIDIsNill)
+{
+  oc_uuid_t uuid{};
+  EXPECT_TRUE(oc_uuid_is_empty(uuid));
+
+  oc_uuid_t uuid2{};
+  oc_str_to_uuid(UUID, &uuid2);
+  EXPECT_FALSE(oc_uuid_is_empty(uuid2));
+}
 
 TEST(UUID, StrToUUIDTest_P)
 {

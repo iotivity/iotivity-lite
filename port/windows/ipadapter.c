@@ -20,12 +20,6 @@
 
 #include "api/oc_network_events_internal.h"
 #include "api/oc_session_events_internal.h"
-#include "port/common/posix/oc_socket_internal.h"
-#include "port/oc_assert.h"
-#include "port/oc_connectivity.h"
-#include "port/oc_connectivity_internal.h"
-#include "port/oc_log_internal.h"
-#include "port/oc_network_event_handler_internal.h"
 #include "ipcontext.h"
 #include "mutex.h"
 #include "network_addresses.h"
@@ -33,6 +27,14 @@
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_network_monitor.h"
+#include "port/common/posix/oc_socket_internal.h"
+#include "port/oc_assert.h"
+#include "port/oc_connectivity.h"
+#include "port/oc_connectivity_internal.h"
+#include "port/oc_log_internal.h"
+#include "port/oc_network_event_handler_internal.h"
+#include "util/oc_list.h"
+#include "util/oc_memb.h"
 
 #ifdef OC_TCP
 #include "tcpadapter.h"
@@ -80,11 +82,8 @@ OVERLAPPED ifchange_event;
 static LPFN_WSARECVMSG PWSARecvMsg;
 static LPFN_WSASENDMSG PWSASendMsg;
 
-#ifdef OC_DYNAMIC_ALLOCATION
-OC_LIST(ip_contexts);
-#else  /* OC_DYNAMIC_ALLOCATION */
-static ip_context_t devices[OC_MAX_NUM_DEVICES];
-#endif /* !OC_DYNAMIC_ALLOCATION */
+OC_LIST(g_ip_contexts);
+OC_MEMB(g_ip_context_s, ip_context_t, OC_MAX_NUM_DEVICES);
 
 OC_MEMB(device_eps, oc_endpoint_t, 1);
 
@@ -213,17 +212,12 @@ oc_network_event_handler_mutex_destroy(void)
 static ip_context_t *
 get_ip_context_for_device(size_t device)
 {
-#ifdef OC_DYNAMIC_ALLOCATION
-  ip_context_t *dev = oc_list_head(ip_contexts);
+  oc_network_event_handler_mutex_lock();
+  ip_context_t *dev = oc_list_head(g_ip_contexts);
   while (dev != NULL && dev->device != device) {
     dev = dev->next;
   }
-  if (!dev) {
-    return NULL;
-  }
-#else  /* OC_DYNAMIC_ALLOCATION */
-  ip_context_t *dev = &devices[device];
-#endif /* !OC_DYNAMIC_ALLOCATION */
+  oc_network_event_handler_mutex_unlock();
   return dev;
 }
 
@@ -490,14 +484,18 @@ static int
 process_interface_change_event(void)
 {
   int ret = 0;
-  size_t num_devices = oc_core_get_num_devices(), i;
   ifaddr_t *ifaddr_list = get_network_addresses();
   if (!ifaddr_list) {
     return -1;
   }
 
-  for (i = 0; i < num_devices; i++) {
+  size_t num_devices = oc_core_get_num_devices();
+  for (size_t i = 0; i < num_devices; i++) {
     ip_context_t *dev = get_ip_context_for_device(i);
+    if (dev == NULL) {
+      continue;
+    }
+
     ret += update_mcast_socket(dev->mcast_sock, AF_INET6, ifaddr_list);
 #ifdef OC_IPV4
     ret += update_mcast_socket(dev->mcast4_sock, AF_INET, ifaddr_list);
@@ -899,7 +897,7 @@ oc_endpoint_t *
 oc_connectivity_get_endpoints(size_t device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
-  if (!dev) {
+  if (dev == NULL) {
     return NULL;
   }
 
@@ -1181,10 +1179,15 @@ oc_send_buffer2(oc_message_t *message, bool queue)
 void
 oc_send_discovery_request(oc_message_t *message)
 {
+  ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
+  if (dev == NULL) {
+    OC_ERR("cannot send discovery request: device(%zu) ip-context not found",
+           message->endpoint.device);
+    return;
+  }
+
   ifaddr_t *ifaddr_list = get_network_addresses();
   ifaddr_t *ifaddr;
-
-  ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
 
   for (ifaddr = ifaddr_list; ifaddr != NULL; ifaddr = ifaddr->next) {
     if (message->endpoint.flags & IPV6 && ifaddr->addr.ss_family == AF_INET6) {
@@ -1426,15 +1429,11 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   }
 
   OC_DBG("Initializing connectivity for device %zd", device);
-#ifdef OC_DYNAMIC_ALLOCATION
-  ip_context_t *dev = (ip_context_t *)calloc(1, sizeof(ip_context_t));
-  if (!dev) {
+  ip_context_t *dev = (ip_context_t *)oc_memb_alloc(&g_ip_context_s);
+  if (dev == NULL) {
     oc_abort("Insufficient memory");
   }
-  oc_list_add(ip_contexts, dev);
-#else  /* OC_DYNAMIC_ALLOCATION */
-  ip_context_t *dev = &devices[device];
-#endif /* !OC_DYNAMIC_ALLOCATION */
+
   dev->device = device;
   OC_LIST_STRUCT_INIT(dev, eps);
   memset(&dev->mcast, 0, sizeof(dev->mcast));
@@ -1464,6 +1463,7 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   if (dev->server_sock == (SOCKET)SOCKET_ERROR ||
       dev->mcast_sock == (SOCKET)SOCKET_ERROR) {
     OC_ERR("creating server sockets");
+    oc_memb_free(&g_ip_context_s, dev);
     return -1;
   }
 
@@ -1471,6 +1471,7 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   dev->secure_sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_UDP);
   if (dev->secure_sock == (SOCKET)SOCKET_ERROR) {
     OC_ERR("creating secure socket");
+    oc_memb_free(&g_ip_context_s, dev);
     return -1;
   }
 #endif /* OC_SECURITY */
@@ -1479,21 +1480,25 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_PKTINFO, (char *)&on,
                  sizeof(on)) == -1) {
     OC_ERR("setting recvpktinfo option %d\n", WSAGetLastError());
+    oc_memb_free(&g_ip_context_s, dev);
     return -1;
   }
   if (setsockopt(dev->server_sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&on,
                  sizeof(on)) == SOCKET_ERROR) {
     OC_ERR("setting sock option %d", WSAGetLastError());
+    oc_memb_free(&g_ip_context_s, dev);
     return -1;
   }
   if (setsockopt(dev->server_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on,
                  sizeof(on)) == SOCKET_ERROR) {
     OC_ERR("setting reuseaddr option %d", WSAGetLastError());
+    oc_memb_free(&g_ip_context_s, dev);
     return -1;
   }
   if (bind(dev->server_sock, (struct sockaddr *)&dev->server,
            sizeof(dev->server)) == SOCKET_ERROR) {
     OC_ERR("binding server socket %d", WSAGetLastError());
+    oc_memb_free(&g_ip_context_s, dev);
     return -1;
   }
 
@@ -1501,6 +1506,7 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   if (getsockname(dev->server_sock, (struct sockaddr *)&dev->server,
                   &socklen) == SOCKET_ERROR) {
     OC_ERR("obtaining server socket information %d", WSAGetLastError());
+    oc_memb_free(&g_ip_context_s, dev);
     return -1;
   }
 
@@ -1514,16 +1520,19 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   if (setsockopt(dev->mcast_sock, IPPROTO_IPV6, IPV6_PKTINFO, (char *)&on,
                  sizeof(on)) == -1) {
     OC_ERR("setting recvpktinfo option %d\n", WSAGetLastError());
+    oc_memb_free(&g_ip_context_s, dev);
     return -1;
   }
   if (setsockopt(dev->mcast_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on,
                  sizeof(on)) == SOCKET_ERROR) {
     OC_ERR("setting reuseaddr option %d", WSAGetLastError());
+    oc_memb_free(&g_ip_context_s, dev);
     return -1;
   }
   if (bind(dev->mcast_sock, (struct sockaddr *)&dev->mcast,
            sizeof(dev->mcast)) == SOCKET_ERROR) {
     OC_ERR("binding mcast socket %d", WSAGetLastError());
+    oc_memb_free(&g_ip_context_s, dev);
     return -1;
   }
 
@@ -1531,16 +1540,19 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   if (setsockopt(dev->secure_sock, IPPROTO_IPV6, IPV6_PKTINFO, (char *)&on,
                  sizeof(on)) == -1) {
     OC_ERR("setting recvpktinfo option %d\n", WSAGetLastError());
+    oc_memb_free(&g_ip_context_s, dev);
     return -1;
   }
   if (setsockopt(dev->secure_sock, SOL_SOCKET, SO_REUSEADDR, (char *)&on,
                  sizeof(on)) == SOCKET_ERROR) {
     OC_ERR("setting reuseaddr option %d", WSAGetLastError());
+    oc_memb_free(&g_ip_context_s, dev);
     return -1;
   }
   if (bind(dev->secure_sock, (struct sockaddr *)&dev->secure,
            sizeof(dev->secure)) == SOCKET_ERROR) {
     OC_ERR("binding IPv6 secure socket %d", WSAGetLastError());
+    oc_memb_free(&g_ip_context_s, dev);
     return -1;
   }
 
@@ -1548,6 +1560,7 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   if (getsockname(dev->secure_sock, (struct sockaddr *)&dev->secure,
                   &socklen) == SOCKET_ERROR) {
     OC_ERR("obtaining secure socket information %d", WSAGetLastError());
+    oc_memb_free(&g_ip_context_s, dev);
     return -1;
   }
 
@@ -1571,22 +1584,26 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
       WSASocketW(AF_INET6, SOCK_DGRAM, 0, NULL, 0, WSA_FLAG_OVERLAPPED);
     if (ifchange_sock == INVALID_SOCKET) {
       OC_ERR("creating socket to track network interface changes");
+      oc_memb_free(&g_ip_context_s, dev);
       return -1;
     }
     BOOL v6_only = FALSE;
     if (setsockopt(ifchange_sock, IPPROTO_IPV6, IPV6_V6ONLY, (char *)&v6_only,
                    sizeof(v6_only)) == SOCKET_ERROR) {
       OC_ERR("setting socket option to make it dual IPv4/v6");
+      oc_memb_free(&g_ip_context_s, dev);
       return -1;
     }
     ifchange_event.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
     if (ifchange_event.hEvent == NULL) {
       OC_ERR("creating network interface change event");
+      oc_memb_free(&g_ip_context_s, dev);
       return -1;
     }
     if (WSAEventSelect(ifchange_sock, ifchange_event.hEvent,
                        FD_ADDRESS_LIST_CHANGE) == SOCKET_ERROR) {
       OC_ERR("binding network interface change event to socket");
+      oc_memb_free(&g_ip_context_s, dev);
       return -1;
     }
     DWORD bytes_returned = 0;
@@ -1596,6 +1613,7 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
       if (err != ERROR_IO_PENDING) {
         OC_ERR("could not set SIO_ADDRESS_LIST_CHANGE on network interface "
                "change socket");
+        oc_memb_free(&g_ip_context_s, dev);
         return -1;
       }
     }
@@ -1606,10 +1624,14 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
     CreateThread(0, 0, network_event_thread, dev, 0, &dev->event_thread);
   if (dev->event_thread_handle == NULL) {
     OC_ERR("creating network polling thread");
+    oc_memb_free(&g_ip_context_s, dev);
     return -1;
   }
 
   OC_DBG("Successfully initialized connectivity for device %zd", device);
+  oc_network_event_handler_mutex_lock();
+  oc_list_add(g_ip_contexts, dev);
+  oc_network_event_handler_mutex_unlock();
 
   return 0;
 }
@@ -1618,6 +1640,11 @@ void
 oc_connectivity_shutdown(size_t device)
 {
   ip_context_t *dev = get_ip_context_for_device(device);
+  if (dev == NULL) {
+    OC_WRN("no ip-context found for device(%zu)", device);
+    return;
+  }
+
   dev->terminate = TRUE;
   /* signal WSASelectEvent() in the thread to leave */
   WSASetEvent(dev->event_server_handle);
@@ -1646,10 +1673,10 @@ oc_connectivity_shutdown(size_t device)
 
   free_endpoints_list(dev);
 
-#ifdef OC_DYNAMIC_ALLOCATION
-  oc_list_remove(ip_contexts, dev);
-  free(dev);
-#endif /* OC_DYNAMIC_ALLOCATION */
+  oc_network_event_handler_mutex_lock();
+  oc_list_remove(g_ip_contexts, dev);
+  oc_network_event_handler_mutex_unlock();
+  oc_memb_free(&g_ip_context_s, dev);
 
   OC_DBG("oc_connectivity_shutdown for device %zd", device);
 }
@@ -1660,7 +1687,7 @@ oc_connectivity_end_session(const oc_endpoint_t *endpoint)
 {
   if (endpoint->flags & TCP) {
     ip_context_t *dev = get_ip_context_for_device(endpoint->device);
-    if (dev) {
+    if (dev != NULL) {
       oc_tcp_end_session(endpoint);
     }
   }
