@@ -39,6 +39,15 @@
 #include "util/oc_macros_internal.h"
 #include "util/oc_secure_string_internal.h"
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+#include "oc_acl.h"
+#include "oc_cred.h"
+#ifdef OC_SECURITY
+#include "security/oc_ael_internal.h"
+#include "security/oc_svr_internal.h"
+#endif /* OC_SECURITY*/
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 #ifdef OC_CLOUD
 #include "api/cloud/oc_cloud_resource_internal.h"
 #endif /* OC_CLOUD */
@@ -105,6 +114,7 @@ oc_core_init(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
+#ifdef OC_DYNAMIC_ALLOCATION
 static void
 oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
 {
@@ -114,6 +124,7 @@ oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
     oc_free_string(&(oc_device_info_item->dmv));
   }
 }
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 void
 oc_core_shutdown(void)
@@ -121,6 +132,38 @@ oc_core_shutdown(void)
   oc_platform_deinit();
 
   uint32_t device_count = OC_ATOMIC_LOAD32(g_device_count);
+
+  /*
+   * 1. Removed All Core Resources
+   */
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (g_core_resources != NULL) {
+#endif /* OC_DYNAMIC_ALLOCATION */
+    for (size_t i = 0;
+         i < OC_NUM_CORE_PLATFORM_RESOURCES +
+               (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * device_count);
+         ++i) {
+      oc_resource_t *core_resource = &g_core_resources[i];
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+      if ((i < OC_NUM_CORE_PLATFORM_RESOURCES) ||
+          (oc_core_get_device_info((i - OC_NUM_CORE_PLATFORM_RESOURCES) /
+                                   OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES)
+             ->is_removed == false)) {
+#endif /* OC_HAS_FEATURE_BRIDGE */
+        oc_ri_free_resource_properties(core_resource);
+#ifdef OC_HAS_FEATURE_BRIDGE
+      }
+#endif /* OC_HAS_FEATURE_BRIDGE */
+    }
+#ifdef OC_DYNAMIC_ALLOCATION
+    free(g_core_resources);
+    g_core_resources = NULL;
+  }
+
+  /*
+   * 2. Removed All Devices
+   */
 #ifdef OC_DYNAMIC_ALLOCATION
   if (g_oc_device_info != NULL) {
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -134,20 +177,6 @@ oc_core_shutdown(void)
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-#ifdef OC_DYNAMIC_ALLOCATION
-  if (g_core_resources != NULL) {
-#endif /* OC_DYNAMIC_ALLOCATION */
-    for (size_t i = 0;
-         i < OC_NUM_CORE_PLATFORM_RESOURCES +
-               (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * device_count);
-         ++i) {
-      oc_resource_t *core_resource = &g_core_resources[i];
-      oc_ri_free_resource_properties(core_resource);
-    }
-#ifdef OC_DYNAMIC_ALLOCATION
-    free(g_core_resources);
-    g_core_resources = NULL;
-  }
 #endif /* OC_DYNAMIC_ALLOCATION */
   OC_ATOMIC_STORE32(g_device_count, 0);
 }
@@ -328,6 +357,32 @@ oc_create_device_resource(size_t device_count, const char *uri, const char *rt)
   }
 }
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+static void
+core_update_existing_device_data(size_t device_count, oc_add_new_device_t cfg)
+{
+  oc_gen_uuid(&g_oc_device_info[device_count].di);
+  oc_gen_uuid(&g_oc_device_info[device_count].piid);
+
+  oc_new_string(&g_oc_device_info[device_count].name, cfg.name,
+                strlen(cfg.name));
+  oc_new_string(&g_oc_device_info[device_count].icv, cfg.spec_version,
+                strlen(cfg.spec_version));
+  oc_new_string(&g_oc_device_info[device_count].dmv, cfg.data_model_version,
+                strlen(cfg.data_model_version));
+  g_oc_device_info[device_count].add_device_cb = cfg.add_device_cb;
+  g_oc_device_info[device_count].data = cfg.add_device_cb_data;
+}
+
+static void
+core_set_device_removed(size_t index, bool is_removed)
+{
+  g_oc_device_info[index].is_removed = is_removed;
+
+  return;
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
+
 oc_device_info_t *
 oc_core_add_new_device(oc_add_new_device_t cfg)
 {
@@ -390,6 +445,10 @@ oc_core_add_new_device(oc_add_new_device_t cfg)
     oc_abort("error initializing connectivity for device");
   }
 
+#ifdef OC_HAS_FEATURE_BRIDGE
+  core_set_device_removed(device_count, false);
+#endif
+
   return &g_oc_device_info[device_count];
 }
 
@@ -407,6 +466,230 @@ oc_core_get_device_index(oc_uuid_t di, size_t *device)
   }
   return false;
 }
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+oc_device_info_t *
+oc_core_add_new_device_at_index(oc_add_new_device_t cfg, size_t index)
+{
+  assert(cfg.uri != NULL);
+  assert(cfg.rt != NULL);
+  assert(cfg.name != NULL);
+  assert(cfg.spec_version != NULL);
+  assert(cfg.data_model_version != NULL);
+
+  uint32_t device_count = OC_ATOMIC_LOAD32(g_device_count);
+
+#if defined(OC_SECURITY) || defined(OC_SOFTWARE_UPDATE)
+  bool is_realloc = false;
+#endif
+
+  if (index > device_count) {
+    OC_ERR("designated device index (%d) is bigger than current number of all "
+           "Devices",
+           device_count);
+    return NULL;
+  } else if (index < device_count) {
+    /*
+     * If an existing Device is being replaced with new Device..
+     * - check if the Device on designated `index` is still alive or removed
+     * before.
+     */
+    if (g_oc_device_info[index].is_removed == false) {
+      OC_ERR("Trying to replace existing normal Device with new one...! \
+          To insert new Device in the middle of the g_oc_device_info[], \
+          remove the existing one first");
+      return NULL;
+    }
+
+    /* store new `oc_device_info_t` entry to existing memory slot */
+    core_update_existing_device_data(index, cfg);
+    device_count = (uint32_t)index;
+  } else if (index == device_count) {
+    /*
+     * if `index` is same as the next normal index of Device,
+     * follow normal procedure.
+     */
+    bool exchanged = false;
+    while (!exchanged) {
+#ifndef OC_DYNAMIC_ALLOCATION
+      if (device_count == OC_MAX_NUM_DEVICES) {
+        OC_ERR("device limit reached");
+        return NULL;
+      }
+#endif /* !OC_DYNAMIC_ALLOCATION */
+      if ((uint64_t)device_count == (uint64_t)MIN(SIZE_MAX, UINT32_MAX)) {
+        OC_ERR("limit of value type of g_device_count reached");
+        return NULL;
+      }
+      /* store (device_count+1) to g_device_count */
+      OC_ATOMIC_COMPARE_AND_SWAP32(g_device_count, device_count,
+                                   device_count + 1, exchanged);
+    }
+
+    /* extend memory allocated to `g_oc_device_info` to add new Device
+     * and add new `oc_device_info_t` entry */
+    core_update_device_data(device_count, cfg);
+
+#if defined(OC_SECURITY) || defined(OC_SOFTWARE_UPDATE)
+    is_realloc = true;
+#endif
+  }
+
+  /* Construct device resource */
+  oc_create_device_resource(device_count, cfg.uri, cfg.rt);
+
+  if (oc_get_con_res_announced()) {
+    /* Construct oic.wk.con resource for this device. */
+    oc_create_con_resource(device_count);
+  }
+
+  oc_create_discovery_resource(device_count);
+
+#ifdef OC_WKCORE
+  oc_create_wkcore_resource(device_count);
+#endif /* OC_WKCORE */
+
+#ifdef OC_INTROSPECTION
+  oc_create_introspection_resource(device_count);
+#endif /* OC_INTROSPECTION */
+
+#ifdef OC_MNT
+  oc_create_maintenance_resource(device_count);
+#endif /* OC_MNT */
+#if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
+  oc_create_cloudconf_resource(device_count);
+#endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
+
+#ifdef OC_HAS_FEATURE_PUSH
+  oc_create_pushconf_resource(device_count);
+  oc_create_pushreceiver_resource(device_count);
+#endif /* OC_HAS_FEATURE_PUSH */
+
+#ifdef OC_SECURITY
+  /*
+   * Do what "main_init_resources()" does for all Devices here...
+   * refer to "main_init_resources()"
+   */
+  if ((OC_ATOMIC_LOAD32(g_device_count) == (device_count + 1)) && is_realloc) {
+    /* realloc memory and populate SVR Resources
+     * only if new Device is attached to the end of `g_oc_device_info[]` */
+    oc_sec_svr_create_new_device(device_count, true);
+  } else {
+    oc_sec_svr_create_new_device(device_count, false);
+  }
+#endif /* OC_SECURITY */
+
+#ifdef OC_SOFTWARE_UPDATE
+  /*
+   * Do what "main_init_resources()" does for all Devices here...
+   * refer to "main_init_resources()"
+   */
+  if ((OC_ATOMIC_LOAD32(g_device_count) == (device_count + 1)) && is_realloc) {
+    /* realloc memory and populate SVR Resources
+     * only if new Device is attached to the end of `g_oc_device_info[]` */
+    oc_swupdate_create_new_device(device_count, true);
+  } else {
+    oc_swupdate_create_new_device(device_count, false);
+  }
+#endif /* OC_SOFTWARE_UPDATE */
+
+#ifdef OC_SECURITY
+  /*
+   * Do what "main_load_resources()" does for all Devices here...
+   * refer to "main_load_resources()"
+   */
+  oc_sec_svr_init_new_device(device_count);
+#endif /* OC_SECURITY */
+
+#ifdef OC_SOFTWARE_UPDATE
+  /*
+   * Do what "main_load_resources()" does for all Devices here...
+   * refer to "main_load_resources()"
+   */
+  OC_DBG("oc_core_add_new_device_at_index(): loading swupdate(%d)",
+         device_count);
+  oc_swupdate_load(device_count);
+#endif /* OC_SOFTWARE_UPDATE */
+
+  core_set_device_removed(device_count, false);
+  return &g_oc_device_info[device_count];
+}
+
+#if 0
+static void
+core_delete_app_resources_per_device(size_t index)
+{
+  oc_ri_delete_app_resources_per_device(index);
+
+  return;
+}
+#endif
+
+bool
+oc_core_remove_device_at_index(size_t index)
+{
+  if (!oc_core_device_is_valid(index)) {
+    OC_ERR("Device index value is out of valid range! : \
+        Device index %zu, current Device count %d",
+           index, g_device_count);
+    return false;
+  }
+
+#ifdef OC_SECURITY
+  oc_reset_device(index);
+  /*
+   * oc_sec_sdi_clear(oc_sec_sdi_get(index)); => already done in
+   * oc_reset_device()
+   * oc_sec_ael_free_device(index); => already done in
+   * oc_reset_device()
+   * oc_sec_cred_clear(index, NULL, NULL); => already done in
+   * oc_reset_device()
+   * oc_sec_acl_clear(index, NULL, NULL); => already done in
+   * oc_reset_device()
+   */
+#endif /* OC_SECURITY */
+
+  /* 1. remove core Resources mapped to this Device */
+  for (size_t i = OC_NUM_CORE_PLATFORM_RESOURCES +
+                  (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * index);
+       i < OC_NUM_CORE_PLATFORM_RESOURCES +
+             (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * (index + 1));
+       ++i) {
+    oc_resource_t *core_resource = &g_core_resources[i];
+    oc_ri_free_resource_properties(core_resource);
+    memset(core_resource, 0, sizeof(oc_resource_t));
+  }
+
+#ifdef OC_HAS_FEATURE_PUSH
+  /*
+   * TODO4ME <2024/01/23> oc_core_remove_device_at_index() :
+   * - make function to delete receivers object list per VOD
+   */
+#if 0
+  oc_push_free();
+#endif
+#endif /* OC_HAS_FEATURE_PUSH */
+
+  /* 2. remove all application Resources (including collections) mapped to this
+   * Device */
+  /*
+   * TODO4ME <2023/12/11> oc_core_remove_device_at_index() : do we need to
+   * delete observer too? (e.g. oc_ri_reset())
+   */
+  //  core_delete_app_resources_per_device(index);
+  oc_ri_delete_app_resources_per_device(index);
+
+  /* 3. clean all Properties of this Device */
+  oc_core_free_device_info_properties(&g_oc_device_info[index]);
+  memset(&g_oc_device_info[index], 0, sizeof(oc_device_info_t));
+
+  /* 4. mark this Device is removed */
+  core_set_device_removed(index, true);
+
+  return true;
+}
+
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 static void
 oc_device_bind_rt(size_t device_index, const char *rt)

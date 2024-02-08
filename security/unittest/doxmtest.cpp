@@ -1,6 +1,8 @@
 /******************************************************************
  *
  * Copyright 2023 Daniel Adam, All Rights Reserved.
+ * Copyright 2024 ETRI Joo-Chul Kevin Lee, All Rights Reserved.
+ *
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -34,6 +36,11 @@
 #include "tests/gtest/RepPool.h"
 #include "tests/gtest/Resource.h"
 #include "tests/gtest/Storage.h"
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+#include "oc_bridge.h"
+#include <memory>
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 #include <algorithm>
 #include <array>
@@ -1075,5 +1082,39 @@ TEST_F(TestDoxmWithServer, Owned_F)
   oc_sec_doxm_init();
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+static bool
+IsDoxmEntryInitialized(const oc_sec_doxm_t *doxmEntry)
+{
+  auto emptyDoxm = std::make_unique<oc_sec_doxm_t>();
+  memset(emptyDoxm.get(), 0, sizeof(oc_sec_doxm_t));
+
+  if (!memcmp(doxmEntry, emptyDoxm.get(), sizeof(oc_sec_doxm_t))) {
+    return true;
+  }
+  return false;
+}
+
+TEST_F(TestDoxmWithServer, DoxmNewDevice)
+{
+  /*
+   * overwrite entry in the existing position
+   */
+  /*
+   * add new acl entry to the end of the array
+   */
+  auto doxmEntry = oc_sec_get_doxm(kDeviceID);
+  auto orgDoxm = std::make_unique<oc_sec_doxm_t>();
+
+  memcpy(orgDoxm.get(), doxmEntry, sizeof(oc_sec_doxm_t));
+
+  oc_sec_doxm_new_device(kDeviceID, false);
+
+  EXPECT_EQ(true, IsDoxmEntryInitialized(doxmEntry));
+
+  memcpy(doxmEntry, orgDoxm.get(), sizeof(oc_sec_doxm_t));
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 #endif /* OC_SECURITY */

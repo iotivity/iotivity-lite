@@ -29,6 +29,7 @@ jobs:
             -DPLGD_DEV_TIME_ENABLED=ON
             -DOC_ETAG_ENABLED=ON
             -DOC_JSON_ENCODER_ENABLED=ON
+            -DOC_BRIDGE_ENABLED=ON
             -B ${{github.workspace}}/build
 
       - uses: vapier/coverity-scan-action@v1

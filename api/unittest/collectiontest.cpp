@@ -1,6 +1,7 @@
 /****************************************************************************
  *
  * Copyright (c) 2023 plgd.dev s.r.o.
+ * Copyright (c) 2024 ETRI
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -1014,5 +1015,61 @@ TEST_F(TestCollectionsWithServer, GetRequest_Batch)
 }
 
 #endif // !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+/*
+ * Done:
+ * oc_collections_free_per_device(device)
+ */
+TEST_F(TestCollectionsWithServer, FreePerDevice)
+{
+  /*
+   * add collection Resource 1
+   */
+  std::string name1 = "col1";
+  std::string uri1 = "/col1";
+  oc_resource_t *col1 =
+    oc_new_collection(name1.c_str(), uri1.c_str(), 0, kDeviceID);
+  ASSERT_NE(nullptr, col1);
+
+  EXPECT_STREQ(name1.c_str(), oc_string(col1->name));
+  EXPECT_STREQ(uri1.c_str(), oc_string(col1->uri));
+  EXPECT_EQ(kDeviceID, col1->device);
+
+  EXPECT_TRUE(oc_add_collection_v1(col1));
+
+  /*
+   * add collection Resource 2
+   */
+  std::string name2 = "col2";
+  std::string uri2 = "/col2";
+  oc_resource_t *col2 =
+    oc_new_collection(name2.c_str(), uri2.c_str(), 0, kDeviceID);
+  ASSERT_NE(nullptr, col2);
+
+  EXPECT_STREQ(name2.c_str(), oc_string(col2->name));
+  EXPECT_STREQ(uri2.c_str(), oc_string(col2->uri));
+  EXPECT_EQ(kDeviceID, col2->device);
+
+  EXPECT_TRUE(oc_add_collection_v1(col2));
+
+  /*
+   * check all Collection Resources were inserted successfully
+   */
+  oc_collection_t *col = oc_collection_get_all();
+  ASSERT_NE(nullptr, col);
+
+  EXPECT_STREQ(oc_string(col->res.name), name1.c_str());
+  col = reinterpret_cast<oc_collection_t *>(col->res.next);
+  EXPECT_STREQ(oc_string(col->res.name), name2.c_str());
+
+  /*
+   * check all collection mapped to this Device are removed successfully
+   */
+  oc_collections_free_per_device(kDeviceID);
+  col = oc_collection_get_all();
+  EXPECT_EQ(nullptr, col);
+}
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 #endif /* OC_COLLECTIONS */

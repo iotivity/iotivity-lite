@@ -19,6 +19,9 @@
 #ifndef OC_SVR_INTERNAL_H
 #define OC_SVR_INTERNAL_H
 
+#include "util/oc_features.h"
+#include <stdbool.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,6 +30,28 @@ extern "C" {
  * @brief Initialize secure vertical resources.
  */
 void oc_sec_svr_create(void);
+
+#ifdef OC_HAS_FEATURE_BRIDGE
+/**
+ * @brief add SVR for the Device which is added dynamically.
+ *        new Device should be added to `g_oc_device_info[]`
+ *        before calling this function.
+ *
+ * @param[in] device_index index of `g_oc_device_info[]` where new Device is
+ *            stored
+ * @param[in] need_realloc indicates whether reallocation of memory for SVR is
+ *            needed or not
+ */
+void oc_sec_svr_create_new_device(size_t device_index, bool need_realloc);
+
+/**
+ * @brief update SVR with stored values,
+ *        if there is no store data, initialize with default value.
+ *
+ * @param[in] device_index index of Device stored in `g_oc_device_info[]`
+ */
+void oc_sec_svr_init_new_device(size_t device_index);
+#endif /* OC_HAS_FEATURE_BRIDGE */
 
 /**
  * @brief Deinitialize secure vertical resources;

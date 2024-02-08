@@ -2286,9 +2286,10 @@ oc_push_init(void)
 
 /*
  * clean up push related data structure
- * - for push configuration Resource: they are cleaned when all app Resources
- * are removed (see oc_main_shutdown())
- * - for push receivers Resource: free in this function
+ * - Push configuration Resource, Push Receiver Resource:
+ *   they are cleaned when all app Resources are removed
+ *   (see oc_ri_shutdown())
+ * - for push receivers Resource: free receiver object list here
  */
 void
 oc_push_free(void)
@@ -2300,7 +2301,9 @@ oc_push_free(void)
     _purge_recv_obj_list(recvs_instance);
     OC_PUSH_DBG("free push receiver Resource (device: %zu)... ",
                 recvs_instance->resource->device);
+#if 0
     oc_delete_resource(recvs_instance->resource);
+#endif
     oc_memb_free(&g_recvs_instance_memb, recvs_instance);
     recvs_instance = (oc_recvs_t *)oc_list_pop(g_recvs_list);
   }

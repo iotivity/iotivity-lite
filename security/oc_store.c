@@ -92,7 +92,7 @@ void
 oc_sec_load_pstat(size_t device)
 {
   if (oc_storage_data_load("pstat", device, store_decode_pstat, NULL) <= 0) {
-    OC_DBG("failed to load pstat from storage for device(%zu)", device);
+    OC_ERR("failed to load pstat from storage for device(%zu)", device);
     oc_sec_pstat_default(device);
     return;
   }
