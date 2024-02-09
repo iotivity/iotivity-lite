@@ -1,6 +1,8 @@
 /******************************************************************
  *
  * Copyright 2023 Daniel Adam, All Rights Reserved.
+ * Copyright 2024 ETRI Joo-Chul Kevin Lee, All Rights Reserved.
+ *
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -1075,5 +1077,28 @@ TEST_F(TestDoxmWithServer, Owned_F)
   oc_sec_doxm_init();
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+
+static bool
+IsDoxmEntryInitialized(const oc_sec_doxm_t *doxmEntry)
+{
+  oc_sec_doxm_t emptyDoxm{};
+  return !memcmp(doxmEntry, &emptyDoxm, sizeof(oc_sec_doxm_t));
+}
+
+TEST_F(TestDoxmWithServer, DoxmNewDevice)
+{
+  auto doxmEntry = oc_sec_get_doxm(kDeviceID);
+  oc_sec_doxm_t orgDoxm{};
+  memcpy(&orgDoxm, doxmEntry, sizeof(oc_sec_doxm_t));
+
+  oc_sec_doxm_init_at_index(kDeviceID, false);
+  EXPECT_EQ(true, IsDoxmEntryInitialized(doxmEntry));
+
+  memcpy(doxmEntry, &orgDoxm, sizeof(oc_sec_doxm_t));
+}
+
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
 
 #endif /* OC_SECURITY */

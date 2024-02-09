@@ -1,6 +1,7 @@
 /******************************************************************
  *
  * Copyright 2023 Daniel Adam, All Rights Reserved.
+ * Copyright 2024 ETRI Joo-Chul Kevin Lee, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -467,5 +468,34 @@ TEST_F(TestSecurityProfileWithServer, DeleteRequest_Fail)
   oc::testNotSupportedMethod(OC_DELETE, &ep, OCF_SEC_SP_URI, nullptr,
                              error_code);
 }
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+
+static bool
+IsSpEntryInitialized(const oc_sec_sp_t *sdiEntry)
+{
+  return sdiEntry->current_profile == OC_SP_BASELINE &&
+         sdiEntry->supported_profiles == OC_SP_BASELINE &&
+         sdiEntry->credid == -1;
+}
+
+TEST_F(TestSecurityProfile, SpNewDevice)
+{
+  /*
+   * overwrite entry in the existing position
+   */
+  auto spEntry = oc_sec_sp_get(kDeviceID);
+  oc_sec_sp_t orgSp{};
+
+  memcpy(&orgSp, spEntry, sizeof(oc_sec_sp_t));
+  oc_sec_sp_init_at_index(kDeviceID, false);
+  oc_sec_sp_default(kDeviceID);
+
+  EXPECT_EQ(true, IsSpEntryInitialized(spEntry));
+
+  memcpy(spEntry, &orgSp, sizeof(oc_sec_sp_t));
+}
+
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
 
 #endif /* OC_SECURITY */

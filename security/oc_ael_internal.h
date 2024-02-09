@@ -19,7 +19,7 @@
 #ifndef OC_AEL_INTERNAL_H
 #define OC_AEL_INTERNAL_H
 
-#include "oc_config.h"
+#include "util/oc_features.h"
 
 #ifdef OC_SECURITY
 
@@ -92,6 +92,11 @@ typedef struct oc_sec_ael_t
 } oc_sec_ael_t;
 
 void oc_sec_ael_init(void);
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+void oc_sec_ael_init_at_index(size_t device_index, bool needs_realloc);
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
+
 void oc_sec_ael_free(void);
 
 void oc_sec_ael_default(size_t device);

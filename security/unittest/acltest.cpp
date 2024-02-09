@@ -1,6 +1,7 @@
 /******************************************************************
  *
  * Copyright 2022 Daniel Adam, All Rights Reserved.
+ * Copyright 2024 ETRI Joo-Chul Kevin Lee, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -34,7 +35,7 @@
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
 
-#include "gtest/gtest.h"
+#include <gtest/gtest.h>
 #include <string>
 
 static const std::string kDeviceURI{ "/oic/d" };
@@ -218,5 +219,33 @@ TEST_F(TestAcl, oc_sec_check_acl_in_RFOTM)
   oc_sec_pstat_free();
 }
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+
+static bool
+IsAclEntryInitialized(const oc_sec_acl_t *aclEntry)
+{
+  /*
+   * resource owner should be null
+   * subject list should be empty
+   */
+  return oc_uuid_is_empty(aclEntry->rowneruuid) &&
+         !oc_list_length(aclEntry->subjects);
+}
+
+TEST_F(TestAcl, AclNewDevice)
+{
+  /* overwrite entry in the existing position */
+  auto aclEntry = oc_sec_get_acl(device_id_);
+  oc_sec_acl_t orgAcl{};
+  memcpy(&orgAcl, aclEntry, sizeof(oc_sec_acl_t));
+
+  oc_sec_acl_init_at_index(device_id_, false);
+  EXPECT_EQ(true, IsAclEntryInitialized(aclEntry));
+
+  memcpy(aclEntry, &orgAcl, sizeof(oc_sec_acl_t));
+}
+
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
 
 #endif /* OC_SECURITY */

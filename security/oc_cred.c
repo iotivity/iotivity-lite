@@ -92,6 +92,32 @@ oc_sec_cred_init(void)
   }
 }
 
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+
+void
+oc_sec_cred_init_at_index(size_t device_index, bool needs_realloc)
+{
+  if (needs_realloc) {
+    size_t device_count = oc_core_get_num_devices();
+    assert(device_index == device_count - 1);
+    oc_sec_creds_t *devices = (oc_sec_creds_t *)realloc(
+      g_devices, device_count * sizeof(oc_sec_creds_t));
+    if (devices == NULL) {
+      oc_abort("Insufficient memory");
+    }
+    g_devices = devices;
+    for (size_t i = 0; i < device_index; ++i) {
+      OC_LIST_STRUCT_REINIT(&g_devices[i], creds);
+    }
+  } else {
+    oc_sec_cred_clear(device_index, NULL, NULL);
+  }
+  memset(&g_devices[device_index], 0, sizeof(oc_sec_creds_t));
+  OC_LIST_STRUCT_INIT(&g_devices[device_index], creds);
+}
+
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
+
 static oc_sec_cred_t *
 cred_get_by_credid(int credid, bool roles_resource, const oc_tls_peer_t *client,
                    size_t device)
@@ -309,10 +335,10 @@ oc_sec_cred_deinit(void)
     oc_sec_cred_clear(device, NULL, NULL);
   }
 #ifdef OC_DYNAMIC_ALLOCATION
-  if (g_devices != NULL) {
-    free(g_devices);
-    g_devices = NULL;
-  }
+  free(g_devices);
+  g_devices = NULL;
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  memset(g_devices, 0, sizeof(g_devices));
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 

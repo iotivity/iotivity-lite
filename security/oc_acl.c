@@ -77,6 +77,32 @@ oc_sec_acl_init(void)
   }
 }
 
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+
+void
+oc_sec_acl_init_at_index(size_t device_index, bool needs_realloc)
+{
+  if (needs_realloc) {
+    size_t device_count = oc_core_get_num_devices();
+    assert(device_index == device_count - 1);
+    oc_sec_acl_t *aclist =
+      (oc_sec_acl_t *)realloc(g_aclist, device_count * sizeof(oc_sec_acl_t));
+    if (aclist == NULL) {
+      oc_abort("Insufficient memory");
+    }
+    g_aclist = aclist;
+    for (size_t i = 0; i < device_index; ++i) {
+      OC_LIST_STRUCT_REINIT(&g_aclist[i], subjects);
+    }
+  } else {
+    oc_sec_acl_clear(device_index, NULL, NULL);
+  }
+  memset(&g_aclist[device_index], 0, sizeof(oc_sec_acl_t));
+  OC_LIST_STRUCT_INIT(&g_aclist[device_index], subjects);
+}
+
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
+
 oc_sec_acl_t *
 oc_sec_get_acl(size_t device)
 {
@@ -1014,9 +1040,10 @@ oc_sec_acl_free(void)
     oc_sec_acl_clear(device, NULL, NULL);
   }
 #ifdef OC_DYNAMIC_ALLOCATION
-  if (g_aclist != NULL) {
-    free(g_aclist);
-  }
+  free(g_aclist);
+  g_aclist = NULL;
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  memset(g_aclist, 0, sizeof(g_aclist));
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 

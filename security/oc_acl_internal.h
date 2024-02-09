@@ -36,6 +36,20 @@ extern "C" {
 #define OC_ACE_WC_ALL_PUBLIC_STR "-"
 
 void oc_sec_acl_init(void);
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+/**
+ * @brief increase existing memory for acl for all Devices
+ * by the size of `oc_sec_acl_t`
+ *
+ * @param device_index index of `g_oc_device_info[]` where new Device is
+ *            stored
+ * @param needs_realloc indicates whether reallocation of memory for SVR is
+ *            needed or not
+ */
+void oc_sec_acl_init_at_index(size_t device_index, bool needs_realloc);
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
+
 void oc_sec_acl_free(void);
 void oc_sec_acl_default(size_t device);
 bool oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,

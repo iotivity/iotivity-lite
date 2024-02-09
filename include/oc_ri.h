@@ -619,7 +619,6 @@ bool oc_ri_on_delete_resource_add_callback(oc_ri_delete_resource_cb_t cb)
 OC_API
 bool oc_ri_on_delete_resource_remove_callback(oc_ri_delete_resource_cb_t cb)
   OC_NONNULL();
-
 #endif /* OC_SERVER */
 
 /**

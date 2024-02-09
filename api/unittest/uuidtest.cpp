@@ -30,7 +30,7 @@ constexpr const char UUID2[] = "XYZabcdefghijklmnopqrstuvwxyz012";
 
 using uuid_buffer_t = std::array<char, OC_UUID_LEN>;
 
-TEST(UUID, UUIDIsNill)
+TEST(UUID, IsEmptyTest_P)
 {
   oc_uuid_t uuid{};
   EXPECT_TRUE(oc_uuid_is_empty(uuid));

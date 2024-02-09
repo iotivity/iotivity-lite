@@ -55,6 +55,20 @@ void oc_core_shutdown(void);
  */
 oc_device_info_t *oc_core_add_new_device(oc_add_new_device_t cfg);
 
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+/**
+ * @brief Add a new device or update an existing device at the position
+ * designated by `index` of Device array (g_oc_device_info)
+ *
+ * @param cfg device configuration
+ * @param index index of `g_oc_device_info[]`
+ * @return oc_device_info_t* the device information
+ */
+oc_device_info_t *oc_core_add_or_update_device_at_index(oc_add_new_device_t cfg,
+                                                        size_t index);
+
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
+
 /**
  * @brief encode the interfaces with the cbor (payload) encoder
  *
