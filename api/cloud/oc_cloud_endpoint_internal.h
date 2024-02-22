@@ -131,13 +131,22 @@ bool oc_cloud_endpoint_remove_by_uri(oc_cloud_endpoints_t *ce,
  * @brief Select a cloud server endpoint from the list of endpoints
  *
  * @param ce cloud endpoints (cannot be NULL)
- * @param uri cloud endpoint URI to select
+ * @param selected cloud endpoint to select (cannot be NULL, must be in the list
+ * of endpoints)
  *
  * @return true if the endpoint was selected
- * @return false if the endpoint was not found (the previous selection remains)
+ * @return false if the endpoint was not found in the list of endpoints (the
+ * previous selection remains)
  */
+bool oc_cloud_endpoint_select(oc_cloud_endpoints_t *ce,
+                              const oc_cloud_endpoint_t *selected) OC_NONNULL();
+
+/** Select a cloud server endpoint by URI from the list of endpoints */
 bool oc_cloud_endpoint_select_by_uri(oc_cloud_endpoints_t *ce,
                                      oc_string_view_t uri) OC_NONNULL();
+
+/** Select the next cloud server endpoint from the list of endpoints */
+void oc_cloud_endpoint_select_next(oc_cloud_endpoints_t *ce) OC_NONNULL();
 
 /** Check if a cloud server endpoint matching the given URI is selected */
 bool oc_cloud_endpoint_is_selected(const oc_cloud_endpoints_t *ce,

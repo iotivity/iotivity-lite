@@ -55,7 +55,7 @@ struct CloudResourceData
   static std::vector<CloudEndpointData> decodeArray(const oc_rep_t *servers)
   {
     std::vector<CloudEndpointData> result{};
-    for (const oc_rep_t *server = servers; server != NULL;
+    for (const oc_rep_t *server = servers; server != nullptr;
          server = server->next) {
       const oc_rep_t *rep = oc_rep_get(server->value.object, OC_REP_STRING,
                                        "uri", OC_CHAR_ARRAY_LEN("uri"));
@@ -264,7 +264,7 @@ TEST_F(TestCloudResourceWithServer, GetRequest_NoCloudServers)
   EXPECT_EQ(0, crd.clec);
 
   // restore default store
-  oc_cloud_store_initialize(&ctx->store);
+  oc_cloud_store_initialize(&ctx->store, nullptr, nullptr);
 }
 
 template<typename Fn, oc_status_t CODE = OC_STATUS_BAD_REQUEST>

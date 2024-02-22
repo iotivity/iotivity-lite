@@ -744,6 +744,7 @@ TEST_F(TestCloud, EndpointAPI)
   // remove default
   oc_cloud_endpoints_clear(&ctx->store.ci_servers);
   // no enpoint selected -> both cis and sid should be nullptr
+  EXPECT_EQ(nullptr, oc_cloud_selected_server(ctx));
   EXPECT_EQ(nullptr, oc_cloud_get_cis(ctx));
   EXPECT_EQ(nullptr, oc_cloud_get_sid(ctx));
 
@@ -770,6 +771,7 @@ TEST_F(TestCloud, EndpointAPI)
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   // first item added to empty list should be selected
+  EXPECT_EQ(ep1, oc_cloud_selected_server(ctx));
   EXPECT_STREQ(uri1.c_str(), oc_cloud_get_cis(ctx));
   EXPECT_TRUE(oc_uuid_is_equal(uid1, *oc_cloud_get_sid(ctx)));
 
@@ -777,6 +779,7 @@ TEST_F(TestCloud, EndpointAPI)
   ASSERT_TRUE(oc_cloud_remove_server(ctx, ep1));
 
   // next endpoint should be selected
+  EXPECT_EQ(ep2, oc_cloud_selected_server(ctx));
   EXPECT_STREQ(uri2.c_str(), oc_cloud_get_cis(ctx));
   EXPECT_TRUE(oc_uuid_is_equal(uid2, *oc_cloud_get_sid(ctx)));
 
@@ -817,9 +820,11 @@ TEST_F(TestCloud, EndpointAPI)
   ASSERT_NE(nullptr, toSelect);
   EXPECT_TRUE(oc_cloud_select_server(ctx, toSelect));
 #ifdef OC_DYNAMIC_ALLOCATION
+  EXPECT_EQ(ep3, oc_cloud_selected_server(ctx));
   EXPECT_STREQ(uri3.c_str(), oc_cloud_get_cis(ctx));
   EXPECT_TRUE(oc_uuid_is_equal(uid3, *oc_cloud_get_sid(ctx)));
 #else  /* !OC_DYNAMIC_ALLOCATION */
+  EXPECT_EQ(ep2, oc_cloud_selected_server(ctx));
   EXPECT_STREQ(uri2.c_str(), oc_cloud_get_cis(ctx));
   EXPECT_TRUE(oc_uuid_is_equal(uid2, *oc_cloud_get_sid(ctx)));
 #endif /* OC_DYNAMIC_ALLOCATION */

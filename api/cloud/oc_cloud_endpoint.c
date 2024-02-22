@@ -34,8 +34,8 @@ cloud_endpoint_uri_is_valid(oc_string_view_t uri)
 }
 
 static void
-cloud_endpoints_set_selected(oc_cloud_endpoints_t *ce,
-                             const oc_cloud_endpoint_t *selected)
+cloud_endpoint_select(oc_cloud_endpoints_t *ce,
+                      const oc_cloud_endpoint_t *selected)
 {
   if (ce->selected == selected) {
     return;
@@ -44,6 +44,17 @@ cloud_endpoints_set_selected(oc_cloud_endpoints_t *ce,
   if (ce->on_selected_change != NULL) {
     ce->on_selected_change(ce->on_selected_change_data);
   }
+}
+
+bool
+oc_cloud_endpoint_select(oc_cloud_endpoints_t *ce,
+                         const oc_cloud_endpoint_t *selected)
+{
+  if (!oc_list_has_item(ce->endpoints, selected)) {
+    return false;
+  }
+  cloud_endpoint_select(ce, selected);
+  return true;
 }
 
 static oc_cloud_endpoint_t *
@@ -68,7 +79,7 @@ cloud_endpoint_item_allocate_and_add(oc_cloud_endpoints_t *ce,
   // automatically select the first endpoint added
   if (ce->selected == NULL) {
     assert(oc_list_length(ce->endpoints) == 0);
-    cloud_endpoints_set_selected(ce, cei);
+    cloud_endpoint_select(ce, cei);
   }
 
   oc_list_add(ce->endpoints, cei);
@@ -182,7 +193,7 @@ oc_cloud_endpoints_clear(oc_cloud_endpoints_t *ce)
     cloud_endpoint_item_free(cei);
     cei = oc_list_pop(ce->endpoints);
   }
-  cloud_endpoints_set_selected(ce, NULL);
+  cloud_endpoint_select(ce, NULL);
 }
 
 typedef struct
@@ -270,8 +281,8 @@ oc_cloud_endpoint_remove(oc_cloud_endpoints_t *ce,
     return false;
   }
   if (ce->selected == ep) {
-    cloud_endpoints_set_selected(
-      ce, cloud_endpoint_item_next(ce, ce->selected, ep_next));
+    cloud_endpoint_select(ce,
+                          cloud_endpoint_item_next(ce, ce->selected, ep_next));
   }
   cloud_endpoint_item_free(found);
   return true;
@@ -294,8 +305,18 @@ oc_cloud_endpoint_select_by_uri(oc_cloud_endpoints_t *ce, oc_string_view_t uri)
   if (found == NULL) {
     return false;
   }
-  cloud_endpoints_set_selected(ce, found);
+  cloud_endpoint_select(ce, found);
   return true;
+}
+
+void
+oc_cloud_endpoint_select_next(oc_cloud_endpoints_t *ce)
+{
+  if (ce->selected == NULL) {
+    return;
+  }
+  cloud_endpoint_select(
+    ce, cloud_endpoint_item_next(ce, ce->selected, ce->selected->next));
 }
 
 bool

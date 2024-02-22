@@ -241,13 +241,6 @@ cloud_store_parse_object_array_property(const oc_rep_t *rep,
   return false;
 }
 
-static void
-cloud_store_on_server_change(void *data)
-{
-  const oc_cloud_store_t *store = (const oc_cloud_store_t *)data;
-  oc_cloud_store_dump_async(store);
-}
-
 static bool
 cloud_store_set_servers(oc_cloud_store_t *store,
                         const oc_string_t *selected_uri,
@@ -262,8 +255,8 @@ cloud_store_set_servers(oc_cloud_store_t *store,
       return false;
     }
   }
-  if (!oc_cloud_endpoints_init(&store->ci_servers, cloud_store_on_server_change,
-                               store, oc_string_view2(selected_uri), uuid)) {
+  if (!oc_cloud_endpoints_reinit(&store->ci_servers,
+                                 oc_string_view2(selected_uri), uuid)) {
     return false;
   }
 
@@ -384,7 +377,7 @@ oc_cloud_store_load(oc_cloud_store_t *store)
   if (oc_storage_data_load(OC_CLOUD_STORE_NAME, store->device,
                            store_decode_cloud, store) <= 0) {
     OC_DBG("failed to load cloud from storage");
-    oc_cloud_store_initialize(store);
+    oc_cloud_store_reinitialize(store);
     return false;
   }
   OC_DBG("cloud loaded from storage");
@@ -392,17 +385,28 @@ oc_cloud_store_load(oc_cloud_store_t *store)
 }
 
 void
-oc_cloud_store_initialize(oc_cloud_store_t *store)
+oc_cloud_store_reinitialize(oc_cloud_store_t *store)
+{
+  oc_cloud_store_initialize(store, store->ci_servers.on_selected_change,
+                            store->ci_servers.on_selected_change_data);
+}
+
+void
+oc_cloud_store_initialize(oc_cloud_store_t *store,
+                          on_selected_change_fn_t on_cloud_server_change,
+                          void *on_cloud_server_change_data)
 {
   oc_cloud_store_deinitialize(store);
-  oc_cloud_endpoints_init(&store->ci_servers, cloud_store_on_server_change,
-                          store, OC_STRING_VIEW(OCF_COAPCLOUDCONF_DEFAULT_CIS),
+  oc_cloud_endpoints_init(&store->ci_servers, on_cloud_server_change,
+                          on_cloud_server_change_data,
+                          OC_STRING_VIEW(OCF_COAPCLOUDCONF_DEFAULT_CIS),
                           OCF_COAPCLOUDCONF_DEFAULT_SID);
 }
 
 void
 oc_cloud_store_deinitialize(oc_cloud_store_t *store)
 {
+  oc_remove_delayed_callback(store, cloud_store_dump_handler);
   oc_cloud_endpoints_deinit(&store->ci_servers);
   oc_set_string(&store->auth_provider, NULL, 0);
   oc_set_string(&store->uid, NULL, 0);
