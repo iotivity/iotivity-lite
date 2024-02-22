@@ -54,7 +54,12 @@ typedef struct oc_cloud_store_t
 } oc_cloud_store_t;
 
 /** @brief Set store data to default values */
-void oc_cloud_store_initialize(oc_cloud_store_t *store) OC_NONNULL();
+void oc_cloud_store_initialize(oc_cloud_store_t *store,
+                               on_selected_change_fn_t on_cloud_server_change,
+                               void *on_cloud_server_change_dat) OC_NONNULL(1);
+
+/** @brief Reinitialize store data */
+void oc_cloud_store_reinitialize(oc_cloud_store_t *store) OC_NONNULL();
 
 /** @brief Deallocate allocated data */
 void oc_cloud_store_deinitialize(oc_cloud_store_t *store) OC_NONNULL();

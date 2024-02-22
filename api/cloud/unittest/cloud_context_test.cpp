@@ -48,7 +48,7 @@ TEST_F(TestCloudContext, GetCisAndSid)
 {
   oc_cloud_context_t ctx{};
 
-  oc_cloud_store_initialize(&ctx.store);
+  oc_cloud_store_initialize(&ctx.store, nullptr, nullptr);
   auto cis = OC_STRING_VIEW("cis");
   oc_uuid_t sid;
   oc_gen_uuid(&sid);

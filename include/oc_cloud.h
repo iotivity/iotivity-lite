@@ -495,14 +495,20 @@ oc_cloud_endpoint_t *oc_cloud_add_server(oc_cloud_context_t *ctx,
  * @param ctx cloud context (cannot be NULL)
  * @param ce cloud endpoint to remove
  *
+ * @return true if the endpoint address was removed from the list of cloud
+ * servers
+ * @return false on failure
+ *
  * @note The servers are stored in a list. If the selected server is removed,
  * then next server in the list will be selected. If the selected server is the
  * last item in the list, then the first server in the list will be selected (if
  * it exists).
  *
- * @return true if the endpoint address was removed from the list of cloud
- * servers
- * @return false on failure
+ * @note The server is cached by the cloud, so if you remove the selected server
+ * during cloud provisioning then it might be necessary to restart the cloud
+ * manager for the change to take effect.
+ *
+ * @see oc_cloud_manager_restart
  */
 OC_API
 bool oc_cloud_remove_server(oc_cloud_context_t *ctx,
@@ -563,13 +569,29 @@ void oc_cloud_iterate_servers(const oc_cloud_context_t *ctx,
  * @note The address of the selected server will be returned as the cis value
  * and the identity of the selected server will be returned as the sid value.
  *
+ * @note The server is cached by the cloud, so if you the selected server during
+ * cloud provisioning then it might be necessary to restart the cloud manager
+ * for the change to take effect.
+ *
  * @see oc_cloud_remove_server
  * @see oc_cloud_get_cis
  * @see oc_cloud_get_sid
+ * @see oc_cloud_manager_restart
  */
 OC_API
 bool oc_cloud_select_server(oc_cloud_context_t *ctx,
                             const oc_cloud_endpoint_t *server) OC_NONNULL();
+
+/**
+ * @brief Get the selected cloud server.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @return oc_cloud_endpoint_t* pointer to the selected cloud server
+ * @return NULL if no cloud server is selected
+ */
+OC_API
+const oc_cloud_endpoint_t *oc_cloud_selected_server(
+  const oc_cloud_context_t *ctx) OC_NONNULL();
 
 /** @} */ // end of cloud_servers
 

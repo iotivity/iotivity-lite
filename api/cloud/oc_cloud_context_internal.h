@@ -19,6 +19,7 @@
 #ifndef OC_CLOUD_CONTEXT_INTERNAL_H
 #define OC_CLOUD_CONTEXT_INTERNAL_H
 
+#include "api/cloud/oc_cloud_endpoint_internal.h"
 #include "api/cloud/oc_cloud_store_internal.h"
 #include "oc_cloud.h"
 #include "util/oc_compiler.h"
@@ -59,6 +60,15 @@ typedef struct oc_cloud_schedule_action_t
   uint16_t timeout; /**< Timeout for the action in seconds. */
 } oc_cloud_schedule_action_t;
 
+typedef struct
+{
+  uint8_t count;
+  uint8_t refresh_token_count;
+} oc_cloud_retry_t;
+
+/** Reset the retry counters */
+void cloud_retry_reset(oc_cloud_retry_t *retry) OC_NONNULL(1);
+
 struct oc_cloud_context_t
 {
   struct oc_cloud_context_t *next;
@@ -66,6 +76,8 @@ struct oc_cloud_context_t
   size_t device;
   oc_cloud_on_status_change_cb_t on_status_change;
   oc_cloud_store_t store;
+
+  oc_cloud_retry_t retry; /**< Retry configuration */
 
   oc_cloud_keepalive_t keepalive; /**< Keepalive configuration */
   oc_cloud_schedule_action_t
@@ -85,9 +97,6 @@ struct oc_cloud_context_t
   uint32_t time_to_live; /**< Time to live of published resources in seconds */
 
   bool cloud_manager; /**< cloud manager has been started */
-
-  uint8_t retry_count;
-  uint8_t retry_refresh_token_count;
 };
 
 /**

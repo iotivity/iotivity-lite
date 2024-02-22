@@ -40,6 +40,13 @@
 OC_LIST(g_cloud_context_list);
 OC_MEMB(g_cloud_context_pool, oc_cloud_context_t, OC_MAX_NUM_DEVICES);
 
+void
+cloud_retry_reset(oc_cloud_retry_t *retry)
+{
+  retry->count = 0;
+  retry->refresh_token_count = 0;
+}
+
 static bool
 need_to_reinitialize_cloud_storage(const oc_cloud_context_t *ctx)
 {
@@ -53,13 +60,20 @@ need_to_reinitialize_cloud_storage(const oc_cloud_context_t *ctx)
 }
 
 static void
+cloud_on_server_change(void *data)
+{
+  const oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  oc_cloud_store_dump_async(&ctx->store);
+}
+
+static void
 reinitialize_cloud_storage(oc_cloud_context_t *ctx)
 {
   if (!need_to_reinitialize_cloud_storage(ctx)) {
     return;
   }
   OC_CLOUD_DBG("reinitializing cloud context in storage");
-  oc_cloud_store_initialize(&ctx->store);
+  oc_cloud_store_initialize(&ctx->store, cloud_on_server_change, ctx);
   if (oc_cloud_store_dump(&ctx->store) < 0) {
     OC_CLOUD_ERR("failed to dump cloud store");
   }
@@ -185,7 +199,7 @@ oc_cloud_context_clear(oc_cloud_context_t *ctx, bool dump_async)
   ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
   cloud_manager_stop(ctx);
   oc_cloud_deregister_stop(ctx);
-  oc_cloud_store_initialize(&ctx->store);
+  oc_cloud_store_reinitialize(&ctx->store);
   ctx->last_error = 0;
   ctx->store.cps = 0;
   ctx->selected_identity_cred_id = -1;
@@ -283,11 +297,13 @@ bool
 oc_cloud_select_server(oc_cloud_context_t *ctx,
                        const oc_cloud_endpoint_t *server)
 {
-  if (!oc_list_has_item(ctx->store.ci_servers.endpoints, server)) {
-    return false;
-  }
-  ctx->store.ci_servers.selected = server;
-  return true;
+  return oc_cloud_endpoint_select(&ctx->store.ci_servers, server);
+}
+
+const oc_cloud_endpoint_t *
+oc_cloud_selected_server(const oc_cloud_context_t *ctx)
+{
+  return ctx->store.ci_servers.selected;
 }
 
 #endif /* OC_CLOUD */

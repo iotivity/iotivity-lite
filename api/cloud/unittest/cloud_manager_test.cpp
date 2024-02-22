@@ -31,6 +31,7 @@
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
 
+#include <array>
 #include <gtest/gtest.h>
 #include <optional>
 #include <string>
@@ -40,6 +41,8 @@ using namespace std::chrono_literals;
 
 #ifndef OC_SECURITY
 
+// cannot use lower value than 1s because oc_cloud_schedule_action_t::timeout is
+// in seconds
 static constexpr auto kTimeout = 1s;
 
 class TestCloudManager : public testing::Test {
@@ -52,14 +55,22 @@ public:
 
   void SetUp() override
   {
+    std::array<uint16_t, 2> timeouts = {
+      std::chrono::duration_cast<std::chrono::milliseconds>(kTimeout).count(),
+      // make the second timeout longer, so we can interrupt the retry
+      std::chrono::duration_cast<std::chrono::milliseconds>(5s).count(),
+    };
+    oc_cloud_manager_set_retry_timeouts(timeouts.data(), timeouts.size());
+
     memset(&m_context, 0, sizeof(m_context));
     m_context.cloud_ep = oc_new_endpoint();
     memset(m_context.cloud_ep, 0, sizeof(oc_endpoint_t));
-    oc_cloud_store_initialize(&m_context.store);
+    oc_cloud_store_initialize(&m_context.store, nullptr, nullptr);
     oc_string_view_t ep = OC_STRING_VIEW("coap://224.0.1.187:5683");
     oc_uuid_t sid;
     oc_gen_uuid(&sid);
-    ASSERT_TRUE(oc_cloud_endpoint_add(&m_context.store.ci_servers, ep, sid));
+    ASSERT_NE(nullptr,
+              oc_cloud_endpoint_add(&m_context.store.ci_servers, ep, sid));
     ASSERT_TRUE(
       oc_cloud_endpoint_select_by_uri(&m_context.store.ci_servers, ep));
     std::string uid = "501";
@@ -73,6 +84,8 @@ public:
 
   void TearDown() override
   {
+    oc_cloud_manager_set_retry_timeouts(nullptr, 0);
+
     oc_free_endpoint(m_context.cloud_ep);
     oc_cloud_store_deinitialize(&m_context.store);
     oc::TestDevice::Reset();
@@ -108,8 +121,8 @@ TEST_F(TestCloudManager, cloud_manager_start_initialized_schedule_turnoff)
   cloud_manager_stop(&m_context);
 
   // Then
-  EXPECT_EQ(0, m_context.retry_count);
-  EXPECT_EQ(0, m_context.retry_refresh_token_count);
+  EXPECT_EQ(0, m_context.retry.count);
+  EXPECT_EQ(0, m_context.retry.refresh_token_count);
   EXPECT_EQ(CLOUD_ERROR_CONNECT, m_context.last_error);
   EXPECT_EQ(OC_CLOUD_INITIALIZED, m_context.store.status);
 
@@ -145,8 +158,8 @@ TEST_F(TestCloudManager,
   cloud_manager_stop(&m_context);
 
   // Then
-  EXPECT_EQ(1, m_context.retry_count);
-  EXPECT_EQ(0, m_context.retry_refresh_token_count);
+  EXPECT_EQ(1, m_context.retry.count);
+  EXPECT_EQ(0, m_context.retry.refresh_token_count);
   EXPECT_EQ(CLOUD_ERROR_CONNECT, m_context.last_error);
   EXPECT_EQ(OC_CLOUD_INITIALIZED, m_context.store.status);
 
@@ -179,8 +192,8 @@ TEST_F(TestCloudManager, cloud_manager_start_initialized_without_retry_f)
   cloud_manager_stop(&m_context);
 
   // Then
-  EXPECT_LT(0, m_context.retry_count);
-  EXPECT_EQ(0, m_context.retry_refresh_token_count);
+  EXPECT_LT(0, m_context.retry.count);
+  EXPECT_EQ(0, m_context.retry.refresh_token_count);
   EXPECT_EQ(CLOUD_ERROR_CONNECT, m_context.last_error);
   EXPECT_EQ(OC_CLOUD_INITIALIZED, m_context.store.status);
 
@@ -193,15 +206,15 @@ TEST_F(TestCloudManager, cloud_manager_start_initialized_f)
   m_context.store.status = OC_CLOUD_INITIALIZED;
   m_context.store.cps = OC_CPS_READYTOREGISTER;
   cloud_manager_start(&m_context);
-  // by default: first retry should happen after 2 seconds + jitter
+  // by default: first retry should happen timeout + jitter
   // ([timeout/2..timeout])  (see default_schedule_action)
-  oc::TestDevice::PoolEventsMsV1(/*timeout*/ 2s + /*max possible jitter*/ 2s,
-                                 true);
+  oc::TestDevice::PoolEventsMsV1(
+    /*timeout*/ kTimeout + /*max possible jitter*/ kTimeout, true);
   cloud_manager_stop(&m_context);
 
   // Then
-  EXPECT_LT(0, m_context.retry_count);
-  EXPECT_EQ(0, m_context.retry_refresh_token_count);
+  EXPECT_LT(0, m_context.retry.count);
+  EXPECT_EQ(0, m_context.retry.refresh_token_count);
   EXPECT_EQ(CLOUD_OK, m_context.last_error);
   EXPECT_EQ(OC_CLOUD_INITIALIZED, m_context.store.status);
 }
@@ -232,8 +245,8 @@ TEST_F(TestCloudManager, cloud_manager_start_registered_without_retry_and_uid_f)
   cloud_manager_stop(&m_context);
 
   // Then
-  EXPECT_LT(0, m_context.retry_count);
-  EXPECT_EQ(0, m_context.retry_refresh_token_count);
+  EXPECT_LT(0, m_context.retry.count);
+  EXPECT_EQ(0, m_context.retry.refresh_token_count);
   EXPECT_EQ(CLOUD_ERROR_CONNECT, m_context.last_error);
   EXPECT_EQ(OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED | OC_CLOUD_FAILURE,
             m_context.store.status);
@@ -247,15 +260,15 @@ TEST_F(TestCloudManager, cloud_manager_start_registered_f)
   m_context.store.status = OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED;
   m_context.store.expires_in = -1;
   cloud_manager_start(&m_context);
-  // by default: first retry should happen after 2 seconds + jitter
+  // by default: first retry should happen timeout + jitter
   // ([timeout/2..timeout])  (see default_schedule_action)
-  oc::TestDevice::PoolEventsMsV1(/*timeout*/ 2s + /*max possible jitter*/ 2s,
-                                 true);
+  oc::TestDevice::PoolEventsMsV1(
+    /*timeout*/ kTimeout + /*max possible jitter*/ kTimeout, true);
   cloud_manager_stop(&m_context);
 
   // Then
-  EXPECT_LT(0, m_context.retry_count);
-  EXPECT_EQ(0, m_context.retry_refresh_token_count);
+  EXPECT_LT(0, m_context.retry.count);
+  EXPECT_EQ(0, m_context.retry.refresh_token_count);
   EXPECT_EQ(CLOUD_OK, m_context.last_error);
   EXPECT_EQ(OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED, m_context.store.status);
 }
@@ -286,8 +299,8 @@ TEST_F(TestCloudManager,
   cloud_manager_stop(&m_context);
 
   // Then
-  EXPECT_EQ(0, m_context.retry_count);
-  EXPECT_LT(0, m_context.retry_refresh_token_count);
+  EXPECT_EQ(0, m_context.retry.count);
+  EXPECT_LT(0, m_context.retry.refresh_token_count);
   EXPECT_EQ(CLOUD_ERROR_REFRESH_ACCESS_TOKEN, m_context.last_error);
   EXPECT_EQ(OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED | OC_CLOUD_FAILURE,
             m_context.store.status);
@@ -300,17 +313,45 @@ TEST_F(TestCloudManager, cloud_manager_start_with_refresh_token_f)
   // When
   m_context.store.status = OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED;
   cloud_manager_start(&m_context);
-  // by default: first retry should happen after 2 seconds + jitter
+  // by default: first retry should happen timeout + jitter
   // ([timeout/2..timeout])  (see default_schedule_action)
-  oc::TestDevice::PoolEventsMsV1(/*timeout*/ 2s + /*max possible jitter*/ 2s,
-                                 true);
+  oc::TestDevice::PoolEventsMsV1(
+    /*timeout*/ kTimeout + /*max possible jitter*/ kTimeout, true);
   cloud_manager_stop(&m_context);
 
   // Then
-  EXPECT_EQ(0, m_context.retry_count);
-  EXPECT_LT(0, m_context.retry_refresh_token_count);
+  EXPECT_EQ(0, m_context.retry.count);
+  EXPECT_LT(0, m_context.retry.refresh_token_count);
   EXPECT_EQ(CLOUD_OK, m_context.last_error);
   EXPECT_EQ(OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED, m_context.store.status);
+}
+
+TEST_F(TestCloudManager, cloud_manager_select_next_server_on_retry)
+{
+  // single try -> the cloud server endpoint should be changed after each try
+  uint16_t timeout =
+    std::chrono::duration_cast<std::chrono::milliseconds>(kTimeout).count();
+  oc_cloud_manager_set_retry_timeouts(&timeout, 1);
+
+  oc_string_view_t uri = OC_STRING_VIEW("coap://13.3.7.187:5683");
+  oc_uuid_t sid;
+  oc_gen_uuid(&sid);
+  auto *ep = oc_cloud_endpoint_add(&m_context.store.ci_servers, uri, sid);
+  ASSERT_NE(nullptr, ep);
+  ASSERT_FALSE(oc_cloud_endpoint_is_selected(&m_context.store.ci_servers, uri));
+
+  // When
+  m_context.store.status = OC_CLOUD_INITIALIZED;
+  m_context.store.cps = OC_CPS_READYTOREGISTER;
+  cloud_manager_start(&m_context);
+  // by default: first retry should happen timeout + jitter
+  // ([timeout/2..timeout])  (see default_schedule_action)
+  oc::TestDevice::PoolEventsMsV1(
+    /*timeout*/ kTimeout + /*max possible jitter*/ kTimeout, true);
+  cloud_manager_stop(&m_context);
+
+  // Then
+  EXPECT_TRUE(oc_cloud_endpoint_is_selected(&m_context.store.ci_servers, uri));
 }
 
 #endif /* !OC_SECURITY */

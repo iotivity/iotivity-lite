@@ -59,7 +59,29 @@ static oc_event_callback_retval_t cloud_manager_login_async(void *data);
 static oc_event_callback_retval_t cloud_manager_refresh_token_async(void *data);
 static oc_event_callback_retval_t cloud_manager_send_ping_async(void *data);
 
-static uint8_t g_retry_timeout[] = { 2, 4, 8, 16, 32, 64 };
+#define OC_CLOUD_DEFAULT_RETRY_TIMEOUTS                                        \
+  {                                                                            \
+    2 * MILLISECONDS_PER_SECOND, 4 * MILLISECONDS_PER_SECOND,                  \
+      8 * MILLISECONDS_PER_SECOND, 16 * MILLISECONDS_PER_SECOND,               \
+      32 * MILLISECONDS_PER_SECOND, 64 * MILLISECONDS_PER_SECOND               \
+  }
+
+static uint16_t g_retry_timeout_ms[] = OC_CLOUD_DEFAULT_RETRY_TIMEOUTS;
+
+void
+oc_cloud_manager_set_retry_timeouts(const uint16_t *timeouts, size_t size)
+{
+  if (timeouts == NULL) {
+    uint16_t def[] = OC_CLOUD_DEFAULT_RETRY_TIMEOUTS;
+    memcpy(g_retry_timeout_ms, def, sizeof(g_retry_timeout_ms));
+    return;
+  }
+
+  assert(size > 0);
+  assert(size <= OC_ARRAY_SIZE(g_retry_timeout_ms));
+  memset(g_retry_timeout_ms, 0, sizeof(g_retry_timeout_ms));
+  memcpy(g_retry_timeout_ms, timeouts, size * sizeof(uint16_t));
+}
 
 static oc_event_callback_retval_t
 cloud_manager_callback_handler_async(void *data)
@@ -101,16 +123,26 @@ cloud_manager_reconnect_async(void *data)
 }
 
 static bool
-OC_NONNULL() default_schedule_action(uint8_t retry_count, uint64_t *delay,
-                                     uint16_t *timeout)
+cloud_retry_is_over(uint8_t retry_count)
 {
-  if (retry_count >= OC_ARRAY_SIZE(g_retry_timeout)) {
+  return retry_count >= OC_ARRAY_SIZE(g_retry_timeout_ms) ||
+         g_retry_timeout_ms[retry_count] == 0;
+}
+
+static bool
+OC_NONNULL()
+  default_schedule_action(oc_cloud_context_t *ctx, uint8_t retry_count,
+                          uint64_t *delay, uint16_t *timeout)
+{
+  if (cloud_retry_is_over(retry_count)) {
+    // we have made all attempts, try to select next server
+    OC_CLOUD_DBG("retry loop over, selecting next server");
+    oc_cloud_endpoint_select_next(&ctx->store.ci_servers);
     return false;
   }
-  *timeout = g_retry_timeout[retry_count];
+  *timeout = (g_retry_timeout_ms[retry_count] / MILLISECONDS_PER_SECOND);
   // for delay use timeout/2 value + random [0, timeout/2]
-  *delay =
-    (uint64_t)(g_retry_timeout[retry_count]) * MILLISECONDS_PER_SECOND / 2;
+  *delay = (uint64_t)(g_retry_timeout_ms[retry_count]) / 2;
   // Include a random delay to prevent multiple devices from attempting to
   // connect or make requests simultaneously.
   *delay += oc_random_value() % *delay;
@@ -127,7 +159,7 @@ on_action_response_set_retry(oc_cloud_context_t *ctx, oc_cloud_action_t action,
       action, retry_count, delay, &ctx->schedule_action.timeout,
       ctx->schedule_action.user_data);
   } else {
-    ok = default_schedule_action(retry_count, delay,
+    ok = default_schedule_action(ctx, retry_count, delay,
                                  &ctx->schedule_action.timeout);
   }
   if (!ok) {
@@ -152,15 +184,15 @@ cloud_schedule_action(oc_cloud_context_t *ctx, oc_cloud_action_t action,
 
   if (action == OC_CLOUD_ACTION_REFRESH_TOKEN) {
     if (is_retry) {
-      count = ++ctx->retry_refresh_token_count;
+      count = ++ctx->retry.refresh_token_count;
     } else {
-      ctx->retry_refresh_token_count = 0;
+      ctx->retry.refresh_token_count = 0;
     }
   } else {
     if (is_retry) {
-      count = ++ctx->retry_count;
+      count = ++ctx->retry.count;
     } else {
-      ctx->retry_count = 0;
+      ctx->retry.count = 0;
     }
   }
   if (!on_action_response_set_retry(ctx, action, count, &interval)) {
@@ -187,8 +219,7 @@ cloud_schedule_first_attempt(oc_cloud_context_t *ctx, oc_cloud_action_t action,
 static void
 cloud_start_process(oc_cloud_context_t *ctx)
 {
-  ctx->retry_count = 0;
-  ctx->retry_refresh_token_count = 0;
+  cloud_retry_reset(&ctx->retry);
 #ifdef OC_SECURITY
   const oc_sec_pstat_t *pstat = oc_sec_get_pstat(ctx->device);
   if (pstat->s != OC_DOS_RFNOP && pstat->s != OC_DOS_RFPRO) {
@@ -392,7 +423,7 @@ _register_handler(oc_cloud_context_t *ctx, const oc_client_response_t *data,
   }
 
   oc_cloud_store_dump_async(&ctx->store);
-  ctx->retry_count = 0;
+  cloud_retry_reset(&ctx->retry);
   ctx->store.status |= OC_CLOUD_REGISTERED;
   OC_CLOUD_INFO("Registration succeeded");
   *cps = OC_CPS_REGISTERED;
@@ -467,7 +498,7 @@ cloud_manager_register_async(void *data)
     return OC_EVENT_DONE;
   }
 
-  OC_CLOUD_DBG("try register(%d)", ctx->retry_count);
+  OC_CLOUD_DBG("try register(%d)", ctx->retry.count);
   oc_cloud_access_conf_t conf;
   if (!oc_cloud_set_access_conf(ctx, cloud_manager_register_handler, ctx,
                                 ctx->schedule_action.timeout, &conf)) {
@@ -545,7 +576,7 @@ _login_handler(oc_cloud_context_t *ctx, const oc_client_response_t *data,
   }
   oc_cloud_store_dump_async(&ctx->store);
 
-  ctx->retry_count = 0;
+  cloud_retry_reset(&ctx->retry);
   ctx->store.status |= OC_CLOUD_LOGGED_IN;
   OC_CLOUD_INFO("Login succeeded");
   *cps = cps_ok;
@@ -586,7 +617,7 @@ on_keepalive_response_default(oc_cloud_context_t *ctx, bool response_received,
 {
   if (response_received) {
     *next_ping = 20UL * MILLISECONDS_PER_SECOND;
-    ctx->retry_count = 0;
+    ctx->retry.count = 0;
   } else {
     *next_ping = 4UL * MILLISECONDS_PER_SECOND;
     uint64_t keepalive_ping_timeout_ms =
@@ -595,9 +626,9 @@ on_keepalive_response_default(oc_cloud_context_t *ctx, bool response_received,
     if (keepalive_ping_timeout_ms >= (*next_ping + MILLISECONDS_PER_SECOND)) {
       *next_ping = (keepalive_ping_timeout_ms - *next_ping);
     }
-    ++ctx->retry_count;
+    ++ctx->retry.count;
   }
-  return ctx->retry_count < OC_ARRAY_SIZE(g_retry_timeout);
+  return !cloud_retry_is_over(ctx->retry.count);
 }
 
 static bool
@@ -693,7 +724,7 @@ cloud_manager_login_async(void *data)
     return OC_EVENT_DONE;
   }
 
-  OC_CLOUD_DBG("try login(%d)", ctx->retry_count);
+  OC_CLOUD_DBG("try login(%d)", ctx->retry.count);
   oc_cloud_access_conf_t conf;
   if (!oc_cloud_set_access_conf(ctx, cloud_manager_login_handler, ctx,
                                 ctx->schedule_action.timeout, &conf)) {
@@ -805,8 +836,7 @@ _refresh_token_handler(oc_cloud_context_t *ctx,
 
   oc_cloud_store_dump_async(&ctx->store);
 
-  ctx->retry_count = 0;
-  ctx->retry_refresh_token_count = 0;
+  cloud_retry_reset(&ctx->retry);
   ctx->store.status |= OC_CLOUD_REFRESHED_TOKEN;
   OC_CLOUD_INFO("Refreshing of access token succeeded");
 
@@ -918,7 +948,7 @@ cloud_manager_refresh_token_async(void *data)
   }
   oc_remove_delayed_callback(ctx, cloud_manager_send_ping_async);
 
-  OC_CLOUD_DBG("try refresh token(%d)", ctx->retry_refresh_token_count);
+  OC_CLOUD_DBG("try refresh token(%d)", ctx->retry.refresh_token_count);
   oc_cloud_access_conf_t conf;
   if (!oc_cloud_set_access_conf(ctx, cloud_manager_refresh_token_handler, ctx,
                                 ctx->schedule_action.timeout, &conf)) {

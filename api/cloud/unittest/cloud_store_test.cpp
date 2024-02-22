@@ -123,7 +123,7 @@ public:
   static void validateDefaults(const oc_cloud_store_t *store)
   {
     oc_cloud_store_t def{};
-    oc_cloud_store_initialize(&def);
+    oc_cloud_store_initialize(&def, nullptr, nullptr);
     compareStores(&def, store);
     freeStore(&def);
   }
