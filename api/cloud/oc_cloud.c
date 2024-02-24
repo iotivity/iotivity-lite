@@ -415,6 +415,12 @@ oc_cloud_manager_restart(oc_cloud_context_t *ctx)
   oc_reset_delayed_callback(ctx, restart_manager, 0);
 }
 
+bool
+oc_cloud_manager_is_started(const oc_cloud_context_t *ctx)
+{
+  return ctx->cloud_manager;
+}
+
 int
 oc_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 {

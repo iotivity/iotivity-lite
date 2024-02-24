@@ -132,34 +132,57 @@ oc_cloud_get_context(size_t device)
   return ctx;
 }
 
+void
+oc_cloud_set_on_status_change(oc_cloud_context_t *ctx,
+                              oc_cloud_on_status_change_t status_change)
+{
+  ctx->on_status_change = status_change;
+}
+
+oc_cloud_on_status_change_t
+oc_cloud_get_on_status_change(const oc_cloud_context_t *ctx)
+{
+  return ctx->on_status_change;
+}
+
 size_t
 oc_cloud_get_device(const oc_cloud_context_t *ctx)
 {
   return ctx->device;
 }
 
-const char *
-oc_cloud_get_apn(const oc_cloud_context_t *ctx)
+const oc_string_t *
+oc_cloud_get_authorization_provider_name(const oc_cloud_context_t *ctx)
 {
-  return oc_string(ctx->store.auth_provider);
+  return &ctx->store.auth_provider;
 }
 
-const char *
-oc_cloud_get_at(const oc_cloud_context_t *ctx)
+const oc_string_t *
+oc_cloud_get_access_token(const oc_cloud_context_t *ctx)
 {
-  return oc_string(ctx->store.access_token);
+  return &ctx->store.access_token;
 }
 
-const char *
-oc_cloud_get_cis(const oc_cloud_context_t *ctx)
+const oc_string_t *
+oc_cloud_get_refresh_token(const oc_cloud_context_t *ctx)
 {
-  return oc_string_view2(
-           oc_cloud_endpoint_selected_address(&ctx->store.ci_servers))
-    .data;
+  return &ctx->store.refresh_token;
+}
+
+const oc_string_t *
+oc_cloud_get_user_id(const oc_cloud_context_t *ctx)
+{
+  return &ctx->store.uid;
+}
+
+const oc_string_t *
+oc_cloud_get_server_uri(const oc_cloud_context_t *ctx)
+{
+  return oc_cloud_endpoint_selected_address(&ctx->store.ci_servers);
 }
 
 const oc_uuid_t *
-oc_cloud_get_sid(const oc_cloud_context_t *ctx)
+oc_cloud_get_server_id(const oc_cloud_context_t *ctx)
 {
   if (ctx->store.ci_servers.selected == NULL) {
     return NULL;
@@ -167,10 +190,28 @@ oc_cloud_get_sid(const oc_cloud_context_t *ctx)
   return &ctx->store.ci_servers.selected->id;
 }
 
-const char *
-oc_cloud_get_uid(const oc_cloud_context_t *ctx)
+const oc_endpoint_t *
+oc_cloud_get_server(const oc_cloud_context_t *ctx)
 {
-  return oc_string(ctx->store.uid);
+  return ctx->cloud_ep;
+}
+
+oc_session_state_t
+oc_cloud_get_server_session_state(const oc_cloud_context_t *ctx)
+{
+  return ctx->cloud_ep_state;
+}
+
+uint8_t
+oc_cloud_get_status(const oc_cloud_context_t *ctx)
+{
+  return ctx->store.status;
+}
+
+oc_cps_t
+oc_cloud_get_provisioning_status(const oc_cloud_context_t *ctx)
+{
+  return ctx->store.cps;
 }
 
 void

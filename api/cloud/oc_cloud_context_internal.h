@@ -42,12 +42,6 @@ typedef struct oc_cloud_keepalive_t
   uint16_t ping_timeout; /**< Timeout for keepalive ping in seconds */
 } oc_cloud_keepalive_t;
 
-typedef struct oc_cloud_on_status_change_cb_t
-{
-  oc_cloud_cb_t cb;
-  void *user_data;
-} oc_cloud_on_status_change_cb_t;
-
 /**
  * @brief Cloud retry configuration structure.
  */
@@ -74,7 +68,7 @@ struct oc_cloud_context_t
   struct oc_cloud_context_t *next;
 
   size_t device;
-  oc_cloud_on_status_change_cb_t on_status_change;
+  oc_cloud_on_status_change_t on_status_change;
   oc_cloud_store_t store;
 
   oc_cloud_retry_t retry; /**< Retry configuration */

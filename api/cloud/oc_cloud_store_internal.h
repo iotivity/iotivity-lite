@@ -41,7 +41,7 @@ typedef struct oc_cloud_store_t
   oc_cloud_endpoints_t ci_servers; ///< ([URL, id] pairs of the OCF Cloud.
   oc_string_t auth_provider; ///< The name of the Authorisation Provider through
                              // which access token was obtained.
-  oc_string_t uid;           ///< Unique OCF Cloud User identifier
+  oc_string_t uid; ///< Unique OCF Cloud User identifier; TODO: switch to uuid
   oc_string_t access_token;  ///< Access token which is returned by an
                              ///< Authorisation Provider or OCF Cloud.
   oc_string_t refresh_token; ///< Refresh token used to refresh the access token

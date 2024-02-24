@@ -104,6 +104,11 @@ public:
   }
 };
 
+TEST_F(TestCloudManager, oc_cloud_manager_is_started)
+{
+  EXPECT_FALSE(oc_cloud_manager_is_started(&m_context));
+}
+
 TEST_F(TestCloudManager, cloud_manager_start_initialized_schedule_turnoff)
 {
   // When
