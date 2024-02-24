@@ -30,6 +30,24 @@ public:
   static void TearDownTestCase() { oc_random_destroy(); }
 };
 
+TEST_F(TestCloudContext, OnStatusChange)
+{
+  oc_cloud_context_t ctx{};
+
+  auto onStatusChange = oc_cloud_get_on_status_change(&ctx);
+  EXPECT_EQ(nullptr, onStatusChange.cb);
+  EXPECT_EQ(nullptr, onStatusChange.user_data);
+
+  auto onChangeCb = [](oc_cloud_context_t *, oc_cloud_status_t, void *) {
+    // no-op
+  };
+  oc_cloud_set_on_status_change(&ctx, { onChangeCb, &ctx });
+
+  onStatusChange = oc_cloud_get_on_status_change(&ctx);
+  EXPECT_EQ(onChangeCb, onStatusChange.cb);
+  EXPECT_EQ(&ctx, onStatusChange.user_data);
+}
+
 TEST_F(TestCloudContext, GetDevice)
 {
   oc_cloud_context_t ctx{};
@@ -41,7 +59,45 @@ TEST_F(TestCloudContext, GetApn)
 {
   oc_cloud_context_t ctx{};
   ctx.store.auth_provider = OC_STRING_LOCAL("apn");
-  EXPECT_STREQ("apn", oc_cloud_get_apn(&ctx));
+  EXPECT_STREQ("apn",
+               oc_string(*oc_cloud_get_authorization_provider_name(&ctx)));
+}
+
+TEST_F(TestCloudContext, GetAccessToken)
+{
+  oc_cloud_context_t ctx{};
+  ctx.store.access_token = OC_STRING_LOCAL("access_token");
+  EXPECT_STREQ("access_token", oc_string(*oc_cloud_get_access_token(&ctx)));
+}
+
+TEST_F(TestCloudContext, GetRefreshToken)
+{
+  oc_cloud_context_t ctx{};
+  ctx.store.refresh_token = OC_STRING_LOCAL("refresh_token");
+  EXPECT_STREQ("refresh_token", oc_string(*oc_cloud_get_refresh_token(&ctx)));
+}
+
+TEST_F(TestCloudContext, GetUid)
+{
+  oc_cloud_context_t ctx{};
+  ctx.store.uid = OC_STRING_LOCAL("uid");
+  EXPECT_STREQ("uid", oc_string(*oc_cloud_get_user_id(&ctx)));
+}
+
+TEST_F(TestCloudContext, GetStatus)
+{
+  oc_cloud_context_t ctx{};
+  ctx.store.status =
+    OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED | OC_CLOUD_TOKEN_EXPIRY;
+  EXPECT_EQ(OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED | OC_CLOUD_TOKEN_EXPIRY,
+            oc_cloud_get_status(&ctx));
+}
+
+TEST_F(TestCloudContext, GetProvisioningStatus)
+{
+  oc_cloud_context_t ctx{};
+  ctx.store.cps = OC_CPS_DEREGISTERING;
+  EXPECT_EQ(OC_CPS_DEREGISTERING, oc_cloud_get_provisioning_status(&ctx));
 }
 
 TEST_F(TestCloudContext, GetCisAndSid)
@@ -53,24 +109,24 @@ TEST_F(TestCloudContext, GetCisAndSid)
   oc_uuid_t sid;
   oc_gen_uuid(&sid);
   ASSERT_TRUE(oc_cloud_endpoints_reinit(&ctx.store.ci_servers, cis, sid));
-  EXPECT_STREQ(cis.data, oc_cloud_get_cis(&ctx));
-  EXPECT_TRUE(oc_uuid_is_equal(sid, *oc_cloud_get_sid(&ctx)));
+  const auto *ctx_cis = oc_cloud_get_server_uri(&ctx);
+  ASSERT_NE(nullptr, ctx_cis);
+  EXPECT_STREQ(cis.data, oc_string(*ctx_cis));
+  EXPECT_TRUE(oc_uuid_is_equal(sid, *oc_cloud_get_server_id(&ctx)));
 
   oc_cloud_store_deinitialize(&ctx.store);
 }
 
-TEST_F(TestCloudContext, GetUid)
+TEST_F(TestCloudContext, oc_cloud_get_server)
 {
   oc_cloud_context_t ctx{};
-  ctx.store.uid = OC_STRING_LOCAL("uid");
-  EXPECT_STREQ("uid", oc_cloud_get_uid(&ctx));
-}
+  oc_endpoint_t *ep = oc_new_endpoint();
+  ctx.cloud_ep = ep;
+  ctx.cloud_ep_state = OC_SESSION_CONNECTED;
+  EXPECT_EQ(ep, oc_cloud_get_server(&ctx));
+  EXPECT_EQ(OC_SESSION_CONNECTED, oc_cloud_get_server_session_state(&ctx));
 
-TEST_F(TestCloudContext, GetAccessToken)
-{
-  oc_cloud_context_t ctx{};
-  ctx.store.access_token = OC_STRING_LOCAL("access_token");
-  EXPECT_STREQ("access_token", oc_cloud_get_at(&ctx));
+  oc_free_endpoint(ep);
 }
 
 TEST_F(TestCloudContext, HasAccesToken)

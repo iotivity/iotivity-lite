@@ -235,12 +235,12 @@ cloud_access_login_out(oc_cloud_access_conf_t conf, const char *uid,
     OC_CLOUD_ERR("Could not init POST request for sign in/out");
     return false;
   }
-  char uuid[OC_UUID_LEN] = { 0 };
-  oc_uuid_to_str(oc_core_get_device_id(conf.device), uuid, OC_UUID_LEN);
+  char di[OC_UUID_LEN] = { 0 };
+  oc_uuid_to_str(oc_core_get_device_id(conf.device), di, OC_UUID_LEN);
 
   oc_rep_start_root_object();
   oc_rep_set_text_string(root, uid, uid);
-  oc_rep_set_text_string(root, di, uuid);
+  oc_rep_set_text_string(root, di, di);
   oc_rep_set_text_string(root, accesstoken, access_token);
   oc_rep_set_boolean(root, login, is_sign_in);
   oc_rep_end_root_object();

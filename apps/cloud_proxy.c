@@ -1680,13 +1680,29 @@ cloud_status_handler(oc_cloud_context_t *ctx, oc_cloud_status_t status,
   }
 
   if (ctx != NULL) {
-    const char *at = oc_cloud_get_at(ctx);
+    const char *at = NULL;
+    const oc_string_t *ctx_at = oc_cloud_get_access_token(ctx);
+    if (ctx_at != NULL) {
+      at = oc_string(*ctx_at);
+    }
     OC_PRINTF("   AC   = %s\n", at != NULL ? at : "");
-    const char *ap = oc_cloud_get_apn(ctx);
+    const char *ap = NULL;
+    const oc_string_t *ctx_ap = oc_cloud_get_authorization_provider_name(ctx);
+    if (ctx_ap != NULL) {
+      ap = oc_string(*ctx_ap);
+    }
     OC_PRINTF("   AP   = %s\n", ap != NULL ? ap : "");
-    const char *ci = oc_cloud_get_cis(ctx);
+    const char *ci = NULL;
+    const oc_string_t *ctx_ci = oc_cloud_get_server_uri(ctx);
+    if (ctx_ci != NULL) {
+      ci = oc_string(*ctx_ci);
+    }
     OC_PRINTF("   CI   = %s\n", ci != NULL ? ci : "");
-    const char *uid = oc_cloud_get_uid(ctx);
+    const char *uid = NULL;
+    const oc_string_t *ctx_uid = oc_cloud_get_user_id(ctx);
+    if (ctx_uid != NULL) {
+      uid = oc_string(*ctx_uid);
+    }
     OC_PRINTF("   UUID = %s\n", uid != NULL ? uid : "");
   }
 }

@@ -143,6 +143,31 @@ typedef bool (*oc_cloud_schedule_action_cb_t)(oc_cloud_action_t action,
 OC_API
 oc_cloud_context_t *oc_cloud_get_context(size_t device);
 
+typedef struct
+{
+  oc_cloud_cb_t cb;
+  void *user_data;
+} oc_cloud_on_status_change_t;
+
+/**
+ * @brief Set the callback function invoked on status change.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @param status_change callback function invoked on status change with user
+ * data
+ */
+OC_API
+void oc_cloud_set_on_status_change(oc_cloud_context_t *ctx,
+                                   oc_cloud_on_status_change_t status_change)
+  OC_NONNULL();
+
+/**
+ * @brief Get the callback function invoked on status change.
+ */
+OC_API
+oc_cloud_on_status_change_t oc_cloud_get_on_status_change(
+  const oc_cloud_context_t *ctx) OC_NONNULL();
+
 /**
  * @brief Get device index from cloud context.
  *
@@ -153,9 +178,9 @@ OC_API
 size_t oc_cloud_get_device(const oc_cloud_context_t *ctx) OC_NONNULL();
 
 /**
- * @brief Get authorization provider name.
+ * @brief Get the authorization provider name from cloud context.
  *
- * The name of the Authorisation Provider through which access token was
+ * The name of the Authorization Provider through which access token was
  * obtained.
  *
  * @param ctx cloud context (cannot be NULL)
@@ -164,7 +189,47 @@ size_t oc_cloud_get_device(const oc_cloud_context_t *ctx) OC_NONNULL();
  * @see `apn` property in the cloud configuration resource
  */
 OC_API
-const char *oc_cloud_get_apn(const oc_cloud_context_t *ctx) OC_NONNULL();
+const oc_string_t *oc_cloud_get_authorization_provider_name(
+  const oc_cloud_context_t *ctx) OC_NONNULL();
+
+/**
+ * @brief Get the access token from cloud context.
+ *
+ * Access token is returned by an Authorisation Provider or an OCF Cloud.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @return access token
+ *
+ * @see `at` property in the cloud configuration resource
+ */
+OC_API
+const oc_string_t *oc_cloud_get_access_token(const oc_cloud_context_t *ctx)
+  OC_NONNULL();
+
+/**
+ * @brief Get the refresh token from cloud context.
+ *
+ * Refresh token is used to obtain a new access token when the current access
+ * token expires.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @return refresh token
+ */
+OC_API
+const oc_string_t *oc_cloud_get_refresh_token(const oc_cloud_context_t *ctx)
+  OC_NONNULL();
+
+/**
+ * @brief Get the OCF Cloud User identifier
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @return OCF Cloud User identifier
+ *
+ * @see `uid` property in the cloud configuration resource
+ */
+OC_API
+const oc_string_t *oc_cloud_get_user_id(const oc_cloud_context_t *ctx)
+  OC_NONNULL();
 
 /**
  * @brief Get the URL of the OCF Cloud.
@@ -175,25 +240,11 @@ const char *oc_cloud_get_apn(const oc_cloud_context_t *ctx) OC_NONNULL();
  * @see `cis` property in the cloud configuration resource
  */
 OC_API
-const char *oc_cloud_get_cis(const oc_cloud_context_t *ctx) OC_NONNULL();
-
-/**
- * @brief Get the access token.
- *
- * Access token is returned by an Authorisation Provider or an OCF Cloud.
- *
- * @param ctx cloud context (cannot be NULL)
- * @return access token
- *
- * @see `at` property in the cloud configuration resource
- */
-OC_API
-const char *oc_cloud_get_at(const oc_cloud_context_t *ctx) OC_NONNULL();
+const oc_string_t *oc_cloud_get_server_uri(const oc_cloud_context_t *ctx)
+  OC_NONNULL();
 
 /**
  * @brief Get the identity of the OCF Cloud.
- *
- * The ID is in the string form of a UUID.
  *
  * @param ctx cloud context (cannot be NULL)
  * @return identity of the OCF Cloud
@@ -201,20 +252,56 @@ const char *oc_cloud_get_at(const oc_cloud_context_t *ctx) OC_NONNULL();
  * @see `sid` property in the cloud configuration resource
  */
 OC_API
-const oc_uuid_t *oc_cloud_get_sid(const oc_cloud_context_t *ctx) OC_NONNULL();
+const oc_uuid_t *oc_cloud_get_server_id(const oc_cloud_context_t *ctx)
+  OC_NONNULL();
 
 /**
- * @brief Get the OCF Cloud User identifier
- *
- * The ID is in the string form of a UUID.
+ * @brief Get the active OCF cloud server.
  *
  * @param ctx cloud context (cannot be NULL)
- * @return identity of the OCF Cloud
+ * @return oc_endpoint_t* pointer to the active cloud server
+ * @return NULL if no cloud server is selected, or if the cloud manager has not
+ * been started
  *
- * @see `uid` property in the cloud configuration resource
+ * @see oc_cloud_select_server
+ * @see oc_cloud_get_server_uri
  */
 OC_API
-const char *oc_cloud_get_uid(const oc_cloud_context_t *ctx) OC_NONNULL();
+const oc_endpoint_t *oc_cloud_get_server(const oc_cloud_context_t *ctx)
+  OC_NONNULL();
+
+/**
+ * @brief Get session state of the active cloud server.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @return oc_session_state_t session state of the active cloud server
+ *
+ * @see oc_cloud_get_server
+ */
+OC_API
+oc_session_state_t oc_cloud_get_server_session_state(
+  const oc_cloud_context_t *ctx) OC_NONNULL();
+
+/**
+ * @brief Get current cloud status.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @return mask of oc_cloud_status_t values
+ */
+OC_API
+uint8_t oc_cloud_get_status(const oc_cloud_context_t *ctx) OC_NONNULL();
+
+/**
+ * @brief Get current cloud provisiong status.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @return oc_cps_t current provisioning status
+ *
+ * @see `cps` property in the cloud configuration resource
+ */
+OC_API
+oc_cps_t oc_cloud_get_provisioning_status(const oc_cloud_context_t *ctx)
+  OC_NONNULL();
 
 /**
  * @brief Start cloud registration process.
@@ -228,6 +315,7 @@ const char *oc_cloud_get_uid(const oc_cloud_context_t *ctx) OC_NONNULL();
 OC_API
 int oc_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t cb,
                            void *data);
+
 /**
  * @brief Stop cloud registration process, remove related pending delayed
  * callbacks and clean-up data.
@@ -248,6 +336,16 @@ int oc_cloud_manager_stop(oc_cloud_context_t *ctx);
  */
 OC_API
 void oc_cloud_manager_restart(oc_cloud_context_t *ctx) OC_NONNULL();
+
+/**
+ * @brief Check if the cloud registration process is started.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @return true if cloud registration process is started
+ * @return false otherwise
+ */
+OC_API
+bool oc_cloud_manager_is_started(const oc_cloud_context_t *ctx) OC_NONNULL();
 
 /**
  * @brief Send request to register device to cloud.
@@ -574,8 +672,8 @@ void oc_cloud_iterate_servers(const oc_cloud_context_t *ctx,
  * for the change to take effect.
  *
  * @see oc_cloud_remove_server
- * @see oc_cloud_get_cis
- * @see oc_cloud_get_sid
+ * @see oc_cloud_get_server_uri
+ * @see oc_cloud_get_server_id
  * @see oc_cloud_manager_restart
  */
 OC_API

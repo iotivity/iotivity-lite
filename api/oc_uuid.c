@@ -122,7 +122,7 @@ oc_str_to_uuid(const char *str, oc_uuid_t *uuid)
     return;
   }
   size_t str_len = oc_strnlen(str, OC_UUID_LEN);
-  oc_str_to_uuid_v1(str, str_len, uuid);
+  (void)oc_str_to_uuid_v1(str, str_len, uuid);
 }
 
 int
