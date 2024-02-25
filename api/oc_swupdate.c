@@ -119,28 +119,38 @@ static struct
 static oc_event_callback_retval_t swupdate_update_async(void *data);
 
 static void
-swupdate_init(void)
+swupdate_init(size_t device_count)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  g_sw =
-    (oc_swupdate_t *)calloc(oc_core_get_num_devices(), sizeof(oc_swupdate_t));
+  g_sw = (oc_swupdate_t *)calloc(device_count, sizeof(oc_swupdate_t));
   if (g_sw == NULL) {
     oc_abort("Insufficient memory");
   }
+#else  /* OC_DYNAMIC_ALLOCATION */
+  (void)device_count;
 #endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+static void
+swupdate_item_free(oc_swupdate_t *swu)
+{
+  oc_ri_remove_timed_event_callback(swu, swupdate_update_async);
+  oc_free_string(&swu->purl);
+  oc_free_string(&swu->nv);
+  oc_free_string(&swu->signage);
 }
 
 void
 oc_swupdate_free(void)
 {
   for (size_t i = 0; i < oc_core_get_num_devices(); ++i) {
-    oc_ri_remove_timed_event_callback(&g_sw[i], swupdate_update_async);
-    oc_free_string(&g_sw[i].purl);
-    oc_free_string(&g_sw[i].nv);
-    oc_free_string(&g_sw[i].signage);
+    swupdate_item_free(&g_sw[i]);
   }
 #ifdef OC_DYNAMIC_ALLOCATION
   free(g_sw);
+  g_sw = NULL;
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  memset(g_sw, 0, sizeof(g_sw));
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
@@ -347,11 +357,35 @@ swupdate_create_resource(size_t device)
 void
 oc_swupdate_create(void)
 {
-  swupdate_init();
-  for (size_t i = 0; i < oc_core_get_num_devices(); ++i) {
+  size_t device_count = oc_core_get_num_devices();
+  swupdate_init(device_count);
+  for (size_t i = 0; i < device_count; ++i) {
     swupdate_create_resource(i);
   }
 }
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+
+void
+oc_swupdate_create_at_index(size_t device_index, bool need_realloc)
+{
+  size_t device_count = oc_core_get_num_devices();
+  assert(device_index == device_count - 1);
+  if (need_realloc) {
+    oc_swupdate_t *sw =
+      (oc_swupdate_t *)realloc(g_sw, device_count * sizeof(oc_swupdate_t));
+    if (sw == NULL) {
+      oc_abort("Insufficient memory");
+    }
+    g_sw = sw;
+  } else {
+    swupdate_item_free(&g_sw[device_index]);
+  }
+  memset(&g_sw[device_index], 0, sizeof(oc_swupdate_t));
+  swupdate_create_resource(device_index);
+}
+
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
 
 const char *
 oc_swupdate_action_to_str(oc_swupdate_action_t action)

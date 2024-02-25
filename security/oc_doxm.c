@@ -186,10 +186,10 @@ oc_sec_doxm_free(void)
 {
   oc_ownership_status_free_all_cbs();
 #ifdef OC_DYNAMIC_ALLOCATION
-  if (g_doxm != NULL) {
-    free(g_doxm);
-    g_doxm = NULL;
-  }
+  free(g_doxm);
+  g_doxm = NULL;
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  memset(g_doxm, 0, sizeof(g_doxm));
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
@@ -205,6 +205,26 @@ oc_sec_doxm_init(void)
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_set_select_oxms_cb(NULL, NULL);
 }
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+
+void
+oc_sec_doxm_init_at_index(size_t device_index, bool needs_realloc)
+{
+  if (needs_realloc) {
+    size_t device_count = oc_core_get_num_devices();
+    assert(device_index == device_count - 1);
+    oc_sec_doxm_t *doxm =
+      (oc_sec_doxm_t *)realloc(g_doxm, device_count * sizeof(oc_sec_doxm_t));
+    if (doxm == NULL) {
+      oc_abort("Insufficient memory");
+    }
+    g_doxm = doxm;
+  }
+  memset(&g_doxm[device_index], 0, sizeof(oc_sec_doxm_t));
+}
+
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
 
 static void
 doxm_evaluate_supported_oxms(size_t device)

@@ -23,6 +23,8 @@
 #include "oc_helpers.h"
 #include "oc_swupdate.h"
 #include "util/oc_compiler.h"
+#include "util/oc_features.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 
@@ -67,6 +69,14 @@ typedef struct oc_swupdate_t
  * @brief Allocate and initialize Software Update (SWU) resources and data.
  */
 void oc_swupdate_create(void);
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+/**
+ * @brief Allocate and initialize Software Update (SWU) resources and data for
+ * specific Device.
+ */
+void oc_swupdate_create_at_index(size_t device_index, bool need_realloc);
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
 
 /**
  * @brief Deallocate all SWU resource data.

@@ -34,13 +34,13 @@
 #ifdef OC_DYNAMIC_ALLOCATION
 #include "port/oc_assert.h"
 #include <stdlib.h>
-static oc_sec_ael_t *ael;
+static oc_sec_ael_t *g_ael;
 #else  /* OC_DYNAMIC_ALLOCATION */
-static oc_sec_ael_t ael[OC_MAX_NUM_DEVICES];
+static oc_sec_ael_t g_ael[OC_MAX_NUM_DEVICES];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 // Can set specific capacity limits to the below allocators for static builds
-OC_MEMB(events_s, oc_sec_ael_event_t, 1);
-OC_MEMB(aux_s, oc_sec_ael_aux_info_t, 1);
+OC_MEMB(g_events_s, oc_sec_ael_event_t, 1);
+OC_MEMB(g_aux_s, oc_sec_ael_aux_info_t, 1);
 
 // Theoretical maximum number of entries in the auxiliaryinfo
 #define AEL_AUX_INFO_MAX_ITEMS (256)
@@ -75,17 +75,17 @@ oc_sec_ael_free_event(oc_sec_ael_event_t *event)
       (oc_sec_ael_aux_info_t *)oc_list_pop(event->aux_info);
     while (aux) {
       oc_free_string(&aux->aux_info);
-      oc_memb_free(&aux_s, aux);
+      oc_memb_free(&g_aux_s, aux);
       aux = (oc_sec_ael_aux_info_t *)oc_list_pop(event->aux_info);
     }
-    oc_memb_free(&events_s, event);
+    oc_memb_free(&g_events_s, event);
   }
 }
 
 static inline size_t
 oc_sec_ael_max_space(size_t device)
 {
-  const oc_sec_ael_t *a = &ael[device];
+  const oc_sec_ael_t *a = &g_ael[device];
   size_t res = (size_t)OC_SEC_AEL_MAX_SIZE;
   switch (a->unit) {
   case OC_SEC_AEL_UNIT_BYTE:
@@ -100,9 +100,9 @@ oc_sec_ael_max_space(size_t device)
 static inline size_t
 oc_sec_ael_used_space(size_t device)
 {
-  const oc_sec_ael_t *a = &ael[device];
+  const oc_sec_ael_t *a = &g_ael[device];
   size_t res = 0;
-  switch (ael->unit) {
+  switch (g_ael->unit) {
   case OC_SEC_AEL_UNIT_BYTE:
     res = a->events_size;
     break;
@@ -117,25 +117,54 @@ void
 oc_sec_ael_init(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  ael = (oc_sec_ael_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_ael_t));
-  if (!ael) {
+  g_ael =
+    (oc_sec_ael_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_ael_t));
+  if (!g_ael) {
     oc_abort("Insufficient memory");
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
   for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
-    OC_LIST_STRUCT_INIT(&ael[device], events);
+    OC_LIST_STRUCT_INIT(&g_ael[device], events);
   }
 }
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+
+void
+oc_sec_ael_init_at_index(size_t device_index, bool needs_realloc)
+{
+  if (needs_realloc) {
+    size_t device_count = oc_core_get_num_devices();
+    assert(device_index == device_count - 1);
+    oc_sec_ael_t *ael =
+      (oc_sec_ael_t *)realloc(g_ael, device_count * sizeof(oc_sec_ael_t));
+    if (ael == NULL) {
+      oc_abort("Insufficient memory");
+    }
+    g_ael = ael;
+    for (size_t i = 0; i < device_index; ++i) {
+      OC_LIST_STRUCT_REINIT(&g_ael[i], events);
+    }
+  } else {
+    oc_sec_ael_reset(device_index);
+  }
+  memset(&g_ael[device_index], 0, sizeof(oc_sec_ael_t));
+  OC_LIST_STRUCT_INIT(&g_ael[device_index], events);
+}
+
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
 
 void
 oc_sec_ael_free(void)
 {
-  for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
+  for (size_t device = 0; device < oc_core_get_num_devices(); ++device) {
     oc_sec_ael_reset(device);
   }
 #ifdef OC_DYNAMIC_ALLOCATION
-  free(ael);
-  ael = NULL;
+  free(g_ael);
+  g_ael = NULL;
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  memset(g_ael, 0, sizeof(g_ael));
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 
@@ -143,7 +172,7 @@ void
 oc_sec_ael_default(size_t device)
 {
   oc_sec_ael_reset(device);
-  oc_sec_ael_t *a = &ael[device];
+  oc_sec_ael_t *a = &g_ael[device];
   a->categoryfilter = OC_SEC_AEL_CATEGORYFILTER_DEFAULT;
   a->priorityfilter = OC_SEC_AEL_PRIORITYFILTER_DEFAULT;
   a->maxsize = (size_t)OC_SEC_AEL_MAX_SIZE;
@@ -213,7 +242,7 @@ bool
 oc_sec_ael_encode(size_t device, oc_interface_mask_t iface_mask,
                   bool to_storage)
 {
-  oc_sec_ael_t *a = &ael[device];
+  oc_sec_ael_t *a = &g_ael[device];
   char tmpstr[64];
   oc_rep_start_root_object();
   if (to_storage || iface_mask & OC_IF_BASELINE) {
@@ -284,7 +313,7 @@ oc_sec_ael_encode(size_t device, oc_interface_mask_t iface_mask,
 bool
 oc_sec_ael_decode(size_t device, const oc_rep_t *rep, bool from_storage)
 {
-  oc_sec_ael_t *a = &ael[device];
+  oc_sec_ael_t *a = &g_ael[device];
   const oc_rep_t *repc = rep;
   for (; repc; repc = repc->next) {
     size_t len = oc_string_len(repc->name);
@@ -392,7 +421,7 @@ oc_sec_ael_decode(size_t device, const oc_rep_t *rep, bool from_storage)
 static void
 oc_sec_ael_reset(size_t device)
 {
-  oc_sec_ael_t *a = &ael[device];
+  oc_sec_ael_t *a = &g_ael[device];
   oc_sec_ael_event_t *e = (oc_sec_ael_event_t *)oc_list_pop(a->events);
   while (e) {
     oc_sec_ael_free_event(e);
@@ -407,7 +436,7 @@ oc_sec_ael_add_event(size_t device, uint8_t category, uint8_t priority,
                      bool write_to_storage)
 {
   bool res = false;
-  oc_sec_ael_t *a = &ael[device];
+  oc_sec_ael_t *a = &g_ael[device];
 
   if (!(a->categoryfilter & category) || (a->priorityfilter < priority)) {
     OC_DBG("Event category %d or priority %d not matching", category, priority);
@@ -473,7 +502,7 @@ oc_sec_ael_create_event(size_t device, uint8_t category, uint8_t priority,
                         size_t aux_size, size_t event_sz)
 {
   // allocate memory
-  oc_sec_ael_event_t *res = (oc_sec_ael_event_t *)oc_memb_alloc(&events_s);
+  oc_sec_ael_event_t *res = (oc_sec_ael_event_t *)oc_memb_alloc(&g_events_s);
   if (!res) {
     OC_ERR("Out of memory!");
     return NULL;
@@ -492,7 +521,7 @@ oc_sec_ael_create_event(size_t device, uint8_t category, uint8_t priority,
   if (aux_info && aux_size > 0) {
     for (size_t i = 0; i < aux_size; i++) {
       oc_sec_ael_aux_info_t *a_info =
-        (oc_sec_ael_aux_info_t *)oc_memb_alloc(&aux_s);
+        (oc_sec_ael_aux_info_t *)oc_memb_alloc(&g_aux_s);
       if (a_info) {
         oc_new_string(&a_info->aux_info, aux_info[i], strlen(aux_info[i]));
         oc_list_add(res->aux_info, a_info);
@@ -500,7 +529,7 @@ oc_sec_ael_create_event(size_t device, uint8_t category, uint8_t priority,
     }
   }
 
-  oc_sec_ael_t *a = &ael[device];
+  oc_sec_ael_t *a = &g_ael[device];
   oc_list_add(a->events, res);
 
   return res;

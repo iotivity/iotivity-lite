@@ -39,6 +39,15 @@
 #include "util/oc_macros_internal.h"
 #include "util/oc_secure_string_internal.h"
 
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+#include "oc_acl.h"
+#include "oc_cred.h"
+#ifdef OC_SECURITY
+#include "security/oc_ael_internal.h"
+#include "security/oc_svr_internal.h"
+#endif /* OC_SECURITY*/
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
+
 #ifdef OC_CLOUD
 #include "api/cloud/oc_cloud_resource_internal.h"
 #endif /* OC_CLOUD */
@@ -69,6 +78,7 @@
 #endif /* OC_HAS_FEATURE_PUSH */
 
 #include <assert.h>
+#include <inttypes.h>
 #include <stdarg.h>
 #include <stdint.h>
 
@@ -106,49 +116,66 @@ oc_core_init(void)
 }
 
 static void
-oc_core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
+core_free_device_info_properties(oc_device_info_t *oc_device_info_item)
 {
-  if (oc_device_info_item) {
-    oc_free_string(&(oc_device_info_item->name));
-    oc_free_string(&(oc_device_info_item->icv));
-    oc_free_string(&(oc_device_info_item->dmv));
+  oc_free_string(&(oc_device_info_item->name));
+  oc_free_string(&(oc_device_info_item->icv));
+  oc_free_string(&(oc_device_info_item->dmv));
+}
+
+// Remove all core cesources
+static void
+core_resources_deinit(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (g_core_resources == NULL) {
+    return;
   }
+#endif /* OC_DYNAMIC_ALLOCATION */
+  uint32_t device_count = OC_ATOMIC_LOAD32(g_device_count);
+
+  for (size_t i = 0;
+       i < OC_NUM_CORE_PLATFORM_RESOURCES +
+             (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * device_count);
+       ++i) {
+    oc_ri_free_resource_properties(&g_core_resources[i]);
+  }
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(g_core_resources);
+  g_core_resources = NULL;
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  memset(g_core_resources, 0, sizeof(g_core_resources));
+#endif /* OC_DYNAMIC_ALLOCATION */
+}
+
+// Remove all devices
+static void
+core_devices_deinit(void)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (g_oc_device_info == NULL) {
+    return;
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+  uint32_t device_count = OC_ATOMIC_LOAD32(g_device_count);
+  for (uint32_t i = 0; i < device_count; ++i) {
+    core_free_device_info_properties(&g_oc_device_info[i]);
+  }
+#ifdef OC_DYNAMIC_ALLOCATION
+  free(g_oc_device_info);
+  g_oc_device_info = NULL;
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  memset(g_oc_device_info, 0, sizeof(g_oc_device_info));
+#endif /* OC_DYNAMIC_ALLOCATION */
 }
 
 void
 oc_core_shutdown(void)
 {
   oc_platform_deinit();
-
-  uint32_t device_count = OC_ATOMIC_LOAD32(g_device_count);
-#ifdef OC_DYNAMIC_ALLOCATION
-  if (g_oc_device_info != NULL) {
-#endif /* OC_DYNAMIC_ALLOCATION */
-    for (uint32_t i = 0; i < device_count; ++i) {
-      oc_device_info_t *oc_device_info_item = &g_oc_device_info[i];
-      oc_core_free_device_info_properties(oc_device_info_item);
-    }
-#ifdef OC_DYNAMIC_ALLOCATION
-    free(g_oc_device_info);
-    g_oc_device_info = NULL;
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
-
-#ifdef OC_DYNAMIC_ALLOCATION
-  if (g_core_resources != NULL) {
-#endif /* OC_DYNAMIC_ALLOCATION */
-    for (size_t i = 0;
-         i < OC_NUM_CORE_PLATFORM_RESOURCES +
-               (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * device_count);
-         ++i) {
-      oc_resource_t *core_resource = &g_core_resources[i];
-      oc_ri_free_resource_properties(core_resource);
-    }
-#ifdef OC_DYNAMIC_ALLOCATION
-    free(g_core_resources);
-    g_core_resources = NULL;
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
+  core_resources_deinit();
+  core_devices_deinit();
   OC_ATOMIC_STORE32(g_device_count, 0);
 }
 
@@ -265,11 +292,30 @@ oc_core_get_latency(void)
 }
 
 static void
-core_update_device_data(uint32_t device_count, oc_add_new_device_t cfg)
+core_set_device_info(oc_device_info_t *info, oc_add_new_device_t cfg)
+{
+  assert(cfg.name != NULL);
+  assert(cfg.spec_version != NULL);
+  assert(cfg.data_model_version != NULL);
+
+  oc_gen_uuid(&info->di);
+  oc_gen_uuid(&info->piid);
+
+  oc_new_string(&info->name, cfg.name, strlen(cfg.name));
+  oc_new_string(&info->icv, cfg.spec_version, strlen(cfg.spec_version));
+  oc_new_string(&info->dmv, cfg.data_model_version,
+                strlen(cfg.data_model_version));
+  info->add_device_cb = cfg.add_device_cb;
+  info->data = cfg.add_device_cb_data;
+}
+
+static void
+core_update_device_data(size_t max_device_index, oc_add_new_device_t cfg)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  size_t new_num = OC_NUM_CORE_PLATFORM_RESOURCES +
-                   (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * (device_count + 1));
+  size_t new_num =
+    OC_NUM_CORE_PLATFORM_RESOURCES +
+    (OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * (max_device_index + 1));
   oc_resource_t *core_resources =
     (oc_resource_t *)realloc(g_core_resources, new_num * sizeof(oc_resource_t));
   if (core_resources == NULL) {
@@ -282,31 +328,23 @@ core_update_device_data(uint32_t device_count, oc_add_new_device_t cfg)
   g_core_resources = core_resources;
 
   oc_device_info_t *device_info = (oc_device_info_t *)realloc(
-    g_oc_device_info, (device_count + 1) * sizeof(oc_device_info_t));
-
+    g_oc_device_info, (max_device_index + 1) * sizeof(oc_device_info_t));
   if (device_info == NULL) {
     oc_abort("Insufficient memory");
   }
-  memset(&device_info[device_count], 0, sizeof(oc_device_info_t));
+  memset(&device_info[max_device_index], 0, sizeof(oc_device_info_t));
   g_oc_device_info = device_info;
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-  oc_gen_uuid(&g_oc_device_info[device_count].di);
-  oc_gen_uuid(&g_oc_device_info[device_count].piid);
-
-  oc_new_string(&g_oc_device_info[device_count].name, cfg.name,
-                strlen(cfg.name));
-  oc_new_string(&g_oc_device_info[device_count].icv, cfg.spec_version,
-                strlen(cfg.spec_version));
-  oc_new_string(&g_oc_device_info[device_count].dmv, cfg.data_model_version,
-                strlen(cfg.data_model_version));
-  g_oc_device_info[device_count].add_device_cb = cfg.add_device_cb;
-  g_oc_device_info[device_count].data = cfg.add_device_cb_data;
+  core_set_device_info(&g_oc_device_info[max_device_index], cfg);
 }
 
 static void
-oc_create_device_resource(size_t device_count, const char *uri, const char *rt)
+oc_create_device_resource(size_t device, const char *uri, const char *rt)
 {
+  assert(uri != NULL);
+  assert(rt != NULL);
+
   /* Construct device resource */
   int properties = OC_DISCOVERABLE;
 #ifdef OC_CLOUD
@@ -316,27 +354,21 @@ oc_create_device_resource(size_t device_count, const char *uri, const char *rt)
     oc_string_view(rt, oc_strnlen(rt, OC_CHAR_ARRAY_LEN(OCF_D_RT) + 1));
   if (oc_string_view_is_equal(
         rtv, oc_string_view(OCF_D_RT, OC_CHAR_ARRAY_LEN(OCF_D_RT)))) {
-    oc_core_populate_resource(OCF_D, device_count, uri,
-                              OC_IF_R | OC_IF_BASELINE, OC_IF_R, properties,
-                              oc_core_device_handler, /*put*/ NULL,
+    oc_core_populate_resource(OCF_D, device, uri, OC_IF_R | OC_IF_BASELINE,
+                              OC_IF_R, properties, oc_core_device_handler,
+                              /*put*/ NULL,
                               /*post*/ NULL, /*delete*/ NULL, 1, rt);
   } else {
-    oc_core_populate_resource(OCF_D, device_count, uri,
-                              OC_IF_R | OC_IF_BASELINE, OC_IF_R, properties,
-                              oc_core_device_handler, /*put*/ NULL,
+    oc_core_populate_resource(OCF_D, device, uri, OC_IF_R | OC_IF_BASELINE,
+                              OC_IF_R, properties, oc_core_device_handler,
+                              /*put*/ NULL,
                               /*post*/ NULL, /*delete*/ NULL, 2, rt, OCF_D_RT);
   }
 }
 
-oc_device_info_t *
-oc_core_add_new_device(oc_add_new_device_t cfg)
+static int64_t
+core_increment_device_count(void)
 {
-  assert(cfg.uri != NULL);
-  assert(cfg.rt != NULL);
-  assert(cfg.name != NULL);
-  assert(cfg.spec_version != NULL);
-  assert(cfg.data_model_version != NULL);
-
   uint32_t device_count = OC_ATOMIC_LOAD32(g_device_count);
 
   bool exchanged = false;
@@ -344,53 +376,70 @@ oc_core_add_new_device(oc_add_new_device_t cfg)
 #ifndef OC_DYNAMIC_ALLOCATION
     if (device_count == OC_MAX_NUM_DEVICES) {
       OC_ERR("device limit reached");
-      return NULL;
+      return -1;
     }
 #endif /* !OC_DYNAMIC_ALLOCATION */
     if ((uint64_t)device_count == (uint64_t)MIN(SIZE_MAX, UINT32_MAX)) {
       OC_ERR("limit of value type of g_device_count reached");
-      return NULL;
+      return -1;
     }
     OC_ATOMIC_COMPARE_AND_SWAP32(g_device_count, device_count, device_count + 1,
                                  exchanged);
   }
+  return device_count;
+}
 
-  core_update_device_data(device_count, cfg);
-
-  oc_create_device_resource(device_count, cfg.uri, cfg.rt);
+static void
+oc_core_set_device_resources_at_index(uint32_t device, const char *uri,
+                                      const char *rt)
+{
+  oc_create_device_resource(device, uri, rt);
 
   if (oc_get_con_res_announced()) {
     /* Construct oic.wk.con resource for this device. */
-    oc_create_con_resource(device_count);
+    oc_create_con_resource(device);
   }
 
-  oc_create_discovery_resource(device_count);
+  oc_create_discovery_resource(device);
 
 #ifdef OC_WKCORE
-  oc_create_wkcore_resource(device_count);
+  oc_create_wkcore_resource(device);
 #endif /* OC_WKCORE */
 
 #ifdef OC_INTROSPECTION
-  oc_create_introspection_resource(device_count);
+  oc_create_introspection_resource(device);
 #endif /* OC_INTROSPECTION */
 
 #ifdef OC_MNT
-  oc_create_maintenance_resource(device_count);
+  oc_create_maintenance_resource(device);
 #endif /* OC_MNT */
 #if defined(OC_CLIENT) && defined(OC_SERVER) && defined(OC_CLOUD)
-  oc_create_cloudconf_resource(device_count);
+  oc_create_cloudconf_resource(device);
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 
 #ifdef OC_HAS_FEATURE_PUSH
-  oc_create_pushconf_resource(device_count);
-  oc_create_pushreceiver_resource(device_count);
+  oc_create_pushconf_resource(device);
+  oc_create_pushreceiver_resource(device);
 #endif /* OC_HAS_FEATURE_PUSH */
+}
 
-  if (oc_connectivity_init(device_count, cfg.ports) < 0) {
+oc_device_info_t *
+oc_core_add_new_device(oc_add_new_device_t cfg)
+{
+  int64_t new_index = core_increment_device_count();
+  if (new_index < 0) {
+    return NULL;
+  }
+  uint32_t device = (uint32_t)new_index;
+
+  core_update_device_data(device, cfg);
+  oc_core_set_device_resources_at_index(device, cfg.uri, cfg.rt);
+
+  if (oc_connectivity_init(device, cfg.ports) < 0) {
     oc_abort("error initializing connectivity for device");
   }
 
-  return &g_oc_device_info[device_count];
+  return &g_oc_device_info[device];
 }
 
 bool
@@ -407,6 +456,56 @@ oc_core_get_device_index(oc_uuid_t di, size_t *device)
   }
   return false;
 }
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+
+oc_device_info_t *
+oc_core_add_or_update_device_at_index(oc_add_new_device_t cfg, size_t index)
+{
+  uint32_t device_count = OC_ATOMIC_LOAD32(g_device_count);
+
+  if (index > device_count) {
+    OC_ERR("designated device index (%" PRIu32
+           ") is bigger than current number of all devices",
+           device_count);
+    return NULL;
+  }
+  if (index < device_count) {
+    OC_ERR("cannot replace existing device (%" PRIu32 ")", device_count);
+    return NULL;
+  }
+
+  // follow normal procedure
+  if (core_increment_device_count() < 0) {
+    return NULL;
+  }
+  ++device_count;
+  core_update_device_data(index, cfg);
+
+  oc_core_set_device_resources_at_index(index, cfg.uri, cfg.rt);
+
+#ifdef OC_SECURITY
+  oc_sec_svr_create_new_device(index, true);
+#endif /* OC_SECURITY */
+
+#ifdef OC_SOFTWARE_UPDATE
+  oc_swupdate_create_at_index(index, true);
+#endif /* OC_SOFTWARE_UPDATE */
+
+#ifdef OC_SECURITY
+  oc_sec_svr_init_new_device(index);
+#endif /* OC_SECURITY */
+
+#ifdef OC_SOFTWARE_UPDATE
+  OC_DBG("oc_core_add_or_update_device_at_index(): loading swupdate(%zu)",
+         index);
+  oc_swupdate_load(index);
+#endif /* OC_SOFTWARE_UPDATE */
+
+  return &g_oc_device_info[index];
+}
+
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
 
 static void
 oc_device_bind_rt(size_t device_index, const char *rt)

@@ -51,6 +51,10 @@ typedef struct
 /** @brief Allocate and initialize global variables */
 void oc_sec_sp_init(void);
 
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+void oc_sec_sp_init_at_index(size_t device_index, bool needs_realloc);
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
+
 /** @brief Deallocate global variables */
 void oc_sec_sp_free(void);
 

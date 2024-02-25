@@ -54,37 +54,74 @@ oc_pki_set_security_profile(size_t device, unsigned supported_profiles,
   g_sp[device] = g_sp_mfg_default[device];
 }
 
+static void
+sp_default_init(size_t device)
+{
+  g_sp_mfg_default[device].current_profile = OC_SP_BASELINE;
+  g_sp_mfg_default[device].supported_profiles = OC_SP_BASELINE;
+  g_sp_mfg_default[device].credid = -1;
+}
+
 void
 oc_sec_sp_init(void)
 {
+  size_t device_count = oc_core_get_num_devices();
 #ifdef OC_DYNAMIC_ALLOCATION
-  g_sp = (oc_sec_sp_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_sp_t));
-  if (!g_sp) {
+  g_sp = (oc_sec_sp_t *)calloc(device_count, sizeof(oc_sec_sp_t));
+  if (g_sp == NULL) {
     oc_abort("Insufficient memory");
   }
-  g_sp_mfg_default =
-    (oc_sec_sp_t *)calloc(oc_core_get_num_devices(), sizeof(oc_sec_sp_t));
-  if (!g_sp_mfg_default) {
+  g_sp_mfg_default = (oc_sec_sp_t *)calloc(device_count, sizeof(oc_sec_sp_t));
+  if (g_sp_mfg_default == NULL) {
     oc_abort("Insufficient memory");
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
-  for (size_t device = 0; device < oc_core_get_num_devices(); ++device) {
-    g_sp_mfg_default[device].current_profile = OC_SP_BASELINE;
-    g_sp_mfg_default[device].supported_profiles = OC_SP_BASELINE;
-    g_sp_mfg_default[device].credid = -1;
+  for (size_t device = 0; device < device_count; ++device) {
+    sp_default_init(device);
   }
 }
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+
+void
+oc_sec_sp_init_at_index(size_t device_index, bool needs_realloc)
+{
+  if (needs_realloc) {
+    size_t device_count = oc_core_get_num_devices();
+    assert(device_index == device_count - 1);
+    oc_sec_sp_t *sp =
+      (oc_sec_sp_t *)realloc(g_sp, device_count * sizeof(oc_sec_sp_t));
+    if (sp == NULL) {
+      oc_abort("Insufficient memory");
+    }
+    g_sp = sp;
+
+    oc_sec_sp_t *sp_mfg_default = (oc_sec_sp_t *)realloc(
+      g_sp_mfg_default, device_count * sizeof(oc_sec_sp_t));
+    if (sp_mfg_default == NULL) {
+      oc_abort("Insufficient memory");
+    }
+    g_sp_mfg_default = sp_mfg_default;
+  }
+  memset(&g_sp[device_index], 0, sizeof(oc_sec_sp_t));
+  memset(&g_sp_mfg_default[device_index], 0, sizeof(oc_sec_sp_t));
+  sp_default_init(device_index);
+}
+
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
 
 void
 oc_sec_sp_free(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  if (g_sp) {
-    free(g_sp);
-  }
-  if (g_sp_mfg_default) {
-    free(g_sp_mfg_default);
-  }
+  free(g_sp);
+  g_sp = NULL;
+
+  free(g_sp_mfg_default);
+  g_sp_mfg_default = NULL;
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  memset(g_sp, 0, sizeof(g_sp));
+  memset(g_sp_mfg_default, 0, sizeof(g_sp_mfg_default));
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
 

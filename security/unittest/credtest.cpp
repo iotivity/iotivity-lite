@@ -1,6 +1,7 @@
 /****************************************************************************
  *
  * Copyright (c) 2023 plgd.dev s.r.o.
+ * Copyright (c) 2024 ETRI Joo-Chul Kevin Lee
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -404,5 +405,39 @@ TEST_F(TestCreds, Serialize_Fail)
 }
 
 #endif /* OC_PKI && (OC_DYNAMIC_ALLOCATION || OC_TEST) */
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+
+static bool
+IsCredsEntryInitialized(const oc_sec_creds_t *credsEntry)
+{
+  /*
+   * resource owner should be null
+   * subject list should be empty
+   */
+  return oc_uuid_is_empty(credsEntry->rowneruuid) &&
+         !oc_list_length(credsEntry->creds);
+}
+
+/*
+ * oc_sec_cred_new_device(device_index, need_realloc)
+ */
+TEST_F(TestCreds, CredNewDevice)
+{
+  /*
+   * overwrite entry in the existing position
+   */
+  auto credsEntry = oc_sec_get_creds(kDeviceID);
+  oc_sec_creds_t orgCreds{};
+
+  memcpy(&orgCreds, credsEntry, sizeof(oc_sec_creds_t));
+
+  oc_sec_cred_init_at_index(kDeviceID, false);
+  EXPECT_EQ(true, IsCredsEntryInitialized(credsEntry));
+
+  memcpy(credsEntry, &orgCreds, sizeof(oc_sec_creds_t));
+}
+
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
 
 #endif /* OC_SECURITY */

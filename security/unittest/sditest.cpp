@@ -1,6 +1,7 @@
 /******************************************************************
  *
  * Copyright 2023 Daniel Adam, All Rights Reserved.
+ * Copyright 2024 ETRI Joo-Chul Kevin Lee, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -399,5 +400,31 @@ TEST_F(TestSdiWithServer, DumpAndLoad)
   oc_free_string(&sdi_new.name);
   oc_free_string(&def.name);
 }
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+
+static bool
+IsSdiEntryInitialized(const oc_sec_sdi_t *sdiEntry)
+{
+  oc_sec_sdi_t emptySdi{};
+  memset(&emptySdi, 0, sizeof(oc_sec_sdi_t));
+  return !memcmp(sdiEntry, &emptySdi, sizeof(oc_sec_sdi_t));
+}
+
+TEST_F(TestSdiWithServer, SdiNewDevice)
+{
+  /*
+   * overwrite entry in the existing position
+   */
+  auto sdiEntry = oc_sec_sdi_get(kDeviceID);
+  oc_sec_sdi_t orgSdi;
+  memcpy(&orgSdi, sdiEntry, sizeof(oc_sec_sdi_t));
+  oc_sec_sdi_init_at_index(kDeviceID, false);
+  EXPECT_EQ(true, IsSdiEntryInitialized(sdiEntry));
+
+  memcpy(sdiEntry, &orgSdi, sizeof(oc_sec_sdi_t));
+}
+
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
 
 #endif /* OC_SECURITY */

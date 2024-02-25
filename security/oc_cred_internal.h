@@ -24,6 +24,7 @@
 #include "oc_ri.h"
 #include "oc_uuid.h"
 #include "util/oc_compiler.h"
+#include "util/oc_features.h"
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -86,6 +87,20 @@ oc_sec_cred_t *oc_sec_cred_remove_from_device_by_credid(int credid,
 void oc_sec_cred_default(size_t device);
 void oc_sec_cred_init(void);
 void oc_sec_cred_deinit(void);
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+/**
+ * @brief increase existing memory for cred for all Devices
+ * by the size of `oc_sec_creds_t`
+ *
+ * @param device_index index of `g_oc_device_info[]` where new Device is
+ *            stored
+ * @param needs_realloc indicates whether reallocation of memory for SVR is
+ *            needed or not
+ */
+void oc_sec_cred_init_at_index(size_t device_index, bool needs_realloc);
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
+
 void oc_sec_encode_cred(size_t device, oc_interface_mask_t iface_mask,
                         bool to_storage);
 bool oc_sec_decode_cred(const oc_rep_t *rep, oc_sec_cred_t **owner,

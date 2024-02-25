@@ -2286,9 +2286,10 @@ oc_push_init(void)
 
 /*
  * clean up push related data structure
- * - for push configuration Resource: they are cleaned when all app Resources
- * are removed (see oc_main_shutdown())
- * - for push receivers Resource: free in this function
+ * - Push configuration Resource, Push Receiver Resource:
+ *   they are cleaned when all app Resources are removed
+ *   (see oc_ri_shutdown())
+ * - for push receivers Resource: free receiver object list here
  */
 void
 oc_push_free(void)

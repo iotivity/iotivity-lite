@@ -1,6 +1,8 @@
 /******************************************************************
  *
  * Copyright 2018 GRANITE RIVER LABS All Rights Reserved.
+ *           2024 ETRI               All Rights Reserved.
+ *
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -19,10 +21,12 @@
 #include "api/oc_core_res_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_runtime_internal.h"
+#include "api/oc_swupdate_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_helpers.h"
 #include "port/oc_network_event_handler_internal.h"
+#include "security/oc_svr_internal.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
 #include "util/oc_macros_internal.h"
@@ -83,11 +87,28 @@ TEST_F(TestCoreResource, CoreDevice_P)
   cfg.rt = kDeviceType.c_str();
   cfg.spec_version = kOCFSpecVersion.c_str();
   cfg.data_model_version = kOCFDataModelVersion.c_str();
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+  oc_device_info_t *addcoredevice =
+    oc_core_add_or_update_device_at_index(cfg, 0);
+#else  /* !OC_HAS_FEATURE_DEVICE_ADD */
   oc_device_info_t *addcoredevice = oc_core_add_new_device(cfg);
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
+
   ASSERT_NE(addcoredevice, nullptr);
   size_t numcoredevice = oc_core_get_num_devices();
   EXPECT_EQ(1, numcoredevice);
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+#ifdef OC_SECURITY
+  oc_sec_svr_free();
+#endif /* OC_SECURITY */
+#ifdef OC_SOFTWARE_UPDATE
+  oc_swupdate_free();
+#endif /* OC_SOFTWARE_UPDATE */
+#else  /* !OC_HAS_FEATURE_DEVICE_ADD */
   oc_connectivity_shutdown(kDevice1ID);
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
 }
 
 static void
@@ -570,3 +591,62 @@ TEST_F(TestCoreResourceWithDevice, BindDeviceResourceType_P)
 }
 
 #endif /* OC_DYNAMIC_ALLOCATION */
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+
+class TestCoreResourceExt : public testing::Test {
+public:
+  void SetUp() override
+  {
+    oc_network_event_handler_mutex_init();
+    oc_runtime_init();
+    oc_ri_init();
+    oc_core_init();
+  }
+
+  void TearDown() override
+  {
+#ifdef OC_SECURITY
+    oc_sec_svr_free();
+#endif /* OC_SECURITY */
+#ifdef OC_SOFTWARE_UPDATE
+    oc_swupdate_free();
+#endif /* OC_SOFTWARE_UPDATE */
+#ifdef OC_HAS_FEATURE_PUSH
+    oc_push_free();
+#endif /* OC_HAS_FEATURE_PUSH */
+    oc_core_shutdown();
+    oc_ri_shutdown();
+    oc_runtime_shutdown();
+    oc_network_event_handler_mutex_destroy();
+  }
+};
+
+TEST_F(TestCoreResourceExt, CoreAddNRemoveDeviceAtIndex)
+{
+  oc_add_new_device_t cfg{};
+  cfg.name = kDeviceName.c_str();
+  cfg.uri = kDeviceURI.c_str();
+  cfg.rt = kDeviceType.c_str();
+  cfg.spec_version = kOCFSpecVersion.c_str();
+  cfg.data_model_version = kOCFDataModelVersion.c_str();
+
+  /* device index is outranged => should fail */
+  size_t device_count = oc_core_get_num_devices();
+  EXPECT_EQ(oc_core_add_or_update_device_at_index(cfg, device_count + 1),
+            nullptr);
+
+  /* add new device at the end of array => should succeed */
+  EXPECT_NE(oc_core_add_or_update_device_at_index(cfg, device_count), nullptr);
+
+  /* try to overwrite new device onto existing device => should fail */
+  EXPECT_EQ(oc_core_add_or_update_device_at_index(cfg, device_count), nullptr);
+
+  /* try to find device with device id => should succeed */
+  size_t device_index;
+  oc_core_get_device_index(oc_core_get_device_info(device_count)->di,
+                           &device_index);
+  EXPECT_EQ(device_index, device_count);
+}
+
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */

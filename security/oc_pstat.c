@@ -67,10 +67,8 @@ void
 oc_sec_pstat_free(void)
 {
 #ifdef OC_DYNAMIC_ALLOCATION
-  if (g_pstat != NULL) {
-    free(g_pstat);
-    g_pstat = NULL;
-  }
+  free(g_pstat);
+  g_pstat = NULL;
 #else
   memset(g_pstat, 0, sizeof(g_pstat));
 #endif /* OC_DYNAMIC_ALLOCATION */
@@ -96,6 +94,26 @@ oc_sec_pstat_init(void)
   oc_sec_pstat_init_for_devices(oc_core_get_num_devices());
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+
+void
+oc_sec_pstat_init_at_index(size_t device_index, bool needs_realloc)
+{
+  if (needs_realloc) {
+    size_t device_count = oc_core_get_num_devices();
+    assert(device_index == device_count - 1);
+    oc_sec_pstat_t *pstat =
+      (oc_sec_pstat_t *)realloc(g_pstat, device_count * sizeof(oc_sec_pstat_t));
+    if (pstat == NULL) {
+      oc_abort("Insufficient memory");
+    }
+    g_pstat = pstat;
+  }
+  memset(&g_pstat[device_index], 0, sizeof(oc_sec_pstat_t));
+}
+
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
 
 static bool
 nil_uuid(const oc_uuid_t *uuid)

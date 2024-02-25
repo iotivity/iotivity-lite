@@ -1,6 +1,7 @@
 /******************************************************************
  *
  * Copyright 2023 Daniel Adam, All Rights Reserved.
+ * Copyright 2024 ETRI Joo-Chul Kevin Lee, All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -217,5 +218,31 @@ TEST_F(TestPstatWithServer, DeleteRequest_Fail)
   oc::testNotSupportedMethod(OC_DELETE, &ep, "/oic/sec/pstat", nullptr,
                              error_code);
 }
+
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+
+static bool
+IsPstatEntryInitialized(const oc_sec_pstat_t *pstatEntry)
+{
+  oc_sec_pstat_t emptyPstat{};
+  return !memcmp(pstatEntry, &emptyPstat, sizeof(oc_sec_pstat_t));
+}
+
+TEST_F(TestPstatWithServer, PstatNewDevice)
+{
+  /*
+   * overwrite entry in the existing position
+   */
+  auto pstatEntry = oc_sec_get_pstat(kDeviceID);
+  oc_sec_pstat_t orgPstat;
+  memcpy(&orgPstat, pstatEntry, sizeof(oc_sec_pstat_t));
+  oc_sec_pstat_init_at_index(kDeviceID, false);
+
+  EXPECT_EQ(true, IsPstatEntryInitialized(pstatEntry));
+
+  memcpy(pstatEntry, &orgPstat, sizeof(oc_sec_pstat_t));
+}
+
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
 
 #endif /* OC_SECURITY */

@@ -66,6 +66,18 @@ typedef struct
 /** @brief Allocate and initialize global variables */
 void oc_sec_doxm_init(void);
 
+#ifdef OC_HAS_FEATURE_DEVICE_ADD
+/**
+ * by the size of `oc_sec_doxm_t`
+ *
+ * @param device_index index of `g_oc_device_info[]` where new Device is
+ *            stored
+ * @param needs_realloc indicates whether reallocation of memory for SVR is
+ *            needed or not
+ */
+void oc_sec_doxm_init_at_index(size_t device_index, bool needs_realloc);
+#endif /* OC_HAS_FEATURE_DEVICE_ADD */
+
 /** @brief Deallocate global variables */
 void oc_sec_doxm_free(void);
 
