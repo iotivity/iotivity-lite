@@ -27,6 +27,20 @@
 #include <numeric>
 #include <vector>
 
+TEST(Helpers, StringLen)
+{
+  oc_string_t oc_str{};
+  EXPECT_EQ(0, oc_string_len(oc_str));
+  // cannot use oc_string_len_unsafe because oc_str.ptr is NULL
+
+  std::string str{ "test" };
+  oc_new_string(&oc_str, str.c_str(), str.length());
+  EXPECT_EQ(str.length(), oc_string_len(oc_str));
+  EXPECT_EQ(str.length(), oc_string_len_unsafe(oc_str));
+
+  oc_free_string(&oc_str);
+}
+
 TEST(Helpers, SetStrings)
 {
   oc_string_t oc_str{};

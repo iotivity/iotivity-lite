@@ -112,9 +112,13 @@ ifeq ($(JSON_ENCODER),1)
 	SWIG_CFLAG += -DOC_JSON_ENCODER
 endif
 
-SRC = oc_api oc_buffer_settings oc_clock oc_cloud oc_collection oc_connectivity oc_core_res oc_cred \
-	oc_endpoint oc_enums oc_etag oc_introspection oc_link oc_obt oc_pki oc_random oc_rep oc_session_events \
-	oc_swupdate oc_storage oc_uuid
+SRC = oc_api oc_buffer_settings oc_clock oc_collection oc_connectivity oc_core_res oc_cred \
+	oc_endpoint oc_enums oc_etag oc_introspection oc_link oc_obt oc_pki oc_random \
+	oc_rep oc_session_events oc_swupdate oc_storage oc_uuid
+
+ifeq ($(CLOUD),1)
+	SRC += oc_cloud oc_endpoint_address
+endif
 
 # Swig interfaces source
 SWIG_INTERFACE_SRC = $(addsuffix .i, $(SRC))
@@ -154,12 +158,18 @@ build_swig: $(SWIG_INTERFACE_SRC) copy_java
 %.i:
 	$(SWIG) -java -package $(PACKAGE_NAME) -outdir $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR) $(SWIG_CFLAG) $(HEADER_FILE) -o $(addsuffix _wrap.c, $(IOTIVITY_LITE_JAVA_JNI_DIR)$(basename $@)) $(SWIG_INTERFACES_DIR)$@
 
+JAVA_SRC := $(wildcard $(OC_JAVA_DIR)*.java)
+ifneq ($(CLOUD),1)
+	JAVA_SRC := $(filter-out %OCCloudStatusMask.java %OCCloudHandler.java,$(JAVA_SRC))
+endif
+JAVA_OC_SRC := $(wildcard $(OC_JAVA_DIR)oc/*.java)
+
 copy_java:
 	cp $(JAVA_LANG_DIR)*.h $(IOTIVITY_LITE_JAVA_JNI_DIR)
 	cp $(JAVA_LANG_DIR)*.c $(IOTIVITY_LITE_JAVA_JNI_DIR)
-	cp $(OC_JAVA_DIR)*.java $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)
 	mkdir -p $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)oc/
-	cp $(OC_JAVA_DIR)oc/*.java $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)oc/
+	cp $(JAVA_SRC) $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)
+	cp $(JAVA_OC_SRC) $(IOTIVITY_LITE_JAVA_SRC_DIR)$(PACKAGE_DIR)oc/
 
 build_jar: copy_java
 	mkdir -p $(IOTIVITY_LITE_JAVA_BIN_DIR)

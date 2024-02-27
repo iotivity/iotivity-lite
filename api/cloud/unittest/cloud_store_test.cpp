@@ -33,6 +33,7 @@
 #include "port/oc_storage_internal.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
+#include "util/oc_endpoint_address.h"
 
 #include <array>
 #include <filesystem>
@@ -71,22 +72,22 @@ public:
 #endif /* OC_STORAGE */
   }
 
-  static void compareEndpoints(const oc_cloud_endpoints_t &eps1,
-                               const oc_cloud_endpoints_t &eps2)
+  static void compareEndpoints(const oc_endpoint_addresses_t &eps1,
+                               const oc_endpoint_addresses_t &eps2)
   {
-    std::map<std::string, oc_cloud_endpoint_t, std::less<>> e1{};
-    std::map<std::string, oc_cloud_endpoint_t, std::less<>> e2{};
-    oc_cloud_endpoint_t *eps = nullptr;
-    if (eps1.endpoints != nullptr) {
-      eps = static_cast<oc_cloud_endpoint_t *>(oc_list_head(eps1.endpoints));
+    std::map<std::string, oc_endpoint_address_t, std::less<>> e1{};
+    std::map<std::string, oc_endpoint_address_t, std::less<>> e2{};
+    oc_endpoint_address_t *eps = nullptr;
+    if (eps1.addresses != nullptr) {
+      eps = static_cast<oc_endpoint_address_t *>(oc_list_head(eps1.addresses));
     }
     while (eps != nullptr) {
       e1[oc_string(eps->uri)] = *eps;
       eps = eps->next;
     }
     eps = nullptr;
-    if (eps2.endpoints != nullptr) {
-      eps = static_cast<oc_cloud_endpoint_t *>(oc_list_head(eps2.endpoints));
+    if (eps2.addresses != nullptr) {
+      eps = static_cast<oc_endpoint_address_t *>(oc_list_head(eps2.addresses));
     }
     while (eps != nullptr) {
       e2[oc_string(eps->uri)] = *eps;
@@ -102,7 +103,17 @@ public:
       auto it = e2.find(key);
       EXPECT_NE(e2.end(), it);
       EXPECT_STREQ(oc_string(value.uri), oc_string(it->second.uri));
-      EXPECT_TRUE(oc_uuid_is_equal(value.id, it->second.id));
+      EXPECT_EQ(value.metadata.id_type, it->second.metadata.id_type);
+      if (value.metadata.id_type != it->second.metadata.id_type) {
+        continue;
+      }
+      if (value.metadata.id_type == OC_ENDPOINT_ADDRESS_METADATA_TYPE_UUID) {
+        EXPECT_TRUE(oc_uuid_is_equal(value.metadata.id.uuid,
+                                     it->second.metadata.id.uuid));
+      } else {
+        EXPECT_STREQ(oc_string(value.metadata.id.name),
+                     oc_string(it->second.metadata.id.name));
+      }
     }
   }
 
@@ -128,11 +139,18 @@ public:
     freeStore(&def);
   }
 
+  static oc_cloud_store_t makeEmptyStore()
+  {
+    oc_cloud_store_t store{};
+    oc_cloud_endpoint_addresses_init(&store.ci_servers, nullptr, nullptr,
+                                     OC_STRING_VIEW_NULL, {});
+    return store;
+  }
+
   static oc_cloud_store_t makeStore()
   {
-    oc_cloud_store_t store;
-    memset(&store, 0, sizeof(store));
-    oc_cloud_endpoints_init(
+    oc_cloud_store_t store{};
+    oc_cloud_endpoint_addresses_init(
       &store.ci_servers, nullptr, nullptr,
       oc_string_view(ci_server.data(), ci_server.length()), sid);
     oc_new_string(&store.auth_provider, auth_provider.data(),
@@ -151,7 +169,7 @@ public:
 
   static void freeStore(oc_cloud_store_t *store)
   {
-    oc_cloud_endpoints_deinit(&store->ci_servers);
+    oc_endpoint_addresses_deinit(&store->ci_servers);
     oc_free_string(&store->auth_provider);
     oc_free_string(&store->uid);
     oc_free_string(&store->access_token);
@@ -219,7 +237,7 @@ TEST_F(TestCloudStore, Decode_ServersArray)
   oc_rep_end_root_object();
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
-  oc_cloud_store_t store{};
+  oc_cloud_store_t store{ makeEmptyStore() };
   EXPECT_TRUE(oc_cloud_store_decode(pool.ParsePayload().get(), &store));
   freeStore(&store);
 }
@@ -232,7 +250,7 @@ TEST_F(TestCloudStore, Decode_FailUnknownProperty)
   oc_rep_end_root_object();
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
-  oc_cloud_store_t store{};
+  oc_cloud_store_t store{ makeEmptyStore() };
   EXPECT_FALSE(oc_cloud_store_decode(pool.ParsePayload().get(), &store));
   freeStore(&store);
 }
@@ -245,7 +263,7 @@ TEST_F(TestCloudStore, Decode_FailUnknownIntProperty)
   oc_rep_end_root_object();
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
-  oc_cloud_store_t store{};
+  oc_cloud_store_t store{ makeEmptyStore() };
   EXPECT_FALSE(oc_cloud_store_decode(pool.ParsePayload().get(), &store));
   freeStore(&store);
 }
@@ -258,7 +276,7 @@ TEST_F(TestCloudStore, Decode_FailUnknownStringProperty)
   oc_rep_end_root_object();
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
-  oc_cloud_store_t store{};
+  oc_cloud_store_t store{ makeEmptyStore() };
   EXPECT_FALSE(oc_cloud_store_decode(pool.ParsePayload().get(), &store));
   freeStore(&store);
 }
@@ -277,7 +295,7 @@ TEST_F(TestCloudStore, Decode_FailUnknownObjectArrayProperty)
   oc_rep_end_root_object();
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
-  oc_cloud_store_t store{};
+  oc_cloud_store_t store{ makeEmptyStore() };
   EXPECT_FALSE(oc_cloud_store_decode(pool.ParsePayload().get(), &store));
   freeStore(&store);
 }
@@ -291,7 +309,7 @@ TEST_F(TestCloudStore, Decode_FailInvalidSid)
   oc_rep_end_root_object();
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
-  oc_cloud_store_t store{};
+  oc_cloud_store_t store{ makeEmptyStore() };
   // invalid sid resuls in a warning, not an error
   EXPECT_TRUE(oc_cloud_store_decode(pool.ParsePayload().get(), &store));
   freeStore(&store);
@@ -299,7 +317,7 @@ TEST_F(TestCloudStore, Decode_FailInvalidSid)
 
 TEST_F(TestCloudStore, LoadDefaults)
 {
-  oc_cloud_store_t store{};
+  oc_cloud_store_t store{ makeEmptyStore() };
   EXPECT_FALSE(oc_cloud_store_load(&store));
 
   validateDefaults(&store);
@@ -311,7 +329,7 @@ TEST_F(TestCloudStore, DumpAndLoad)
   oc_cloud_store_t store = makeStore();
   ASSERT_LT(0, oc_cloud_store_dump(&store));
 
-  oc_cloud_store_t store2{};
+  oc_cloud_store_t store2{ makeEmptyStore() };
   store2.device = store.device;
   ASSERT_TRUE(oc_cloud_store_load(&store2));
   compareStores(&store, &store2);
@@ -327,14 +345,16 @@ TEST_F(TestCloudStore, DumpAndLoad_MultipleEndpoints)
   oc_cloud_store_t store = makeStore();
   oc_uuid_t id{};
   oc_gen_uuid(&id);
-  ASSERT_TRUE(
-    oc_cloud_endpoint_add(&store.ci_servers, OC_STRING_VIEW("/test/1"), id));
+  ASSERT_TRUE(oc_endpoint_addresses_add(
+    &store.ci_servers,
+    oc_endpoint_address_make_view_with_uuid(OC_STRING_VIEW("/test/1"), id)));
   oc_gen_uuid(&id);
-  ASSERT_TRUE(
-    oc_cloud_endpoint_add(&store.ci_servers, OC_STRING_VIEW("/test/2"), id));
+  ASSERT_TRUE(oc_endpoint_addresses_add(
+    &store.ci_servers,
+    oc_endpoint_address_make_view_with_uuid(OC_STRING_VIEW("/test/2"), id)));
   ASSERT_LT(0, oc_cloud_store_dump(&store));
 
-  oc_cloud_store_t store2{};
+  oc_cloud_store_t store2{ makeEmptyStore() };
   store2.device = store.device;
   ASSERT_TRUE(oc_cloud_store_load(&store2));
   compareStores(&store, &store2);
@@ -365,7 +385,7 @@ writeCloudStoreData(const std::function<void()> &writePayload)
 #if OC_DBG_IS_ENABLED
   auto rep = pool.ParsePayload();
   OC_DBG("storage: %s", oc::RepPool::GetJson(rep.get(), true).data());
-#endif
+#endif /* OC_DBG_IS_ENABLED */
 }
 
 TEST_F(TestCloudStore, SingleStoreData)
@@ -376,7 +396,7 @@ TEST_F(TestCloudStore, SingleStoreData)
     oc_rep_end_root_object();
   });
 
-  oc_cloud_store_t store{};
+  oc_cloud_store_t store{ makeEmptyStore() };
   store.device = kDevice;
   ASSERT_TRUE(oc_cloud_store_load(&store));
 
@@ -398,7 +418,7 @@ TEST_F(TestCloudStore, InvalidStoreData)
     oc_rep_end_root_object();
   });
 
-  oc_cloud_store_t store{};
+  oc_cloud_store_t store{ makeEmptyStore() };
   store.device = kDevice;
   ASSERT_FALSE(oc_cloud_store_load(&store));
 
@@ -437,7 +457,7 @@ TEST_F(TestCloudStoreWithServer, DumpAsync)
   oc_cloud_store_dump_async(&store);
   oc::TestDevice::PoolEventsMsV1(50ms);
 
-  oc_cloud_store_t store1{};
+  oc_cloud_store_t store1{ TestCloudStore::makeEmptyStore() };
   store1.device = store.device;
 #ifdef OC_STORAGE
   ASSERT_TRUE(oc_cloud_store_load(&store1));
@@ -459,8 +479,7 @@ TEST_F(TestCloudStoreWithServer, Dump)
 #else  /* !OC_STORAGE */
   EXPECT_NE(0, oc_cloud_store_dump(&store));
 #endif /* OC_STORAGE */
-  oc_cloud_store_t store1;
-  memset(&store1, 0, sizeof(store1));
+  oc_cloud_store_t store1{ TestCloudStore::makeEmptyStore() };
   store1.device = store.device;
 #ifdef OC_STORAGE
   ASSERT_TRUE(oc_cloud_store_load(&store1));

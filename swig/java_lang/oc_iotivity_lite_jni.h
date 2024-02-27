@@ -125,7 +125,6 @@ extern jclass cls_ArrayList;
 extern jclass cls_OCMainInitHandler;
 extern jclass cls_OCAddDeviceHandler;
 extern jclass cls_OCClientResponse;
-extern jclass cls_OCCloudContext;
 extern jclass cls_OCConWriteHandler;
 extern jclass cls_OCDiscoveryHandler;
 extern jclass cls_OCDiscoveryAllHandler;
@@ -154,8 +153,12 @@ extern jclass cls_OCObtCredsHandler;
 extern jclass cls_OCObtDiscoveryHandler;
 extern jclass cls_OCObtDeviceStatusHandler;
 extern jclass cls_OCObtStatusHandler;
-extern jclass cls_OCCloudHandler;
 extern jclass cls_OCSecurityAcl;
+
+#ifdef OC_CLOUD
+extern jclass cls_OCCloudContext;
+extern jclass cls_OCCloudHandler;
+#endif /* OC_CLOUD */
 
 /*
  * This struct used to hold information needed for java callbacks.

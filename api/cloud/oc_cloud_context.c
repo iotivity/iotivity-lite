@@ -30,6 +30,7 @@
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
 #include "oc_session_events.h"
+#include "util/oc_endpoint_address_internal.h"
 
 #ifdef OC_SECURITY
 #include "security/oc_pstat_internal.h"
@@ -73,7 +74,7 @@ reinitialize_cloud_storage(oc_cloud_context_t *ctx)
     return;
   }
   OC_CLOUD_DBG("reinitializing cloud context in storage");
-  oc_cloud_store_initialize(&ctx->store, cloud_on_server_change, ctx);
+  oc_cloud_store_reinitialize(&ctx->store);
   if (oc_cloud_store_dump(&ctx->store) < 0) {
     OC_CLOUD_ERR("failed to dump cloud store");
   }
@@ -93,6 +94,7 @@ cloud_context_init(size_t device)
   ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
   ctx->cloud_ep = oc_new_endpoint();
   ctx->selected_identity_cred_id = -1;
+  oc_cloud_store_initialize(&ctx->store, cloud_on_server_change, ctx);
   oc_cloud_store_load(&ctx->store);
   ctx->store.status &=
     ~(OC_CLOUD_LOGGED_IN | OC_CLOUD_TOKEN_EXPIRY | OC_CLOUD_REFRESHED_TOKEN |
@@ -178,16 +180,13 @@ oc_cloud_get_user_id(const oc_cloud_context_t *ctx)
 const oc_string_t *
 oc_cloud_get_server_uri(const oc_cloud_context_t *ctx)
 {
-  return oc_cloud_endpoint_selected_address(&ctx->store.ci_servers);
+  return oc_endpoint_addresses_selected_uri(&ctx->store.ci_servers);
 }
 
 const oc_uuid_t *
 oc_cloud_get_server_id(const oc_cloud_context_t *ctx)
 {
-  if (ctx->store.ci_servers.selected == NULL) {
-    return NULL;
-  }
-  return &ctx->store.ci_servers.selected->id;
+  return oc_endpoint_addresses_selected_uuid(&ctx->store.ci_servers);
 }
 
 const oc_endpoint_t *
@@ -313,38 +312,41 @@ oc_cloud_set_schedule_action(oc_cloud_context_t *ctx,
   ctx->schedule_action.user_data = user_data;
 }
 
-oc_cloud_endpoint_t *
-oc_cloud_add_server(oc_cloud_context_t *ctx, const char *uri, size_t uri_len,
-                    oc_uuid_t sid)
+oc_endpoint_address_t *
+oc_cloud_add_server_address(oc_cloud_context_t *ctx, const char *uri,
+                            size_t uri_len, oc_uuid_t sid)
 {
-  return oc_cloud_endpoint_add(&ctx->store.ci_servers,
-                               oc_string_view(uri, uri_len), sid);
+  return oc_endpoint_addresses_add(
+    &ctx->store.ci_servers,
+    oc_endpoint_address_make_view_with_uuid(oc_string_view(uri, uri_len), sid));
 }
 
 bool
-oc_cloud_remove_server(oc_cloud_context_t *ctx, const oc_cloud_endpoint_t *ce)
+oc_cloud_remove_server_address(oc_cloud_context_t *ctx,
+                               const oc_endpoint_address_t *ea)
 {
-  return oc_cloud_endpoint_remove(&ctx->store.ci_servers, ce);
+  return oc_endpoint_addresses_remove(&ctx->store.ci_servers, ea);
 }
 
 void
-oc_cloud_iterate_servers(const oc_cloud_context_t *ctx,
-                         oc_cloud_endpoints_iterate_fn_t fn, void *data)
+oc_cloud_iterate_server_addresses(const oc_cloud_context_t *ctx,
+                                  oc_endpoint_addresses_iterate_fn_t fn,
+                                  void *data)
 {
-  oc_cloud_endpoints_iterate(&ctx->store.ci_servers, fn, data);
+  oc_endpoint_addresses_iterate(&ctx->store.ci_servers, fn, data);
 }
 
 bool
-oc_cloud_select_server(oc_cloud_context_t *ctx,
-                       const oc_cloud_endpoint_t *server)
+oc_cloud_select_server_address(oc_cloud_context_t *ctx,
+                               const oc_endpoint_address_t *ea)
 {
-  return oc_cloud_endpoint_select(&ctx->store.ci_servers, server);
+  return oc_endpoint_addresses_select(&ctx->store.ci_servers, ea);
 }
 
-const oc_cloud_endpoint_t *
-oc_cloud_selected_server(const oc_cloud_context_t *ctx)
+const oc_endpoint_address_t *
+oc_cloud_selected_server_address(const oc_cloud_context_t *ctx)
 {
-  return ctx->store.ci_servers.selected;
+  return oc_endpoint_addresses_selected(&ctx->store.ci_servers);
 }
 
 #endif /* OC_CLOUD */

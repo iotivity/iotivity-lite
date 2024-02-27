@@ -79,19 +79,18 @@ oc_cloud_store_encode(const oc_cloud_store_t *store)
 {
   oc_rep_start_root_object();
 
-  const oc_cloud_endpoint_t *selected = store->ci_servers.selected;
+  const oc_endpoint_address_t *selected =
+    oc_endpoint_addresses_selected(&store->ci_servers);
   if (selected != NULL) {
-    rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_CI_SERVER),
-                        oc_string_view2(&selected->uri));
-    char selected_uuid[OC_UUID_LEN] = { 0 };
-    int selected_uuid_len = oc_uuid_to_str_v1(&selected->id, selected_uuid,
-                                              OC_ARRAY_SIZE(selected_uuid));
-    assert(selected_uuid_len > 0);
-    rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_SID),
-                        oc_string_view(selected_uuid, selected_uuid_len));
+    assert(selected->metadata.id_type ==
+           OC_ENDPOINT_ADDRESS_METADATA_TYPE_UUID);
+    g_err |= oc_endpoint_address_encode(
+      oc_rep_object(root), OC_STRING_VIEW(CLOUD_CI_SERVER),
+      OC_STRING_VIEW(CLOUD_SID), OC_STRING_VIEW_NULL,
+      oc_endpoint_address_view(selected));
   }
-  g_err |= oc_cloud_endpoints_encode(oc_rep_object(root), &store->ci_servers,
-                                     OC_STRING_VIEW(CLOUD_SERVERS), true);
+  g_err |= oc_endpoint_addresses_encode(oc_rep_object(root), &store->ci_servers,
+                                        OC_STRING_VIEW(CLOUD_SERVERS), true);
   rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_AUTH_PROVIDER),
                       oc_string_view2(&store->auth_provider));
   rep_set_text_string(oc_rep_object(root), OC_STRING_VIEW(CLOUD_UID),
@@ -246,7 +245,6 @@ cloud_store_set_servers(oc_cloud_store_t *store,
                         const oc_string_t *selected_uri,
                         const oc_string_t *selected_id, const oc_rep_t *servers)
 {
-  oc_cloud_endpoints_deinit(&store->ci_servers);
   oc_uuid_t uuid = OCF_COAPCLOUDCONF_DEFAULT_SID;
   if (selected_id != NULL) {
     oc_string_view_t selected_idv = oc_string_view2(selected_id);
@@ -255,8 +253,9 @@ cloud_store_set_servers(oc_cloud_store_t *store,
       return false;
     }
   }
-  if (!oc_cloud_endpoints_reinit(&store->ci_servers,
-                                 oc_string_view2(selected_uri), uuid)) {
+  if (!oc_endpoint_addresses_reinit(&store->ci_servers,
+                                    oc_endpoint_address_make_view_with_uuid(
+                                      oc_string_view2(selected_uri), uuid))) {
     return false;
   }
 
@@ -286,11 +285,13 @@ cloud_store_set_servers(oc_cloud_store_t *store,
       continue;
     }
 
-    if (oc_cloud_endpoint_contains(&store->ci_servers, uri)) {
+    if (oc_endpoint_addresses_contains(&store->ci_servers, uri)) {
       continue;
     }
 
-    if (!oc_cloud_endpoint_add(&store->ci_servers, uri, uuid)) {
+    if (!oc_endpoint_addresses_add(
+          &store->ci_servers,
+          oc_endpoint_address_make_view_with_uuid(uri, uuid))) {
       return false;
     }
   }
@@ -392,22 +393,23 @@ oc_cloud_store_reinitialize(oc_cloud_store_t *store)
 }
 
 void
-oc_cloud_store_initialize(oc_cloud_store_t *store,
-                          on_selected_change_fn_t on_cloud_server_change,
-                          void *on_cloud_server_change_data)
+oc_cloud_store_initialize(
+  oc_cloud_store_t *store,
+  on_selected_endpoint_address_change_fn_t on_cloud_server_change,
+  void *on_cloud_server_change_data)
 {
   oc_cloud_store_deinitialize(store);
-  oc_cloud_endpoints_init(&store->ci_servers, on_cloud_server_change,
-                          on_cloud_server_change_data,
-                          OC_STRING_VIEW(OCF_COAPCLOUDCONF_DEFAULT_CIS),
-                          OCF_COAPCLOUDCONF_DEFAULT_SID);
+  oc_cloud_endpoint_addresses_init(
+    &store->ci_servers, on_cloud_server_change, on_cloud_server_change_data,
+    OC_STRING_VIEW(OCF_COAPCLOUDCONF_DEFAULT_CIS),
+    OCF_COAPCLOUDCONF_DEFAULT_SID);
 }
 
 void
 oc_cloud_store_deinitialize(oc_cloud_store_t *store)
 {
   oc_remove_delayed_callback(store, cloud_store_dump_handler);
-  oc_cloud_endpoints_deinit(&store->ci_servers);
+  oc_endpoint_addresses_deinit(&store->ci_servers);
   oc_set_string(&store->auth_provider, NULL, 0);
   oc_set_string(&store->uid, NULL, 0);
   oc_set_string(&store->access_token, NULL, 0);

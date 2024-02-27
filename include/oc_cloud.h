@@ -30,6 +30,7 @@
 #include "oc_session_events.h"
 #include "oc_uuid.h"
 #include "util/oc_compiler.h"
+#include "util/oc_endpoint_address.h"
 #include "util/oc_features.h"
 
 #ifdef __cplusplus
@@ -263,7 +264,7 @@ const oc_uuid_t *oc_cloud_get_server_id(const oc_cloud_context_t *ctx)
  * @return NULL if no cloud server is selected, or if the cloud manager has not
  * been started
  *
- * @see oc_cloud_select_server
+ * @see oc_cloud_select_server_address
  * @see oc_cloud_get_server_uri
  */
 OC_API
@@ -556,21 +557,13 @@ void oc_cloud_context_clear(oc_cloud_context_t *ctx, bool dump_async)
   OC_NONNULL();
 
 /**
- * \defgroup cloud_servers Support for multiple cloud servers
+ * \defgroup cloud_servers Support for multiple cloud server addresses
  * @{
  */
 
-/** Maximum length of the cloud server URI. */
-#ifdef OC_STORAGE
-#define OC_ENDPOINT_MAX_ENDPOINT_URI_LENGTH STRING_ARRAY_ITEM_MAX_LEN
-#else /* !OC_STORAGE */
-#define OC_ENDPOINT_MAX_ENDPOINT_URI_LENGTH OC_MAX_STRING_LENGTH
-#endif /* OC_STORAGE */
-
-typedef struct oc_cloud_endpoint_t oc_cloud_endpoint_t;
-
 /**
- * @brief Allocate and add an endpoint address to the list of cloud servers.
+ * @brief Allocate and add an endpoint address to the list of cloud server
+ * addresses.
  *
  * @param ctx cloud context (cannot be NULL)
  * @param uri endpoint address (cannot be NULL; the uri must be at least 1
@@ -579,116 +572,95 @@ typedef struct oc_cloud_endpoint_t oc_cloud_endpoint_t;
  * @param uri_len length of \p uri
  * @param sid identity of the cloud server
  *
- * @return oc_cloud_endpoint_t* pointer to the allocated cloud endpoint
+ * @return oc_endpoint_address_t* pointer to the allocated cloud address
  * @return NULL on failure
  */
 OC_API
-oc_cloud_endpoint_t *oc_cloud_add_server(oc_cloud_context_t *ctx,
-                                         const char *uri, size_t uri_len,
-                                         oc_uuid_t sid) OC_NONNULL();
+oc_endpoint_address_t *oc_cloud_add_server_address(oc_cloud_context_t *ctx,
+                                                   const char *uri,
+                                                   size_t uri_len,
+                                                   oc_uuid_t sid) OC_NONNULL();
 
 /**
- * @brief Remove an endpoint address from the list of cloud servers.
+ * @brief Remove an endpoint address from the list of cloud server addresses.
  *
  * @param ctx cloud context (cannot be NULL)
- * @param ce cloud endpoint to remove
+ * @param ea endpoint address to remove
  *
  * @return true if the endpoint address was removed from the list of cloud
  * servers
  * @return false on failure
  *
- * @note The servers are stored in a list. If the selected server is removed,
- * then next server in the list will be selected. If the selected server is the
- * last item in the list, then the first server in the list will be selected (if
- * it exists).
+ * @note The servers are stored in a list. If the selected server address is
+ * removed, then next server address in the list will be selected. If the
+ * selected server address is the last item in the list, then the first server
+ * address in the list will be selected (if it exists).
  *
  * @note The server is cached by the cloud, so if you remove the selected server
- * during cloud provisioning then it might be necessary to restart the cloud
- * manager for the change to take effect.
+ * address during cloud provisioning then it might be necessary to restart the
+ * cloud manager for the change to take effect.
  *
  * @see oc_cloud_manager_restart
  */
 OC_API
-bool oc_cloud_remove_server(oc_cloud_context_t *ctx,
-                            const oc_cloud_endpoint_t *ce) OC_NONNULL();
-
-/** @brief Get the address of the cloud endpoint. */
-OC_API
-const oc_string_t *oc_cloud_endpoint_uri(const oc_cloud_endpoint_t *ce)
+bool oc_cloud_remove_server_address(oc_cloud_context_t *ctx,
+                                    const oc_endpoint_address_t *ea)
   OC_NONNULL();
 
-/** @brief Set the ID of the cloud endpoint. */
-OC_API
-void oc_cloud_endpoint_set_id(oc_cloud_endpoint_t *ce, oc_uuid_t id)
-  OC_NONNULL();
-
-/** @brief Get the ID of the cloud endpoint. */
-OC_API
-oc_uuid_t oc_cloud_endpoint_id(const oc_cloud_endpoint_t *ce) OC_NONNULL();
-
 /**
- * @brief Callback invoked for each endpoint address iterated by
- * oc_cloud_servers_iterate.
- *
- * @param ce cloud endpoint to process
- * @param data custom user data provided to oc_cloud_servers_iterate
- * @return true to continue iteration
- * @return false to stop iteration
- */
-typedef bool (*oc_cloud_endpoints_iterate_fn_t)(oc_cloud_endpoint_t *ce,
-                                                void *data) OC_NONNULL(1);
-
-/**
- * @brief Iterate over cloud servers.
+ * @brief Iterate over cloud server addresses.
  *
  * @param ctx cloud context (cannot be NULL)
- * @param fn callback function invoked for each endpoint address (cannot be
+ * @param fn callback function invoked for each  cloud server address (cannot be
  * NULL)
  * @param data custom user data provided to \p fn
  *
- * @note The callback function \p fn must not modify the list of cloud servers.
+ * @note The callback function \p fn must not modify the list of cloud server
+ * addresses.
  */
 OC_API
-void oc_cloud_iterate_servers(const oc_cloud_context_t *ctx,
-                              oc_cloud_endpoints_iterate_fn_t fn, void *data)
-  OC_NONNULL(1, 2);
+void oc_cloud_iterate_server_addresses(const oc_cloud_context_t *ctx,
+                                       oc_endpoint_addresses_iterate_fn_t fn,
+                                       void *data) OC_NONNULL(1, 2);
 
 /**
- * @brief Select a cloud server from the list of cloud servers.
+ * @brief Select an address from the list of cloud server addresses.
  *
  * @param ctx cloud context (cannot be NULL)
- * @param server cloud server to select (cannot be NULL; must be in the list of
- * cloud servers)
+ * @param ea cloud server address to select (cannot be NULL; must be in
+ * the list of cloud servers)
  *
- * @return true if the cloud server was selected
- * @return false on failure to select the server, because it is not in the list
- * of endpoints
+ * @return true if the address was selected
+ * @return false on failure to select the address, because it is not in the list
+ * of cloud server addresses
  *
- * @note The address of the selected server will be returned as the cis value
- * and the identity of the selected server will be returned as the sid value.
+ * @note The uri of the selected server address will be returned as the cis
+ * value and the identity of the selected server address will be returned as the
+ * sid value.
  *
- * @note The server is cached by the cloud, so if you the selected server during
- * cloud provisioning then it might be necessary to restart the cloud manager
- * for the change to take effect.
+ * @note The server is cached by the cloud, so if you change the selected server
+ * address during cloud provisioning then it might be necessary to restart the
+ * cloud manager for the change to take effect.
  *
- * @see oc_cloud_remove_server
+ * @see oc_cloud_remove_server_address
  * @see oc_cloud_get_server_uri
  * @see oc_cloud_get_server_id
  * @see oc_cloud_manager_restart
  */
 OC_API
-bool oc_cloud_select_server(oc_cloud_context_t *ctx,
-                            const oc_cloud_endpoint_t *server) OC_NONNULL();
+bool oc_cloud_select_server_address(oc_cloud_context_t *ctx,
+                                    const oc_endpoint_address_t *ea)
+  OC_NONNULL();
 
 /**
- * @brief Get the selected cloud server.
+ * @brief Get the selected cloud server address.
  *
  * @param ctx cloud context (cannot be NULL)
- * @return oc_cloud_endpoint_t* pointer to the selected cloud server
- * @return NULL if no cloud server is selected
+ * @return oc_endpoint_address_t* pointer to the selected cloud server address
+ * @return NULL if no cloud server address is selected
  */
 OC_API
-const oc_cloud_endpoint_t *oc_cloud_selected_server(
+const oc_endpoint_address_t *oc_cloud_selected_server_address(
   const oc_cloud_context_t *ctx) OC_NONNULL();
 
 /** @} */ // end of cloud_servers

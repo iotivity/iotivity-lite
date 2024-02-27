@@ -17,6 +17,10 @@
 #define OC_HAS_FEATURE_ETAG
 #endif /* OC_ETAG && OC_SERVER */
 
+#if defined(OC_CLOUD)
+#define OC_HAS_FEATURE_ENDPOINT_ADDRESS_LIST
+#endif /* OC_CLOUD */
+
 /*********************************************************************
  * change enums being used as bitmaps to integers for Java enums do
  * not work as bitmaps in Java due to language constraints.

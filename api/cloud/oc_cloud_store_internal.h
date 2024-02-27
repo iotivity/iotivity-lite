@@ -21,11 +21,12 @@
 #ifndef OC_CLOUD_STORE_INTERNAL_H
 #define OC_CLOUD_STORE_INTERNAL_H
 
-#include "api/cloud/oc_cloud_endpoint_internal.h"
+#include "api/cloud/oc_cloud_endpoints_internal.h"
 #include "oc_cloud.h"
 #include "oc_helpers.h"
 #include "oc_rep.h"
 #include "util/oc_compiler.h"
+#include "util/oc_endpoint_address_internal.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -38,7 +39,7 @@ extern "C" {
 
 typedef struct oc_cloud_store_t
 {
-  oc_cloud_endpoints_t ci_servers; ///< ([URL, id] pairs of the OCF Cloud.
+  oc_endpoint_addresses_t ci_servers; ///< ([URL, id] pairs of the OCF Cloud.
   oc_string_t auth_provider; ///< The name of the Authorisation Provider through
                              // which access token was obtained.
   oc_string_t uid; ///< Unique OCF Cloud User identifier; TODO: switch to uuid
@@ -54,9 +55,10 @@ typedef struct oc_cloud_store_t
 } oc_cloud_store_t;
 
 /** @brief Set store data to default values */
-void oc_cloud_store_initialize(oc_cloud_store_t *store,
-                               on_selected_change_fn_t on_cloud_server_change,
-                               void *on_cloud_server_change_dat) OC_NONNULL(1);
+void oc_cloud_store_initialize(
+  oc_cloud_store_t *store,
+  on_selected_endpoint_address_change_fn_t on_cloud_server_change,
+  void *on_cloud_server_change_data) OC_NONNULL(1);
 
 /** @brief Reinitialize store data */
 void oc_cloud_store_reinitialize(oc_cloud_store_t *store) OC_NONNULL();

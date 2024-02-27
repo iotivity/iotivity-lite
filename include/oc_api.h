@@ -33,7 +33,6 @@
 
 #include "messaging/coap/oc_coap.h"
 #include "oc_buffer_settings.h"
-#include "oc_cloud.h"
 #include "oc_config.h"
 #include "oc_export.h"
 #include "oc_link.h"
@@ -45,6 +44,10 @@
 #include "util/oc_compiler.h"
 #include "util/oc_features.h"
 #include "util/oc_process.h"
+
+#ifdef OC_CLOUD
+#include "oc_cloud.h"
+#endif /* OC_CLOUD */
 
 #ifdef OC_COLLECTIONS
 #include "oc_collection.h"

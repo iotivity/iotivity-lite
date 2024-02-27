@@ -168,7 +168,16 @@ typedef struct oc_mmem oc_handle_t, oc_string_t, oc_array_t, oc_string_array_t,
  */
 void oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2)
   OC_NONNULL();
+
+/// @brief Get the length of the C-string stored by ocstring
 #define oc_string_len(ocstring) ((ocstring).size != 0 ? (ocstring).size - 1 : 0)
+
+/**
+ * @brief Get the length of the non-NULL C-string
+ * @warning This is an unsafe version of oc_string_len, use only if you are sure
+ * that the C-string stored by ocstring is not NULL
+ */
+size_t oc_string_len_unsafe(oc_string_t str);
 
 #define oc_int_array_size(ocintarray) ((ocintarray).size)
 #define oc_bool_array_size(ocboolarray) ((ocboolarray).size)

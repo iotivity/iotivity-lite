@@ -108,7 +108,8 @@ TEST_F(TestCloudContext, GetCisAndSid)
   auto cis = OC_STRING_VIEW("cis");
   oc_uuid_t sid;
   oc_gen_uuid(&sid);
-  ASSERT_TRUE(oc_cloud_endpoints_reinit(&ctx.store.ci_servers, cis, sid));
+  ASSERT_TRUE(oc_endpoint_addresses_reinit(
+    &ctx.store.ci_servers, oc_endpoint_address_make_view_with_uuid(cis, sid)));
   const auto *ctx_cis = oc_cloud_get_server_uri(&ctx);
   ASSERT_NE(nullptr, ctx_cis);
   EXPECT_STREQ(cis.data, oc_string(*ctx_cis));
