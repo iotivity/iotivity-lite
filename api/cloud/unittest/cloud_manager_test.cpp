@@ -70,10 +70,11 @@ public:
     oc_string_view_t ep = OC_STRING_VIEW("coap://224.0.1.187:5683");
     oc_uuid_t sid;
     oc_gen_uuid(&sid);
-    ASSERT_NE(nullptr,
-              oc_cloud_endpoint_add(&m_context.store.ci_servers, ep, sid));
+    ASSERT_NE(nullptr, oc_endpoint_addresses_add(
+                         &m_context.store.ci_servers,
+                         oc_endpoint_address_make_view_with_uuid(ep, sid)));
     ASSERT_TRUE(
-      oc_cloud_endpoint_select_by_uri(&m_context.store.ci_servers, ep));
+      oc_endpoint_addresses_select_by_uri(&m_context.store.ci_servers, ep));
     std::string uid = "501";
     oc_set_string(&m_context.store.uid, uid.c_str(), uid.length());
     std::string token = "access_token";
@@ -342,9 +343,12 @@ TEST_F(TestCloudManager, cloud_manager_select_next_server_on_retry)
   oc_string_view_t uri = OC_STRING_VIEW("coap://13.3.7.187:5683");
   oc_uuid_t sid;
   oc_gen_uuid(&sid);
-  auto *ep = oc_cloud_endpoint_add(&m_context.store.ci_servers, uri, sid);
+  auto *ep = oc_endpoint_addresses_add(
+    &m_context.store.ci_servers,
+    oc_endpoint_address_make_view_with_uuid(uri, sid));
   ASSERT_NE(nullptr, ep);
-  ASSERT_FALSE(oc_cloud_endpoint_is_selected(&m_context.store.ci_servers, uri));
+  ASSERT_FALSE(
+    oc_endpoint_addresses_is_selected(&m_context.store.ci_servers, uri));
 
   // When
   m_context.store.status = OC_CLOUD_INITIALIZED;
@@ -357,7 +361,8 @@ TEST_F(TestCloudManager, cloud_manager_select_next_server_on_retry)
   cloud_manager_stop(&m_context);
 
   // Then
-  EXPECT_TRUE(oc_cloud_endpoint_is_selected(&m_context.store.ci_servers, uri));
+  EXPECT_TRUE(
+    oc_endpoint_addresses_is_selected(&m_context.store.ci_servers, uri));
 }
 
 #endif /* !OC_SECURITY */
@@ -370,8 +375,8 @@ public:
   void SetUp() override
   {
     memset(&m_context, 0, sizeof(m_context));
-    oc_cloud_endpoints_init(&m_context.store.ci_servers, nullptr, nullptr,
-                            OC_STRING_VIEW_NULL, {});
+    oc_cloud_endpoint_addresses_init(&m_context.store.ci_servers, nullptr,
+                                     nullptr, OC_STRING_VIEW_NULL, {});
   }
 
   void TearDown() override
@@ -405,7 +410,7 @@ public:
 
   bool IsEmptyContext() const
   {
-    return oc_cloud_endpoints_is_empty(&m_context.store.ci_servers) &&
+    return oc_endpoint_addresses_is_empty(&m_context.store.ci_servers) &&
            oc_string(m_context.store.access_token) == nullptr &&
            oc_string(m_context.store.refresh_token) == nullptr &&
            oc_string(m_context.store.uid) == nullptr &&
@@ -561,23 +566,26 @@ TEST_F(TestCloudManagerData, cloud_manager_parse_redirect)
   oc_rep_end_root_object();
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
   oc::oc_rep_unique_ptr rep = ParsePayload();
+  ASSERT_NE(nullptr, rep.get());
   PrintJson(rep.get());
 
-  oc_cloud_endpoints_reinit(&GetContext()->store.ci_servers,
-                            OC_STRING_VIEW(OCF_COAPCLOUDCONF_DEFAULT_CIS),
-                            OCF_COAPCLOUDCONF_DEFAULT_SID);
+  oc_endpoint_addresses_reinit(&GetContext()->store.ci_servers,
+                               oc_endpoint_address_make_view_with_uuid(
+                                 OC_STRING_VIEW(OCF_COAPCLOUDCONF_DEFAULT_CIS),
+                                 OCF_COAPCLOUDCONF_DEFAULT_SID));
   EXPECT_TRUE(cloud_manager_handle_redirect_response(GetContext(), rep.get()));
   EXPECT_FALSE(IsEmptyContext());
-  EXPECT_TRUE(oc_cloud_endpoint_is_selected(
+  EXPECT_TRUE(oc_endpoint_addresses_is_selected(
     &GetContext()->store.ci_servers,
     oc_string_view(redirect.c_str(), redirect.length())));
 
   GetContext()->cloud_ep = oc_new_endpoint();
-  oc_cloud_endpoints_reinit(&GetContext()->store.ci_servers,
-                            OC_STRING_VIEW_NULL, {});
+  oc_endpoint_addresses_reinit(
+    &GetContext()->store.ci_servers,
+    oc_endpoint_address_make_view_with_uuid(OC_STRING_VIEW_NULL, {}));
   EXPECT_TRUE(cloud_manager_handle_redirect_response(GetContext(), rep.get()));
   EXPECT_FALSE(IsEmptyContext());
-  EXPECT_TRUE(oc_cloud_endpoint_is_selected(
+  EXPECT_TRUE(oc_endpoint_addresses_is_selected(
     &GetContext()->store.ci_servers,
     oc_string_view(redirect.c_str(), redirect.length())));
   oc_cloud_set_endpoint(GetContext());
@@ -586,7 +594,7 @@ TEST_F(TestCloudManagerData, cloud_manager_parse_redirect)
 
   EXPECT_TRUE(cloud_manager_handle_redirect_response(GetContext(), rep.get()));
   EXPECT_FALSE(IsEmptyContext());
-  EXPECT_TRUE(oc_cloud_endpoint_is_selected(
+  EXPECT_TRUE(oc_endpoint_addresses_is_selected(
     &GetContext()->store.ci_servers,
     oc_string_view(redirect.c_str(), redirect.length())));
 }

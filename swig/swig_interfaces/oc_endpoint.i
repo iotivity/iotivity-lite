@@ -72,9 +72,9 @@
   }
 
   ~oc_endpoint_t() {
-   OC_DBG("JNI: %s\n", __func__);
-   oc_free_endpoint($self);
-   $self = NULL;
+    OC_DBG("JNI: %s\n", __func__);
+    oc_free_endpoint($self);
+    $self = NULL;
   }
 
   void setDi(oc_uuid_t *di) {

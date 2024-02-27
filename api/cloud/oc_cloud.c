@@ -37,6 +37,7 @@
 #include "oc_core_res.h"
 #include "oc_network_monitor.h"
 #include "port/oc_assert.h"
+#include "util/oc_endpoint_address_internal.h"
 #include "util/oc_mmem_internal.h"
 #include "util/oc_secure_string_internal.h"
 
@@ -113,7 +114,7 @@ oc_cloud_set_endpoint(oc_cloud_context_t *ctx)
 
   bool success = false;
   const oc_string_t *ep_addr =
-    oc_cloud_endpoint_selected_address(&ctx->store.ci_servers);
+    oc_endpoint_addresses_selected_uri(&ctx->store.ci_servers);
   if (oc_string_to_endpoint(ep_addr, ctx->cloud_ep, NULL) == 0) {
     // set device id to cloud endpoint for multiple servers
     ctx->cloud_ep->device = ctx->device;
@@ -181,13 +182,14 @@ cloud_set_cloudconf(oc_cloud_context_t *ctx, const oc_cloud_conf_update_t *data)
     oc_copy_string(&ctx->store.auth_provider, data->auth_provider);
   }
   if (!oc_string_is_null_or_empty(data->ci_server)) {
-    // cannot oc_cloud_endpoints_reinit, because the deinit might deallocate
-    // oc_string_t values and relocate memory, thus invalidating the
+    // cannot call oc_endpoint_addresses_reinit, because the deinit might
+    // deallocate oc_string_t values and relocate memory, thus invalidating the
     // oc_string_view
-    oc_cloud_endpoints_deinit(&ctx->store.ci_servers);
-    // oc_cloud_endpoints_init only allocates, so the oc_string_view_t is valid
+    oc_endpoint_addresses_deinit(&ctx->store.ci_servers);
+    // oc_cloud_endpoint_addresses_init only allocates, so the oc_string_view_t
+    // is valid
     oc_string_view_t cis = oc_string_view2(data->ci_server);
-    if (!oc_cloud_endpoints_init(
+    if (!oc_cloud_endpoint_addresses_init(
           &ctx->store.ci_servers, ctx->store.ci_servers.on_selected_change,
           ctx->store.ci_servers.on_selected_change_data, cis, data->sid)) {
       OC_WRN("Failed to reinitialize cloud server endpoints");

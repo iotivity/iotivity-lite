@@ -246,7 +246,7 @@ TEST_F(TestCloudResourceWithServer, GetRequest_NoCloudServers)
   // remove default
   auto *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
-  oc_cloud_endpoints_clear(&ctx->store.ci_servers);
+  oc_endpoint_addresses_clear(&ctx->store.ci_servers);
 
   CloudResourceData crd{};
   getRequest(&crd);

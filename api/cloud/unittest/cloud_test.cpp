@@ -19,7 +19,7 @@
 #include "api/cloud/oc_cloud_apis_internal.h"
 #include "api/cloud/oc_cloud_context_internal.h"
 #include "api/cloud/oc_cloud_deregister_internal.h"
-#include "api/cloud/oc_cloud_endpoint_internal.h"
+#include "api/cloud/oc_cloud_endpoints_internal.h"
 #include "api/cloud/oc_cloud_internal.h"
 #include "api/cloud/oc_cloud_resource_internal.h"
 #include "messaging/coap/conf.h"
@@ -265,7 +265,7 @@ TEST_F(TestCloud, oc_cloud_register_fail_invalid_server)
   auto cbk = [](oc_cloud_context_t *, oc_cloud_status_t, void *user_data) {
     *static_cast<bool *>(user_data) = true;
   };
-  oc_cloud_endpoints_clear(&ctx->store.ci_servers);
+  oc_endpoint_addresses_clear(&ctx->store.ci_servers);
 
   ASSERT_EQ(-1, oc_cloud_register(ctx, cbk, &cbk_called));
   EXPECT_FALSE(cbk_called);
@@ -344,7 +344,7 @@ TEST_F(TestCloud, oc_cloud_login_fail_invalid_server)
     *static_cast<bool *>(user_data) = true;
   };
   ctx->store.status = OC_CLOUD_REGISTERED;
-  oc_cloud_endpoints_clear(&ctx->store.ci_servers);
+  oc_endpoint_addresses_clear(&ctx->store.ci_servers);
 
   ASSERT_EQ(-1, oc_cloud_login(ctx, cbk, &cbk_called));
   EXPECT_FALSE(cbk_called);
@@ -407,7 +407,7 @@ TEST_F(TestCloud, oc_cloud_refresh_token_fail_invalid_server)
     *static_cast<bool *>(user_data) = true;
   };
   ctx->store.status = OC_CLOUD_REGISTERED;
-  oc_cloud_endpoints_clear(&ctx->store.ci_servers);
+  oc_endpoint_addresses_clear(&ctx->store.ci_servers);
 
   ASSERT_EQ(-1, oc_cloud_refresh_token(ctx, cbk, &cbk_called));
   EXPECT_FALSE(cbk_called);
@@ -474,7 +474,7 @@ TEST_F(TestCloud, oc_cloud_logout_fail_invalid_server)
     *static_cast<bool *>(user_data) = true;
   };
   ctx->store.status = OC_CLOUD_REGISTERED | OC_CLOUD_LOGGED_IN;
-  oc_cloud_endpoints_clear(&ctx->store.ci_servers);
+  oc_endpoint_addresses_clear(&ctx->store.ci_servers);
 
   ASSERT_EQ(-1, oc_cloud_logout(ctx, cbk, &cbk_called));
   EXPECT_FALSE(cbk_called);
@@ -556,7 +556,7 @@ TEST_F(TestCloud, oc_cloud_deregister_fail_invalid_server)
     *static_cast<bool *>(user_data) = true;
   };
   ctx->store.status = OC_CLOUD_REGISTERED;
-  oc_cloud_endpoints_clear(&ctx->store.ci_servers);
+  oc_endpoint_addresses_clear(&ctx->store.ci_servers);
 
   ASSERT_EQ(-1, oc_cloud_deregister(ctx, cbk, &cbk_called));
   EXPECT_FALSE(cbk_called);
@@ -677,7 +677,7 @@ TEST_F(TestCloud, oc_cloud_deregister_with_refresh_token_fail_invalid_server)
                 refresh_token.length());
   ASSERT_FALSE(oc_cloud_check_accesstoken_for_deregister(ctx));
   ctx->store.status = OC_CLOUD_REGISTERED;
-  oc_cloud_endpoints_clear(&ctx->store.ci_servers);
+  oc_endpoint_addresses_clear(&ctx->store.ci_servers);
 
   bool cbk_called = false;
   auto cbk = [](oc_cloud_context_t *, oc_cloud_status_t, void *user_data) {
@@ -724,7 +724,7 @@ TEST_F(TestCloud, oc_cloud_deregister_with_login_fail_invalid_server)
                 longAccessToken.length());
   ASSERT_FALSE(oc_cloud_check_accesstoken_for_deregister(ctx));
   ctx->store.status = OC_CLOUD_REGISTERED;
-  oc_cloud_endpoints_clear(&ctx->store.ci_servers);
+  oc_endpoint_addresses_clear(&ctx->store.ci_servers);
 
   bool cbk_called = false;
   auto cbk = [](oc_cloud_context_t *, oc_cloud_status_t, void *user_data) {
@@ -763,9 +763,9 @@ TEST_F(TestCloud, EndpointAPI)
   EXPECT_TRUE(oc_uuid_is_equal(OCF_COAPCLOUDCONF_DEFAULT_SID,
                                *oc_cloud_get_server_id(ctx)));
   // remove default
-  oc_cloud_endpoints_clear(&ctx->store.ci_servers);
-  // no enpoint selected -> both cis and sid should be nullptr
-  EXPECT_EQ(nullptr, oc_cloud_selected_server(ctx));
+  oc_endpoint_addresses_clear(&ctx->store.ci_servers);
+  // no endpoint selected -> both cis and sid should be nullptr
+  EXPECT_EQ(nullptr, oc_cloud_selected_server_address(ctx));
   EXPECT_EQ(nullptr, oc_cloud_get_server_uri(ctx));
   EXPECT_EQ(nullptr, oc_cloud_get_server_id(ctx));
 
@@ -773,43 +773,43 @@ TEST_F(TestCloud, EndpointAPI)
   std::string uri1 = "/uri/1";
   oc_uuid_t uid1;
   oc_gen_uuid(&uid1);
-  oc_cloud_endpoint_t *ep1 =
-    oc_cloud_add_server(ctx, uri1.c_str(), uri1.length(), uid1);
+  auto *ep1 =
+    oc_cloud_add_server_address(ctx, uri1.c_str(), uri1.length(), uid1);
   ASSERT_NE(nullptr, ep1);
   std::string uri2 = "/uri/2";
   oc_uuid_t uid2;
   oc_gen_uuid(&uid2);
-  oc_cloud_endpoint_t *ep2 =
-    oc_cloud_add_server(ctx, uri2.c_str(), uri2.length(), uid2);
+  auto *ep2 =
+    oc_cloud_add_server_address(ctx, uri2.c_str(), uri2.length(), uid2);
   ASSERT_NE(nullptr, ep2);
 #ifdef OC_DYNAMIC_ALLOCATION
   std::string uri3 = "/uri/3";
   oc_uuid_t uid3;
   oc_gen_uuid(&uid3);
-  oc_cloud_endpoint_t *ep3 =
-    oc_cloud_add_server(ctx, uri3.c_str(), uri3.length(), uid3);
+  auto *ep3 =
+    oc_cloud_add_server_address(ctx, uri3.c_str(), uri3.length(), uid3);
   ASSERT_NE(nullptr, ep3);
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   // first item added to empty list should be selected
-  EXPECT_EQ(ep1, oc_cloud_selected_server(ctx));
+  EXPECT_EQ(ep1, oc_cloud_selected_server_address(ctx));
   EXPECT_STREQ(uri1.c_str(), oc_string(*oc_cloud_get_server_uri(ctx)));
   EXPECT_TRUE(oc_uuid_is_equal(uid1, *oc_cloud_get_server_id(ctx)));
 
   // remove the first item
-  ASSERT_TRUE(oc_cloud_remove_server(ctx, ep1));
+  ASSERT_TRUE(oc_cloud_remove_server_address(ctx, ep1));
 
   // next endpoint should be selected
-  EXPECT_EQ(ep2, oc_cloud_selected_server(ctx));
+  EXPECT_EQ(ep2, oc_cloud_selected_server_address(ctx));
   EXPECT_STREQ(uri2.c_str(), oc_string(*oc_cloud_get_server_uri(ctx)));
   EXPECT_TRUE(oc_uuid_is_equal(uid2, *oc_cloud_get_server_id(ctx)));
 
   std::set<std::string, std::less<>> uris{};
   // iterate
-  oc_cloud_iterate_servers(
+  oc_cloud_iterate_server_addresses(
     ctx,
-    [](oc_cloud_endpoint_t *endpoint, void *data) {
-      auto uri = oc_cloud_endpoint_uri(endpoint);
+    [](oc_endpoint_address_t *ea, void *data) {
+      auto uri = oc_endpoint_address_uri(ea);
       static_cast<std::set<std::string> *>(data)->insert(
         std::string(oc_string(*uri), oc_string_len(*uri)));
       return true;
@@ -825,38 +825,38 @@ TEST_F(TestCloud, EndpointAPI)
   EXPECT_NE(uris.end(), uris.find(uri2));
   EXPECT_EQ(uris.end(), uris.find(uri1));
 
-  oc_cloud_endpoint_t *toSelect = nullptr;
+  oc_endpoint_address_t *toSelect = nullptr;
   // iterate to get the last endpoint
-  oc_cloud_iterate_servers(
+  oc_cloud_iterate_server_addresses(
     ctx,
-    [](oc_cloud_endpoint_t *endpoint, void *data) {
-      *static_cast<oc_cloud_endpoint_t **>(data) = endpoint;
+    [](oc_endpoint_address_t *ea, void *data) {
+      *static_cast<oc_endpoint_address_t **>(data) = ea;
       return true;
     },
     &toSelect);
 
-  oc_cloud_endpoint_t notInList{};
-  EXPECT_FALSE(oc_cloud_select_server(ctx, &notInList));
+  oc_endpoint_address_t notInList{};
+  EXPECT_FALSE(oc_cloud_select_server_address(ctx, &notInList));
 
   ASSERT_NE(nullptr, toSelect);
-  EXPECT_TRUE(oc_cloud_select_server(ctx, toSelect));
+  EXPECT_TRUE(oc_cloud_select_server_address(ctx, toSelect));
 #ifdef OC_DYNAMIC_ALLOCATION
-  EXPECT_EQ(ep3, oc_cloud_selected_server(ctx));
+  EXPECT_EQ(ep3, oc_cloud_selected_server_address(ctx));
   EXPECT_STREQ(uri3.c_str(), oc_string(*oc_cloud_get_server_uri(ctx)));
   EXPECT_TRUE(oc_uuid_is_equal(uid3, *oc_cloud_get_server_id(ctx)));
 #else  /* !OC_DYNAMIC_ALLOCATION */
-  EXPECT_EQ(ep2, oc_cloud_selected_server(ctx));
+  EXPECT_EQ(ep2, oc_cloud_selected_server_address(ctx));
   EXPECT_STREQ(uri2.c_str(), oc_string(*oc_cloud_get_server_uri(ctx)));
   EXPECT_TRUE(oc_uuid_is_equal(uid2, *oc_cloud_get_server_id(ctx)));
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   oc_uuid_t uid;
   oc_gen_uuid(&uid);
-  oc_cloud_endpoint_set_id(toSelect, uid);
-  EXPECT_TRUE(oc_uuid_is_equal(uid, oc_cloud_endpoint_id(toSelect)));
+  oc_endpoint_address_set_uuid(toSelect, uid);
+  EXPECT_TRUE(oc_uuid_is_equal(uid, *oc_endpoint_address_uuid(toSelect)));
   EXPECT_TRUE(oc_uuid_is_equal(uid, *oc_cloud_get_server_id(ctx)));
 
-  EXPECT_TRUE(oc_cloud_remove_server(ctx, toSelect));
+  EXPECT_TRUE(oc_cloud_remove_server_address(ctx, toSelect));
 
   cloud_context_deinit(ctx);
 }

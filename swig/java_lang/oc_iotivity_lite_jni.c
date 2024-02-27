@@ -48,7 +48,6 @@ jclass cls_ArrayList;
 jclass cls_OCMainInitHandler;
 jclass cls_OCAddDeviceHandler;
 jclass cls_OCClientResponse;
-jclass cls_OCCloudContext;
 jclass cls_OCConWriteHandler;
 jclass cls_OCDiscoveryHandler;
 jclass cls_OCDiscoveryAllHandler;
@@ -77,8 +76,12 @@ jclass cls_OCObtCredsHandler;
 jclass cls_OCObtDiscoveryHandler;
 jclass cls_OCObtDeviceStatusHandler;
 jclass cls_OCObtStatusHandler;
-jclass cls_OCCloudHandler;
 jclass cls_OCSecurityAcl;
+
+#ifdef OC_CLOUD
+jclass cls_OCCloudContext;
+jclass cls_OCCloudHandler;
+#endif /* OC_CLOUD */
 
 JNIEXPORT jint JNICALL
 JNI_OnLoad(JavaVM *vm, void *reserved)
@@ -123,13 +126,6 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
   cls_OCClientResponse =
     (jclass)(JCALL1(NewGlobalRef, jenv, ocClientResponseClass));
   JCALL1(DeleteLocalRef, jenv, ocClientResponseClass);
-
-  jclass ocCloudContextClass =
-    JCALL1(FindClass, jenv, "org/iotivity/OCCloudContext");
-  assert(ocCloudContextClass);
-  cls_OCCloudContext =
-    (jclass)(JCALL1(NewGlobalRef, jenv, ocCloudContextClass));
-  JCALL1(DeleteLocalRef, jenv, ocCloudContextClass);
 
   jclass ocCoreAddDeviceHandlerClass =
     JCALL1(FindClass, jenv, "org/iotivity/OCCoreAddDeviceHandler");
@@ -309,13 +305,6 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
     (jclass)(JCALL1(NewGlobalRef, jenv, ocObtStatusHandlerClass));
   JCALL1(DeleteLocalRef, jenv, ocObtStatusHandlerClass);
 
-  jclass ocCloudHandlerClass =
-    JCALL1(FindClass, jenv, "org/iotivity/OCCloudHandler");
-  assert(ocCloudHandlerClass);
-  cls_OCCloudHandler =
-    (jclass)(JCALL1(NewGlobalRef, jenv, ocCloudHandlerClass));
-  JCALL1(DeleteLocalRef, jenv, ocCloudHandlerClass);
-
   jclass ocSecurityAclClass =
     JCALL1(FindClass, jenv, "org/iotivity/OCSecurityAcl");
   assert(ocSecurityAclClass);
@@ -326,6 +315,22 @@ JNI_OnLoad(JavaVM *vm, void *reserved)
   assert(utilArrayListClass);
   cls_ArrayList = (jclass)(JCALL1(NewGlobalRef, jenv, utilArrayListClass));
   JCALL1(DeleteLocalRef, jenv, utilArrayListClass);
+
+#ifdef OC_CLOUD
+  jclass ocCloudContextClass =
+    JCALL1(FindClass, jenv, "org/iotivity/OCCloudContext");
+  assert(ocCloudContextClass);
+  cls_OCCloudContext =
+    (jclass)(JCALL1(NewGlobalRef, jenv, ocCloudContextClass));
+  JCALL1(DeleteLocalRef, jenv, ocCloudContextClass);
+
+  jclass ocCloudHandlerClass =
+    JCALL1(FindClass, jenv, "org/iotivity/OCCloudHandler");
+  assert(ocCloudHandlerClass);
+  cls_OCCloudHandler =
+    (jclass)(JCALL1(NewGlobalRef, jenv, ocCloudHandlerClass));
+  JCALL1(DeleteLocalRef, jenv, ocCloudHandlerClass);
+#endif /* OC_CLOUD */
 
 #ifdef __ANDROID__
   // Get the Android Context

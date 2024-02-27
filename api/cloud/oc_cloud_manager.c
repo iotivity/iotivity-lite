@@ -37,6 +37,7 @@
 #include "oc_cloud_access.h"
 #include "oc_endpoint.h"
 #include "port/oc_random.h"
+#include "util/oc_endpoint_address_internal.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
 
@@ -137,7 +138,7 @@ OC_NONNULL()
   if (cloud_retry_is_over(retry_count)) {
     // we have made all attempts, try to select next server
     OC_CLOUD_DBG("retry loop over, selecting next server");
-    oc_cloud_endpoint_select_next(&ctx->store.ci_servers);
+    oc_endpoint_addresses_select_next(&ctx->store.ci_servers);
     return false;
   }
   *timeout = (g_retry_timeout_ms[retry_count] / MILLISECONDS_PER_SECOND);
@@ -355,40 +356,49 @@ cloud_manager_handle_redirect_response(oc_cloud_context_t *ctx,
   assert(ctx != NULL);
   assert(payload != NULL);
 
-  char *value = NULL;
-  size_t size = 0;
-  if (!oc_rep_get_string(payload, REDIRECTURI_KEY, &value, &size) ||
-      size == 0) {
+  const oc_rep_t *redirect = oc_rep_get(payload, OC_REP_STRING, REDIRECTURI_KEY,
+                                        OC_CHAR_ARRAY_LEN(REDIRECTURI_KEY));
+  if (redirect == NULL) {
     return false;
   }
-  oc_string_view_t cis = oc_string_view(value, size);
-  if (oc_cloud_endpoint_is_selected(&ctx->store.ci_servers, cis)) {
+  const oc_string_t *redirecturi = &redirect->value.string;
+  if (redirecturi->size <= 1) {
+    return false;
+  }
+  if (oc_endpoint_addresses_is_selected(&ctx->store.ci_servers,
+                                        oc_string_view2(redirecturi))) {
     return true;
   }
 
-  const oc_cloud_endpoint_t *originalCis = ctx->store.ci_servers.selected;
+  const oc_endpoint_address_t *originalCis = ctx->store.ci_servers.selected;
   oc_uuid_t sid = OCF_COAPCLOUDCONF_DEFAULT_SID;
   // OCF Cloud Security Specification, 6.2:
   // "If OCF Cloud provides "redirecturi" Value as response during Device
   // Registration, the redirected to OCF Cloud is assumed to have the same OCF
   // Cloud UUID and to use the same trust anchor"
   if (originalCis != NULL) {
-    sid = originalCis->id;
+    assert(originalCis->metadata.id_type ==
+           OC_ENDPOINT_ADDRESS_METADATA_TYPE_UUID);
+    sid = originalCis->metadata.id.uuid;
   }
 
-  if (!oc_cloud_endpoint_contains(&ctx->store.ci_servers, cis) &&
-      oc_cloud_endpoint_add(&ctx->store.ci_servers, cis, sid) == NULL) {
+  if (!oc_endpoint_addresses_contains(&ctx->store.ci_servers,
+                                      oc_string_view2(redirecturi)) &&
+      oc_endpoint_addresses_add(&ctx->store.ci_servers,
+                                oc_endpoint_address_make_view_with_uuid(
+                                  oc_string_view2(redirecturi), sid)) == NULL) {
     OC_ERR("failed to add server to the list");
     return false;
   }
 
   // remove the original server from the list
   if (originalCis != NULL) {
-    oc_cloud_endpoint_remove(&ctx->store.ci_servers, originalCis);
+    oc_endpoint_addresses_remove(&ctx->store.ci_servers, originalCis);
   }
 
   // select the new server
-  oc_cloud_endpoint_select_by_uri(&ctx->store.ci_servers, cis);
+  oc_endpoint_addresses_select_by_uri(&ctx->store.ci_servers,
+                                      oc_string_view2(redirecturi));
 
   if (ctx->cloud_ep != NULL) {
     oc_cloud_close_endpoint(ctx->cloud_ep);

@@ -29,6 +29,7 @@
 #include "oc_cloud_log_internal.h"
 #include "oc_cloud_store_internal.h"
 #include "oc_core_res.h"
+#include "util/oc_endpoint_address_internal.h"
 
 oc_string_view_t
 oc_cps_to_string(oc_cps_t cps)
@@ -67,10 +68,11 @@ oc_cloud_encode(const oc_cloud_context_t *ctx)
                             auth_provider.length);
 
   oc_string_view_t cis =
-    oc_string_view2(oc_cloud_endpoint_selected_address(&ctx->store.ci_servers));
+    oc_string_view2(oc_endpoint_addresses_selected_uri(&ctx->store.ci_servers));
   oc_rep_set_text_string_v1(root, cis, cis.data, cis.length);
 
-  const oc_uuid_t *sid = oc_cloud_endpoint_selected_id(&ctx->store.ci_servers);
+  const oc_uuid_t *sid =
+    oc_endpoint_addresses_selected_uuid(&ctx->store.ci_servers);
   char sid_str[OC_UUID_LEN] = { 0 };
   int sid_str_len = 0;
   if (sid != NULL) {
@@ -79,7 +81,7 @@ oc_cloud_encode(const oc_cloud_context_t *ctx)
   }
   oc_rep_set_text_string_v1(root, sid, sid_str, sid_str_len);
 
-  g_err |= oc_cloud_endpoints_encode(
+  g_err |= oc_endpoint_addresses_encode(
     oc_rep_object(root), &ctx->store.ci_servers,
     OC_STRING_VIEW(OCF_COAPCLOUDCONF_PROP_CISERVERS), true);
 

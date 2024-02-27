@@ -19,7 +19,6 @@
 #ifndef OC_CLOUD_CONTEXT_INTERNAL_H
 #define OC_CLOUD_CONTEXT_INTERNAL_H
 
-#include "api/cloud/oc_cloud_endpoint_internal.h"
 #include "api/cloud/oc_cloud_store_internal.h"
 #include "oc_cloud.h"
 #include "util/oc_compiler.h"

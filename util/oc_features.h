@@ -84,4 +84,8 @@
           !ESP_PLATFORM) */
 #endif /* OC_SIMPLE_MAIN_LOOP */
 
+#ifdef OC_CLOUD
+#define OC_HAS_FEATURE_ENDPOINT_ADDRESS_LIST
+#endif /* OC_CLOUD */
+
 #endif /* OC_FEATURES_H */

@@ -8,8 +8,10 @@
 
 %import "oc_collection.i"
 %import "oc_endpoint.i"
+%import "oc_endpoint_address.i"
 %import "oc_ri.i"
 %import "oc_session_events.i"
+
 
 %pragma(java) jniclasscode=%{
   static {
@@ -712,15 +714,43 @@ void jni_cloud_context_clear(oc_cloud_context_t *ctx, bool dump_async)
 %ignore cloud_context_has_refresh_token;
 %include "api/cloud/oc_cloud_context_internal.h"
 
-// TODO implement
-%ignore oc_cloud_add_server;
-%ignore oc_cloud_remove_server;
-%ignore oc_cloud_endpoint_uri;
-%ignore oc_cloud_endpoint_set_id;
-%ignore oc_cloud_endpoint_id;
-%ignore oc_cloud_iterate_servers;
-%ignore oc_cloud_select_server;
-%ignore oc_cloud_selected_server;
+%ignore oc_cloud_add_server_address;
+%rename(addServerAddress) jni_cloud_add_server_address;
+%inline %{
+oc_endpoint_address_t *jni_cloud_add_server_address(oc_cloud_context_t *ctx, const char *uri, size_t uri_len, oc_uuid_t sid)
+{
+  return oc_cloud_add_server_address(ctx, uri, uri_len, sid);
+}
+%}
+
+%ignore oc_cloud_remove_server_address;
+%rename(removeServerAddress) jni_cloud_remove_server_address;
+%inline %{
+bool jni_cloud_remove_server_address(oc_cloud_context_t *ctx, const oc_endpoint_address_t *ea)
+{
+  return oc_cloud_remove_server_address(ctx, ea);
+}
+%}
+
+%ignore oc_cloud_select_server_address;
+%rename(selectServerAddress) jni_cloud_select_server_address;
+%inline %{
+bool jni_cloud_select_server_address(oc_cloud_context_t *ctx, const oc_endpoint_address_t *ea)
+{
+  return oc_cloud_select_server_address(ctx, ea);
+}
+%}
+
+%ignore oc_cloud_selected_server_address;
+%rename(selectedServerAddress) jni_cloud_selected_server_address;
+%inline %{
+const oc_endpoint_address_t *jni_cloud_selected_server_address(oc_cloud_context_t *ctx)
+{
+  return oc_cloud_selected_server_address(ctx);
+}
+%}
+
+%ignore oc_cloud_iterate_server_addresses;
 
 #define OC_API
 %include "oc_cloud.h"

@@ -47,7 +47,9 @@ oc_malloc(
     func,
 #endif
     block, num_items, pool_type);
+#ifndef OC_TEST
   oc_assert(alloc_ret > 0);
+#endif /* !OC_TEST */
   return alloc_ret;
 }
 
@@ -213,6 +215,13 @@ oc_concat_strings(oc_string_t *concat, const char *str1, const char *str2)
   memcpy(oc_string(*concat), str1, len1);
   memcpy(oc_string(*concat) + len1, str2, len2);
   oc_string(*concat)[len1 + len2] = '\0';
+}
+
+size_t
+oc_string_len_unsafe(oc_string_t str)
+{
+  assert(str.size > 0);
+  return str.size - 1;
 }
 
 void
