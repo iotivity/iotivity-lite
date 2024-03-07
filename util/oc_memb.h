@@ -96,15 +96,15 @@ extern "C" {
 extern "C" {
 #endif
 #define OC_MEMB(name, structure, num)                                          \
-  static struct oc_memb name = { sizeof(structure), 0, NULL, NULL, NULL }
+  static oc_memb_t name = { sizeof(structure), 0, NULL, NULL, NULL }
 #define OC_MEMB_LOCAL(name, structure, num)                                    \
-  struct oc_memb name = { sizeof(structure), 0, NULL, NULL, NULL }
+  oc_memb_t name = { sizeof(structure), 0, NULL, NULL, NULL }
 #define OC_MEMB_STATIC(name, structure, num)                                   \
   static char CC_CONCAT(name, _memb_count)[num];                               \
   static structure CC_CONCAT(name, _memb_mem)[num];                            \
-  static struct oc_memb name = { sizeof(structure), num,                       \
-                                 CC_CONCAT(name, _memb_count),                 \
-                                 (void *)CC_CONCAT(name, _memb_mem), NULL }
+  static oc_memb_t name = { sizeof(structure), num,                            \
+                            CC_CONCAT(name, _memb_count),                      \
+                            (void *)CC_CONCAT(name, _memb_mem), NULL }
 #else /* OC_DYNAMIC_ALLOCATION */
 #ifdef __cplusplus
 }
@@ -116,31 +116,29 @@ extern "C" {
 #define OC_MEMB(name, structure, num)                                          \
   static char CC_CONCAT(name, _memb_count)[num];                               \
   static structure CC_CONCAT(name, _memb_mem)[num];                            \
-  static struct oc_memb name = { sizeof(structure), num,                       \
-                                 CC_CONCAT(name, _memb_count),                 \
-                                 (void *)CC_CONCAT(name, _memb_mem), NULL }
+  static oc_memb_t name = { sizeof(structure), num,                            \
+                            CC_CONCAT(name, _memb_count),                      \
+                            (void *)CC_CONCAT(name, _memb_mem), NULL }
 #define OC_MEMB_LOCAL(name, structure, num)                                    \
   char CC_CONCAT(name, _memb_count)[num];                                      \
   memset(CC_CONCAT(name, _memb_count), 0, num * sizeof(char));                 \
   structure CC_CONCAT(name, _memb_mem)[num];                                   \
   memset(CC_CONCAT(name, _memb_mem), 0, num * sizeof(structure));              \
-  struct oc_memb name = { sizeof(structure), num,                              \
-                          CC_CONCAT(name, _memb_count),                        \
-                          (void *)CC_CONCAT(name, _memb_mem), NULL }
+  oc_memb_t name = { sizeof(structure), num, CC_CONCAT(name, _memb_count),     \
+                     (void *)CC_CONCAT(name, _memb_mem), NULL }
 
-// TODO: update struct oc_memb rep_objects
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 typedef void (*oc_memb_buffers_avail_callback_t)(int);
 
-struct oc_memb
+typedef struct oc_memb
 {
   unsigned short size;
   unsigned short num;
   char *count;
   void *mem;
   oc_memb_buffers_avail_callback_t buffers_avail_cb;
-};
+} oc_memb_t;
 
 /**
  * Initialize a memory block that was declared with MEMB().

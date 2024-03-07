@@ -315,7 +315,7 @@ hawkbit_store_load(hawkbit_context_t *ctx)
   }
 
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
+  oc_memb_t *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
   oc_rep_t *rep = oc_parse_rep(buf, (size_t)ret);
   if (rep == NULL || !hawkbit_decode(ctx, rep, true)) {
     APP_ERR("cannot parse representation");

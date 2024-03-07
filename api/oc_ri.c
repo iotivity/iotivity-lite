@@ -1357,7 +1357,7 @@ ri_invoke_handler(coap_make_response_ctx_t *ctx,
 #endif /* !OC_BLOCK_WISE */
 
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
+  oc_memb_t *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
 
   // we need to check only for bad request
   if (!bitmask_code) {

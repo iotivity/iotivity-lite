@@ -91,7 +91,7 @@ struct CborEncoder
   public";
 %{
 uint8_t *g_new_rep_buffer = NULL;
-struct oc_memb g_rep_objects;
+oc_memb_t g_rep_objects;
 %}
 %inline %{
 void deleteBuffer(void) {

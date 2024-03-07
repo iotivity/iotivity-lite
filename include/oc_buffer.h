@@ -50,7 +50,7 @@ void oc_set_buffers_avail_cb(oc_memb_buffers_avail_callback_t cb);
  * @param pool the memory pool to use for allocation
  * @return oc_message_t* the message
  */
-oc_message_t *oc_allocate_message_from_pool(struct oc_memb *pool);
+oc_message_t *oc_allocate_message_from_pool(oc_memb_t *pool);
 
 /**
  * @brief add reference (for tracking in use)
