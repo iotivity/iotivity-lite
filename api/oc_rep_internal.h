@@ -49,11 +49,11 @@ void oc_free_rep(oc_rep_t *rep);
  *
  * @note The rep pool is only used when dynamic memory allocation is disabled.
  */
-void oc_rep_set_pool(struct oc_memb *rep_objects_pool);
+void oc_rep_set_pool(oc_memb_t *rep_objects_pool);
 
 /** @brief Set the object pool from which to allocate oc_rep_t objects and
  * return the previously set pool */
-struct oc_memb *oc_rep_reset_pool(struct oc_memb *pool);
+oc_memb_t *oc_rep_reset_pool(oc_memb_t *pool);
 
 typedef enum {
   OC_REP_PARSE_RESULT_REP,

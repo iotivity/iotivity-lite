@@ -133,7 +133,7 @@ oc_storage_data_load(const char *name, size_t device,
     return -1;
   }
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
+  oc_memb_t *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
   oc_rep_t *rep = oc_parse_rep(buf.buffer, (size_t)ret);
   if (rep != NULL && decode(rep, device, decode_data) != 0) {
     OC_ERR("cannot load from \"%s\" from store: cannot decode data", name);
@@ -156,7 +156,7 @@ storage_print_data(const uint8_t *buf, size_t size)
   }
   oc_rep_decoder_t decoder = oc_rep_decoder(OC_REP_CBOR_DECODER);
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
+  oc_memb_t *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
   oc_rep_parse_result_t result;
   memset(&result, 0, sizeof(result));
   if (CborNoError != decoder.parse(buf, size, &result)) {

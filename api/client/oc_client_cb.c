@@ -486,7 +486,7 @@ oc_client_cb_invoke(const coap_packet_t *response, oc_client_cb_t *cb,
       }
     } else {
       OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-      struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
+      oc_memb_t *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
       int err = 0;
       /* Do not parse an incoming payload when the Content-Format option
        * has not been set to the CBOR encoding.

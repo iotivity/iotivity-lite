@@ -587,7 +587,7 @@ resource_print_payload(oc_resource_t *resource, oc_interface_mask_t iface)
 
   oc_rep_decoder_t decoder = oc_rep_decoder(OC_REP_CBOR_DECODER);
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
+  oc_memb_t *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
   oc_rep_parse_result_t result;
   memset(&result, 0, sizeof(result));
   if (CborNoError != decoder.parse(response_buffer.buffer,

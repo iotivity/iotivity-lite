@@ -193,7 +193,7 @@ oc_ri_add_timed_event_callback_ticks(void *cb_data, oc_trigger_t event_callback,
 }
 
 static void
-event_callbacks_poll_timers(oc_list_t list, struct oc_memb *cb_pool)
+event_callbacks_poll_timers(oc_list_t list, oc_memb_t *cb_pool)
 {
   oc_event_callback_t *event_cb = (oc_event_callback_t *)oc_list_head(list);
   while (event_cb != NULL) {

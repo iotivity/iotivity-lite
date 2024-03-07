@@ -322,8 +322,8 @@ oc_obt_load_state(void)
     return;
   }
 
-  struct oc_memb rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
-  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
+  oc_memb_t rep_objects = { sizeof(oc_rep_t), 0, 0, 0, 0 };
+  oc_memb_t *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
   oc_rep_t *parsed_rep = oc_parse_rep(buf, (size_t)ret);
   if (parsed_rep == NULL) {
     oc_rep_set_pool(prev_rep_objects);

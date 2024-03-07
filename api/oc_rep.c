@@ -31,21 +31,21 @@
 
 #include <assert.h>
 
-static struct oc_memb *g_rep_objects = NULL;
+static oc_memb_t *g_rep_objects = NULL;
 CborEncoder root_map;
 CborEncoder links_array;
 int g_err = CborNoError;
 
-struct oc_memb *
-oc_rep_reset_pool(struct oc_memb *pool)
+oc_memb_t *
+oc_rep_reset_pool(oc_memb_t *pool)
 {
-  struct oc_memb *prev_pool = g_rep_objects;
+  oc_memb_t *prev_pool = g_rep_objects;
   g_rep_objects = pool;
   return prev_pool;
 }
 
 void
-oc_rep_set_pool(struct oc_memb *rep_objects_pool)
+oc_rep_set_pool(oc_memb_t *rep_objects_pool)
 {
   g_rep_objects = rep_objects_pool;
 }

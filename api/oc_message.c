@@ -42,7 +42,7 @@ OC_MEMB(oc_outgoing_buffers, oc_message_t, OC_MAX_NUM_CONCURRENT_REQUESTS);
 #endif /* OC_INOUT_BUFFER_POOL */
 
 static void
-message_deallocate(oc_message_t *message, struct oc_memb *pool)
+message_deallocate(oc_message_t *message, oc_memb_t *pool)
 {
 #ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
   free(message->data);
@@ -57,7 +57,7 @@ message_deallocate(oc_message_t *message, struct oc_memb *pool)
 }
 
 static oc_message_t *
-message_allocate_with_size(struct oc_memb *pool, size_t size)
+message_allocate_with_size(oc_memb_t *pool, size_t size)
 {
 #ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
   oc_allocator_mutex_lock();
@@ -101,7 +101,7 @@ message_allocate_with_size(struct oc_memb *pool, size_t size)
 }
 
 static oc_message_t *
-message_allocate(struct oc_memb *pool)
+message_allocate(oc_memb_t *pool)
 {
 #ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
   return message_allocate_with_size(pool, OC_PDU_SIZE);
@@ -140,7 +140,7 @@ oc_message_buffer_size(const oc_message_t *message)
 }
 
 oc_message_t *
-oc_allocate_message_from_pool(struct oc_memb *pool)
+oc_allocate_message_from_pool(oc_memb_t *pool)
 {
   if (pool) {
     return message_allocate(pool);
@@ -216,7 +216,7 @@ oc_message_unref(oc_message_t *message)
     return;
   }
 
-  struct oc_memb *pool = message->pool;
+  oc_memb_t *pool = message->pool;
   message_deallocate(message, pool);
   OC_DBG("buffer: deallocated message(%p) from pool(%p)", (void *)message,
          (void *)pool);

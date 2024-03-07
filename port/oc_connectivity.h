@@ -31,8 +31,10 @@
 #include "oc_session_events.h"
 #include "util/oc_atomic.h"
 #include "util/oc_features.h"
+#include "util/oc_memb.h"
 #include "util/oc_process.h"
 
+#include <stddef.h>
 #include <stdint.h>
 
 #ifdef __cplusplus
@@ -115,7 +117,7 @@ extern "C" {
 typedef struct oc_message_s
 {
   struct oc_message_s *next;
-  struct oc_memb *pool;
+  oc_memb_t *pool;
   oc_endpoint_t endpoint;
   size_t length; // length of the used part of the buffer
   OC_ATOMIC_UINT8_T ref_count;

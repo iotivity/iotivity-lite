@@ -47,7 +47,7 @@ OC_MEMB_STATIC(oc_app_data_s, oc_app_data_buffer_t, OC_APP_DATA_BUFFER_POOL);
 #endif /* OC_APP_DATA_BUFFER_POOL */
 
 static oc_blockwise_state_t *
-blockwise_init_buffer(struct oc_memb *pool, const char *href, size_t href_len,
+blockwise_init_buffer(oc_memb_t *pool, const char *href, size_t href_len,
                       const oc_endpoint_t *endpoint, oc_method_t method,
                       oc_blockwise_role_t role, uint32_t buffer_size)
 {
@@ -104,7 +104,7 @@ blockwise_init_buffer(struct oc_memb *pool, const char *href, size_t href_len,
 }
 
 static void
-blockwise_free_buffer(oc_list_t list, struct oc_memb *pool,
+blockwise_free_buffer(oc_list_t list, oc_memb_t *pool,
                       oc_blockwise_state_t *buffer)
 {
   if (buffer == NULL) {

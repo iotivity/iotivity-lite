@@ -1317,7 +1317,7 @@ oc_discovery_process_payload(const uint8_t *payload, size_t len,
   oc_interface_mask_t iface_mask = 0;
 
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
-  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
+  oc_memb_t *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
   oc_rep_parse_result_t result;
   memset(&result, 0, sizeof(result));
   int s = oc_rep_parse_payload(payload, len, &result);

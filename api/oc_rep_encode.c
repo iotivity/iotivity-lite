@@ -344,7 +344,7 @@ oc_rep_encoded_payload_is_empty_object(oc_rep_encoder_type_t type,
   }
 
   OC_MEMB_LOCAL(rep_objects, oc_rep_t, 1);
-  struct oc_memb *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
+  oc_memb_t *prev_rep_objects = oc_rep_reset_pool(&rep_objects);
   oc_rep_decoder_t decoder = oc_rep_decoder((oc_rep_decoder_type_t)dtype);
   oc_rep_parse_result_t result;
   memset(&result, 0, sizeof(result));
