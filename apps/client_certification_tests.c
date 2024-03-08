@@ -84,6 +84,41 @@ free_all_resources(void)
   }
 }
 
+#ifdef OC_IDD_API
+static bool
+set_introspection_data(size_t device)
+{
+  FILE *fp = fopen("./client_certification_tests_IDD.cbor", "rb");
+  if (fp == NULL) {
+    return false;
+  }
+  long ret = fseek(fp, 0, SEEK_END);
+  if (ret < 0) {
+    fclose(fp);
+    return false;
+  }
+  ret = ftell(fp);
+  if (ret < 0) {
+    fclose(fp);
+    return false;
+  }
+  rewind(fp);
+
+  size_t buffer_size = (size_t)ret;
+  uint8_t *buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
+  size_t fread_ret = fread(buffer, buffer_size, 1, fp);
+  fclose(fp);
+
+  if (fread_ret != 1) {
+    free(buffer);
+    return false;
+  }
+
+  oc_set_introspection_data(device, buffer, buffer_size);
+  return true;
+}
+#endif /* OC_IDD_API */
+
 static int
 app_init(void)
 {
@@ -91,36 +126,19 @@ app_init(void)
   ret |= oc_add_device("/oic/d", "oic.wk.d", "OCFTestClient", "ocf.2.2.5",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
 
-#ifdef OC_IDD_API
-  FILE *fp;
-  uint8_t *buffer;
-  size_t buffer_size;
-  const char introspection_error[] =
-    "\tERROR Could not read client_certification_tests_IDD.cbor\n"
-    "\tIntrospection data not set for device.\n";
-  fp = fopen("./client_certification_tests_IDD.cbor", "rb");
-  if (fp) {
-    fseek(fp, 0, SEEK_END);
-    buffer_size = ftell(fp);
-    rewind(fp);
-
-    buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
-    size_t fread_ret = fread(buffer, buffer_size, 1, fp);
-    fclose(fp);
-
-    if (fread_ret == 1) {
-      oc_set_introspection_data(0, buffer, buffer_size);
-      OC_PRINTF("\tIntrospection data set for device.\n");
-    } else {
-      OC_PRINTF("%s", introspection_error);
-    }
-    free(buffer);
-  } else {
-    OC_PRINTF("%s", introspection_error);
+  if (ret < 0) {
+    return ret;
   }
-#endif
 
-  return ret;
+#ifdef OC_IDD_API
+  if (!set_introspection_data(/*device*/ 0)) {
+    OC_PRINTF("%s",
+              "\tERROR Could not read client_certification_tests_IDD.cbor\n"
+              "\tIntrospection data not set for device.\n");
+  }
+#endif /* OC_IDD_API */
+
+  return 0;
 }
 
 #define SCANF(...)                                                             \
