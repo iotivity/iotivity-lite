@@ -430,12 +430,20 @@ factory_presets_cb(size_t device, void *data)
     0xbf, 0x42, 0x44
   };
 
+  if (oc_pki_add_mfg_trust_anchor(0, root_ca, sizeof(root_ca)) < 0) {
+    printf("ERROR: unable to add manufacturer trust anchor\n");
+  }
+
   int credid =
     oc_pki_add_mfg_cert(0, my_crt, sizeof(my_crt), my_key, sizeof(my_key));
+  if (credid < 0) {
+    printf("ERROR: unable to add manufacturer certificate\n");
+    return;
+  }
 
-  oc_pki_add_mfg_intermediate_cert(0, credid, int_ca, sizeof(int_ca));
-
-  oc_pki_add_mfg_trust_anchor(0, root_ca, sizeof(root_ca));
+  if (oc_pki_add_mfg_intermediate_cert(0, credid, int_ca, sizeof(int_ca)) < 0) {
+    printf("ERROR: unable to add manufacturer intermediate certificate\n");
+  }
 
   oc_pki_set_security_profile(0, OC_SP_BLACK, OC_SP_BLACK, credid);
 #endif /* OC_SECURITY && OC_PKI */
