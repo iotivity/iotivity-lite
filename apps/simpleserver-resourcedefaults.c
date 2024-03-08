@@ -317,7 +317,7 @@ get_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
     break;
   }
   oc_rep_end_root_object();
-  if (error_state == false) {
+  if (!error_state) {
     oc_send_response(request, oc_status_code);
   } else {
     oc_send_response(request, OC_STATUS_BAD_OPTION);
@@ -395,7 +395,7 @@ get_binaryswitch_revert(oc_request_t *request, oc_interface_mask_t interfaces,
     break;
   }
   oc_rep_end_root_object();
-  if (error_state == false) {
+  if (!error_state) {
     oc_send_response(request, oc_status_code);
   } else {
     oc_send_response(request, OC_STATUS_BAD_OPTION);
@@ -451,7 +451,8 @@ get_binaryswitch_startup(oc_request_t *request, oc_interface_mask_t interfaces,
     break;
   case OC_IF_STARTUP:
     if (g_binaryswitch_startup_storage_status != 1) {
-      oc_send_response(request, OC_STATUS_BAD_OPTION);
+      error_state = true;
+      break;
     }
 #ifdef OC_STORAGE
     /* property (boolean) 'value' */
@@ -471,7 +472,7 @@ get_binaryswitch_startup(oc_request_t *request, oc_interface_mask_t interfaces,
     break;
   }
   oc_rep_end_root_object();
-  if (error_state == false) {
+  if (!error_state) {
     oc_send_response(request, OC_STATUS_OK);
   } else {
     oc_send_response(request, OC_STATUS_BAD_OPTION);
@@ -537,7 +538,7 @@ post_binaryswitch_both(oc_request_t *request, oc_interface_mask_t interfaces,
   }
   /* if the input is ok, then process the input document and assign the global
    * variables */
-  if (error_state == false) {
+  if (!error_state) {
     switch (interfaces) {
     case OC_IF_STARTUP: {
       g_binaryswitch_both_storage_status = 1;
@@ -744,7 +745,7 @@ post_binaryswitch_revert(oc_request_t *request, oc_interface_mask_t interfaces,
   }
   /* if the input is ok, then process the input document and assign the global
    * variables */
-  if (error_state == false) {
+  if (!error_state) {
     switch (interfaces) {
     case OC_IF_STARTUP_REVERT: {
       g_binaryswitch_revert_storage_status = 2;
@@ -908,7 +909,7 @@ post_binaryswitch_startup(oc_request_t *request, oc_interface_mask_t interfaces,
   }
   /* if the input is ok, then process the input document and assign the global
    * variables */
-  if (error_state == false) {
+  if (!error_state) {
     switch (interfaces) {
     case OC_IF_STARTUP: {
       g_binaryswitch_startup_storage_status = 1;
