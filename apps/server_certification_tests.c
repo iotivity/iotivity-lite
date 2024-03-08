@@ -959,7 +959,7 @@ get_dali(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
     break;
   }
   oc_rep_end_root_object();
-  if (error_state == false) {
+  if (!error_state) {
     oc_send_response(request, OC_STATUS_OK);
   } else {
     oc_send_response(request, OC_STATUS_BAD_OPTION);
@@ -1095,7 +1095,7 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
   }
   /* if the input is ok, then process the input document and assign the global
    * variables */
-  if (error_state == false) {
+  if (!error_state) {
     switch (interfaces) {
     default: {
       /* loop over all the properties in the input document */
@@ -1254,8 +1254,6 @@ get_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
      The implementation always return everything that belongs to the resource.
      this implementation is not optimal, but is functionally correct and will
      pass CTT1.2.2 */
-  bool error_state = false;
-
   OC_PRINTF("-- Begin get_config: interface %d\n", interfaces);
   oc_rep_start_root_object();
   switch (interfaces) {
@@ -1296,11 +1294,7 @@ get_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
     break;
   }
   oc_rep_end_root_object();
-  if (error_state == false) {
-    oc_send_response(request, OC_STATUS_OK);
-  } else {
-    oc_send_response(request, OC_STATUS_BAD_OPTION);
-  }
+  oc_send_response(request, OC_STATUS_OK);
   OC_PRINTF("-- End get_config\n");
 }
 
@@ -1360,7 +1354,7 @@ post_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
   }
   /* if the input is ok, then process the input document and assign the global
    * variables */
-  if (error_state == false) {
+  if (!error_state) {
     switch (interfaces) {
     default: {
       /* loop over all the properties in the input document */
