@@ -39,6 +39,8 @@
 #include <mbedtls/oid.h>
 #include <mbedtls/pk.h>
 
+#include <inttypes.h>
+#include <stdint.h>
 #include <string.h>
 
 #define UUID_PREFIX "uuid:"
@@ -51,13 +53,13 @@
 static mbedtls_md_type_t g_signature_md = MBEDTLS_MD_SHA256;
 
 // allowed message digests signature algorithms
-static unsigned g_allowed_mds_mask = MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256);
+static uint32_t g_allowed_mds_mask = MBEDTLS_X509_ID_FLAG(MBEDTLS_MD_SHA256);
 
 // groupid of the elliptic curve used for keys in generated certificates or CSRs
 static mbedtls_ecp_group_id g_ecp_grpid = MBEDTLS_ECP_DP_SECP256R1;
 
 // allowed groupids of elliptic curves
-static unsigned g_allowed_ecp_grpids_mask =
+static uint32_t g_allowed_ecp_grpids_mask =
   MBEDTLS_X509_ID_FLAG(MBEDTLS_ECP_DP_SECP256R1);
 
 void
@@ -88,7 +90,7 @@ void
 oc_sec_certs_md_set_algorithms_allowed(unsigned md_mask)
 {
   g_allowed_mds_mask = (md_mask & OCF_CERTS_SUPPORTED_MDS);
-  OC_DBG("allowed message digests mask: %u", g_allowed_mds_mask);
+  OC_DBG("allowed message digests mask: %" PRIu32, g_allowed_mds_mask);
 }
 
 unsigned
@@ -97,11 +99,17 @@ oc_sec_certs_md_algorithms_allowed(void)
   return g_allowed_mds_mask;
 }
 
+static uint32_t
+certs_x509_id_flag_value(int value, int min, int max)
+{
+  return value > min && value < max ? MBEDTLS_X509_ID_FLAG(value) : 0;
+}
+
 bool
 oc_sec_certs_md_algorithm_is_allowed(mbedtls_md_type_t md)
 {
-  return md != MBEDTLS_MD_NONE &&
-         ((unsigned)MBEDTLS_X509_ID_FLAG(md) & g_allowed_mds_mask) != 0;
+  return (certs_x509_id_flag_value(md, MBEDTLS_MD_NONE, 32) &
+          g_allowed_mds_mask) != 0;
 }
 
 void
@@ -121,7 +129,8 @@ void
 oc_sec_certs_ecp_set_group_ids_allowed(unsigned gid_mask)
 {
   g_allowed_ecp_grpids_mask = (gid_mask & OCF_CERTS_SUPPORTED_ELLIPTIC_CURVES);
-  OC_DBG("allowed elliptic curve groupids: %u", g_allowed_ecp_grpids_mask);
+  OC_DBG("allowed elliptic curve groupids: %" PRIu32,
+         g_allowed_ecp_grpids_mask);
 }
 
 unsigned
@@ -133,8 +142,8 @@ oc_sec_certs_ecp_group_ids_allowed(void)
 bool
 oc_sec_certs_ecp_group_id_is_allowed(mbedtls_ecp_group_id gid)
 {
-  return gid != MBEDTLS_ECP_DP_NONE &&
-         (MBEDTLS_X509_ID_FLAG(gid) & g_allowed_ecp_grpids_mask) != 0;
+  return (certs_x509_id_flag_value(gid, MBEDTLS_ECP_DP_NONE, 32) &
+          g_allowed_ecp_grpids_mask) != 0;
 }
 
 bool
