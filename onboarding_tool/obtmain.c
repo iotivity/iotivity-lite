@@ -1549,7 +1549,6 @@ provision_ace2(void)
   }
 
   const char *conn_types[2] = { "anon-clear", "auth-crypt" };
-  int num_resources = 0;
 
   device_handle_t *devices[MAX_NUM_DEVICES];
   device_handle_t *device = (device_handle_t *)oc_list_head(owned_devices);
@@ -1647,12 +1646,19 @@ provision_ace2(void)
     return;
   }
 
-  while (num_resources <= 0 || num_resources > MAX_NUM_RESOURCES) {
-    if (num_resources != 0) {
-      OC_PRINTF("\n\nERROR: Enter valid number\n\n");
-    }
+  int num_resources = 0;
+  while (true) {
     OC_PRINTF("\nEnter number of resources in this ACE: ");
-    SCANF("%d", &num_resources);
+    if (scanf("%d", &num_resources) <= 0) {
+      OC_PRINTF("ERROR Invalid input\n");
+      fflush(stdin);
+      continue;
+    }
+    if (num_resources <= 0 || num_resources > MAX_NUM_RESOURCES) {
+      OC_PRINTF("\n\nERROR: Enter valid number\n\n");
+      continue;
+    }
+    break;
   }
 
   int c;
