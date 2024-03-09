@@ -72,7 +72,10 @@ toggle_switch_resource(void *data)
 {
   (void)data;
   while (OC_ATOMIC_LOAD8(quit) != 1) {
-    getchar();
+    int c = getchar();
+    if (c == EOF) {
+      break;
+    }
     if (OC_ATOMIC_LOAD8(quit) != 1) {
       printf("\nSwitch toggled\n");
       switch_state = !switch_state;

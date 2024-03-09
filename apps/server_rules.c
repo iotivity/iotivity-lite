@@ -224,8 +224,12 @@ toggle_switch_resource(void *data)
   (void)data;
   while (OC_ATOMIC_LOAD8(quit) != 1) {
     int c = getchar();
+    if (c == EOF) {
+      break;
+    }
+
     if (OC_ATOMIC_LOAD8(quit) != 1) {
-      getchar();
+      (void)getchar(); // consume newline
       if (c == 48) {
         g_binaryswitch_value = false;
       } else {
