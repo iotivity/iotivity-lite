@@ -115,6 +115,7 @@ set_introspection_data(size_t device)
   }
 
   oc_set_introspection_data(device, buffer, buffer_size);
+  free(buffer);
   return true;
 }
 #endif /* OC_IDD_API */
