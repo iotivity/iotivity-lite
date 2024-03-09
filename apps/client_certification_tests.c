@@ -354,7 +354,7 @@ static void
 cloud_send_ping(void)
 {
   OC_PRINTF("\nEnter receiving endpoint: ");
-  char addr[256];
+  char addr[256] = { 0 };
   SCANF("%255s", addr);
   char endpoint_string[267];
   sprintf(endpoint_string, "coap+tcp://%s", addr);
@@ -849,12 +849,12 @@ post_cloud_configuration_resource(bool tcp)
     resource_t *cloudconf_resource =
       get_discovered_resource_by_uri("/CoAPCloudConf");
     if (cloudconf_resource) {
-      char cis_value[1000];
-      char sid_value[1000];
+      char cis_value[1000] = { 0 };
       OC_PRINTF("Provide cis value:\n");
-      SCANF("%s", cis_value);
+      SCANF("%999s", cis_value);
+      char sid_value[1000] = { 0 };
       OC_PRINTF("Provide sid value:\n");
-      SCANF("%s", sid_value);
+      SCANF("%999s", sid_value);
       oc_endpoint_t *ep = cloudconf_resource->endpoint;
       while (ep && (tcp && !(ep->flags & TCP))) {
         ep = ep->next;
