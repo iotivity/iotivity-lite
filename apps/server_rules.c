@@ -664,7 +664,8 @@ post_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
       if (!match) {
         oc_send_response(request, OC_STATUS_BAD_REQUEST);
       }
-      strcpy(ra_lastscene, oc_string(rep->value.string));
+      strncpy(ra_lastscene, oc_string(rep->value.string), sizeof(ra_lastscene));
+      ra_lastscene[sizeof(ra_lastscene) - 1] = '\0';
     } else {
       oc_send_response(request, OC_STATUS_BAD_REQUEST);
     }
@@ -702,7 +703,8 @@ set_scenecol_properties(const oc_resource_t *resource, const oc_rep_t *rep,
         if (!match) {
           return false;
         }
-        strcpy(lastscene, oc_string(rep->value.string));
+        strncpy(lastscene, oc_string(rep->value.string), sizeof(lastscene));
+        lastscene[sizeof(lastscene) - 1] = '\0';
         oc_set_delayed_callback(NULL, &set_scene, 0);
       }
       break;
