@@ -2375,7 +2375,8 @@ oc_obt_provision_trust_anchor(const char *certificate, size_t certificate_size,
   p->cb.data = data;
   p->trustanchor = certificate;
   p->trustanchor_size = certificate_size;
-  strcpy(p->trustanchor_subject, subject);
+  strncpy(p->trustanchor_subject, subject, sizeof(p->trustanchor_subject));
+  p->trustanchor_subject[sizeof(p->trustanchor_subject) - 1] = '\0';
   p->device1 = device;
   oc_tls_select_psk_ciphersuite();
 
