@@ -335,9 +335,10 @@ find_same_endpoint(const oc_endpoint_t *endpoint, const char *uri,
 
     if (oc_endpoint_compare(&originserver_ep, ep) == 0) {
       OC_PRINTF("     ===> matched originserver ep is found!\n");
-      if (bm & OC_PUSHABLE) {
+      if ((bm & OC_PUSHABLE) != 0) {
         OC_PRINTF("     ===> Resource %s is PUSHABLE Resource!\n", uri);
-        strcpy(push_rsc_uri, uri);
+        strncpy(push_rsc_uri, uri, sizeof(push_rsc_uri));
+        push_rsc_uri[sizeof(push_rsc_uri) - 1] = '\0';
         resource_found = true;
       }
     }
