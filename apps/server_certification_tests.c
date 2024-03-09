@@ -533,6 +533,43 @@ toggle_switch_resource(void)
   oc_signal_interrupt_handler(toggle_switch);
 }
 
+#ifdef OC_IDD_API
+static bool
+set_introspection_data(size_t device)
+{
+  FILE *fp = fopen("./server_certification_tests_IDD.cbor", "rb");
+  if (fp == NULL) {
+    return false;
+  }
+  long ret = fseek(fp, 0, SEEK_END);
+  if (ret < 0) {
+    fclose(fp);
+    return false;
+  }
+  ret = ftell(fp);
+  if (ret < 0) {
+    fclose(fp);
+    return false;
+  }
+  rewind(fp);
+
+  size_t buffer_size = (size_t)ret;
+  uint8_t *buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
+  size_t fread_ret = fread(buffer, buffer_size, 1, fp);
+  fclose(fp);
+
+  if (fread_ret != 1) {
+    free(buffer);
+    return false;
+  }
+
+  oc_set_introspection_data(device, buffer, buffer_size);
+  OC_PRINTF("\tIntrospection data set for device.\n");
+  free(buffer);
+  return true;
+}
+#endif /* OC_IDD_API */
+
 static int
 app_init(void)
 {
@@ -541,6 +578,9 @@ app_init(void)
 
   err |= oc_add_device(deivce_uri, device_rt, device_name, spec_version,
                        data_model_version, NULL, NULL);
+  if (err < 0) {
+    return err;
+  }
   OC_PRINTF("\tSwitch device added.\n");
 
   oc_new_string_array(&my_supportedactions, (size_t)19);
@@ -563,40 +603,17 @@ app_init(void)
   oc_string_array_add_item(my_supportedactions, "9");
   oc_string_array_add_item(my_supportedactions, "0");
   oc_string_array_add_item(my_supportedactions, "-");
-#if defined(OC_IDD_API)
-  FILE *fp;
-  uint8_t *buffer;
-  size_t buffer_size;
-  const char introspection_error[] =
-    "\tERROR Could not read server_certification_tests_IDD.cbor\n"
-    "\tIntrospection data not set for device.\n";
-  fp = fopen("./server_certification_tests_IDD.cbor", "rb");
-  if (fp) {
-    fseek(fp, 0, SEEK_END);
-    buffer_size = ftell(fp);
-    rewind(fp);
-
-    buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
-    size_t fread_ret = fread(buffer, buffer_size, 1, fp);
-    fclose(fp);
-
-    if (fread_ret == 1) {
-      oc_set_introspection_data(0, buffer, buffer_size);
-      OC_PRINTF("\tIntrospection data set for device.\n");
-    } else {
-      OC_PRINTF("%s", introspection_error);
-    }
-    free(buffer);
-  } else {
-    OC_PRINTF("%s", introspection_error);
+#ifdef OC_IDD_API
+  if (!set_introspection_data(/*device*/ 0)) {
+    OC_PRINTF("%s",
+              "\tERROR Could not read server_certification_tests_IDD.cbor\n"
+              "\tIntrospection data not set for device.\n");
   }
-#endif
+#endif /* OC_IDD_API */
 
-  if (err >= 0) {
-    oc_uuid_t my_uuid;
-    oc_str_to_uuid(mfg_persistent_uuid, &my_uuid);
-    oc_set_immutable_device_identifier(0, &my_uuid);
-  }
+  oc_uuid_t my_uuid;
+  oc_str_to_uuid(mfg_persistent_uuid, &my_uuid);
+  oc_set_immutable_device_identifier(0, &my_uuid);
   return err;
 }
 
