@@ -142,10 +142,13 @@ static const char *g_binaryswitch_startup_RESOURCE_TYPE[MAX_STRING] = {
 static int g_binaryswitch_startup_nr_resource_types = 1;
 
 #if defined(OC_INTROSPECTION) && defined(OC_IDD_API)
+
+#define INTROSPECTION_IDD_FILE "server_introspection.cbor"
+
 static bool
 set_introspection_data(size_t device)
 {
-  FILE *fp = fopen("./server_introspection.cbor", "rb");
+  FILE *fp = fopen("./" INTROSPECTION_IDD_FILE, "rb");
   if (fp == NULL) {
     return false;
   }
@@ -163,6 +166,10 @@ set_introspection_data(size_t device)
 
   size_t buffer_size = (size_t)ret;
   uint8_t *buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
+  if (buffer == NULL) {
+    fclose(fp);
+    return false;
+  }
   size_t fread_ret = fread(buffer, buffer_size, 1, fp);
   fclose(fp);
 
@@ -171,8 +178,11 @@ set_introspection_data(size_t device)
     return false;
   }
 
-  oc_set_introspection_data(device, buffer, buffer_size);
-  printf("\tIntrospection data set 'server_introspection.cbor': %d [bytes]\n",
+  if (oc_set_introspection_data_v1(device, buffer, buffer_size) < 0) {
+    free(buffer);
+    return false;
+  }
+  printf("\tIntrospection data set '%s': %d [bytes]\n", INTROSPECTION_IDD_FILE,
          (int)buffer_size);
   free(buffer);
   return true;
@@ -200,7 +210,7 @@ app_init(void)
 #ifdef OC_INTROSPECTION
 #ifdef OC_IDD_API
   if (!set_introspection_data(/*device*/ 0)) {
-    printf("%s", "\tERROR Could not read 'server_introspection.cbor'\n"
+    printf("%s", "\tERROR Could not read '" INTROSPECTION_IDD_FILE "'\n"
                  "\tIntrospection data not set.\n");
   }
 #else  /* !OC_IDD_API */

@@ -18,16 +18,16 @@
 
 #include "api/cloud/oc_cloud_context_internal.h"
 #include "api/oc_helpers_internal.h"
+#include "api/oc_runtime_internal.h"
 #include "oc_uuid.h"
-#include "port/oc_random.h"
 
 #include <gtest/gtest.h>
 
 class TestCloudContext : public testing::Test {
 public:
-  static void SetUpTestCase() { oc_random_init(); }
+  static void SetUpTestCase() { oc_runtime_init(); }
 
-  static void TearDownTestCase() { oc_random_destroy(); }
+  static void TearDownTestCase() { oc_runtime_shutdown(); }
 };
 
 TEST_F(TestCloudContext, OnStatusChange)

@@ -123,6 +123,18 @@ public class OcDevice {
     }
 
     /**
+     * Sets the introspection data of to this device.
+     * <p>
+     *
+     * @param idd the introspection data byte array
+     * @return >=0 on success, number of written bytes
+     * @return -1 otherwise
+     */
+    public int setIntrospectionDataV1(byte[] idd) {
+        return OCIntrospection.setIntrospectionDataV1(deviceIndex, idd);
+    }
+
+    /**
      * Sets the immutable device id of to this device.
      * <p>
      *

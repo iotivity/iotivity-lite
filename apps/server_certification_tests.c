@@ -49,7 +49,7 @@ static const size_t DEVICE = 0;
 static const char *spec_version = "ocf.2.2.5";
 static const char *data_model_version = "ocf.res.1.3.0,ocf.sh.1.3.0";
 
-static const char *deivce_uri = "/oic/d";
+static const char *device_uri = "/oic/d";
 static const char *device_rt = "oic.d.switch";
 static const char *device_name = "OCFTestServer";
 
@@ -466,10 +466,18 @@ static void
 cloud_send_ping(void)
 {
   OC_PRINTF("\nEnter receiving endpoint: ");
-  char addr[256];
-  SCANF("%255s", addr);
-  char endpoint_string[267];
-  sprintf(endpoint_string, "coap+tcp://%s", addr);
+  char addr[256] = { 0 };
+  if (fgets(addr, sizeof(addr), stdin) == NULL) {
+    OC_PRINTF("\nERROR reading input\n");
+    return;
+  }
+  char endpoint_string[267] = { 0 };
+  int len =
+    snprintf(endpoint_string, sizeof(endpoint_string), "coap+tcp://%s", addr);
+  if (len < 0 || (size_t)len >= sizeof(endpoint_string)) {
+    OC_PRINTF("\nERROR: Invalid endpoint\n");
+    return;
+  }
   oc_string_t ep_string;
   oc_new_string(&ep_string, endpoint_string, strlen(endpoint_string));
   oc_endpoint_t endpoint;
@@ -534,10 +542,13 @@ toggle_switch_resource(void)
 }
 
 #ifdef OC_IDD_API
+
+#define INTROSPECTION_IDD_FILE "server_certification_tests_IDD.cbor"
+
 static bool
 set_introspection_data(size_t device)
 {
-  FILE *fp = fopen("./server_certification_tests_IDD.cbor", "rb");
+  FILE *fp = fopen("./" INTROSPECTION_IDD_FILE, "rb");
   if (fp == NULL) {
     return false;
   }
@@ -555,6 +566,10 @@ set_introspection_data(size_t device)
 
   size_t buffer_size = (size_t)ret;
   uint8_t *buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
+  if (buffer == NULL) {
+    fclose(fp);
+    return false;
+  }
   size_t fread_ret = fread(buffer, buffer_size, 1, fp);
   fclose(fp);
 
@@ -563,8 +578,12 @@ set_introspection_data(size_t device)
     return false;
   }
 
-  oc_set_introspection_data(device, buffer, buffer_size);
-  OC_PRINTF("\tIntrospection data set for device.\n");
+  if (oc_set_introspection_data_v1(device, buffer, buffer_size) < 0) {
+    free(buffer);
+    return false;
+  }
+  OC_PRINTF("\tIntrospection data set '%s.cbor': %d [bytes]\n",
+            INTROSPECTION_IDD_FILE, (int)buffer_size);
   free(buffer);
   return true;
 }
@@ -576,7 +595,7 @@ app_init(void)
   oc_activate_interrupt_handler(toggle_switch);
   int err = oc_init_platform(manufacturer, NULL, NULL);
 
-  err |= oc_add_device(deivce_uri, device_rt, device_name, spec_version,
+  err |= oc_add_device(device_uri, device_rt, device_name, spec_version,
                        data_model_version, NULL, NULL);
   if (err < 0) {
     return err;
@@ -605,9 +624,8 @@ app_init(void)
   oc_string_array_add_item(my_supportedactions, "-");
 #ifdef OC_IDD_API
   if (!set_introspection_data(/*device*/ 0)) {
-    OC_PRINTF("%s",
-              "\tERROR Could not read server_certification_tests_IDD.cbor\n"
-              "\tIntrospection data not set for device.\n");
+    OC_PRINTF("%s", "\tERROR Could not read '" INTROSPECTION_IDD_FILE "'\n"
+                    "\tIntrospection data not set for device.\n");
   }
 #endif /* OC_IDD_API */
 
@@ -2274,9 +2292,9 @@ main(void)
 
   display_device_uuid();
 
-  int c;
   while (OC_ATOMIC_LOAD8(quit) != 1) {
     display_menu();
+    int c = 0;
     SCANF("%d", &c);
     switch (c) {
     case 0:

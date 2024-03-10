@@ -58,21 +58,29 @@
 check oc_config.h and make sure OC_STORAGE is defined if OC_IDD_API is defined.
 #endif /* !OC_STORAGE */
 
-void
-oc_set_introspection_data(size_t device, const uint8_t *IDD, size_t IDD_size)
+long
+oc_set_introspection_data_v1(size_t device, const uint8_t *IDD, size_t IDD_size)
 {
   char idd_tag[OC_STORAGE_SVR_TAG_MAX];
   if (oc_storage_gen_svr_tag(OC_INTROSPECTION_WK_STORE_NAME, device, idd_tag,
                              sizeof(idd_tag)) < 0) {
     OC_ERR("cannot set introspection data: failed to generate tag");
-    return;
+    return -1;
   }
-  long rr = oc_storage_write(idd_tag, IDD, IDD_size);
-  if (rr < 0) {
-    OC_ERR("cannot set introspection data: failed to write data");
-    return;
+  long ret = oc_storage_write(idd_tag, IDD, IDD_size);
+  if (ret < 0) {
+    OC_ERR("cannot set introspection data: failed to write data(error=%ld)",
+           ret);
+    return ret;
   }
-  OC_DBG("\tIntrospection data set written data size: %ld [bytes]\n", rr);
+  OC_DBG("Introspection data set written data size: %ld [bytes]\n", ret);
+  return ret;
+}
+
+void
+oc_set_introspection_data(size_t device, const uint8_t *IDD, size_t IDD_size)
+{
+  (void)oc_set_introspection_data_v1(device, IDD, IDD_size);
 }
 
 #endif /* !OC_IDD_API */

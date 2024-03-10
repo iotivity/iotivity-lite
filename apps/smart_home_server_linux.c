@@ -86,10 +86,13 @@ toggle_switch_resource(void *data)
 }
 
 #ifdef OC_IDD_API
+
+#define INTROSPECTION_IDD_FILE "smart_home_server_linux_IDD.cbor"
+
 static bool
 set_introspection_data(size_t device)
 {
-  FILE *fp = fopen("./smart_home_server_linux_IDD.cbor", "rb");
+  FILE *fp = fopen("./" INTROSPECTION_IDD_FILE, "rb");
   if (fp == NULL) {
     return false;
   }
@@ -107,6 +110,10 @@ set_introspection_data(size_t device)
 
   size_t buffer_size = (size_t)ret;
   uint8_t *buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
+  if (buffer == NULL) {
+    fclose(fp);
+    return false;
+  }
   size_t fread_ret = fread(buffer, buffer_size, 1, fp);
   fclose(fp);
 
@@ -115,7 +122,12 @@ set_introspection_data(size_t device)
     return false;
   }
 
-  oc_set_introspection_data(device, buffer, buffer_size);
+  if (oc_set_introspection_data_v1(device, buffer, buffer_size) < 0) {
+    free(buffer);
+    return false;
+  }
+  printf("\tIntrospection data set '%s.cbor': %d [bytes]\n",
+         INTROSPECTION_IDD_FILE, (int)buffer_size);
   free(buffer);
   return true;
 }
@@ -137,7 +149,7 @@ app_init(void)
 
 #ifdef OC_IDD_API
   if (!set_introspection_data(/*device*/ 0)) {
-    printf("%s", "\tERROR Could not read smart_home_server_linux_IDD.cbor\n"
+    printf("%s", "\tERROR Could not read '" INTROSPECTION_IDD_FILE "'\n"
                  "\tIntrospection data not set for device.\n");
   }
 #endif /* OC_IDD_API */

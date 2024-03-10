@@ -62,17 +62,29 @@ extern "C" {
 #endif
 
 /**
- *
  * @brief Set the IDD by passing in an array containing the data
  *
  * @param device index of the device to which the IDD describes
  * @param IDD an array of CBOR encoded bytes containing the introspection device
  * data (cannot be NULL)
  * @param IDD_size the size of the IDD array
+ *
+ * @return -1 on failure
+ * @return >=0 number of written bytes on success
+ */
+OC_API
+long oc_set_introspection_data_v1(size_t device, const uint8_t *IDD,
+                                  size_t IDD_size) OC_NONNULL();
+
+/**
+ * @brief Set the IDD by passing in an array containing the data
+ *
+ * @deprecated replaced by oc_set_introspection_data_v1 in v2.2.5.13
  */
 OC_API
 void oc_set_introspection_data(size_t device, const uint8_t *IDD,
-                               size_t IDD_size) OC_NONNULL();
+                               size_t IDD_size) OC_NONNULL()
+  OC_DEPRECATED("replaced by oc_set_introspection_data_v1 in v2.2.5.13");
 
 #ifdef __cplusplus
 }

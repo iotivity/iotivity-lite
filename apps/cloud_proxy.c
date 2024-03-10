@@ -426,10 +426,13 @@ is_udn_listed(char *udn)
 }
 
 #if defined(OC_INTROSPECTION) && defined(OC_IDD_API)
+
+#define INTROSPECTION_IDD_FILE "cloud_proxy_IDD.cbor"
+
 static bool
 set_introspection_data(size_t device)
 {
-  FILE *fp = fopen("./cloud_proxy_IDD.cbor", "rb");
+  FILE *fp = fopen("./" INTROSPECTION_IDD_FILE, "rb");
   if (fp == NULL) {
     return false;
   }
@@ -447,6 +450,10 @@ set_introspection_data(size_t device)
 
   size_t buffer_size = (size_t)ret;
   uint8_t *buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
+  if (buffer == NULL) {
+    fclose(fp);
+    return false;
+  }
   size_t fread_ret = fread(buffer, buffer_size, 1, fp);
   fclose(fp);
 
@@ -455,9 +462,12 @@ set_introspection_data(size_t device)
     return false;
   }
 
-  oc_set_introspection_data(device, buffer, buffer_size);
-  OC_PRINTF("\tIntrospection data set 'cloud_proxy_IDD.cbor': %d [bytes]\n",
-            (int)buffer_size);
+  if (oc_set_introspection_data_v1(device, buffer, buffer_size) < 0) {
+    free(buffer);
+    return false;
+  }
+  OC_PRINTF("\tIntrospection data set '%s.cbor': %d [bytes]\n",
+            INTROSPECTION_IDD_FILE, (int)buffer_size);
   free(buffer);
   return true;
 }
@@ -484,7 +494,7 @@ app_init(void)
 #ifdef OC_INTROSPECTION
 #ifdef OC_IDD_API
   if (!set_introspection_data(/*device*/ 0)) {
-    OC_PRINTF("%s", "\tERROR Could not read 'cloud_proxy_IDD.cbor'\n"
+    OC_PRINTF("%s", "\tERROR Could not read '" INTROSPECTION_IDD_FILE "'\n"
                     "\tIntrospection data not set.\n");
   }
 #else  /* !OC_IDD_API */
