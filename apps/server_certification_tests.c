@@ -471,6 +471,10 @@ cloud_send_ping(void)
     OC_PRINTF("\nERROR reading input\n");
     return;
   }
+  size_t addr_len = strlen(addr);
+  if (addr_len > 0 && addr[addr_len - 1] == '\n') {
+    addr[addr_len - 1] = '\0'; // remove newline
+  }
   char endpoint_string[267] = { 0 };
   int len =
     snprintf(endpoint_string, sizeof(endpoint_string), "coap+tcp://%s", addr);
@@ -479,7 +483,7 @@ cloud_send_ping(void)
     return;
   }
   oc_string_t ep_string;
-  oc_new_string(&ep_string, endpoint_string, strlen(endpoint_string));
+  oc_new_string(&ep_string, endpoint_string, (size_t)len);
   oc_endpoint_t endpoint;
   int ret = oc_string_to_endpoint(&ep_string, &endpoint, NULL);
   oc_free_string(&ep_string);

@@ -71,9 +71,7 @@ oc_set_introspection_data_v1(size_t device, const uint8_t *IDD, size_t IDD_size)
   if (ret < 0) {
     OC_ERR("cannot set introspection data: failed to write data(error=%ld)",
            ret);
-    return ret;
   }
-  OC_DBG("Introspection data set written data size: %ld [bytes]\n", ret);
   return ret;
 }
 
