@@ -84,9 +84,11 @@ display_menu(void)
   OC_PRINTF("\nSelect option: \n");
 }
 
-#define SCANF(...)                                                             \
+#define SCANF_INT(...)                                                         \
   do {                                                                         \
-    if (scanf(__VA_ARGS__) != 1) {                                             \
+    char input[64];                                                            \
+    if (fgets(input, sizeof(input), stdin) == NULL ||                          \
+        sscanf(input, __VA_ARGS__) <= 0) {                                     \
       OC_PRINTF("ERROR Invalid input\n");                                      \
     }                                                                          \
   } while (0)
@@ -368,14 +370,24 @@ static void
 cloud_send_ping(void)
 {
   OC_PRINTF("\nEnter receiving endpoint: ");
-  char addr[256];
-  memset(addr, 0, sizeof(addr));
-  SCANF("%255s", addr);
-  char endpoint_string[267];
-  memset(endpoint_string, 0, sizeof(addr));
-  sprintf(endpoint_string, "coap+tcp://%s", addr);
+  char addr[256] = { 0 };
+  if (fgets(addr, sizeof(addr), stdin) == NULL) {
+    OC_PRINTF("\nERROR reading input\n");
+    return;
+  }
+  size_t addr_len = strlen(addr);
+  if (addr_len > 0 && addr[addr_len - 1] == '\n') {
+    addr[addr_len - 1] = '\0'; // remove newline
+  }
+  char endpoint_string[267] = { 0 };
+  int len =
+    snprintf(endpoint_string, sizeof(endpoint_string), "coap+tcp://%s", addr);
+  if (len < 0 || (size_t)len >= sizeof(endpoint_string)) {
+    OC_PRINTF("\nERROR: Invalid endpoint\n");
+    return;
+  }
   oc_string_t ep_string;
-  oc_new_string(&ep_string, endpoint_string, strlen(endpoint_string));
+  oc_new_string(&ep_string, endpoint_string, (size_t)len);
   oc_endpoint_t endpoint;
   int ret = oc_string_to_endpoint(&ep_string, &endpoint, NULL);
   oc_free_string(&ep_string);
@@ -778,10 +790,10 @@ main(int argc, char *argv[])
     return -1;
   }
 
-  int c;
   while (OC_ATOMIC_LOAD8(quit) != 1) {
     display_menu();
-    SCANF("%d", &c);
+    int c = 0;
+    SCANF_INT("%d", &c);
     switch (c) {
     case 0:
       continue;

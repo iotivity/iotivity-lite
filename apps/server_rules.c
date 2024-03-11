@@ -151,6 +151,54 @@ oc_define_interrupt_handler(toggle_switch)
   }
 }
 
+#ifdef OC_IDD_API
+
+#define INTROSPECTION_IDD_FILE "server_rules_IDD.cbor"
+
+static bool
+set_introspection_data(size_t device)
+{
+  FILE *fp = fopen("./" INTROSPECTION_IDD_FILE, "rb");
+  if (fp == NULL) {
+    return false;
+  }
+  long ret = fseek(fp, 0, SEEK_END);
+  if (ret < 0) {
+    fclose(fp);
+    return false;
+  }
+  ret = ftell(fp);
+  if (ret < 0) {
+    fclose(fp);
+    return false;
+  }
+  rewind(fp);
+
+  size_t buffer_size = (size_t)ret;
+  uint8_t *buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
+  if (buffer == NULL) {
+    fclose(fp);
+    return false;
+  }
+  size_t fread_ret = fread(buffer, buffer_size, 1, fp);
+  fclose(fp);
+
+  if (fread_ret != 1) {
+    free(buffer);
+    return false;
+  }
+
+  if (oc_set_introspection_data_v1(device, buffer, buffer_size) < 0) {
+    free(buffer);
+    return false;
+  }
+  OC_PRINTF("\tIntrospection data set '%s.cbor': %d [bytes]\n",
+            INTROSPECTION_IDD_FILE, (int)buffer_size);
+  free(buffer);
+  return true;
+}
+#endif /* OC_IDD_API */
+
 /**
  * function to set up the device.
  *
@@ -167,6 +215,9 @@ app_init(void)
                        "ocf.2.2.5",                   /* icv value */
                        "ocf.res.1.3.0, ocf.sh.1.3.0", /* dmv value */
                        NULL, NULL);
+  if (ret < 0) {
+    return ret;
+  }
   strcpy(rule, "(switch:value = true)");
   strcpy(lastscene, "normalaudio");
   strcpy(ra_lastscene, "loudaudio");
@@ -187,35 +238,13 @@ app_init(void)
     sprintf(sm->value, "%d", 60);
     oc_list_add(smap, sm);
   }
-#if defined(OC_IDD_API)
-  FILE *fp;
-  uint8_t *buffer;
-  size_t buffer_size;
-  const char introspection_error[] =
-    "\tERROR Could not read server_certification_tests_IDD.cbor\n"
-    "\tIntrospection data not set for device.\n";
-  fp = fopen("./server_rules_IDD.cbor", "rb");
-  if (fp) {
-    fseek(fp, 0, SEEK_END);
-    buffer_size = ftell(fp);
-    rewind(fp);
-
-    buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
-    size_t fread_ret = fread(buffer, buffer_size, 1, fp);
-    fclose(fp);
-
-    if (fread_ret == 1) {
-      oc_set_introspection_data(0, buffer, buffer_size);
-      OC_PRINTF("\tIntrospection data set for device.\n");
-    } else {
-      OC_PRINTF("%s", introspection_error);
-    }
-    free(buffer);
-  } else {
-    OC_PRINTF("%s", introspection_error);
+#ifdef OC_IDD_API
+  if (!set_introspection_data(/*device*/ 0)) {
+    OC_PRINTF("%s", "\tERROR Could not read '" INTROSPECTION_IDD_FILE "'\n"
+                    "\tIntrospection data not set for device.\n");
   }
-#endif
-  return ret;
+#endif /* OC_IDD_API */
+  return 0;
 }
 
 static void *
@@ -224,8 +253,12 @@ toggle_switch_resource(void *data)
   (void)data;
   while (OC_ATOMIC_LOAD8(quit) != 1) {
     int c = getchar();
+    if (c == EOF) {
+      break;
+    }
+
     if (OC_ATOMIC_LOAD8(quit) != 1) {
-      getchar();
+      (void)getchar(); // consume newline
       if (c == 48) {
         g_binaryswitch_value = false;
       } else {
@@ -664,7 +697,8 @@ post_ruleaction(oc_request_t *request, oc_interface_mask_t interfaces,
       if (!match) {
         oc_send_response(request, OC_STATUS_BAD_REQUEST);
       }
-      strcpy(ra_lastscene, oc_string(rep->value.string));
+      strncpy(ra_lastscene, oc_string(rep->value.string), sizeof(ra_lastscene));
+      ra_lastscene[sizeof(ra_lastscene) - 1] = '\0';
     } else {
       oc_send_response(request, OC_STATUS_BAD_REQUEST);
     }
@@ -702,7 +736,8 @@ set_scenecol_properties(const oc_resource_t *resource, const oc_rep_t *rep,
         if (!match) {
           return false;
         }
-        strcpy(lastscene, oc_string(rep->value.string));
+        strncpy(lastscene, oc_string(rep->value.string), sizeof(lastscene));
+        lastscene[sizeof(lastscene) - 1] = '\0';
         oc_set_delayed_callback(NULL, &set_scene, 0);
       }
       break;

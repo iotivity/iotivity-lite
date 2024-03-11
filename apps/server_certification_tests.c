@@ -49,7 +49,7 @@ static const size_t DEVICE = 0;
 static const char *spec_version = "ocf.2.2.5";
 static const char *data_model_version = "ocf.res.1.3.0,ocf.sh.1.3.0";
 
-static const char *deivce_uri = "/oic/d";
+static const char *device_uri = "/oic/d";
 static const char *device_rt = "oic.d.switch";
 static const char *device_name = "OCFTestServer";
 
@@ -466,12 +466,24 @@ static void
 cloud_send_ping(void)
 {
   OC_PRINTF("\nEnter receiving endpoint: ");
-  char addr[256];
-  SCANF("%255s", addr);
-  char endpoint_string[267];
-  sprintf(endpoint_string, "coap+tcp://%s", addr);
+  char addr[256] = { 0 };
+  if (fgets(addr, sizeof(addr), stdin) == NULL) {
+    OC_PRINTF("\nERROR reading input\n");
+    return;
+  }
+  size_t addr_len = strlen(addr);
+  if (addr_len > 0 && addr[addr_len - 1] == '\n') {
+    addr[addr_len - 1] = '\0'; // remove newline
+  }
+  char endpoint_string[267] = { 0 };
+  int len =
+    snprintf(endpoint_string, sizeof(endpoint_string), "coap+tcp://%s", addr);
+  if (len < 0 || (size_t)len >= sizeof(endpoint_string)) {
+    OC_PRINTF("\nERROR: Invalid endpoint\n");
+    return;
+  }
   oc_string_t ep_string;
-  oc_new_string(&ep_string, endpoint_string, strlen(endpoint_string));
+  oc_new_string(&ep_string, endpoint_string, (size_t)len);
   oc_endpoint_t endpoint;
   int ret = oc_string_to_endpoint(&ep_string, &endpoint, NULL);
   oc_free_string(&ep_string);
@@ -533,14 +545,65 @@ toggle_switch_resource(void)
   oc_signal_interrupt_handler(toggle_switch);
 }
 
+#ifdef OC_IDD_API
+
+#define INTROSPECTION_IDD_FILE "server_certification_tests_IDD.cbor"
+
+static bool
+set_introspection_data(size_t device)
+{
+  FILE *fp = fopen("./" INTROSPECTION_IDD_FILE, "rb");
+  if (fp == NULL) {
+    return false;
+  }
+  long ret = fseek(fp, 0, SEEK_END);
+  if (ret < 0) {
+    fclose(fp);
+    return false;
+  }
+  ret = ftell(fp);
+  if (ret < 0) {
+    fclose(fp);
+    return false;
+  }
+  rewind(fp);
+
+  size_t buffer_size = (size_t)ret;
+  uint8_t *buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
+  if (buffer == NULL) {
+    fclose(fp);
+    return false;
+  }
+  size_t fread_ret = fread(buffer, buffer_size, 1, fp);
+  fclose(fp);
+
+  if (fread_ret != 1) {
+    free(buffer);
+    return false;
+  }
+
+  if (oc_set_introspection_data_v1(device, buffer, buffer_size) < 0) {
+    free(buffer);
+    return false;
+  }
+  OC_PRINTF("\tIntrospection data set '%s.cbor': %d [bytes]\n",
+            INTROSPECTION_IDD_FILE, (int)buffer_size);
+  free(buffer);
+  return true;
+}
+#endif /* OC_IDD_API */
+
 static int
 app_init(void)
 {
   oc_activate_interrupt_handler(toggle_switch);
   int err = oc_init_platform(manufacturer, NULL, NULL);
 
-  err |= oc_add_device(deivce_uri, device_rt, device_name, spec_version,
+  err |= oc_add_device(device_uri, device_rt, device_name, spec_version,
                        data_model_version, NULL, NULL);
+  if (err < 0) {
+    return err;
+  }
   OC_PRINTF("\tSwitch device added.\n");
 
   oc_new_string_array(&my_supportedactions, (size_t)19);
@@ -563,40 +626,16 @@ app_init(void)
   oc_string_array_add_item(my_supportedactions, "9");
   oc_string_array_add_item(my_supportedactions, "0");
   oc_string_array_add_item(my_supportedactions, "-");
-#if defined(OC_IDD_API)
-  FILE *fp;
-  uint8_t *buffer;
-  size_t buffer_size;
-  const char introspection_error[] =
-    "\tERROR Could not read server_certification_tests_IDD.cbor\n"
-    "\tIntrospection data not set for device.\n";
-  fp = fopen("./server_certification_tests_IDD.cbor", "rb");
-  if (fp) {
-    fseek(fp, 0, SEEK_END);
-    buffer_size = ftell(fp);
-    rewind(fp);
-
-    buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
-    size_t fread_ret = fread(buffer, buffer_size, 1, fp);
-    fclose(fp);
-
-    if (fread_ret == 1) {
-      oc_set_introspection_data(0, buffer, buffer_size);
-      OC_PRINTF("\tIntrospection data set for device.\n");
-    } else {
-      OC_PRINTF("%s", introspection_error);
-    }
-    free(buffer);
-  } else {
-    OC_PRINTF("%s", introspection_error);
+#ifdef OC_IDD_API
+  if (!set_introspection_data(/*device*/ 0)) {
+    OC_PRINTF("%s", "\tERROR Could not read '" INTROSPECTION_IDD_FILE "'\n"
+                    "\tIntrospection data not set for device.\n");
   }
-#endif
+#endif /* OC_IDD_API */
 
-  if (err >= 0) {
-    oc_uuid_t my_uuid;
-    oc_str_to_uuid(mfg_persistent_uuid, &my_uuid);
-    oc_set_immutable_device_identifier(0, &my_uuid);
-  }
+  oc_uuid_t my_uuid;
+  oc_str_to_uuid(mfg_persistent_uuid, &my_uuid);
+  oc_set_immutable_device_identifier(0, &my_uuid);
   return err;
 }
 
@@ -959,7 +998,7 @@ get_dali(oc_request_t *request, oc_interface_mask_t interfaces, void *user_data)
     break;
   }
   oc_rep_end_root_object();
-  if (error_state == false) {
+  if (!error_state) {
     oc_send_response(request, OC_STATUS_OK);
   } else {
     oc_send_response(request, OC_STATUS_BAD_OPTION);
@@ -1095,7 +1134,7 @@ post_dali(oc_request_t *request, oc_interface_mask_t interfaces,
   }
   /* if the input is ok, then process the input document and assign the global
    * variables */
-  if (error_state == false) {
+  if (!error_state) {
     switch (interfaces) {
     default: {
       /* loop over all the properties in the input document */
@@ -1254,8 +1293,6 @@ get_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
      The implementation always return everything that belongs to the resource.
      this implementation is not optimal, but is functionally correct and will
      pass CTT1.2.2 */
-  bool error_state = false;
-
   OC_PRINTF("-- Begin get_config: interface %d\n", interfaces);
   oc_rep_start_root_object();
   switch (interfaces) {
@@ -1296,11 +1333,7 @@ get_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
     break;
   }
   oc_rep_end_root_object();
-  if (error_state == false) {
-    oc_send_response(request, OC_STATUS_OK);
-  } else {
-    oc_send_response(request, OC_STATUS_BAD_OPTION);
-  }
+  oc_send_response(request, OC_STATUS_OK);
   OC_PRINTF("-- End get_config\n");
 }
 
@@ -1360,7 +1393,7 @@ post_dali_config(oc_request_t *request, oc_interface_mask_t interfaces,
   }
   /* if the input is ok, then process the input document and assign the global
    * variables */
-  if (error_state == false) {
+  if (!error_state) {
     switch (interfaces) {
     default: {
       /* loop over all the properties in the input document */
@@ -2263,9 +2296,9 @@ main(void)
 
   display_device_uuid();
 
-  int c;
   while (OC_ATOMIC_LOAD8(quit) != 1) {
     display_menu();
+    int c = 0;
     SCANF("%d", &c);
     switch (c) {
     case 0:

@@ -537,8 +537,7 @@ TestETagWithServer::addIntrospectionData(size_t device)
   std::for_each(std::istreambuf_iterator<char>(idd_fs),
                 std::istreambuf_iterator<char>(),
                 [&idd](char c) { idd.push_back(c); });
-  oc_set_introspection_data(device, idd.data(), idd.size());
-  return true;
+  return oc_set_introspection_data_v1(device, idd.data(), idd.size()) >= 0;
 }
 #endif /* OC_IDD_API */
 

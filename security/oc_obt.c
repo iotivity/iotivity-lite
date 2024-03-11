@@ -2375,12 +2375,20 @@ oc_obt_provision_trust_anchor(const char *certificate, size_t certificate_size,
   p->cb.data = data;
   p->trustanchor = certificate;
   p->trustanchor_size = certificate_size;
-  strcpy(p->trustanchor_subject, subject);
+  size_t subject_len = oc_strnlen_s(subject, sizeof(p->trustanchor_subject));
+  if (subject_len == sizeof(p->trustanchor_subject)) {
+    OC_ERR("trustanchor subject too long");
+    oc_memb_free(&oc_installtrust_ctx_m, p);
+    return -1;
+  }
+  if (subject_len > 0) {
+    memcpy(p->trustanchor_subject, subject, subject_len);
+  }
+  p->trustanchor_subject[subject_len] = '\0';
   p->device1 = device;
   oc_tls_select_psk_ciphersuite();
 
-  /**  1) check if certificates is supported
-   */
+  /**  1) check if certificates is supported */
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   if (!oc_do_get(OCF_SEC_DOXM_URI, ep, NULL, &trustanchor_supports_cert_creds,
                  HIGH_QOS, p)) {

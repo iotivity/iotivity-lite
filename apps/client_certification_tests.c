@@ -84,48 +84,79 @@ free_all_resources(void)
   }
 }
 
+#ifdef OC_IDD_API
+
+#define INTROSPECTION_IDD_FILE "client_certification_tests_IDD.cbor"
+
+static bool
+set_introspection_data(size_t device)
+{
+  FILE *fp = fopen("./" INTROSPECTION_IDD_FILE, "rb");
+  if (fp == NULL) {
+    return false;
+  }
+  long ret = fseek(fp, 0, SEEK_END);
+  if (ret < 0) {
+    fclose(fp);
+    return false;
+  }
+  ret = ftell(fp);
+  if (ret < 0) {
+    fclose(fp);
+    return false;
+  }
+  rewind(fp);
+
+  size_t buffer_size = (size_t)ret;
+  uint8_t *buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
+  if (buffer == NULL) {
+    fclose(fp);
+    return false;
+  }
+  size_t fread_ret = fread(buffer, buffer_size, 1, fp);
+  fclose(fp);
+
+  if (fread_ret != 1) {
+    free(buffer);
+    return false;
+  }
+
+  if (oc_set_introspection_data_v1(device, buffer, buffer_size) < 0) {
+    free(buffer);
+    return false;
+  }
+  OC_PRINTF("\tIntrospection data set '%s.cbor': %d [bytes]\n",
+            INTROSPECTION_IDD_FILE, (int)buffer_size);
+  free(buffer);
+  return true;
+}
+#endif /* OC_IDD_API */
+
 static int
 app_init(void)
 {
   int ret = oc_init_platform("OCF", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.wk.d", "OCFTestClient", "ocf.2.2.5",
                        "ocf.res.1.3.0,ocf.sh.1.3.0", NULL, NULL);
+  if (ret < 0) {
+    return ret;
+  }
 
 #ifdef OC_IDD_API
-  FILE *fp;
-  uint8_t *buffer;
-  size_t buffer_size;
-  const char introspection_error[] =
-    "\tERROR Could not read client_certification_tests_IDD.cbor\n"
-    "\tIntrospection data not set for device.\n";
-  fp = fopen("./client_certification_tests_IDD.cbor", "rb");
-  if (fp) {
-    fseek(fp, 0, SEEK_END);
-    buffer_size = ftell(fp);
-    rewind(fp);
-
-    buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
-    size_t fread_ret = fread(buffer, buffer_size, 1, fp);
-    fclose(fp);
-
-    if (fread_ret == 1) {
-      oc_set_introspection_data(0, buffer, buffer_size);
-      OC_PRINTF("\tIntrospection data set for device.\n");
-    } else {
-      OC_PRINTF("%s", introspection_error);
-    }
-    free(buffer);
-  } else {
-    OC_PRINTF("%s", introspection_error);
+  if (!set_introspection_data(/*device*/ 0)) {
+    OC_PRINTF("%s", "\tERROR Could not read '" INTROSPECTION_IDD_FILE "'\n"
+                    "\tIntrospection data not set for device.\n");
   }
-#endif
+#endif /* OC_IDD_API */
 
-  return ret;
+  return 0;
 }
 
-#define SCANF(...)                                                             \
+#define SCANF_INT(...)                                                         \
   do {                                                                         \
-    if (scanf(__VA_ARGS__) != 1) {                                             \
+    char input[64];                                                            \
+    if (fgets(input, sizeof(input), stdin) == NULL ||                          \
+        sscanf(input, __VA_ARGS__) <= 0) {                                     \
       OC_PRINTF("ERROR Invalid input\n");                                      \
     }                                                                          \
   } while (0)
@@ -335,12 +366,24 @@ static void
 cloud_send_ping(void)
 {
   OC_PRINTF("\nEnter receiving endpoint: ");
-  char addr[256];
-  SCANF("%255s", addr);
-  char endpoint_string[267];
-  sprintf(endpoint_string, "coap+tcp://%s", addr);
+  char addr[256] = { 0 };
+  if (fgets(addr, sizeof(addr), stdin) == NULL) {
+    OC_PRINTF("\nERROR reading input\n");
+    return;
+  }
+  size_t addr_len = strlen(addr);
+  if (addr_len > 0 && addr[addr_len - 1] == '\n') {
+    addr[addr_len - 1] = '\0'; // remove newline
+  }
+  char endpoint_string[267] = { 0 };
+  int len =
+    snprintf(endpoint_string, sizeof(endpoint_string), "coap+tcp://%s", addr);
+  if (len < 0 || (size_t)len >= sizeof(endpoint_string)) {
+    OC_PRINTF("\nERROR: Invalid endpoint\n");
+    return;
+  }
   oc_string_t ep_string;
-  oc_new_string(&ep_string, endpoint_string, strlen(endpoint_string));
+  oc_new_string(&ep_string, endpoint_string, (size_t)len);
   oc_endpoint_t endpoint;
   int ret = oc_string_to_endpoint(&ep_string, &endpoint, NULL);
   oc_free_string(&ep_string);
@@ -367,8 +410,8 @@ get_resource(bool tcp, bool observe)
     resource_t *res[100];
     show_discovered_resources(res);
     OC_PRINTF("\n\nSelect resource: ");
-    int c;
-    SCANF("%d", &c);
+    int c = -1;
+    SCANF_INT("%d", &c);
     if (c < 0 || c > oc_list_length(resources)) {
       OC_PRINTF("\nERROR: Invalid selection.. Try again..\n");
     } else {
@@ -402,8 +445,8 @@ stop_observe_resource(bool tcp)
     resource_t *res[100];
     show_discovered_resources(res);
     OC_PRINTF("\n\nSelect resource: ");
-    int c;
-    SCANF("%d", &c);
+    int c = -1;
+    SCANF_INT("%d", &c);
     if (c < 0 || c > oc_list_length(resources)) {
       OC_PRINTF("\nERROR: Invalid selection.. Try again..\n");
     } else {
@@ -428,14 +471,14 @@ post_resource(bool tcp, bool mcast)
     resource_t *res[100];
     show_discovered_resources(res);
     OC_PRINTF("\n\nSelect resource: ");
-    int c;
-    SCANF("%d", &c);
+    int c = -1;
+    SCANF_INT("%d", &c);
     if (c < 0 || c > oc_list_length(resources)) {
       OC_PRINTF("\nERROR: Invalid selection.. Try again..\n");
     } else {
-      int s;
-      OC_PRINTF("Select siwtch value:\n[0]: true\n[1]: false\n\nSelect: ");
-      SCANF("%d", &s);
+      OC_PRINTF("Select switch value:\n[0]: true\n[1]: false\n\nSelect: ");
+      int s = -1;
+      SCANF_INT("%d", &s);
       if (s < 0 || s > 1) {
         OC_PRINTF("\nERROR: Invalid selection.. Try again..\n");
       } else {
@@ -786,9 +829,9 @@ otm_just_works(void)
 
   device_handle_t *device = (device_handle_t *)oc_list_head(unowned_devices);
   device_handle_t *devices[MAX_NUM_DEVICES];
-  int i = 0, c;
 
   OC_PRINTF("\nUnowned Devices:\n");
+  int i = 0;
   while (device != NULL) {
     char di[OC_UUID_LEN];
     oc_uuid_to_str(&device->uuid, di, OC_UUID_LEN);
@@ -798,7 +841,8 @@ otm_just_works(void)
     device = device->next;
   }
   OC_PRINTF("\n\nSelect device: ");
-  SCANF("%d", &c);
+  int c = -1;
+  SCANF_INT("%d", &c);
   if (c < 0 || c >= i) {
     OC_PRINTF("ERROR: Invalid selection\n");
     return;
@@ -830,12 +874,20 @@ post_cloud_configuration_resource(bool tcp)
     resource_t *cloudconf_resource =
       get_discovered_resource_by_uri("/CoAPCloudConf");
     if (cloudconf_resource) {
-      char cis_value[1000];
-      char sid_value[1000];
+      char cis_value[1000] = { 0 };
       OC_PRINTF("Provide cis value:\n");
-      SCANF("%s", cis_value);
+      if (fgets(cis_value, sizeof(cis_value), stdin) == NULL) {
+        pthread_mutex_unlock(&app_sync_lock);
+        OC_PRINTF("\nERROR reading input\n");
+        return;
+      }
+      char sid_value[1000] = { 0 };
       OC_PRINTF("Provide sid value:\n");
-      SCANF("%s", sid_value);
+      if (fgets(sid_value, sizeof(sid_value), stdin) == NULL) {
+        pthread_mutex_unlock(&app_sync_lock);
+        OC_PRINTF("\nERROR reading input\n");
+        return;
+      }
       oc_endpoint_t *ep = cloudconf_resource->endpoint;
       while (ep && (tcp && !(ep->flags & TCP))) {
         ep = ep->next;
@@ -975,10 +1027,10 @@ main(void)
 
   display_device_uuid();
 
-  int c;
   while (OC_ATOMIC_LOAD8(quit) != 1) {
     display_menu();
-    SCANF("%d", &c);
+    int c = 0;
+    SCANF_INT("%d", &c);
     switch (c) {
     case 0:
       continue;

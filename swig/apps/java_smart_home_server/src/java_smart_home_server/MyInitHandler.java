@@ -14,10 +14,10 @@ public class MyInitHandler implements OCMainInitHandler {
         ret |= OCMain.addDevice("/oic/d", "oic.d.switch", "Temperature Sensor", "ocf.2.1.0",
                 "ocf.res.1.3.0,ocf.sh.1.3.0");
 
-        OCIntrospection.setIntrospectionData(0,
-                SmartHomeIntrospectionData.getCborFileBytes("./assets/smart_home_introspection_data.cbor"));
-
-        System.out.println("Introspection data set for device");
+        if (OCIntrospection.setIntrospectionDataV1(0,
+                SmartHomeIntrospectionData.getCborFileBytes("./assets/smart_home_introspection_data.cbor")) >= 0) {
+            System.out.println("Introspection data set for device");
+        }
 
         OCMain.setRandomPinHandler(new RandomPinHandler());
         OCSoftwareUpdate.setImpl(new MySoftwareUpdateHandler());

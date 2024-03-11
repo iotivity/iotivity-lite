@@ -57,7 +57,8 @@ public:
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 
 #ifdef OC_IDD_API
-    oc_set_introspection_data(kDeviceID, idd_.data(), idd_.size());
+    ASSERT_LT(
+      0, oc_set_introspection_data_v1(kDeviceID, idd_.data(), idd_.size()));
 #endif /* OC_IDD_API */
   }
 
@@ -128,7 +129,8 @@ TEST_F(TestIntrospectionWithServer, SetData_Fail)
 {
   // without configured storage introspection data cannot be stored
   oc_storage_reset();
-  oc_set_introspection_data(kDeviceID, idd_.data(), idd_.size());
+  ASSERT_GT(0,
+            oc_set_introspection_data_v1(kDeviceID, idd_.data(), idd_.size()));
   std::vector<uint8_t> buffer(OC_MAX_APP_DATA_SIZE);
   long size =
     oc_introspection_get_data(kDeviceID, buffer.data(), buffer.size());

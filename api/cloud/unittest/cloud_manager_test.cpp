@@ -23,6 +23,7 @@
 #include "api/cloud/oc_cloud_resource_internal.h"
 #include "api/cloud/oc_cloud_store_internal.h"
 #include "api/oc_rep_internal.h"
+#include "api/oc_runtime_internal.h"
 #include "messaging/coap/transactions_internal.h"
 #include "oc_api.h"
 #include "oc_rep.h"
@@ -363,6 +364,9 @@ TEST_F(TestCloudManager, cloud_manager_select_next_server_on_retry)
 
 class TestCloudManagerData : public testing::Test {
 public:
+  static void SetUpTestCase() { oc_runtime_init(); }
+  static void TearDownTestCase() { oc_runtime_shutdown(); }
+
   void SetUp() override
   {
     memset(&m_context, 0, sizeof(m_context));

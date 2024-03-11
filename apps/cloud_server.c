@@ -944,9 +944,10 @@ simulate_tpm_mbedtls_pk_parse_key(size_t device, mbedtls_pk_context *pk,
                 buf);
       return MBEDTLS_ERR_PK_KEY_INVALID_FORMAT;
     }
-    uint8_t identity_private_key[4096] = { 0 };
+    uint8_t identity_private_key[4096];
     size_t ret =
       fread(identity_private_key, 1, sizeof(identity_private_key) - 1, f);
+    identity_private_key[ret] = '\0';
     fclose(f);
     return mbedtls_pk_parse_key(pk, identity_private_key, ret, NULL, 0, f_rng,
                                 p_rng);

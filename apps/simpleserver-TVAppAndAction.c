@@ -54,12 +54,64 @@ static oc_string_array_t my_supportedactions;
 /* global property variables for path: "/binaryswitch" */
 bool g_binaryswitch_value = false;
 
+#if defined(OC_INTROSPECTION) && defined(OC_IDD_API)
+
+#define INTROSPECTION_IDD_FILE "server_introspection.cbor"
+
+static bool
+set_introspection_data(size_t device)
+{
+  FILE *fp = fopen("./" INTROSPECTION_IDD_FILE, "rb");
+  if (fp == NULL) {
+    return false;
+  }
+  long ret = fseek(fp, 0, SEEK_END);
+  if (ret < 0) {
+    fclose(fp);
+    return false;
+  }
+  ret = ftell(fp);
+  if (ret < 0) {
+    fclose(fp);
+    return false;
+  }
+  rewind(fp);
+
+  size_t buffer_size = (size_t)ret;
+  uint8_t *buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
+  if (buffer == NULL) {
+    fclose(fp);
+    return false;
+  }
+  size_t fread_ret = fread(buffer, buffer_size, 1, fp);
+  fclose(fp);
+
+  if (fread_ret != 1) {
+    free(buffer);
+    return false;
+  }
+
+  if (oc_set_introspection_data_v1(device, buffer, buffer_size) < 0) {
+    free(buffer);
+    return false;
+  }
+  printf("\tIntrospection data set '" INTROSPECTION_IDD_FILE "': %d [bytes]\n",
+         (int)buffer_size);
+  free(buffer);
+  return true;
+}
+#endif /* OC_INTROSPECTION && OC_IDD_API */
+
 static int
 app_init(void)
 {
   int ret = oc_init_platform("OCF", NULL, NULL);
   ret |= oc_add_device("/oic/d", "oic.d.light", "Lamp", "ocf.2.2.3",
                        "ocf.res.1.3.0, ocf.sh.1.3.0", NULL, NULL);
+  if (ret < 0) {
+    return ret;
+  }
+
   oc_new_string(&name, "John's Light", 12);
   oc_new_string_array(&my_supportedactions, (size_t)19);
   oc_string_array_add_item(my_supportedactions, "arrowup");
@@ -84,33 +136,9 @@ app_init(void)
 
 #ifdef OC_INTROSPECTION
 #ifdef OC_IDD_API
-  uint8_t *buffer;
-  size_t buffer_size;
-  const char introspection_error[] =
-    "\tERROR Could not read 'server_introspection.cbor'\n"
-    "\tIntrospection data not set.\n";
-  FILE *fp =
-    fopen("c:/users/m.trayer/OCF/TVApps/server_introspection.cbor", "rb");
-  if (fp) {
-    fseek(fp, 0, SEEK_END);
-    buffer_size = ftell(fp);
-    rewind(fp);
-
-    buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
-    size_t fread_ret = fread(buffer, buffer_size, 1, fp);
-    fclose(fp);
-
-    if (fread_ret == 1) {
-      oc_set_introspection_data(0, buffer, buffer_size);
-      printf(
-        "\tIntrospection data set 'server_introspection.cbor': %d [bytes]\n",
-        (int)buffer_size);
-    } else {
-      printf("%s", introspection_error);
-    }
-    free(buffer);
-  } else {
-    printf("%s", introspection_error);
+  if (!set_introspection_data(/*device*/ 0)) {
+    printf("%s", "\tERROR Could not read '" INTROSPECTION_IDD_FILE "'\n"
+                 "\tIntrospection data not set.\n");
   }
 #else  /* !OC_IDD_API */
   printf("\t introspection via header file\n");
