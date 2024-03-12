@@ -196,6 +196,22 @@ discovery_encode_endpoints(CborEncoder *link, const oc_resource_t *resource,
   oc_rep_end_array(link, eps);
 }
 
+static void
+encode_resource_types(CborEncoder *links, const oc_resource_t *resource)
+{
+  oc_rep_set_key((links), "rt");
+  oc_rep_start_array((links), rt);
+  for (size_t i = 0; i < oc_string_array_get_allocated_size(resource->types);
+       ++i) {
+    size_t size = oc_string_array_get_item_size(resource->types, i);
+    const char *t = (const char *)oc_string_array_get_item(resource->types, i);
+    if (size > 0) {
+      oc_rep_add_text_string_v1(rt, t, size);
+    }
+  }
+  oc_rep_end_array((links), rt);
+}
+
 static bool
 encode_resource(CborEncoder *links, const oc_resource_t *resource,
                 const oc_request_t *request, oc_string_view_t anchor,
@@ -223,16 +239,7 @@ encode_resource(CborEncoder *links, const oc_resource_t *resource,
                             oc_string_len(resource->uri));
 
   // rt
-  oc_rep_set_array(link, rt);
-  for (size_t i = 0; i < oc_string_array_get_allocated_size(resource->types);
-       ++i) {
-    size_t size = oc_string_array_get_item_size(resource->types, i);
-    const char *t = (const char *)oc_string_array_get_item(resource->types, i);
-    if (size > 0) {
-      oc_rep_add_text_string_v1(rt, t, size);
-    }
-  }
-  oc_rep_close_array(link, rt);
+  encode_resource_types(oc_rep_object(link), resource);
 
   // if
   oc_core_encode_interfaces_mask(oc_rep_object(link), resource->interfaces,
@@ -411,16 +418,7 @@ process_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
                             oc_string_len(resource->uri));
 
   // rt
-  oc_rep_set_array(res, rt);
-  for (size_t i = 0; i < oc_string_array_get_allocated_size(resource->types);
-       ++i) {
-    size_t size = oc_string_array_get_item_size(resource->types, i);
-    const char *t = (const char *)oc_string_array_get_item(resource->types, i);
-    if (size > 0) {
-      oc_rep_add_text_string(rt, t);
-    }
-  }
-  oc_rep_close_array(res, rt);
+  encode_resource_types(oc_rep_object(res), resource);
 
   // if
   oc_core_encode_interfaces_mask(oc_rep_object(res), resource->interfaces,
@@ -747,6 +745,9 @@ discovery_process_batch_response(
 
   oc_rep_set_text_string_v1(links_obj, href, href,
                             oc_strnlen(href, OC_ARRAY_SIZE(href)));
+  // rt
+  encode_resource_types(oc_rep_object(links_obj), resource);
+
 #ifdef OC_HAS_FEATURE_ETAG
   oc_rep_set_byte_string(links_obj, etag, (uint8_t *)&resource->etag,
                          sizeof(resource->etag));
