@@ -1418,8 +1418,7 @@ oc_tls_configure_end_entity_cert_chain(mbedtls_ssl_config *conf, size_t device,
   }
   if (!cert) {
 #if OC_WRN_IS_ENABLED
-    char credid_str[16];
-    memset(credid_str, 0, sizeof(credid_str));
+    char credid_str[16] = { 0 };
     if (credid == OC_TLS_SELECTED_ANY_CRED_ID) {
       strncpy(credid_str, "any", sizeof(credid_str));
     } else {
@@ -1435,8 +1434,7 @@ oc_tls_configure_end_entity_cert_chain(mbedtls_ssl_config *conf, size_t device,
   int err = mbedtls_ssl_conf_own_cert(conf, &cert->cert, &cert->pk);
   if (err != 0) {
 #if OC_WRN_IS_ENABLED
-    char credid_str[16];
-    memset(credid_str, 0, sizeof(credid_str));
+    char credid_str[16] = { 0 };
     if (credid == OC_TLS_SELECTED_ANY_CRED_ID) {
       strncpy(credid_str, "any", sizeof(credid_str));
     } else {

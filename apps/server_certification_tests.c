@@ -556,23 +556,22 @@ set_introspection_data(size_t device)
   if (fp == NULL) {
     return false;
   }
-  long ret = fseek(fp, 0, SEEK_END);
-  if (ret < 0) {
-    fclose(fp);
-    return false;
+  uint8_t *buffer = NULL;
+  if (fseek(fp, 0, SEEK_END) < 0) {
+    goto error;
   }
-  ret = ftell(fp);
+  long ret = ftell(fp);
   if (ret < 0) {
-    fclose(fp);
-    return false;
+    goto error;
   }
-  rewind(fp);
+  if (fseek(fp, 0, SEEK_SET) < 0) {
+    goto error;
+  }
 
   size_t buffer_size = (size_t)ret;
-  uint8_t *buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
+  buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
   if (buffer == NULL) {
-    fclose(fp);
-    return false;
+    goto error;
   }
   size_t fread_ret = fread(buffer, buffer_size, 1, fp);
   fclose(fp);
@@ -590,6 +589,11 @@ set_introspection_data(size_t device)
             INTROSPECTION_IDD_FILE, (int)buffer_size);
   free(buffer);
   return true;
+
+error:
+  free(buffer);
+  fclose(fp);
+  return false;
 }
 #endif /* OC_IDD_API */
 

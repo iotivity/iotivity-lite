@@ -436,23 +436,22 @@ set_introspection_data(size_t device)
   if (fp == NULL) {
     return false;
   }
-  long ret = fseek(fp, 0, SEEK_END);
-  if (ret < 0) {
-    fclose(fp);
-    return false;
+  uint8_t *buffer = NULL;
+  if (fseek(fp, 0, SEEK_END) < 0) {
+    goto error;
   }
-  ret = ftell(fp);
+  long ret = ftell(fp);
   if (ret < 0) {
-    fclose(fp);
-    return false;
+    goto error;
   }
-  rewind(fp);
+  if (fseek(fp, 0, SEEK_SET) < 0) {
+    goto error;
+  }
 
   size_t buffer_size = (size_t)ret;
-  uint8_t *buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
+  buffer = (uint8_t *)malloc(buffer_size * sizeof(uint8_t));
   if (buffer == NULL) {
-    fclose(fp);
-    return false;
+    goto error;
   }
   size_t fread_ret = fread(buffer, buffer_size, 1, fp);
   fclose(fp);
@@ -470,6 +469,11 @@ set_introspection_data(size_t device)
             INTROSPECTION_IDD_FILE, (int)buffer_size);
   free(buffer);
   return true;
+
+error:
+  free(buffer);
+  fclose(fp);
+  return false;
 }
 #endif /* OC_INTROSPECTION && OC_IDD_API */
 
@@ -1387,8 +1391,6 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   uri_len = (uri_len >= MAX_URI_LENGTH) ? MAX_URI_LENGTH - 1 : uri_len;
 
   int nr_resource_types = (int)oc_string_array_get_allocated_size(types);
-  char url[MAX_URI_LENGTH];
-  char udn_url[200];
   for (int i = 0; i < nr_resource_types; i++) {
     char *t = oc_string_array_get_item(types, i);
 
@@ -1454,11 +1456,13 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
       }
     } /* ep is NULL */
 
+    char url[MAX_URI_LENGTH];
     // make uri as url NULL terminated
-    strncpy(url, uri, uri_len);
+    memcpy(url, uri, uri_len);
     url[uri_len] = '\0';
 
     // make extended url with local UDN as prefix
+    char udn_url[200];
     strcpy(udn_url, "/");
     strcat(udn_url, this_udn);
     strcat(udn_url, url);

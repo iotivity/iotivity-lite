@@ -24,14 +24,17 @@ jobs:
         with:
           submodules: "true"
 
-      # latest clang and clang-tidy on ubuntu-22.04: v15
-      - name: Install clang-15 and clang-tidy-15
+      - name: Install clang-17 and clang-tidy-17
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y clang-15 clang-tidy-15
-          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 200
-          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 200
-          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-15 200
+          sudo apt-get install curl
+          curl -sL https://apt.llvm.org/llvm.sh > llvm.sh
+          chmod u+x llvm.sh
+          sudo ./llvm.sh 17
+          sudo apt-get install clang-17 clang-tidy-17
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-17 200
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-17 200
+          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-17 200
           update-alternatives --verbose --display clang
 
       - name: Build with clang and analyze with clang-tidy

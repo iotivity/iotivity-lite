@@ -78,6 +78,8 @@ str_to_uuid(const char *str, size_t str_len, oc_uuid_t *uuid)
       case 102:
         c |= 0x0f;
         break;
+      default:
+        break;
       }
     } else {
       c |= str[i] - 48;
@@ -143,11 +145,7 @@ oc_uuid_to_str_v1(const oc_uuid_t *uuid, char *buffer, size_t buflen)
   }
   int j = 0;
   for (size_t i = 0; i < OC_ARRAY_SIZE(uuid->id); ++i) {
-    switch (i) {
-    case 4:
-    case 6:
-    case 8:
-    case 10: {
+    if (i == 4 || i == 6 || i == 8 || i == 10) {
       int len = snprintf(&buffer[j], buflen, "-");
       if (len < 0 || (size_t)len >= buflen) {
         OC_ERR("cannot encode uuid to string: buffer too small");
@@ -155,8 +153,6 @@ oc_uuid_to_str_v1(const oc_uuid_t *uuid, char *buffer, size_t buflen)
       }
       j += len;
       buflen -= (size_t)len;
-      break;
-    }
     }
     int len = snprintf(&buffer[j], buflen, "%02x", uuid->id[i]);
     if (len < 0 || (size_t)len >= buflen) {
