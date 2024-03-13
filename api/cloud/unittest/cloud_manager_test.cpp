@@ -401,10 +401,7 @@ public:
     std::optional<std::string> refresh_token = {},
     std::optional<std::string> uid = {}, int64_t expires_in = -1);
 
-  oc_cloud_context_t *GetContext()
-  {
-    return &m_context;
-  }
+  oc_cloud_context_t *GetContext() { return &m_context; }
 
   bool IsEmptyContext() const
   {

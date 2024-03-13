@@ -542,10 +542,7 @@ public:
     TestSWUpdateImplementation::Clear();
   }
 
-  static void TearDownTestCase()
-  {
-    oc::TestDevice::StopServer();
-  }
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 
   void SetUp() override
   {

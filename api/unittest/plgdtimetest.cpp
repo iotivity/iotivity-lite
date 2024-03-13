@@ -277,10 +277,7 @@ public:
     oc::TestDevice::StopServer();
   }
 
-  void SetUp() override
-  {
-    plgd_time_set_time(oc_clock_time());
-  }
+  void SetUp() override { plgd_time_set_time(oc_clock_time()); }
 
   void TearDown() override
   {

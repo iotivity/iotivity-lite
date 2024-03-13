@@ -358,10 +358,7 @@ public:
     oc_network_event_handler_mutex_destroy();
   }
 
-  void TearDown() override
-  {
-    oc_event_callbacks_shutdown();
-  }
+  void TearDown() override { oc_event_callbacks_shutdown(); }
 };
 
 TEST_F(TestObserveCallback, Add)
@@ -492,10 +489,7 @@ public:
 #endif // OC_SERVER && OC_COLLECTIONS
   }
 
-  static void TearDownTestCase()
-  {
-    oc::TestDevice::StopServer();
-  }
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 
   void SetUp() override
   {
@@ -509,10 +503,7 @@ public:
 #endif // OC_SERVER && OC_COLLECTIONS
   }
 
-  void TearDown() override
-  {
-    oc::TestDevice::Reset();
-  }
+  void TearDown() override { oc::TestDevice::Reset(); }
 
 #if defined(OC_SERVER) && defined(OC_COLLECTIONS)
   static Switches switches_;

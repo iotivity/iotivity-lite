@@ -1280,10 +1280,7 @@ public:
     oc_rep_decoder_set_type(OC_REP_CBOR_DECODER);
   }
 
-  void TearDown() override
-  {
-    oc::TestDevice::Reset();
-  }
+  void TearDown() override { oc::TestDevice::Reset(); }
 };
 
 TEST_F(TestJsonRepWithServer, EncodePostPayload)

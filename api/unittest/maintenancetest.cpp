@@ -74,15 +74,9 @@ public:
     setupDevice();
   }
 
-  static void TearDownTestCase()
-  {
-    oc::TestDevice::StopServer();
-  }
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 
-  void TearDown() override
-  {
-    oc::TestDevice::Reset();
-  }
+  void TearDown() override { oc::TestDevice::Reset(); }
 };
 
 TEST_F(TestMaintenanceWithServer, GetResourceByIndex_F)
@@ -334,10 +328,7 @@ public:
     oc_set_max_app_data_size(defaultAppSize);
   }
 
-  void TearDown() override
-  {
-    oc::TestDevice::Reset();
-  }
+  void TearDown() override { oc::TestDevice::Reset(); }
 
 private:
   static size_t defaultAppSize;

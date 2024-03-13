@@ -158,15 +158,9 @@ public:
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
 
-  static void TearDownTestCase()
-  {
-    oc::TestDevice::StopServer();
-  }
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 
-  void TearDown() override
-  {
-    oc::TestDevice::Reset();
-  }
+  void TearDown() override { oc::TestDevice::Reset(); }
 };
 
 TEST_F(TestCloudResourceWithServer, GetResourceByIndex_F)

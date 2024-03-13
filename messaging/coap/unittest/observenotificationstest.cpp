@@ -80,20 +80,11 @@ public:
 #endif // OC_COLLECTIONS
   }
 
-  static void TearDownTestCase()
-  {
-    oc::TestDevice::StopServer();
-  }
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 
-  void SetUp() override
-  {
-    coap_observe_counter_reset();
-  }
+  void SetUp() override { coap_observe_counter_reset(); }
 
-  void TearDown() override
-  {
-    oc::TestDevice::Reset();
-  }
+  void TearDown() override { oc::TestDevice::Reset(); }
 
   static void onGetEmptyResource(oc_request_t *request, oc_interface_mask_t,
                                  void *)

@@ -46,10 +46,10 @@ typedef uint32_t oc_clock_time_t;
 #define OC_REQUEST_HISTORY
 
 /* Add support observable for oic/res */
-//#define OC_DISCOVERY_RESOURCE_OBSERVABLE
+// #define OC_DISCOVERY_RESOURCE_OBSERVABLE
 
 /* Maximum size of uri for a collection resource */
-//#define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
+// #define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
 
 /* If we selected support for dynamic memory allocation */
 #ifdef OC_DYNAMIC_ALLOCATION
@@ -59,7 +59,7 @@ typedef uint32_t oc_clock_time_t;
                        // function)
 
 /* Enable reallocation during encoding the representation to cbor */
-//#define OC_REP_ENCODING_REALLOC
+// #define OC_REP_ENCODING_REALLOC
 
 #else /* OC_DYNAMIC_ALLOCATION */
 

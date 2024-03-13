@@ -301,10 +301,7 @@ public:
     m_send_response_cb_invoked = false;
   }
 
-  void TearDown() override
-  {
-    oc::TestDevice::Reset();
-  }
+  void TearDown() override { oc::TestDevice::Reset(); }
 
   static void SendResponseCallback(oc_request_t *request,
                                    oc_status_t response_code)

@@ -34,7 +34,7 @@ typedef uint64_t oc_clock_time_t;
 #define OC_MAX_APP_RESOURCES (1)
 
 /* Common parameters */
-//#define OC_BLOCK_WISE_SET_MTU (80)
+// #define OC_BLOCK_WISE_SET_MTU (80)
 
 /* Maximum size of request/response PDUs */
 #define OC_MAX_APP_DATA_SIZE (600)
@@ -51,7 +51,7 @@ typedef uint64_t oc_clock_time_t;
 #define OC_MAX_NUM_ENDPOINTS (4)
 
 /* Maximum size of uri for a collection resource */
-//#define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
+// #define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
 
 /* Security layer */
 /* Maximum number of authorized clients */
@@ -70,7 +70,7 @@ typedef uint64_t oc_clock_time_t;
 #define OC_REQUEST_HISTORY
 
 /* Add support observable for oic/res */
-//#define OC_DISCOVERY_RESOURCE_OBSERVABLE
+// #define OC_DISCOVERY_RESOURCE_OBSERVABLE
 
 /* library features that require persistent storage */
 #ifdef OC_SECURITY
