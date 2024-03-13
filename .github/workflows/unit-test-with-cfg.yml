@@ -57,6 +57,18 @@ jobs:
           repository: wolfcw/libfaketime
           path: libfaketime
 
+      - name: Install clang-17
+        if: ${{ inputs.clang }}
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install curl
+          curl -sL https://apt.llvm.org/llvm.sh > llvm.sh
+          chmod u+x llvm.sh
+          sudo ./llvm.sh 17
+          sudo apt-get install clang-17
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-17 200
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-17 200
+
       - name: Install libfaketime
         if: ${{ inputs.install_faketime }}
         working-directory: libfaketime
@@ -90,6 +102,13 @@ jobs:
           mkdir build && cd build
           cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ steps.cmake_flags.outputs.compiler }} ${{ inputs.build_args }} ${{ inputs.install_mbedtls && '-DBUILD_MBEDTLS=OFF' || '' }} ${{ inputs.install_tinycbor && '-DBUILD_TINYCBOR=OFF' || '' }} -DBUILD_TESTING=ON ..
           make oc-unittests
+
+      # Issue no Linux kernels 6.6+, which have bumped mmap_rnd_bits value to 32, 
+      # whilst sanitizers only support value up to 28
+      - name: Set mmap_rnd_bits to 28
+        run: |
+          sudo sysctl vm.mmap_rnd_bits
+          sudo sysctl -w vm.mmap_rnd_bits=28
 
       - name: Setup firewall to drop TCP IPV6 with destination port 12345 (for timeout tests)
         run: |
