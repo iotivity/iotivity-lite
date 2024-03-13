@@ -20,7 +20,7 @@ sudo apt install -y git wget flex bison gperf python3 python3-pip python3-setupt
 
 Jump to the [common steps](#common-steps) below.
 
-### MacOS
+### macOS
 
 Jump to the [common steps](#common-steps) below.
 
@@ -76,6 +76,9 @@ for mbedTLS v3.1.0:
 ```bash
 cd ./iotivity-lite/port/esp32
 git clone --recursive -b release/v5.1 https://github.com/espressif/esp-idf.git
+# checkout latest commit with mbedTLS v3.5.0
+( cd esp-idf && git checkout 7380f96017424c7be5d8e3229bf81ceb0869cc54 )
+( cd esp-idf && git submodule update --init --recursive )
 ./esp-idf/install.sh
 . ./esp-idf/export.sh
 idf.py set-target esp32
@@ -94,10 +97,10 @@ ESPBAUD=115200 idf.py flash monitor
 
 - after OCF ownership transfer and cloud onboard, only 50KB of heap is available; rebooting gives 130KB
 - partition nvs must be resized (extended) because the storage store the data to the nvs
-- when built with CLOUD=1, OC_DYNAMIC_ALLOCATION must be set as as well as OC_COLLECTIONS requires it
+- when built with CLOUD=1, OC_DYNAMIC_ALLOCATION must be set as well as OC_COLLECTIONS requires it
 - max_app_data_size must be set to 7+KB otherwise credentials are not stored to the storage
 - compiler performance optimalization(-O2) must be set otherwise heap is exhausted during own and onboard
-- to avoid exhausted heap, set CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN to same same size as max_app_data_size
+- to avoid exhausted heap, set CONFIG_MBEDTLS_SSL_IN_CONTENT_LEN to the same size as max_app_data_size
 
 ## Performance over heap memory
 
