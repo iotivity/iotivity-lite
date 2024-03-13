@@ -536,7 +536,7 @@ oc_parse_endpoint_string(const oc_string_t *endpoint_str,
       return -1;
     }
     char domain[MAX_HOST_LEN + 1];
-    strncpy(domain, address, host_len);
+    memcpy(domain, address, host_len);
     domain[host_len] = '\0';
     if (!dns_lookup(domain, &ipaddress, ep_uri.scheme_flags)) {
       OC_ERR("failed to resolve domain(%s)", domain);

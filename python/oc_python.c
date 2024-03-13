@@ -2081,14 +2081,20 @@ char *
 py_get_obt_uuid(void)
 {
   char buffer[OC_UUID_LEN];
-  oc_uuid_to_str(oc_core_get_device_id(0), buffer, OC_ARRAY_SIZE(buffer));
+  int len =
+    oc_uuid_to_str_v1(oc_core_get_device_id(0), buffer, OC_ARRAY_SIZE(buffer));
+  if (len < 0) {
+    OC_PRINTF("ERROR: unable to convert UUID to string\n");
+    return NULL;
+  }
 
   char *uuid = malloc(sizeof(char) * OC_UUID_LEN);
   if (uuid == NULL) {
     OC_PRINTF("ERROR: unable to allocate memory\n");
     return NULL;
   }
-  strncpy(uuid, buffer, OC_UUID_LEN);
+  memcpy(uuid, buffer, OC_UUID_LEN);
+  buffer[len] = '\0';
   return uuid;
 }
 
@@ -2207,7 +2213,6 @@ diplomat_discovery(const char *anchor, const char *uri, oc_string_array_t types,
                    void *user_data)
 {
   OC_PRINTF("[C] Diplomat discovery requested\n");
-  (void)anchor;
   (void)iface_mask;
   (void)bm;
   (void)user_data;
@@ -2217,14 +2222,14 @@ diplomat_discovery(const char *anchor, const char *uri, oc_string_array_t types,
     if (oc_strnlen(t, STRING_ARRAY_ITEM_MAX_LEN) == 14 &&
         strncmp(t, "oic.r.diplomat", 14) == 0) {
       oc_endpoint_list_copy(&diplomat_ep, endpoint);
-      strncpy(diplomat_uri, uri, uri_len);
+      memcpy(diplomat_uri, uri, uri_len);
       diplomat_uri[uri_len] = '\0';
 
       OC_PRINTF("Resource %s anchor: %s hosted at endpoints:\n", diplomat_uri,
                 anchor);
 
-      char di[OC_UUID_LEN];
-      strncpy(di, anchor + 6, OC_UUID_LEN);
+      char di[OC_UUID_LEN] = { 0 };
+      memcpy(di, anchor + 6, OC_UUID_LEN);
       oc_uuid_t uuid;
       oc_str_to_uuid(di, &uuid);
 
@@ -2354,7 +2359,7 @@ discovery_cb(const char *anchor, const char *uri, oc_string_array_t types,
     const char *t = oc_string_array_get_item(types, i);
     if (strlen(t) == 10 && strncmp(t, "core.light", 10) == 0) {
       oc_endpoint_list_copy(&light_server, endpoint);
-      strncpy(a_light, uri, uri_len);
+      memcpy(a_light, uri, uri_len);
       a_light[uri_len] = '\0';
 
       OC_PRINTF("Resource %s hosted at endpoints:\n", a_light);

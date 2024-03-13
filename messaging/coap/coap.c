@@ -850,6 +850,9 @@ coap_oscore_parse_inner_option(coap_packet_t *packet,
            packet->location_query);
     return COAP_NO_ERROR;
 #endif
+  default:
+    COAP_DBG("Unknown COAP option (%u)", option_number);
+    break;
   }
 
   return BAD_OPTION_4_02;
@@ -891,6 +894,9 @@ coap_oscore_parse_outer_option(coap_packet_t *packet,
            packet->proxy_scheme);
     return PROXYING_NOT_SUPPORTED_5_05;
 #endif
+  default:
+    COAP_DBG("Unknown COAP option (%u)", option_number);
+    break;
   }
 
   return BAD_OPTION_4_02;
@@ -985,7 +991,7 @@ coap_oscore_parse_option(coap_packet_t *packet, uint8_t *current_option,
     break;
   }
   default:
-    COAP_DBG("  unknown (%u)", option_number);
+    COAP_DBG("Unknown COAP option (%u)", option_number);
     /* check if critical (odd) */
     if ((option_number & 1) != 0) {
       COAP_WRN("Unsupported critical option");

@@ -145,26 +145,26 @@ get_collection_instance_uri(oc_collection_t *collection, char *uri,
   if (index == 0) {
     return false;
   }
-  size_t len = oc_string_len(collection->res.uri) + 1;
-  if (len > uri_size) {
+  size_t res_uri_len = oc_string_len(collection->res.uri);
+  size_t res_uri_size = res_uri_len + 1; // length with NULL terminator
+  if (res_uri_size > uri_size) {
     // uri too long for output buffer
     return false;
   }
-  if (oc_string_len(collection->res.uri) > 0) {
-    strncpy(uri, oc_string(collection->res.uri),
-            oc_string_len(collection->res.uri));
+  if (res_uri_len > 0) {
+    memcpy(uri, oc_string(collection->res.uri), res_uri_len);
   }
-  uri[oc_string_len(collection->res.uri)] = '/';
+  uri[res_uri_len] = '/';
 
   int written = snprintf(NULL, 0, "%d", index);
-  if ((written <= 0) || (len + (size_t)written + 1 > uri_size)) {
+  if ((written <= 0) || (res_uri_size + (size_t)written + 1 > uri_size)) {
     // cannot fit the index converted to string into uri
     return false;
   }
 
-  written = snprintf(uri + len, uri_size - len, "%d", index);
+  written = snprintf(uri + res_uri_size, uri_size - res_uri_size, "%d", index);
   // check for truncation by snprintf
-  return (written > 0) && ((size_t)written <= uri_size - len);
+  return (written > 0) && ((size_t)written <= uri_size - res_uri_size);
 }
 
 oc_rt_created_t *

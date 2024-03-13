@@ -489,37 +489,45 @@ register_resources(void)
   oc_add_resource(res1);
 }
 
-static oc_resource_t *reg_resource = NULL;
+static oc_resource_t *g_reg_resource = NULL;
 static struct switch_t reg_bswitch = { false };
 
 static void
 add_resource(void)
 {
-  // clang-15 seems to have a bug in the analysis of the following code and
-  // thinks that reg_resource can be set to NULL by the oc_resource_* functions
+  // clang-tidy seems to have a bug in the analysis of the following code and
+  // thinks that g_reg_resource can be set to NULL by the oc_resource_*
+  // functions
   // NOLINTBEGIN
-  if (reg_resource != NULL) {
+  if (g_reg_resource != NULL) {
     return;
   }
-  reg_resource = oc_new_resource(NULL, "/addDeleteResource", 1, 0);
-  oc_resource_bind_resource_type(reg_resource, "oic.r.switch.binary");
-  oc_resource_set_discoverable(reg_resource, true);
-  oc_resource_set_observable(reg_resource, true);
-  oc_resource_set_request_handler(reg_resource, OC_GET, get_switch,
+  g_reg_resource = oc_new_resource(NULL, "/addDeleteResource", 1, 0);
+  if (g_reg_resource == NULL) {
+    OC_PRINTF("ERROR: could not create /addDeleteResource\n");
+    return;
+  }
+  oc_resource_bind_resource_type(g_reg_resource, "oic.r.switch.binary");
+  oc_resource_set_discoverable(g_reg_resource, true);
+  oc_resource_set_observable(g_reg_resource, true);
+  oc_resource_set_request_handler(g_reg_resource, OC_GET, get_switch,
                                   &reg_bswitch);
-  oc_resource_set_request_handler(reg_resource, OC_POST, post_switch,
+  oc_resource_set_request_handler(g_reg_resource, OC_POST, post_switch,
                                   &reg_bswitch);
   // NOLINTEND
-  oc_add_resource(reg_resource);
-  oc_cloud_add_resource(reg_resource); /* Publish resource to the Cloud RD */
+  oc_add_resource(g_reg_resource);
+  oc_cloud_add_resource(g_reg_resource); /* Publish resource to the Cloud RD */
 }
 
 static void
 delete_resource(void)
 {
-  oc_cloud_delete_resource(reg_resource); /* Publish resource to the Cloud RD */
-  oc_delete_resource(reg_resource);
-  reg_resource = NULL;
+  if (g_reg_resource != NULL) {
+    oc_cloud_delete_resource(
+      g_reg_resource); /* Publish resource to the Cloud RD */
+    oc_delete_resource(g_reg_resource);
+    g_reg_resource = NULL;
+  }
 }
 
 static void
