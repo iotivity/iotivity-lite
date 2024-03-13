@@ -259,15 +259,9 @@ public:
 #endif /* OC_SERVER && OC_DYNAMIC_ALLOCATION */
   }
 
-  static void TearDownTestCase()
-  {
-    oc::TestDevice::StopServer();
-  }
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 
-  void TearDown() override
-  {
-    oc::TestDevice::Reset();
-  }
+  void TearDown() override { oc::TestDevice::Reset(); }
 };
 
 TEST_F(TestCoreResourceWithDevice, CoreGetDeviceID_F)

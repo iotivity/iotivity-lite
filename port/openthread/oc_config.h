@@ -70,7 +70,7 @@ typedef uint64_t oc_clock_time_t;
 #define OC_REQUEST_HISTORY
 
 /* Add support observable for oic/res */
-//#define OC_DISCOVERY_RESOURCE_OBSERVABLE
+// #define OC_DISCOVERY_RESOURCE_OBSERVABLE
 
 /* library features that require persistent storage */
 #ifdef OC_SECURITY

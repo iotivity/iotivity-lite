@@ -262,10 +262,7 @@ public:
     signalEventLoop();
   }
 
-  static void poolEvents(uint64_t secs)
-  {
-    poolEventsMs(secs * 1000U);
-  }
+  static void poolEvents(uint64_t secs) { poolEventsMs(secs * 1000U); }
 
   static void waitForEvent(oc_clock_time_t next_event_mt)
   {

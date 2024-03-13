@@ -219,10 +219,7 @@ public:
     }
   }
 
-  void TearDown() override
-  {
-    oc::TestDevice::Reset();
-  }
+  void TearDown() override { oc::TestDevice::Reset(); }
 };
 
 TEST_F(TestSdiWithServer, GetResourceByIndex)

@@ -66,10 +66,7 @@ public:
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
 
-  static void TearDownTestCase()
-  {
-    oc::TestDevice::StopServer();
-  }
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 
   void SetUp() override
   {
@@ -81,10 +78,7 @@ public:
     oc_set_con_write_cb(nullptr);
   }
 
-  void TearDown() override
-  {
-    oc::TestDevice::Reset();
-  }
+  void TearDown() override { oc::TestDevice::Reset(); }
 
   static ConResourceData decodePayload(const oc_rep_t *rep)
   {

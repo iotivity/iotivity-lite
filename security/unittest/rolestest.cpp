@@ -73,10 +73,7 @@ public:
 #endif /* OC_DYNAMIC_ALLOCATION */
   }
 
-  static void TearDownTestCase()
-  {
-    oc::TestDevice::StopServer();
-  }
+  static void TearDownTestCase() { oc::TestDevice::StopServer(); }
 
   void TearDown() override
   {

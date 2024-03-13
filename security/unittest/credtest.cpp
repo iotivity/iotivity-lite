@@ -82,10 +82,7 @@ public:
     oc_network_event_handler_mutex_destroy();
   }
 
-  void TearDown() override
-  {
-    oc_sec_cred_clear(kDeviceID, nullptr, nullptr);
-  }
+  void TearDown() override { oc_sec_cred_clear(kDeviceID, nullptr, nullptr); }
 
   static size_t countCreds(size_t device)
   {

@@ -202,7 +202,7 @@ void oc_join_string_array(oc_string_array_t *ocstringarray,
 #define oc_string_array_add_item(ocstringarray, str)                           \
   (_oc_string_array_add_item(&(ocstringarray), str))
 #define oc_string_array_get_item(ocstringarray, index)                         \
-  (oc_string(ocstringarray) + (ptrdiff_t)((index)*STRING_ARRAY_ITEM_MAX_LEN))
+  (oc_string(ocstringarray) + (ptrdiff_t)((index) * STRING_ARRAY_ITEM_MAX_LEN))
 #define oc_string_array_set_item(ocstringarray, str, index)                    \
   (_oc_copy_string_to_array(&(ocstringarray), str, index))
 #define oc_string_array_get_item_size(ocstringarray, index)                    \
@@ -220,11 +220,11 @@ bool _oc_byte_string_array_add_item(oc_string_array_t *ocstringarray,
 #define oc_byte_string_array_add_item(ocstringarray, str, str_len)             \
   (_oc_byte_string_array_add_item(&(ocstringarray), str, str_len))
 #define oc_byte_string_array_get_item(ocstringarray, index)                    \
-  (oc_string(ocstringarray) + (index)*STRING_ARRAY_ITEM_MAX_LEN + 1)
+  (oc_string(ocstringarray) + (index) * STRING_ARRAY_ITEM_MAX_LEN + 1)
 #define oc_byte_string_array_set_item(ocstringarray, str, str_len, index)      \
   (_oc_copy_byte_string_to_array(&(ocstringarray), str, str_len, index))
 #define oc_byte_string_array_get_item_size(ocstringarray, index)               \
-  (*(oc_string(ocstringarray) + (index)*STRING_ARRAY_ITEM_MAX_LEN))
+  (*(oc_string(ocstringarray) + (index) * STRING_ARRAY_ITEM_MAX_LEN))
 #define oc_byte_string_array_get_allocated_size(ocstringarray)                 \
   ((ocstringarray).size / STRING_ARRAY_ITEM_MAX_LEN)
 

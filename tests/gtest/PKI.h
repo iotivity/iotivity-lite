@@ -79,18 +79,9 @@ public:
   bool Add(size_t device);
 #endif /* OC_SECURITY */
 
-  bool IsMfg() const
-  {
-    return isMfg_;
-  }
-  int CredentialID() const
-  {
-    return credid_;
-  }
-  size_t Device() const
-  {
-    return device_;
-  }
+  bool IsMfg() const { return isMfg_; }
+  int CredentialID() const { return credid_; }
+  size_t Device() const { return device_; }
 
 private:
   PemData certificate_;
@@ -108,18 +99,9 @@ public:
   bool Add(size_t device);
 #endif /* OC_SECURITY */
 
-  bool IsMfg() const
-  {
-    return isMfg_;
-  }
-  int CredentialID() const
-  {
-    return credid_;
-  }
-  size_t Device() const
-  {
-    return device_;
-  }
+  bool IsMfg() const { return isMfg_; }
+  int CredentialID() const { return credid_; }
+  size_t Device() const { return device_; }
 
 private:
   PemData certificate_;
@@ -137,18 +119,9 @@ public:
   bool Add(size_t device, int entity_credid);
 #endif /* OC_SECURITY */
 
-  int CredentialID() const
-  {
-    return credid_;
-  }
-  int EntityCredentialID() const
-  {
-    return entity_credid_;
-  }
-  size_t Device() const
-  {
-    return device_;
-  }
+  int CredentialID() const { return credid_; }
+  int EntityCredentialID() const { return entity_credid_; }
+  size_t Device() const { return device_; }
 
 private:
   PemData certificate_;

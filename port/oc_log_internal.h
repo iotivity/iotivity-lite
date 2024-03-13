@@ -276,7 +276,7 @@
     oc_string_t _oc_log_bytes_buf;                                             \
     memset(&_oc_log_bytes_buf, 0, sizeof(_oc_log_bytes_buf));                  \
     oc_alloc_string(&_oc_log_bytes_buf,                                        \
-                    (length)*3 + 1 < 2048 ? (length)*3 + 1 : 2048);            \
+                    (length) * 3 + 1 < 2048 ? (length) * 3 + 1 : 2048);        \
     size_t _oc_log_bytes_buf_size = oc_string_len(_oc_log_bytes_buf);          \
     if (_oc_log_bytes_buf_size == 0) {                                         \
       break;                                                                   \

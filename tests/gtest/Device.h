@@ -176,14 +176,8 @@ public:
   static void ConfigurePlgdTime(bool useInMbedTLS);
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 
-  static oc_clock_time_t GetSystemTime()
-  {
-    return system_time;
-  };
-  static void ClearSystemTime()
-  {
-    system_time = 0;
-  }
+  static oc_clock_time_t GetSystemTime() { return system_time; };
+  static void ClearSystemTime() { system_time = 0; }
 
   static void DummyHandler(oc_request_t *, oc_interface_mask_t, void *)
   {

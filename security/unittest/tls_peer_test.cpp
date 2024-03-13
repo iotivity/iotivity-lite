@@ -96,15 +96,9 @@ public:
 #endif /* _WIN32 */
   }
 
-  void SetUp() override
-  {
-    oc_tls_init_context();
-  }
+  void SetUp() override { oc_tls_init_context(); }
 
-  void TearDown() override
-  {
-    oc_tls_shutdown();
-  }
+  void TearDown() override { oc_tls_shutdown(); }
 
   static std::vector<oc::tls::Peer> getClients()
   {

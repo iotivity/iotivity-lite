@@ -32,14 +32,19 @@ jobs:
         with:
           submodules: "true"
 
+      - name: Install clang-format-17
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install curl
+          curl -sL https://apt.llvm.org/llvm.sh > llvm.sh
+          chmod u+x llvm.sh
+          sudo ./llvm.sh 17
+          sudo apt-get install clang-format-17
+
       # Runs a set of commands using the runners shell
       - name: format-check
         run: |
-          sudo apt-get update -y
-          sudo apt-get install clang-format-14
-
-          mkdir build
-          cd build
+          mkdir build && cd build
           cmake ../.
-          make format
+          cmake --build . --target format
           git diff --exit-code --ignore-submodules=all
