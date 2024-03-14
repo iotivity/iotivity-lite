@@ -75,6 +75,12 @@ jobs:
         with:
           submodules: "true"
 
+      - name: Configure vm.mmap_rnd_bits for sanitizers
+        if: contains(inputs.build_args, 'OC_ASAN_ENABLED') || contains(inputs.build_args, 'OC_LSAN_ENABLED') || contains(inputs.build_args, 'OC_TSAN_ENABLED') || contains(inputs.build_args, 'OC_UBSAN_ENABLED')
+        run: |
+          sudo sysctl vm.mmap_rnd_bits
+          sudo sysctl -w vm.mmap_rnd_bits=28
+
       - name: Build cloud server docker image
         uses: docker/build-push-action@v5
         with:
