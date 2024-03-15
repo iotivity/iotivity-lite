@@ -75,7 +75,7 @@ obt_jw_15(oc_client_response_t *data)
    */
   const oc_device_t *device = o->device;
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_16, HIGH_QOS, o)) {
+  if (oc_init_post(OCF_SEC_PSTAT_URI, ep, NULL, &obt_jw_16, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_object(root, dos);
     oc_rep_set_int(dos, s, OC_DOS_RFNOP);
@@ -107,7 +107,7 @@ obt_jw_14(oc_client_response_t *data)
    */
   const oc_device_t *device = o->device;
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/acl2", ep, NULL, &obt_jw_15, HIGH_QOS, o)) {
+  if (oc_init_post(OCF_SEC_ACL_URI, ep, NULL, &obt_jw_15, HIGH_QOS, o)) {
     char uuid[OC_UUID_LEN];
     const oc_uuid_t *my_uuid = oc_core_get_device_id(0);
     oc_uuid_to_str(my_uuid, uuid, OC_UUID_LEN);
@@ -218,7 +218,7 @@ obt_jw_13(oc_client_response_t *data)
    */
   const oc_device_t *device = o->device;
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_do_delete("/oic/sec/acl2", ep, NULL, &obt_jw_14, HIGH_QOS, o)) {
+  if (oc_do_delete(OCF_SEC_ACL_URI, ep, NULL, &obt_jw_14, HIGH_QOS, o)) {
     return;
   }
 
@@ -243,7 +243,7 @@ obt_jw_12(oc_client_response_t *data)
    */
   const oc_device_t *device = o->device;
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_13, HIGH_QOS, o)) {
+  if (oc_init_post(OCF_SEC_PSTAT_URI, ep, NULL, &obt_jw_13, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_object(root, dos);
     oc_rep_set_int(dos, s, OC_DOS_RFPRO);
@@ -378,7 +378,7 @@ obt_jw_9(oc_client_response_t *data)
 
   /**  9) post cred rowneruuid, cred
    */
-  if (oc_init_post("/oic/sec/cred", ep, NULL, &obt_jw_10, HIGH_QOS, o)) {
+  if (oc_init_post(OCF_SEC_CRED_URI, ep, NULL, &obt_jw_10, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_array(root, creds);
     oc_rep_object_array_start_item(creds);
@@ -421,7 +421,7 @@ obt_jw_8(oc_client_response_t *data)
    */
   const oc_device_t *device = o->device;
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_9, HIGH_QOS, o)) {
+  if (oc_init_post(OCF_SEC_PSTAT_URI, ep, NULL, &obt_jw_9, HIGH_QOS, o)) {
     const oc_uuid_t *my_uuid = oc_core_get_device_id(0);
     char uuid[OC_UUID_LEN];
     oc_uuid_to_str(my_uuid, uuid, OC_UUID_LEN);
@@ -456,7 +456,7 @@ obt_jw_7(oc_client_response_t *data)
   const oc_device_t *device = o->device;
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
 
-  if (oc_init_post("/oic/sec/acl2", ep, NULL, &obt_jw_8, HIGH_QOS, o)) {
+  if (oc_init_post(OCF_SEC_ACL_URI, ep, NULL, &obt_jw_8, HIGH_QOS, o)) {
     const oc_uuid_t *my_uuid = oc_core_get_device_id(0);
     char uuid[OC_UUID_LEN];
     oc_uuid_to_str(my_uuid, uuid, OC_UUID_LEN);
@@ -608,7 +608,7 @@ obt_jw_3(oc_client_response_t *data)
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
   oc_tls_close_connection(ep);
   oc_tls_select_anon_ciphersuite();
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_jw_4, HIGH_QOS, o)) {
+  if (oc_init_post(OCF_SEC_PSTAT_URI, ep, NULL, &obt_jw_4, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_int(root, om, 4);
     oc_rep_end_root_object();

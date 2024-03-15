@@ -27,6 +27,10 @@
 extern "C" {
 #endif
 
+#define OC_PERM_ALL                                                            \
+  (OC_PERM_CREATE | OC_PERM_RETRIEVE | OC_PERM_UPDATE | OC_PERM_DELETE |       \
+   OC_PERM_NOTIFY)
+
 /** @brief Convert enum value to string view */
 oc_string_view_t oc_enum_to_string_view(oc_enum_t val);
 

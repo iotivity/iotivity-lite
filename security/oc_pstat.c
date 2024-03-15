@@ -19,8 +19,10 @@
 #ifdef OC_SECURITY
 
 #include "api/oc_core_res_internal.h"
+#include "api/oc_helpers_internal.h"
 #include "api/oc_main_internal.h"
 #include "api/oc_message_buffer_internal.h"
+#include "api/oc_resource_internal.h"
 #include "messaging/coap/coap_internal.h"
 #include "messaging/coap/observe_internal.h"
 #include "oc_acl_internal.h"
@@ -446,9 +448,15 @@ oc_sec_is_operational(size_t device)
 }
 
 bool
-oc_sec_pstat_is_in_dos_state(size_t device, unsigned dos_mask)
+oc_sec_pstat_is_in_dos_state(const oc_sec_pstat_t *ps, unsigned dos_mask)
 {
-  return (OC_PSTAT_DOS_ID_FLAG(g_pstat[device].s) & dos_mask) != 0;
+  return (OC_PSTAT_DOS_ID_FLAG(ps->s) & dos_mask) != 0;
+}
+
+bool
+oc_device_is_in_dos_state(size_t device, unsigned dos_mask)
+{
+  return oc_sec_pstat_is_in_dos_state(&g_pstat[device], dos_mask);
 }
 
 void
@@ -667,8 +675,9 @@ oc_sec_decode_pstat(const oc_rep_t *rep, bool from_storage, size_t device)
   return false;
 }
 
-void
-get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+static void
+pstat_resource_get(oc_request_t *request, oc_interface_mask_t iface_mask,
+                   void *data)
 {
   (void)data;
   switch (iface_mask) {
@@ -682,8 +691,9 @@ get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
   }
 }
 
-void
-post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask, void *data)
+static void
+pstat_resource_post(oc_request_t *request, oc_interface_mask_t iface_mask,
+                    void *data)
 {
   (void)iface_mask;
   (void)data;
@@ -796,4 +806,27 @@ oc_reset_devices_in_RFOTM(void)
     }
   }
 }
+
+void
+oc_sec_pstat_create_resource(size_t device)
+{
+  oc_core_populate_resource(
+    OCF_SEC_PSTAT, device, OCF_SEC_PSTAT_URI, OC_IF_RW | OC_IF_BASELINE,
+    OC_IF_RW, OC_DISCOVERABLE | OC_OBSERVABLE, pstat_resource_get,
+    /*put*/ NULL, pstat_resource_post, /*delete*/ NULL, 1, OCF_SEC_PSTAT_RT);
+}
+
+bool
+oc_sec_is_pstat_resource_uri(oc_string_view_t uri)
+{
+  return oc_resource_match_uri(OC_STRING_VIEW(OCF_SEC_PSTAT_URI), uri);
+}
+
+bool
+oc_sec_pstat_is_owned_by(size_t device, oc_uuid_t uuid)
+{
+  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
+  return oc_uuid_is_equal(pstat->rowneruuid, uuid);
+}
+
 #endif /* OC_SECURITY */

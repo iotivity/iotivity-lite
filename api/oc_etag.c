@@ -212,8 +212,7 @@ bool
 oc_etag_dump_ignore_resource(const char *uri, size_t uri_len)
 {
 #ifdef OC_WKCORE
-  if (uri_len == OC_CHAR_ARRAY_LEN(OC_WELLKNOWNCORE_URI) &&
-      memcmp(uri, OC_WELLKNOWNCORE_URI, uri_len) == 0) {
+  if (oc_is_wkcore_resource_uri(oc_string_view(uri, uri_len))) {
     return true;
   }
 #endif /* OC_WKCORE */
@@ -441,8 +440,7 @@ static bool
 etag_can_update_device(size_t device)
 {
 #ifdef OC_SECURITY
-  return oc_sec_pstat_is_in_dos_state(device,
-                                      OC_PSTAT_DOS_ID_FLAG(OC_DOS_RFNOP));
+  return oc_device_is_in_dos_state(device, OC_PSTAT_DOS_ID_FLAG(OC_DOS_RFNOP));
 #else  /* OC_SECURITY */
   (void)device;
   return true;

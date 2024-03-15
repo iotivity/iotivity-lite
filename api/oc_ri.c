@@ -83,6 +83,7 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_acl_internal.h"
+#include "security/oc_acl_util_internal.h"
 #include "security/oc_audit_internal.h"
 #include "security/oc_pstat_internal.h"
 #include "security/oc_roles_internal.h"

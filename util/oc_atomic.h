@@ -38,10 +38,10 @@ extern "C" {
    (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 1)))
 
 #define OC_ATOMIC
-#define OC_ATOMIC_INT8_T int8_t
-#define OC_ATOMIC_UINT8_T uint8_t
-#define OC_ATOMIC_INT32_T int32_t
-#define OC_ATOMIC_UINT32_T uint32_t
+typedef int8_t OC_ATOMIC_INT8_T;
+typedef uint8_t OC_ATOMIC_UINT8_T;
+typedef int32_t OC_ATOMIC_INT32_T;
+typedef uint32_t OC_ATOMIC_UINT32_T;
 
 #define OC_ATOMIC_LOAD32(x) __atomic_load_n(&(x), __ATOMIC_SEQ_CST)
 
@@ -80,10 +80,10 @@ extern "C" {
 #include <intrin.h>
 
 #define OC_ATOMIC
-#define OC_ATOMIC_INT8_T int8_t
-#define OC_ATOMIC_UINT8_T uint8_t
-#define OC_ATOMIC_INT32_T int32_t
-#define OC_ATOMIC_UINT32_T uint32_t
+typedef int8_t OC_ATOMIC_INT8_T;
+typedef uint8_t OC_ATOMIC_UINT8_T;
+typedef int32_t OC_ATOMIC_INT32_T;
+typedef uint32_t OC_ATOMIC_UINT32_T;
 
 #define OC_ATOMIC_LOAD8(x) _InterlockedOr8((&x), 0)
 #define OC_ATOMIC_LOAD32(x) _InterlockedOr((&x), 0)

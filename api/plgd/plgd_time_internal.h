@@ -23,6 +23,7 @@
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 
+#include "api/oc_helpers_internal.h"
 #include "oc_rep.h"
 #include "oc_ri.h"
 #include "plgd/plgd_time.h"
@@ -55,6 +56,11 @@ extern "C" {
  * @brief Create plgd time (/x.plgd.dev/time) resource
  */
 void plgd_time_create_resource(void);
+
+/** @brief Check if the URI matches the plgd time resource URI (with or without
+ *  the leading slash)
+ */
+bool plgd_is_time_resource_uri(oc_string_view_t uri);
 
 typedef struct plgd_time_store_t
 {

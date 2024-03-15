@@ -561,6 +561,13 @@ oc_tls_get_peer(const oc_endpoint_t *endpoint)
   return NULL;
 }
 
+bool
+oc_tls_peer_is_doc(const oc_endpoint_t *endpoint)
+{
+  const oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
+  return peer != NULL && peer->doc;
+}
+
 void
 oc_tls_remove_peer(const oc_endpoint_t *endpoint)
 {
@@ -2720,18 +2727,12 @@ oc_tls_send_message(oc_message_t *message)
 bool
 oc_tls_uses_psk_cred(const oc_tls_peer_t *peer)
 {
-  if (!peer) {
-    return false;
-  }
-  if (!peer->ssl_ctx.session) {
+  if (peer == NULL || peer->ssl_ctx.session == NULL) {
     return false;
   }
   int cipher = peer->ssl_ctx.session->ciphersuite;
-  if (MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256 == cipher ||
-      MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256 == cipher) {
-    return true;
-  }
-  return false;
+  return (MBEDTLS_TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256 == cipher ||
+          MBEDTLS_TLS_ECDH_ANON_WITH_AES_128_CBC_SHA256 == cipher);
 }
 
 oc_uuid_t *

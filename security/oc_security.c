@@ -82,6 +82,30 @@ oc_mbedtls_init(void)
 #endif /* OC_DBG_IS_ENABLED */
 }
 
+void
+oc_sec_own_resources(size_t device, oc_uuid_t uuid)
+{
+  oc_sec_acl_t *acl = oc_sec_get_acl(device);
+  memcpy(acl->rowneruuid.id, uuid.id, sizeof(uuid.id));
+
+  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+  memcpy(doxm->devowneruuid.id, uuid.id, sizeof(uuid.id));
+  memcpy(doxm->deviceuuid.id, uuid.id, sizeof(uuid.id));
+  memcpy(doxm->rowneruuid.id, uuid.id, sizeof(uuid.id));
+  doxm->owned = true;
+  doxm->oxmsel = 0;
+
+  oc_sec_creds_t *creds = oc_sec_get_creds(device);
+  memcpy(creds->rowneruuid.id, uuid.id, sizeof(uuid.id));
+
+  oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
+  memcpy(ps->rowneruuid.id, uuid.id, sizeof(uuid.id));
+  ps->tm = 0;
+  ps->cm = 0;
+  ps->isop = true;
+  ps->s = OC_DOS_RFNOP;
+}
+
 int
 oc_sec_self_own(size_t device)
 {
@@ -90,26 +114,7 @@ oc_sec_self_own(size_t device)
   if (uuid == NULL) {
     return -1;
   }
-
-  oc_sec_acl_t *acl = oc_sec_get_acl(device);
-  memcpy(acl->rowneruuid.id, uuid->id, sizeof(uuid->id));
-
-  oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
-  memcpy(doxm->devowneruuid.id, uuid->id, sizeof(uuid->id));
-  memcpy(doxm->deviceuuid.id, uuid->id, sizeof(uuid->id));
-  memcpy(doxm->rowneruuid.id, uuid->id, sizeof(uuid->id));
-  doxm->owned = true;
-  doxm->oxmsel = 0;
-
-  oc_sec_creds_t *creds = oc_sec_get_creds(device);
-  memcpy(creds->rowneruuid.id, uuid->id, sizeof(uuid->id));
-
-  oc_sec_pstat_t *ps = oc_sec_get_pstat(device);
-  memcpy(ps->rowneruuid.id, uuid->id, sizeof(uuid->id));
-  ps->tm = 0;
-  ps->cm = 0;
-  ps->isop = true;
-  ps->s = OC_DOS_RFNOP;
+  oc_sec_own_resources(device, *uuid);
 
   oc_sec_acl_add_bootstrap_acl(device);
 

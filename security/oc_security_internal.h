@@ -29,10 +29,8 @@
 extern "C" {
 #endif
 
-/**
- * @brief Configure mbedTLS for IoTivity-lite.
- */
-void oc_mbedtls_init(void);
+/** Own secure resources by given uuid */
+void oc_sec_own_resources(size_t device, oc_uuid_t uuid);
 
 /**
  * @brief Perform self-onboarding.
@@ -55,6 +53,11 @@ int oc_sec_self_own(size_t device);
  * @param device device index
  */
 void oc_sec_self_disown(size_t device);
+
+/**
+ * @brief Configure mbedTLS for IoTivity-lite.
+ */
+void oc_mbedtls_init(void);
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
 

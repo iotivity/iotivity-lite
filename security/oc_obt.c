@@ -871,7 +871,7 @@ switch_dos(oc_device_t *device, oc_dostype_t dos, oc_obt_status_cb_t cb,
   d->cb.cb = cb;
   d->cb.data = data;
 
-  if (!oc_init_post("/oic/sec/pstat", ep, NULL, &pstat_POST_dos1_to_dos2,
+  if (!oc_init_post(OCF_SEC_PSTAT_URI, ep, NULL, &pstat_POST_dos1_to_dos2,
                     HIGH_QOS, d)) {
     OC_ERR("Could not init POST request to /oic/sec/pstat");
     goto err_switch_dos;
@@ -1069,7 +1069,7 @@ device1oscore_cred(oc_client_response_t *data)
   oc_uuid_to_str(&p->device1->uuid, d1uuid, OC_UUID_LEN);
 
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device2->endpoint);
-  if (!oc_init_post("/oic/sec/cred", ep, NULL, &device2oscore_cred, HIGH_QOS,
+  if (!oc_init_post(OCF_SEC_CRED_URI, ep, NULL, &device2oscore_cred, HIGH_QOS,
                     p)) {
     OC_ERR("Could not init POST request to /oic/sec/cred");
     goto err_device1oscore_cred;
@@ -1140,7 +1140,7 @@ device2oscore_RFPRO(int status, void *data)
   char d2uuid[OC_UUID_LEN];
   oc_uuid_to_str(&p->device2->uuid, d2uuid, OC_UUID_LEN);
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
-  if (!oc_init_post("/oic/sec/cred", ep, NULL, &device1oscore_cred, HIGH_QOS,
+  if (!oc_init_post(OCF_SEC_CRED_URI, ep, NULL, &device1oscore_cred, HIGH_QOS,
                     p)) {
     OC_ERR("Could not init POST request to /oic/sec/cred");
     goto err_device2oscore_RFPRO;
@@ -1325,7 +1325,7 @@ deviceoscoregroup_RFPRO(int status, void *data)
   char groupsub[OC_UUID_LEN];
   oc_uuid_to_str(&p->subjectuuid, groupsub, OC_UUID_LEN);
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device->endpoint);
-  if (!oc_init_post("/oic/sec/cred", ep, NULL, &deviceoscoregroup_cred,
+  if (!oc_init_post(OCF_SEC_CRED_URI, ep, NULL, &deviceoscoregroup_cred,
                     HIGH_QOS, p)) {
     OC_ERR("Could not init POST request to /oic/sec/cred");
     goto err_deviceoscoregroup_RFPRO;
@@ -1555,7 +1555,7 @@ device1_cred(oc_client_response_t *data)
 
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device2->endpoint);
 
-  if (!oc_init_post("/oic/sec/cred", ep, NULL, &device2_cred, HIGH_QOS, p)) {
+  if (!oc_init_post(OCF_SEC_CRED_URI, ep, NULL, &device2_cred, HIGH_QOS, p)) {
     OC_ERR("Could not init POST request to /oic/sec/cred");
     goto err_device1_cred;
   }
@@ -1607,7 +1607,7 @@ device2_RFPRO(int status, void *data)
 
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
 
-  if (!oc_init_post("/oic/sec/cred", ep, NULL, &device1_cred, HIGH_QOS, p)) {
+  if (!oc_init_post(OCF_SEC_CRED_URI, ep, NULL, &device1_cred, HIGH_QOS, p)) {
     OC_ERR("Could not init POST request to /oic/sec/cred");
     goto err_device2_RFPRO;
   }
@@ -1810,7 +1810,7 @@ device_cred(oc_client_response_t *data)
   /**  6) post acl2 with auth-crypt RW ACE for /oic/sec/roles
    */
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
-  if (!oc_init_post("/oic/sec/acl2", ep, NULL, &device_authcrypt_roles,
+  if (!oc_init_post(OCF_SEC_ACL_URI, ep, NULL, &device_authcrypt_roles,
                     HIGH_QOS, p)) {
     OC_ERR("Could not init POST request to /oic/sec/acl2");
     goto err_device_cred;
@@ -1966,7 +1966,7 @@ device_CSR(oc_client_response_t *data)
    */
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
 
-  if (!oc_init_post("/oic/sec/cred", ep, NULL, &device_cred, HIGH_QOS, p)) {
+  if (!oc_init_post(OCF_SEC_CRED_URI, ep, NULL, &device_cred, HIGH_QOS, p)) {
     OC_ERR("Could not init POST request to /oic/sec/cred");
     goto err_device_CSR;
   }
@@ -2054,7 +2054,7 @@ device_RFPRO(int status, void *data)
   /**  3) post cred with trustca
    */
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
-  if (!oc_init_post("/oic/sec/cred", ep, NULL, &device_root, HIGH_QOS, p)) {
+  if (!oc_init_post(OCF_SEC_CRED_URI, ep, NULL, &device_root, HIGH_QOS, p)) {
     OC_ERR("Could not init POST request to /oic/sec/cred");
     goto err_device_RFPRO;
   }
@@ -2277,7 +2277,7 @@ trustanchor_device_RFPRO(int status, void *response_data)
   /**  3) post cred with trustca
    */
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device1->endpoint);
-  if (!oc_init_post("/oic/sec/cred", ep, NULL, &trustanchor_device_RFNOP,
+  if (!oc_init_post(OCF_SEC_CRED_URI, ep, NULL, &trustanchor_device_RFNOP,
                     HIGH_QOS, p)) {
     OC_ERR("Could not init POST request to /oic/sec/cred");
     goto err_trustanchor_device_RFPRO;
@@ -2648,7 +2648,7 @@ provision_ace(int status, void *data)
   oc_sec_ace_t *ace = r->ace;
 
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (!oc_init_post("/oic/sec/acl2", ep, NULL, &acl2_response, HIGH_QOS, r)) {
+  if (!oc_init_post(OCF_SEC_ACL_URI, ep, NULL, &acl2_response, HIGH_QOS, r)) {
     OC_ERR("Could not init POST request to /oic/sec/acl2");
     goto err_provision_ace;
   }
@@ -3010,7 +3010,7 @@ oc_obt_retrieve_creds(const oc_uuid_t *uuid, oc_obt_creds_cb_t cb, void *data)
 
   oc_tls_select_psk_ciphersuite();
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (!oc_do_get("/oic/sec/cred", ep, NULL, &cred_rsrc, HIGH_QOS, r)) {
+  if (!oc_do_get(OCF_SEC_CRED_URI, ep, NULL, &cred_rsrc, HIGH_QOS, r)) {
     OC_ERR("could not issue GET request to /oic/sec/cred");
     oc_memb_free(&oc_credret_ctx_m, r);
     return -1;
@@ -3099,7 +3099,7 @@ creddel_RFPRO(int status, void *data)
   char query[64];
   snprintf(query, 64, "credid=%d", p->credid);
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device->endpoint);
-  if (!oc_do_delete("/oic/sec/cred", ep, query, &cred_del, HIGH_QOS, p)) {
+  if (!oc_do_delete(OCF_SEC_CRED_URI, ep, query, &cred_del, HIGH_QOS, p)) {
     OC_ERR("could not issue DELETE request to /oic/sec/cred");
     goto err_creddel_RFPRO;
   }
@@ -3343,7 +3343,7 @@ oc_obt_retrieve_acl(const oc_uuid_t *uuid, oc_obt_acl_cb_t cb, void *data)
 
   oc_tls_select_psk_ciphersuite();
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (!oc_do_get("/oic/sec/acl2", ep, NULL, &acl2_rsrc, HIGH_QOS, r)) {
+  if (!oc_do_get(OCF_SEC_ACL_URI, ep, NULL, &acl2_rsrc, HIGH_QOS, r)) {
     OC_ERR("could not issue GET request to /oic/sec/acl2");
     oc_memb_free(&oc_aclret_ctx_m, r);
     return -1;
@@ -3431,7 +3431,7 @@ acedel_RFPRO(int status, void *data)
   char query[64];
   snprintf(query, 64, "aceid=%d", p->aceid);
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(p->device->endpoint);
-  if (!oc_do_delete("/oic/sec/acl2", ep, query, &ace_del, HIGH_QOS, p)) {
+  if (!oc_do_delete(OCF_SEC_ACL_URI, ep, query, &ace_del, HIGH_QOS, p)) {
     OC_ERR("could not issue DELETE request to /oic/sec/acl2");
     goto err_acedel_RFPRO;
   }

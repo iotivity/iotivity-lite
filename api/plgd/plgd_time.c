@@ -610,6 +610,12 @@ plgd_time_create_resource(void)
                             /*delete*/ NULL, 1, PLGD_TIME_RT);
 }
 
+bool
+plgd_is_time_resource_uri(oc_string_view_t uri)
+{
+  return oc_resource_match_uri(OC_STRING_VIEW(PLGD_TIME_URI), uri);
+}
+
 void
 plgd_time_configure(bool use_in_mbedtls,
                     plgd_set_system_time_fn_t set_system_time,

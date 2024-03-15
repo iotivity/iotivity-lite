@@ -1,21 +1,23 @@
-FROM alpine:latest AS build
+FROM alpine:3.19 AS build
 ARG BUILD_TYPE=Release
 ARG BUILD_ARGS
 RUN apk add --no-cache cmake curl git build-base gcc linux-headers patch perl python3
 COPY ./  /iotivity-lite/
-RUN cd /iotivity-lite/ && git submodule update --recursive
-RUN mkdir /iotivity-lite/build && \
-	cd /iotivity-lite/build && \
-	cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=OFF -DOC_CLOUD_ENABLED=ON ${BUILD_ARGS} .. && \
+WORKDIR /iotivity-lite
+RUN git submodule update --recursive
+RUN mkdir /iotivity-lite/build
+WORKDIR /iotivity-lite/build
+RUN	cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=OFF -DOC_CLOUD_ENABLED=ON ${BUILD_ARGS} .. && \
 	cmake --build . --target cloud_server
 
 # install libfaketime
+WORKDIR /
 # enable struct stat64 by adding -D__USE_LARGEFILE64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE
 RUN git clone https://github.com/wolfcw/libfaketime.git && \
 	cd /libfaketime/src && \
 	make install FAKETIME_COMPILE_CFLAGS="-DFAKE_SETTIME -DFAKE_STATELESS -D__USE_LARGEFILE64 -D_LARGEFILE_SOURCE -D_LARGEFILE64_SOURCE"
 
-FROM alpine:latest AS service
+FROM alpine:3.19 AS service
 RUN apk add --no-cache bash
 COPY --from=build /iotivity-lite/build/apps/cloud_server /iotivity-lite/port/linux/service
 COPY --from=build /usr/local/lib/faketime/libfaketimeMT.so.1 /usr/local/lib/faketime/libfaketimeMT.so.1

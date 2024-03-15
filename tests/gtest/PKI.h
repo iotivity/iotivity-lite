@@ -23,6 +23,7 @@
 #include "oc_pki.h"
 #include "security/oc_certs_generate_internal.h"
 #include "tests/gtest/KeyPair.h"
+#include "tests/gtest/Role.h"
 
 #include <mbedtls/build_info.h>
 #include <mbedtls/ctr_drbg.h>
@@ -173,6 +174,31 @@ public:
   static bool writeKeyDerInvoked;
   static bool parseKeyInvoked;
 };
+
+#ifdef OC_DYNAMIC_ALLOCATION
+
+namespace obt {
+
+int GenerateSelfSignedRootCertificate(
+  size_t device, const std::string &subject_name, const oc::keypair_t &kp,
+  mbedtls_md_type_t sig_alg = MBEDTLS_MD_SHA256);
+
+std::vector<unsigned char> GenerateSelfSignedRootCertificate(
+  const std::string &subject_name, const oc::keypair_t &kp,
+  mbedtls_md_type_t sig_alg = MBEDTLS_MD_SHA256);
+
+std::vector<unsigned char> GenerateIdentityCertificate(
+  const std::string &subject_name, const std::string &issuer_name,
+  const oc::keypair_t &kp, mbedtls_md_type_t sig_alg = MBEDTLS_MD_SHA256);
+
+std::vector<unsigned char> GenerateRoleCertificate(
+  const std::string &subject_name, const std::string &issuer_name,
+  const oc::keypair_t &kp, const oc::Roles &roles = {},
+  mbedtls_md_type_t sig_alg = MBEDTLS_MD_SHA256);
+
+} // namespace obt
+
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 } // namespace oc::pki
 

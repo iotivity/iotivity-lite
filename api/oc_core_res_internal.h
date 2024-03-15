@@ -19,6 +19,7 @@
 #ifndef OC_CORE_RES_INTERNAL_H
 #define OC_CORE_RES_INTERNAL_H
 
+#include "api/oc_helpers_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"
 #include "oc_helpers.h"
@@ -36,6 +37,11 @@ extern "C" {
 
 #define OCF_D_URI "/oic/d"
 #define OCF_D_RT "oic.wk.d"
+
+/** @brief Check if the URI matches the device resource URI (with or without
+ *  the leading slash)
+ */
+bool oc_is_device_resource_uri(oc_string_view_t uri);
 
 /**
  * @brief initialize the core functionality

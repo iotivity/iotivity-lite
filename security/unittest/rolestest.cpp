@@ -36,6 +36,7 @@
 #include "tests/gtest/Device.h"
 #include "tests/gtest/Endpoint.h"
 #include "tests/gtest/KeyPair.h"
+#include "tests/gtest/PKI.h"
 #include "tests/gtest/RepPool.h"
 #include "tests/gtest/Resource.h"
 #include "tests/gtest/Role.h"
@@ -67,9 +68,9 @@ public:
     ASSERT_NE(nullptr, g_uuid);
 #ifdef OC_DYNAMIC_ALLOCATION
     g_root_keypair = oc::GetECPKeyPair(MBEDTLS_ECP_DP_SECP256R1);
-    g_root_credid = generateSelfSignedRootCertificate(
-      g_root_keypair, g_root_subject, MBEDTLS_MD_SHA256);
-    ASSERT_GT(g_root_credid, 0);
+    g_root_credid = oc::pki::obt::GenerateSelfSignedRootCertificate(
+      kDeviceID, g_root_subject, g_root_keypair);
+    ASSERT_LT(0, g_root_credid);
 #endif /* OC_DYNAMIC_ALLOCATION */
   }
 
@@ -88,15 +89,6 @@ public:
   oc_tls_peer_t *addPeer(const oc_endpoint_t *ep);
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  static int generateSelfSignedRootCertificate(const oc::keypair_t &kp,
-                                               const std::string &subject_name,
-                                               mbedtls_md_type_t sig_alg);
-
-  static std::vector<unsigned char> generateRoleCertificatePEM(
-    const oc::keypair_t &kp, const oc::Roles &roles,
-    const std::string &subject_name, const std::string &issuer_name,
-    mbedtls_md_type_t sig_alg);
-
   static bool addRolesByCertificate(const oc_uuid_t *uuid,
                                     const oc::keypair_t &kp,
                                     const oc::Roles &roles,
@@ -143,62 +135,6 @@ TestRolesWithServer::addPeer(const oc_endpoint_t *ep)
 
 #ifdef OC_DYNAMIC_ALLOCATION
 
-static std::vector<unsigned char>
-getPEM(std::vector<unsigned char> &data)
-{
-  auto it =
-    std::find(data.begin(), data.end(), static_cast<unsigned char>('\0'));
-  size_t data_len =
-    std::distance(data.begin(), it) + 1; // size with NULL terminator
-  EXPECT_NE(data.end(), it);
-
-  EXPECT_TRUE(oc_certs_is_PEM(&data[0], data_len));
-  data.resize(data_len);
-  return data;
-}
-
-int
-TestRolesWithServer::generateSelfSignedRootCertificate(
-  const oc::keypair_t &kp, const std::string &subject_name,
-  mbedtls_md_type_t sig_alg)
-{
-  oc_obt_generate_root_cert_data_t cert_data = {
-    /*.subject_name = */ subject_name.c_str(),
-    /*.public_key =*/kp.public_key.data(),
-    /*.public_key_size =*/kp.public_key_size,
-    /*.private_key =*/kp.private_key.data(),
-    /*.private_key_size =*/kp.private_key_size,
-    /*.signature_md_alg=*/sig_alg,
-  };
-
-  return oc_obt_generate_self_signed_root_cert(cert_data, kDeviceID);
-}
-
-std::vector<unsigned char>
-TestRolesWithServer::generateRoleCertificatePEM(const oc::keypair_t &kp,
-                                                const oc::Roles &roles,
-                                                const std::string &subject_name,
-                                                const std::string &issuer_name,
-                                                mbedtls_md_type_t sig_alg)
-{
-  oc_obt_generate_role_cert_data_t cert_data = {
-    /*.roles =*/roles.Head(),
-    /*.subject_name =*/subject_name.c_str(),
-    /*.public_key =*/kp.public_key.data(),
-    /*.public_key_size =*/kp.public_key_size,
-    /*.issuer_name =*/issuer_name.c_str(),
-    /*.issuer_private_key =*/kp.private_key.data(),
-    /*.issuer_private_key_size =*/kp.private_key_size,
-    /*.signature_md_alg=*/sig_alg,
-  };
-
-  std::vector<unsigned char> cert_buf{};
-  cert_buf.resize(4096, '\0');
-  EXPECT_EQ(0, oc_obt_generate_role_cert_pem(cert_data, cert_buf.data(),
-                                             cert_buf.size()));
-  return getPEM(cert_buf);
-}
-
 bool
 TestRolesWithServer::addRolesByCertificate(const oc_uuid_t *uuid,
                                            const oc::keypair_t &kp,
@@ -210,8 +146,8 @@ TestRolesWithServer::addRolesByCertificate(const oc_uuid_t *uuid,
   if (!oc_certs_encode_CN_with_UUID(uuid, uuid_buf.data(), uuid_buf.size())) {
     return false;
   }
-  auto role_pem = generateRoleCertificatePEM(kp, roles, uuid_buf.data(),
-                                             subject_name, MBEDTLS_MD_SHA256);
+  auto role_pem = oc::pki::obt::GenerateRoleCertificate(
+    uuid_buf.data(), subject_name, kp, roles);
   if (role_pem.empty()) {
     return false;
   }
@@ -315,7 +251,7 @@ TEST_F(TestRolesWithServer, AddRole_FailAssertion)
 TEST_F(TestRolesWithServer, AddRole_AssertAllowed)
 {
   oc::Roles roles{};
-  roles.Add("oic.role.owner");
+  roles.Add(OCF_SEC_ROLE_OWNER);
 
   oc_endpoint_t ep = oc::endpoint::FromString("coaps://[::1]:42");
   const auto *peer = addPeer(&ep);

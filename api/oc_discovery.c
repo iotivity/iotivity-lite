@@ -48,6 +48,7 @@
 #include "security/oc_tls_internal.h"
 #ifdef OC_RES_BATCH_SUPPORT
 #include "security/oc_acl_internal.h"
+#include "security/oc_acl_util_internal.h"
 #endif /* OC_RES_BATCH_SUPPORT*/
 #endif /* OC_SECURITY */
 
@@ -1264,6 +1265,12 @@ oc_create_wkcore_resource(size_t device)
                             OC_DISCOVERABLE, oc_wkcore_discovery_handler,
                             /*put*/ NULL, /*post*/ NULL, /*delete*/ NULL, 1,
                             OC_WELLKNOWNCORE_RT);
+}
+
+bool
+oc_is_wkcore_resource_uri(oc_string_view_t uri)
+{
+  return oc_resource_match_uri(OC_STRING_VIEW(OC_WELLKNOWNCORE_URI), uri);
 }
 
 #endif /* OC_WKCORE */

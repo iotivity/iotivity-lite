@@ -28,6 +28,7 @@
 #include "security/oc_security_internal.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/KeyPair.h"
+#include "tests/gtest/PKI.h"
 #include "tests/gtest/Role.h"
 
 #include <algorithm>
@@ -86,14 +87,6 @@ public:
     return std::string(container.begin(), container.end());
   }
 
-  static std::vector<unsigned char> GetPEM(std::vector<unsigned char> &data);
-  std::vector<unsigned char> GenerateSelfSignedRootCertificate(
-    oc::keypair_t &kp, mbedtls_md_type_t sig_alg = MBEDTLS_MD_SHA256) const;
-  std::vector<unsigned char> GenerateIdentityCertificate(
-    oc::keypair_t &kp, mbedtls_md_type_t sig_alg = MBEDTLS_MD_SHA256) const;
-  std::vector<unsigned char> GenerateRoleCertificate(
-    oc::keypair_t &kp, mbedtls_md_type_t sig_alg = MBEDTLS_MD_SHA256) const;
-
   std::string uuid_{};
   oc::keypair_t kp256_{};
   oc::keypair_t kp384_{};
@@ -103,90 +96,6 @@ public:
 static const std::string g_root_subject_name{ "IoTivity-Lite Test" };
 static const std::string g_root_subject{ "C=US, O=OCF, CN=" +
                                          g_root_subject_name };
-
-std::vector<unsigned char>
-TestObtCerts::GetPEM(std::vector<unsigned char> &data)
-{
-  auto it =
-    std::find(data.begin(), data.end(), static_cast<unsigned char>('\0'));
-  size_t data_len =
-    std::distance(data.begin(), it) + 1; // size with NULL terminator
-  EXPECT_NE(data.end(), it);
-
-  EXPECT_TRUE(oc_certs_is_PEM(&data[0], data_len));
-  data.resize(data_len);
-  return data;
-}
-
-std::vector<unsigned char>
-TestObtCerts::GenerateSelfSignedRootCertificate(oc::keypair_t &kp,
-                                                mbedtls_md_type_t sig_alg) const
-{
-  oc_obt_generate_root_cert_data_t cert_data = {
-    /*.subject_name = */ g_root_subject.c_str(),
-    /*.public_key =*/kp.public_key.data(),
-    /*.public_key_size =*/kp.public_key_size,
-    /*.private_key =*/kp.private_key.data(),
-    /*.private_key_size =*/kp.private_key_size,
-    /*.signature_md_alg=*/sig_alg,
-  };
-
-  std::vector<unsigned char> cert_buf{};
-  cert_buf.resize(4096, '\0');
-  int err = oc_obt_generate_self_signed_root_cert_pem(
-    cert_data, cert_buf.data(), cert_buf.size());
-  EXPECT_EQ(0, err);
-
-  return GetPEM(cert_buf);
-}
-
-std::vector<unsigned char>
-TestObtCerts::GenerateIdentityCertificate(oc::keypair_t &kp,
-                                          mbedtls_md_type_t sig_alg) const
-{
-  oc_obt_generate_identity_cert_data_t cert_data = {
-    /*.subject_name =*/uuid_.c_str(),
-    /*.public_key =*/kp.public_key.data(),
-    /*.public_key_size =*/kp.public_key_size,
-    /*.issuer_name =*/g_root_subject.c_str(),
-    /*.issuer_private_key =*/kp.private_key.data(),
-    /*.issuer_private_key_size =*/kp.private_key_size,
-    /*.signature_md_alg=*/sig_alg,
-  };
-
-  std::vector<unsigned char> cert_buf{};
-  cert_buf.resize(4096, '\0');
-  int err = oc_obt_generate_identity_cert_pem(cert_data, cert_buf.data(),
-                                              cert_buf.size());
-  EXPECT_EQ(0, err);
-  return GetPEM(cert_buf);
-}
-
-std::vector<unsigned char>
-TestObtCerts::GenerateRoleCertificate(oc::keypair_t &kp,
-                                      mbedtls_md_type_t sig_alg) const
-{
-  oc_obt_generate_role_cert_data_t cert_data = {
-    /*.roles =*/roles_.Head(),
-    /*.subject_name =*/uuid_.c_str(),
-    /*.public_key =*/kp.public_key.data(),
-    /*.public_key_size =*/kp.public_key_size,
-    /*.issuer_name =*/g_root_subject.c_str(),
-    /*.issuer_private_key =*/kp.private_key.data(),
-    /*.issuer_private_key_size =*/kp.private_key_size,
-    /*.signature_md_alg=*/sig_alg,
-  };
-
-  std::vector<unsigned char> cert_buf{};
-  cert_buf.resize(4096, '\0');
-  int err =
-    oc_obt_generate_role_cert_pem(cert_data, cert_buf.data(), cert_buf.size());
-  EXPECT_EQ(0, err);
-  if (err != 0) {
-    return {};
-  }
-  return GetPEM(cert_buf);
-}
 
 TEST_F(TestObtCerts, GenerateSelfSignedRootCertificateFail)
 {
@@ -235,7 +144,8 @@ TEST_F(TestObtCerts, GenerateSelfSignedRootCertificateFail)
 
 TEST_F(TestObtCerts, GenerateValidSelfSignedCertificate)
 {
-  auto cert_buf = GenerateSelfSignedRootCertificate(kp256_, MBEDTLS_MD_SHA384);
+  auto cert_buf = oc::pki::obt::GenerateSelfSignedRootCertificate(
+    g_root_subject, kp256_, MBEDTLS_MD_SHA384);
 
   std::array<char, 128> serial{};
   int ret = oc_certs_parse_serial_number(&cert_buf[0], cert_buf.size(),
@@ -260,7 +170,8 @@ TEST_F(TestObtCerts, GenerateValidSelfSignedCertificate)
 
 TEST_F(TestObtCerts, SerializeSelfSignedCertificate)
 {
-  auto root_cert = GenerateSelfSignedRootCertificate(kp384_, MBEDTLS_MD_SHA384);
+  auto root_cert = oc::pki::obt::GenerateSelfSignedRootCertificate(
+    g_root_subject, kp384_, MBEDTLS_MD_SHA384);
   mbedtls_x509_crt crt;
   mbedtls_x509_crt_init(&crt);
 
@@ -281,7 +192,8 @@ TEST_F(TestObtCerts, SerializeSelfSignedCertificate)
 
 TEST_F(TestObtCerts, ValidateSelfSignedCertificate)
 {
-  auto root_cert = GenerateSelfSignedRootCertificate(kp384_);
+  auto root_cert =
+    oc::pki::obt::GenerateSelfSignedRootCertificate(g_root_subject, kp384_);
   mbedtls_x509_crt crt;
   mbedtls_x509_crt_init(&crt);
 
@@ -350,7 +262,8 @@ TEST_F(TestObtCerts, GenerateIdentityCertificateFail)
 
 TEST_F(TestObtCerts, GenerateValidIdentityCertificate)
 {
-  auto id_cert = GenerateIdentityCertificate(kp256_, MBEDTLS_MD_SHA384);
+  auto id_cert = oc::pki::obt::GenerateIdentityCertificate(
+    uuid_, g_root_subject, kp256_, MBEDTLS_MD_SHA384);
 
   std::array<char, 128> serial{};
   int ret = oc_certs_parse_serial_number(&id_cert[0], id_cert.size(),
@@ -384,7 +297,8 @@ TEST_F(TestObtCerts, GenerateValidIdentityCertificate)
 
 TEST_F(TestObtCerts, SerializeIdentityCertificate)
 {
-  auto id_cert = GenerateIdentityCertificate(kp384_);
+  auto id_cert =
+    oc::pki::obt::GenerateIdentityCertificate(uuid_, g_root_subject, kp384_);
   mbedtls_x509_crt crt;
   mbedtls_x509_crt_init(&crt);
 
@@ -405,7 +319,8 @@ TEST_F(TestObtCerts, SerializeIdentityCertificate)
 
 TEST_F(TestObtCerts, ValidateIdentityCertificate)
 {
-  auto cert_buf = GenerateIdentityCertificate(kp384_, MBEDTLS_MD_SHA384);
+  auto cert_buf = oc::pki::obt::GenerateIdentityCertificate(
+    uuid_, g_root_subject, kp384_, MBEDTLS_MD_SHA384);
 
   mbedtls_x509_crt crt;
   mbedtls_x509_crt_init(&crt);
@@ -490,7 +405,8 @@ TEST_F(TestObtCerts, GenerateRoleCertificateFail)
 
 TEST_F(TestObtCerts, GenerateValidRoleCertificate)
 {
-  auto role_cert = GenerateRoleCertificate(kp256_, MBEDTLS_MD_SHA384);
+  auto role_cert = oc::pki::obt::GenerateRoleCertificate(
+    uuid_, g_root_subject, kp256_, roles_, MBEDTLS_MD_SHA384);
   ASSERT_FALSE(role_cert.empty());
 
   std::array<char, 128> serial{};
@@ -536,7 +452,10 @@ TEST_F(TestObtCerts, GenerateValidRoleCertificate)
 
 TEST_F(TestObtCerts, SerializeRoleCertificate)
 {
-  auto role_cert = GenerateRoleCertificate(kp384_);
+  auto role_cert = oc::pki::obt::GenerateRoleCertificate(uuid_, g_root_subject,
+                                                         kp384_, roles_);
+  ASSERT_FALSE(role_cert.empty());
+
   mbedtls_x509_crt crt;
   mbedtls_x509_crt_init(&crt);
 
@@ -557,7 +476,9 @@ TEST_F(TestObtCerts, SerializeRoleCertificate)
 
 TEST_F(TestObtCerts, ValidateRoleCertificate)
 {
-  auto cert_buf = GenerateRoleCertificate(kp384_, MBEDTLS_MD_SHA384);
+  auto cert_buf = oc::pki::obt::GenerateRoleCertificate(
+    uuid_, g_root_subject, kp384_, roles_, MBEDTLS_MD_SHA384);
+  ASSERT_FALSE(cert_buf.empty());
 
   mbedtls_x509_crt crt;
   mbedtls_x509_crt_init(&crt);
@@ -573,6 +494,8 @@ TEST_F(TestObtCerts, ValidateRoleCertificate)
 
   mbedtls_x509_crt_free(&crt);
 }
+
+static constexpr size_t kDeviceID{ 0 };
 
 class TestObtCertsWithDevice : public testing::Test {
 public:
@@ -617,21 +540,11 @@ public:
 TEST_F(TestObtCertsWithDevice, RootCertificateCredential)
 {
   oc::keypair_t kp{ oc::GetECPKeyPair(MBEDTLS_ECP_DP_SECP256R1) };
-
-  oc_obt_generate_root_cert_data_t cert_data = {
-    /*.subject_name = */ g_root_subject.c_str(),
-    /*.public_key =*/kp.public_key.data(),
-    /*.public_key_size =*/kp.public_key_size,
-    /*.private_key =*/kp.private_key.data(),
-    /*.private_key_size =*/kp.private_key_size,
-    /*.signature_md_alg=*/MBEDTLS_MD_SHA256,
-  };
-
-  size_t device = 0;
-  int credid = oc_obt_generate_self_signed_root_cert(cert_data, device);
+  int credid = oc::pki::obt::GenerateSelfSignedRootCertificate(
+    kDeviceID, g_root_subject, kp);
   ASSERT_LT(0, credid);
 
-  oc_sec_cred_t *cred = oc_sec_get_cred_by_credid(credid, device);
+  oc_sec_cred_t *cred = oc_sec_get_cred_by_credid(credid, kDeviceID);
   EXPECT_NE(nullptr, cred);
   // is root CA
   EXPECT_EQ(OC_CREDUSAGE_TRUSTCA, cred->credusage);
@@ -656,18 +569,9 @@ TEST_F(TestObtCertsWithDevice, RoleCertificateCredential)
   oc::keypair_t kp{ oc::GetECPKeyPair(MBEDTLS_ECP_DP_SECP384R1) };
 
   // need a trust anchor to verify Role Cert
-  oc_obt_generate_root_cert_data_t root_cert = {
-    /*.subject_name = */ g_root_subject.c_str(),
-    /*.public_key =*/kp.public_key.data(),
-    /*.public_key_size =*/kp.public_key_size,
-    /*.private_key =*/kp.private_key.data(),
-    /*.private_key_size =*/kp.private_key_size,
-    /*.signature_md_alg=*/MBEDTLS_MD_SHA384,
-  };
-
-  size_t device = 0;
-  int credid = oc_obt_generate_self_signed_root_cert(root_cert, device);
-  EXPECT_LT(0, credid);
+  int credid = oc::pki::obt::GenerateSelfSignedRootCertificate(
+    kDeviceID, g_root_subject, kp);
+  ASSERT_LT(0, credid);
 
   oc_obt_generate_role_cert_data_t role_cert = {
     /*.roles =*/roles_.Head(),
@@ -689,7 +593,7 @@ TEST_F(TestObtCertsWithDevice, RoleCertificateCredential)
   oc_uuid_t subjectuuid{};
   subjectuuid.id[0] = '*';
   oc_sec_cred_t *cred = oc_sec_allocate_cred(&subjectuuid, OC_CREDTYPE_CERT,
-                                             OC_CREDUSAGE_ROLE_CERT, device);
+                                             OC_CREDUSAGE_ROLE_CERT, kDeviceID);
   EXPECT_NE(nullptr, cred);
   EXPECT_EQ(0, oc_certs_parse_role_certificate(&cert_buf[0], cert_buf.size(),
                                                cred, false));
@@ -699,7 +603,7 @@ TEST_F(TestObtCertsWithDevice, RoleCertificateCredential)
   OC_DBG("authority: %s", oc_string(cred->role.authority));
   EXPECT_STREQ(g_root_subject_name.c_str(), oc_string(cred->role.authority));
 
-  oc_sec_remove_cred(cred, device);
+  oc_sec_remove_cred(cred, kDeviceID);
 }
 
 #endif /* OC_SECURITY && OC_PKI && OC_DYNAMIC_ALLOCATION  */

@@ -22,6 +22,7 @@
 
 #include "api/oc_core_res_internal.h"
 #include "api/oc_helpers_internal.h"
+#include "api/oc_resource_internal.h"
 #include "port/oc_log_internal.h"
 #include "security/oc_cred_util_internal.h"
 #include "security/oc_roles_internal.h"
@@ -407,6 +408,12 @@ oc_sec_roles_create_resource(size_t device)
                             OC_DISCOVERABLE | OC_SECURE, roles_resource_get,
                             /*put*/ NULL, roles_resource_post,
                             roles_resource_delete, 1, OCF_SEC_ROLES_RT);
+}
+
+bool
+oc_sec_is_roles_resource_uri(oc_string_view_t uri)
+{
+  return oc_resource_match_uri(OC_STRING_VIEW(OCF_SEC_ROLES_URI), uri);
 }
 
 #endif /* OC_SECURITY && OC_PKI */
