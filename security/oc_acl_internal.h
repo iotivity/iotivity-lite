@@ -48,8 +48,6 @@ void post_acl(oc_request_t *request, oc_interface_mask_t iface_mask,
 void get_acl(oc_request_t *request, oc_interface_mask_t iface_mask, void *data);
 void delete_acl(oc_request_t *request, oc_interface_mask_t iface_mask,
                 void *data);
-bool oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
-                      const oc_endpoint_t *endpoint);
 bool oc_sec_acl_add_created_resource_ace(const char *href,
                                          const oc_endpoint_t *client,
                                          size_t device, bool collection);
@@ -72,6 +70,11 @@ oc_sec_ace_t *oc_sec_acl_find_subject(oc_sec_ace_t *start,
                                       int aceid, uint16_t permission,
                                       const char *tag, bool match_tag,
                                       size_t device);
+
+oc_ace_res_t *oc_sec_ace_find_resource(oc_ace_res_t *start,
+                                       const oc_sec_ace_t *ace,
+                                       const char *href,
+                                       oc_ace_wildcard_t wildcard);
 
 #ifdef __cplusplus
 }

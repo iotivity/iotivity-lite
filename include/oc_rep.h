@@ -1189,20 +1189,22 @@ typedef enum {
   OC_REP_OBJECT_ARRAY = 0x0E
 } oc_rep_value_type_t;
 
+typedef union oc_rep_value {
+  int64_t integer;
+  bool boolean;
+  double double_p;
+  oc_string_t string;
+  oc_array_t array;
+  struct oc_rep_s *object;
+  struct oc_rep_s *object_array;
+} oc_rep_value_t;
+
 typedef struct oc_rep_s
 {
   oc_rep_value_type_t type;
   struct oc_rep_s *next;
   oc_string_t name;
-  union oc_rep_value {
-    int64_t integer;
-    bool boolean;
-    double double_p;
-    oc_string_t string;
-    oc_array_t array;
-    struct oc_rep_s *object;
-    struct oc_rep_s *object_array;
-  } value;
+  oc_rep_value_t value;
 } oc_rep_t;
 
 /**

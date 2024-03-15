@@ -48,6 +48,7 @@
 #include "security/oc_tls_internal.h"
 #ifdef OC_RES_BATCH_SUPPORT
 #include "security/oc_acl_internal.h"
+#include "security/oc_acl_util_internal.h"
 #endif /* OC_RES_BATCH_SUPPORT*/
 #endif /* OC_SECURITY */
 

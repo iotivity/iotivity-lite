@@ -359,6 +359,9 @@
     <ClCompile Include="..\..\..\security\oc_acl.c">
       <Filter>Security</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\security\oc_acl_util.c">
+      <Filter>Security</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\security\oc_cred.c">
       <Filter>Security</Filter>
     </ClCompile>
@@ -722,6 +725,9 @@
       <Filter>Security</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\security\oc_acl_internal.h">
+      <Filter>Security</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\security\oc_acl_util_internal.h">
       <Filter>Security</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\security\oc_cred_internal.h">

@@ -27,6 +27,7 @@
 #include "oc_uuid.h"
 #include "port/oc_network_event_handler_internal.h"
 #include "security/oc_acl_internal.h"
+#include "security/oc_acl_util_internal.h"
 #include "security/oc_pstat_internal.h"
 #include "util/oc_list.h"
 

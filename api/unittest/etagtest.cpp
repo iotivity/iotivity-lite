@@ -594,13 +594,9 @@ isETagStorageEmpty(size_t device, bool platform = false)
   std::string store =
     platform ? OC_ETAG_PLATFORM_STORE_NAME : OC_ETAG_STORE_NAME;
 
-  long ret = oc_storage_data_load(
-    store.c_str(), device, [](const oc_rep_t *, size_t, void *) { return 0; },
-    nullptr);
-  if (ret > 0) {
-    return false;
-  }
-  return true;
+  return oc_storage_data_load(
+           store.c_str(), device,
+           [](const oc_rep_t *, size_t, void *) { return 0; }, nullptr) <= 0;
 }
 
 TEST_F(TestETagWithServer, DumpAndLoad)
@@ -688,7 +684,7 @@ TEST_F(TestETagWithServer, DumpAndLoad)
 #ifdef OC_SECURITY
 
 static bool
-isPlatformResourceURI(const std::string &uri)
+isPlatformResourceURI(std::string_view uri)
 {
   return uri == "/oic/p"
 #ifdef OC_HAS_FEATURE_PLGD_TIME
