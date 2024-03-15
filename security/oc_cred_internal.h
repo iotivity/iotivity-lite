@@ -32,6 +32,9 @@
 extern "C" {
 #endif
 
+#define OCF_SEC_CRED_URI "/oic/sec/cred"
+#define OCF_SEC_CRED_RT "oic.r.cred"
+
 struct oc_tls_peer_t;
 
 typedef struct
@@ -178,11 +181,18 @@ oc_sec_cred_t *oc_sec_find_role_cred(oc_sec_cred_t *start,
                                      oc_string_view_t tag);
 
 /**
- * @brief Create roles (/oic/sec/cred) resource for given device.
+ * @brief Create cred (/oic/sec/cred) resource for given device.
  *
  * @param device device index
  */
 void oc_sec_cred_create_resource(size_t device);
+
+/** @brief Check if the URI matches the cred resource URI (with or without
+ * the leading slash */
+bool oc_sec_is_cred_resource_uri(oc_string_view_t uri);
+
+/** @brief Check if the cred resource is owned by given UUID */
+bool oc_sec_cred_is_owned_by(size_t device, oc_uuid_t uuid);
 
 #ifdef __cplusplus
 }

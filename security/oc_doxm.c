@@ -738,9 +738,8 @@ doxm_resource_post(oc_request_t *request, oc_interface_mask_t iface_mask,
 {
   (void)iface_mask;
   (void)data;
-  const oc_tls_peer_t *p = oc_tls_get_peer(request->origin);
   if (!oc_sec_decode_doxm(request->request_payload, false,
-                          p != NULL ? p->doc : false,
+                          oc_tls_peer_is_doc(request->origin),
                           request->resource->device)) {
     oc_send_response_with_callback(request, OC_STATUS_BAD_REQUEST, true);
     return;
@@ -764,6 +763,13 @@ bool
 oc_sec_is_doxm_resource_uri(oc_string_view_t uri)
 {
   return oc_resource_match_uri(OC_STRING_VIEW(OCF_SEC_DOXM_URI), uri);
+}
+
+bool
+oc_sec_doxm_is_owned_by(size_t device, oc_uuid_t uuid)
+{
+  const oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+  return oc_uuid_is_equal(doxm->rowneruuid, uuid);
 }
 
 void

@@ -276,25 +276,18 @@ TEST_F(TestKeyPair, GenerateForDevice)
 {
   auto generate_keypair = [](mbedtls_ecp_group_id grpid) {
     OC_DBG("generate ecdsa keypair with elliptic-curve %d", (int)grpid);
-    EXPECT_EQ(0, oc_sec_ecdsa_count_keypairs())
-      << "error for ec(" << grpid << ")";
+    EXPECT_EQ(0, oc_sec_ecdsa_count_keypairs());
     EXPECT_TRUE(
       oc_sec_ecdsa_update_or_generate_keypair_for_device(grpid,
-                                                         /*device*/ 0))
-      << "error for ec(" << grpid << ")";
-    EXPECT_EQ(1, oc_sec_ecdsa_count_keypairs())
-      << "error for ec(" << grpid << ")";
+                                                         /*device*/ 0));
+    EXPECT_EQ(1, oc_sec_ecdsa_count_keypairs());
     EXPECT_TRUE(
       oc_sec_ecdsa_update_or_generate_keypair_for_device(grpid,
-                                                         /*device*/ 0))
-      << "error for ec(" << grpid << ")";
-    EXPECT_EQ(1, oc_sec_ecdsa_count_keypairs())
-      << "error for ec(" << grpid << ")";
+                                                         /*device*/ 0));
+    EXPECT_EQ(1, oc_sec_ecdsa_count_keypairs());
 
-    EXPECT_NE(nullptr, oc_sec_ecdsa_get_keypair(/*device*/ 0))
-      << "error for ec(" << grpid << ")";
-    EXPECT_EQ(nullptr, oc_sec_ecdsa_get_keypair(/*device*/ 1))
-      << "error for ec(" << grpid << ")";
+    EXPECT_NE(nullptr, oc_sec_ecdsa_get_keypair(/*device*/ 0));
+    EXPECT_EQ(nullptr, oc_sec_ecdsa_get_keypair(/*device*/ 1));
 
     oc_sec_ecdsa_free_keypairs();
   };

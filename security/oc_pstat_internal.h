@@ -19,6 +19,7 @@
 #ifndef OC_PSTAT_INTERNAL_H
 #define OC_PSTAT_INTERNAL_H
 
+#include "api/oc_helpers_internal.h"
 #include "oc_ri.h"
 #include "util/oc_compiler.h"
 
@@ -29,12 +30,25 @@
 extern "C" {
 #endif
 
+#define OCF_SEC_PSTAT_URI "/oic/sec/pstat"
+#define OCF_SEC_PSTAT_RT "oic.r.pstat"
+
+/** Create pstat (/oic/sec/pstat) resource for given device. */
+void oc_sec_pstat_create_resource(size_t device);
+
+/** Check if the URI matches the pstat resource URI (with or without the leading
+ * slash */
+bool oc_sec_is_pstat_resource_uri(oc_string_view_t uri);
+
+/** @brief Check if the pstat resource is owned by given UUID */
+bool oc_sec_pstat_is_owned_by(size_t device, oc_uuid_t uuid);
+
 typedef enum {
-  OC_DOS_RESET = 0,
-  OC_DOS_RFOTM,
-  OC_DOS_RFPRO,
-  OC_DOS_RFNOP,
-  OC_DOS_SRESET
+  OC_DOS_RESET = 0, ///< Device reset
+  OC_DOS_RFOTM,     ///< Ready for owner transfer method
+  OC_DOS_RFPRO,     ///< Ready for provisioning
+  OC_DOS_RFNOP,     ///< Ready for normal operation
+  OC_DOS_SRESET     ///< Soft reset
 } oc_dostype_t;
 
 typedef enum {
@@ -91,11 +105,6 @@ void oc_sec_pstat_copy(oc_sec_pstat_t *dst, const oc_sec_pstat_t *src);
 void oc_sec_pstat_clear(oc_sec_pstat_t *pstat, bool resetToDefault)
   OC_NONNULL();
 
-void get_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
-               void *data);
-void post_pstat(oc_request_t *request, oc_interface_mask_t iface_mask,
-                void *data);
-
 #ifdef OC_SOFTWARE_UPDATE
 
 void oc_sec_pstat_set_current_mode(size_t device, oc_dpmtype_t cm);
@@ -106,6 +115,19 @@ oc_dpmtype_t oc_sec_pstat_current_mode(size_t device);
 #define OC_PSTAT_DOS_ID_FLAG(id) (1 << (id))
 
 /**
+ * @brief Check if the onboarding state property is in one of the DOS states.
+ *
+ * @param ps the pstat to check (cannot be NULL)
+ * @param dos_mask mask of DOS states to check (created by OR-ing values from
+ * OC_PSTAT_DOS_ID_FLAG(oc_dostype_t))
+ *
+ * @return true if pstat is in one of the DOS states
+ * @return false otherwise
+ */
+bool oc_sec_pstat_is_in_dos_state(const oc_sec_pstat_t *ps, unsigned dos_mask)
+  OC_NONNULL();
+
+/**
  * @brief Check if device is in one of the DOS states.
  *
  * @param device device index
@@ -114,7 +136,7 @@ oc_dpmtype_t oc_sec_pstat_current_mode(size_t device);
  * @return true if device is in one of the DOS states
  * @return false otherwise
  */
-bool oc_sec_pstat_is_in_dos_state(size_t device, unsigned dos_mask);
+bool oc_device_is_in_dos_state(size_t device, unsigned dos_mask);
 
 /**
  * @brief Reset all devices in RFOTM state for shutdown.

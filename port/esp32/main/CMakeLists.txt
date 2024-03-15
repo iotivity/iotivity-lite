@@ -187,6 +187,7 @@ if(CONFIG_SECURE)
 	list(APPEND OC_DEFINITIONS -DOC_SECURITY -DOC_PKI)
 	list(APPEND sources
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_acl.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_acl_util.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_ael.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_audit.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../security/oc_certs.c

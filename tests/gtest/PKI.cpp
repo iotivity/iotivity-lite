@@ -19,10 +19,15 @@
 #ifdef OC_PKI
 
 #include "oc_pki.h"
-#include "PKI.h"
 #include "port/oc_log_internal.h"
 #include "security/oc_certs_internal.h"
 #include "security/oc_entropy_internal.h"
+#include "tests/gtest/PKI.h"
+#include "tests/gtest/Role.h"
+
+#ifdef OC_DYNAMIC_ALLOCATION
+#include "security/oc_obt_internal.h"
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 #include <algorithm>
 #include <filesystem>
@@ -54,6 +59,23 @@ ReadPem(const std::string &path)
   return data;
 }
 
+static std::vector<unsigned char>
+GetPEM(std::vector<unsigned char> &data)
+{
+  auto it =
+    std::find(data.begin(), data.end(), static_cast<unsigned char>('\0'));
+  if (data.end() == it) {
+    return {};
+  }
+  size_t data_len =
+    std::distance(data.begin(), it) + 1; // size with NULL terminator
+  if (!oc_certs_is_PEM(&data[0], data_len)) {
+    return {};
+  }
+  data.resize(data_len);
+  return data;
+}
+
 #if defined(OC_DYNAMIC_ALLOCATION) || defined(OC_TEST)
 
 static constexpr std::string_view kRootSubjectName{ "IoTivity-Lite Test" };
@@ -73,16 +95,7 @@ GenerateCertificate(const oc_certs_generate_t &generate)
   if (err != 0) {
     return {};
   }
-
-  auto it = std::find(cert_buf.begin(), cert_buf.end(),
-                      static_cast<unsigned char>('\0'));
-  size_t data_len =
-    std::distance(cert_buf.begin(), it) + 1; // size with NULL terminator
-  if (cert_buf.end() == it || !oc_certs_is_PEM(&cert_buf[0], data_len)) {
-    return {};
-  }
-  cert_buf.resize(data_len);
-  return cert_buf;
+  return GetPEM(cert_buf);
 }
 
 std::vector<unsigned char>
@@ -171,14 +184,7 @@ KeyParser::GetPrivateKey(const unsigned char *key, size_t keylen)
   }
   mbedtls_pk_free(&pk);
 
-  auto it = std::find(pem.begin(), pem.end(), static_cast<unsigned char>('\0'));
-  if (pem.end() == it) {
-    return {};
-  }
-  size_t dataSize =
-    std::distance(pem.begin(), it) + 1; // include null terminator
-  pem.resize(dataSize);
-  return pem;
+  return GetPEM(pem);
 }
 
 PemData::PemData(const std::string &path)
@@ -325,6 +331,104 @@ PKDummyFunctions::GetPKFunctions()
   pk_functions.pk_free_key = FreeKey;
   return pk_functions;
 }
+
+#ifdef OC_DYNAMIC_ALLOCATION
+
+namespace obt {
+
+int
+GenerateSelfSignedRootCertificate(size_t device,
+                                  const std::string &subject_name,
+                                  const oc::keypair_t &kp,
+                                  mbedtls_md_type_t sig_alg)
+{
+  oc_obt_generate_root_cert_data_t root_cert_data = {
+    /*.subject_name = */ subject_name.c_str(),
+    /*.public_key =*/kp.public_key.data(),
+    /*.public_key_size =*/kp.public_key_size,
+    /*.private_key =*/kp.private_key.data(),
+    /*.private_key_size =*/kp.private_key_size,
+    /*.signature_md_alg=*/sig_alg,
+  };
+  return oc_obt_generate_self_signed_root_cert(root_cert_data, device);
+}
+
+std::vector<unsigned char>
+GenerateSelfSignedRootCertificate(const std::string &subject_name,
+                                  const oc::keypair_t &kp,
+                                  mbedtls_md_type_t sig_alg)
+{
+  oc_obt_generate_root_cert_data_t cert_data = {
+    /*.subject_name = */ subject_name.c_str(),
+    /*.public_key =*/kp.public_key.data(),
+    /*.public_key_size =*/kp.public_key_size,
+    /*.private_key =*/kp.private_key.data(),
+    /*.private_key_size =*/kp.private_key_size,
+    /*.signature_md_alg=*/sig_alg,
+  };
+
+  std::vector<unsigned char> cert_buf{};
+  cert_buf.resize(4096, '\0');
+  int err = oc_obt_generate_self_signed_root_cert_pem(
+    cert_data, cert_buf.data(), cert_buf.size());
+  EXPECT_EQ(0, err);
+
+  return GetPEM(cert_buf);
+}
+
+std::vector<unsigned char>
+GenerateIdentityCertificate(const std::string &subject_name,
+                            const std::string &issuer_name,
+                            const oc::keypair_t &kp, mbedtls_md_type_t sig_alg)
+{
+  oc_obt_generate_identity_cert_data_t cert_data = {
+    /*.subject_name =*/subject_name.c_str(),
+    /*.public_key =*/kp.public_key.data(),
+    /*.public_key_size =*/kp.public_key_size,
+    /*.issuer_name =*/issuer_name.c_str(),
+    /*.issuer_private_key =*/kp.private_key.data(),
+    /*.issuer_private_key_size =*/kp.private_key_size,
+    /*.signature_md_alg=*/sig_alg,
+  };
+
+  std::vector<unsigned char> cert_buf{};
+  cert_buf.resize(4096, '\0');
+  int err = oc_obt_generate_identity_cert_pem(cert_data, cert_buf.data(),
+                                              cert_buf.size());
+  EXPECT_EQ(0, err);
+  return GetPEM(cert_buf);
+}
+
+std::vector<unsigned char>
+GenerateRoleCertificate(const std::string &subject_name,
+                        const std::string &issuer_name, const oc::keypair_t &kp,
+                        const oc::Roles &roles, mbedtls_md_type_t sig_alg)
+{
+  oc_obt_generate_role_cert_data_t cert_data = {
+    /*.roles =*/roles.Head(),
+    /*.subject_name =*/subject_name.c_str(),
+    /*.public_key =*/kp.public_key.data(),
+    /*.public_key_size =*/kp.public_key_size,
+    /*.issuer_name =*/issuer_name.c_str(),
+    /*.issuer_private_key =*/kp.private_key.data(),
+    /*.issuer_private_key_size =*/kp.private_key_size,
+    /*.signature_md_alg=*/sig_alg,
+  };
+
+  std::vector<unsigned char> cert_buf{};
+  cert_buf.resize(4096, '\0');
+  int err =
+    oc_obt_generate_role_cert_pem(cert_data, cert_buf.data(), cert_buf.size());
+  EXPECT_EQ(0, err);
+  if (err != 0) {
+    return {};
+  }
+  return GetPEM(cert_buf);
+}
+
+} // namespace obt
+
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 } // namespace oc::pki
 

@@ -42,6 +42,8 @@ enum {
   OCF_SEC_ROLES_MAX_NUM = 2,
 };
 
+#define OCF_SEC_ROLE_OWNER "oic.role.owner"
+
 /**
  * \defgroup server-roles Event timers
  *
@@ -73,8 +75,13 @@ oc_sec_cred_t *oc_sec_roles_add(const oc_tls_peer_t *client, size_t device)
  */
 void oc_sec_roles_create_resource(size_t device);
 
+/** @brief Check if the URI matches the roles resource URI (with or without
+ * the leading slash */
+bool oc_sec_is_roles_resource_uri(oc_string_view_t uri);
+
 /**
- * @brief Remove role from the list of roles for given client and deallocate it.
+ * @brief Remove role from the list of roles for given client and deallocate
+ * it.
  *
  * @param role role to remove (cannot be NULL)
  * @param client client asserting the role (cannot be NULL)

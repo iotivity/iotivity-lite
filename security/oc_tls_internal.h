@@ -192,6 +192,9 @@ oc_tls_peer_t *oc_tls_get_peer(const oc_endpoint_t *endpoint);
  */
 oc_uuid_t *oc_tls_get_peer_uuid(const oc_endpoint_t *endpoint);
 
+/** Check if peer for endpoint exists and it is the DOC connection */
+bool oc_tls_peer_is_doc(const oc_endpoint_t *endpoint);
+
 /**
  * @brief Count the number of peers in the device.
  *
@@ -220,6 +223,7 @@ bool oc_tls_connected(const oc_endpoint_t *endpoint);
  * @return -1 on error
  */
 size_t oc_tls_send_message(oc_message_t *message);
+
 bool oc_tls_uses_psk_cred(const oc_tls_peer_t *peer);
 
 /* Public APIs for selecting certificate credentials */

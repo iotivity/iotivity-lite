@@ -20,6 +20,7 @@
 
 #include "api/oc_helpers_internal.h"
 #include "api/oc_core_res_internal.h"
+#include "api/oc_resource_internal.h"
 #include "oc_api.h"
 #include "oc_config.h"
 #include "oc_core_res.h"
@@ -62,8 +63,8 @@ static oc_sec_creds_t g_devices[OC_MAX_NUM_DEVICES];
 
 #ifdef OC_PKI
 static oc_string_view_t g_allowed_roles[] = { {
-  .data = "oic.role.owner",
-  .length = OC_CHAR_ARRAY_LEN("oic.role.owner"),
+  .data = OCF_SEC_ROLE_OWNER,
+  .length = OC_CHAR_ARRAY_LEN(OCF_SEC_ROLE_OWNER),
 } };
 #endif /* OC_PKI */
 
@@ -1588,9 +1589,22 @@ void
 oc_sec_cred_create_resource(size_t device)
 {
   oc_core_populate_resource(
-    OCF_SEC_CRED, device, "/oic/sec/cred", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
+    OCF_SEC_CRED, device, OCF_SEC_CRED_URI, OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
     OC_DISCOVERABLE | OC_SECURE, cred_resource_get, /*put*/ NULL,
-    cred_resource_post, cred_resource_delete, 1, "oic.r.cred");
+    cred_resource_post, cred_resource_delete, 1, OCF_SEC_CRED_RT);
+}
+
+bool
+oc_sec_is_cred_resource_uri(oc_string_view_t uri)
+{
+  return oc_resource_match_uri(OC_STRING_VIEW(OCF_SEC_CRED_URI), uri);
+}
+
+bool
+oc_sec_cred_is_owned_by(size_t device, oc_uuid_t uuid)
+{
+  const oc_sec_creds_t *creds = oc_sec_get_creds(device);
+  return oc_uuid_is_equal(creds->rowneruuid, uuid);
 }
 
 #endif /* OC_SECURITY */

@@ -93,7 +93,7 @@ CborError oc_sec_encode_doxm(size_t device, oc_interface_mask_t iface_mask,
                              bool to_storage);
 
 /**
- * @brief Create roles (/oic/sec/doxm) resource for given device.
+ * @brief Create doxm (/oic/sec/doxm) resource for given device.
  *
  * @param device device index
  */
@@ -102,6 +102,9 @@ void oc_sec_doxm_create_resource(size_t device);
 /** @brief Check if the URI matches the doxm resource URI (with or without
  * the leading slash */
 bool oc_sec_is_doxm_resource_uri(oc_string_view_t uri);
+
+/** @brief Check if the doxm resource is owned by given UUID */
+bool oc_sec_doxm_is_owned_by(size_t device, oc_uuid_t uuid);
 
 #ifdef OC_TEST
 

@@ -69,7 +69,7 @@ TEST_F(TestClock, oc_clock_wait)
   oc_clock_wait(wait_time);
   oc_clock_time_t cur_stamp = oc_clock_time();
 
-  int seconds = (cur_stamp - prev_stamp) / OC_CLOCK_SECOND;
+  auto seconds = static_cast<long>((cur_stamp - prev_stamp) / OC_CLOCK_SECOND);
   EXPECT_EQ(1, seconds);
 }
 

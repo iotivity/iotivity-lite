@@ -48,6 +48,7 @@
 #endif /* OC_MNT */
 
 #ifdef OC_SECURITY
+#include "security/oc_acl_internal.h"
 #include "security/oc_doxm_internal.h"
 #include "security/oc_pstat_internal.h"
 #include "security/oc_roles_internal.h"
@@ -85,6 +86,12 @@ static oc_device_info_t g_oc_device_info[OC_MAX_NUM_DEVICES] = { 0 };
 
 static int g_res_latency = 0;
 static OC_ATOMIC_UINT32_T g_device_count = 0;
+
+bool
+oc_is_device_resource_uri(oc_string_view_t uri)
+{
+  return oc_resource_match_uri(OC_STRING_VIEW(OCF_D_URI), uri);
+}
 
 void
 oc_core_init(void)
@@ -687,8 +694,7 @@ oc_core_get_resource_type_by_uri(const char *uri, size_t uri_len)
   if (oc_is_platform_resource_uri(oc_string_view(uri, uri_len))) {
     return OCF_P;
   }
-  if (core_is_resource_uri(uri, uri_len, OCF_D_URI,
-                           OC_CHAR_ARRAY_LEN(OCF_D_URI))) {
+  if (oc_is_device_resource_uri(oc_string_view(uri, uri_len))) {
     return OCF_D;
   }
   if (oc_is_discovery_resource_uri(oc_string_view(uri, uri_len))) {
@@ -710,14 +716,12 @@ oc_core_get_resource_type_by_uri(const char *uri, size_t uri_len)
   }
 #endif /* OC_INTROSPECTION */
 #ifdef OC_HAS_FEATURE_PLGD_TIME
-  if (core_is_resource_uri(uri, uri_len, PLGD_TIME_URI,
-                           OC_CHAR_ARRAY_LEN(PLGD_TIME_URI))) {
+  if (plgd_is_time_resource_uri(oc_string_view(uri, uri_len))) {
     return PLGD_TIME;
   }
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 #ifdef OC_WKCORE
-  if (core_is_resource_uri(uri, uri_len, OC_WELLKNOWNCORE_URI,
-                           OC_CHAR_ARRAY_LEN(OC_WELLKNOWNCORE_URI))) {
+  if (oc_is_wkcore_resource_uri(oc_string_view(uri, uri_len))) {
     return WELLKNOWNCORE;
   }
 #endif /* OC_WKCORE */
@@ -733,19 +737,16 @@ oc_core_get_resource_type_by_uri(const char *uri, size_t uri_len)
   }
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 #ifdef OC_SECURITY
-  if (core_is_resource_uri(uri, uri_len, "/oic/sec/pstat",
-                           OC_CHAR_ARRAY_LEN("/oic/sec/pstat"))) {
+  if (oc_sec_is_pstat_resource_uri(oc_string_view(uri, uri_len))) {
     return OCF_SEC_PSTAT;
   }
   if (oc_sec_is_doxm_resource_uri(oc_string_view(uri, uri_len))) {
     return OCF_SEC_DOXM;
   }
-  if (core_is_resource_uri(uri, uri_len, "/oic/sec/acl2",
-                           OC_CHAR_ARRAY_LEN("/oic/sec/acl2"))) {
+  if (oc_sec_is_acl_resource_uri(oc_string_view(uri, uri_len))) {
     return OCF_SEC_ACL;
   }
-  if (core_is_resource_uri(uri, uri_len, "/oic/sec/cred",
-                           OC_CHAR_ARRAY_LEN("/oic/sec/cred"))) {
+  if (oc_sec_is_cred_resource_uri(oc_string_view(uri, uri_len))) {
     return OCF_SEC_CRED;
   }
   if (core_is_resource_uri(uri, uri_len, "/oic/sec/ael",
@@ -761,8 +762,7 @@ oc_core_get_resource_type_by_uri(const char *uri, size_t uri_len)
                            OC_CHAR_ARRAY_LEN(OCF_SEC_CSR_URI))) {
     return OCF_SEC_CSR;
   }
-  if (core_is_resource_uri(uri, uri_len, OCF_SEC_ROLES_URI,
-                           OC_CHAR_ARRAY_LEN(OCF_SEC_ROLES_URI))) {
+  if (oc_sec_is_roles_resource_uri(oc_string_view(uri, uri_len))) {
     return OCF_SEC_ROLES;
   }
 #endif /* OC_PKI */

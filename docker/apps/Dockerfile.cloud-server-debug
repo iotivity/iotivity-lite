@@ -2,16 +2,19 @@ FROM ubuntu:22.04 AS service
 ARG BUILD_TYPE=Release
 ARG BUILD_ARGS
 RUN apt-get update -y && \
-	DEBIAN_FRONTEND="noninteractive" apt-get install -y bash ca-certificates cmake curl gdb git-core gcovr g++ make patch python3 --no-install-recommends
+	DEBIAN_FRONTEND="noninteractive" apt-get install --no-install-recommends -y bash ca-certificates cmake curl gdb git-core gcovr g++ make patch python3 && \
+	apt-get clean
 COPY ./  /iotivity-lite/
-RUN cd /iotivity-lite/ && git submodule update --recursive
-RUN mkdir /iotivity-lite/build && \
-	cd /iotivity-lite/build && \
-	cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=OFF -DOC_CLOUD_ENABLED=ON ${BUILD_ARGS} .. && \
+WORKDIR /iotivity-lite
+RUN git submodule update --recursive
+RUN mkdir /iotivity-lite/build
+WORKDIR /iotivity-lite/build
+RUN cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=OFF -DOC_CLOUD_ENABLED=ON ${BUILD_ARGS} .. && \
 	cmake --build . --target cloud_server
 RUN cp /iotivity-lite/build/apps/cloud_server /iotivity-lite/port/linux/service
 
 # install libfaketime
+WORKDIR /
 RUN git clone https://github.com/wolfcw/libfaketime.git && \
 	cd /libfaketime/src && \
 	make install FAKETIME_COMPILE_CFLAGS="-DFAKE_SETTIME -DFAKE_STATELESS"

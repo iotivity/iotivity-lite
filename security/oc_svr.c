@@ -48,14 +48,8 @@ oc_sec_svr_create(void)
 
   for (size_t i = 0; i < oc_core_get_num_devices(); i++) {
     oc_sec_doxm_create_resource(i);
-    oc_core_populate_resource(OCF_SEC_PSTAT, i, "/oic/sec/pstat",
-                              OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-                              OC_DISCOVERABLE | OC_OBSERVABLE, get_pstat, 0,
-                              post_pstat, 0, 1, "oic.r.pstat");
-    oc_core_populate_resource(OCF_SEC_ACL, i, "/oic/sec/acl2",
-                              OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
-                              OC_DISCOVERABLE | OC_SECURE, get_acl, 0, post_acl,
-                              delete_acl, 1, "oic.r.acl2");
+    oc_sec_pstat_create_resource(i);
+    oc_sec_acl_create_resource(i);
     oc_sec_cred_create_resource(i);
     oc_core_populate_resource(
       OCF_SEC_AEL, i, "/oic/sec/ael", OC_IF_RW | OC_IF_BASELINE, OC_IF_RW,
