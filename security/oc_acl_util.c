@@ -43,6 +43,7 @@
 #include <stdint.h>
 
 #if OC_DBG_IS_ENABLED
+
 static void
 print_acls(size_t device)
 {
@@ -101,6 +102,7 @@ print_acls(size_t device)
     ace = ace->next;
   }
 }
+
 #endif /* OC_DBG_IS_ENABLED */
 
 static uint16_t
@@ -164,25 +166,17 @@ static bool
 eval_access(oc_method_t method, uint16_t permission)
 {
   if (permission != 0) {
-    switch (method) {
-    case OC_GET:
-      if ((permission & OC_PERM_RETRIEVE) || (permission & OC_PERM_NOTIFY)) {
-        return true;
-      }
-      break;
-    case OC_PUT:
-    case OC_POST:
-      if ((permission & OC_PERM_CREATE) || (permission & OC_PERM_UPDATE)) {
-        return true;
-      }
-      break;
-    case OC_DELETE:
-      if (permission & OC_PERM_DELETE) {
-        return true;
-      }
-      break;
-    default:
-      break;
+    if (method == OC_GET) {
+      return (permission & OC_PERM_RETRIEVE) != 0 ||
+             (permission & OC_PERM_NOTIFY) != 0;
+    }
+
+    if (method == OC_POST || method == OC_PUT) {
+      return (permission & OC_PERM_CREATE) != 0 ||
+             (permission & OC_PERM_UPDATE) != 0;
+    }
+    if (method == OC_DELETE) {
+      return (permission & OC_PERM_DELETE) != 0;
     }
   }
   return false;
@@ -258,7 +252,7 @@ oc_sec_check_acl_by_uuid(const oc_uuid_t *uuid, size_t device,
   }
   const oc_sec_pstat_t *pstat = oc_sec_get_pstat(device);
   if (memcmp(uuid->id, pstat->rowneruuid.id, sizeof(uuid->id)) == 0 &&
-      uri_len == 14 && memcmp(uri, "/oic/sec/pstat", 14) == 0) {
+      oc_sec_is_pstat_resource_uri(oc_string_view(uri, uri_len))) {
     OC_DBG("oc_acl: peer's UUID matches pstat's rowneruuid");
     return true;
   }
@@ -287,39 +281,41 @@ oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
     is_vertical = oc_core_is_vertical_resource(resource, resource->device);
   }
 
-  const oc_sec_pstat_t *pstat = oc_sec_get_pstat(endpoint->device);
-  /* All unicast requests which are not received over the open Device DOC
-   * shall be rejected with an appropriate error message (e.g. forbidden),
-   * regardless of the configuration of the ACEs in the "/oic/sec/acl2"
-   * Resource.
-   */
-  if (pstat->s == OC_DOS_RFOTM && !(endpoint->flags & SECURED) &&
-      oc_tls_num_peers(endpoint->device) == 1) {
-    OC_DBG("oc_sec_check_acl: unencrypted request received while DOC is open - "
-           "access forbidden");
-    return false;
-  }
+  const oc_sec_pstat_t *ps = oc_sec_get_pstat(endpoint->device);
+  oc_dostype_t dos = ps->s;
+  if (dos == OC_DOS_RFOTM && (endpoint->flags & SECURED) == 0) {
+    /* All unicast requests which are not received over the open Device DOC
+     * shall be rejected with an appropriate error message (e.g. forbidden),
+     * regardless of the configuration of the ACEs in the "/oic/sec/acl2"
+     * Resource.
+     */
+    if (oc_tls_num_peers(endpoint->device) == 1) {
+      OC_DBG(
+        "oc_sec_check_acl: unencrypted request received while DOC is open - "
+        "access forbidden");
+      return false;
+    }
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
-  /* Allow access to resources in RFOTM mode if the feature is enabled and
-   * permission match the method. */
-  if (pstat->s == OC_DOS_RFOTM && !(endpoint->flags & SECURED) &&
-      (resource->properties & OC_ACCESS_IN_RFOTM) == OC_ACCESS_IN_RFOTM &&
-      eval_access(method, resource->anon_permission_in_rfotm)) {
-    OC_DBG("oc_sec_check_acl: access granted to %s via anon permission in "
-           "RFOTM state",
-           oc_string(resource->uri));
-    return true;
-  }
+    /* Allow access to resources in RFOTM mode if the feature is enabled and
+     * permission match the method. */
+    if ((resource->properties & OC_ACCESS_IN_RFOTM) == OC_ACCESS_IN_RFOTM &&
+        eval_access(method, (uint16_t)resource->anon_permission_in_rfotm)) {
+      OC_DBG("oc_sec_check_acl: access granted to %s via anon permission in "
+             "RFOTM state",
+             oc_string(resource->uri));
+      return true;
+    }
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  }
 
   /* NCRs are accessible only in RFNOP */
-  if (!is_DCR && pstat->s != OC_DOS_RFNOP) {
+  if (!is_DCR && dos != OC_DOS_RFNOP) {
     OC_DBG("oc_sec_check_acl: resource is NCR and dos is not RFNOP");
     return false;
   }
   /* anon-clear access to vertical resources is prohibited */
-  if (is_vertical && !(endpoint->flags & SECURED)) {
+  if (is_vertical && (endpoint->flags & SECURED) == 0) {
     OC_DBG("oc_sec_check_acl: anon-clear access to vertical resources is "
            "prohibited");
     return false;
@@ -329,51 +325,51 @@ oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
    * Resource.
    */
   const oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
-  if (peer && peer->doc && is_DCR) {
+  if (is_DCR && peer && peer->doc) {
     OC_DBG("oc_sec_check_acl: connection is DOC and request directed to DCR - "
            "access granted");
     return true;
   }
 
   if (method == OC_GET &&
-      oc_sec_check_acl_on_get(resource, pstat->s == OC_DOS_RFOTM)) {
+      oc_sec_check_acl_on_get(resource, dos == OC_DOS_RFOTM)) {
+    OC_DBG("oc_sec_check_acl: access granted to %s via special GET rule",
+           oc_string(resource->uri));
     return true;
   }
 
   /* Requests over unsecured channel prior to DOC */
-  if (pstat->s == OC_DOS_RFOTM && oc_tls_num_peers(endpoint->device) == 0) {
+  if (dos == OC_DOS_RFOTM && oc_tls_num_peers(endpoint->device) == 0) {
     /* Anonymous Retrieve and Updates requests to “/oic/sec/doxm” shall be
        granted.
     */
     if (oc_sec_is_doxm_resource_uri(oc_string_view2(&resource->uri))) {
-      OC_DBG("oc_sec_check_acl: RW access granted to /doxm  prior to DOC");
+      OC_DBG("oc_sec_check_acl: RW access granted to doxm prior to DOC");
       return true;
     }
     /* All Retrieve requests to the “/oic/sec/pstat” Resource shall be
-       granted.
-    */
-    if (oc_string_len(resource->uri) == 14 &&
-        memcmp(oc_string(resource->uri), "/oic/sec/pstat", 14) == 0 &&
-        method == OC_GET) {
+       granted. */
+    if (method == OC_GET &&
+        oc_sec_is_pstat_resource_uri(oc_string_view2(&resource->uri))) {
       OC_DBG("oc_sec_check_acl: R access granted to pstat prior to DOC");
       return true;
     }
     /* Reject all other requests */
+    OC_DBG("oc_sec_check_acl: access denied to %s prior to DOC",
+           oc_string(resource->uri));
     return false;
   }
 
-  if ((pstat->s == OC_DOS_RFPRO || pstat->s == OC_DOS_RFNOP ||
-       pstat->s == OC_DOS_SRESET) &&
-      !(endpoint->flags & SECURED)) {
-    /* anon-clear requests to SVRs while the
-     * dos is RFPRO, RFNOP or SRESET should not be authorized
-     * regardless of the ACL configuration.
-     */
-    if (is_SVR) {
-      OC_DBG("oc_sec_check_acl: anon-clear access to SVRs in RFPRO, RFNOP and "
-             "SRESET is prohibited");
-      return false;
-    }
+  /* anon-clear requests to SVRs while the dos is RFPRO, RFNOP or SRESET should
+   * not be authorized regardless of the ACL configuration */
+  if (is_SVR &&
+      oc_sec_pstat_is_in_dos_state(ps, OC_PSTAT_DOS_ID_FLAG(OC_DOS_RFPRO) |
+                                         OC_PSTAT_DOS_ID_FLAG(OC_DOS_RFNOP) |
+                                         OC_PSTAT_DOS_ID_FLAG(OC_DOS_SRESET)) &&
+      (endpoint->flags & SECURED) == 0) {
+    OC_DBG("oc_sec_check_acl: anon-clear access to SVRs in RFPRO, RFNOP and "
+           "SRESET is prohibited");
+    return false;
   }
 
   const oc_uuid_t *uuid = &endpoint->di;
@@ -381,8 +377,7 @@ oc_sec_check_acl(oc_method_t method, const oc_resource_t *resource,
     if (oc_sec_check_acl_by_uuid(uuid, endpoint->device, resource)) {
       return true;
     }
-    if ((pstat->s == OC_DOS_RFPRO || pstat->s == OC_DOS_RFNOP ||
-         pstat->s == OC_DOS_SRESET) &&
+    if ((dos == OC_DOS_RFPRO || dos == OC_DOS_RFNOP || dos == OC_DOS_SRESET) &&
         oc_string_is_cstr_equal(&resource->uri, OCF_SEC_ROLES_URI,
                                 OC_CHAR_ARRAY_LEN(OCF_SEC_ROLES_URI))) {
       OC_DBG("oc_acl: peer has implicit access to /oic/sec/roles in RFPRO, "

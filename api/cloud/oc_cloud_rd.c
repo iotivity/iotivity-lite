@@ -160,8 +160,8 @@ static void
 cloud_publish_resources(oc_cloud_context_t *ctx)
 {
 #ifdef OC_SECURITY
-  if (!oc_sec_pstat_is_in_dos_state(ctx->device,
-                                    OC_PSTAT_DOS_ID_FLAG(OC_DOS_RFNOP))) {
+  if (!oc_device_is_in_dos_state(ctx->device,
+                                 OC_PSTAT_DOS_ID_FLAG(OC_DOS_RFNOP))) {
     OC_CLOUD_DBG("cannot publish resource links when not in RFNOP");
     return;
   }
@@ -253,8 +253,8 @@ cloud_delete_resources(oc_cloud_context_t *ctx)
 {
   assert(ctx->rd_delete_resources != NULL);
 #ifdef OC_SECURITY
-  if (!oc_sec_pstat_is_in_dos_state(ctx->device,
-                                    OC_PSTAT_DOS_ID_FLAG(OC_DOS_RFNOP))) {
+  if (!oc_device_is_in_dos_state(ctx->device,
+                                 OC_PSTAT_DOS_ID_FLAG(OC_DOS_RFNOP))) {
     OC_CLOUD_DBG("cannot unpublish resource links when not in RFNOP");
     return;
   }

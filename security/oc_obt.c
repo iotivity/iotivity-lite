@@ -871,7 +871,7 @@ switch_dos(oc_device_t *device, oc_dostype_t dos, oc_obt_status_cb_t cb,
   d->cb.cb = cb;
   d->cb.data = data;
 
-  if (!oc_init_post("/oic/sec/pstat", ep, NULL, &pstat_POST_dos1_to_dos2,
+  if (!oc_init_post(OCF_SEC_PSTAT_URI, ep, NULL, &pstat_POST_dos1_to_dos2,
                     HIGH_QOS, d)) {
     OC_ERR("Could not init POST request to /oic/sec/pstat");
     goto err_switch_dos;
