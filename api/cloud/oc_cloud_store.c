@@ -121,7 +121,7 @@ oc_cloud_store_dump(const oc_cloud_store_t *store)
   long ret = oc_storage_data_save(OC_CLOUD_STORE_NAME, store->device,
                                   store_encode_cloud, store);
   if (ret <= 0) {
-    OC_ERR("cannot dump cloud to storage: error(%ld)", ret);
+    OC_CLOUD_ERR("cannot dump cloud to storage: error(%ld)", ret);
     return false;
   }
   return true;
@@ -245,58 +245,24 @@ cloud_store_set_servers(oc_cloud_store_t *store,
                         const oc_string_t *selected_uri,
                         const oc_string_t *selected_id, const oc_rep_t *servers)
 {
-  oc_uuid_t uuid = OCF_COAPCLOUDCONF_DEFAULT_SID;
+
+  oc_uuid_t selected_uuid = OCF_COAPCLOUDCONF_DEFAULT_SID;
   if (selected_id != NULL) {
     oc_string_view_t selected_idv = oc_string_view2(selected_id);
-    if (oc_str_to_uuid_v1(selected_idv.data, selected_idv.length, &uuid) !=
-        OC_UUID_ID_SIZE) {
-      return false;
-    }
-  }
-  if (!oc_endpoint_addresses_reinit(&store->ci_servers,
-                                    oc_endpoint_address_make_view_with_uuid(
-                                      oc_string_view2(selected_uri), uuid))) {
-    return false;
-  }
-
-  if (servers == NULL) {
-    return true;
-  }
-
-  for (const oc_rep_t *server = servers; server != NULL;
-       server = server->next) {
-    const oc_rep_t *rep =
-      oc_rep_get(server->value.object, OC_REP_STRING, CLOUD_ENDPOINT_URI,
-                 OC_CHAR_ARRAY_LEN(CLOUD_ENDPOINT_URI));
-    if (rep == NULL) {
-      OC_ERR("cloud server uri missing");
-      continue;
-    }
-    oc_string_view_t uri = oc_string_view2(&rep->value.string);
-
-    rep = oc_rep_get(server->value.object, OC_REP_STRING, CLOUD_ENDPOINT_ID,
-                     OC_CHAR_ARRAY_LEN(CLOUD_ENDPOINT_ID));
-    if (rep == NULL) {
-      OC_ERR("cloud server id missing");
-      continue;
-    }
-    oc_string_view_t sid = oc_string_view2(&rep->value.string);
-    if (oc_str_to_uuid_v1(sid.data, sid.length, &uuid) < 0) {
-      continue;
-    }
-
-    if (oc_endpoint_addresses_contains(&store->ci_servers, uri)) {
-      continue;
-    }
-
-    if (!oc_endpoint_addresses_add(
-          &store->ci_servers,
-          oc_endpoint_address_make_view_with_uuid(uri, uuid))) {
+    if (oc_str_to_uuid_v1(selected_idv.data, selected_idv.length,
+                          &selected_uuid) != OC_UUID_ID_SIZE) {
+      OC_CLOUD_ERR("invalid selected cloud sid");
       return false;
     }
   }
 
-  return true;
+  return oc_cloud_endpoint_addresses_set(
+    &store->ci_servers, selected_uri, selected_uuid,
+    (oc_endpoint_addresses_rep_t){
+      .uri_key = OC_STRING_VIEW(CLOUD_ENDPOINT_URI),
+      .uuid_key = OC_STRING_VIEW(CLOUD_ENDPOINT_ID),
+      .servers = servers,
+    });
 }
 
 bool
@@ -338,7 +304,7 @@ oc_cloud_store_decode(const oc_rep_t *rep, oc_cloud_store_t *store)
   // copy data to store
   if ((csd.ci_server != NULL || csd.ci_servers != NULL) &&
       !cloud_store_set_servers(store, csd.ci_server, csd.sid, csd.ci_servers)) {
-    OC_WRN("failed to set cloud servers from storage");
+    OC_CLOUD_WRN("failed to set cloud servers from storage");
   }
 
   if (csd.auth_provider != NULL) {
@@ -366,7 +332,7 @@ store_decode_cloud(const oc_rep_t *rep, size_t device, void *data)
   (void)device;
   oc_cloud_store_t *store = (oc_cloud_store_t *)data;
   if (!oc_cloud_store_decode(rep, store)) {
-    OC_ERR("cannot load cloud: cannot decode representation");
+    OC_CLOUD_ERR("cannot load cloud: cannot decode representation");
     return -1;
   }
   return 0;
@@ -377,19 +343,19 @@ oc_cloud_store_load(oc_cloud_store_t *store)
 {
   if (oc_storage_data_load(OC_CLOUD_STORE_NAME, store->device,
                            store_decode_cloud, store) <= 0) {
-    OC_DBG("failed to load cloud from storage");
+    OC_CLOUD_DBG("failed to load cloud from storage");
     oc_cloud_store_reinitialize(store);
     return false;
   }
-  OC_DBG("cloud loaded from storage");
+  OC_CLOUD_DBG("cloud loaded from storage");
   return true;
 }
 
 void
 oc_cloud_store_reinitialize(oc_cloud_store_t *store)
 {
-  oc_cloud_store_initialize(store, store->ci_servers.on_selected_change,
-                            store->ci_servers.on_selected_change_data);
+  oc_cloud_store_initialize(store, store->ci_servers.on_selected_change.cb,
+                            store->ci_servers.on_selected_change.cb_data);
 }
 
 void

@@ -79,7 +79,8 @@ oc_endpoint_address_uri(const oc_endpoint_address_t *ea)
 }
 
 static void
-endpoint_address_free_metadata_id(oc_endpoint_address_metadata_t *metadata)
+OC_NONNULL()
+  endpoint_address_free_metadata_id(oc_endpoint_address_metadata_t *metadata)
 {
   if (metadata->id_type == OC_ENDPOINT_ADDRESS_METADATA_TYPE_NAME) {
     oc_free_string(&metadata->id.name);
@@ -131,22 +132,24 @@ endpoint_address_is_valid(oc_string_view_t uri)
   return uri.length > 0 && uri.length < OC_ENDPOINT_MAX_ENDPOINT_URI_LENGTH;
 }
 
-static void
-endpoint_address_select(oc_endpoint_addresses_t *eas,
-                        const oc_endpoint_address_t *selected)
+static bool OC_NONNULL(1)
+  endpoint_address_select(oc_endpoint_addresses_t *eas,
+                          const oc_endpoint_address_t *selected)
 {
   if (eas->selected == selected) {
-    return;
+    return false;
   }
   eas->selected = selected;
-  if (eas->on_selected_change != NULL) {
-    eas->on_selected_change(eas->on_selected_change_data);
+  if (eas->on_selected_change.cb != NULL) {
+    eas->on_selected_change.cb(eas->on_selected_change.cb_data);
   }
+  return true;
 }
 
 static bool
-endpoint_address_set_metadata(oc_endpoint_address_t *ea,
-                              oc_endpoint_address_metadata_view_t metadata)
+OC_NONNULL()
+  endpoint_address_set_metadata(oc_endpoint_address_t *ea,
+                                oc_endpoint_address_metadata_view_t metadata)
 {
   ea->metadata.id_type = metadata.id_type;
   if (metadata.id_type == OC_ENDPOINT_ADDRESS_METADATA_TYPE_UUID) {
@@ -162,9 +165,9 @@ endpoint_address_set_metadata(oc_endpoint_address_t *ea,
 }
 
 static oc_endpoint_address_t *
-endpoint_address_allocate_and_add(oc_endpoint_addresses_t *eas,
-                                  oc_string_view_t uri,
-                                  oc_endpoint_address_metadata_view_t metadata)
+OC_NONNULL() endpoint_address_allocate_and_add(
+  oc_endpoint_addresses_t *eas, oc_string_view_t uri,
+  oc_endpoint_address_metadata_view_t metadata)
 {
   if (!endpoint_address_is_valid(uri)) {
     return NULL;
@@ -209,8 +212,8 @@ oc_endpoint_addresses_init(
 
   // set callback before calling allocate and add, because it may trigger the
   // callback
-  eas->on_selected_change = on_selected_change;
-  eas->on_selected_change_data = on_selected_change_data;
+  eas->on_selected_change.cb = on_selected_change;
+  eas->on_selected_change.cb_data = on_selected_change_data;
 
   if (default_ea.uri.length > 0) {
     const oc_endpoint_address_t *ea = endpoint_address_allocate_and_add(
@@ -224,7 +227,8 @@ oc_endpoint_addresses_init(
 }
 
 static void
-endpoint_address_free(oc_endpoint_addresses_t *eas, oc_endpoint_address_t *ea)
+OC_NONNULL()
+  endpoint_address_free(oc_endpoint_addresses_t *eas, oc_endpoint_address_t *ea)
 {
   oc_free_string(&ea->uri);
   endpoint_address_free_metadata_id(&ea->metadata);
@@ -250,8 +254,24 @@ oc_endpoint_addresses_reinit(oc_endpoint_addresses_t *eas,
                              oc_endpoint_address_view_t default_ea)
 {
   oc_endpoint_addresses_deinit(eas);
-  return oc_endpoint_addresses_init(eas, eas->pool, eas->on_selected_change,
-                                    eas->on_selected_change_data, default_ea);
+  return oc_endpoint_addresses_init(eas, eas->pool, eas->on_selected_change.cb,
+                                    eas->on_selected_change.cb_data,
+                                    default_ea);
+}
+
+void
+oc_endpoint_addresses_set_on_selected_change(
+  oc_endpoint_addresses_t *eas, on_selected_endpoint_address_change_fn_t cb,
+  void *data)
+{
+  eas->on_selected_change.cb = cb;
+  eas->on_selected_change.cb_data = data;
+}
+
+oc_endpoint_addresses_on_selected_change_t
+oc_endpoint_addresses_get_on_selected_change(const oc_endpoint_addresses_t *eas)
+{
+  return eas->on_selected_change;
 }
 
 size_t
@@ -289,7 +309,7 @@ oc_endpoint_addresses_add(oc_endpoint_addresses_t *eas,
                           oc_endpoint_address_view_t ea)
 {
   if (!endpoint_address_is_valid(ea.uri)) {
-    OC_DBG("oc_endpoint_addresses_add: invalid uri(%s)",
+    OC_ERR("cannot add endpoint address: invalid uri(%s)",
            ea.uri.data != NULL ? ea.uri.data : "null");
     return NULL;
   }
@@ -301,9 +321,9 @@ oc_endpoint_addresses_add(oc_endpoint_addresses_t *eas,
   return endpoint_address_allocate_and_add(eas, ea.uri, ea.metadata);
 }
 
-static const oc_endpoint_address_t *
-endpoint_address_next(const oc_endpoint_addresses_t *eas,
-                      const oc_endpoint_address_t *item_next)
+static const oc_endpoint_address_t *OC_NONNULL(1)
+  endpoint_address_next(const oc_endpoint_addresses_t *eas,
+                        const oc_endpoint_address_t *item_next)
 {
   if (item_next != NULL) {
     return item_next;
@@ -375,7 +395,7 @@ typedef struct
 } endpoint_address_match_t;
 
 static bool
-endpoint_address_match(oc_endpoint_address_t *ea, void *data)
+OC_NONNULL() endpoint_address_match(oc_endpoint_address_t *ea, void *data)
 {
   endpoint_address_match_t *match = (endpoint_address_match_t *)data;
   if (oc_string_view_is_equal(oc_string_view2(&ea->uri), match->uri)) {
@@ -420,13 +440,14 @@ oc_endpoint_addresses_select_by_uri(oc_endpoint_addresses_t *eas,
   return true;
 }
 
-void
+bool
 oc_endpoint_addresses_select_next(oc_endpoint_addresses_t *eas)
 {
   if (eas->selected == NULL) {
-    return;
+    return false;
   }
-  endpoint_address_select(eas, endpoint_address_next(eas, eas->selected->next));
+  return endpoint_address_select(
+    eas, endpoint_address_next(eas, eas->selected->next));
 }
 
 bool
@@ -509,7 +530,7 @@ oc_endpoint_address_encode(CborEncoder *encoder, oc_string_view_t uri_key,
 }
 
 static bool
-endpoint_addresses_encode(oc_endpoint_address_t *ea, void *data)
+OC_NONNULL() endpoint_addresses_encode(oc_endpoint_address_t *ea, void *data)
 {
   endpoint_address_encoder_t *encoder = (endpoint_address_encoder_t *)data;
 
@@ -518,8 +539,9 @@ endpoint_addresses_encode(oc_endpoint_address_t *ea, void *data)
   encoder->error |= oc_rep_encoder_create_map(
     encoder->ci_servers, &endpoint_map, CborIndefiniteLength);
   encoder->error |= oc_endpoint_address_encode(
-    &endpoint_map, OC_STRING_VIEW("uri"), OC_STRING_VIEW("id"),
-    OC_STRING_VIEW("name"), oc_endpoint_address_view(ea));
+    &endpoint_map, OC_STRING_VIEW(OC_ENDPOINT_ADDRESS_URI),
+    OC_STRING_VIEW(OC_ENDPOINT_ADDRESS_ID),
+    OC_STRING_VIEW(OC_ENDPOINT_ADDRESS_NAME), oc_endpoint_address_view(ea));
   encoder->error |=
     oc_rep_encoder_close_container(encoder->ci_servers, &endpoint_map);
   return true;

@@ -126,7 +126,7 @@ resource_payload_get_string_property(const oc_rep_t *payload,
                                      oc_string_view_t key, bool cannotBeEmpty)
 {
   const oc_rep_t *rep =
-    oc_rep_get(payload, OC_REP_STRING, key.data, key.length);
+    oc_rep_get_by_type_and_key(payload, OC_REP_STRING, key.data, key.length);
   if (rep == NULL ||
       (cannotBeEmpty && oc_string_is_empty(&rep->value.string))) {
     return NULL;
@@ -157,9 +157,17 @@ cloud_update_from_request(oc_cloud_context_t *ctx, const oc_request_t *request)
   if (sid != NULL) {
     oc_string_view_t sidv = oc_string_view2(sid);
     if (oc_str_to_uuid_v1(sidv.data, sidv.length, &data.sid) < 0) {
-      OC_ERR("failed parsing sid(%s)", sidv.data);
+      OC_CLOUD_ERR("failed parsing sid(%s)", sidv.data);
       return false;
     }
+  }
+
+  const oc_rep_t *ci_servers = oc_rep_get_by_type_and_key(
+    request->request_payload, OC_REP_OBJECT_ARRAY,
+    OCF_COAPCLOUDCONF_PROP_CISERVERS,
+    OC_CHAR_ARRAY_LEN(OCF_COAPCLOUDCONF_PROP_CISERVERS));
+  if (ci_servers != NULL) {
+    data.ci_servers = ci_servers->value.object_array;
   }
 
   if (data.ci_server != NULL && (oc_string_is_empty(data.ci_server) ||

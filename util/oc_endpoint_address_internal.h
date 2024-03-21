@@ -101,14 +101,17 @@ typedef void (*on_selected_endpoint_address_change_fn_t)(void *data);
 
 typedef struct
 {
+  on_selected_endpoint_address_change_fn_t
+    cb; ///< callback invoked when the selected endpoint address changes
+  void *cb_data; ///< data passed to the callback
+} oc_endpoint_addresses_on_selected_change_t;
+
+typedef struct
+{
   oc_memb_t *pool; ///< memory pool for endpoint addresses
   const oc_endpoint_address_t
     *selected; ///< currently selected endpoint address
-  on_selected_endpoint_address_change_fn_t
-    on_selected_change; ///< callback invoked when the selected endpoint address
-                        ///< changes
-  void *
-    on_selected_change_data; ///< data passed to the on_selected_change callback
+  oc_endpoint_addresses_on_selected_change_t on_selected_change;
   OC_LIST_STRUCT(addresses); ///< list of endpoint addresses
 } oc_endpoint_addresses_t;
 
@@ -138,6 +141,16 @@ void oc_endpoint_addresses_deinit(oc_endpoint_addresses_t *eas) OC_NONNULL();
 bool oc_endpoint_addresses_reinit(oc_endpoint_addresses_t *eas,
                                   oc_endpoint_address_view_t default_ea)
   OC_NONNULL(1);
+
+/** Set the callback invoked when the selected endpoint address changes */
+void oc_endpoint_addresses_set_on_selected_change(
+  oc_endpoint_addresses_t *eas, on_selected_endpoint_address_change_fn_t cb,
+  void *data) OC_NONNULL(1, 2);
+
+/** Get the callback invoked when the selected endpoint address changes */
+oc_endpoint_addresses_on_selected_change_t
+oc_endpoint_addresses_get_on_selected_change(const oc_endpoint_addresses_t *eas)
+  OC_NONNULL();
 
 /** Get the number of endpoint adresses in the list */
 size_t oc_endpoint_addresses_size(const oc_endpoint_addresses_t *eas)
@@ -221,7 +234,7 @@ bool oc_endpoint_addresses_select_by_uri(oc_endpoint_addresses_t *eas,
                                          oc_string_view_t uri) OC_NONNULL();
 
 /** Select the next endpoint address from the list of endpoint addresses */
-void oc_endpoint_addresses_select_next(oc_endpoint_addresses_t *eas)
+bool oc_endpoint_addresses_select_next(oc_endpoint_addresses_t *eas)
   OC_NONNULL();
 
 /** Check if an endpoint address matching the given URI is selected */
@@ -243,6 +256,10 @@ const oc_uuid_t *oc_endpoint_addresses_selected_uuid(
 /** Get the name of the currently selected endpoint address */
 const oc_string_t *oc_endpoint_addresses_selected_name(
   const oc_endpoint_addresses_t *eas) OC_NONNULL();
+
+#define OC_ENDPOINT_ADDRESS_URI ("uri")
+#define OC_ENDPOINT_ADDRESS_ID ("id")
+#define OC_ENDPOINT_ADDRESS_NAME ("name")
 
 /**
  * Encode cloud server endpoints array to an encoder

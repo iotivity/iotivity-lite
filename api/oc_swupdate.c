@@ -273,10 +273,12 @@ oc_swupdate_action_schedule(size_t device, oc_clock_time_t schedule_at)
   assert(!oc_swupdate_action_is_scheduled(device));
 
 #if OC_DBG_IS_ENABLED
+  // GCOVR_EXCL_START
 #define RFC3339_BUFFER_SIZE 64
   char scheduled_ts[RFC3339_BUFFER_SIZE] = { 0 };
   oc_clock_encode_time_rfc3339(schedule_at, scheduled_ts, sizeof(scheduled_ts));
   OC_DBG("swupdate: update scheduled at %s", scheduled_ts);
+  // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
 
   oc_clock_time_t now = oc_clock_time();

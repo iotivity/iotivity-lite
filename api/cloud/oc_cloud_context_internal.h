@@ -62,6 +62,16 @@ typedef struct
 /** Reset the retry counters */
 void cloud_retry_reset(oc_cloud_retry_t *retry) OC_NONNULL(1);
 
+/** When retrying the registration step, all available servers should be used
+ * once and after that retrying should be stopped. */
+typedef struct
+{
+  oc_string_t initial_server; ///< server address when cloud manager is started;
+  uint8_t remaining_server_changes; ///< remaining number of server changes
+                                    ///< allowed before cloud manager is stopped
+  bool server_changed;
+} oc_cloud_registration_context_t;
+
 struct oc_cloud_context_t
 {
   struct oc_cloud_context_t *next;
@@ -82,6 +92,8 @@ struct oc_cloud_context_t
   oc_link_t *rd_publish_resources;   /**< Resource links to publish */
   oc_link_t *rd_published_resources; /**< Resource links already published */
   oc_link_t *rd_delete_resources;    /**< Resource links to delete */
+
+  oc_cloud_registration_context_t registration_ctx; /**< Registration context */
 
   int selected_identity_cred_id; /**< Selected identity cert chain. -1(default)
                                     means any*/
@@ -104,9 +116,9 @@ oc_cloud_context_t *cloud_context_init(size_t device);
 /**
  * @brief Deinitialize and deallocate cloud context
  *
- * @param ctx context to deinitialize (cannot be NULL)
+ * @param ctx context to deinitialize
  */
-void cloud_context_deinit(oc_cloud_context_t *ctx) OC_NONNULL();
+void cloud_context_deinit(oc_cloud_context_t *ctx);
 
 /// @brief Count number of allocated contexts
 size_t cloud_context_size(void);
@@ -158,6 +170,19 @@ void cloud_context_clear_access_token(oc_cloud_context_t *ctx) OC_NONNULL();
  */
 bool cloud_context_has_refresh_token(const oc_cloud_context_t *ctx)
   OC_NONNULL();
+
+/** @brief Callback invoked by ctx::store::ci_servers when the selected cloud
+ * server is changed  */
+void cloud_context_on_server_change(void *data) OC_NONNULL();
+
+/** @brief Initialize the registration context */
+void oc_cloud_registration_context_init(oc_cloud_registration_context_t *regctx,
+                                        const oc_endpoint_addresses_t *servers)
+  OC_NONNULL();
+
+/** @brief Deinitialize the registration context */
+void oc_cloud_registration_context_deinit(
+  oc_cloud_registration_context_t *regctx) OC_NONNULL();
 
 #ifdef __cplusplus
 }

@@ -274,10 +274,12 @@ cloud_delete_resources(oc_cloud_context_t *ctx)
   }
 
 #if OC_DBG_IS_ENABLED
+  // GCOVR_EXCL_START
   for (const oc_link_t *link = partition.not_deleted; link != NULL;
        link = link->next) {
     OC_CLOUD_DBG("link(ins=%" PRId64 ") not unpublished", link->ins);
   }
+  // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
   ctx->rd_delete_resources = partition.not_deleted;
   rd_link_free(&partition.deleted);
@@ -369,7 +371,7 @@ oc_cloud_publish_resources(size_t device)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(device);
   if (ctx == NULL) {
-    OC_ERR("cannot publish resource: invalid device(%zu)", device);
+    OC_CLOUD_ERR("cannot publish resource: invalid device(%zu)", device);
     return -1;
   }
   publish_published_resources(ctx);

@@ -1739,6 +1739,8 @@ oc_rep_t * jni_rep_get_object_array(oc_rep_t* rep, const char *key) {
 }
 %}
 
+%ignore oc_rep_get_by_type_and_key;
+// TODO: implement
 
 // Expose oc_array_t this will be exposed as a class that has no usage without helper functions
 %rename(OCArray) oc_mmem;

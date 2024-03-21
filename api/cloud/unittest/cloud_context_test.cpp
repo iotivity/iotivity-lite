@@ -20,8 +20,10 @@
 #include "api/oc_helpers_internal.h"
 #include "api/oc_runtime_internal.h"
 #include "oc_uuid.h"
+#include "util/oc_features.h"
 
 #include <gtest/gtest.h>
+#include <vector>
 
 class TestCloudContext : public testing::Test {
 public:
@@ -29,6 +31,42 @@ public:
 
   static void TearDownTestCase() { oc_runtime_shutdown(); }
 };
+
+#ifndef OC_SECURITY
+
+// insecure build to avoid pstat checks, which need valid device indexes
+TEST_F(TestCloudContext, Init)
+{
+#ifdef OC_DYNAMIC_ALLOCATION
+  size_t num_devices = 3;
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  size_t num_devices = OC_MAX_NUM_DEVICES;
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+  std::vector<oc_cloud_context_t *> contexts{};
+  for (size_t i = 0; i < num_devices; ++i) {
+    oc_cloud_context_t *ctx = cloud_context_init(i);
+    ASSERT_NE(nullptr, ctx);
+    EXPECT_EQ(i, oc_cloud_get_device(ctx));
+    contexts.push_back(ctx);
+  }
+
+#ifndef OC_DYNAMIC_ALLOCATION
+  oc_cloud_context_t *ctx = cloud_context_init(num_devices);
+  ASSERT_EQ(nullptr, ctx);
+#endif /* !OC_DYNAMIC_ALLOCATION */
+
+  for (auto ctx : contexts) {
+    cloud_context_deinit(ctx);
+  }
+}
+
+#endif /* !OC_SECURITY */
+
+TEST_F(TestCloudContext, Deinit)
+{
+  cloud_context_deinit(nullptr);
+}
 
 TEST_F(TestCloudContext, OnStatusChange)
 {

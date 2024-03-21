@@ -60,10 +60,13 @@ need_to_reinitialize_cloud_storage(const oc_cloud_context_t *ctx)
   return cloud_is_deregistering(ctx);
 }
 
-static void
-cloud_on_server_change(void *data)
+void
+cloud_context_on_server_change(void *data)
 {
-  const oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  oc_cloud_context_t *ctx = (oc_cloud_context_t *)data;
+  if (ctx->cloud_manager) {
+    ctx->registration_ctx.server_changed = true;
+  }
   oc_cloud_store_dump_async(&ctx->store);
 }
 
@@ -94,7 +97,7 @@ cloud_context_init(size_t device)
   ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
   ctx->cloud_ep = oc_new_endpoint();
   ctx->selected_identity_cred_id = -1;
-  oc_cloud_store_initialize(&ctx->store, cloud_on_server_change, ctx);
+  oc_cloud_store_initialize(&ctx->store, cloud_context_on_server_change, ctx);
   oc_cloud_store_load(&ctx->store);
   ctx->store.status &=
     ~(OC_CLOUD_LOGGED_IN | OC_CLOUD_TOKEN_EXPIRY | OC_CLOUD_REFRESHED_TOKEN |
@@ -113,6 +116,10 @@ cloud_context_init(size_t device)
 void
 cloud_context_deinit(oc_cloud_context_t *ctx)
 {
+  if (ctx == NULL) {
+    return;
+  }
+  oc_cloud_registration_context_deinit(&ctx->registration_ctx);
   cloud_rd_deinit(ctx);
   // In the case of a factory reset, the cloud data may remain on the device
   // when the device is shut down during de-registration.
@@ -233,10 +240,9 @@ oc_cloud_context_clear(oc_cloud_context_t *ctx, bool dump_async)
 {
   assert(ctx != NULL);
 
+  oc_cloud_registration_context_deinit(&ctx->registration_ctx);
   cloud_rd_reset_context(ctx);
-  oc_cloud_close_endpoint(ctx->cloud_ep);
-  memset(ctx->cloud_ep, 0, sizeof(oc_endpoint_t));
-  ctx->cloud_ep_state = OC_SESSION_DISCONNECTED;
+  oc_cloud_reset_endpoint(ctx);
   cloud_manager_stop(ctx);
   oc_cloud_deregister_stop(ctx);
   oc_cloud_store_reinitialize(&ctx->store);
@@ -292,6 +298,31 @@ int
 oc_cloud_get_identity_cert_chain(const oc_cloud_context_t *ctx)
 {
   return ctx->selected_identity_cred_id;
+}
+
+void
+oc_cloud_registration_context_init(oc_cloud_registration_context_t *regctx,
+                                   const oc_endpoint_addresses_t *servers)
+{
+  oc_cloud_registration_context_deinit(regctx);
+  oc_copy_string(&regctx->initial_server,
+                 oc_endpoint_addresses_selected_uri(servers));
+  // limit the number of server changes to the number of servers at startup
+  // minus one (since the initial address is already used)
+  size_t server_count = oc_endpoint_addresses_size(servers);
+  assert(server_count <= UINT8_MAX);
+  regctx->remaining_server_changes =
+    (uint8_t)(oc_endpoint_addresses_selected(servers) != NULL ? server_count - 1
+                                                              : 0);
+  regctx->server_changed = false;
+}
+
+void
+oc_cloud_registration_context_deinit(oc_cloud_registration_context_t *regctx)
+{
+  oc_free_string(&regctx->initial_server);
+  regctx->remaining_server_changes = 0;
+  regctx->server_changed = false;
 }
 
 void

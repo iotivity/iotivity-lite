@@ -780,6 +780,7 @@ oc_sec_add_new_ace(oc_ace_subject_type_t type, const oc_ace_subject_t *subject,
   } else {
     memcpy(&ace->subject, subject, sizeof(oc_ace_subject_t));
 #if OC_DBG_IS_ENABLED
+    // GCOVR_EXCL_START
     if (type == OC_SUBJECT_UUID) {
       char c[OC_UUID_LEN];
       oc_uuid_to_str(&ace->subject.uuid, c, OC_UUID_LEN);
@@ -791,6 +792,7 @@ oc_sec_add_new_ace(oc_ace_subject_type_t type, const oc_ace_subject_t *subject,
         OC_DBG("Adding ACE for auth-crypt connection");
       }
     }
+    // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
   }
 
@@ -825,6 +827,7 @@ oc_sec_add_new_ace_res(const char *href, oc_ace_wildcard_t wildcard,
     res->wildcard = wildcard;
   }
 #if OC_DBG_IS_ENABLED
+  // GCOVR_EXCL_START
   switch (res->wildcard) {
   case OC_ACE_WC_ALL_SECURED:
     OC_DBG("Adding wildcard resource + with permission %d", permission);
@@ -838,6 +841,7 @@ oc_sec_add_new_ace_res(const char *href, oc_ace_wildcard_t wildcard,
   default:
     break;
   }
+  // GCOVR_EXCL_STOP
 #else  /* !OC_DBG_IS_ENABLED */
   (void)permission;
 #endif /* OC_DBG_IS_ENABLED */
