@@ -32,6 +32,7 @@
 %ignore oc_endpoint_address_metadata_t;
 %ignore oc_endpoint_address_metadata_view_t;
 %ignore oc_endpoint_address_view_t;
+%ignore oc_endpoint_address_view;
 %ignore oc_endpoint_address_make_view_with_uuid;
 %ignore oc_endpoint_address_make_view_with_name;
 
@@ -87,6 +88,11 @@
 
 /*******************Begin oc_endpoint_address_internal.h****************************/
 
+%ignore oc_endpoint_address_metadata_type_t;
+%ignore oc_endpoint_address_encode;
+%ignore on_selected_endpoint_address_change_fn_t;
+%ignore oc_endpoint_addresses_on_selected_change_t;
+
 %ignore oc_endpoint_addresses_t;
 %ignore oc_endpoint_addresses_init;
 %ignore oc_endpoint_addresses_deinit;
@@ -104,11 +110,13 @@
 %ignore oc_endpoint_addresses_select_by_uri;
 %ignore oc_endpoint_addresses_select_next;
 %ignore oc_endpoint_addresses_is_selected;
+%ignore oc_endpoint_addresses_selected;
 %ignore oc_endpoint_addresses_selected_uri;
 %ignore oc_endpoint_addresses_selected_uuid;
 %ignore oc_endpoint_addresses_selected_name;
 %ignore oc_endpoint_addresses_encode;
-
+%ignore oc_endpoint_addresses_set_on_selected_change;
+%ignore oc_endpoint_addresses_get_on_selected_change;
 
 %include "util/oc_endpoint_address_internal.h"
 

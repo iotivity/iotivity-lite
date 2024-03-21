@@ -378,7 +378,16 @@ TEST_F(TestEndpointAddresses, Select)
 {
   oc_endpoint_addresses_t &ea{ getAddresses() };
 
+  auto on_selected_change = oc_endpoint_addresses_get_on_selected_change(&ea);
+  ASSERT_EQ(nullptr, on_selected_change.cb);
+  ASSERT_EQ(nullptr, on_selected_change.cb_data);
+  bool selected_changed = false;
+  oc_endpoint_addresses_set_on_selected_change(
+    &ea, [](void *data) { *static_cast<bool *>(data) = true; },
+    &selected_changed);
+
   oc_endpoint_addresses_select_next(&ea);
+  EXPECT_FALSE(selected_changed);
   auto *selected_addr = oc_endpoint_addresses_selected_uri(&ea);
   EXPECT_EQ(nullptr, selected_addr);
   auto *selected_uuid = oc_endpoint_addresses_selected_uuid(&ea);
@@ -395,6 +404,7 @@ TEST_F(TestEndpointAddresses, Select)
 
   // when adding to an empty list, the first added item is automatically
   // selected
+  EXPECT_TRUE(selected_changed);
   EXPECT_TRUE(oc_endpoint_addresses_is_selected(&ea, uri1));
   selected_addr = oc_endpoint_addresses_selected_uri(&ea);
   ASSERT_NE(nullptr, selected_addr);
@@ -407,8 +417,10 @@ TEST_F(TestEndpointAddresses, Select)
   ASSERT_EQ(nullptr, selected_name);
 
   // non-existing URI shouldn't change the selection
+  selected_changed = false;
   EXPECT_FALSE(
     oc_endpoint_addresses_select_by_uri(&ea, OC_STRING_VIEW("/fail")));
+  EXPECT_FALSE(selected_changed);
   EXPECT_FALSE(oc_endpoint_addresses_is_selected(&ea, OC_STRING_VIEW("/fail")));
   EXPECT_TRUE(oc_endpoint_addresses_is_selected(&ea, uri1));
   selected_addr = oc_endpoint_addresses_selected_uri(&ea);
@@ -453,10 +465,14 @@ TEST_F(TestEndpointAddresses, Select)
   EXPECT_STREQ(name3.data, oc_string(*selected_name));
 
   // rotate back to uri1
+  selected_changed = false;
   oc_endpoint_addresses_select_next(&ea);
+  EXPECT_TRUE(selected_changed);
 #else  /* !OC_DYNAMIC_ALLOCATION  */
   // the list has a single element, so the selection should stay at uri1
+  selected_changed = false;
   oc_endpoint_addresses_select_next(&ea);
+  EXPECT_FALSE(selected_changed);
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   EXPECT_TRUE(oc_endpoint_addresses_is_selected(&ea, uri1));

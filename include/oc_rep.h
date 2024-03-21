@@ -1569,6 +1569,23 @@ bool oc_rep_get_object_array(const oc_rep_t *rep, const char *key,
                              oc_rep_t **value);
 
 /**
+ * @brief Get the value of a property by type and key.
+ *
+ * @param rep oc_rep_t to read the value from
+ * @param type the type of the value to read
+ * @param key the key for the value
+ * @param key_len the length of \p key
+ *
+ * @return the value of the property if found
+ * @return NULL otherwise
+ */
+OC_API
+const oc_rep_t *oc_rep_get_by_type_and_key(const oc_rep_t *rep,
+                                           oc_rep_value_type_t type,
+                                           const char *key, size_t key_len)
+  OC_NONNULL(3);
+
+/**
  * Tab character(s) used for oc_rep_to_json function when doing pretty_print
  */
 #define OC_PRETTY_PRINT_TAB_CHARACTER "  "

@@ -113,9 +113,10 @@ jobs:
           build-wrapper-linux-x86-64 --out-dir ${{ env.BUILD_WRAPPER_OUT_DIR }} cmake --build build --verbose --target client-server-static --target all
 
       - name: Get coverage from all tests job
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          path: tools/
+          merge-multiple: true
+          path: tools/coverage/
 
       - name: Install gcovr
         run: |
@@ -126,7 +127,7 @@ jobs:
         run: |
           cd tools
           # ls -lR .
-          gcovr --add-tracefile "unit-test-coverage/*coverage*.json" --add-tracefile "plgd-device-coverage/*coverage*.json" --add-tracefile "plgd-hub-coverage/*coverage*.json"  --sonarqube --output "coverage.xml" --verbose
+          gcovr --add-tracefile "coverage/*coverage*.json" --sonarqube --output "coverage.xml" --verbose
 
       - name: Run sonar-scanner
         env:

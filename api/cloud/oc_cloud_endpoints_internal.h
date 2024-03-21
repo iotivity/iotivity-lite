@@ -20,6 +20,7 @@
 #define OC_CLOUD_ENDPOINTS_INTERNAL_H
 
 #include "api/oc_helpers_internal.h"
+#include "oc_rep.h"
 #include "oc_uuid.h"
 #include "util/oc_endpoint_address_internal.h"
 #include "util/oc_compiler.h"
@@ -42,6 +43,19 @@ bool oc_cloud_endpoint_addresses_init(
   on_selected_endpoint_address_change_fn_t on_selected_change,
   void *on_selected_change_data, oc_string_view_t default_uri,
   oc_uuid_t default_id) OC_NONNULL(1);
+
+typedef struct
+{
+  oc_string_view_t uri_key;
+  oc_string_view_t uuid_key;
+  const oc_rep_t *servers;
+} oc_endpoint_addresses_rep_t;
+
+/** Reinitialize cloud server endpoint addresses from a payload */
+bool oc_cloud_endpoint_addresses_set(oc_endpoint_addresses_t *ea,
+                                     const oc_string_t *selected_uri,
+                                     oc_uuid_t selected_uuid,
+                                     oc_endpoint_addresses_rep_t srep);
 
 #ifdef __cplusplus
 }
