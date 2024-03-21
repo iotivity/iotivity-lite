@@ -22,26 +22,174 @@
 #include "api/cloud/oc_cloud_endpoints_internal.h"
 #include "api/cloud/oc_cloud_internal.h"
 #include "api/cloud/oc_cloud_resource_internal.h"
+#include "api/cloud/oc_cloud_schedule_internal.h"
+#include "api/oc_core_res_internal.h"
+#include "api/oc_ri_internal.h"
+#include "api/oc_runtime_internal.h"
 #include "messaging/coap/conf.h"
 #include "oc_api.h"
 #include "oc_cloud.h"
 #include "oc_uuid.h"
+#include "port/oc_network_event_handler_internal.h"
 #include "tests/gtest/Device.h"
+#include "tests/gtest/RepPool.h"
 #include "util/oc_secure_string_internal.h"
+#include "util/oc_features.h"
 
+#include <array>
 #include <gtest/gtest.h>
 #include <set>
 #include <string>
+#include <vector>
 
 #ifdef OC_SECURITY
 #include "security/oc_pstat_internal.h"
-#endif
+#include "security/oc_svr_internal.h"
+#endif /* OC_SECURITY */
+
+#ifdef OC_HAS_FEATURE_PUSH
+#include "api/oc_push_internal.h"
+#endif /* OC_HAS_FEATURE_PUSH */
 
 using namespace std::chrono_literals;
 
 static constexpr size_t kDeviceID{ 0 };
 
 class TestCloud : public testing::Test {
+public:
+  void SetUp() override { oc_runtime_init(); }
+
+  void TearDown() override { oc_runtime_shutdown(); }
+};
+
+TEST_F(TestCloud, cloud_is_connection_error_code)
+{
+  std::set<oc_status_t> connectionErrors{
+    OC_STATUS_SERVICE_UNAVAILABLE,
+    OC_STATUS_GATEWAY_TIMEOUT,
+    OC_CONNECTION_CLOSED,
+    OC_TRANSACTION_TIMEOUT,
+  };
+  for (int i = OC_STATUS_OK; i <= OC_CANCELLED; ++i) {
+    bool contains = connectionErrors.count(static_cast<oc_status_t>(i)) == 1;
+    EXPECT_EQ(contains,
+              cloud_is_connection_error_code(static_cast<oc_status_t>(i)));
+  }
+}
+
+TEST_F(TestCloud, oc_cloud_set_retry_timeouts)
+{
+  std::vector<uint16_t> tooManyTimeouts(OC_CLOUD_RETRY_TIMEOUTS_SIZE + 1, 0);
+  EXPECT_FALSE(oc_cloud_set_retry_timeouts(tooManyTimeouts.data(),
+                                           tooManyTimeouts.size()));
+
+  std::vector<uint16_t> invalidTimeouts{ 1, 42, /*invalid*/ 0, 13 };
+  EXPECT_FALSE(oc_cloud_set_retry_timeouts(invalidTimeouts.data(),
+                                           invalidTimeouts.size()));
+
+  // restore default values by using NULL
+  EXPECT_TRUE(oc_cloud_set_retry_timeouts(nullptr, 0));
+}
+
+TEST_F(TestCloud, oc_cloud_get_retry_timeouts)
+{
+  std::array<uint16_t, 3> timeouts{ 1, 42, 13 };
+  ASSERT_TRUE(oc_cloud_set_retry_timeouts(timeouts.data(), timeouts.size()));
+
+  std::array<uint16_t, 1> tooSmall{};
+  EXPECT_EQ(-1, oc_cloud_get_retry_timeouts(tooSmall.data(), tooSmall.size()));
+
+  std::vector<uint16_t> result{};
+  result.resize(timeouts.size());
+  EXPECT_EQ(timeouts.size(),
+            oc_cloud_get_retry_timeouts(result.data(), result.size()));
+  for (size_t i = 0; i < timeouts.size(); ++i) {
+    EXPECT_EQ(timeouts[i], result[i]);
+  }
+
+  EXPECT_TRUE(oc_cloud_set_retry_timeouts(nullptr, 0));
+  result.resize(OC_CLOUD_RETRY_TIMEOUTS_SIZE);
+  EXPECT_EQ(OC_CLOUD_RETRY_TIMEOUTS_SIZE,
+            oc_cloud_get_retry_timeouts(result.data(), result.size()));
+}
+
+TEST_F(TestCloud, oc_cloud_init_fail)
+{
+  ASSERT_TRUE(oc_cloud_init());
+  // multiple initialization is not allowed
+  EXPECT_FALSE(oc_cloud_init());
+
+  oc_cloud_shutdown();
+}
+
+TEST_F(TestCloud, oc_cloud_shutdown_fail)
+{
+  oc_network_event_handler_mutex_init();
+  oc_ri_init();
+  oc_core_init();
+  ASSERT_EQ(0, oc_init_platform("OCFTest", nullptr, nullptr));
+  ASSERT_EQ(
+    0, oc_add_device(
+         oc::DefaultDevice.uri.c_str(), oc::DefaultDevice.rt.c_str(),
+         oc::DefaultDevice.name.c_str(), oc::DefaultDevice.spec_version.c_str(),
+         oc::DefaultDevice.data_model_version.c_str(), nullptr, nullptr));
+#ifdef OC_SECURITY
+  oc_sec_svr_create();
+#endif /* OC_SECURITY */
+  ASSERT_TRUE(oc_cloud_init());
+
+  oc_cloud_shutdown();
+  // multiple shutdown is not allowed, but the app should not crash
+  oc_cloud_shutdown();
+
+#ifdef OC_SECURITY
+  oc_sec_svr_free();
+#endif /* OC_SECURITY */
+#ifdef OC_HAS_FEATURE_PUSH
+  oc_push_free();
+#endif /* OC_HAS_FEATURE_PUSH */
+  oc_connectivity_shutdown(/*device*/ 0);
+  oc_core_shutdown();
+  oc_ri_shutdown();
+  oc_network_event_handler_mutex_destroy();
+}
+
+#if !defined(OC_SECURITY)
+// we need static allocation to ensure that allocation fails
+// we need insecure build, because for secure build we need to have a valid
+// pstat, which is not the case here
+TEST_F(TestCloud, cloud_init_devices)
+{
+  EXPECT_FALSE(cloud_init_devices(1));
+
+  oc_ri_init();
+  oc_core_init();
+  // add device 0, but platform resource is missing
+  ASSERT_EQ(
+    0, oc_add_device(
+         oc::DefaultDevice.uri.c_str(), oc::DefaultDevice.rt.c_str(),
+         oc::DefaultDevice.name.c_str(), oc::DefaultDevice.spec_version.c_str(),
+         oc::DefaultDevice.data_model_version.c_str(), nullptr, nullptr));
+  EXPECT_FALSE(cloud_init_devices(1));
+
+  ASSERT_EQ(0, oc_init_platform("OCFTest", nullptr, nullptr));
+  EXPECT_TRUE(cloud_init_devices(1));
+  cloud_deinit_devices(1);
+
+  EXPECT_FALSE(cloud_init_devices(2));
+
+  oc_cloud_shutdown();
+#ifdef OC_HAS_FEATURE_PUSH
+  oc_push_free();
+#endif /* OC_HAS_FEATURE_PUSH */
+  oc_connectivity_shutdown(/*device*/ 0);
+  oc_core_shutdown();
+  oc_ri_shutdown();
+}
+
+#endif /* !OC_SECURITY */
+
+class TestCloudWithServer : public testing::Test {
 public:
   static void SetUpTestCase() { ASSERT_TRUE(oc::TestDevice::StartServer()); }
 
@@ -56,13 +204,13 @@ public:
   }
 };
 
-TEST_F(TestCloud, oc_cloud_get_context)
+TEST_F(TestCloudWithServer, oc_cloud_get_context)
 {
   EXPECT_NE(nullptr, oc_cloud_get_context(kDeviceID));
   EXPECT_EQ(nullptr, oc_cloud_get_context(42));
 }
 
-TEST_F(TestCloud, set_published_resources_ttl)
+TEST_F(TestCloudWithServer, set_published_resources_ttl)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -74,7 +222,7 @@ TEST_F(TestCloud, set_published_resources_ttl)
   oc_cloud_set_published_resources_ttl(ctx, default_ttl);
 }
 
-TEST_F(TestCloud, cloud_status)
+TEST_F(TestCloudWithServer, cloud_status)
 {
   oc_cloud_status_t status;
   memset(&status, 0, sizeof(status));
@@ -85,7 +233,7 @@ TEST_F(TestCloud, cloud_status)
   EXPECT_EQ(ctx->store.status, status);
 }
 
-TEST_F(TestCloud, cloud_set_last_error)
+TEST_F(TestCloudWithServer, cloud_set_last_error)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -94,13 +242,13 @@ TEST_F(TestCloud, cloud_set_last_error)
   ASSERT_EQ(CLOUD_ERROR_RESPONSE, ctx->last_error);
 }
 
-TEST_F(TestCloud, oc_cloud_update_by_resource)
+TEST_F(TestCloudWithServer, oc_cloud_update_by_resource)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
   ctx->store.status = OC_CLOUD_FAILURE;
 
-  oc_cloud_conf_update_t data;
+  oc_cloud_conf_update_t data{};
   auto access_token = OC_STRING_LOCAL("access_token");
   data.access_token = &access_token;
   auto auth_provider = OC_STRING_LOCAL("auth_provider");
@@ -109,6 +257,43 @@ TEST_F(TestCloud, oc_cloud_update_by_resource)
   data.ci_server = &ci_server;
   auto sid = OC_STRING_LOCAL("12345678-1234-5678-1234-567812345678");
   oc_str_to_uuid(oc_string(sid), &data.sid);
+
+  oc::RepPool pool{};
+  oc_rep_start_root_object();
+  std::string key{ "x.org.iotivity.servers" };
+  oc_rep_encode_text_string(oc_rep_object(root), key.c_str(), key.length());
+  oc_rep_begin_array(oc_rep_object(root), servers);
+  oc_rep_object_array_begin_item(servers);
+  // missing uri -> item skipped
+  oc_rep_set_text_string(servers, id, "00000000-0000-0000-0000-000000000000");
+  oc_rep_object_array_end_item(servers);
+  oc_rep_object_array_begin_item(servers);
+  // missing id -> item skipped
+  oc_rep_set_text_string(servers, uri, "coaps://plgd.dev");
+  oc_rep_object_array_end_item(servers);
+  oc_rep_object_array_begin_item(servers);
+  // invalid id -> item skipped
+  oc_rep_set_text_string(servers, uri, "coaps://plgd.dev");
+  oc_rep_set_text_string(servers, id, "invalid");
+  oc_rep_object_array_end_item(servers);
+  // valid
+  oc_rep_object_array_begin_item(servers);
+  oc_rep_set_text_string(servers, uri, "coaps://plgd.dev");
+  oc_rep_set_text_string(servers, id, "00000000-0000-0000-0000-000000000000");
+  oc_rep_object_array_end_item(servers);
+  // duplicate -> item skipped
+  oc_rep_object_array_begin_item(servers);
+  oc_rep_set_text_string(servers, uri, "coaps://plgd.dev");
+  oc_rep_set_text_string(servers, id, "00000000-0000-0000-0000-000000000000");
+  oc_rep_object_array_end_item(servers);
+  oc_rep_end_array(oc_rep_object(root), servers);
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  auto ci_servers_rep = pool.ParsePayload();
+  auto *ci_servers = oc_rep_get_by_type_and_key(
+    ci_servers_rep.get(), OC_REP_OBJECT_ARRAY, key.c_str(), key.length());
+  ASSERT_NE(nullptr, ci_servers);
+  data.ci_servers = ci_servers->value.object_array;
   oc_cloud_update_by_resource(ctx, &data);
 
   EXPECT_STREQ(oc_string(*data.access_token),
@@ -122,7 +307,7 @@ TEST_F(TestCloud, oc_cloud_update_by_resource)
   EXPECT_EQ(OC_CLOUD_INITIALIZED, ctx->store.status);
 }
 
-TEST_F(TestCloud, oc_cloud_provision_conf_resource)
+TEST_F(TestCloudWithServer, oc_cloud_provision_conf_resource)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -178,7 +363,7 @@ TEST_F(TestCloud, oc_cloud_provision_conf_resource)
   EXPECT_EQ(OC_CLOUD_INITIALIZED, ctx->store.status);
 }
 
-TEST_F(TestCloud, oc_cloud_action_to_str)
+TEST_F(TestCloudWithServer, oc_cloud_action_to_str)
 {
   std::string v;
   v.assign(oc_cloud_action_to_str(OC_CLOUD_ACTION_REGISTER));
@@ -215,7 +400,7 @@ provisionCloud(oc_cloud_context_t *ctx, const std::string &uid = {})
   }
 }
 
-TEST_F(TestCloud, oc_cloud_register_already_registered)
+TEST_F(TestCloudWithServer, oc_cloud_register_already_registered)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -233,7 +418,7 @@ TEST_F(TestCloud, oc_cloud_register_already_registered)
   EXPECT_TRUE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_register_fail_invalid_input)
+TEST_F(TestCloudWithServer, oc_cloud_register_fail_invalid_input)
 {
   EXPECT_EQ(-1, oc_cloud_register(nullptr, nullptr, nullptr));
 
@@ -242,7 +427,7 @@ TEST_F(TestCloud, oc_cloud_register_fail_invalid_input)
   ASSERT_EQ(-1, oc_cloud_register(ctx, nullptr, nullptr));
 }
 
-TEST_F(TestCloud, oc_cloud_register_fail_invalid_status)
+TEST_F(TestCloudWithServer, oc_cloud_register_fail_invalid_status)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -257,7 +442,7 @@ TEST_F(TestCloud, oc_cloud_register_fail_invalid_status)
   EXPECT_FALSE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_register_fail_invalid_server)
+TEST_F(TestCloudWithServer, oc_cloud_register_fail_invalid_server)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -271,7 +456,7 @@ TEST_F(TestCloud, oc_cloud_register_fail_invalid_server)
   EXPECT_FALSE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_do_register)
+TEST_F(TestCloudWithServer, oc_cloud_do_register)
 {
   setRFNOP();
 
@@ -294,7 +479,7 @@ TEST_F(TestCloud, oc_cloud_do_register)
   EXPECT_TRUE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_login_already_logged_in)
+TEST_F(TestCloudWithServer, oc_cloud_login_already_logged_in)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -312,7 +497,7 @@ TEST_F(TestCloud, oc_cloud_login_already_logged_in)
   EXPECT_TRUE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_login_fail_invalid_input)
+TEST_F(TestCloudWithServer, oc_cloud_login_fail_invalid_input)
 {
   EXPECT_EQ(-1, oc_cloud_login(nullptr, nullptr, nullptr));
 
@@ -321,7 +506,7 @@ TEST_F(TestCloud, oc_cloud_login_fail_invalid_input)
   ASSERT_EQ(-1, oc_cloud_login(ctx, nullptr, nullptr));
 }
 
-TEST_F(TestCloud, oc_cloud_login_fail_invalid_status)
+TEST_F(TestCloudWithServer, oc_cloud_login_fail_invalid_status)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -335,7 +520,7 @@ TEST_F(TestCloud, oc_cloud_login_fail_invalid_status)
   EXPECT_FALSE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_login_fail_invalid_server)
+TEST_F(TestCloudWithServer, oc_cloud_login_fail_invalid_server)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -350,7 +535,7 @@ TEST_F(TestCloud, oc_cloud_login_fail_invalid_server)
   EXPECT_FALSE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_do_login)
+TEST_F(TestCloudWithServer, oc_cloud_do_login)
 {
   setRFNOP();
 
@@ -375,7 +560,7 @@ TEST_F(TestCloud, oc_cloud_do_login)
   EXPECT_TRUE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_refresh_token_fail_invalid_input)
+TEST_F(TestCloudWithServer, oc_cloud_refresh_token_fail_invalid_input)
 {
   EXPECT_EQ(-1, oc_cloud_refresh_token(nullptr, nullptr, nullptr));
 
@@ -384,7 +569,7 @@ TEST_F(TestCloud, oc_cloud_refresh_token_fail_invalid_input)
   ASSERT_EQ(-1, oc_cloud_refresh_token(ctx, nullptr, nullptr));
 }
 
-TEST_F(TestCloud, oc_cloud_refresh_token_fail_invalid_status)
+TEST_F(TestCloudWithServer, oc_cloud_refresh_token_fail_invalid_status)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -398,7 +583,7 @@ TEST_F(TestCloud, oc_cloud_refresh_token_fail_invalid_status)
   EXPECT_FALSE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_refresh_token_fail_invalid_server)
+TEST_F(TestCloudWithServer, oc_cloud_refresh_token_fail_invalid_server)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -413,7 +598,7 @@ TEST_F(TestCloud, oc_cloud_refresh_token_fail_invalid_server)
   EXPECT_FALSE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_do_refresh_token)
+TEST_F(TestCloudWithServer, oc_cloud_do_refresh_token)
 {
   setRFNOP();
 
@@ -442,7 +627,7 @@ TEST_F(TestCloud, oc_cloud_do_refresh_token)
   EXPECT_TRUE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_logout_fail_invalid_input)
+TEST_F(TestCloudWithServer, oc_cloud_logout_fail_invalid_input)
 {
   EXPECT_EQ(-1, oc_cloud_logout(nullptr, nullptr, nullptr));
 
@@ -451,7 +636,7 @@ TEST_F(TestCloud, oc_cloud_logout_fail_invalid_input)
   ASSERT_EQ(-1, oc_cloud_logout(ctx, nullptr, nullptr));
 }
 
-TEST_F(TestCloud, oc_cloud_logout_fail_invalid_status)
+TEST_F(TestCloudWithServer, oc_cloud_logout_fail_invalid_status)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -465,7 +650,7 @@ TEST_F(TestCloud, oc_cloud_logout_fail_invalid_status)
   EXPECT_FALSE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_logout_fail_invalid_server)
+TEST_F(TestCloudWithServer, oc_cloud_logout_fail_invalid_server)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -480,7 +665,7 @@ TEST_F(TestCloud, oc_cloud_logout_fail_invalid_server)
   EXPECT_FALSE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_do_logout)
+TEST_F(TestCloudWithServer, oc_cloud_do_logout)
 {
   setRFNOP();
 
@@ -505,7 +690,7 @@ TEST_F(TestCloud, oc_cloud_do_logout)
   EXPECT_TRUE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_deregister_fail_invalid_input)
+TEST_F(TestCloudWithServer, oc_cloud_deregister_fail_invalid_input)
 {
   EXPECT_EQ(-1, oc_cloud_deregister(nullptr, nullptr, nullptr));
 
@@ -514,7 +699,7 @@ TEST_F(TestCloud, oc_cloud_deregister_fail_invalid_input)
   ASSERT_EQ(-1, oc_cloud_deregister(ctx, nullptr, nullptr));
 }
 
-TEST_F(TestCloud, oc_cloud_deregister_fail_invalid_status)
+TEST_F(TestCloudWithServer, oc_cloud_deregister_fail_invalid_status)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -528,7 +713,7 @@ TEST_F(TestCloud, oc_cloud_deregister_fail_invalid_status)
   EXPECT_FALSE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_deregister_fail_already_deregistering)
+TEST_F(TestCloudWithServer, oc_cloud_deregister_fail_already_deregistering)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -546,7 +731,7 @@ TEST_F(TestCloud, oc_cloud_deregister_fail_already_deregistering)
   EXPECT_FALSE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_deregister_fail_invalid_server)
+TEST_F(TestCloudWithServer, oc_cloud_deregister_fail_invalid_server)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -562,7 +747,7 @@ TEST_F(TestCloud, oc_cloud_deregister_fail_invalid_server)
   EXPECT_FALSE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_do_deregister_with_short_access_token)
+TEST_F(TestCloudWithServer, oc_cloud_do_deregister_with_short_access_token)
 {
   setRFNOP();
 
@@ -590,7 +775,8 @@ TEST_F(TestCloud, oc_cloud_do_deregister_with_short_access_token)
 
 #ifdef OC_DYNAMIC_ALLOCATION
 
-TEST_F(TestCloud, oc_cloud_deregister_fail_not_logged_in_long_access_token)
+TEST_F(TestCloudWithServer,
+       oc_cloud_deregister_fail_not_logged_in_long_access_token)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -609,7 +795,7 @@ TEST_F(TestCloud, oc_cloud_deregister_fail_not_logged_in_long_access_token)
   EXPECT_FALSE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_do_deregister_logged_in)
+TEST_F(TestCloudWithServer, oc_cloud_do_deregister_logged_in)
 {
   setRFNOP();
 
@@ -636,7 +822,7 @@ TEST_F(TestCloud, oc_cloud_do_deregister_logged_in)
   EXPECT_TRUE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_do_deregister_with_refresh_token)
+TEST_F(TestCloudWithServer, oc_cloud_do_deregister_with_refresh_token)
 {
   setRFNOP();
 
@@ -664,7 +850,8 @@ TEST_F(TestCloud, oc_cloud_do_deregister_with_refresh_token)
   EXPECT_FALSE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_deregister_with_refresh_token_fail_invalid_server)
+TEST_F(TestCloudWithServer,
+       oc_cloud_deregister_with_refresh_token_fail_invalid_server)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -689,7 +876,7 @@ TEST_F(TestCloud, oc_cloud_deregister_with_refresh_token_fail_invalid_server)
   EXPECT_FALSE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_do_deregister_with_login)
+TEST_F(TestCloudWithServer, oc_cloud_do_deregister_with_login)
 {
   setRFNOP();
 
@@ -714,7 +901,7 @@ TEST_F(TestCloud, oc_cloud_do_deregister_with_login)
   EXPECT_FALSE(cbk_called);
 }
 
-TEST_F(TestCloud, oc_cloud_deregister_with_login_fail_invalid_server)
+TEST_F(TestCloudWithServer, oc_cloud_deregister_with_login_fail_invalid_server)
 {
   oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
   ASSERT_NE(nullptr, ctx);
@@ -748,11 +935,9 @@ TEST_F(TestCloud, oc_cloud_deregister_with_login_fail_invalid_server)
   EXPECT_FALSE(cbk_called);
 }
 
-#endif /* OC_DYNAMIC_ALLOCATION */
-
 // TODO: async deregister steps with mocked cloud
 
-TEST_F(TestCloud, EndpointAPI)
+TEST_F(TestCloudWithServer, EndpointAPI)
 {
   oc_cloud_context_t *ctx = cloud_context_init(/*device*/ 0);
   ASSERT_NE(nullptr, ctx);
@@ -782,14 +967,12 @@ TEST_F(TestCloud, EndpointAPI)
   auto *ep2 =
     oc_cloud_add_server_address(ctx, uri2.c_str(), uri2.length(), uid2);
   ASSERT_NE(nullptr, ep2);
-#ifdef OC_DYNAMIC_ALLOCATION
   std::string uri3 = "/uri/3";
   oc_uuid_t uid3;
   oc_gen_uuid(&uid3);
   auto *ep3 =
     oc_cloud_add_server_address(ctx, uri3.c_str(), uri3.length(), uid3);
   ASSERT_NE(nullptr, ep3);
-#endif /* OC_DYNAMIC_ALLOCATION */
 
   // first item added to empty list should be selected
   EXPECT_EQ(ep1, oc_cloud_selected_server_address(ctx));
@@ -816,12 +999,8 @@ TEST_F(TestCloud, EndpointAPI)
     },
     &uris);
 
-#ifdef OC_DYNAMIC_ALLOCATION
   ASSERT_EQ(2, uris.size());
   EXPECT_NE(uris.end(), uris.find(uri3));
-#else  /* !OC_DYNAMIC_ALLOCATION */
-  ASSERT_EQ(1, uris.size());
-#endif /* OC_DYNAMIC_ALLOCATION */
   EXPECT_NE(uris.end(), uris.find(uri2));
   EXPECT_EQ(uris.end(), uris.find(uri1));
 
@@ -840,15 +1019,9 @@ TEST_F(TestCloud, EndpointAPI)
 
   ASSERT_NE(nullptr, toSelect);
   EXPECT_TRUE(oc_cloud_select_server_address(ctx, toSelect));
-#ifdef OC_DYNAMIC_ALLOCATION
   EXPECT_EQ(ep3, oc_cloud_selected_server_address(ctx));
   EXPECT_STREQ(uri3.c_str(), oc_string(*oc_cloud_get_server_uri(ctx)));
   EXPECT_TRUE(oc_uuid_is_equal(uid3, *oc_cloud_get_server_id(ctx)));
-#else  /* !OC_DYNAMIC_ALLOCATION */
-  EXPECT_EQ(ep2, oc_cloud_selected_server_address(ctx));
-  EXPECT_STREQ(uri2.c_str(), oc_string(*oc_cloud_get_server_uri(ctx)));
-  EXPECT_TRUE(oc_uuid_is_equal(uid2, *oc_cloud_get_server_id(ctx)));
-#endif /* OC_DYNAMIC_ALLOCATION */
 
   oc_uuid_t uid;
   oc_gen_uuid(&uid);
@@ -860,3 +1033,5 @@ TEST_F(TestCloud, EndpointAPI)
 
   cloud_context_deinit(ctx);
 }
+
+#endif /* OC_DYNAMIC_ALLOCATION */

@@ -499,11 +499,13 @@ coap_serialize_options(const coap_packet_t *packet, uint8_t *option_array,
   size_t option_length = 0;
 
 #if OC_DBG_IS_ENABLED
+  // GCOVR_EXCL_START
   if (option != NULL) {
     COAP_DBG("Serializing options at %p", (void *)option);
   } else {
     COAP_DBG("Calculating size of options");
   }
+  // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
 
 #ifdef OC_TCP
@@ -721,11 +723,13 @@ coap_oscore_parse_inner_option(coap_packet_t *packet,
     packet->etag_len = (uint8_t)MIN(COAP_ETAG_LEN, option_length);
     memcpy(packet->etag, option, packet->etag_len);
 #if OC_DBG_IS_ENABLED
+    // GCOVR_EXCL_START
     char buf[32];
     size_t buf_size = OC_ARRAY_SIZE(buf);
     oc_conv_byte_array_to_hex_string(packet->etag, packet->etag_len, buf,
                                      &buf_size);
     COAP_DBG("  ETag %u [0x%s]", packet->etag_len, buf);
+    // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
     return COAP_NO_ERROR;
   }

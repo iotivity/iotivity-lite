@@ -144,12 +144,14 @@ get_network_addresses(void)
         if (!IN6_IS_ADDR_LINKLOCAL(&addr->sin6_addr) &&
             !(address->Flags & IP_ADAPTER_ADDRESS_DNS_ELIGIBLE)) {
 #if OC_DBG_IS_ENABLED
+          // GCOVR_EXCL_START
           char dotname[NI_MAXHOST] = { 0 };
           getnameinfo((const SOCKADDR *)addr, sizeof(struct sockaddr_in6),
                       dotname, sizeof(dotname), NULL, 0, NI_NUMERICHOST);
           OC_DBG("%s is not IN6_IS_ADDR_LINKLOCAL and not "
                  "IP_ADAPTER_ADDRESS_DNS_ELIGIBLE, skipped.",
                  dotname);
+          // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
           continue;
         }

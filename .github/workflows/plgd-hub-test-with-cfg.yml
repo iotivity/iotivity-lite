@@ -103,12 +103,13 @@ jobs:
       - name: Run plgd hub tests image
         run: docker run --rm --network=host ${{ inputs.hub_args }} ${{ env.TEST_CLOUD_SERVER_IMAGE }}
 
-      - name: Get output file name
+      - name: Generate file name and artifact name
         if: ${{ inputs.coverage }}
         id: coverage
         run: |
           SUFFIX=`echo "-DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ inputs.build_args }} ${{ inputs.args }} ${{ inputs.docker_args }} ${{ inputs.hub_args }} ${{ inputs.name }} -DBUILD_TESTING=ON" | sha1sum | cut -f 1 -d ' '`
           echo "filename=coverage-plgd-hub-${SUFFIX}.json" >> $GITHUB_OUTPUT
+          echo "artifact=plgd-hub-${SUFFIX}-coverage" >> $GITHUB_OUTPUT
 
       - name: Gather coverage data
         if: ${{ inputs.coverage }}
@@ -122,9 +123,9 @@ jobs:
 
       - name: Upload coverage data
         if: ${{ inputs.coverage }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: plgd-hub-coverage
+          name: ${{ steps.coverage.outputs.artifact }}
           path: data/coverage/${{ steps.coverage.outputs.filename }}
           if-no-files-found: error
           retention-days: 1

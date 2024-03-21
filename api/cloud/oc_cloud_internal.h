@@ -24,6 +24,7 @@
 #include "api/oc_helpers_internal.h"
 #include "oc_api.h"
 #include "oc_cloud.h"
+#include "oc_rep.h"
 #include "oc_uuid.h"
 #include "util/oc_compiler.h"
 
@@ -55,13 +56,23 @@ typedef struct
   const oc_string_t *ci_server;     /**< Cloud Interface Server URL which an a
                                        enrollee is going to registered. */
   oc_uuid_t sid; /**< OCF Cloud Identity as defined in OCF CNC 2.0 Spec. */
+  const oc_rep_t *ci_servers; /**< List of Cloud Interface Servers. */
 } oc_cloud_conf_update_t;
+
+/** Initialize cloud data for devices */
+bool cloud_init_devices(size_t devices);
+
+/** Deinitialize cloud data for devices */
+void cloud_deinit_devices(size_t devices);
 
 /** Set cloud endpoint from currently selected cloud server address */
 bool oc_cloud_set_endpoint(oc_cloud_context_t *ctx) OC_NONNULL();
 
 /** Close connection to currently selected cloud server address  */
 void oc_cloud_close_endpoint(const oc_endpoint_t *ep) OC_NONNULL();
+
+/** Close connection and set endpoint to initial state */
+void oc_cloud_reset_endpoint(oc_cloud_context_t *ctx) OC_NONNULL();
 
 /** Initialize cloud data for devices */
 bool oc_cloud_init(void);
@@ -104,8 +115,11 @@ int cloud_reset(size_t device, bool force, bool sync, uint16_t timeout);
  *
  * @param ctx cloud context (cannot be NULL)
  * @param data configuration update (cannot be NULL)
+ *
+ * @return true on success
+ * @return false on failure
  */
-void cloud_set_cloudconf(oc_cloud_context_t *ctx,
+bool cloud_set_cloudconf(oc_cloud_context_t *ctx,
                          const oc_cloud_conf_update_t *data) OC_NONNULL();
 
 /** Update cloud based on update data */

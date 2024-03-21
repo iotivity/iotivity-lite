@@ -878,6 +878,7 @@ process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
   }
 
 #if OC_DBG_IS_ENABLED
+  // GCOVR_EXCL_START
   if (rdfds != NULL) {
     for (int i = 0; i < FD_SETSIZE; ++i) {
       if (FD_ISSET(i, rdfds)) {
@@ -892,6 +893,7 @@ process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
       }
     }
   }
+  // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
 
   return 0;

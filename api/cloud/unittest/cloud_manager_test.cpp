@@ -45,6 +45,7 @@ using namespace std::chrono_literals;
 // cannot use lower value than 1s because oc_cloud_schedule_action_t::timeout is
 // in seconds
 static constexpr auto kTimeout = 1s;
+static constexpr auto kTestServer = OC_STRING_VIEW("coap://224.0.1.187:5683");
 
 class TestCloudManager : public testing::Test {
 public:
@@ -66,15 +67,16 @@ public:
     memset(&m_context, 0, sizeof(m_context));
     m_context.cloud_ep = oc_new_endpoint();
     memset(m_context.cloud_ep, 0, sizeof(oc_endpoint_t));
-    oc_cloud_store_initialize(&m_context.store, nullptr, nullptr);
-    oc_string_view_t ep = OC_STRING_VIEW("coap://224.0.1.187:5683");
+    oc_cloud_store_initialize(&m_context.store, cloud_context_on_server_change,
+                              &m_context);
     oc_uuid_t sid;
     oc_gen_uuid(&sid);
-    ASSERT_NE(nullptr, oc_endpoint_addresses_add(
-                         &m_context.store.ci_servers,
-                         oc_endpoint_address_make_view_with_uuid(ep, sid)));
-    ASSERT_TRUE(
-      oc_endpoint_addresses_select_by_uri(&m_context.store.ci_servers, ep));
+    ASSERT_NE(nullptr,
+              oc_endpoint_addresses_add(
+                &m_context.store.ci_servers,
+                oc_endpoint_address_make_view_with_uuid(kTestServer, sid)));
+    ASSERT_TRUE(oc_endpoint_addresses_select_by_uri(&m_context.store.ci_servers,
+                                                    kTestServer));
     std::string uid = "501";
     oc_set_string(&m_context.store.uid, uid.c_str(), uid.length());
     std::string token = "access_token";
@@ -86,6 +88,7 @@ public:
 
   void TearDown() override
   {
+    oc_cloud_set_schedule_action(&m_context, nullptr, nullptr);
     oc_cloud_manager_set_retry_timeouts(nullptr, 0);
 
     oc_free_endpoint(m_context.cloud_ep);
@@ -105,6 +108,16 @@ public:
       0);
   }
 };
+
+TEST_F(TestCloudManager, oc_cloud_manager_start_fail)
+{
+  EXPECT_EQ(-1, oc_cloud_manager_start(nullptr, nullptr, nullptr));
+}
+
+TEST_F(TestCloudManager, oc_cloud_manager_stop_fail)
+{
+  EXPECT_EQ(-1, oc_cloud_manager_stop(nullptr));
+}
 
 TEST_F(TestCloudManager, oc_cloud_manager_is_started)
 {
@@ -132,8 +145,6 @@ TEST_F(TestCloudManager, cloud_manager_start_initialized_schedule_turnoff)
   EXPECT_EQ(0, m_context.retry.refresh_token_count);
   EXPECT_EQ(CLOUD_ERROR_CONNECT, m_context.last_error);
   EXPECT_EQ(OC_CLOUD_INITIALIZED, m_context.store.status);
-
-  oc_cloud_set_schedule_action(&m_context, nullptr, nullptr);
 }
 
 TEST_F(TestCloudManager,
@@ -169,8 +180,6 @@ TEST_F(TestCloudManager,
   EXPECT_EQ(0, m_context.retry.refresh_token_count);
   EXPECT_EQ(CLOUD_ERROR_CONNECT, m_context.last_error);
   EXPECT_EQ(OC_CLOUD_INITIALIZED, m_context.store.status);
-
-  oc_cloud_set_schedule_action(&m_context, nullptr, nullptr);
 }
 
 TEST_F(TestCloudManager, cloud_manager_start_initialized_without_retry_f)
@@ -203,8 +212,6 @@ TEST_F(TestCloudManager, cloud_manager_start_initialized_without_retry_f)
   EXPECT_EQ(0, m_context.retry.refresh_token_count);
   EXPECT_EQ(CLOUD_ERROR_CONNECT, m_context.last_error);
   EXPECT_EQ(OC_CLOUD_INITIALIZED, m_context.store.status);
-
-  oc_cloud_set_schedule_action(&m_context, nullptr, nullptr);
 }
 
 TEST_F(TestCloudManager, cloud_manager_start_initialized_f)
@@ -257,8 +264,6 @@ TEST_F(TestCloudManager, cloud_manager_start_registered_without_retry_and_uid_f)
   EXPECT_EQ(CLOUD_ERROR_CONNECT, m_context.last_error);
   EXPECT_EQ(OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED | OC_CLOUD_FAILURE,
             m_context.store.status);
-
-  oc_cloud_set_schedule_action(&m_context, nullptr, nullptr);
 }
 
 TEST_F(TestCloudManager, cloud_manager_start_registered_f)
@@ -311,8 +316,6 @@ TEST_F(TestCloudManager,
   EXPECT_EQ(CLOUD_ERROR_REFRESH_ACCESS_TOKEN, m_context.last_error);
   EXPECT_EQ(OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED | OC_CLOUD_FAILURE,
             m_context.store.status);
-
-  oc_cloud_set_schedule_action(&m_context, nullptr, nullptr);
 }
 
 TEST_F(TestCloudManager, cloud_manager_start_with_refresh_token_f)
@@ -349,20 +352,78 @@ TEST_F(TestCloudManager, cloud_manager_select_next_server_on_retry)
   ASSERT_NE(nullptr, ep);
   ASSERT_FALSE(
     oc_endpoint_addresses_is_selected(&m_context.store.ci_servers, uri));
+  // default cloud server (127.0.0.1), kTestServer and uri
+  ASSERT_EQ(3, oc_endpoint_addresses_size(&m_context.store.ci_servers));
 
-  // When
+  ASSERT_TRUE(oc_endpoint_addresses_is_selected(&m_context.store.ci_servers,
+                                                kTestServer));
   m_context.store.status = OC_CLOUD_INITIALIZED;
   m_context.store.cps = OC_CPS_READYTOREGISTER;
-  cloud_manager_start(&m_context);
+  ASSERT_EQ(0, oc_cloud_manager_start(&m_context, nullptr, nullptr));
   // by default: first retry should happen timeout + jitter
   // ([timeout/2..timeout])  (see default_schedule_action)
-  oc::TestDevice::PoolEventsMsV1(
-    /*timeout*/ kTimeout + /*max possible jitter*/ kTimeout, true);
-  cloud_manager_stop(&m_context);
+  auto interval = (/* 3 servers to try */ 3) *
+                  (/*timeout*/ kTimeout + /*max possible jitter*/ kTimeout);
+  oc::TestDevice::PoolEventsMsV1(interval, true);
 
-  // Then
+  // the retries should loop all servers and loop back to the original
+  EXPECT_TRUE(oc_endpoint_addresses_is_selected(&m_context.store.ci_servers,
+                                                kTestServer));
+  ASSERT_EQ(0, oc_cloud_manager_stop(&m_context));
+}
+
+TEST_F(TestCloudManager, cloud_manager_select_next_server_on_custom_retry)
+{
+  struct schedule_action_t
+  {
+    oc_cloud_context_t *ctx;
+    bool epChanged;
+  };
+  schedule_action_t scheduleAction = { &m_context, false };
+  oc_cloud_set_schedule_action(
+    &m_context,
+    [](oc_cloud_action_t action, uint8_t retry, uint64_t *delay,
+       uint16_t *timeout, void *data) -> bool {
+      if (action == OC_CLOUD_ACTION_REGISTER && retry == 0) {
+        *delay = 0;
+        *timeout = kTimeout.count();
+        return true;
+      }
+      auto *sact = static_cast<schedule_action_t *>(data);
+      if (!sact->epChanged) {
+        oc_endpoint_addresses_select_next(&sact->ctx->store.ci_servers);
+        sact->epChanged = true;
+      }
+      return false;
+    },
+    &scheduleAction);
+
+  oc_string_view_t uri = OC_STRING_VIEW("coap://13.3.7.187:5683");
+  oc_uuid_t sid;
+  oc_gen_uuid(&sid);
+  auto *ep = oc_endpoint_addresses_add(
+    &m_context.store.ci_servers,
+    oc_endpoint_address_make_view_with_uuid(uri, sid));
+  ASSERT_NE(nullptr, ep);
+  ASSERT_FALSE(
+    oc_endpoint_addresses_is_selected(&m_context.store.ci_servers, uri));
+  ASSERT_EQ(3, oc_endpoint_addresses_size(&m_context.store.ci_servers));
+
+  ASSERT_TRUE(oc_endpoint_addresses_is_selected(&m_context.store.ci_servers,
+                                                kTestServer));
+  m_context.store.status = OC_CLOUD_INITIALIZED;
+  m_context.store.cps = OC_CPS_READYTOREGISTER;
+  ASSERT_EQ(0, oc_cloud_manager_start(&m_context, nullptr, nullptr));
+
+  // 2 servers should be tried -> after the first server is tried, the schedule
+  //  action invokes oc_endpoint_addresses_select_next but only once; after that
+  // the retry should stop because the server selection was not changed
+  auto interval = (/* 2 servers to try */ 2) * (/*timeout*/ kTimeout);
+  oc::TestDevice::PoolEventsMsV1(interval, true);
+
   EXPECT_TRUE(
     oc_endpoint_addresses_is_selected(&m_context.store.ci_servers, uri));
+  ASSERT_EQ(0, oc_cloud_manager_stop(&m_context));
 }
 
 #endif /* !OC_SECURITY */
@@ -446,6 +507,36 @@ TestCloudManagerData::GetPayload(std::optional<std::string> access_token,
   oc::oc_rep_unique_ptr rep = ParsePayload();
   PrintJson(rep.get());
   return rep;
+}
+
+TEST_F(TestCloudManagerData, cloud_manager_calculate_refresh_token_expiration)
+{
+  // long internal (>1hour) -> refresh schedule 10mins before expiration
+  std::chrono::milliseconds expires_in = 2h;
+  auto expires_in_ms =
+    cloud_manager_calculate_refresh_token_expiration(expires_in.count());
+  EXPECT_LT(0, expires_in_ms);
+  EXPECT_GT(expires_in.count(), expires_in_ms);
+
+  // middle internal (>4mins) -> refresh schedule 2mins before expiration
+  expires_in = 5min;
+  expires_in_ms =
+    cloud_manager_calculate_refresh_token_expiration(expires_in.count());
+  EXPECT_LT(0, expires_in_ms);
+  EXPECT_GT(expires_in.count(), expires_in_ms);
+
+  // short internal (>20s) -> refresh schedule 10secs before expiration
+  expires_in = 1min;
+  expires_in_ms =
+    cloud_manager_calculate_refresh_token_expiration(expires_in.count());
+  EXPECT_LT(0, expires_in_ms);
+  EXPECT_GT(expires_in.count(), expires_in_ms);
+
+  // immediate expiration (<=20s)
+  expires_in = 10s;
+  expires_in_ms =
+    cloud_manager_calculate_refresh_token_expiration(expires_in.count());
+  EXPECT_EQ(expires_in.count(), expires_in_ms);
 }
 
 TEST_F(TestCloudManagerData, cloud_manager_parse_register_data_invalid)

@@ -158,7 +158,7 @@ rd_prepare_write_buffer(oc_write_buffer_t *wb, char *buffer, size_t buffer_size,
   // enough room to write the "di={id}" part
   if (buffer_size <=
       /*di=*/3 + id.length) {
-    OC_ERR("buffer too small");
+    OC_CLOUD_ERR("buffer too small");
     return false;
   }
   wb->buffer = buffer;
@@ -212,10 +212,10 @@ rd_delete_send_packet(const oc_endpoint_t *endpoint, oc_string_view_t query,
                       void *data)
 {
   rd_delete_packet_t *pkt = (rd_delete_packet_t *)data;
-  OC_DBG("Unpublishing links (query=%s)", query.data);
+  OC_CLOUD_DBG("Unpublishing links (query=%s)", query.data);
   if (!oc_do_delete(OC_RSRVD_RD_URI, endpoint, query.data, pkt->handler,
                     pkt->qos, pkt->user_data)) {
-    OC_ERR("failed to unpublish links (query=%s)", query.data);
+    OC_CLOUD_ERR("failed to unpublish links (query=%s)", query.data);
     return false;
   }
   return true;

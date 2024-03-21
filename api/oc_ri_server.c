@@ -34,7 +34,7 @@ bool
 oc_ri_on_delete_resource_add_callback(oc_ri_delete_resource_cb_t cb)
 {
   if (oc_ri_on_delete_resource_find_callback(cb) != NULL) {
-    OC_WRN("delete resource callback already exists");
+    OC_ERR("delete resource callback already exists");
     return false;
   }
   oc_ri_on_delete_resource_t *item = oc_memb_alloc(&g_on_delete_resource_cb_s);

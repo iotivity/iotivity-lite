@@ -67,10 +67,6 @@ typedef struct
   oc_rep_t *rep;
 } oc_rep_parse_result_t;
 
-/** @brief Get the value of a property by name. */
-const oc_rep_t *oc_rep_get(const oc_rep_t *rep, oc_rep_value_type_t type,
-                           const char *key, size_t key_len) OC_NONNULL(3);
-
 /**
  * @brief Decode the payload into a oc_rep_t object using the global decoder.
  *
