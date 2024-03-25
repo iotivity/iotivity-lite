@@ -40,6 +40,7 @@
 
 #ifdef OC_SECURITY
 #include "security/oc_acl_internal.h"
+#include "security/oc_acl_util_internal.h"
 #endif /* OC_SECURITY */
 
 #ifdef OC_HAS_FEATURE_ETAG

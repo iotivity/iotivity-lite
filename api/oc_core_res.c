@@ -733,8 +733,7 @@ oc_core_get_resource_type_by_uri(const char *uri, size_t uri_len)
   }
 #endif /* OC_CLIENT && OC_SERVER && OC_CLOUD */
 #ifdef OC_SECURITY
-  if (core_is_resource_uri(uri, uri_len, "/oic/sec/pstat",
-                           OC_CHAR_ARRAY_LEN("/oic/sec/pstat"))) {
+  if (oc_sec_is_pstat_resource_uri(oc_string_view(uri, uri_len))) {
     return OCF_SEC_PSTAT;
   }
   if (oc_sec_is_doxm_resource_uri(oc_string_view(uri, uri_len))) {

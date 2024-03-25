@@ -76,7 +76,7 @@ obt_rdp_13(oc_client_response_t *data)
    */
   const oc_device_t *device = o->device;
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_14, HIGH_QOS, o)) {
+  if (oc_init_post(OCF_SEC_PSTAT_URI, ep, NULL, &obt_rdp_14, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_object(root, dos);
     oc_rep_set_int(dos, s, OC_DOS_RFNOP);
@@ -244,7 +244,7 @@ obt_rdp_10(oc_client_response_t *data)
    */
   const oc_device_t *device = o->device;
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_11, HIGH_QOS, o)) {
+  if (oc_init_post(OCF_SEC_PSTAT_URI, ep, NULL, &obt_rdp_11, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_object(root, dos);
     oc_rep_set_int(dos, s, OC_DOS_RFPRO);
@@ -422,7 +422,7 @@ obt_rdp_6(oc_client_response_t *data)
    */
   const oc_device_t *device = o->device;
   const oc_endpoint_t *ep = oc_obt_get_secure_endpoint(device->endpoint);
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_7, HIGH_QOS, o)) {
+  if (oc_init_post(OCF_SEC_PSTAT_URI, ep, NULL, &obt_rdp_7, HIGH_QOS, o)) {
     const oc_uuid_t *my_uuid = oc_core_get_device_id(0);
     char uuid[OC_UUID_LEN];
     oc_uuid_to_str(my_uuid, uuid, OC_UUID_LEN);
@@ -671,7 +671,7 @@ oc_obt_perform_random_pin_otm(const oc_uuid_t *uuid, const unsigned char *pin,
   oc_tls_close_connection(ep);
   oc_tls_select_psk_ciphersuite();
   oc_tls_use_pin_obt_psk_identity();
-  if (oc_init_post("/oic/sec/pstat", ep, NULL, &obt_rdp_2, HIGH_QOS, o)) {
+  if (oc_init_post(OCF_SEC_PSTAT_URI, ep, NULL, &obt_rdp_2, HIGH_QOS, o)) {
     oc_rep_start_root_object();
     oc_rep_set_int(root, om, 4);
     oc_rep_end_root_object();

@@ -441,8 +441,7 @@ static bool
 etag_can_update_device(size_t device)
 {
 #ifdef OC_SECURITY
-  return oc_sec_pstat_is_in_dos_state(device,
-                                      OC_PSTAT_DOS_ID_FLAG(OC_DOS_RFNOP));
+  return oc_device_is_in_dos_state(device, OC_PSTAT_DOS_ID_FLAG(OC_DOS_RFNOP));
 #else  /* OC_SECURITY */
   (void)device;
   return true;
