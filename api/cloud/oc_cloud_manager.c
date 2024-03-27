@@ -29,6 +29,7 @@
 #include "api/cloud/oc_cloud_log_internal.h"
 #include "api/cloud/oc_cloud_manager_internal.h"
 #include "api/cloud/oc_cloud_resource_internal.h"
+#include "api/cloud/oc_cloud_schedule_internal.h"
 #include "api/cloud/oc_cloud_store_internal.h"
 #include "api/cloud/rd_client_internal.h"
 #include "api/oc_rep_internal.h"
@@ -36,7 +37,6 @@
 #include "oc_api.h"
 #include "oc_cloud_access.h"
 #include "oc_endpoint.h"
-#include "port/oc_random.h"
 #include "util/oc_endpoint_address_internal.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
@@ -49,40 +49,12 @@
 #include <assert.h>
 #include <stdint.h>
 
-#define MILLISECONDS_PER_SECOND (1000)
-#define MILLISECONDS_PER_MINUTE (60 * MILLISECONDS_PER_SECOND)
-#define MILLISECONDS_PER_HOUR (60 * MILLISECONDS_PER_MINUTE)
-
 static void cloud_start_process(oc_cloud_context_t *ctx);
 static oc_event_callback_retval_t cloud_manager_reconnect_async(void *data);
 static oc_event_callback_retval_t cloud_manager_register_async(void *data);
 static oc_event_callback_retval_t cloud_manager_login_async(void *data);
 static oc_event_callback_retval_t cloud_manager_refresh_token_async(void *data);
 static oc_event_callback_retval_t cloud_manager_send_ping_async(void *data);
-
-#define OC_CLOUD_DEFAULT_RETRY_TIMEOUTS                                        \
-  {                                                                            \
-    2 * MILLISECONDS_PER_SECOND, 4 * MILLISECONDS_PER_SECOND,                  \
-      8 * MILLISECONDS_PER_SECOND, 16 * MILLISECONDS_PER_SECOND,               \
-      32 * MILLISECONDS_PER_SECOND, 64 * MILLISECONDS_PER_SECOND               \
-  }
-
-static uint16_t g_retry_timeout_ms[] = OC_CLOUD_DEFAULT_RETRY_TIMEOUTS;
-
-void
-oc_cloud_manager_set_retry_timeouts(const uint16_t *timeouts, size_t size)
-{
-  if (timeouts == NULL) {
-    uint16_t def[] = OC_CLOUD_DEFAULT_RETRY_TIMEOUTS;
-    memcpy(g_retry_timeout_ms, def, sizeof(g_retry_timeout_ms));
-    return;
-  }
-
-  assert(size > 0);
-  assert(size <= OC_ARRAY_SIZE(g_retry_timeout_ms));
-  memset(g_retry_timeout_ms, 0, sizeof(g_retry_timeout_ms));
-  memcpy(g_retry_timeout_ms, timeouts, size * sizeof(uint16_t));
-}
 
 static oc_event_callback_retval_t
 cloud_manager_callback_handler_async(void *data)
@@ -121,86 +93,6 @@ cloud_manager_reconnect_async(void *data)
   oc_reset_delayed_callback(ctx, cloud_manager_callback_handler_async, 0);
   oc_cloud_manager_restart(ctx);
   return OC_EVENT_DONE;
-}
-
-static bool
-cloud_retry_is_over(uint8_t retry_count)
-{
-  return retry_count >= OC_ARRAY_SIZE(g_retry_timeout_ms) ||
-         g_retry_timeout_ms[retry_count] == 0;
-}
-
-static bool
-OC_NONNULL()
-  default_schedule_action(oc_cloud_context_t *ctx, uint8_t retry_count,
-                          uint64_t *delay, uint16_t *timeout)
-{
-  if (cloud_retry_is_over(retry_count)) {
-    // we have made all attempts, try to select next server
-    OC_CLOUD_DBG("retry loop over, selecting next server");
-    oc_endpoint_addresses_select_next(&ctx->store.ci_servers);
-    return false;
-  }
-  *timeout = (g_retry_timeout_ms[retry_count] / MILLISECONDS_PER_SECOND);
-  // for delay use timeout/2 value + random [0, timeout/2]
-  *delay = (uint64_t)(g_retry_timeout_ms[retry_count]) / 2;
-  // Include a random delay to prevent multiple devices from attempting to
-  // connect or make requests simultaneously.
-  *delay += oc_random_value() % *delay;
-  return true;
-}
-
-static bool
-on_action_response_set_retry(oc_cloud_context_t *ctx, oc_cloud_action_t action,
-                             uint8_t retry_count, uint64_t *delay)
-{
-  bool ok = false;
-  if (ctx->schedule_action.on_schedule_action != NULL) {
-    ok = ctx->schedule_action.on_schedule_action(
-      action, retry_count, delay, &ctx->schedule_action.timeout,
-      ctx->schedule_action.user_data);
-  } else {
-    ok = default_schedule_action(ctx, retry_count, delay,
-                                 &ctx->schedule_action.timeout);
-  }
-  if (!ok) {
-    OC_CLOUD_DBG("for retry(%d), action(%s) is stopped", retry_count,
-                 oc_cloud_action_to_str(action));
-    return false;
-  }
-  OC_CLOUD_DBG(
-    "for retry(%d), action(%s) is delayed for %llu milliseconds with "
-    "and set with %u seconds timeout",
-    retry_count, oc_cloud_action_to_str(action), (long long unsigned)*delay,
-    ctx->schedule_action.timeout);
-  return true;
-}
-
-static bool
-cloud_schedule_action(oc_cloud_context_t *ctx, oc_cloud_action_t action,
-                      oc_trigger_t callback, bool is_retry)
-{
-  uint64_t interval = 0;
-  uint8_t count = 0;
-
-  if (action == OC_CLOUD_ACTION_REFRESH_TOKEN) {
-    if (is_retry) {
-      count = ++ctx->retry.refresh_token_count;
-    } else {
-      ctx->retry.refresh_token_count = 0;
-    }
-  } else {
-    if (is_retry) {
-      count = ++ctx->retry.count;
-    } else {
-      ctx->retry.count = 0;
-    }
-  }
-  if (!on_action_response_set_retry(ctx, action, count, &interval)) {
-    return false;
-  }
-  oc_reset_delayed_callback_ms(ctx, callback, interval);
-  return true;
 }
 
 static bool

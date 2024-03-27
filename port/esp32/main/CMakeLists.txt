@@ -136,6 +136,7 @@ if (CONFIG_CLOUD)
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_manager.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_rd.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_resource.c
+		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_schedule.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud_store.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/oc_cloud.c
 		${CMAKE_CURRENT_SOURCE_DIR}/../../../api/cloud/rd_client.c
