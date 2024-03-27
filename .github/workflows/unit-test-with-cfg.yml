@@ -119,12 +119,13 @@ jobs:
           cd build
           ctest --verbose --label-regex "oc-unittest"
 
-      - name: Get output file name
+      - name: Generate file name and artifact name
         if: ${{ inputs.coverage }}
         id: coverage
         run: |
           SUFFIX=`echo "-DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ steps.cmake_flags.outputs.compiler }} ${{ inputs.build_args }} -DBUILD_TESTING=ON" | sha1sum | cut -f 1 -d ' '`
           echo "filename=coverage-unix-${SUFFIX}.json" >> $GITHUB_OUTPUT
+          echo "artifact=unit-test-${SUFFIX}-coverage" >> $GITHUB_OUTPUT
 
       - name: Collect coverage data
         if: ${{ inputs.coverage }}
@@ -135,9 +136,9 @@ jobs:
 
       - name: Upload coverage data
         if: ${{ inputs.coverage }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: unit-test-coverage
+          name: ${{ steps.coverage.outputs.artifact }}
           path: tools/${{ steps.coverage.outputs.filename }}
           if-no-files-found: error
           retention-days: 1

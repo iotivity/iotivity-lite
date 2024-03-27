@@ -213,8 +213,10 @@ oc_storage_data_save(const char *name, size_t device,
     goto error;
   }
 #if OC_DBG_IS_ENABLED
+  // GCOVR_EXCL_START
   OC_DBG("oc_storage: encoded \"%s\" size %d", name, size);
   storage_print_data(sb.buffer, size);
+  // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
 
   char svr_tag[OC_STORAGE_SVR_TAG_MAX];

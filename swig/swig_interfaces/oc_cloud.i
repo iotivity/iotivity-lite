@@ -712,6 +712,11 @@ void jni_cloud_context_clear(oc_cloud_context_t *ctx, bool dump_async)
 %ignore cloud_context_has_permanent_access_token;
 %ignore cloud_context_clear_access_token;
 %ignore cloud_context_has_refresh_token;
+
+%ignore oc_cloud_registration_context_t;
+%ignore oc_cloud_registration_context_init;
+%ignore oc_cloud_registration_context_deinit;
+%ignore oc_cloud_context_t::registration_ctx;
 %include "api/cloud/oc_cloud_context_internal.h"
 
 %ignore oc_cloud_add_server_address;

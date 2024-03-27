@@ -57,15 +57,15 @@ struct CloudResourceData
     std::vector<CloudEndpointData> result{};
     for (const oc_rep_t *server = servers; server != nullptr;
          server = server->next) {
-      const oc_rep_t *rep = oc_rep_get(server->value.object, OC_REP_STRING,
-                                       "uri", OC_CHAR_ARRAY_LEN("uri"));
+      const oc_rep_t *rep = oc_rep_get_by_type_and_key(
+        server->value.object, OC_REP_STRING, "uri", OC_CHAR_ARRAY_LEN("uri"));
       if (rep == nullptr) {
         continue;
       }
       std::string uri = oc_string(rep->value.string);
 
-      rep = oc_rep_get(server->value.object, OC_REP_STRING, "id",
-                       OC_CHAR_ARRAY_LEN("id"));
+      rep = oc_rep_get_by_type_and_key(server->value.object, OC_REP_STRING,
+                                       "id", OC_CHAR_ARRAY_LEN("id"));
       if (rep == nullptr) {
         continue;
       }
@@ -377,6 +377,36 @@ TEST_F(TestCloudResourceWithServer, PostRequest_FailInvalidState)
   });
 
   cloud_context_clear(ctx);
+}
+
+TEST_F(TestCloudResourceWithServer, PostRequest_MultipleServers)
+{
+  auto encode = []() {
+    oc_rep_begin_root_object();
+    oc_rep_set_text_string(root, cis, "coap://mock.plgd.dev");
+    oc_rep_set_text_string(root, at, "access_token");
+    oc_rep_set_text_string(root, sid, "00000000-0000-0000-0000-000000000000");
+    std::string_view key{ "x.org.iotivity.servers" };
+    oc_rep_encode_text_string(oc_rep_object(root), key.data(), key.length());
+    oc_rep_begin_array(oc_rep_object(root), servers);
+    oc_rep_object_array_begin_item(servers);
+    oc_rep_set_text_string(servers, uri, "coaps://plgd.dev");
+    oc_rep_set_text_string(servers, id, "00000000-0000-0000-0000-000000000000");
+    oc_rep_object_array_end_item(servers);
+    oc_rep_end_array(oc_rep_object(root), servers);
+    oc_rep_end_root_object();
+  };
+  postRequest<decltype(encode), OC_STATUS_CHANGED>(encode);
+
+  const auto *addresses = &oc_cloud_get_context(kDeviceID)->store.ci_servers;
+  ASSERT_EQ(2, oc_endpoint_addresses_size(addresses));
+  EXPECT_TRUE(oc_endpoint_addresses_contains(
+    addresses, OC_STRING_VIEW("coap://mock.plgd.dev")));
+  EXPECT_TRUE(oc_endpoint_addresses_contains(
+    addresses, OC_STRING_VIEW("coaps://plgd.dev")));
+  // the server from the sid property should be selected
+  EXPECT_TRUE(oc_endpoint_addresses_is_selected(
+    addresses, OC_STRING_VIEW("coap://mock.plgd.dev")));
 }
 
 TEST_F(TestCloudResourceWithServer, PostRequest_Deregister)

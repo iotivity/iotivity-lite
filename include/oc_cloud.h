@@ -138,9 +138,7 @@ typedef bool (*oc_cloud_schedule_action_cb_t)(oc_cloud_action_t action,
                                               uint16_t *timeout,
                                               void *user_data) OC_NONNULL(3, 4);
 
-/**
- * @brief Get cloud context for device.
- */
+/** @brief Get cloud context for device. */
 OC_API
 oc_cloud_context_t *oc_cloud_get_context(size_t device);
 

@@ -1082,6 +1082,7 @@ coap_iterate_observers(oc_resource_t *resource, oc_response_t *response,
     }
     if (prepare_response) {
 #if OC_DBG_IS_ENABLED
+      // GCOVR_EXCL_START
       oc_string64_t ep_str;
       const char *ep_cstr = "";
       if (oc_endpoint_to_string64(&obs->endpoint, &ep_str)) {
@@ -1089,6 +1090,7 @@ coap_iterate_observers(oc_resource_t *resource, oc_response_t *response,
       }
       COAP_DBG("prepare GET request to resource(%s) for endpoint %s",
                oc_string(resource->uri), ep_cstr);
+      // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
       if (!coap_fill_response(response, resource, &obs->endpoint, iface_mask,
                               true)) {

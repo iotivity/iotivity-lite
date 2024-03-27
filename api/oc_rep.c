@@ -147,8 +147,8 @@ oc_free_rep(oc_rep_t *rep)
 }
 
 const oc_rep_t *
-oc_rep_get(const oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
-           size_t key_len)
+oc_rep_get_by_type_and_key(const oc_rep_t *rep, oc_rep_value_type_t type,
+                           const char *key, size_t key_len)
 {
   if (key_len == 0 || key_len >= OC_MAX_STRING_LENGTH) {
     OC_ERR("Error of input parameters: invalid key");
@@ -181,7 +181,8 @@ oc_rep_get_value(const oc_rep_t *rep, oc_rep_value_type_t type, const char *key,
     OC_ERR("Error of input parameters: invalid value");
     return false;
   }
-  const oc_rep_t *rep_value = oc_rep_get(rep, type, key, key_len);
+  const oc_rep_t *rep_value =
+    oc_rep_get_by_type_and_key(rep, type, key, key_len);
   if (rep_value == NULL) {
     return false;
   }

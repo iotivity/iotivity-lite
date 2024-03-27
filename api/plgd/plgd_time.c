@@ -154,10 +154,12 @@ dev_time_set_time(oc_clock_time_t lst, bool dump, bool notify)
   }
 
 #if OC_DBG_IS_ENABLED
+  // GCOVR_EXCL_START
   char lst_ts[64] = { 0 };
   oc_clock_encode_time_rfc3339(lst, lst_ts, sizeof(lst_ts));
   uint64_t ut_s = (uint64_t)((double)updateTime / (double)OC_CLOCK_SECOND);
   OC_DBG("plgd-time: %s (update: %" PRIu64 "s)", lst_ts, ut_s);
+  // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
 
   plgd_time_set(lst, updateTime, dump, notify);
@@ -207,6 +209,7 @@ dev_plgd_time(plgd_time_t pt)
   oc_clock_time_t ptime = (pt.store.last_synced_time + elapsed);
 
 #if OC_DBG_IS_ENABLED
+  // GCOVR_EXCL_START
 #define RFC3339_BUFFER_SIZE 64
   double to_micros = (10000000 / (double)OC_CLOCK_SECOND);
   char lst_ts[RFC3339_BUFFER_SIZE] = { 0 };
@@ -226,6 +229,7 @@ dev_plgd_time(plgd_time_t pt)
   long diff = (long)((double)(time - ptime) / (double)OC_CLOCK_SECOND);
   OC_DBG("calculated plgd-time: %s, system time: %s, diff: %lds", pt_ts, ts,
          diff);
+  // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
   return ptime;
 }
@@ -246,8 +250,10 @@ void
 plgd_time_set_status(plgd_time_status_t status)
 {
 #if OC_DBG_IS_ENABLED
+  // GCOVR_EXCL_START
   const char *status_str = plgd_time_status_to_str(status);
   OC_DBG("plgd-time status: %s", status_str != NULL ? status_str : "NULL");
+  // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
   g_oc_plgd_time.status = status;
 }

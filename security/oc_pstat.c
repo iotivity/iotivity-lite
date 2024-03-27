@@ -341,10 +341,12 @@ oc_pstat_handle_state(oc_sec_pstat_t *ps, size_t device, bool from_storage,
     if (doxm->owned || !nil_uuid(&doxm->devowneruuid) ||
         !pstat_check_ps_state(ps)) {
 #if OC_DBG_IS_ENABLED
+      // GCOVR_EXCL_START
       if (!nil_uuid(&doxm->devowneruuid)) {
         OC_DBG("non-Nil doxm:devowneruuid in RFOTM");
       }
       OC_DBG("ERROR in RFOTM\n");
+      // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
       g_pstat[device].reset_in_progress = false;
       goto pstat_state_error;
@@ -566,9 +568,11 @@ oc_sec_decode_pstat(const oc_rep_t *rep, bool from_storage, size_t device)
   oc_sec_pstat_t ps;
   oc_sec_pstat_copy(&ps, &g_pstat[device]);
 #if OC_DBG_IS_ENABLED
+  // GCOVR_EXCL_START
   if (!from_storage) {
     print_pstat_dos(&ps);
   }
+  // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
 
   bool transition_state = false;

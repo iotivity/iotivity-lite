@@ -139,8 +139,8 @@ endpoint_address_select(oc_endpoint_addresses_t *eas,
     return;
   }
   eas->selected = selected;
-  if (eas->on_selected_change != NULL) {
-    eas->on_selected_change(eas->on_selected_change_data);
+  if (eas->on_selected_change.cb != NULL) {
+    eas->on_selected_change.cb(eas->on_selected_change.cb_data);
   }
 }
 
@@ -209,8 +209,8 @@ oc_endpoint_addresses_init(
 
   // set callback before calling allocate and add, because it may trigger the
   // callback
-  eas->on_selected_change = on_selected_change;
-  eas->on_selected_change_data = on_selected_change_data;
+  eas->on_selected_change.cb = on_selected_change;
+  eas->on_selected_change.cb_data = on_selected_change_data;
 
   if (default_ea.uri.length > 0) {
     const oc_endpoint_address_t *ea = endpoint_address_allocate_and_add(
@@ -250,8 +250,24 @@ oc_endpoint_addresses_reinit(oc_endpoint_addresses_t *eas,
                              oc_endpoint_address_view_t default_ea)
 {
   oc_endpoint_addresses_deinit(eas);
-  return oc_endpoint_addresses_init(eas, eas->pool, eas->on_selected_change,
-                                    eas->on_selected_change_data, default_ea);
+  return oc_endpoint_addresses_init(eas, eas->pool, eas->on_selected_change.cb,
+                                    eas->on_selected_change.cb_data,
+                                    default_ea);
+}
+
+void
+oc_endpoint_addresses_set_on_selected_change(
+  oc_endpoint_addresses_t *eas, on_selected_endpoint_address_change_fn_t cb,
+  void *data)
+{
+  eas->on_selected_change.cb = cb;
+  eas->on_selected_change.cb_data = data;
+}
+
+oc_endpoint_addresses_on_selected_change_t
+oc_endpoint_addresses_get_on_selected_change(const oc_endpoint_addresses_t *eas)
+{
+  return eas->on_selected_change;
 }
 
 size_t
@@ -289,7 +305,7 @@ oc_endpoint_addresses_add(oc_endpoint_addresses_t *eas,
                           oc_endpoint_address_view_t ea)
 {
   if (!endpoint_address_is_valid(ea.uri)) {
-    OC_DBG("oc_endpoint_addresses_add: invalid uri(%s)",
+    OC_ERR("cannot add endpoint address: invalid uri(%s)",
            ea.uri.data != NULL ? ea.uri.data : "null");
     return NULL;
   }
@@ -518,8 +534,9 @@ endpoint_addresses_encode(oc_endpoint_address_t *ea, void *data)
   encoder->error |= oc_rep_encoder_create_map(
     encoder->ci_servers, &endpoint_map, CborIndefiniteLength);
   encoder->error |= oc_endpoint_address_encode(
-    &endpoint_map, OC_STRING_VIEW("uri"), OC_STRING_VIEW("id"),
-    OC_STRING_VIEW("name"), oc_endpoint_address_view(ea));
+    &endpoint_map, OC_STRING_VIEW(OC_ENDPOINT_ADDRESS_URI),
+    OC_STRING_VIEW(OC_ENDPOINT_ADDRESS_ID),
+    OC_STRING_VIEW(OC_ENDPOINT_ADDRESS_NAME), oc_endpoint_address_view(ea));
   encoder->error |=
     oc_rep_encoder_close_container(encoder->ci_servers, &endpoint_map);
   return true;

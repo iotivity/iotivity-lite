@@ -36,9 +36,6 @@ extern "C" {
 #define USER_ID_KEY "uid"
 #define EXPIRESIN_KEY "expiresin"
 
-/** Set timeout intervals for the default retry action */
-void oc_cloud_manager_set_retry_timeouts(const uint16_t *timeouts, size_t size);
-
 /**
  * @brief Parse sign-up response retrieved from the server and store the data to
  * cloud context.
@@ -63,6 +60,19 @@ bool cloud_manager_handle_register_response(oc_cloud_context_t *ctx,
 bool cloud_manager_handle_redirect_response(oc_cloud_context_t *ctx,
                                             const oc_rep_t *payload)
   OC_NONNULL();
+
+/**
+ * @brief Calculate the expiration time of the refresh token.
+ *
+ * The expiration time is used to determine when the refresh token should be
+ * refreshed. It should be less than the actual expiration time of the token, so
+ * it can be refreshed before it really expires.
+ *
+ * @param expires_in_ms expires_in value in milliseconds (must be >0)
+ * @return uint64_t expiration time in milliseconds
+ */
+uint64_t cloud_manager_calculate_refresh_token_expiration(
+  uint64_t expires_in_ms);
 
 /**
  * @brief Parse refresh token response retrieved from the server and store the
@@ -90,6 +100,17 @@ void cloud_manager_start(oc_cloud_context_t *ctx) OC_NONNULL();
  * @param ctx cloud context (cannot be NULL)
  */
 void cloud_manager_stop(const oc_cloud_context_t *ctx) OC_NONNULL();
+
+/**
+ * @brief Check if retry of the cloud registration step with changed server
+ * should be attempted
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @return true retry should be attempted
+ * @return false otherwise
+ */
+bool cloud_manager_register_check_retry_with_changed_server(
+  const oc_cloud_context_t *ctx) OC_NONNULL();
 
 void oc_cloud_register_handler(oc_client_response_t *data) OC_NONNULL();
 void oc_cloud_login_handler(oc_client_response_t *data) OC_NONNULL();

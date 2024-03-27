@@ -465,11 +465,13 @@ static void
 oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb, bool from_reset)
 {
 #if OC_DBG_IS_ENABLED
+  // GCOVR_EXCL_START
   oc_string64_t endpoint_str;
   oc_endpoint_to_string64(&peer->endpoint, &endpoint_str);
   OC_DBG("oc_tls: freeing peer(%p): endpoint(%s), role(%s)", (void *)peer,
          oc_string(endpoint_str),
          peer->role == MBEDTLS_SSL_IS_SERVER ? "server" : "client");
+  // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
 #ifdef OC_PKI
   if (peer->user_data.free != NULL) {
@@ -990,6 +992,7 @@ next_cred_in_chain:
           return true;
         }
 #if OC_DBG_IS_ENABLED
+        // GCOVR_EXCL_START
         mbedtls_x509_crt *c = &certs->cert;
         int chain_length = 0;
         while (c) {
@@ -997,6 +1000,7 @@ next_cred_in_chain:
           c = c->next;
         }
         OC_DBG("identity cert chain is now of size %d", chain_length);
+        // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
 
         if (cert->next) {
@@ -1065,6 +1069,7 @@ add_new_identity_cert(oc_sec_cred_t *cred, size_t device)
   }
 
 #if OC_DBG_IS_ENABLED
+  // GCOVR_EXCL_START
   mbedtls_x509_crt *c = &cert->cert;
   int chain_length = 0;
   while (c) {
@@ -1072,6 +1077,7 @@ add_new_identity_cert(oc_sec_cred_t *cred, size_t device)
     c = c->next;
   }
   OC_DBG("adding new identity cert chain of size %d", chain_length);
+  // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
 
   oc_list_add(g_identity_certs, cert);
@@ -1174,11 +1180,13 @@ oc_tls_reload_trust_anchors(void)
     }
     cert->cert = c;
 #if OC_DBG_IS_ENABLED
+    // GCOVR_EXCL_START
     char buf[256];
     if (mbedtls_x509_serial_gets(buf, OC_ARRAY_SIZE(buf) - 1, &c->serial) > 0) {
       OC_DBG("trust anchor(serial: %s) added to chain", buf);
     }
     OC_DBG("trust anchor chain is now of size %d", chain_length);
+    // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
 
     cert = cert->next;
@@ -1519,11 +1527,13 @@ add_new_trust_anchor(oc_sec_cred_t *cred, size_t device)
   }
   cert->cert = c;
 #if OC_DBG_IS_ENABLED
+  // GCOVR_EXCL_START
   char buf[256];
   if (mbedtls_x509_serial_gets(buf, OC_ARRAY_SIZE(buf) - 1, &c->serial) > 0) {
     OC_DBG("trust anchor(serial: %s) added to chain", buf);
   }
   OC_DBG("trust anchor chain is now of size %d", chain_length);
+  // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
 
   oc_list_add(g_ca_certs, cert);
@@ -1844,6 +1854,7 @@ verify_manufacturer_or_identity_certificate(oc_tls_peer_t *peer,
         OC_DBG("found matching trustca; check if trustca's cred entry has a "
                "UUID matching with the peer's UUID, or *");
 #if OC_DBG_IS_ENABLED
+        // GCOVR_EXCL_START
         if (ca_cert->cred->subjectuuid.id[0] != '*') {
           char ca_uuid[OC_UUID_LEN] = { 0 };
           oc_uuid_to_str(&ca_cert->cred->subjectuuid, ca_uuid,
@@ -1852,6 +1863,7 @@ verify_manufacturer_or_identity_certificate(oc_tls_peer_t *peer,
         } else {
           OC_DBG("trustca cred UUID is the wildcard *");
         }
+        // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
         if (memcmp(ca_cert->cred->subjectuuid.id, peer->uuid.id,
                    OC_ARRAY_SIZE(peer->uuid.id)) != 0) {
@@ -2154,11 +2166,13 @@ oc_tls_add_new_peer(oc_tls_new_peer_params_t params)
 
   oc_list_add(g_tls_peers, peer);
 #if OC_DBG_IS_ENABLED
+  // GCOVR_EXCL_START
   oc_string64_t endpoint_str;
   oc_endpoint_to_string64(&peer->endpoint, &endpoint_str);
   OC_DBG("oc_tls: new peer(%p) added: endpoint(%s), role(%s)", (void *)peer,
          oc_string(endpoint_str),
          peer->role == MBEDTLS_SSL_IS_SERVER ? "server" : "client");
+  // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
 
   return peer;
@@ -3010,10 +3024,12 @@ oc_tls_recv_message(oc_message_t *message)
     return;
   }
 #if OC_DBG_IS_ENABLED
+  // GCOVR_EXCL_START
   char u[OC_UUID_LEN];
   oc_uuid_to_str(&peer->uuid, u, OC_UUID_LEN);
   OC_DBG("oc_tls: Received message from device(uuid=%s): length=%zu, peer=%p",
          u, message->length, (void *)peer);
+  // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
 
   // Set the interface index from the incoming message if the network interface
