@@ -213,8 +213,16 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\api\c-timestamp\timestamp.h" />
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_context_internal.h" />
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_deregister_internal.h" />
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_endpoints_internal.h" />
     <ClInclude Include="..\..\..\api\cloud\oc_cloud_internal.h" />
-    <ClInclude Include="..\..\..\api\cloud\rd_client.h" />
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_log_internal.h" />
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_manager_internal.h" />
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_rd_internal.h" />
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_resource_internal.h" />
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_store_internal.h" />
+    <ClInclude Include="..\..\..\api\cloud\rd_client_internal.h" />
     <ClInclude Include="..\..\..\api\oc_blockwise_internal.h" />
     <ClInclude Include="..\..\..\api\oc_etag_internal.h" />
     <ClInclude Include="..\..\..\api\oc_events_internal.h" />
@@ -339,6 +347,7 @@
     <ClCompile Include="..\..\..\api\cloud\oc_cloud_manager.c" />
     <ClCompile Include="..\..\..\api\cloud\oc_cloud_rd.c" />
     <ClCompile Include="..\..\..\api\cloud\oc_cloud_resource.c" />
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_schedule.c" />
     <ClCompile Include="..\..\..\api\cloud\oc_cloud_store.c" />
     <ClCompile Include="..\..\..\api\cloud\rd_client.c" />
     <ClCompile Include="..\..\..\api\oc_base64.c" />

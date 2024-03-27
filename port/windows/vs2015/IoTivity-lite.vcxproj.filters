@@ -440,6 +440,9 @@
     <ClCompile Include="..\..\..\api\cloud\oc_cloud_resource.c">
       <Filter>Core\cloud</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_schedule.c">
+      <Filter>Core\cloud</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\api\cloud\oc_cloud_store.c">
       <Filter>Core\cloud</Filter>
     </ClCompile>
@@ -477,6 +480,9 @@
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\api\cloud\oc_cloud_resource.c">
+      <Filter>Core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\api\cloud\oc_cloud_schedule.c">
       <Filter>Core</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\api\cloud\oc_cloud_store.c">
@@ -766,10 +772,34 @@
     <ClInclude Include="..\..\..\include\oc_cloud.h">
       <Filter>Headers</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_context_internal.h">
+      <Filter>Core\cloud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_deregister_internal.h">
+      <Filter>Core\cloud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_endpoints_internal.h">
+      <Filter>Core\cloud</Filter>
+    </ClInclude>
     <ClInclude Include="..\..\..\api\cloud\oc_cloud_internal.h">
       <Filter>Core\cloud</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\api\cloud\rd_client.h">
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_log_internal.h">
+      <Filter>Core\cloud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_manager_internal.h">
+      <Filter>Core\cloud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_rd_internal.h">
+      <Filter>Core\cloud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_resource_internal.h">
+      <Filter>Core\cloud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\cloud\oc_cloud_store_internal.h">
+      <Filter>Core\cloud</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\..\api\cloud\rd_client_internal.h">
       <Filter>Core\cloud</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\api\oc_session_events_internal.h">
@@ -813,12 +843,6 @@
     </ClInclude>
     <ClInclude Include="..\network_addresses.h">
       <Filter>Port</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\api\cloud\oc_cloud_internal.h">
-      <Filter>Core</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\..\api\cloud\rd_client.h">
-      <Filter>Core</Filter>
     </ClInclude>
     <ClInclude Include="..\mutex.h">
       <Filter>Port</Filter>

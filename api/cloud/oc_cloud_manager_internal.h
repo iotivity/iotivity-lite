@@ -36,9 +36,6 @@ extern "C" {
 #define USER_ID_KEY "uid"
 #define EXPIRESIN_KEY "expiresin"
 
-/** Set timeout intervals for the default retry action */
-void oc_cloud_manager_set_retry_timeouts(const uint16_t *timeouts, size_t size);
-
 /**
  * @brief Parse sign-up response retrieved from the server and store the data to
  * cloud context.

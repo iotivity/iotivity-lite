@@ -334,15 +334,6 @@ oc_cloud_set_keepalive(
   ctx->keepalive.user_data = user_data;
 }
 
-void
-oc_cloud_set_schedule_action(oc_cloud_context_t *ctx,
-                             oc_cloud_schedule_action_cb_t on_schedule_action,
-                             void *user_data)
-{
-  ctx->schedule_action.on_schedule_action = on_schedule_action;
-  ctx->schedule_action.user_data = user_data;
-}
-
 oc_endpoint_address_t *
 oc_cloud_add_server_address(oc_cloud_context_t *ctx, const char *uri,
                             size_t uri_len, oc_uuid_t sid)
