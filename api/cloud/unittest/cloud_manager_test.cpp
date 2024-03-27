@@ -21,6 +21,7 @@
 #include "api/cloud/oc_cloud_internal.h"
 #include "api/cloud/oc_cloud_manager_internal.h"
 #include "api/cloud/oc_cloud_resource_internal.h"
+#include "api/cloud/oc_cloud_schedule_internal.h"
 #include "api/cloud/oc_cloud_store_internal.h"
 #include "api/oc_rep_internal.h"
 #include "api/oc_runtime_internal.h"
@@ -62,7 +63,7 @@ public:
       // make the second timeout longer, so we can interrupt the retry
       std::chrono::duration_cast<std::chrono::milliseconds>(5s).count(),
     };
-    oc_cloud_manager_set_retry_timeouts(timeouts.data(), timeouts.size());
+    ASSERT_TRUE(oc_cloud_set_retry_timeouts(timeouts.data(), timeouts.size()));
 
     memset(&m_context, 0, sizeof(m_context));
     m_context.cloud_ep = oc_new_endpoint();
@@ -89,7 +90,7 @@ public:
   void TearDown() override
   {
     oc_cloud_set_schedule_action(&m_context, nullptr, nullptr);
-    oc_cloud_manager_set_retry_timeouts(nullptr, 0);
+    ASSERT_TRUE(oc_cloud_set_retry_timeouts(nullptr, 0));
 
     oc_free_endpoint(m_context.cloud_ep);
     oc_cloud_store_deinitialize(&m_context.store);
@@ -341,7 +342,7 @@ TEST_F(TestCloudManager, cloud_manager_select_next_server_on_retry)
   // single try -> the cloud server endpoint should be changed after each try
   uint16_t timeout =
     std::chrono::duration_cast<std::chrono::milliseconds>(kTimeout).count();
-  oc_cloud_manager_set_retry_timeouts(&timeout, 1);
+  ASSERT_TRUE(oc_cloud_set_retry_timeouts(&timeout, 1));
 
   oc_string_view_t uri = OC_STRING_VIEW("coap://13.3.7.187:5683");
   oc_uuid_t sid;
