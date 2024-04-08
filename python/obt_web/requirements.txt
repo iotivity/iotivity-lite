@@ -15,5 +15,5 @@ simplejson==3.17.3
 wheel
 termcolor==1.1.0
 typing-extensions==3.10.0.0
-Werkzeug==2.0.1
+Werkzeug==2.3.8
 zipp==3.5.0
