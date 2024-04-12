@@ -120,6 +120,63 @@ TEST_F(TestCloudManager, oc_cloud_manager_stop_fail)
   EXPECT_EQ(-1, oc_cloud_manager_stop(nullptr));
 }
 
+TEST_F(TestCloudManager, oc_cloud_manager_stop_v1)
+{
+  ASSERT_EQ(0, oc_cloud_manager_start(&m_context, nullptr, nullptr));
+  ASSERT_TRUE(oc_cloud_manager_is_started(&m_context));
+
+  // if cloud is registered and logged in, then the login flag should be
+  // removed, so on restart will attempt to login again
+  m_context.store.status =
+    OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED | OC_CLOUD_LOGGED_IN;
+  m_context.store.cps = OC_CPS_REGISTERED;
+  oc_cloud_manager_stop_v1(&m_context, false);
+  EXPECT_FALSE(oc_cloud_manager_is_started(&m_context));
+  EXPECT_EQ(OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED, m_context.store.status);
+  EXPECT_EQ(OC_CPS_REGISTERED, m_context.store.cps);
+
+  // if cloud is stopped during registration, then it should be in the ready to
+  // register state
+  ASSERT_EQ(0, oc_cloud_manager_start(&m_context, nullptr, nullptr));
+  ASSERT_TRUE(oc_cloud_manager_is_started(&m_context));
+  m_context.store.status = OC_CLOUD_INITIALIZED;
+  m_context.store.cps = OC_CPS_REGISTERING;
+  oc_cloud_manager_stop_v1(&m_context, false);
+  EXPECT_FALSE(oc_cloud_manager_is_started(&m_context));
+  EXPECT_EQ(OC_CLOUD_INITIALIZED, m_context.store.status);
+  EXPECT_EQ(OC_CPS_READYTOREGISTER, m_context.store.cps);
+
+  // if the cloud is not configured, then the configuration should be reset
+  ASSERT_EQ(0, oc_cloud_manager_start(&m_context, nullptr, nullptr));
+  ASSERT_TRUE(oc_cloud_manager_is_started(&m_context));
+  m_context.store.status =
+    OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED | OC_CLOUD_LOGGED_IN;
+  m_context.store.cps = OC_CPS_REGISTERED;
+  // this sets the default cloud server, but access token will not be set
+  ASSERT_EQ(0, oc_cloud_provision_conf_resource(&m_context, "", "", "", ""));
+  ASSERT_EQ(nullptr, oc_string(*oc_cloud_get_access_token(&m_context)));
+  oc_cloud_manager_stop_v1(&m_context, false);
+  EXPECT_FALSE(oc_cloud_manager_is_started(&m_context));
+  EXPECT_EQ(OC_CLOUD_INITIALIZED, m_context.store.status);
+  EXPECT_EQ(OC_CPS_UNINITIALIZED, m_context.store.cps);
+
+  ASSERT_EQ(0, oc_cloud_manager_start(&m_context, nullptr, nullptr));
+  ASSERT_TRUE(oc_cloud_manager_is_started(&m_context));
+  m_context.store.status =
+    OC_CLOUD_INITIALIZED | OC_CLOUD_REGISTERED | OC_CLOUD_LOGGED_IN;
+  m_context.store.cps = OC_CPS_REGISTERED;
+  // access token set
+  ASSERT_EQ(0, oc_cloud_provision_conf_resource(&m_context, "", "access_token",
+                                                "", ""));
+  ASSERT_NE(nullptr, oc_string(*oc_cloud_get_access_token(&m_context)));
+  // but no cloud server set
+  oc_endpoint_addresses_clear(&m_context.store.ci_servers);
+  oc_cloud_manager_stop_v1(&m_context, false);
+  EXPECT_FALSE(oc_cloud_manager_is_started(&m_context));
+  EXPECT_EQ(OC_CLOUD_INITIALIZED, m_context.store.status);
+  EXPECT_EQ(OC_CPS_UNINITIALIZED, m_context.store.cps);
+}
+
 TEST_F(TestCloudManager, oc_cloud_manager_is_started)
 {
   EXPECT_FALSE(oc_cloud_manager_is_started(&m_context));

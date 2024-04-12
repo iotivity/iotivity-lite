@@ -300,6 +300,24 @@ oc_cloud_get_identity_cert_chain(const oc_cloud_context_t *ctx)
   return ctx->selected_identity_cred_id;
 }
 
+bool
+oc_cloud_registration_context_is_initialized(
+  const oc_cloud_registration_context_t *regctx)
+{
+  return oc_string(regctx->initial_server) != NULL;
+}
+
+void
+oc_cloud_registration_context_init_if_not_set(
+  oc_cloud_registration_context_t *regctx,
+  const oc_endpoint_addresses_t *servers)
+{
+  if (oc_cloud_registration_context_is_initialized(regctx)) {
+    return;
+  }
+  oc_cloud_registration_context_init(regctx, servers);
+}
+
 void
 oc_cloud_registration_context_init(oc_cloud_registration_context_t *regctx,
                                    const oc_endpoint_addresses_t *servers)
@@ -322,6 +340,12 @@ oc_cloud_registration_context_deinit(oc_cloud_registration_context_t *regctx)
 {
   oc_free_string(&regctx->initial_server);
   regctx->remaining_server_changes = 0;
+  regctx->server_changed = false;
+}
+
+void
+oc_cloud_registration_context_reset(oc_cloud_registration_context_t *regctx)
+{
   regctx->server_changed = false;
 }
 

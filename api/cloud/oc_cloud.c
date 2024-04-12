@@ -89,10 +89,7 @@ start_manager(void *user_data)
 static void
 cloud_manager_restart(oc_cloud_context_t *ctx)
 {
-  if (!ctx->cloud_manager) {
-    OC_CLOUD_ERR("cloud manager is not running");
-    return;
-  }
+  assert(ctx->cloud_manager);
   cloud_manager_stop(ctx);
   oc_cloud_deregister_stop(ctx);
   oc_reset_delayed_callback(ctx, start_manager, 0);
@@ -102,7 +99,9 @@ static oc_event_callback_retval_t
 restart_manager(void *user_data)
 {
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)user_data;
-  cloud_manager_restart(ctx);
+  if (ctx->cloud_manager) {
+    cloud_manager_restart(ctx);
+  }
   return OC_EVENT_DONE;
 }
 
@@ -449,8 +448,11 @@ oc_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
 
   cloud_manager_start(ctx);
   ctx->cloud_manager = true;
-  oc_cloud_registration_context_init(&ctx->registration_ctx,
-                                     &ctx->store.ci_servers);
+  // in case we stopped the manager, but kept the configuration by calling
+  // oc_cloud_manager_stop_v1(ctx, true), we also need to keep the registration
+  // context
+  oc_cloud_registration_context_init_if_not_set(&ctx->registration_ctx,
+                                                &ctx->store.ci_servers);
 #ifdef OC_SESSION_EVENTS
   oc_remove_session_event_callback_v1(cloud_ep_session_event_handler, ctx,
                                       false);
@@ -464,13 +466,16 @@ oc_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t cb, void *data)
   return 0;
 }
 
-int
-oc_cloud_manager_stop(oc_cloud_context_t *ctx)
+static bool
+cloud_has_configuration(const oc_cloud_context_t *ctx)
 {
-  if (ctx == NULL) {
-    return -1;
-  }
+  return oc_cloud_get_server_uri(ctx) != NULL &&
+         cloud_context_has_access_token(ctx);
+}
 
+void
+oc_cloud_manager_stop_v1(oc_cloud_context_t *ctx, bool resetConfiguration)
+{
 #ifdef OC_SESSION_EVENTS
   oc_remove_session_event_callback_v1(cloud_ep_session_event_handler, ctx,
                                       false);
@@ -484,11 +489,28 @@ oc_cloud_manager_stop(oc_cloud_context_t *ctx)
   oc_remove_delayed_callback(ctx, start_manager);
   cloud_rd_reset_context(ctx);
   cloud_manager_stop(ctx);
-  oc_cloud_store_reinitialize(&ctx->store);
   oc_cloud_reset_endpoint(ctx);
-  oc_cloud_registration_context_deinit(&ctx->registration_ctx);
+  if (resetConfiguration || !cloud_has_configuration(ctx)) {
+    oc_cloud_store_reinitialize(&ctx->store);
+    oc_cloud_registration_context_deinit(&ctx->registration_ctx);
+  } else {
+    ctx->store.status &= ~OC_CLOUD_LOGGED_IN;
+    ctx->store.cps = (ctx->store.status & OC_CLOUD_REGISTERED) != 0
+                       ? OC_CPS_REGISTERED
+                       : OC_CPS_READYTOREGISTER;
+    oc_cloud_registration_context_reset(&ctx->registration_ctx);
+    oc_cloud_store_dump_async(&ctx->store);
+  }
   ctx->cloud_manager = false;
+}
 
+int
+oc_cloud_manager_stop(oc_cloud_context_t *ctx)
+{
+  if (ctx == NULL) {
+    return -1;
+  }
+  oc_cloud_manager_stop_v1(ctx, true);
   return 0;
 }
 

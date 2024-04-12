@@ -184,6 +184,20 @@ void oc_cloud_registration_context_init(oc_cloud_registration_context_t *regctx,
 void oc_cloud_registration_context_deinit(
   oc_cloud_registration_context_t *regctx) OC_NONNULL();
 
+/** @brief Check if the registration context is initialized */
+bool oc_cloud_registration_context_is_initialized(
+  const oc_cloud_registration_context_t *regctx) OC_NONNULL();
+
+/** @brief Initialize the registration context if it hasn't been previously
+ * initialized */
+void oc_cloud_registration_context_init_if_not_set(
+  oc_cloud_registration_context_t *regctx,
+  const oc_endpoint_addresses_t *servers) OC_NONNULL();
+
+/** @brief Reset temporary data */
+void oc_cloud_registration_context_reset(
+  oc_cloud_registration_context_t *regctx) OC_NONNULL();
+
 #ifdef __cplusplus
 }
 #endif

@@ -363,6 +363,43 @@ TEST_F(TestCloudWithServer, oc_cloud_provision_conf_resource)
   EXPECT_EQ(OC_CLOUD_INITIALIZED, ctx->store.status);
 }
 
+TEST_F(TestCloudWithServer, oc_cloud_provision_conf_resource_with_started_cloud)
+{
+  oc_cloud_context_t *ctx = oc_cloud_get_context(kDeviceID);
+  ASSERT_NE(nullptr, ctx);
+  ASSERT_FALSE(
+    oc_cloud_registration_context_is_initialized(&ctx->registration_ctx));
+  ctx->store.status = OC_CLOUD_INITIALIZED;
+  ASSERT_EQ(0, oc_cloud_manager_start(ctx, nullptr, nullptr));
+  ASSERT_TRUE(
+    oc_cloud_registration_context_is_initialized(&ctx->registration_ctx));
+  auto defaulServer = OC_STRING_LOCAL(OCF_COAPCLOUDCONF_DEFAULT_CIS);
+  EXPECT_TRUE(
+    oc_string_is_equal(&ctx->registration_ctx.initial_server, &defaulServer));
+
+  std::string_view ci_server = "ci_server";
+  std::string_view access_token = "access_token";
+  std::string_view sid = "12345678-1234-5678-1234-567812345678";
+  oc_uuid_t sid_uuid;
+  oc_str_to_uuid(sid.data(), &sid_uuid);
+  std::string_view auth_provider = "auth_provider";
+  ASSERT_EQ(0, oc_cloud_provision_conf_resource(ctx, ci_server.data(),
+                                                access_token.data(), sid.data(),
+                                                auth_provider.data()));
+  EXPECT_STREQ(access_token.data(), oc_string(*oc_cloud_get_access_token(ctx)));
+  EXPECT_STREQ(auth_provider.data(),
+               oc_string(*oc_cloud_get_authorization_provider_name(ctx)));
+  const auto *ctx_cis = oc_cloud_get_server_uri(ctx);
+  ASSERT_NE(nullptr, ctx_cis);
+  EXPECT_STREQ(ci_server.data(), oc_string(*ctx_cis));
+  EXPECT_TRUE(oc_uuid_is_equal(sid_uuid, *oc_cloud_get_server_id(ctx)));
+  EXPECT_EQ(OC_CLOUD_INITIALIZED, ctx->store.status);
+  EXPECT_TRUE(oc_cloud_manager_is_started(ctx));
+  EXPECT_TRUE(oc_string_view_is_equal(
+    oc_string_view2(&ctx->registration_ctx.initial_server),
+    oc_string_view(ci_server.data(), ci_server.length())));
+}
+
 TEST_F(TestCloudWithServer, oc_cloud_action_to_str)
 {
   std::string v;

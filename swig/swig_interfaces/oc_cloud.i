@@ -377,6 +377,23 @@ int jni_cloud_manager_stop(oc_cloud_context_t *ctx)
 }
 %}
 
+%ignore oc_cloud_manager_stop_v1;
+%rename (managerStopV1) jni_cloud_manager_stop_v1;
+%inline %{
+void jni_cloud_manager_stop_v1(oc_cloud_context_t *ctx, bool resetConfiguration)
+{
+#ifdef OC_CLOUD
+  oc_cloud_manager_stop_v1(ctx, resetConfiguration);
+  jni_callback_data *item = jni_list_get_item_by_callback_valid(OC_CALLBACK_VALID_TILL_CLOUD_MANAGER_STOP);
+  jni_list_remove(item);
+#else /* OC_CLOUD*/
+  OC_DBG("JNI: %s - Must build with OC_CLOUD defined to use this function.\n", __func__);
+  (void)ctx;
+  (void)resetConfiguration;
+#endif /* !OC_CLOUD */
+}
+%}
+
 %ignore oc_cloud_manager_restart;
 %rename (managerRestart) jni_cloud_manager_restart;
 %inline %{
@@ -712,10 +729,14 @@ void jni_cloud_context_clear(oc_cloud_context_t *ctx, bool dump_async)
 %ignore cloud_context_has_permanent_access_token;
 %ignore cloud_context_clear_access_token;
 %ignore cloud_context_has_refresh_token;
+%ignore cloud_context_on_server_change;
 
 %ignore oc_cloud_registration_context_t;
 %ignore oc_cloud_registration_context_init;
 %ignore oc_cloud_registration_context_deinit;
+%ignore oc_cloud_registration_context_is_initialized;
+%ignore oc_cloud_registration_context_init_if_not_set;
+%ignore oc_cloud_registration_context_reset;
 %ignore oc_cloud_context_t::registration_ctx;
 %include "api/cloud/oc_cloud_context_internal.h"
 

@@ -305,7 +305,7 @@ oc_cps_t oc_cloud_get_provisioning_status(const oc_cloud_context_t *ctx)
 /**
  * @brief Start cloud registration process.
  *
- * @param ctx cloud context (cannot be NULL)
+ * @param ctx cloud context
  * @param cb callback function invoked on status change
  * @param data user data provided to the status change function
  * @return int 0 on success
@@ -319,12 +319,27 @@ int oc_cloud_manager_start(oc_cloud_context_t *ctx, oc_cloud_cb_t cb,
  * @brief Stop cloud registration process, remove related pending delayed
  * callbacks and clean-up data.
  *
- * @param ctx cloud context (cannot be NULL)
+ * @param ctx cloud context
  * @return int 0 on success
  * @return int -1 on error
  */
 OC_API
 int oc_cloud_manager_stop(oc_cloud_context_t *ctx);
+
+/**
+ * @brief Stop cloud registration process, remove related pending delayed
+ * callbacks and clean-up data.
+ *
+ * @param ctx cloud context (cannot be NULL)
+ * @param resetConfiguration if true, reset cloud configuration to default
+ * (cloud must be reconfigured by oc_cloud_provision_conf_resource or by
+ * updating the cloud resource); if false the previous cloud configuration is
+ * kept, but the cloud is reset to OC_CPS_REGISTERED state if it was registered
+ * or to OC_CPS_READYTOREGISTER otherwise
+ */
+OC_API
+void oc_cloud_manager_stop_v1(oc_cloud_context_t *ctx, bool resetConfiguration)
+  OC_NONNULL();
 
 /**
  * @brief Restart cloud registration process with the current configuration.
