@@ -26,6 +26,7 @@
 #include "oc_helpers.h"
 #include "oc_uuid.h"
 #include "port/oc_log_internal.h"
+#include "security/oc_ace_internal.h"
 #include "security/oc_acl_internal.h"
 #include "security/oc_acl_util_internal.h"
 #include "security/oc_certs_validate_internal.h"
@@ -133,11 +134,12 @@ oc_ace_get_permission(const oc_sec_ace_t *ace, const oc_resource_t *resource,
 
   uint16_t permission = 0;
   oc_ace_res_t *res =
-    oc_sec_ace_find_resource(NULL, ace, oc_string(resource->uri), wc);
+    oc_sec_ace_find_resource(NULL, ace, oc_string_view2(&resource->uri), wc);
   while (res != NULL) {
     permission |= ace->permission;
 
-    res = oc_sec_ace_find_resource(res, ace, oc_string(resource->uri), wc);
+    res =
+      oc_sec_ace_find_resource(res, ace, oc_string_view2(&resource->uri), wc);
   }
 
   return permission;
@@ -151,10 +153,10 @@ get_role_permissions(const oc_sec_cred_t *role_cred,
   uint16_t permission = 0;
   oc_sec_ace_t *match = NULL;
   do {
-    match = oc_sec_acl_find_subject(match, OC_SUBJECT_ROLE,
-                                    (const oc_ace_subject_t *)&role_cred->role,
-                                    /*aceid*/ -1, /*permission*/ 0,
-                                    /*tag*/ NULL, /*match_tag*/ false, device);
+    match = oc_sec_acl_find_subject(
+      match, OC_SUBJECT_ROLE, (const oc_ace_subject_t *)&role_cred->role,
+      /*aceid*/ -1, /*permission*/ 0,
+      /*tag*/ OC_STRING_VIEW_NULL, /*match_tag*/ false, device);
 
     if (match != NULL) {
       permission |= oc_ace_get_permission(match, resource, is_DCR, is_public);
@@ -342,8 +344,8 @@ get_conn_permissions(const oc_resource_t *resource, bool is_DCR, bool is_public,
     do {
       match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_auth_crypt,
                                       /*aceid*/ -1, /*permission*/ 0,
-                                      /*tag*/ NULL, /*match_tag*/ false,
-                                      endpoint->device);
+                                      /*tag*/ OC_STRING_VIEW_NULL,
+                                      /*match_tag*/ false, endpoint->device);
       if (match == NULL) {
         continue;
       }
@@ -360,8 +362,8 @@ get_conn_permissions(const oc_resource_t *resource, bool is_DCR, bool is_public,
   do {
     match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_anon_clear,
                                     /*aceid*/ -1, /*permission*/ 0,
-                                    /*tag*/ NULL, /*match_tag*/ false,
-                                    endpoint->device);
+                                    /*tag*/ OC_STRING_VIEW_NULL,
+                                    /*match_tag*/ false, endpoint->device);
     if (match == NULL) {
       continue;
     }
@@ -388,10 +390,11 @@ oc_sec_check_acl_by_permissions(oc_method_t method,
     oc_ace_subject_t subject;
     memset(&subject, 0, sizeof(oc_ace_subject_t));
     memcpy(&subject.uuid, uuid, sizeof(*uuid));
-    match = oc_sec_acl_find_subject(match, OC_SUBJECT_UUID, &subject,
-                                    /*aceid*/ -1,
-                                    /*permission*/ 0, /*tag*/ NULL,
-                                    /*match_tag*/ false, endpoint->device);
+    match =
+      oc_sec_acl_find_subject(match, OC_SUBJECT_UUID, &subject,
+                              /*aceid*/ -1,
+                              /*permission*/ 0, /*tag*/ OC_STRING_VIEW_NULL,
+                              /*match_tag*/ false, endpoint->device);
 
     if (match == NULL) {
       continue;
