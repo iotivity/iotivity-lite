@@ -279,6 +279,7 @@
     <ClInclude Include="..\..\..\messaging\coap\oc_coap.h" />
     <ClInclude Include="..\..\..\messaging\coap\separate_internal.h" />
     <ClInclude Include="..\..\..\messaging\coap\transactions_internal.h" />
+    <ClInclude Include="..\..\..\security\oc_ace_internal.h" />
     <ClInclude Include="..\..\..\security\oc_acl_internal.h" />
     <ClInclude Include="..\..\..\security\oc_acl_util_internal.h" />
     <ClInclude Include="..\..\..\security\oc_ael_internal.h" />
@@ -461,6 +462,7 @@
     <ClCompile Include="..\..\..\port\common\oc_poll_loop.c" />
     <ClCompile Include="..\..\..\port\common\posix\oc_socket.c" />
     <ClCompile Include="..\..\..\port\common\posix\oc_tcp_socket.c" />
+    <ClCompile Include="..\..\..\security\oc_ace.c" />
     <ClCompile Include="..\..\..\security\oc_acl.c" />
     <ClCompile Include="..\..\..\security\oc_acl_util.c" />
     <ClCompile Include="..\..\..\security\oc_ael.c" />

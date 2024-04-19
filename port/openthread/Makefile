@@ -57,7 +57,7 @@ ifeq ($(MEMORY_TRACE), 1)
 endif
 
 ifeq ($(SECURE),1)
-	SRC_COMMON += oc_acl.c oc_acl_util.c oc_cred.c oc_cred_util.c oc_doxm.c oc_pstat.c oc_dtls.c oc_svr.c oc_store.c oc_sdi.c
+	SRC_COMMON += oc_ace.c oc_acl.c oc_acl_util.c oc_cred.c oc_cred_util.c oc_doxm.c oc_pstat.c oc_dtls.c oc_svr.c oc_store.c oc_sdi.c
 	SRC_COMMON += memory_buffer_alloc.c
 	CFLAGS += -DOC_SECURITY
 endif
