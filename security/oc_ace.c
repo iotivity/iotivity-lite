@@ -36,12 +36,44 @@ OC_MEMB(g_res_l, oc_ace_res_t,
         OC_MAX_APP_RESOURCES + OC_NUM_CORE_PLATFORM_RESOURCES +
           OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * OC_MAX_NUM_DEVICES);
 
+#if OC_DBG_IS_ENABLED
+static void
+log_new_ace(const oc_sec_ace_t *ace)
+{
+  // GCOVR_EXCL_START
+  if (ace->subject_type == OC_SUBJECT_ROLE) {
+    const char *role = oc_string(ace->subject.role.role);
+    const char *authority = oc_string_len(ace->subject.role.authority) > 0
+                              ? oc_string(ace->subject.role.authority)
+                              : "";
+    OC_DBG("Adding ACE(%d) for role (role=%s, authority=%s)", ace->aceid, role,
+           authority);
+  } else if (ace->subject_type == OC_SUBJECT_UUID) {
+    char c[OC_UUID_LEN];
+    oc_uuid_to_str(&ace->subject.uuid, c, OC_UUID_LEN);
+    OC_DBG("Adding ACE(%d) for subject %s", ace->aceid, c);
+  } else if (ace->subject_type == OC_SUBJECT_CONN) {
+    if (ace->subject.conn == OC_CONN_ANON_CLEAR) {
+      OC_DBG("Adding ACE(%d) for anon-clear connection", ace->aceid);
+    } else {
+      OC_DBG("Adding ACE(%d) for auth-crypt connection", ace->aceid);
+    }
+  }
+
+  const char *tag =
+    oc_string(ace->tag) != NULL ? oc_string(ace->tag) : "(NULL)";
+  OC_DBG("\t with permission=%d and tag=%s", ace->permission, tag);
+  // GCOVR_EXCL_STOP
+}
+
+#endif /* OC_DBG_IS_ENABLED */
+
 oc_sec_ace_t *
-oc_sec_add_new_ace(oc_ace_subject_type_t type, const oc_ace_subject_t *subject,
-                   int aceid, uint16_t permission, oc_string_view_t tag)
+oc_sec_new_ace(oc_ace_subject_type_t type, const oc_ace_subject_t *subject,
+               int aceid, uint16_t permission, oc_string_view_t tag)
 {
   oc_sec_ace_t *ace = oc_memb_alloc(&g_ace_l);
-  if (!ace) {
+  if (ace == NULL) {
     OC_WRN("insufficient memory to add new ACE");
     return NULL;
   }
@@ -49,38 +81,22 @@ oc_sec_add_new_ace(oc_ace_subject_type_t type, const oc_ace_subject_t *subject,
   OC_LIST_STRUCT_INIT(ace, resources);
 
   if (type == OC_SUBJECT_ROLE) {
-    OC_DBG("Adding ACE for role %s", oc_string(subject->role.role));
-    oc_new_string(&ace->subject.role.role, oc_string(subject->role.role),
-                  oc_string_len(subject->role.role));
-    if (oc_string_len(subject->role.authority) > 0) {
-      oc_new_string(&ace->subject.role.authority,
-                    oc_string(subject->role.authority),
-                    oc_string_len(subject->role.authority));
+    oc_copy_string(&ace->subject.role.role, &subject->role.role);
+    if (!oc_string_is_empty(&subject->role.authority)) {
+      oc_copy_string(&ace->subject.role.authority, &subject->role.authority);
     }
   } else {
     memcpy(&ace->subject, subject, sizeof(oc_ace_subject_t));
-#if OC_DBG_IS_ENABLED
-    // GCOVR_EXCL_START
-    if (type == OC_SUBJECT_UUID) {
-      char c[OC_UUID_LEN];
-      oc_uuid_to_str(&ace->subject.uuid, c, OC_UUID_LEN);
-      OC_DBG("Adding ACE for subject %s", c);
-    } else if (type == OC_SUBJECT_CONN) {
-      if (ace->subject.conn == OC_CONN_ANON_CLEAR) {
-        OC_DBG("Adding ACE for anon-clear connection");
-      } else {
-        OC_DBG("Adding ACE for auth-crypt connection");
-      }
-    }
-    // GCOVR_EXCL_STOP
-#endif /* OC_DBG_IS_ENABLED */
   }
   ace->aceid = aceid;
   ace->subject_type = type;
   ace->permission = permission;
-  if (tag.data != 0) {
+  if (tag.data != NULL) {
     oc_new_string(&ace->tag, tag.data, tag.length);
   }
+#if OC_DBG_IS_ENABLED
+  log_new_ace(ace);
+#endif /* OC_DBG_IS_ENABLED */
 
   return ace;
 }
@@ -149,7 +165,7 @@ oc_sec_ace_get_or_add_res(oc_sec_ace_t *ace, oc_string_view_t href,
 }
 
 static void
-oc_ace_free_resources(oc_sec_ace_t *ace)
+ace_free_resources(oc_sec_ace_t *ace)
 {
   oc_ace_res_t *res = (oc_ace_res_t *)oc_list_pop(ace->resources);
   while (res != NULL) {
@@ -160,9 +176,9 @@ oc_ace_free_resources(oc_sec_ace_t *ace)
 }
 
 void
-oc_free_ace(oc_sec_ace_t *ace)
+oc_sec_free_ace(oc_sec_ace_t *ace)
 {
-  oc_ace_free_resources(ace);
+  ace_free_resources(ace);
   if (ace->subject_type == OC_SUBJECT_ROLE) {
     oc_free_string(&ace->subject.role.role);
     oc_free_string(&ace->subject.role.authority);
@@ -177,8 +193,7 @@ ace_has_matching_tag(const oc_sec_ace_t *ace, oc_string_view_t tag)
   if (tag.data == NULL) {
     return oc_string(ace->tag) == NULL;
   }
-  return oc_string(ace->tag) != NULL &&
-         oc_string_is_cstr_equal(&ace->tag, tag.data, tag.length);
+  return oc_string_is_cstr_equal(&ace->tag, tag.data, tag.length);
 }
 
 static bool
@@ -190,11 +205,10 @@ ace_has_matching_subject(const oc_sec_ace_t *ace, oc_ace_subject_type_t type,
   }
   switch (type) {
   case OC_SUBJECT_UUID:
-    return memcmp(subject->uuid.id, ace->subject.uuid.id,
-                  OC_ARRAY_SIZE(subject->uuid.id)) == 0;
+    return oc_uuid_is_equal(ace->subject.uuid, subject->uuid);
   case OC_SUBJECT_ROLE:
     return oc_string_is_equal(&subject->role.role, &ace->subject.role.role) &&
-           (oc_string_len(ace->subject.role.authority) == 0 ||
+           (oc_string_is_empty(&ace->subject.role.authority) ||
             oc_string_is_equal(&subject->role.authority,
                                &ace->subject.role.authority));
   case OC_SUBJECT_CONN:
@@ -209,29 +223,26 @@ oc_sec_ace_find_subject(oc_sec_ace_t *ace, oc_ace_subject_type_t type,
                         uint16_t permission, oc_string_view_t tag,
                         bool match_tag)
 {
-  while (ace != NULL) {
+  for (; ace != NULL; ace = ace->next) {
     if (aceid != -1 && ace->aceid != aceid) {
-      goto next_ace;
+      continue;
     }
     if (permission != 0 && ace->permission != permission) {
-      goto next_ace;
+      continue;
     }
     if (match_tag && !ace_has_matching_tag(ace, tag)) {
-      goto next_ace;
+      continue;
     }
     if (ace_has_matching_subject(ace, type, subject)) {
       return ace;
     }
-
-  next_ace:
-    ace = ace->next;
   }
-  return ace;
+  return NULL;
 }
 
 static oc_ace_res_t *
-oc_sec_ace_res_find_resource(oc_ace_res_t *res, oc_string_view_t href,
-                             oc_ace_wildcard_t wildcard)
+ace_res_find_resource(oc_ace_res_t *res, oc_string_view_t href,
+                      oc_ace_wildcard_t wildcard)
 {
   int skip = 0;
   if (href.data != NULL && href.data[0] != '/') {
@@ -279,7 +290,7 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, const oc_sec_ace_t *ace,
   } else {
     res = res->next;
   }
-  return oc_sec_ace_res_find_resource(res, href, wildcard);
+  return ace_res_find_resource(res, href, wildcard);
 }
 
 #endif /* OC_SECURITY */

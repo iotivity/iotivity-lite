@@ -208,7 +208,7 @@ oc_sec_acl_update_res(oc_ace_subject_type_t type,
     if (aceid == -1) {
       aceid = acl_get_new_aceid(device);
     }
-    ace = oc_sec_add_new_ace(type, subject, aceid, permission, tag);
+    ace = oc_sec_new_ace(type, subject, aceid, permission, tag);
     if (ace == NULL) {
       return false;
     }
@@ -263,7 +263,7 @@ void
 oc_sec_remove_ace(oc_sec_ace_t *ace, size_t device)
 {
   oc_acl_remove_ace_from_device(ace, device);
-  oc_free_ace(ace);
+  oc_sec_free_ace(ace);
 }
 
 bool
@@ -272,7 +272,7 @@ oc_sec_remove_ace_by_aceid(int aceid, size_t device)
   bool removed = false;
   oc_sec_ace_t *ace = oc_acl_remove_ace_from_device_by_aceid(aceid, device);
   if (ace != NULL) {
-    oc_free_ace(ace);
+    oc_sec_free_ace(ace);
     removed = true;
   }
   return removed;
@@ -287,7 +287,7 @@ oc_sec_acl_clear(size_t device, oc_sec_ace_filter_t filter, void *user_data)
     oc_sec_ace_t *ace_next = ace->next;
     if (filter == NULL || filter(ace, user_data)) {
       oc_list_remove(acl_d->subjects, ace);
-      oc_free_ace(ace);
+      oc_sec_free_ace(ace);
     }
     ace = ace_next;
   }
@@ -561,7 +561,7 @@ oc_sec_decode_acl(const oc_rep_t *rep, bool from_storage, size_t device,
         }
 
         if (replaced_ace) {
-          oc_free_ace(replaced_ace);
+          oc_sec_free_ace(replaced_ace);
         }
 
         if (subject_type == OC_SUBJECT_ROLE) {
