@@ -98,6 +98,9 @@ bool oc_filter_out_ep_for_resource(const oc_endpoint_t *ep,
 
 #ifdef OC_RES_BATCH_SUPPORT
 
+/** Batch responses are currently only supported with a secure endpoint */
+bool oc_discovery_batch_response_is_supported(const oc_endpoint_t *ep);
+
 /**
  * @brief Check if resource should be included in the batch response.
  *

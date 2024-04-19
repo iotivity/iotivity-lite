@@ -418,7 +418,7 @@ TEST_F(TestDiscoveryWithServer, ObserveBatchWithResourceAdded)
   verifyBatchPayload(obd.batch, &ep);
 }
 
-TEST_F(TestDiscoveryWithServer, ObserveBatchIgnoreEmptyChange)
+TEST_F(TestDiscoveryWithServer, ObserveBatchSkipEmptyResourceChange)
 {
   ASSERT_TRUE(oc_get_con_res_announced());
 
@@ -441,6 +441,40 @@ TEST_F(TestDiscoveryWithServer, ObserveBatchIgnoreEmptyChange)
                                             kDynamicURI3.size(), kDeviceID);
   ASSERT_NE(nullptr, res);
   // notification with empty payload should be ignored
+  oc_notify_resource_changed(res);
+  int repeats = 0;
+  while (obd.observe == 0 && repeats < 30) {
+    oc::TestDevice::PoolEventsMsV1(10ms);
+    ++repeats;
+  }
+  EXPECT_EQ(0, obd.observe);
+  EXPECT_TRUE(obd.batch.empty());
+}
+
+TEST_F(TestDiscoveryWithServer, ObserveBatchSkipIgnoreResourceChange)
+{
+  ASSERT_TRUE(oc_get_con_res_announced());
+
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  observeBatchData obd{};
+  ASSERT_TRUE(oc_do_observe(OCF_RES_URI, &ep, "if=" OC_IF_B_STR, onBatchObserve,
+                            HIGH_QOS, &obd));
+  oc::TestDevice::PoolEventsMsV1(1s);
+  EXPECT_EQ(OC_COAP_OPTION_OBSERVE_REGISTER, obd.observe);
+  ASSERT_FALSE(obd.batch.empty());
+  // all resources should be in the first payload
+  verifyBatchPayload(obd.batch, &ep);
+  obd.observe = 0;
+  obd.batch.clear();
+
+  auto *res = oc_ri_get_app_resource_by_uri(
+    kDynamicURIIgnored.data(), kDynamicURIIgnored.size(), kDeviceID);
+  ASSERT_NE(nullptr, res);
+  // notification with payload from resource that returns OC_IGNORE should be
+  // ignored
   oc_notify_resource_changed(res);
   int repeats = 0;
   while (obd.observe == 0 && repeats < 30) {

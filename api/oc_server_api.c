@@ -139,6 +139,7 @@ oc_send_response_internal(oc_request_t *request, oc_status_t response_code,
 {
   int status_code = oc_status_code(response_code);
   if (status_code < 0) {
+    OC_ERR("could not send response: invalid response code");
     request->response->response_buffer->code = CLEAR_TRANSACTION;
     return false;
   }
@@ -190,7 +191,7 @@ oc_send_response_with_callback(oc_request_t *request, oc_status_t response_code,
   bool canTruncate = request->method != OC_GET || response_code != OC_STATUS_OK;
   if (!oc_send_response_internal(request, response_code, content_format,
                                  response_length(canTruncate), trigger_cb)) {
-    OC_ERR("could not send response: invalid response code");
+    return;
   }
 }
 
