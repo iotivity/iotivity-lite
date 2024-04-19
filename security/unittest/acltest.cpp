@@ -61,7 +61,6 @@
 #endif /* OC_HAS_FEATURE_PUSH */
 
 #include <array>
-#include <functional>
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
@@ -191,10 +190,11 @@ TEST_F(TestAcl, oc_sec_acl_clear)
 {
   oc_ace_subject_t anon_clear{};
   anon_clear.conn = OC_CONN_ANON_CLEAR;
-  EXPECT_EQ(true, oc_sec_acl_update_res(
-                    OC_SUBJECT_CONN, &anon_clear, -1, OC_PERM_RETRIEVE,
-                    /*tag*/ OC_STRING_VIEW_NULL, OC_STRING_VIEW("/test/a"),
-                    OC_ACE_NO_WC, kDeviceID, nullptr));
+  auto tag = OC_STRING_VIEW("tag");
+  EXPECT_EQ(true, oc_sec_acl_update_res(OC_SUBJECT_CONN, &anon_clear, -1,
+                                        OC_PERM_RETRIEVE, tag,
+                                        OC_STRING_VIEW("/test/a"), OC_ACE_NO_WC,
+                                        kDeviceID, nullptr));
 
   oc_uuid_t uuid{};
   oc_gen_uuid(&uuid);
@@ -222,16 +222,31 @@ TEST_F(TestAcl, oc_sec_acl_clear)
   oc_sec_ace_t *ace =
     oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, &anon_clear, /*aceid*/
                             -1,
-                            /*permission*/ 0, /*tag*/ OC_STRING_VIEW_NULL,
-                            /*match_tag*/ false, kDeviceID);
+                            /*permission*/ 0, tag,
+                            /*match_tag*/ true, kDeviceID);
   EXPECT_NE(nullptr, ace);
+
+  // non-matching tag
+  ace = oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, &anon_clear, /*aceid*/
+                                -1,
+                                /*permission*/ 0, /*tag*/ OC_STRING_VIEW_NULL,
+                                /*match_tag*/ true, kDeviceID);
+  EXPECT_EQ(nullptr, ace);
+
+  // ignore non-matching tag
+  ace = oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, &anon_clear, /*aceid*/
+                                -1,
+                                /*permission*/ 0, /*tag*/ OC_STRING_VIEW_NULL,
+                                /*match_tag*/ false, kDeviceID);
+  EXPECT_NE(nullptr, ace);
+
   oc_sec_acl_clear(
     kDeviceID,
     [](const oc_sec_ace_t *entry, void *) {
       return entry->subject_type == OC_SUBJECT_CONN;
     },
     nullptr);
-  EXPECT_EQ(2, oc_sec_ace_count(kDeviceID));
+  ASSERT_EQ(2, oc_sec_ace_count(kDeviceID));
   ace = oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, &anon_clear, /*aceid*/
                                 -1,
                                 /*permission*/ 0, /*tag*/ OC_STRING_VIEW_NULL,

@@ -35,13 +35,16 @@ extern "C" {
 #define OC_ACE_WC_ALL_SECURED_STR "+"
 #define OC_ACE_WC_ALL_PUBLIC_STR "-"
 
-oc_sec_ace_t *oc_sec_add_new_ace(oc_ace_subject_type_t type,
-                                 const oc_ace_subject_t *subject, int aceid,
-                                 uint16_t permission, oc_string_view_t tag)
+/** Create a new ACE of given subject type */
+oc_sec_ace_t *oc_sec_new_ace(oc_ace_subject_type_t type,
+                             const oc_ace_subject_t *subject, int aceid,
+                             uint16_t permission, oc_string_view_t tag)
   OC_NONNULL();
 
-void oc_free_ace(oc_sec_ace_t *ace) OC_NONNULL();
+/** Free an ACE */
+void oc_sec_free_ace(oc_sec_ace_t *ace) OC_NONNULL();
 
+/** Find ACE in a list */
 oc_sec_ace_t *oc_sec_ace_find_subject(oc_sec_ace_t *ace,
                                       oc_ace_subject_type_t type,
                                       const oc_ace_subject_t *subject,
