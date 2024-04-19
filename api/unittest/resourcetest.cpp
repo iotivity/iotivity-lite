@@ -52,6 +52,7 @@ static constexpr std::string_view kDevice2Name{ "Test Device 2" };
 
 constexpr std::string_view kDynamicURI1 = "/dyn/discoverable";
 constexpr std::string_view kDynamicURI2 = "/dyn/undiscoverable";
+constexpr std::string_view kDynamicIgnoredURI = "/dyn/ignored";
 constexpr std::string_view kCollectionURI = "/col";
 constexpr std::string_view kColDynamicURI1 = "/col/discoverable";
 #endif /* OC_SERVER && OC_DYNAMIC_ALLOCATION */
@@ -253,6 +254,8 @@ public:
   static void addDynamicResources();
   static void onGetDynamicResource(oc_request_t *request, oc_interface_mask_t,
                                    void *user_data);
+  static void onGetIgnoredDynamicResource(oc_request_t *request,
+                                          oc_interface_mask_t, void *);
 #ifdef OC_COLLECTIONS
   static void addCollections();
 #endif /* OC_COLLECTIONS */
@@ -345,6 +348,13 @@ TestResourceWithDevice::onGetDynamicResource(oc_request_t *request,
 }
 
 void
+TestResourceWithDevice::onGetIgnoredDynamicResource(oc_request_t *request,
+                                                    oc_interface_mask_t, void *)
+{
+  oc_send_response(request, OC_IGNORE);
+}
+
+void
 TestResourceWithDevice::addDynamicResources()
 {
   oc::DynamicResourceHandler handlers1{};
@@ -357,6 +367,9 @@ TestResourceWithDevice::addDynamicResources()
   handlers2.onGet = onGetDynamicResource;
   handlers2.onGetData = &m_dynamic_resources[std::string(kDynamicURI2)];
 
+  oc::DynamicResourceHandler handlers3{};
+  handlers3.onGet = onGetIgnoredDynamicResource;
+
   std::vector<oc::DynamicResourceToAdd> dynResources = {
     oc::makeDynamicResourceToAdd("Dynamic Resource 1",
                                  std::string(kDynamicURI1),
@@ -366,10 +379,17 @@ TestResourceWithDevice::addDynamicResources()
                                  std::string(kDynamicURI2),
                                  { "oic.d.undiscoverable", "oic.d.test" },
                                  { OC_IF_BASELINE, OC_IF_R }, handlers2, 0),
+    oc::makeDynamicResourceToAdd("Dynamic Resource 3",
+                                 std::string(kDynamicIgnoredURI),
+                                 { "oic.d.ignored", "oic.d.test" },
+                                 { OC_IF_BASELINE, OC_IF_R }, handlers3),
   };
   for (const auto &dr : dynResources) {
     oc_resource_t *res = oc::TestDevice::AddDynamicResource(dr, kDevice1ID);
     ASSERT_NE(nullptr, res);
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+    oc_resource_set_access_in_RFOTM(res, true, OC_PERM_RETRIEVE);
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
   }
 }
 
@@ -568,6 +588,33 @@ TEST_F(TestResourceWithDevice, IterateCollectionResources)
   ASSERT_TRUE(collection4.empty());
 }
 
+#if !defined(OC_SECURITY) || defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM)
+
+// Resource that returns OC_IGNORE shouldn't return any payload
+TEST_F(TestResourceWithDevice, GetRequestIgnoredResource)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDevice1ID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  bool invoked = false;
+  auto get_handler = [](oc_client_response_t *data) {
+    oc::TestDevice::Terminate();
+    *static_cast<bool *>(data->user_data) = true;
+    ASSERT_EQ(OC_REQUEST_TIMEOUT, data->code);
+    OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload, true).data());
+  };
+
+  auto timeout = 1s;
+  EXPECT_TRUE(oc_do_get_with_timeout(kDynamicIgnoredURI.data(), &ep, nullptr,
+                                     timeout.count(), get_handler, LOW_QOS,
+                                     &invoked));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  ASSERT_TRUE(invoked);
+}
+
+#endif /* !OC_SECURITY || OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+
 #endif /* OC_SERVER && OC_DYNAMIC_ALLOCATION */
 
 #if !defined(OC_SECURITY) || defined(OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM)
@@ -657,7 +704,7 @@ TEST_F(TestResourceWithDevice, BaselineInterfaceProperties)
   auto timeout = 1s;
   bool invoked = false;
   EXPECT_TRUE(oc_do_get_with_timeout("/oc/con", &ep, "if=" OC_IF_BASELINE_STR,
-                                     timeout.count(), get_handler, HIGH_QOS,
+                                     timeout.count(), get_handler, LOW_QOS,
                                      &invoked));
   oc::TestDevice::PoolEventsMsV1(timeout, true);
 

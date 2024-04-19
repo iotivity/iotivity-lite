@@ -34,6 +34,7 @@
 #include "tests/gtest/Device.h"
 #include "tests/gtest/RepPool.h"
 #include "tests/gtest/Resource.h"
+#include "util/oc_features.h"
 #include "util/oc_macros_internal.h"
 
 #ifdef OC_SECURITY
@@ -328,6 +329,19 @@ TEST_F(TestDiscoveryWithServer, GetRequestBaseline)
 
 #ifdef OC_RES_BATCH_SUPPORT
 
+class TestBatchDiscoveryWithServer : public TestDiscoveryWithServer {
+public:
+  void TearDown() override
+  {
+#ifdef OC_HAS_FEATURE_ETAG
+    oc::IterateAllResources([](oc_resource_t *resource) {
+      oc_resource_set_etag(resource, oc_etag_get());
+    });
+#endif /* OC_HAS_FEATURE_ETAG */
+    TestDiscoveryWithServer::TearDown();
+  }
+};
+
 // batch interface
 // [
 //   {
@@ -338,7 +352,7 @@ TEST_F(TestDiscoveryWithServer, GetRequestBaseline)
 //   },
 //   ...
 // ]
-TEST_F(TestDiscoveryWithServer, GetRequestBatch)
+TEST_F(TestBatchDiscoveryWithServer, GetRequestBatch)
 {
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
   ASSERT_TRUE(epOpt.has_value());
@@ -505,7 +519,7 @@ testBatchIncrementalChanges(
   testBatchIncrementalChanges(ep, &coapETag, query, expectedCode, expected);
 }
 
-TEST_F(TestDiscoveryWithServer, GetRequestBatchIncremental_Single)
+TEST_F(TestBatchDiscoveryWithServer, GetRequestBatchIncremental_Single)
 {
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
   ASSERT_TRUE(epOpt.has_value());
@@ -533,7 +547,7 @@ TEST_F(TestDiscoveryWithServer, GetRequestBatchIncremental_Single)
 }
 
 // Invalid ETag0 should be ignored
-TEST_F(TestDiscoveryWithServer,
+TEST_F(TestBatchDiscoveryWithServer,
        GetRequestBatchIncremental_Single_InvalidIncrementalETag0)
 {
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
@@ -557,7 +571,7 @@ TEST_F(TestDiscoveryWithServer,
 
 // invalid ETags in the query should be ignored, but if a single valid ETag is
 // found then is should be used
-TEST_F(TestDiscoveryWithServer, GetRequestBatchIncremental_InvalidETags)
+TEST_F(TestBatchDiscoveryWithServer, GetRequestBatchIncremental_InvalidETags)
 {
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
   ASSERT_TRUE(epOpt.has_value());
@@ -644,7 +658,7 @@ TEST_F(TestDiscoveryWithServer,
 // Test with multiple etags in the query, sorted in descending order, so only
 // the first should trigger the iteration of resources and subsequent ETag
 // candidates should be skipped because they have a lower value
-TEST_F(TestDiscoveryWithServer, GetRequestBatchIncremental_Multiple)
+TEST_F(TestBatchDiscoveryWithServer, GetRequestBatchIncremental_Multiple)
 {
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
   ASSERT_TRUE(epOpt.has_value());
@@ -680,7 +694,8 @@ TEST_F(TestDiscoveryWithServer, GetRequestBatchIncremental_Multiple)
 // Test with multiple etags in the query, sorted in ascending order, so all
 // candidates should trigger resources iteration and the last value should be
 // finally used as the ETag
-TEST_F(TestDiscoveryWithServer, GetRequestBatchIncremental_MultipleAscending)
+TEST_F(TestBatchDiscoveryWithServer,
+       GetRequestBatchIncremental_MultipleAscending)
 {
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
   ASSERT_TRUE(epOpt.has_value());
@@ -715,7 +730,7 @@ TEST_F(TestDiscoveryWithServer, GetRequestBatchIncremental_MultipleAscending)
 
 /// Test will all batch resources etags in query, one of them is the latest
 /// updated thus we should receive a VALID response with empty payload
-TEST_F(TestDiscoveryWithServer, GetRequestBatchIncremental_AllAscending)
+TEST_F(TestBatchDiscoveryWithServer, GetRequestBatchIncremental_AllAscending)
 {
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
   ASSERT_TRUE(epOpt.has_value());

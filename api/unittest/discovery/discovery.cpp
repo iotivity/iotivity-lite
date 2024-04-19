@@ -28,6 +28,10 @@
 #include "tests/gtest/Resource.h"
 #include "tests/gtest/Utility.h"
 
+#ifdef OC_HAS_FEATURE_ETAG
+#include "api/oc_etag_internal.h"
+#endif /* OC_HAS_FEATURE_ETAG */
+
 #ifdef OC_COLLECTIONS
 #include "tests/gtest/Collection.h"
 #endif /* OC_COLLECTIONS */
@@ -338,6 +342,14 @@ TestDiscoveryWithServer::onGetEmptyDynamicResource(oc_request_t *request,
 }
 
 void
+TestDiscoveryWithServer::onGetIgnoredDynamicResource(oc_request_t *request,
+                                                     oc_interface_mask_t,
+                                                     void *)
+{
+  oc_send_response(request, OC_IGNORE);
+}
+
+void
 TestDiscoveryWithServer::addDynamicResources()
 {
   oc::DynamicResourceHandler handlers1{};
@@ -353,6 +365,9 @@ TestDiscoveryWithServer::addDynamicResources()
   oc::DynamicResourceHandler handlers3{};
   handlers3.onGet = onGetEmptyDynamicResource;
 
+  oc::DynamicResourceHandler handlers4{};
+  handlers4.onGet = onGetIgnoredDynamicResource;
+
   std::vector<oc::DynamicResourceToAdd> dynResources = {
     oc::makeDynamicResourceToAdd("Dynamic Resource 1",
                                  std::string(kDynamicURI1),
@@ -366,6 +381,10 @@ TestDiscoveryWithServer::addDynamicResources()
       "Dynamic Resource 3", std::string(kDynamicURI3),
       { "oic.d.observable", "oic.d.test" }, { OC_IF_BASELINE, OC_IF_R },
       handlers3, OC_DISCOVERABLE | OC_OBSERVABLE),
+    oc::makeDynamicResourceToAdd(
+      "Dynamic Resource 4", std::string(kDynamicURIIgnored),
+      { "oic.d.ignored", "oic.d.test" }, { OC_IF_BASELINE, OC_IF_R }, handlers4,
+      OC_DISCOVERABLE | OC_OBSERVABLE),
   };
   for (const auto &dr : dynResources) {
     oc_resource_t *res = oc::TestDevice::AddDynamicResource(dr, kDeviceID);
@@ -401,7 +420,6 @@ TestDiscoveryWithServer::addColletions()
   dynamicResources[std::string(kColDynamicURI1)] = { 404 };
   handlers1.onGet = onGetDynamicResource;
   handlers1.onGetData = &dynamicResources[std::string(kColDynamicURI1)];
-
   auto dr1 = oc::makeDynamicResourceToAdd(
     "Collection Resource 1", std::string(kColDynamicURI1),
     { std::string(powerSwitchRT), "oic.d.test" }, { OC_IF_BASELINE, OC_IF_R },
@@ -416,7 +434,6 @@ TestDiscoveryWithServer::addColletions()
   dynamicResources[std::string(kColDynamicURI2)] = { 1 };
   handlers2.onGet = onGetDynamicResource;
   handlers2.onGetData = &dynamicResources[std::string(kColDynamicURI2)];
-
   auto dr2 = oc::makeDynamicResourceToAdd(
     "Collection Resource 2", std::string(kColDynamicURI2),
     { std::string(powerSwitchRT), "oic.d.test" }, { OC_IF_BASELINE, OC_IF_R },
@@ -429,7 +446,6 @@ TestDiscoveryWithServer::addColletions()
 
   oc::DynamicResourceHandler handlers3{};
   handlers3.onGet = onGetEmptyDynamicResource;
-
   auto dr3 = oc::makeDynamicResourceToAdd(
     "Collection Resource 3", std::string(kColDynamicURI3),
     { std::string(powerSwitchRT), "oic.d.test" }, { OC_IF_BASELINE, OC_IF_R },
@@ -530,6 +546,10 @@ TestDiscoveryWithServer::getBatchResources(const oc_endpoint_t *endpoint)
   oc_resources_iterate(
     kDeviceID, true, true, true, true,
     [](oc_resource_t *resource, void *data) {
+      if (std::string(kDynamicURIIgnored) == oc_string(resource->uri)) {
+        // resource that returns OC_IGNORE shouldn't be in the batch payload
+        return true;
+      }
       if (auto *br = static_cast<batch_resources_t *>(data);
           oc_discovery_resource_is_in_batch_response(resource, br->endpoint,
                                                      true)) {

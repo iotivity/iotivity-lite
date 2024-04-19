@@ -110,12 +110,12 @@ public:
   void SetUp() override;
   void TearDown() override;
 
-  static void onGetDynamicResource(oc_request_t *request,
-                                   oc_interface_mask_t interface,
+  static void onGetDynamicResource(oc_request_t *request, oc_interface_mask_t,
                                    void *user_data);
   static void onGetEmptyDynamicResource(oc_request_t *request,
-                                        oc_interface_mask_t interface,
-                                        void *user_data);
+                                        oc_interface_mask_t, void *);
+  static void onGetIgnoredDynamicResource(oc_request_t *request,
+                                          oc_interface_mask_t, void *);
 
   static void addDynamicResources();
 #ifdef OC_COLLECTIONS
@@ -154,6 +154,7 @@ constexpr size_t kDeviceID{ 0 };
 constexpr std::string_view kDynamicURI1 = "/dyn/discoverable";
 constexpr std::string_view kDynamicURI2 = "/dyn/undiscoverable";
 constexpr std::string_view kDynamicURI3 = "/dyn/empty";
+constexpr std::string_view kDynamicURIIgnored = "/dyn/ignored";
 
 #ifdef OC_COLLECTIONS
 

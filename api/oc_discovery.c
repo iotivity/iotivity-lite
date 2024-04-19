@@ -223,7 +223,7 @@ encode_resource(CborEncoder *links, const oc_resource_t *resource,
     return false;
   }
 
-  oc_rep_start_object(links, link);
+  oc_rep_begin_object(links, link);
 
   // rel
   if (oc_core_get_resource_by_index(OCF_RES, resource->device) == resource) {
@@ -412,7 +412,7 @@ process_oic_1_1_resource(oc_resource_t *resource, oc_request_t *request,
     return false;
   }
 
-  oc_rep_start_object(links, res);
+  oc_rep_begin_object(links, res);
 
   // uri
   oc_rep_set_text_string_v1(res, href, oc_string(resource->uri),
@@ -502,7 +502,7 @@ process_oic_1_1_device_object(CborEncoder *device, oc_request_t *request,
   char uuid[OC_UUID_LEN];
   oc_uuid_to_str(oc_core_get_device_id(device_num), uuid, OC_ARRAY_SIZE(uuid));
 
-  oc_rep_start_object(device, links);
+  oc_rep_begin_object(device, links);
   oc_rep_set_text_string_v1(links, di, uuid,
                             oc_strnlen(uuid, OC_ARRAY_SIZE(uuid)));
 
@@ -700,6 +700,38 @@ discovery_process_batch_response_write_href(char *buffer, size_t buffer_size,
   buffer[to_write] = '\0';
 }
 
+static bool
+discovery_should_ignore_resource_response(
+  coap_status_t response_code, ptrdiff_t payload_start, size_t payload_size,
+  bool is_collection, bool is_notification, const oc_resource_t *resource)
+{
+  (void)resource;
+  if (response_code == CLEAR_TRANSACTION) {
+    OC_DBG("discovery%s: ignoring resource(%s) with CLEAR_TRANSACTION",
+           is_notification ? " notification" : "", oc_string(resource->uri));
+    return true;
+  }
+#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
+  if (is_notification && response_code == CONTENT_2_05) {
+    const uint8_t *payload = oc_rep_get_encoder_buf() + payload_start;
+    if (payload_size == 0 ||
+        (!is_collection && payload_size == 2 &&
+         oc_rep_encoded_payload_is_empty_object(oc_rep_encoder_get_type(),
+                                                payload, payload_size))) {
+      OC_DBG("discovery notification: ignoring empty resource(%s)",
+             oc_string(resource->uri));
+      return true;
+    }
+  }
+#else  /* !OC_DISCOVERY_RESOURCE_OBSERVABLE */
+  (void)payload_start;
+  (void)payload_size;
+  (void)is_collection;
+  (void)is_notification;
+#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
+  return false;
+}
+
 typedef bool (*discovery_process_batch_response_filter_t)(const oc_resource_t *,
                                                           void *);
 
@@ -715,7 +747,6 @@ discovery_process_batch_response(
     return false;
   }
 
-#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
   struct
   {
     CborEncoder global;
@@ -723,7 +754,6 @@ discovery_process_batch_response(
   } prev;
   memcpy(&prev.links, encoder, sizeof(CborEncoder));
   memcpy(&prev.global, oc_rep_get_encoder(), sizeof(CborEncoder));
-#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
 
   oc_request_t rest_request;
   memset(&rest_request, 0, sizeof(oc_request_t));
@@ -737,7 +767,7 @@ discovery_process_batch_response(
   rest_request.origin = endpoint;
   rest_request.method = OC_GET;
 
-  oc_rep_start_object(encoder, links_obj);
+  oc_rep_begin_object(encoder, links_obj);
 
   char href[OC_MAX_OCF_URI_SIZE] = { 0 };
   discovery_process_batch_response_write_href(href, OC_MAX_OCF_URI_SIZE,
@@ -779,24 +809,13 @@ discovery_process_batch_response(
     payload_size = total_payload_end - total_payload_start;
   }
 
-#ifdef OC_DISCOVERY_RESOURCE_OBSERVABLE
-  if (is_notification && response_buffer.code == CONTENT_2_05) {
-    const uint8_t *payload =
-      oc_rep_get_encoder_buf() + (ptrdiff_t)total_payload_start;
-    if (payload_size == 0 ||
-        (!is_collection && payload_size == 2 &&
-         oc_rep_encoded_payload_is_empty_object(oc_rep_encoder_get_type(),
-                                                payload, payload_size))) {
-      OC_DBG("ignoring empty resource(%s)", oc_string(resource->uri));
-      memcpy(encoder, &prev.links, sizeof(CborEncoder));
-      memcpy(oc_rep_get_encoder(), &prev.global, sizeof(CborEncoder));
-      return false;
-    }
+  if (discovery_should_ignore_resource_response(
+        response_buffer.code, (ptrdiff_t)total_payload_start, payload_size,
+        is_collection, is_notification, resource)) {
+    memcpy(encoder, &prev.links, sizeof(CborEncoder));
+    memcpy(oc_rep_get_encoder(), &prev.global, sizeof(CborEncoder));
+    return false;
   }
-#else  /* !OC_DISCOVERY_RESOURCE_OBSERVABLE */
-  (void)is_notification;
-  (void)is_collection;
-#endif /* OC_DISCOVERY_RESOURCE_OBSERVABLE */
 
   if (payload_size == 0) {
     oc_rep_start_root_object();
@@ -1072,6 +1091,18 @@ discovery_encode_sdi(CborEncoder *object, size_t device)
 
 #endif
 
+#ifdef OC_RES_BATCH_SUPPORT
+bool
+oc_discovery_batch_response_is_supported(const oc_endpoint_t *ep)
+{
+  return ep != NULL
+#ifdef OC_SECURITY
+         && (ep->flags & SECURED) != 0
+#endif /* OC_SECURITY */
+    ;
+}
+#endif /* OC_RES_BATCH_SUPPORT */
+
 static int
 discovery_encode(const oc_request_t *request, oc_interface_mask_t iface)
 {
@@ -1084,11 +1115,7 @@ discovery_encode(const oc_request_t *request, oc_interface_mask_t iface)
   }
 #ifdef OC_RES_BATCH_SUPPORT
   case OC_IF_B: {
-    if (request->origin == NULL
-#ifdef OC_SECURITY
-        || (request->origin->flags & SECURED) == 0
-#endif /* OC_SECURITY */
-    ) {
+    if (!oc_discovery_batch_response_is_supported(request->origin)) {
       OC_ERR("oc_discovery: insecure batch interface requests are unsupported");
       return -1;
     }

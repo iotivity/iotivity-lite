@@ -16,6 +16,7 @@
  *
  ***************************************************************************/
 
+#include "api/oc_discovery_internal.h"
 #include "api/oc_endpoint_internal.h"
 #include "api/oc_event_callback_internal.h"
 #include "api/oc_events_internal.h"
@@ -1652,11 +1653,21 @@ ri_invoke_coap_set_etag(const ri_invoke_coap_set_etag_in_t *in,
    */
   const uint8_t *req_etag_buf = NULL;
   uint8_t req_etag_buf_len = coap_options_get_etag(in->request, &req_etag_buf);
+  bool is_batch = in->iface_mask == OC_IF_B;
+#ifdef OC_RES_BATCH_SUPPORT
+  if (is_batch &&
+      (oc_core_get_resource_by_index(OCF_RES, in->endpoint->device) ==
+       in->preparsed_request_obj->cur_resource) &&
+      !oc_discovery_batch_response_is_supported(in->endpoint)) {
+    OC_DBG(
+      "skip etag: insecure discovery batch interface requests are unsupported");
+    return BITMASK_CODE_BAD_REQUEST;
+  }
+#endif /* OC_RES_BATCH_SUPPORT */
   uint64_t etag =
-    (in->iface_mask == OC_IF_B)
-      ? oc_ri_get_batch_etag(in->preparsed_request_obj->cur_resource,
-                             in->endpoint, in->endpoint->device)
-      : oc_ri_get_etag(in->preparsed_request_obj->cur_resource);
+    is_batch ? oc_ri_get_batch_etag(in->preparsed_request_obj->cur_resource,
+                                    in->endpoint, in->endpoint->device)
+             : oc_ri_get_etag(in->preparsed_request_obj->cur_resource);
   if (etag == OC_ETAG_UNINITIALIZED) {
     return bitmask_code;
   }
