@@ -39,11 +39,22 @@ extern "C" {
 #define OCF_SEC_ACL_RT "oic.r.acl2"
 #define OCF_SEC_ACL_STORE_NAME "acl"
 
+#define OC_CONN_AUTH_CRYPT_STR "auth-crypt"
+#define OC_CONN_ANON_CLEAR_STR "anon-clear"
+
+/** @brief Allocate and initialize global variables */
 void oc_sec_acl_init(void);
+
+/** @brief Deallocate global variables */
 void oc_sec_acl_free(void);
+
+/** @brief Reset the ACL resource for given device to default values. */
 void oc_sec_acl_default(size_t device);
+
+/** @brief Encode the ACL resource to root encoder. */
 bool oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,
                        bool to_storage);
+
 bool oc_sec_decode_acl(const oc_rep_t *rep, bool from_storage, size_t device,
                        oc_sec_on_apply_acl_cb_t on_apply_ace_cb,
                        void *on_apply_ace_data);
