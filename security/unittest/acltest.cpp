@@ -186,7 +186,7 @@ TEST_F(TestAcl, oc_sec_acl_add_bootstrap_acl)
   EXPECT_EQ(1, oc_sec_ace_count(kDeviceID));
 }
 
-TEST_F(TestAcl, oc_sec_acl_clear)
+TEST_F(TestAcl, oc_sec_acl_find_subject)
 {
   oc_ace_subject_t anon_clear{};
   anon_clear.conn = OC_CONN_ANON_CLEAR;
@@ -207,17 +207,40 @@ TEST_F(TestAcl, oc_sec_acl_clear)
 
   oc_ace_subject_t subject_role{};
   auto testRole = OC_STRING_LOCAL("test.role");
-  auto testAuthority = OC_STRING_LOCAL("test.authority");
-  subject_role.role = { testRole, testAuthority };
+  subject_role.role = { testRole, {} };
   EXPECT_EQ(true, oc_sec_acl_update_res(
                     OC_SUBJECT_ROLE, &subject_role, -1, OC_PERM_NOTIFY,
                     /*tag*/ OC_STRING_VIEW_NULL, OC_STRING_VIEW("/test/c"),
                     OC_ACE_NO_WC, kDeviceID, nullptr));
-  EXPECT_EQ(3, oc_sec_ace_count(kDeviceID));
+  oc_ace_subject_t subject_role2{};
+  auto testAuthority = OC_STRING_LOCAL("test.authority");
+  subject_role2.role = { testRole, testAuthority };
+  EXPECT_EQ(true, oc_sec_acl_update_res(
+                    OC_SUBJECT_ROLE, &subject_role2, -1, OC_PERM_RETRIEVE,
+                    /*tag*/ OC_STRING_VIEW_NULL, OC_STRING_VIEW("/test/d"),
+                    OC_ACE_NO_WC, kDeviceID, nullptr));
+
+  oc_ace_subject_t subject_role3{};
+  auto testAuthority2 = OC_STRING_LOCAL("test.newauthority");
+  subject_role3.role = { testRole, testAuthority2 };
+  EXPECT_EQ(true, oc_sec_acl_update_res(
+                    OC_SUBJECT_ROLE, &subject_role3, -1, OC_PERM_RETRIEVE,
+                    /*tag*/ OC_STRING_VIEW_NULL, OC_STRING_VIEW("/test/e"),
+                    OC_ACE_NO_WC, kDeviceID, nullptr));
+
+  oc_ace_subject_t subject_role4{};
+  auto testRole2 = OC_STRING_LOCAL("test.newrole");
+  subject_role4.role = { testRole2, testAuthority };
+  EXPECT_EQ(true, oc_sec_acl_update_res(
+                    OC_SUBJECT_ROLE, &subject_role4, -1, OC_PERM_RETRIEVE,
+                    /*tag*/ OC_STRING_VIEW_NULL, OC_STRING_VIEW("/test/f"),
+                    OC_ACE_NO_WC, kDeviceID, nullptr));
+
+  ASSERT_EQ(6, oc_sec_ace_count(kDeviceID));
 
   oc_sec_acl_clear(
     kDeviceID, [](const oc_sec_ace_t *, void *) { return false; }, nullptr);
-  EXPECT_EQ(3, oc_sec_ace_count(kDeviceID));
+  EXPECT_EQ(6, oc_sec_ace_count(kDeviceID));
 
   oc_sec_ace_t *ace =
     oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, &anon_clear, /*aceid*/
@@ -225,6 +248,21 @@ TEST_F(TestAcl, oc_sec_acl_clear)
                             /*permission*/ 0, tag,
                             /*match_tag*/ true, kDeviceID);
   EXPECT_NE(nullptr, ace);
+
+  // must match aceid
+  ASSERT_NE(-1, ace->aceid);
+  ace =
+    oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, &anon_clear, ace->aceid,
+                            /*permission*/ 0, tag,
+                            /*match_tag*/ true, kDeviceID);
+  EXPECT_NE(nullptr, ace);
+
+  // non-matching aceid
+  ace = oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, &anon_clear,
+                                ace->aceid + 1,
+                                /*permission*/ 0, tag,
+                                /*match_tag*/ true, kDeviceID);
+  EXPECT_EQ(nullptr, ace);
 
   // non-matching tag
   ace = oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, &anon_clear, /*aceid*/
@@ -246,7 +284,7 @@ TEST_F(TestAcl, oc_sec_acl_clear)
       return entry->subject_type == OC_SUBJECT_CONN;
     },
     nullptr);
-  ASSERT_EQ(2, oc_sec_ace_count(kDeviceID));
+  ASSERT_EQ(5, oc_sec_ace_count(kDeviceID));
   ace = oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, &anon_clear, /*aceid*/
                                 -1,
                                 /*permission*/ 0, /*tag*/ OC_STRING_VIEW_NULL,
@@ -258,6 +296,7 @@ TEST_F(TestAcl, oc_sec_acl_clear)
                                 /*tag*/ OC_STRING_VIEW_NULL,
                                 /*match_tag*/ false, kDeviceID);
   EXPECT_NE(nullptr, ace);
+
   int aceid{ ace->aceid };
   oc_sec_acl_clear(
     kDeviceID,

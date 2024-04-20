@@ -216,7 +216,7 @@ oc_sec_acl_update_res(oc_ace_subject_type_t type,
     created = true;
   }
   oc_ace_res_data_t res_data =
-    oc_sec_ace_get_or_add_res(ace, href, wildcard, permission, true);
+    oc_sec_ace_get_or_add_res(ace, href, wildcard, true);
   if (res_data.res == NULL) {
     oc_sec_remove_ace(ace, device);
     return false;
@@ -320,8 +320,7 @@ oc_sec_acl_add_created_resource_ace(oc_string_view_t href,
   memset(&subject, 0, sizeof(oc_ace_subject_t));
   memcpy(subject.uuid.id, uuid->id, sizeof(oc_uuid_t));
 
-  oc_ace_permissions_t perm =
-    OC_PERM_RETRIEVE | OC_PERM_DELETE | OC_PERM_UPDATE;
+  uint16_t perm = OC_PERM_RETRIEVE | OC_PERM_DELETE | OC_PERM_UPDATE;
   if (collection) {
     perm |= OC_PERM_CREATE;
   }
