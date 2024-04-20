@@ -52,23 +52,23 @@ oc_sec_ace_t *oc_sec_ace_find_subject(oc_sec_ace_t *ace,
                                       oc_string_view_t tag, bool match_tag)
   OC_NONNULL(3);
 
-oc_ace_res_t *oc_sec_ace_find_resource(oc_ace_res_t *start,
-                                       const oc_sec_ace_t *ace,
-                                       oc_string_view_t href,
-                                       oc_ace_wildcard_t wildcard)
-  OC_NONNULL(2);
-
 typedef struct oc_ace_res_data_t
 {
   oc_ace_res_t *res;
   bool created;
 } oc_ace_res_data_t;
 
+/** Get an oc_ace_res_t* if it exists, otherwise create it */
 oc_ace_res_data_t oc_sec_ace_get_or_add_res(oc_sec_ace_t *ace,
                                             oc_string_view_t href,
                                             oc_ace_wildcard_t wildcard,
-                                            uint16_t permission, bool create)
-  OC_NONNULL();
+                                            bool create) OC_NONNULL();
+
+/** Find an ace_res_t* match by href or a wildcard */
+oc_ace_res_t *oc_sec_ace_find_resource(oc_ace_res_t *start,
+                                       const oc_sec_ace_t *ace,
+                                       oc_string_view_t href,
+                                       uint16_t wildcard);
 
 #ifdef __cplusplus
 }

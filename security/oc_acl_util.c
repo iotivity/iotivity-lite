@@ -120,7 +120,7 @@ oc_ace_get_permission(const oc_sec_ace_t *ace, const oc_resource_t *resource,
    * OC_ACE_WC_ALL. If the resource is not discoverable, then match only with
    * ACEs bearing OC_ACE_WC_ALL.
    */
-  oc_ace_wildcard_t wc = 0;
+  uint16_t wc = 0;
   if (!is_DCR) {
     if (resource->properties & OC_DISCOVERABLE) {
       wc = OC_ACE_WC_ALL_SECURED;

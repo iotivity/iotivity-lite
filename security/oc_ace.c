@@ -19,6 +19,7 @@
 #ifdef OC_SECURITY
 
 #include "api/oc_helpers_internal.h"
+#include "api/oc_resource_internal.h"
 #include "api/oc_ri_internal.h"
 #include "port/oc_log_internal.h"
 #include "security/oc_ace_internal.h"
@@ -101,12 +102,40 @@ oc_sec_new_ace(oc_ace_subject_type_t type, const oc_ace_subject_t *subject,
   return ace;
 }
 
+#if OC_DBG_IS_ENABLED
+static void
+log_new_ace_resource(const oc_ace_res_t *res, uint16_t permission)
+{
+  // GCOVR_EXCL_START
+  switch (res->wildcard) {
+  case OC_ACE_WC_ALL_SECURED:
+    OC_DBG("Adding wildcard resource %s with permission %d",
+           OC_ACE_WC_ALL_SECURED_STR, permission);
+    break;
+  case OC_ACE_WC_ALL_PUBLIC:
+    OC_DBG("Adding wildcard resource %s with permission %d",
+           OC_ACE_WC_ALL_PUBLIC_STR, permission);
+    break;
+  case OC_ACE_WC_ALL:
+    OC_DBG("Adding wildcard resource %s with permission %d", OC_ACE_WC_ALL_STR,
+           permission);
+    break;
+  default:
+    break;
+  }
+  if (oc_string(res->href) != NULL) {
+    OC_DBG("Adding resource %s with permission %d", oc_string(res->href),
+           permission);
+  }
+  // GCOVR_EXCL_STOP
+}
+#endif /* OC_DBG_IS_ENABLED */
+
 static oc_ace_res_t *
-oc_sec_add_new_ace_res(oc_string_view_t href, oc_ace_wildcard_t wildcard,
-                       uint16_t permission)
+oc_sec_add_new_ace_res(oc_string_view_t href, oc_ace_wildcard_t wildcard)
 {
   oc_ace_res_t *res = oc_memb_alloc(&g_res_l);
-  if (!res) {
+  if (res == NULL) {
     OC_WRN("insufficient memory to add new resource to ACE");
     return NULL;
   }
@@ -114,54 +143,36 @@ oc_sec_add_new_ace_res(oc_string_view_t href, oc_ace_wildcard_t wildcard,
   if (wildcard != OC_ACE_NO_WC) {
     res->wildcard = wildcard;
   }
-#if OC_DBG_IS_ENABLED
-  // GCOVR_EXCL_START
-  switch (res->wildcard) {
-  case OC_ACE_WC_ALL_SECURED:
-    OC_DBG("Adding wildcard resource + with permission %d", permission);
-    break;
-  case OC_ACE_WC_ALL_PUBLIC:
-    OC_DBG("Adding wildcard resource - with permission %d", permission);
-    break;
-  case OC_ACE_WC_ALL:
-    OC_DBG("Adding wildcard resource * with permission %d", permission);
-    break;
-  default:
-    break;
-  }
-  // GCOVR_EXCL_STOP
-#else  /* !OC_DBG_IS_ENABLED */
-  (void)permission;
-#endif /* OC_DBG_IS_ENABLED */
-
   if (href.data != NULL) {
+    assert(href.length > 0);
+    assert(href.data[0] == '/');
     oc_new_string(&res->href, href.data, href.length);
-    OC_DBG("Adding resource %s with permission %d", href.data, permission);
   }
   return res;
 }
 
 oc_ace_res_data_t
 oc_sec_ace_get_or_add_res(oc_sec_ace_t *ace, oc_string_view_t href,
-                          oc_ace_wildcard_t wildcard, uint16_t permission,
-                          bool create)
+                          oc_ace_wildcard_t wildcard, bool create)
 {
   assert(ace != NULL);
-  oc_ace_res_t *res = oc_sec_ace_find_resource(NULL, ace, href, wildcard);
-  if (res) {
-    oc_ace_res_data_t data = { res, false };
-    return data;
+  oc_ace_res_t *res =
+    oc_sec_ace_find_resource(NULL, ace, href, (uint16_t)wildcard);
+  if (res != NULL) {
+    return (oc_ace_res_data_t){ res, false };
   }
   if (create) {
-    res = oc_sec_add_new_ace_res(href, wildcard, permission);
+    res = oc_sec_add_new_ace_res(href, wildcard);
   }
-  if (!res) {
-    oc_ace_res_data_t data = { NULL, false };
-    return data;
+  if (res == NULL) {
+    OC_ERR("could not %s resource for ACE", create ? "create" : "find");
+    return (oc_ace_res_data_t){ NULL, false };
   }
+#if OC_DBG_IS_ENABLED
+  log_new_ace_resource(res, ace->permission);
+#endif /* OC_DBG_IS_ENABLED */
   oc_list_add(ace->resources, res);
-  oc_ace_res_data_t data = { res, true };
-  return data;
+  return (oc_ace_res_data_t){ res, true };
 }
 
 static void
@@ -240,41 +251,41 @@ oc_sec_ace_find_subject(oc_sec_ace_t *ace, oc_ace_subject_type_t type,
   return NULL;
 }
 
+static bool
+ace_res_match_wild_card(uint16_t wc, uint16_t reswc)
+{
+  if (wc == OC_ACE_WC_ALL) {
+    return reswc == OC_ACE_WC_ALL;
+  }
+  return (wc & reswc) != 0;
+}
+
 static oc_ace_res_t *
 ace_res_find_resource(oc_ace_res_t *res, oc_string_view_t href,
-                      oc_ace_wildcard_t wildcard)
+                      uint16_t wildcard)
 {
-  int skip = 0;
-  if (href.data != NULL && href.data[0] != '/') {
-    skip = 1;
-  }
-  while (res != NULL) {
-    bool positive = false;
-    bool match = true;
-    if (href.data != NULL && oc_string_len(res->href) > 0) {
-      if ((href.length + skip) != oc_string_len(res->href) ||
-          memcmp(oc_string(res->href) + skip, href.data,
-                 oc_string_len(res->href) - skip) != 0) {
-        match = false;
+  for (; res != NULL; res = res->next) {
+    bool match = false;
+    // match href
+    if (href.data != NULL && !oc_string_is_empty(&res->href)) {
+      if (!oc_resource_match_uri(oc_string_view2(&res->href), href)) {
+        continue;
+      }
+      match = true;
+    }
+
+    // match wildcard
+    if (wildcard != 0 && res->wildcard != 0) {
+      if (ace_res_match_wild_card(wildcard, (uint16_t)res->wildcard)) {
+        match = true;
       } else {
-        positive = true;
+        continue;
       }
     }
 
-    if (match && wildcard != 0 && res->wildcard != 0) {
-      if ((wildcard != OC_ACE_WC_ALL && (wildcard & res->wildcard) != 0) ||
-          (wildcard == OC_ACE_WC_ALL && res->wildcard == OC_ACE_WC_ALL)) {
-        positive = true;
-      } else {
-        match = false;
-      }
-    }
-
-    if (match && positive) {
+    if (match) {
       return res;
     }
-
-    res = res->next;
   }
 
   return res;
@@ -282,10 +293,11 @@ ace_res_find_resource(oc_ace_res_t *res, oc_string_view_t href,
 
 oc_ace_res_t *
 oc_sec_ace_find_resource(oc_ace_res_t *start, const oc_sec_ace_t *ace,
-                         oc_string_view_t href, oc_ace_wildcard_t wildcard)
+                         oc_string_view_t href, uint16_t wildcard)
 {
+  assert(start != NULL || ace != NULL);
   oc_ace_res_t *res = start;
-  if (!res) {
+  if (res == NULL) {
     res = (oc_ace_res_t *)oc_list_head(ace->resources);
   } else {
     res = res->next;
