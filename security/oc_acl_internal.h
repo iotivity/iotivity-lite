@@ -39,9 +39,6 @@ extern "C" {
 #define OCF_SEC_ACL_RT "oic.r.acl2"
 #define OCF_SEC_ACL_STORE_NAME "acl"
 
-#define OC_CONN_AUTH_CRYPT_STR "auth-crypt"
-#define OC_CONN_ANON_CLEAR_STR "anon-clear"
-
 /** @brief Allocate and initialize global variables */
 void oc_sec_acl_init(void);
 

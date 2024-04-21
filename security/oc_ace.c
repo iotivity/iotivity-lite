@@ -28,6 +28,18 @@
 
 #include <assert.h>
 
+#define OC_ACE_PROP_SUBJECT "subject"
+#define OC_ACE_PROP_SUBJECT_UUID "uuid"
+#define OC_ACE_PROP_SUBJECT_ROLE "role"
+#define OC_ACE_PROP_SUBJECT_AUTHORITY "authority"
+#define OC_ACE_PROP_SUBJECT_CONNTYPE "conntype"
+#define OC_ACE_PROP_SUBJECT_PERMISSION "permission"
+#define OC_ACE_PROP_SUBJECT_ACEID "aceid"
+#define OC_ACE_PROP_TAG "tag"
+#define OC_ACE_PROP_RESOURCES "resources"
+#define OC_ACE_PROP_RESOURCE_HREF "href"
+#define OC_ACE_PROP_RESOURCE_WILDCARD "wc"
+
 #define MAX_NUM_RES_PERM_PAIRS                                                 \
   ((OC_MAX_NUM_SUBJECTS + 2) *                                                 \
    (OC_MAX_APP_RESOURCES + OC_NUM_CORE_PLATFORM_RESOURCES +                    \
@@ -36,6 +48,21 @@ OC_MEMB(g_ace_l, oc_sec_ace_t, MAX_NUM_RES_PERM_PAIRS);
 OC_MEMB(g_res_l, oc_ace_res_t,
         OC_MAX_APP_RESOURCES + OC_NUM_CORE_PLATFORM_RESOURCES +
           OC_NUM_CORE_LOGICAL_DEVICE_RESOURCES * OC_MAX_NUM_DEVICES);
+
+oc_string_view_t
+oc_ace_wildcard_to_string(oc_ace_wildcard_t wc)
+{
+  if (wc == OC_ACE_WC_ALL) {
+    return OC_STRING_VIEW(OC_ACE_WC_ALL_STR);
+  }
+  if (wc == OC_ACE_WC_ALL_SECURED) {
+    return OC_STRING_VIEW(OC_ACE_WC_ALL_SECURED_STR);
+  }
+  if (wc == OC_ACE_WC_ALL_PUBLIC) {
+    return OC_STRING_VIEW(OC_ACE_WC_ALL_PUBLIC_STR);
+  }
+  return OC_STRING_VIEW_NULL;
+}
 
 #if OC_DBG_IS_ENABLED
 static void
@@ -107,21 +134,10 @@ static void
 log_new_ace_resource(const oc_ace_res_t *res, uint16_t permission)
 {
   // GCOVR_EXCL_START
-  switch (res->wildcard) {
-  case OC_ACE_WC_ALL_SECURED:
-    OC_DBG("Adding wildcard resource %s with permission %d",
-           OC_ACE_WC_ALL_SECURED_STR, permission);
-    break;
-  case OC_ACE_WC_ALL_PUBLIC:
-    OC_DBG("Adding wildcard resource %s with permission %d",
-           OC_ACE_WC_ALL_PUBLIC_STR, permission);
-    break;
-  case OC_ACE_WC_ALL:
-    OC_DBG("Adding wildcard resource %s with permission %d", OC_ACE_WC_ALL_STR,
+  oc_string_view_t wcv = oc_ace_wildcard_to_string(res->wildcard);
+  if (wcv.data != NULL) {
+    OC_DBG("Adding wildcard resource %s with permission %d", wcv.data,
            permission);
-    break;
-  default:
-    break;
   }
   if (oc_string(res->href) != NULL) {
     OC_DBG("Adding resource %s with permission %d", oc_string(res->href),
@@ -134,12 +150,17 @@ log_new_ace_resource(const oc_ace_res_t *res, uint16_t permission)
 static oc_ace_res_t *
 oc_sec_add_new_ace_res(oc_string_view_t href, oc_ace_wildcard_t wildcard)
 {
+  if (wildcard == OC_ACE_NO_WC && href.data == NULL) {
+    OC_ERR("wildcard and href cannot both be empty");
+    return NULL;
+  }
+
   oc_ace_res_t *res = oc_memb_alloc(&g_res_l);
   if (res == NULL) {
     OC_WRN("insufficient memory to add new resource to ACE");
     return NULL;
   }
-  res->wildcard = 0;
+  res->wildcard = OC_ACE_NO_WC;
   if (wildcard != OC_ACE_NO_WC) {
     res->wildcard = wildcard;
   }
@@ -303,6 +324,128 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, const oc_sec_ace_t *ace,
     res = res->next;
   }
   return ace_res_find_resource(res, href, wildcard);
+}
+
+static oc_string_view_t
+ace_connection_type_to_str(oc_ace_connection_type_t type)
+{
+  if (type == OC_CONN_AUTH_CRYPT) {
+    return OC_STRING_VIEW(OC_CONN_AUTH_CRYPT_STR);
+  }
+  if (type == OC_CONN_ANON_CLEAR) {
+    return OC_STRING_VIEW(OC_CONN_ANON_CLEAR_STR);
+  }
+  return OC_STRING_VIEW_NULL;
+}
+
+static void
+ace_encode_subject(CborEncoder *encoder, const oc_sec_ace_t *sub)
+{
+  if (sub->subject_type == OC_SUBJECT_UUID) {
+    char uuid[OC_UUID_LEN];
+    int len = oc_uuid_to_str_v1(&sub->subject.uuid, uuid, OC_UUID_LEN);
+    assert(len > 0);
+    oc_string_view_t key = OC_STRING_VIEW(OC_ACE_PROP_SUBJECT_UUID);
+    g_err |= oc_rep_object_set_text_string(encoder, key.data, key.length, uuid,
+                                           (size_t)len);
+    return;
+  }
+
+  if (sub->subject_type == OC_SUBJECT_ROLE) {
+    oc_string_view_t role_key = OC_STRING_VIEW(OC_ACE_PROP_SUBJECT_ROLE);
+    g_err |= oc_rep_object_set_text_string(
+      encoder, role_key.data, role_key.length,
+      oc_string(sub->subject.role.role),
+      oc_string_len_unsafe(sub->subject.role.role));
+    if (!oc_string_is_empty(&sub->subject.role.authority)) {
+      oc_string_view_t authority_key =
+        OC_STRING_VIEW(OC_ACE_PROP_SUBJECT_AUTHORITY);
+      g_err |= oc_rep_object_set_text_string(
+        encoder, authority_key.data, authority_key.length,
+        oc_string(sub->subject.role.authority),
+        oc_string_len_unsafe(sub->subject.role.authority));
+    }
+    return;
+  }
+
+  if (sub->subject_type == OC_SUBJECT_CONN) {
+    oc_string_view_t conntype_key =
+      OC_STRING_VIEW(OC_ACE_PROP_SUBJECT_CONNTYPE);
+    oc_string_view_t conntype = ace_connection_type_to_str(sub->subject.conn);
+    g_err |= oc_rep_object_set_text_string(encoder, conntype_key.data,
+                                           conntype_key.length, conntype.data,
+                                           conntype.length);
+    return;
+  }
+}
+
+static void
+ace_encode_subject_resource(CborEncoder *encoder, const oc_ace_res_t *res)
+{
+  size_t href_len = oc_string_len(res->href);
+  if (href_len > 0) {
+    oc_string_view_t href_key = OC_STRING_VIEW(OC_ACE_PROP_RESOURCE_HREF);
+    g_err |= oc_rep_object_set_text_string(
+      encoder, href_key.data, href_key.length, oc_string(res->href), href_len);
+    return;
+  }
+
+  oc_string_view_t wcv = oc_ace_wildcard_to_string(res->wildcard);
+  if (wcv.length > 0) {
+    oc_string_view_t wc_key = OC_STRING_VIEW(OC_ACE_PROP_RESOURCE_WILDCARD);
+    g_err |= oc_rep_object_set_text_string(encoder, wc_key.data, wc_key.length,
+                                           wcv.data, wcv.length);
+    return;
+  }
+}
+
+static void
+ace_encode_subject_resources(CborEncoder *encoder, const oc_ace_res_t *res)
+{
+  if (res == NULL) {
+    return;
+  }
+  oc_string_view_t key = OC_STRING_VIEW(OC_ACE_PROP_RESOURCES);
+  g_err |= oc_rep_encode_text_string(encoder, key.data, key.length);
+  oc_rep_begin_array(encoder, resources);
+  for (; res != NULL; res = res->next) {
+    oc_rep_object_array_begin_item(resources);
+    ace_encode_subject_resource(oc_rep_object(resources), res);
+    oc_rep_object_array_end_item(resources);
+  }
+  oc_rep_end_array(encoder, resources);
+}
+
+void
+oc_sec_encode_ace(CborEncoder *encoder, const oc_sec_ace_t *sub,
+                  bool to_storage)
+{
+  oc_string_view_t subject_key = OC_STRING_VIEW(OC_ACE_PROP_SUBJECT);
+  g_err |=
+    oc_rep_encode_text_string(encoder, subject_key.data, subject_key.length);
+  oc_rep_begin_object(encoder, subject);
+  ace_encode_subject(oc_rep_object(subject), sub);
+  oc_rep_end_object(encoder, subject);
+
+  ace_encode_subject_resources(
+    encoder, (const oc_ace_res_t *)oc_list_head(sub->resources));
+
+  oc_string_view_t permission_key =
+    OC_STRING_VIEW(OC_ACE_PROP_SUBJECT_PERMISSION);
+  g_err |= oc_rep_object_set_uint(encoder, permission_key.data,
+                                  permission_key.length, sub->permission);
+
+  oc_string_view_t aceid_key = OC_STRING_VIEW(OC_ACE_PROP_SUBJECT_ACEID);
+  g_err |= oc_rep_object_set_int(encoder, aceid_key.data, aceid_key.length,
+                                 sub->aceid);
+  if (to_storage) {
+    if (!oc_string_is_empty(&sub->tag)) {
+      oc_string_view_t tag_key = OC_STRING_VIEW(OC_ACE_PROP_TAG);
+      g_err |= oc_rep_object_set_text_string(
+        encoder, tag_key.data, tag_key.length, oc_string(sub->tag),
+        oc_string_len_unsafe(sub->tag)); // safe: oc_string_is_empty check above
+    }
+  }
 }
 
 #endif /* OC_SECURITY */

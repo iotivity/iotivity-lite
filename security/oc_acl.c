@@ -109,124 +109,15 @@ acl_get_new_aceid(size_t device)
   return aceid;
 }
 
-#define OC_ACL_PROP_UUID "uuid"
-#define OC_ACL_PROP_ROLE "role"
-#define OC_ACL_PROP_AUTHORITY "authority"
-#define OC_ACL_PROP_CONNTYPE "conntype"
-#define OC_ACL_PROP_RESOURCES "resources"
-
-static oc_string_view_t
-ace_connection_type_to_str(oc_ace_connection_type_t type)
-{
-  if (type == OC_CONN_AUTH_CRYPT) {
-    return OC_STRING_VIEW(OC_CONN_AUTH_CRYPT_STR);
-  }
-  if (type == OC_CONN_ANON_CLEAR) {
-    return OC_STRING_VIEW(OC_CONN_ANON_CLEAR_STR);
-  }
-  return OC_STRING_VIEW_NULL;
-}
-
-static void
-acl_encode_subject(CborEncoder *encoder, const oc_sec_ace_t *sub)
-{
-  if (sub->subject_type == OC_SUBJECT_UUID) {
-    char uuid[OC_UUID_LEN];
-    int len = oc_uuid_to_str_v1(&sub->subject.uuid, uuid, OC_UUID_LEN);
-    assert(len > 0);
-    oc_string_view_t key = OC_STRING_VIEW(OC_ACL_PROP_UUID);
-    g_err |= oc_rep_object_set_text_string(encoder, key.data, key.length, uuid,
-                                           (size_t)len);
-    return;
-  }
-
-  if (sub->subject_type == OC_SUBJECT_ROLE) {
-    oc_string_view_t role_key = OC_STRING_VIEW(OC_ACL_PROP_ROLE);
-    g_err |= oc_rep_object_set_text_string(
-      encoder, role_key.data, role_key.length,
-      oc_string(sub->subject.role.role),
-      oc_string_len_unsafe(sub->subject.role.role));
-    if (!oc_string_is_empty(&sub->subject.role.authority)) {
-      oc_string_view_t authority_key = OC_STRING_VIEW(OC_ACL_PROP_AUTHORITY);
-      g_err |= oc_rep_object_set_text_string(
-        encoder, authority_key.data, authority_key.length,
-        oc_string(sub->subject.role.authority),
-        oc_string_len_unsafe(sub->subject.role.authority));
-    }
-    return;
-  }
-
-  if (sub->subject_type == OC_SUBJECT_CONN) {
-    oc_string_view_t conntype_key = OC_STRING_VIEW(OC_ACL_PROP_CONNTYPE);
-    oc_string_view_t conntype = ace_connection_type_to_str(sub->subject.conn);
-    g_err |= oc_rep_object_set_text_string(encoder, conntype_key.data,
-                                           conntype_key.length, conntype.data,
-                                           conntype.length);
-    return;
-  }
-}
-
-static void
-acl_encode_subject_resources(CborEncoder *encoder, const oc_ace_res_t *res)
-{
-  oc_string_view_t key = OC_STRING_VIEW(OC_ACL_PROP_RESOURCES);
-  g_err |= oc_rep_encode_text_string(encoder, key.data, key.length);
-  oc_rep_begin_array(encoder, resources);
-  for (; res != NULL; res = res->next) {
-    oc_rep_object_array_start_item(resources);
-    size_t href_len = oc_string_len(res->href);
-    if (href_len > 0) {
-      oc_rep_set_text_string_v1(resources, href, oc_string(res->href),
-                                href_len);
-    } else {
-      switch (res->wildcard) {
-      case OC_ACE_WC_ALL_SECURED:
-        oc_rep_set_text_string_v1(resources, wc, OC_ACE_WC_ALL_SECURED_STR,
-                                  OC_CHAR_ARRAY_LEN(OC_ACE_WC_ALL_SECURED_STR));
-        break;
-      case OC_ACE_WC_ALL_PUBLIC:
-        oc_rep_set_text_string_v1(resources, wc, OC_ACE_WC_ALL_PUBLIC_STR,
-                                  OC_CHAR_ARRAY_LEN(OC_ACE_WC_ALL_PUBLIC_STR));
-        break;
-      case OC_ACE_WC_ALL:
-        oc_rep_set_text_string_v1(resources, wc, OC_ACE_WC_ALL_STR,
-                                  OC_CHAR_ARRAY_LEN(OC_ACE_WC_ALL_STR));
-        break;
-      default:
-        break;
-      }
-    }
-    oc_rep_object_array_end_item(resources);
-  }
-  oc_rep_end_array(encoder, resources);
-}
-
 static void
 acl_encode_subjects(oc_list_t subjects, bool to_storage)
 {
   oc_rep_open_array(root, aclist2);
-  const oc_sec_ace_t *sub = oc_list_head(subjects);
-
-  while (sub != NULL) {
-    oc_rep_object_array_start_item(aclist2);
-
-    oc_rep_open_object(aclist2, subject);
-    acl_encode_subject(oc_rep_object(subject), sub);
-    oc_rep_close_object(aclist2, subject);
-
-    acl_encode_subject_resources(
-      oc_rep_object(aclist2),
-      (const oc_ace_res_t *)oc_list_head(sub->resources));
-
-    oc_rep_set_uint(aclist2, permission, sub->permission);
-    oc_rep_set_int(aclist2, aceid, sub->aceid);
-    if (to_storage) {
-      if (oc_string_len(sub->tag) > 0) {
-        oc_rep_set_text_string(aclist2, tag, oc_string(sub->tag));
-      }
-    }
+  for (const oc_sec_ace_t *sub = oc_list_head(subjects); sub != NULL;
+       sub = sub->next) {
+    oc_rep_object_array_begin_item(aclist2);
+    oc_sec_encode_ace(oc_rep_object(aclist2), sub, to_storage);
     oc_rep_object_array_end_item(aclist2);
-    sub = sub->next;
   }
   oc_rep_close_array(root, aclist2);
 }
