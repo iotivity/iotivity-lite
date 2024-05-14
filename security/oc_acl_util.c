@@ -155,7 +155,7 @@ get_role_permissions(const oc_sec_cred_t *role_cred,
   do {
     oc_ace_subject_view_t role_subject = {
       .role =
-        (struct oc_ace_subject_role_view_t){
+        (oc_ace_subject_role_view_t){
           .role = oc_string_view2(&role_cred->role.role),
           .authority = oc_string_view2(&role_cred->role.authority),
         }

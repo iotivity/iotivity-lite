@@ -28,7 +28,9 @@
 #include "tests/gtest/RepPool.h"
 #include "util/oc_list.h"
 
+#include <algorithm>
 #include <gtest/gtest.h>
+#include <vector>
 
 class TestACE : public testing::Test {
 public:
@@ -43,6 +45,55 @@ public:
   }
 
   void TearDown() override { oc_log_set_level(OC_LOG_LEVEL_INFO); }
+
+  static void checkEncodedACE(
+    const oc_sec_ace_t *ace, const oc_rep_t *rep,
+    std::vector<const oc_ace_res_t *> expResources = {})
+  {
+    ASSERT_NE(nullptr, rep);
+    OC_DBG("payload: %s", oc::RepPool::GetJson(rep, true).data());
+    oc_sec_ace_decode_t decoded{};
+    ASSERT_TRUE(oc_sec_decode_ace(rep, &decoded));
+    EXPECT_EQ(ace->aceid, decoded.aceid);
+    EXPECT_TRUE(
+      oc_ace_has_matching_subject(ace, decoded.subject_type, decoded.subject));
+    EXPECT_EQ(ace->permission, decoded.permission);
+    EXPECT_TRUE(oc_ace_has_matching_tag(ace, oc_string_view2(decoded.tag)));
+    if (expResources.empty()) {
+      EXPECT_EQ(nullptr, decoded.resources);
+    } else {
+      ASSERT_NE(nullptr, decoded.resources);
+      std::vector<oc_sec_ace_res_decode_t> resources{};
+      ASSERT_TRUE(oc_sec_decode_ace_resources(
+        decoded.resources,
+        [](const oc_sec_ace_res_decode_t *aceresdecode, void *user_data) {
+          auto *resources =
+            static_cast<std::vector<oc_sec_ace_res_decode_t> *>(user_data);
+          resources->push_back(*aceresdecode);
+        },
+        &resources));
+      ASSERT_EQ(expResources.size(), resources.size());
+      for (auto resource : resources) {
+        auto it = std::find_if(expResources.begin(), expResources.end(),
+                               [&resource](const oc_ace_res_t *aceres) {
+                                 return aceres->wildcard == resource.wildcard &&
+                                        oc_string_is_equal(&aceres->href,
+                                                           resource.href);
+                               });
+        ASSERT_NE(it, expResources.end());
+        expResources.erase(it);
+      }
+      EXPECT_TRUE(expResources.empty());
+    }
+  }
+
+  static void checkInvalidPayload(const oc_rep_t *rep)
+  {
+    ASSERT_NE(nullptr, rep);
+    OC_DBG("payload: %s", oc::RepPool::GetJson(rep, true).data());
+    oc_sec_ace_decode_t decoded{};
+    EXPECT_FALSE(oc_sec_decode_ace(rep, &decoded));
+  }
 };
 
 TEST_F(TestACE, NewUUID)
@@ -293,6 +344,18 @@ TEST_F(TestACE, WildcardToString)
                oc_ace_wildcard_to_string(OC_ACE_WC_ALL_SECURED).data);
 }
 
+TEST_F(TestACE, WildcardFromString)
+{
+  EXPECT_EQ(-1, oc_ace_wildcard_from_string(OC_STRING_VIEW("")));
+
+  EXPECT_EQ(OC_ACE_WC_ALL,
+            oc_ace_wildcard_from_string(OC_STRING_VIEW(OC_ACE_WC_ALL_STR)));
+  EXPECT_EQ(OC_ACE_WC_ALL_PUBLIC, oc_ace_wildcard_from_string(
+                                    OC_STRING_VIEW(OC_ACE_WC_ALL_PUBLIC_STR)));
+  EXPECT_EQ(OC_ACE_WC_ALL_SECURED, oc_ace_wildcard_from_string(OC_STRING_VIEW(
+                                     OC_ACE_WC_ALL_SECURED_STR)));
+}
+
 TEST_F(TestACE, ConnectionTypeToString)
 {
   EXPECT_EQ(nullptr, oc_ace_connection_type_to_string(
@@ -305,7 +368,7 @@ TEST_F(TestACE, ConnectionTypeToString)
                oc_ace_connection_type_to_string(OC_CONN_ANON_CLEAR).data);
 }
 
-TEST_F(TestACE, FromStringToConnectionType)
+TEST_F(TestACE, ConnectionTypeFromString)
 {
   EXPECT_EQ(-1, oc_ace_connection_type_from_string(OC_STRING_VIEW("")));
 
@@ -332,10 +395,7 @@ TEST_F(TestACE, EncodeUUID)
   oc_rep_end_root_object();
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
-  oc::oc_rep_unique_ptr rep = pool.ParsePayload();
-  ASSERT_NE(nullptr, rep.get());
-  OC_DBG("payload: %s", oc::RepPool::GetJson(rep.get(), true).data());
-  // TODO: decode and check
+  checkEncodedACE(ace, pool.ParsePayload().get());
 
   oc_sec_free_ace(ace);
 }
@@ -349,6 +409,7 @@ TEST_F(TestACE, EncodeRole)
   oc_sec_ace_t *ace =
     oc_sec_new_ace(OC_SUBJECT_ROLE, subject_role, 13,
                    OC_PERM_RETRIEVE | OC_PERM_UPDATE, OC_STRING_VIEW_NULL);
+  ASSERT_NE(ace, nullptr);
 
   oc::RepPool pool{};
   oc_rep_begin_root_object();
@@ -356,10 +417,7 @@ TEST_F(TestACE, EncodeRole)
   oc_rep_end_root_object();
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
-  oc::oc_rep_unique_ptr rep = pool.ParsePayload();
-  ASSERT_NE(nullptr, rep.get());
-  OC_DBG("payload: %s", oc::RepPool::GetJson(rep.get(), true).data());
-  // TODO: decode and check
+  checkEncodedACE(ace, pool.ParsePayload().get());
 
   oc_sec_free_ace(ace);
 }
@@ -370,6 +428,7 @@ TEST_F(TestACE, EncodeAnonConn)
   anon_conn.conn = OC_CONN_ANON_CLEAR;
   oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_CONN, anon_conn, 1,
                                      OC_PERM_NONE, OC_STRING_VIEW_NULL);
+  ASSERT_NE(ace, nullptr);
 
   oc::RepPool pool{};
   oc_rep_begin_root_object();
@@ -377,10 +436,7 @@ TEST_F(TestACE, EncodeAnonConn)
   oc_rep_end_root_object();
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
-  oc::oc_rep_unique_ptr rep = pool.ParsePayload();
-  ASSERT_NE(nullptr, rep.get());
-  OC_DBG("payload: %s", oc::RepPool::GetJson(rep.get(), true).data());
-  // TODO: decode and check
+  checkEncodedACE(ace, pool.ParsePayload().get());
 
   oc_sec_free_ace(ace);
 }
@@ -391,6 +447,7 @@ TEST_F(TestACE, EncodeCryptConn)
   crypt_conn.conn = OC_CONN_AUTH_CRYPT;
   oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_CONN, crypt_conn, 2,
                                      OC_PERM_CREATE, OC_STRING_VIEW_NULL);
+  ASSERT_NE(ace, nullptr);
 
   oc::RepPool pool{};
   oc_rep_begin_root_object();
@@ -398,10 +455,7 @@ TEST_F(TestACE, EncodeCryptConn)
   oc_rep_end_root_object();
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
-  oc::oc_rep_unique_ptr rep = pool.ParsePayload();
-  ASSERT_NE(nullptr, rep.get());
-  OC_DBG("payload: %s", oc::RepPool::GetJson(rep.get(), true).data());
-  // TODO: decode and check
+  checkEncodedACE(ace, pool.ParsePayload().get());
 
   oc_sec_free_ace(ace);
 }
@@ -413,6 +467,7 @@ TEST_F(TestACE, EncodeWithResources)
   subject_role.role = { testRole, {} };
   oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_ROLE, subject_role, 17,
                                      OC_PERM_NOTIFY, OC_STRING_VIEW_NULL);
+  ASSERT_NE(ace, nullptr);
 
   // href resource
   auto href = OC_STRING_VIEW("/uri/1");
@@ -421,16 +476,16 @@ TEST_F(TestACE, EncodeWithResources)
   ASSERT_NE(nullptr, res_data.res);
 
   // wc-all secured resource
-  res_data = oc_sec_ace_get_or_add_res(ace, OC_STRING_VIEW_NULL,
-                                       OC_ACE_WC_ALL_SECURED, true);
-  ASSERT_TRUE(res_data.created);
-  ASSERT_NE(nullptr, res_data.res);
+  auto wc_all_res_data = oc_sec_ace_get_or_add_res(ace, OC_STRING_VIEW_NULL,
+                                                   OC_ACE_WC_ALL_SECURED, true);
+  ASSERT_TRUE(wc_all_res_data.created);
+  ASSERT_NE(nullptr, wc_all_res_data.res);
 
   // wc-all public resource
-  res_data = oc_sec_ace_get_or_add_res(ace, OC_STRING_VIEW_NULL,
-                                       OC_ACE_WC_ALL_PUBLIC, true);
-  ASSERT_TRUE(res_data.created);
-  ASSERT_NE(nullptr, res_data.res);
+  auto wc_all_public_res_data = oc_sec_ace_get_or_add_res(
+    ace, OC_STRING_VIEW_NULL, OC_ACE_WC_ALL_PUBLIC, true);
+  ASSERT_TRUE(wc_all_public_res_data.created);
+  ASSERT_NE(nullptr, wc_all_public_res_data.res);
 
   oc::RepPool pool{};
   oc_rep_begin_root_object();
@@ -438,10 +493,10 @@ TEST_F(TestACE, EncodeWithResources)
   oc_rep_end_root_object();
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
-  oc::oc_rep_unique_ptr rep = pool.ParsePayload();
-  ASSERT_NE(nullptr, rep.get());
-  OC_DBG("payload: %s", oc::RepPool::GetJson(rep.get(), true).data());
-  // TODO: decode and check
+  std::vector<const oc_ace_res_t *> expResources = {
+    res_data.res, wc_all_res_data.res, wc_all_public_res_data.res
+  };
+  checkEncodedACE(ace, pool.ParsePayload().get(), expResources);
 
   oc_sec_free_ace(ace);
 }
@@ -452,6 +507,7 @@ TEST_F(TestACE, EncodeWithWCAllResource)
   anon_conn.conn = OC_CONN_ANON_CLEAR;
   oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_CONN, anon_conn, 1,
                                      OC_PERM_CREATE, OC_STRING_VIEW_NULL);
+  ASSERT_NE(ace, nullptr);
 
   // wc-all resource
   auto res_data =
@@ -465,12 +521,60 @@ TEST_F(TestACE, EncodeWithWCAllResource)
   oc_rep_end_root_object();
   ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
 
-  oc::oc_rep_unique_ptr rep = pool.ParsePayload();
-  ASSERT_NE(nullptr, rep.get());
-  OC_DBG("payload: %s", oc::RepPool::GetJson(rep.get(), true).data());
-  // TODO: decode and check
+  std::vector<const oc_ace_res_t *> expResources = { res_data.res };
+  checkEncodedACE(ace, pool.ParsePayload().get(), expResources);
 
   oc_sec_free_ace(ace);
 }
+
+TEST_F(TestACE, Decode_FailInvalidStringProperty)
+{
+  oc::RepPool pool{};
+  oc_rep_begin_root_object();
+  oc_rep_set_text_string(root, plgd, "dev");
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  checkInvalidPayload(pool.ParsePayload().get());
+}
+
+TEST_F(TestACE, Decode_FailInvalidIntProperty)
+{
+  oc::RepPool pool{};
+  oc_rep_begin_root_object();
+  oc_rep_set_int(root, plgd.dev, 42);
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  checkInvalidPayload(pool.ParsePayload().get());
+}
+
+// permission is uint16_t type
+TEST_F(TestACE, Decode_FailInvalidPermission)
+{
+  oc::RepPool pool{};
+  oc_rep_begin_root_object();
+  oc_rep_set_int(root, permission, std::numeric_limits<int64_t>::max());
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  checkInvalidPayload(pool.ParsePayload().get());
+}
+
+#if INT_MAX < INT64_MAX
+
+// aceid is int type
+TEST_F(TestACE, Decode_FailInvalidAceid)
+{
+  oc::RepPool pool{};
+  oc_rep_begin_root_object();
+  oc_rep_set_int(root, aceid, std::numeric_limits<int64_t>::max());
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  checkInvalidPayload(pool.ParsePayload().get());
+}
+
+#endif /* INT_MAX < INT64_MAX */
 
 #endif /* OC_SECURITY */
