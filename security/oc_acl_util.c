@@ -153,10 +153,17 @@ get_role_permissions(const oc_sec_cred_t *role_cred,
   uint16_t permission = 0;
   oc_sec_ace_t *match = NULL;
   do {
-    match = oc_sec_acl_find_subject(
-      match, OC_SUBJECT_ROLE, (const oc_ace_subject_t *)&role_cred->role,
-      /*aceid*/ -1, /*permission*/ 0,
-      /*tag*/ OC_STRING_VIEW_NULL, /*match_tag*/ false, device);
+    oc_ace_subject_view_t role_subject = {
+      .role =
+        (struct oc_ace_subject_role_view_t){
+          .role = oc_string_view2(&role_cred->role.role),
+          .authority = oc_string_view2(&role_cred->role.authority),
+        }
+    };
+    match = oc_sec_acl_find_subject(match, OC_SUBJECT_ROLE, role_subject,
+                                    /*aceid*/ -1, /*permission*/ 0,
+                                    /*tag*/ OC_STRING_VIEW_NULL,
+                                    /*match_tag*/ false, device);
 
     if (match != NULL) {
       permission |= oc_ace_get_permission(match, resource, is_DCR, is_public);
@@ -338,11 +345,11 @@ get_conn_permissions(const oc_resource_t *resource, bool is_DCR, bool is_public,
   uint16_t permission = 0;
   oc_sec_ace_t *match = NULL;
   if ((endpoint->flags & SECURED) != 0) {
-    oc_ace_subject_t _auth_crypt;
-    memset(&_auth_crypt, 0, sizeof(oc_ace_subject_t));
-    _auth_crypt.conn = OC_CONN_AUTH_CRYPT;
+    oc_ace_subject_view_t auth_crypt = {
+      .conn = OC_CONN_AUTH_CRYPT,
+    };
     do {
-      match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_auth_crypt,
+      match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, auth_crypt,
                                       /*aceid*/ -1, /*permission*/ 0,
                                       /*tag*/ OC_STRING_VIEW_NULL,
                                       /*match_tag*/ false, endpoint->device);
@@ -356,11 +363,11 @@ get_conn_permissions(const oc_resource_t *resource, bool is_DCR, bool is_public,
     } while (match != NULL);
   }
 
-  oc_ace_subject_t _anon_clear;
-  memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
-  _anon_clear.conn = OC_CONN_ANON_CLEAR;
+  oc_ace_subject_view_t anon_clear = {
+    .conn = OC_CONN_ANON_CLEAR,
+  };
   do {
-    match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, &_anon_clear,
+    match = oc_sec_acl_find_subject(match, OC_SUBJECT_CONN, anon_clear,
                                     /*aceid*/ -1, /*permission*/ 0,
                                     /*tag*/ OC_STRING_VIEW_NULL,
                                     /*match_tag*/ false, endpoint->device);
@@ -382,16 +389,15 @@ oc_sec_check_acl_by_permissions(oc_method_t method,
                                 bool is_SVR, const oc_endpoint_t *endpoint,
                                 const oc_tls_peer_t *peer)
 {
-  const oc_uuid_t *uuid = &endpoint->di;
   const bool is_public = ((resource->properties & OC_SECURE) == 0);
   uint16_t permission = 0;
   oc_sec_ace_t *match = NULL;
   do {
-    oc_ace_subject_t subject;
-    memset(&subject, 0, sizeof(oc_ace_subject_t));
-    memcpy(&subject.uuid, uuid, sizeof(*uuid));
+    oc_ace_subject_view_t subject = {
+      .uuid = endpoint->di,
+    };
     match =
-      oc_sec_acl_find_subject(match, OC_SUBJECT_UUID, &subject,
+      oc_sec_acl_find_subject(match, OC_SUBJECT_UUID, subject,
                               /*aceid*/ -1,
                               /*permission*/ 0, /*tag*/ OC_STRING_VIEW_NULL,
                               /*match_tag*/ false, endpoint->device);
@@ -414,7 +420,12 @@ oc_sec_check_acl_by_permissions(oc_method_t method,
     permission |= get_conn_permissions(resource, is_DCR, is_public, endpoint);
   }
 
-  return eval_access(method, permission);
+  bool ok = eval_access(method, permission);
+#ifdef OC_DBG_IS_ENABLED
+  OC_DBG("oc_sec_check_acl: access %s to %s", ok ? "granted" : "denied",
+         oc_string(resource->uri));
+#endif /* OC_DBG_IS_ENABLED */
+  return ok;
 }
 
 bool

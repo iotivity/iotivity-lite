@@ -41,9 +41,26 @@ extern "C" {
 /** Convert wildcard to string representation */
 oc_string_view_t oc_ace_wildcard_to_string(oc_ace_wildcard_t wc);
 
+/** Convert connection type to string */
+oc_string_view_t oc_ace_connection_type_to_string(
+  oc_ace_connection_type_t conn);
+
+/** Convert string to connection type */
+int oc_ace_connection_type_from_string(oc_string_view_t str);
+
+typedef union {
+  oc_uuid_t uuid;
+  struct oc_ace_subject_role_view_t
+  {
+    oc_string_view_t role;
+    oc_string_view_t authority;
+  } role;
+  oc_ace_connection_type_t conn;
+} oc_ace_subject_view_t;
+
 /** Create a new ACE of given subject type */
 oc_sec_ace_t *oc_sec_new_ace(oc_ace_subject_type_t type,
-                             const oc_ace_subject_t *subject, int aceid,
+                             oc_ace_subject_view_t subject, int aceid,
                              uint16_t permission, oc_string_view_t tag)
   OC_NONNULL();
 
@@ -53,10 +70,9 @@ void oc_sec_free_ace(oc_sec_ace_t *ace) OC_NONNULL();
 /** Find ACE in a list */
 oc_sec_ace_t *oc_sec_ace_find_subject(oc_sec_ace_t *ace,
                                       oc_ace_subject_type_t type,
-                                      const oc_ace_subject_t *subject,
-                                      int aceid, uint16_t permission,
-                                      oc_string_view_t tag, bool match_tag)
-  OC_NONNULL(3);
+                                      oc_ace_subject_view_t subject, int aceid,
+                                      uint16_t permission, oc_string_view_t tag,
+                                      bool match_tag);
 
 typedef struct oc_ace_res_data_t
 {
@@ -79,6 +95,18 @@ oc_ace_res_t *oc_sec_ace_find_resource(oc_ace_res_t *start,
 /** Encode an ACE to encoder  */
 void oc_sec_encode_ace(CborEncoder *encoder, const oc_sec_ace_t *sub,
                        bool to_storage);
+
+typedef struct
+{
+  int aceid;
+  int32_t permission; // uint16_t or -1
+  oc_ace_subject_view_t subject;
+  oc_ace_subject_type_t subject_type;
+  const oc_rep_t *resources;
+  const oc_string_t *tag;
+} oc_sec_ace_decode_t;
+
+bool oc_sec_decode_ace(const oc_rep_t *rep, oc_sec_ace_decode_t *acedecode);
 
 #ifdef __cplusplus
 }

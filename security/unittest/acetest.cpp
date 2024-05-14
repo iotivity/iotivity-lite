@@ -49,11 +49,11 @@ TEST_F(TestACE, NewUUID)
 {
   oc_uuid_t uuid{};
   oc_gen_uuid(&uuid);
-  oc_ace_subject_t subject_uuid{};
+  oc_ace_subject_view_t subject_uuid{};
   subject_uuid.uuid = uuid;
   auto tag = OC_STRING_VIEW("l33t");
   oc_sec_ace_t *ace =
-    oc_sec_new_ace(OC_SUBJECT_UUID, &subject_uuid, 42, OC_PERM_RETRIEVE, tag);
+    oc_sec_new_ace(OC_SUBJECT_UUID, subject_uuid, 42, OC_PERM_RETRIEVE, tag);
   ASSERT_NE(ace, nullptr);
 
   EXPECT_EQ(OC_SUBJECT_UUID, ace->subject_type);
@@ -68,16 +68,16 @@ TEST_F(TestACE, NewUUID)
 
 TEST_F(TestACE, NewRole)
 {
-  oc_ace_subject_t subject_role{};
-  auto testRole = OC_STRING_LOCAL("test.role");
+  oc_ace_subject_view_t subject_role{};
+  auto testRole = OC_STRING_VIEW("test.role");
   subject_role.role = { testRole, {} };
   auto tag = OC_STRING_VIEW("role");
-  oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_ROLE, &subject_role, 13,
+  oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_ROLE, subject_role, 13,
                                      OC_PERM_RETRIEVE | OC_PERM_UPDATE, tag);
   ASSERT_NE(ace, nullptr);
   ASSERT_EQ(OC_SUBJECT_ROLE, ace->subject_type);
   ASSERT_NE(nullptr, oc_string(ace->subject.role.role));
-  EXPECT_STREQ(oc_string(testRole), oc_string(ace->subject.role.role));
+  EXPECT_STREQ(testRole.data, oc_string(ace->subject.role.role));
   ASSERT_EQ(nullptr, oc_string(ace->subject.role.authority));
   EXPECT_EQ(13, ace->aceid);
   EXPECT_EQ(OC_PERM_RETRIEVE | OC_PERM_UPDATE, ace->permission);
@@ -87,26 +87,25 @@ TEST_F(TestACE, NewRole)
   oc_sec_free_ace(ace);
 
   // empty role.authority is equal to NULL
-  auto testAuthority = OC_STRING_LOCAL("");
-  ace = oc_sec_new_ace(OC_SUBJECT_ROLE, &subject_role, 13,
+  auto testAuthority = OC_STRING_VIEW("");
+  ace = oc_sec_new_ace(OC_SUBJECT_ROLE, subject_role, 13,
                        OC_PERM_RETRIEVE | OC_PERM_UPDATE, tag);
   ASSERT_NE(ace, nullptr);
   ASSERT_EQ(nullptr, oc_string(ace->subject.role.authority));
   oc_sec_free_ace(ace);
 
-  oc_ace_subject_t subject_role_with_authority{};
-  testRole = OC_STRING_LOCAL("test.newrole");
-  testAuthority = OC_STRING_LOCAL("test.authority");
+  oc_ace_subject_view_t subject_role_with_authority{};
+  testRole = OC_STRING_VIEW("test.newrole");
+  testAuthority = OC_STRING_VIEW("test.authority");
   subject_role_with_authority.role = { testRole, testAuthority };
-  ace = oc_sec_new_ace(OC_SUBJECT_ROLE, &subject_role_with_authority, 37,
+  ace = oc_sec_new_ace(OC_SUBJECT_ROLE, subject_role_with_authority, 37,
                        OC_PERM_DELETE | OC_PERM_NOTIFY, OC_STRING_VIEW_NULL);
   ASSERT_NE(ace, nullptr);
   ASSERT_EQ(OC_SUBJECT_ROLE, ace->subject_type);
   ASSERT_NE(nullptr, oc_string(ace->subject.role.role));
-  EXPECT_STREQ(oc_string(testRole), oc_string(ace->subject.role.role));
+  EXPECT_STREQ(testRole.data, oc_string(ace->subject.role.role));
   ASSERT_NE(nullptr, oc_string(ace->subject.role.authority));
-  EXPECT_STREQ(oc_string(testAuthority),
-               oc_string(ace->subject.role.authority));
+  EXPECT_STREQ(testAuthority.data, oc_string(ace->subject.role.authority));
   EXPECT_EQ(37, ace->aceid);
   EXPECT_EQ(OC_PERM_DELETE | OC_PERM_NOTIFY, ace->permission);
   EXPECT_EQ(0, oc_list_length(ace->resources));
@@ -116,9 +115,9 @@ TEST_F(TestACE, NewRole)
 
 TEST_F(TestACE, NewAnonConn)
 {
-  oc_ace_subject_t anon_conn{};
+  oc_ace_subject_view_t anon_conn{};
   anon_conn.conn = OC_CONN_ANON_CLEAR;
-  oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_CONN, &anon_conn, 1,
+  oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_CONN, anon_conn, 1,
                                      OC_PERM_NONE, OC_STRING_VIEW_NULL);
   ASSERT_NE(ace, nullptr);
   ASSERT_EQ(OC_SUBJECT_CONN, ace->subject_type);
@@ -132,9 +131,9 @@ TEST_F(TestACE, NewAnonConn)
 
 TEST_F(TestACE, NewCryptConn)
 {
-  oc_ace_subject_t crypt_conn{};
+  oc_ace_subject_view_t crypt_conn{};
   crypt_conn.conn = OC_CONN_AUTH_CRYPT;
-  oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_CONN, &crypt_conn, 2,
+  oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_CONN, crypt_conn, 2,
                                      OC_PERM_CREATE, OC_STRING_VIEW_NULL);
   ASSERT_NE(ace, nullptr);
   ASSERT_EQ(OC_SUBJECT_CONN, ace->subject_type);
@@ -150,14 +149,14 @@ TEST_F(TestACE, GetOrAddResource)
 {
   oc_uuid_t uuid{};
   oc_gen_uuid(&uuid);
-  oc_ace_subject_t subject_uuid{};
+  oc_ace_subject_view_t subject_uuid{};
   subject_uuid.uuid = uuid;
   auto tag = OC_STRING_VIEW("l33t");
   oc_sec_ace_t *ace =
-    oc_sec_new_ace(OC_SUBJECT_UUID, &subject_uuid, 42, OC_PERM_RETRIEVE, tag);
+    oc_sec_new_ace(OC_SUBJECT_UUID, subject_uuid, 42, OC_PERM_RETRIEVE, tag);
   ASSERT_NE(ace, nullptr);
 
-  oc_string_view_t href = OC_STRING_VIEW("/uri/1");
+  auto href = OC_STRING_VIEW("/uri/1");
   auto res_data = oc_sec_ace_get_or_add_res(ace, href, OC_ACE_NO_WC, true);
   EXPECT_TRUE(res_data.created);
   EXPECT_NE(nullptr, res_data.res);
@@ -179,7 +178,7 @@ TEST_F(TestACE, GetOrAddResource)
   EXPECT_EQ(nullptr, res_data.res);
 
   // try to get a resource that does not exist
-  oc_string_view_t href2 = OC_STRING_VIEW("/uri/2");
+  auto href2 = OC_STRING_VIEW("/uri/2");
   res_data = oc_sec_ace_get_or_add_res(ace, href2, OC_ACE_NO_WC, false);
   EXPECT_FALSE(res_data.created);
   EXPECT_EQ(nullptr, res_data.res);
@@ -191,21 +190,21 @@ TEST_F(TestACE, FindResource)
 {
   oc_uuid_t uuid{};
   oc_gen_uuid(&uuid);
-  oc_ace_subject_t subject_uuid{};
+  oc_ace_subject_view_t subject_uuid{};
   subject_uuid.uuid = uuid;
   auto tag = OC_STRING_VIEW("l33t");
   oc_sec_ace_t *ace =
-    oc_sec_new_ace(OC_SUBJECT_UUID, &subject_uuid, 42, OC_PERM_RETRIEVE, tag);
+    oc_sec_new_ace(OC_SUBJECT_UUID, subject_uuid, 42, OC_PERM_RETRIEVE, tag);
   ASSERT_NE(ace, nullptr);
 
   // href-only
-  oc_string_view_t href = OC_STRING_VIEW("/uri/1");
+  auto href = OC_STRING_VIEW("/uri/1");
   auto res_data = oc_sec_ace_get_or_add_res(ace, href, OC_ACE_NO_WC, true);
   ASSERT_TRUE(res_data.created);
   ASSERT_NE(nullptr, res_data.res);
 
   // href + wildcard
-  oc_string_view_t href2 = OC_STRING_VIEW("/uri/2");
+  auto href2 = OC_STRING_VIEW("/uri/2");
   res_data = oc_sec_ace_get_or_add_res(ace, href2, OC_ACE_WC_ALL_SECURED, true);
   ASSERT_TRUE(res_data.created);
   ASSERT_NE(nullptr, res_data.res);
@@ -246,7 +245,7 @@ TEST_F(TestACE, FindResource)
   res = oc_sec_ace_find_resource(nullptr, ace, OC_STRING_VIEW_NULL,
                                  OC_ACE_WC_ALL_SECURED);
   ASSERT_NE(nullptr, res);
-  while (res != NULL) {
+  while (res != nullptr) {
     ++count;
     res = oc_sec_ace_find_resource(res, nullptr, OC_STRING_VIEW_NULL,
                                    OC_ACE_WC_ALL_SECURED);
@@ -258,7 +257,7 @@ TEST_F(TestACE, FindResource)
   res = oc_sec_ace_find_resource(nullptr, ace, OC_STRING_VIEW_NULL,
                                  OC_ACE_WC_ALL_SECURED | OC_ACE_WC_ALL_PUBLIC);
   ASSERT_NE(nullptr, res);
-  while (res != NULL) {
+  while (res != nullptr) {
     ++count;
     res =
       oc_sec_ace_find_resource(res, nullptr, OC_STRING_VIEW_NULL,
@@ -280,15 +279,51 @@ TEST_F(TestACE, FindResource)
   oc_sec_free_ace(ace);
 }
 
+TEST_F(TestACE, WildcardToString)
+{
+  EXPECT_EQ(nullptr, oc_ace_wildcard_to_string(OC_ACE_NO_WC).data);
+  EXPECT_EQ(nullptr,
+            oc_ace_wildcard_to_string(static_cast<oc_ace_wildcard_t>(-1)).data);
+
+  EXPECT_STREQ(OC_ACE_WC_ALL_STR,
+               oc_ace_wildcard_to_string(OC_ACE_WC_ALL).data);
+  EXPECT_STREQ(OC_ACE_WC_ALL_PUBLIC_STR,
+               oc_ace_wildcard_to_string(OC_ACE_WC_ALL_PUBLIC).data);
+  EXPECT_STREQ(OC_ACE_WC_ALL_SECURED_STR,
+               oc_ace_wildcard_to_string(OC_ACE_WC_ALL_SECURED).data);
+}
+
+TEST_F(TestACE, ConnectionTypeToString)
+{
+  EXPECT_EQ(nullptr, oc_ace_connection_type_to_string(
+                       static_cast<oc_ace_connection_type_t>(-1))
+                       .data);
+
+  EXPECT_STREQ(OC_CONN_AUTH_CRYPT_STR,
+               oc_ace_connection_type_to_string(OC_CONN_AUTH_CRYPT).data);
+  EXPECT_STREQ(OC_CONN_ANON_CLEAR_STR,
+               oc_ace_connection_type_to_string(OC_CONN_ANON_CLEAR).data);
+}
+
+TEST_F(TestACE, FromStringToConnectionType)
+{
+  EXPECT_EQ(-1, oc_ace_connection_type_from_string(OC_STRING_VIEW("")));
+
+  EXPECT_EQ(OC_CONN_AUTH_CRYPT, oc_ace_connection_type_from_string(
+                                  OC_STRING_VIEW(OC_CONN_AUTH_CRYPT_STR)));
+  EXPECT_EQ(OC_CONN_ANON_CLEAR, oc_ace_connection_type_from_string(
+                                  OC_STRING_VIEW(OC_CONN_ANON_CLEAR_STR)));
+}
+
 TEST_F(TestACE, EncodeUUID)
 {
   oc_uuid_t uuid{};
   oc_gen_uuid(&uuid);
-  oc_ace_subject_t subject_uuid{};
+  oc_ace_subject_view_t subject_uuid{};
   subject_uuid.uuid = uuid;
   auto tag = OC_STRING_VIEW("l33t");
   oc_sec_ace_t *ace =
-    oc_sec_new_ace(OC_SUBJECT_UUID, &subject_uuid, 42, OC_PERM_RETRIEVE, tag);
+    oc_sec_new_ace(OC_SUBJECT_UUID, subject_uuid, 42, OC_PERM_RETRIEVE, tag);
   ASSERT_NE(ace, nullptr);
 
   oc::RepPool pool{};
@@ -307,12 +342,12 @@ TEST_F(TestACE, EncodeUUID)
 
 TEST_F(TestACE, EncodeRole)
 {
-  oc_ace_subject_t subject_role{};
-  auto testRole = OC_STRING_LOCAL("test.role");
-  auto testAuthority = OC_STRING_LOCAL("test.authority");
+  oc_ace_subject_view_t subject_role{};
+  auto testRole = OC_STRING_VIEW("test.role");
+  auto testAuthority = OC_STRING_VIEW("test.authority");
   subject_role.role = { testRole, testAuthority };
   oc_sec_ace_t *ace =
-    oc_sec_new_ace(OC_SUBJECT_ROLE, &subject_role, 13,
+    oc_sec_new_ace(OC_SUBJECT_ROLE, subject_role, 13,
                    OC_PERM_RETRIEVE | OC_PERM_UPDATE, OC_STRING_VIEW_NULL);
 
   oc::RepPool pool{};
@@ -331,9 +366,9 @@ TEST_F(TestACE, EncodeRole)
 
 TEST_F(TestACE, EncodeAnonConn)
 {
-  oc_ace_subject_t anon_conn{};
+  oc_ace_subject_view_t anon_conn{};
   anon_conn.conn = OC_CONN_ANON_CLEAR;
-  oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_CONN, &anon_conn, 1,
+  oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_CONN, anon_conn, 1,
                                      OC_PERM_NONE, OC_STRING_VIEW_NULL);
 
   oc::RepPool pool{};
@@ -352,9 +387,9 @@ TEST_F(TestACE, EncodeAnonConn)
 
 TEST_F(TestACE, EncodeCryptConn)
 {
-  oc_ace_subject_t crypt_conn{};
+  oc_ace_subject_view_t crypt_conn{};
   crypt_conn.conn = OC_CONN_AUTH_CRYPT;
-  oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_CONN, &crypt_conn, 2,
+  oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_CONN, crypt_conn, 2,
                                      OC_PERM_CREATE, OC_STRING_VIEW_NULL);
 
   oc::RepPool pool{};
@@ -373,14 +408,14 @@ TEST_F(TestACE, EncodeCryptConn)
 
 TEST_F(TestACE, EncodeWithResources)
 {
-  oc_ace_subject_t subject_role{};
-  auto testRole = OC_STRING_LOCAL("test.role");
+  oc_ace_subject_view_t subject_role{};
+  auto testRole = OC_STRING_VIEW("test.role");
   subject_role.role = { testRole, {} };
-  oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_ROLE, &subject_role, 17,
+  oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_ROLE, subject_role, 17,
                                      OC_PERM_NOTIFY, OC_STRING_VIEW_NULL);
 
   // href resource
-  oc_string_view_t href = OC_STRING_VIEW("/uri/1");
+  auto href = OC_STRING_VIEW("/uri/1");
   auto res_data = oc_sec_ace_get_or_add_res(ace, href, OC_ACE_NO_WC, true);
   ASSERT_TRUE(res_data.created);
   ASSERT_NE(nullptr, res_data.res);
@@ -413,9 +448,9 @@ TEST_F(TestACE, EncodeWithResources)
 
 TEST_F(TestACE, EncodeWithWCAllResource)
 {
-  oc_ace_subject_t anon_conn{};
+  oc_ace_subject_view_t anon_conn{};
   anon_conn.conn = OC_CONN_ANON_CLEAR;
-  oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_CONN, &anon_conn, 1,
+  oc_sec_ace_t *ace = oc_sec_new_ace(OC_SUBJECT_CONN, anon_conn, 1,
                                      OC_PERM_CREATE, OC_STRING_VIEW_NULL);
 
   // wc-all resource
