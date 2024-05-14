@@ -67,6 +67,21 @@ oc_ace_wildcard_to_string(oc_ace_wildcard_t wc)
   return OC_STRING_VIEW_NULL;
 }
 
+int
+oc_ace_wildcard_from_string(oc_string_view_t str)
+{
+  if (oc_string_view_is_equal(str, OC_STRING_VIEW(OC_ACE_WC_ALL_STR))) {
+    return OC_ACE_WC_ALL;
+  }
+  if (oc_string_view_is_equal(str, OC_STRING_VIEW(OC_ACE_WC_ALL_SECURED_STR))) {
+    return OC_ACE_WC_ALL_SECURED;
+  }
+  if (oc_string_view_is_equal(str, OC_STRING_VIEW(OC_ACE_WC_ALL_PUBLIC_STR))) {
+    return OC_ACE_WC_ALL_PUBLIC;
+  }
+  return -1;
+}
+
 #if OC_DBG_IS_ENABLED
 static void
 log_new_ace(const oc_sec_ace_t *ace)
@@ -148,9 +163,9 @@ log_new_ace_resource(const oc_ace_res_t *res, uint16_t permission)
     OC_DBG("Adding wildcard resource %s with permission %d", wcv.data,
            permission);
   }
-  if (oc_string(res->href) != NULL) {
-    OC_DBG("Adding resource %s with permission %d", oc_string(res->href),
-           permission);
+  const char *href = oc_string(res->href);
+  if (href != NULL) {
+    OC_DBG("Adding resource %s with permission %d", href, permission);
   }
   // GCOVR_EXCL_STOP
 }
@@ -228,8 +243,8 @@ oc_sec_free_ace(oc_sec_ace_t *ace)
   oc_memb_free(&g_ace_l, ace);
 }
 
-static bool
-ace_has_matching_tag(const oc_sec_ace_t *ace, oc_string_view_t tag)
+bool
+oc_ace_has_matching_tag(const oc_sec_ace_t *ace, oc_string_view_t tag)
 {
   if (tag.data == NULL) {
     return oc_string(ace->tag) == NULL;
@@ -237,9 +252,9 @@ ace_has_matching_tag(const oc_sec_ace_t *ace, oc_string_view_t tag)
   return oc_string_is_cstr_equal(&ace->tag, tag.data, tag.length);
 }
 
-static bool
-ace_has_matching_subject(const oc_sec_ace_t *ace, oc_ace_subject_type_t type,
-                         oc_ace_subject_view_t subject)
+bool
+oc_ace_has_matching_subject(const oc_sec_ace_t *ace, oc_ace_subject_type_t type,
+                            oc_ace_subject_view_t subject)
 {
   if (ace->subject_type != type) {
     return false;
@@ -272,10 +287,10 @@ oc_sec_ace_find_subject(oc_sec_ace_t *ace, oc_ace_subject_type_t type,
     if (permission != 0 && ace->permission != permission) {
       continue;
     }
-    if (match_tag && !ace_has_matching_tag(ace, tag)) {
+    if (match_tag && !oc_ace_has_matching_tag(ace, tag)) {
       continue;
     }
-    if (ace_has_matching_subject(ace, type, subject)) {
+    if (oc_ace_has_matching_subject(ace, type, subject)) {
       return ace;
     }
   }
@@ -468,59 +483,72 @@ oc_sec_encode_ace(CborEncoder *encoder, const oc_sec_ace_t *sub,
   }
 }
 
+typedef struct
+{
+  const oc_string_t *uuid;
+  const oc_string_t *role;
+  const oc_string_t *authority;
+  const oc_string_t *conntype;
+} ace_subject_decode_t;
+
+static bool
+ace_decode_subject_string_property(const oc_rep_t *rep,
+                                   ace_subject_decode_t *decode)
+{
+  if (oc_rep_is_property(rep, OC_ACE_PROP_SUBJECT_UUID,
+                         OC_CHAR_ARRAY_LEN(OC_ACE_PROP_SUBJECT_UUID))) {
+    decode->uuid = &rep->value.string;
+    return true;
+  }
+
+  if (oc_rep_is_property(rep, OC_ACE_PROP_SUBJECT_ROLE,
+                         OC_CHAR_ARRAY_LEN(OC_ACE_PROP_SUBJECT_ROLE))) {
+    decode->role = &rep->value.string;
+    return true;
+  }
+
+  if (oc_rep_is_property(rep, OC_ACE_PROP_SUBJECT_AUTHORITY,
+                         OC_CHAR_ARRAY_LEN(OC_ACE_PROP_SUBJECT_AUTHORITY))) {
+    decode->authority = &rep->value.string;
+    return true;
+  }
+
+  if (oc_rep_is_property(rep, OC_ACE_PROP_SUBJECT_CONNTYPE,
+                         OC_CHAR_ARRAY_LEN(OC_ACE_PROP_SUBJECT_CONNTYPE))) {
+    decode->conntype = &rep->value.string;
+    return true;
+  }
+  return false;
+}
+
 static int
 ace_decode_subject(const oc_rep_t *rep, oc_ace_subject_view_t *subject)
 {
-  const oc_string_t *uuid = NULL;
-  const oc_string_t *role = NULL;
-  const oc_string_t *authority = NULL;
-  const oc_string_t *conntype = NULL;
+  ace_subject_decode_t decode = { NULL, NULL, NULL, NULL };
   for (; rep != NULL; rep = rep->next) {
-    if (rep->type == OC_REP_STRING) {
-      if (oc_rep_is_property(rep, OC_ACE_PROP_SUBJECT_UUID,
-                             OC_CHAR_ARRAY_LEN(OC_ACE_PROP_SUBJECT_UUID))) {
-        uuid = &rep->value.string;
-        continue;
-      }
-
-      if (oc_rep_is_property(rep, OC_ACE_PROP_SUBJECT_ROLE,
-                             OC_CHAR_ARRAY_LEN(OC_ACE_PROP_SUBJECT_ROLE))) {
-        role = &rep->value.string;
-        continue;
-      }
-
-      if (oc_rep_is_property(
-            rep, OC_ACE_PROP_SUBJECT_AUTHORITY,
-            OC_CHAR_ARRAY_LEN(OC_ACE_PROP_SUBJECT_AUTHORITY))) {
-        authority = &rep->value.string;
-        continue;
-      }
-
-      if (oc_rep_is_property(rep, OC_ACE_PROP_SUBJECT_CONNTYPE,
-                             OC_CHAR_ARRAY_LEN(OC_ACE_PROP_SUBJECT_CONNTYPE))) {
-        conntype = &rep->value.string;
-        continue;
-      }
+    if (rep->type == OC_REP_STRING &&
+        ace_decode_subject_string_property(rep, &decode)) {
+      continue;
     }
-
     OC_ERR("ACE decode subject: unknown property (name=%s, type=%d)",
            oc_string(rep->name) != NULL ? oc_string(rep->name) : "(null)",
            (int)rep->type);
     return -1;
   }
 
-  bool has_uuid = uuid != NULL;
-  bool has_role = role != NULL || authority != NULL;
-  bool has_conntype = conntype != NULL;
+  bool has_uuid = decode.uuid != NULL;
+  bool has_role = decode.role != NULL || decode.authority != NULL;
+  bool has_conntype = decode.conntype != NULL;
   if (has_uuid) {
     if (has_role || has_conntype) {
       OC_ERR("ACE decode subject: uuid cannot be used with role or conntype");
       return -1;
     }
     oc_uuid_t id;
-    if (oc_str_to_uuid_v1(oc_string(*uuid), oc_string_len_unsafe(*uuid), &id) <
-        0) {
-      OC_ERR("ACE decode subject: uuid(%s) is invalid", oc_string(*uuid));
+    if (oc_str_to_uuid_v1(oc_string(*decode.uuid),
+                          oc_string_len_unsafe(*decode.uuid), &id) < 0) {
+      OC_ERR("ACE decode subject: uuid(%s) is invalid",
+             oc_string(*decode.uuid));
       return -1;
     }
     subject->uuid = id;
@@ -528,7 +556,7 @@ ace_decode_subject(const oc_rep_t *rep, oc_ace_subject_view_t *subject)
   }
 
   if (has_role) {
-    if (role == NULL) {
+    if (decode.role == NULL) {
       OC_ERR("ACE decode subject: role is missing");
       return -1;
     }
@@ -536,18 +564,19 @@ ace_decode_subject(const oc_rep_t *rep, oc_ace_subject_view_t *subject)
       OC_ERR("ACE decode subject: conntype cannot be used with role");
       return -1;
     }
-    subject->role = (struct oc_ace_subject_role_view_t){
-      .role = oc_string_view2(role),
-      .authority = oc_string_view2(authority),
+    subject->role = (oc_ace_subject_role_view_t){
+      .role = oc_string_view2(decode.role),
+      .authority = oc_string_view2(decode.authority),
     };
     return OC_SUBJECT_ROLE;
   }
 
   if (has_conntype) {
-    int conn = oc_ace_connection_type_from_string(oc_string_view2(conntype));
+    int conn =
+      oc_ace_connection_type_from_string(oc_string_view2(decode.conntype));
     if (conn < 0) {
       OC_ERR("ACE decode subject: conntype(%s) is invalid",
-             oc_string(*conntype));
+             oc_string(*decode.conntype));
       return -1;
     }
     subject->conn = (oc_ace_connection_type_t)conn;
@@ -581,7 +610,7 @@ ace_decode_property(const oc_rep_t *rep, oc_sec_ace_decode_t *acedecode)
       acedecode->aceid = (int)rep->value.integer;
       return true;
     }
-    return false;
+    goto unknown_property;
   }
 
   if (rep->type == OC_REP_STRING) {
@@ -590,7 +619,7 @@ ace_decode_property(const oc_rep_t *rep, oc_sec_ace_decode_t *acedecode)
       acedecode->tag = &rep->value.string;
       return true;
     }
-    return false;
+    goto unknown_property;
   }
 
   if (rep->type == OC_REP_OBJECT) {
@@ -605,7 +634,7 @@ ace_decode_property(const oc_rep_t *rep, oc_sec_ace_decode_t *acedecode)
       acedecode->subject_type = (oc_ace_subject_type_t)subject_type;
       return true;
     }
-    return false;
+    goto unknown_property;
   }
 
   if (rep->type == OC_REP_OBJECT_ARRAY) {
@@ -614,8 +643,13 @@ ace_decode_property(const oc_rep_t *rep, oc_sec_ace_decode_t *acedecode)
       acedecode->resources = rep->value.object_array;
       return true;
     }
-    return false;
+    goto unknown_property;
   }
+
+unknown_property:
+  OC_ERR("ACE decode: unknown property (name=%s, type=%d)",
+         oc_string(rep->name) != NULL ? oc_string(rep->name) : "(null)",
+         (int)rep->type);
   return false;
 }
 
@@ -625,15 +659,85 @@ oc_sec_decode_ace(const oc_rep_t *rep, oc_sec_ace_decode_t *acedecode)
 
   for (; rep != NULL; rep = rep->next) {
     if (!ace_decode_property(rep, acedecode)) {
-      OC_ERR("ACE decode: unknown property (name=%s, type=%d)",
-             oc_string(rep->name) != NULL ? oc_string(rep->name) : "(null)",
-             (int)rep->type);
       return false;
     }
-    OC_DBG("aceid: %d, permission: %d, subject_type: %d", acedecode->aceid,
-           acedecode->permission, acedecode->subject_type);
+    OC_DBG("aceid: %d, permission: %" PRIu16 ", subject_type: %d",
+           acedecode->aceid, acedecode->permission, acedecode->subject_type);
   }
   return true;
 }
 
+static bool
+ace_decode_resource_string_property(const oc_rep_t *rep,
+                                    oc_sec_ace_res_decode_t *aceresdecode)
+{
+  if (oc_rep_is_property(rep, OC_ACE_PROP_RESOURCE_HREF,
+                         OC_CHAR_ARRAY_LEN(OC_ACE_PROP_RESOURCE_HREF))) {
+    aceresdecode->href = &rep->value.string;
+    return true;
+  }
+  if (oc_rep_is_property(rep, OC_ACE_PROP_RESOURCE_WILDCARD,
+                         OC_CHAR_ARRAY_LEN(OC_ACE_PROP_RESOURCE_WILDCARD))) {
+    int wc = oc_ace_wildcard_from_string(oc_string_view2(&rep->value.string));
+    if (wc == -1) {
+      OC_ERR("ACE decode resource: wildcard(%s) is invalid",
+             oc_string(rep->value.string));
+      return false;
+    }
+    aceresdecode->wildcard = (oc_ace_wildcard_t)wc;
+    return true;
+  }
+  return false;
+}
+
+static bool
+ace_decode_resource(const oc_rep_t *rep, oc_sec_ace_res_decode_t *aceresdecode)
+{
+  for (; rep != NULL; rep = rep->next) {
+    if (rep->type == OC_REP_STRING &&
+        ace_decode_resource_string_property(rep, aceresdecode)) {
+      continue;
+    }
+    if (rep->type == OC_REP_STRING_ARRAY &&
+        oc_rep_is_property(rep, "if", OC_CHAR_ARRAY_LEN("if"))) {
+      // TODO: remove from plgd tests
+      continue;
+    }
+    OC_ERR("ACE decode resource: unknown property (name=%s, type=%d)",
+           oc_string(rep->name) != NULL ? oc_string(rep->name) : "(null)",
+           (int)rep->type);
+    return false;
+  }
+
+#if 0
+#ifdef OC_SERVER
+  oc_resource_properties_t wc_r = 0;
+  if (wc == OC_ACE_WC_ALL || wc == OC_ACE_WC_ALL_SECURED) {
+    wc_r = ~0;
+  }
+  if (wc == OC_ACE_WC_ALL_PUBLIC) {
+    wc_r = ~OC_DISCOVERABLE;
+  }
+  aceresdecode->wc_r = wc_r;
+#endif /* OC_SERVER */
+#endif
+
+  return true;
+}
+
+bool
+oc_sec_decode_ace_resources(const oc_rep_t *rep,
+                            oc_sec_on_decode_ace_resource_fn_t on_decode,
+                            void *decode_fn_data)
+{
+  for (; rep != NULL; rep = rep->next) {
+    oc_sec_ace_res_decode_t aceres_decode;
+    memset(&aceres_decode, 0, sizeof(oc_sec_ace_res_decode_t));
+    if (!ace_decode_resource(rep->value.object, &aceres_decode)) {
+      return false;
+    }
+    on_decode(&aceres_decode, decode_fn_data);
+  }
+  return true;
+}
 #endif /* OC_SECURITY */

@@ -283,6 +283,65 @@ oc_sec_acl_default(size_t device)
   oc_sec_dump_acl(device);
 }
 
+typedef struct
+{
+  oc_sec_ace_decode_t *ace_decode;
+  size_t device;
+  oc_sec_ace_t *ace;
+  bool created;
+  bool created_resource;
+} acl_decode_ace_resources_data_t;
+
+static void
+acl_decode_ace_resources(const oc_sec_ace_res_decode_t *aceres_decode,
+                         void *user_data)
+{
+  acl_decode_ace_resources_data_t *dard =
+    (acl_decode_ace_resources_data_t *)user_data;
+
+  oc_sec_ace_update_data_t ace_upd = { NULL, false, false };
+  if (oc_sec_acl_update_res(dard->ace_decode->subject_type,
+                            dard->ace_decode->subject, dard->ace_decode->aceid,
+                            dard->ace_decode->permission,
+                            oc_string_view2(dard->ace_decode->tag),
+                            oc_string_view2(aceres_decode->href),
+                            aceres_decode->wildcard, dard->device, &ace_upd)) {
+    dard->ace = ace_upd.ace;
+    dard->created |= ace_upd.created;
+    dard->created_resource |= ace_upd.created_resource;
+  } else {
+    OC_WRN("failed to create resource(href:%s wildcard:%d)",
+           aceres_decode->href != NULL ? oc_string(*aceres_decode->href) : "",
+           aceres_decode->wildcard);
+  }
+
+#if 0
+  /* The following code block attaches "coap" endpoints to resources linked to
+     an anon-clear ACE. This logic is being currently disabled to comply with
+     the SH spec which requires that all vertical resources not expose a "coap"
+     endpoint. */
+#ifdef OC_SERVER
+  if (dard->ace_decode->subject_type == OC_SUBJECT_CONN && dard->ace_decode->subject.conn == OC_CONN_ANON_CLEAR) {
+    if (href) {
+      oc_resource_t *r =
+        oc_ri_get_app_resource_by_uri(href, strlen(href), device);
+      if (r) {
+        oc_resource_make_public(r);
+      }
+    } else {
+      oc_resource_t *r = oc_ri_get_app_resources();
+      while (r != NULL) {
+        if ((r->properties & aceres_decode->wc_r) == r->properties) {
+          oc_resource_make_public(r);
+        }
+        r = r->next;
+      }
+    }
+  }
+#endif /* OC_SERVER */
+#endif
+}
+
 bool
 oc_sec_decode_acl(const oc_rep_t *rep, bool from_storage, size_t device,
                   oc_sec_on_apply_acl_cb_t on_apply_ace_cb,
@@ -325,8 +384,8 @@ oc_sec_decode_acl(const oc_rep_t *rep, bool from_storage, size_t device,
       }
       break;
     case OC_REP_OBJECT_ARRAY: {
-      const oc_rep_t *aclist2 = rep->value.object_array;
-      while (aclist2 != NULL) {
+      for (const oc_rep_t *aclist2 = rep->value.object_array; aclist2 != NULL;
+           aclist2 = aclist2->next) {
         oc_sec_ace_decode_t ace_decode;
         memset(&ace_decode, 0, sizeof(oc_sec_ace_decode_t));
         ace_decode.aceid = -1;
@@ -335,123 +394,34 @@ oc_sec_decode_acl(const oc_rep_t *rep, bool from_storage, size_t device,
           return false;
         }
 
-        oc_sec_ace_t *upd_ace = NULL;
         oc_sec_ace_t *replaced_ace = NULL;
-        bool created = false;
-        bool created_resource = false;
         if (ace_decode.aceid != -1 &&
             !acl_unique_aceid(ace_decode.aceid, device)) {
           replaced_ace =
             oc_acl_remove_ace_from_device_by_aceid(ace_decode.aceid, device);
         }
 
-        const oc_rep_t *resources = ace_decode.resources;
-        while (resources != NULL) {
-          oc_ace_wildcard_t wc = OC_ACE_NO_WC;
-          const oc_rep_t *resource = resources->value.object;
-          const oc_string_t *href = NULL;
-          /*
-      #ifdef OC_SERVER
-          oc_resource_properties_t wc_r = 0;
-      #endif
-          */
-
-          while (resource != NULL) {
-            switch (resource->type) {
-            case OC_REP_STRING:
-              if (oc_string_len(resource->name) == 4 &&
-                  memcmp(oc_string(resource->name), "href", 4) == 0) {
-                href = &resource->value.string;
-              } else if (oc_string_len(resource->name) == 2 &&
-                         memcmp(oc_string(resource->name), "wc", 2) == 0) {
-                if (oc_string(resource->value.string)[0] == '*') {
-                  wc = OC_ACE_WC_ALL;
-                  /*
-            #ifdef OC_SERVER
-                  wc_r = ~0;
-            #endif
-                  */
-                }
-                if (oc_string(resource->value.string)[0] == '+') {
-                  wc = OC_ACE_WC_ALL_SECURED;
-                  /*
-            #ifdef OC_SERVER
-                  wc_r = ~0;
-            #endif
-                  */
-                }
-                if (oc_string(resource->value.string)[0] == '-') {
-                  wc = OC_ACE_WC_ALL_PUBLIC;
-                  /*
-            #ifdef OC_SERVER
-                  wc_r = ~OC_DISCOVERABLE;
-            #endif
-                  */
-                }
-              }
-              break;
-            default:
-              break;
-            }
-
-            resource = resource->next;
-          }
-
-          oc_sec_ace_update_data_t ace_upd = { NULL, false, false };
-          if (oc_sec_acl_update_res(
-                ace_decode.subject_type, ace_decode.subject, ace_decode.aceid,
-                ace_decode.permission, oc_string_view2(ace_decode.tag),
-                oc_string_view2(href), wc, device, &ace_upd)) {
-            upd_ace = ace_upd.ace;
-            created |= ace_upd.created;
-            created_resource |= ace_upd.created_resource;
-          } else {
-            OC_WRN("failed to create resource(href:%s wildcard:%d)",
-                   href != NULL ? oc_string(*href) : "", wc);
-          }
-
-          /* The following code block attaches "coap" endpoints to
-                   resources linked to an anon-clear ACE. This logic is
-                   being currently disabled to comply with the SH spec
-                   which
-      requires that all vertical resources not expose a "coap" endpoint.
-      #ifdef OC_SERVER
-                if (subject_type == OC_SUBJECT_CONN &&
-                    subject.conn == OC_CONN_ANON_CLEAR) {
-                  if (href) {
-                    oc_resource_t *r =
-                      oc_ri_get_app_resource_by_uri(href, strlen(href),
-      device); if (r) { oc_resource_make_public(r);
-                    }
-                  } else {
-                    oc_resource_t *r = oc_ri_get_app_resources();
-                    while (r != NULL) {
-                      if ((r->properties & wc_r) == r->properties) {
-                        oc_resource_make_public(r);
-                      }
-                      r = r->next;
-                    }
-                  }
-                }
-      #endif
-          */
-          resources = resources->next;
+        acl_decode_ace_resources_data_t dard = {
+          .ace_decode = &ace_decode,
+          .device = device,
+        };
+        if (!oc_sec_decode_ace_resources(ace_decode.resources,
+                                         acl_decode_ace_resources, &dard)) {
+          OC_ERR("oc_acl: error decoding ACE resources");
+          return false;
         }
 
-        if (on_apply_ace_cb != NULL) {
-          if (upd_ace != NULL) {
-            oc_sec_on_apply_acl_data_t acl_data = { g_aclist[device].rowneruuid,
-                                                    upd_ace, replaced_ace,
-                                                    created, created_resource };
-            on_apply_ace_cb(acl_data, on_apply_ace_data);
-          }
+        if (on_apply_ace_cb != NULL && dard.ace != NULL) {
+          oc_sec_on_apply_acl_data_t acl_data = { g_aclist[device].rowneruuid,
+                                                  dard.ace, replaced_ace,
+                                                  dard.created,
+                                                  dard.created_resource };
+          on_apply_ace_cb(acl_data, on_apply_ace_data);
         }
 
         if (replaced_ace) {
           oc_sec_free_ace(replaced_ace);
         }
-
-        aclist2 = aclist2->next;
       }
     } break;
     default:
