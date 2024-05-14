@@ -72,7 +72,7 @@ oc_sec_get_acl(size_t device)
 
 oc_sec_ace_t *
 oc_sec_acl_find_subject(oc_sec_ace_t *start, oc_ace_subject_type_t type,
-                        const oc_ace_subject_t *subject, int aceid,
+                        oc_ace_subject_view_t subject, int aceid,
                         uint16_t permission, oc_string_view_t tag,
                         bool match_tag, size_t device)
 {
@@ -143,9 +143,8 @@ oc_sec_encode_acl(size_t device, oc_interface_mask_t iface_mask,
 }
 
 bool
-oc_sec_acl_update_res(oc_ace_subject_type_t type,
-                      const oc_ace_subject_t *subject, int aceid,
-                      uint16_t permission, oc_string_view_t tag,
+oc_sec_acl_update_res(oc_ace_subject_type_t type, oc_ace_subject_view_t subject,
+                      int aceid, uint16_t permission, oc_string_view_t tag,
                       oc_string_view_t href, oc_ace_wildcard_t wildcard,
                       size_t device, oc_sec_ace_update_data_t *data)
 {
@@ -262,18 +261,16 @@ oc_sec_acl_add_created_resource_ace(oc_string_view_t href,
                                     const oc_endpoint_t *client, size_t device,
                                     bool collection)
 {
-  const oc_uuid_t *uuid = &client->di;
-
-  oc_ace_subject_t subject;
-  memset(&subject, 0, sizeof(oc_ace_subject_t));
-  memcpy(subject.uuid.id, uuid->id, sizeof(oc_uuid_t));
+  oc_ace_subject_view_t subject = {
+    .uuid = client->di,
+  };
 
   uint16_t perm = OC_PERM_RETRIEVE | OC_PERM_DELETE | OC_PERM_UPDATE;
   if (collection) {
     perm |= OC_PERM_CREATE;
   }
 
-  return oc_sec_acl_update_res(OC_SUBJECT_UUID, &subject, -1, perm,
+  return oc_sec_acl_update_res(OC_SUBJECT_UUID, subject, -1, perm,
                                OC_STRING_VIEW_NULL, href, 0, device, NULL);
 }
 #endif /* OC_COLLECTIONS && OC_SERVER && OC_COLLECTIONS_IF_CREATE */
@@ -330,87 +327,28 @@ oc_sec_decode_acl(const oc_rep_t *rep, bool from_storage, size_t device,
     case OC_REP_OBJECT_ARRAY: {
       const oc_rep_t *aclist2 = rep->value.object_array;
       while (aclist2 != NULL) {
-        oc_ace_subject_t subject;
-        memset(&subject, 0, sizeof(oc_ace_subject_t));
-        oc_ace_subject_type_t subject_type = 0;
-        uint16_t permission = 0;
-        int aceid = -1;
-        const oc_string_t *tag = NULL;
-        const oc_rep_t *resources = 0;
-        const oc_rep_t *ace = aclist2->value.object;
-        while (ace != NULL) {
-          len = oc_string_len(ace->name);
-          switch (ace->type) {
-          case OC_REP_INT:
-            if (len == 10 &&
-                memcmp(oc_string(ace->name), "permission", 10) == 0) {
-              permission = (uint16_t)ace->value.integer;
-            } else if (len == 5 &&
-                       memcmp(oc_string(ace->name), "aceid", 5) == 0) {
-              aceid = (int)ace->value.integer;
-            }
-            break;
-
-          case OC_REP_STRING:
-            if (len == 3 && memcmp(oc_string(ace->name), "tag", 3) == 0) {
-              tag = &ace->value.string;
-            }
-            break;
-          case OC_REP_OBJECT_ARRAY:
-            if (len == 9 && memcmp(oc_string(ace->name), "resources", 9) == 0)
-              resources = ace->value.object_array;
-            break;
-          case OC_REP_OBJECT: {
-            const oc_rep_t *sub = ace->value.object;
-            while (sub != NULL) {
-              len = oc_string_len(sub->name);
-              if (len == 4 && memcmp(oc_string(sub->name), "uuid", 4) == 0) {
-                oc_str_to_uuid(oc_string(sub->value.string), &subject.uuid);
-                subject_type = OC_SUBJECT_UUID;
-              } else if (len == 4 &&
-                         memcmp(oc_string(sub->name), "role", 4) == 0) {
-                oc_new_string(&subject.role.role, oc_string(sub->value.string),
-                              oc_string_len(sub->value.string));
-                subject_type = OC_SUBJECT_ROLE;
-              } else if (len == 9 &&
-                         memcmp(oc_string(sub->name), "authority", 9) == 0) {
-                oc_new_string(&subject.role.authority,
-                              oc_string(sub->value.string),
-                              oc_string_len(sub->value.string));
-                subject_type = OC_SUBJECT_ROLE;
-              } else if (len == 8 &&
-                         memcmp(oc_string(sub->name), "conntype", 8) == 0) {
-                if (oc_string_len(sub->value.string) == 10 &&
-                    memcmp(oc_string(sub->value.string), "auth-crypt", 10) ==
-                      0) {
-                  subject.conn = OC_CONN_AUTH_CRYPT;
-                } else if (oc_string_len(sub->value.string) == 10 &&
-                           memcmp(oc_string(sub->value.string), "anon-clear",
-                                  10) == 0) {
-                  subject.conn = OC_CONN_ANON_CLEAR;
-                }
-                subject_type = OC_SUBJECT_CONN;
-              }
-              sub = sub->next;
-            }
-          } break;
-          default:
-            break;
-          }
-          ace = ace->next;
+        oc_sec_ace_decode_t ace_decode;
+        memset(&ace_decode, 0, sizeof(oc_sec_ace_decode_t));
+        ace_decode.aceid = -1;
+        if (!oc_sec_decode_ace(aclist2->value.object, &ace_decode)) {
+          OC_ERR("oc_acl: error decoding ACE");
+          return false;
         }
 
         oc_sec_ace_t *upd_ace = NULL;
         oc_sec_ace_t *replaced_ace = NULL;
         bool created = false;
         bool created_resource = false;
-        if (aceid != -1 && !acl_unique_aceid(aceid, device)) {
-          replaced_ace = oc_acl_remove_ace_from_device_by_aceid(aceid, device);
+        if (ace_decode.aceid != -1 &&
+            !acl_unique_aceid(ace_decode.aceid, device)) {
+          replaced_ace =
+            oc_acl_remove_ace_from_device_by_aceid(ace_decode.aceid, device);
         }
 
+        const oc_rep_t *resources = ace_decode.resources;
         while (resources != NULL) {
           oc_ace_wildcard_t wc = OC_ACE_NO_WC;
-          oc_rep_t *resource = resources->value.object;
+          const oc_rep_t *resource = resources->value.object;
           const oc_string_t *href = NULL;
           /*
       #ifdef OC_SERVER
@@ -460,9 +398,10 @@ oc_sec_decode_acl(const oc_rep_t *rep, bool from_storage, size_t device,
           }
 
           oc_sec_ace_update_data_t ace_upd = { NULL, false, false };
-          if (oc_sec_acl_update_res(subject_type, &subject, aceid, permission,
-                                    oc_string_view2(tag), oc_string_view2(href),
-                                    wc, device, &ace_upd)) {
+          if (oc_sec_acl_update_res(
+                ace_decode.subject_type, ace_decode.subject, ace_decode.aceid,
+                ace_decode.permission, oc_string_view2(ace_decode.tag),
+                oc_string_view2(href), wc, device, &ace_upd)) {
             upd_ace = ace_upd.ace;
             created |= ace_upd.created;
             created_resource |= ace_upd.created_resource;
@@ -472,8 +411,9 @@ oc_sec_decode_acl(const oc_rep_t *rep, bool from_storage, size_t device,
           }
 
           /* The following code block attaches "coap" endpoints to
-                   resources linked to an anon-clear ACE. This logic is being
-                   currently disabled to comply with the SH spec which
+                   resources linked to an anon-clear ACE. This logic is
+                   being currently disabled to comply with the SH spec
+                   which
       requires that all vertical resources not expose a "coap" endpoint.
       #ifdef OC_SERVER
                 if (subject_type == OC_SUBJECT_CONN &&
@@ -511,11 +451,6 @@ oc_sec_decode_acl(const oc_rep_t *rep, bool from_storage, size_t device,
           oc_sec_free_ace(replaced_ace);
         }
 
-        if (subject_type == OC_SUBJECT_ROLE) {
-          oc_free_string(&subject.role.role);
-          oc_free_string(&subject.role.authority);
-        }
-
         aclist2 = aclist2->next;
       }
     } break;
@@ -532,10 +467,10 @@ oc_sec_acl_anon_connection(size_t device, oc_string_view_t href,
                            uint16_t permission)
 {
   assert(href.data != NULL);
-  oc_ace_subject_t _anon_clear;
-  memset(&_anon_clear, 0, sizeof(oc_ace_subject_t));
-  _anon_clear.conn = OC_CONN_ANON_CLEAR;
-  if (!oc_sec_acl_update_res(OC_SUBJECT_CONN, &_anon_clear, -1, permission,
+  oc_ace_subject_view_t anon_clear = {
+    .conn = OC_CONN_ANON_CLEAR,
+  };
+  if (!oc_sec_acl_update_res(OC_SUBJECT_CONN, anon_clear, -1, permission,
                              OC_STRING_VIEW_NULL, href, OC_ACE_NO_WC, device,
                              NULL)) {
     OC_ERR("oc_acl: Failed to bootstrap %s resource", href.data);

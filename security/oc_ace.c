@@ -19,22 +19,25 @@
 #ifdef OC_SECURITY
 
 #include "api/oc_helpers_internal.h"
+#include "api/oc_rep_internal.h"
 #include "api/oc_resource_internal.h"
 #include "api/oc_ri_internal.h"
 #include "port/oc_log_internal.h"
 #include "security/oc_ace_internal.h"
 #include "util/oc_features.h"
+#include "util/oc_macros_internal.h"
 #include "util/oc_memb.h"
 
 #include <assert.h>
+#include <inttypes.h>
 
 #define OC_ACE_PROP_SUBJECT "subject"
 #define OC_ACE_PROP_SUBJECT_UUID "uuid"
 #define OC_ACE_PROP_SUBJECT_ROLE "role"
 #define OC_ACE_PROP_SUBJECT_AUTHORITY "authority"
 #define OC_ACE_PROP_SUBJECT_CONNTYPE "conntype"
-#define OC_ACE_PROP_SUBJECT_PERMISSION "permission"
-#define OC_ACE_PROP_SUBJECT_ACEID "aceid"
+#define OC_ACE_PROP_PERMISSION "permission"
+#define OC_ACE_PROP_ACEID "aceid"
 #define OC_ACE_PROP_TAG "tag"
 #define OC_ACE_PROP_RESOURCES "resources"
 #define OC_ACE_PROP_RESOURCE_HREF "href"
@@ -97,7 +100,7 @@ log_new_ace(const oc_sec_ace_t *ace)
 #endif /* OC_DBG_IS_ENABLED */
 
 oc_sec_ace_t *
-oc_sec_new_ace(oc_ace_subject_type_t type, const oc_ace_subject_t *subject,
+oc_sec_new_ace(oc_ace_subject_type_t type, oc_ace_subject_view_t subject,
                int aceid, uint16_t permission, oc_string_view_t tag)
 {
   oc_sec_ace_t *ace = oc_memb_alloc(&g_ace_l);
@@ -108,13 +111,19 @@ oc_sec_new_ace(oc_ace_subject_type_t type, const oc_ace_subject_t *subject,
 
   OC_LIST_STRUCT_INIT(ace, resources);
 
-  if (type == OC_SUBJECT_ROLE) {
-    oc_copy_string(&ace->subject.role.role, &subject->role.role);
-    if (!oc_string_is_empty(&subject->role.authority)) {
-      oc_copy_string(&ace->subject.role.authority, &subject->role.authority);
+  assert(type == OC_SUBJECT_UUID || type == OC_SUBJECT_ROLE ||
+         type == OC_SUBJECT_CONN);
+  if (type == OC_SUBJECT_UUID) {
+    ace->subject.uuid = subject.uuid;
+  } else if (type == OC_SUBJECT_ROLE) {
+    oc_new_string(&ace->subject.role.role, subject.role.role.data,
+                  subject.role.role.length);
+    if (subject.role.authority.length > 0) {
+      oc_new_string(&ace->subject.role.authority, subject.role.authority.data,
+                    subject.role.authority.length);
     }
-  } else {
-    memcpy(&ace->subject, subject, sizeof(oc_ace_subject_t));
+  } else if (type == OC_SUBJECT_CONN) {
+    ace->subject.conn = subject.conn;
   }
   ace->aceid = aceid;
   ace->subject_type = type;
@@ -230,28 +239,29 @@ ace_has_matching_tag(const oc_sec_ace_t *ace, oc_string_view_t tag)
 
 static bool
 ace_has_matching_subject(const oc_sec_ace_t *ace, oc_ace_subject_type_t type,
-                         const oc_ace_subject_t *subject)
+                         oc_ace_subject_view_t subject)
 {
   if (ace->subject_type != type) {
     return false;
   }
-  switch (type) {
-  case OC_SUBJECT_UUID:
-    return oc_uuid_is_equal(ace->subject.uuid, subject->uuid);
-  case OC_SUBJECT_ROLE:
-    return oc_string_is_equal(&subject->role.role, &ace->subject.role.role) &&
-           (oc_string_is_empty(&ace->subject.role.authority) ||
-            oc_string_is_equal(&subject->role.authority,
-                               &ace->subject.role.authority));
-  case OC_SUBJECT_CONN:
-    return subject->conn == ace->subject.conn;
+  if (type == OC_SUBJECT_UUID) {
+    return oc_uuid_is_equal(ace->subject.uuid, subject.uuid);
   }
-  return false;
+  if (type == OC_SUBJECT_ROLE) {
+    return oc_string_view_is_equal(subject.role.role,
+                                   oc_string_view2(&ace->subject.role.role)) &&
+           (oc_string_is_empty(&ace->subject.role.authority) ||
+            oc_string_view_is_equal(
+              subject.role.authority,
+              oc_string_view2(&ace->subject.role.authority)));
+  }
+  assert(type == OC_SUBJECT_CONN);
+  return subject.conn == ace->subject.conn;
 }
 
 oc_sec_ace_t *
 oc_sec_ace_find_subject(oc_sec_ace_t *ace, oc_ace_subject_type_t type,
-                        const oc_ace_subject_t *subject, int aceid,
+                        oc_ace_subject_view_t subject, int aceid,
                         uint16_t permission, oc_string_view_t tag,
                         bool match_tag)
 {
@@ -326,8 +336,8 @@ oc_sec_ace_find_resource(oc_ace_res_t *start, const oc_sec_ace_t *ace,
   return ace_res_find_resource(res, href, wildcard);
 }
 
-static oc_string_view_t
-ace_connection_type_to_str(oc_ace_connection_type_t type)
+oc_string_view_t
+oc_ace_connection_type_to_string(oc_ace_connection_type_t type)
 {
   if (type == OC_CONN_AUTH_CRYPT) {
     return OC_STRING_VIEW(OC_CONN_AUTH_CRYPT_STR);
@@ -336,6 +346,18 @@ ace_connection_type_to_str(oc_ace_connection_type_t type)
     return OC_STRING_VIEW(OC_CONN_ANON_CLEAR_STR);
   }
   return OC_STRING_VIEW_NULL;
+}
+
+int
+oc_ace_connection_type_from_string(oc_string_view_t str)
+{
+  if (oc_string_view_is_equal(str, OC_STRING_VIEW(OC_CONN_AUTH_CRYPT_STR))) {
+    return OC_CONN_AUTH_CRYPT;
+  }
+  if (oc_string_view_is_equal(str, OC_STRING_VIEW(OC_CONN_ANON_CLEAR_STR))) {
+    return OC_CONN_ANON_CLEAR;
+  }
+  return -1;
 }
 
 static void
@@ -371,7 +393,8 @@ ace_encode_subject(CborEncoder *encoder, const oc_sec_ace_t *sub)
   if (sub->subject_type == OC_SUBJECT_CONN) {
     oc_string_view_t conntype_key =
       OC_STRING_VIEW(OC_ACE_PROP_SUBJECT_CONNTYPE);
-    oc_string_view_t conntype = ace_connection_type_to_str(sub->subject.conn);
+    oc_string_view_t conntype =
+      oc_ace_connection_type_to_string(sub->subject.conn);
     g_err |= oc_rep_object_set_text_string(encoder, conntype_key.data,
                                            conntype_key.length, conntype.data,
                                            conntype.length);
@@ -430,22 +453,187 @@ oc_sec_encode_ace(CborEncoder *encoder, const oc_sec_ace_t *sub,
   ace_encode_subject_resources(
     encoder, (const oc_ace_res_t *)oc_list_head(sub->resources));
 
-  oc_string_view_t permission_key =
-    OC_STRING_VIEW(OC_ACE_PROP_SUBJECT_PERMISSION);
+  oc_string_view_t permission_key = OC_STRING_VIEW(OC_ACE_PROP_PERMISSION);
   g_err |= oc_rep_object_set_uint(encoder, permission_key.data,
                                   permission_key.length, sub->permission);
 
-  oc_string_view_t aceid_key = OC_STRING_VIEW(OC_ACE_PROP_SUBJECT_ACEID);
+  oc_string_view_t aceid_key = OC_STRING_VIEW(OC_ACE_PROP_ACEID);
   g_err |= oc_rep_object_set_int(encoder, aceid_key.data, aceid_key.length,
                                  sub->aceid);
-  if (to_storage) {
-    if (!oc_string_is_empty(&sub->tag)) {
-      oc_string_view_t tag_key = OC_STRING_VIEW(OC_ACE_PROP_TAG);
-      g_err |= oc_rep_object_set_text_string(
-        encoder, tag_key.data, tag_key.length, oc_string(sub->tag),
-        oc_string_len_unsafe(sub->tag)); // safe: oc_string_is_empty check above
-    }
+  if (to_storage && !oc_string_is_empty(&sub->tag)) {
+    oc_string_view_t tag_key = OC_STRING_VIEW(OC_ACE_PROP_TAG);
+    g_err |= oc_rep_object_set_text_string(
+      encoder, tag_key.data, tag_key.length, oc_string(sub->tag),
+      oc_string_len_unsafe(sub->tag)); // safe: oc_string_is_empty check above
   }
+}
+
+static int
+ace_decode_subject(const oc_rep_t *rep, oc_ace_subject_view_t *subject)
+{
+  const oc_string_t *uuid = NULL;
+  const oc_string_t *role = NULL;
+  const oc_string_t *authority = NULL;
+  const oc_string_t *conntype = NULL;
+  for (; rep != NULL; rep = rep->next) {
+    if (rep->type == OC_REP_STRING) {
+      if (oc_rep_is_property(rep, OC_ACE_PROP_SUBJECT_UUID,
+                             OC_CHAR_ARRAY_LEN(OC_ACE_PROP_SUBJECT_UUID))) {
+        uuid = &rep->value.string;
+        continue;
+      }
+
+      if (oc_rep_is_property(rep, OC_ACE_PROP_SUBJECT_ROLE,
+                             OC_CHAR_ARRAY_LEN(OC_ACE_PROP_SUBJECT_ROLE))) {
+        role = &rep->value.string;
+        continue;
+      }
+
+      if (oc_rep_is_property(
+            rep, OC_ACE_PROP_SUBJECT_AUTHORITY,
+            OC_CHAR_ARRAY_LEN(OC_ACE_PROP_SUBJECT_AUTHORITY))) {
+        authority = &rep->value.string;
+        continue;
+      }
+
+      if (oc_rep_is_property(rep, OC_ACE_PROP_SUBJECT_CONNTYPE,
+                             OC_CHAR_ARRAY_LEN(OC_ACE_PROP_SUBJECT_CONNTYPE))) {
+        conntype = &rep->value.string;
+        continue;
+      }
+    }
+
+    OC_ERR("ACE decode subject: unknown property (name=%s, type=%d)",
+           oc_string(rep->name) != NULL ? oc_string(rep->name) : "(null)",
+           (int)rep->type);
+    return -1;
+  }
+
+  bool has_uuid = uuid != NULL;
+  bool has_role = role != NULL || authority != NULL;
+  bool has_conntype = conntype != NULL;
+  if (has_uuid) {
+    if (has_role || has_conntype) {
+      OC_ERR("ACE decode subject: uuid cannot be used with role or conntype");
+      return -1;
+    }
+    oc_uuid_t id;
+    if (oc_str_to_uuid_v1(oc_string(*uuid), oc_string_len_unsafe(*uuid), &id) <
+        0) {
+      OC_ERR("ACE decode subject: uuid(%s) is invalid", oc_string(*uuid));
+      return -1;
+    }
+    subject->uuid = id;
+    return OC_SUBJECT_UUID;
+  }
+
+  if (has_role) {
+    if (role == NULL) {
+      OC_ERR("ACE decode subject: role is missing");
+      return -1;
+    }
+    if (has_conntype) {
+      OC_ERR("ACE decode subject: conntype cannot be used with role");
+      return -1;
+    }
+    subject->role = (struct oc_ace_subject_role_view_t){
+      .role = oc_string_view2(role),
+      .authority = oc_string_view2(authority),
+    };
+    return OC_SUBJECT_ROLE;
+  }
+
+  if (has_conntype) {
+    int conn = oc_ace_connection_type_from_string(oc_string_view2(conntype));
+    if (conn < 0) {
+      OC_ERR("ACE decode subject: conntype(%s) is invalid",
+             oc_string(*conntype));
+      return -1;
+    }
+    subject->conn = (oc_ace_connection_type_t)conn;
+    return OC_SUBJECT_CONN;
+  }
+
+  OC_ERR("ACE decode subject: subject is missing");
+  return -1;
+}
+
+static bool
+ace_decode_property(const oc_rep_t *rep, oc_sec_ace_decode_t *acedecode)
+{
+  if (rep->type == OC_REP_INT) {
+    if (oc_rep_is_property(rep, OC_ACE_PROP_PERMISSION,
+                           OC_CHAR_ARRAY_LEN(OC_ACE_PROP_PERMISSION))) {
+      if (rep->value.integer > UINT16_MAX) {
+        OC_ERR("ACE permission value(%" PRId64 ") is invalid",
+               rep->value.integer);
+        return false;
+      }
+      acedecode->permission = (uint16_t)rep->value.integer;
+      return true;
+    }
+    if (oc_rep_is_property(rep, OC_ACE_PROP_ACEID,
+                           OC_CHAR_ARRAY_LEN(OC_ACE_PROP_ACEID))) {
+      if (rep->value.integer > INT_MAX) {
+        OC_ERR("ACE aceid value(%" PRId64 ") is invalid", rep->value.integer);
+        return false;
+      }
+      acedecode->aceid = (int)rep->value.integer;
+      return true;
+    }
+    return false;
+  }
+
+  if (rep->type == OC_REP_STRING) {
+    if (oc_rep_is_property(rep, OC_ACE_PROP_TAG,
+                           OC_CHAR_ARRAY_LEN(OC_ACE_PROP_TAG))) {
+      acedecode->tag = &rep->value.string;
+      return true;
+    }
+    return false;
+  }
+
+  if (rep->type == OC_REP_OBJECT) {
+    if (oc_rep_is_property(rep, OC_ACE_PROP_SUBJECT,
+                           OC_CHAR_ARRAY_LEN(OC_ACE_PROP_SUBJECT))) {
+      int subject_type =
+        ace_decode_subject(rep->value.object, &acedecode->subject);
+      if (subject_type < 0) {
+        OC_ERR("ACE decode: subject is invalid");
+        return false;
+      }
+      acedecode->subject_type = (oc_ace_subject_type_t)subject_type;
+      return true;
+    }
+    return false;
+  }
+
+  if (rep->type == OC_REP_OBJECT_ARRAY) {
+    if (oc_rep_is_property(rep, OC_ACE_PROP_RESOURCES,
+                           OC_CHAR_ARRAY_LEN(OC_ACE_PROP_RESOURCES))) {
+      acedecode->resources = rep->value.object_array;
+      return true;
+    }
+    return false;
+  }
+  return false;
+}
+
+bool
+oc_sec_decode_ace(const oc_rep_t *rep, oc_sec_ace_decode_t *acedecode)
+{
+
+  for (; rep != NULL; rep = rep->next) {
+    if (!ace_decode_property(rep, acedecode)) {
+      OC_ERR("ACE decode: unknown property (name=%s, type=%d)",
+             oc_string(rep->name) != NULL ? oc_string(rep->name) : "(null)",
+             (int)rep->type);
+      return false;
+    }
+    OC_DBG("aceid: %d, permission: %d, subject_type: %d", acedecode->aceid,
+           acedecode->permission, acedecode->subject_type);
+  }
+  return true;
 }
 
 #endif /* OC_SECURITY */

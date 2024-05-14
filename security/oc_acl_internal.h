@@ -24,6 +24,7 @@
 #include "oc_ri.h"
 #include "oc_uuid.h"
 #include "port/oc_log_internal.h"
+#include "security/oc_ace_internal.h"
 #include "util/oc_features.h"
 #include "util/oc_list.h"
 #include "util/oc_memb.h"
@@ -62,10 +63,9 @@ bool oc_sec_acl_add_created_resource_ace(oc_string_view_t href,
 
 oc_sec_ace_t *oc_sec_acl_find_subject(oc_sec_ace_t *start,
                                       oc_ace_subject_type_t type,
-                                      const oc_ace_subject_t *subject,
-                                      int aceid, uint16_t permission,
-                                      oc_string_view_t tag, bool match_tag,
-                                      size_t device);
+                                      oc_ace_subject_view_t subject, int aceid,
+                                      uint16_t permission, oc_string_view_t tag,
+                                      bool match_tag, size_t device);
 
 typedef struct
 {
@@ -75,11 +75,10 @@ typedef struct
 } oc_sec_ace_update_data_t;
 
 bool oc_sec_acl_update_res(oc_ace_subject_type_t type,
-                           const oc_ace_subject_t *subject, int aceid,
+                           oc_ace_subject_view_t subject, int aceid,
                            uint16_t permission, oc_string_view_t tag,
                            oc_string_view_t href, oc_ace_wildcard_t wildcard,
-                           size_t device, oc_sec_ace_update_data_t *data)
-  OC_NONNULL(2);
+                           size_t device, oc_sec_ace_update_data_t *data);
 
 /** @brief Create ACL (/oic/sec/acl2) resource for given device. */
 void oc_sec_acl_create_resource(size_t device);
