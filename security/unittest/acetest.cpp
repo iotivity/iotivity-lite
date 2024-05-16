@@ -30,6 +30,8 @@
 
 #include <algorithm>
 #include <gtest/gtest.h>
+#include <map>
+#include <string>
 #include <vector>
 
 class TestACE : public testing::Test {
@@ -37,12 +39,6 @@ public:
   static void SetUpTestCase() { oc_random_init(); }
 
   static void TearDownTestCase() { oc_random_destroy(); }
-
-  void SetUp() override
-  {
-    // TODO: rm
-    oc_log_set_level(OC_LOG_LEVEL_DEBUG);
-  }
 
   void TearDown() override { oc_log_set_level(OC_LOG_LEVEL_INFO); }
 
@@ -73,12 +69,15 @@ public:
         },
         &resources));
       ASSERT_EQ(expResources.size(), resources.size());
-      for (auto resource : resources) {
+      for (const auto &resource : resources) {
         auto it = std::find_if(expResources.begin(), expResources.end(),
                                [&resource](const oc_ace_res_t *aceres) {
+                                 oc_string_view_t href1 =
+                                   oc_string_view2(&aceres->href);
+                                 oc_string_view_t href2 =
+                                   oc_string_view2(resource.href);
                                  return aceres->wildcard == resource.wildcard &&
-                                        oc_string_is_equal(&aceres->href,
-                                                           resource.href);
+                                        oc_string_view_is_equal(href1, href2);
                                });
         ASSERT_NE(it, expResources.end());
         expResources.erase(it);
@@ -549,6 +548,21 @@ TEST_F(TestACE, Decode_FailInvalidIntProperty)
   checkInvalidPayload(pool.ParsePayload().get());
 }
 
+TEST_F(TestACE, Decode_FailInvalidObjectProperty)
+{
+  oc::RepPool pool{};
+  oc_rep_begin_root_object();
+  oc_rep_set_key(oc_rep_object(root), "objects");
+  oc_rep_begin_array(oc_rep_object(root), objects);
+  oc_rep_object_array_begin_item(objects);
+  oc_rep_object_array_end_item(objects);
+  oc_rep_end_array(oc_rep_object(root), objects);
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  checkInvalidPayload(pool.ParsePayload().get());
+}
+
 // permission is uint16_t type
 TEST_F(TestACE, Decode_FailInvalidPermission)
 {
@@ -576,5 +590,129 @@ TEST_F(TestACE, Decode_FailInvalidAceid)
 }
 
 #endif /* INT_MAX < INT64_MAX */
+
+TEST_F(TestACE, Decode_FailInvalidObject)
+{
+  oc::RepPool pool{};
+  oc_rep_begin_root_object();
+  oc_rep_open_object(root, empty);
+  oc_rep_close_object(root, empty);
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  checkInvalidPayload(pool.ParsePayload().get());
+}
+
+TEST_F(TestACE, DecodeSubject_FailInvalidProperty)
+{
+  oc::RepPool pool{};
+  oc_rep_begin_root_object();
+  oc_rep_open_object(root, subject);
+  oc_rep_set_text_string(subject, plgd, "dev");
+  oc_rep_close_object(root, subject);
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  checkInvalidPayload(pool.ParsePayload().get());
+
+  pool.Clear();
+  oc_rep_begin_root_object();
+  oc_rep_open_object(root, subject);
+  oc_rep_set_int(subject, plgd, 42);
+  oc_rep_close_object(root, subject);
+  oc_rep_end_root_object();
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+  checkInvalidPayload(pool.ParsePayload().get());
+}
+
+static void
+encodeSubject(const std::map<std::string, std::string, std::less<>> &properties)
+{
+  oc_rep_begin_root_object();
+  oc_rep_open_object(root, subject);
+  for (const auto &[key, value] : properties) {
+    g_err |= oc_rep_object_set_text_string(oc_rep_object(subject), key.c_str(),
+                                           key.length(), value.c_str(),
+                                           value.length());
+  }
+  oc_rep_close_object(root, subject);
+  oc_rep_end_root_object();
+}
+
+TEST_F(TestACE, DecodeSubjectUUID)
+{
+  std::string uuid_str = "550e8400-e29b-41d4-a716-446655440000";
+  oc_uuid_t uuid{};
+  ASSERT_NE(-1, oc_str_to_uuid_v1(uuid_str.c_str(), uuid_str.length(), &uuid));
+  oc_sec_ace_t ace{};
+  ace.subject_type = OC_SUBJECT_UUID;
+  ace.subject.uuid = uuid;
+
+  oc::RepPool pool{};
+  encodeSubject({ { OC_ACE_PROP_SUBJECT_UUID, uuid_str } });
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  checkEncodedACE(&ace, pool.ParsePayload().get());
+}
+
+TEST_F(TestACE, DecodeSubjectUUID_FailInvalidUUID)
+{
+  oc::RepPool pool{};
+  encodeSubject({ { OC_ACE_PROP_SUBJECT_UUID, "invalid-uuid" } });
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  checkInvalidPayload(pool.ParsePayload().get());
+}
+
+TEST_F(TestACE, DecodeSubjectRole)
+{
+  oc_sec_ace_t ace{};
+  ace.subject_type = OC_SUBJECT_ROLE;
+  ace.subject.role = {
+    /*.role =*/OC_STRING_LOCAL("role"),
+    /*.authority =*/OC_STRING_LOCAL("authority"),
+  };
+
+  oc::RepPool pool{};
+  encodeSubject(
+    { { OC_ACE_PROP_SUBJECT_ROLE, oc_string(ace.subject.role.role) },
+      { OC_ACE_PROP_SUBJECT_AUTHORITY,
+        oc_string(ace.subject.role.authority) } });
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  checkEncodedACE(&ace, pool.ParsePayload().get());
+}
+
+TEST_F(TestACE, DecodeSubjectRole_FailMissingRole)
+{
+  oc::RepPool pool{};
+  encodeSubject({ { OC_ACE_PROP_SUBJECT_AUTHORITY, "authority" } });
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  checkInvalidPayload(pool.ParsePayload().get());
+}
+
+TEST_F(TestACE, DecodeSubjectConn)
+{
+  oc_sec_ace_t ace{};
+  ace.subject_type = OC_SUBJECT_CONN;
+  ace.subject.conn = OC_CONN_ANON_CLEAR;
+
+  oc::RepPool pool{};
+  encodeSubject(
+    { { OC_ACE_PROP_SUBJECT_CONNTYPE,
+        oc_ace_connection_type_to_string(ace.subject.conn).data } });
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  checkEncodedACE(&ace, pool.ParsePayload().get());
+}
+
+TEST_F(TestACE, DecodeSubjectConn_FailInvalidConnType)
+{
+  oc::RepPool pool{};
+  encodeSubject({ { OC_ACE_PROP_SUBJECT_CONNTYPE, "invalid-conn-type" } });
+  ASSERT_EQ(CborNoError, oc_rep_get_cbor_errno());
+
+  checkInvalidPayload(pool.ParsePayload().get());
+}
 
 #endif /* OC_SECURITY */

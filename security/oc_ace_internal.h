@@ -38,6 +38,18 @@ extern "C" {
 #define OC_CONN_AUTH_CRYPT_STR "auth-crypt"
 #define OC_CONN_ANON_CLEAR_STR "anon-clear"
 
+#define OC_ACE_PROP_SUBJECT "subject"
+#define OC_ACE_PROP_SUBJECT_UUID "uuid"
+#define OC_ACE_PROP_SUBJECT_ROLE "role"
+#define OC_ACE_PROP_SUBJECT_AUTHORITY "authority"
+#define OC_ACE_PROP_SUBJECT_CONNTYPE "conntype"
+#define OC_ACE_PROP_PERMISSION "permission"
+#define OC_ACE_PROP_ACEID "aceid"
+#define OC_ACE_PROP_TAG "tag"
+#define OC_ACE_PROP_RESOURCES "resources"
+#define OC_ACE_PROP_RESOURCE_HREF "href"
+#define OC_ACE_PROP_RESOURCE_WILDCARD "wc"
+
 /** Convert wildcard to string representation */
 oc_string_view_t oc_ace_wildcard_to_string(oc_ace_wildcard_t wc);
 

@@ -31,18 +31,6 @@
 #include <assert.h>
 #include <inttypes.h>
 
-#define OC_ACE_PROP_SUBJECT "subject"
-#define OC_ACE_PROP_SUBJECT_UUID "uuid"
-#define OC_ACE_PROP_SUBJECT_ROLE "role"
-#define OC_ACE_PROP_SUBJECT_AUTHORITY "authority"
-#define OC_ACE_PROP_SUBJECT_CONNTYPE "conntype"
-#define OC_ACE_PROP_PERMISSION "permission"
-#define OC_ACE_PROP_ACEID "aceid"
-#define OC_ACE_PROP_TAG "tag"
-#define OC_ACE_PROP_RESOURCES "resources"
-#define OC_ACE_PROP_RESOURCE_HREF "href"
-#define OC_ACE_PROP_RESOURCE_WILDCARD "wc"
-
 #define MAX_NUM_RES_PERM_PAIRS                                                 \
   ((OC_MAX_NUM_SUBJECTS + 2) *                                                 \
    (OC_MAX_APP_RESOURCES + OC_NUM_CORE_PLATFORM_RESOURCES +                    \
@@ -588,26 +576,35 @@ ace_decode_subject(const oc_rep_t *rep, oc_ace_subject_view_t *subject)
 }
 
 static bool
+ace_decode_int_property(const oc_rep_t *rep, oc_sec_ace_decode_t *acedecode)
+{
+  if (oc_rep_is_property(rep, OC_ACE_PROP_PERMISSION,
+                         OC_CHAR_ARRAY_LEN(OC_ACE_PROP_PERMISSION))) {
+    if (rep->value.integer > UINT16_MAX) {
+      OC_ERR("ACE permission value(%" PRId64 ") is invalid",
+             rep->value.integer);
+      return false;
+    }
+    acedecode->permission = (uint16_t)rep->value.integer;
+    return true;
+  }
+  if (oc_rep_is_property(rep, OC_ACE_PROP_ACEID,
+                         OC_CHAR_ARRAY_LEN(OC_ACE_PROP_ACEID))) {
+    if (rep->value.integer > INT_MAX) {
+      OC_ERR("ACE aceid value(%" PRId64 ") is invalid", rep->value.integer);
+      return false;
+    }
+    acedecode->aceid = (int)rep->value.integer;
+    return true;
+  }
+  return false;
+}
+
+static bool
 ace_decode_property(const oc_rep_t *rep, oc_sec_ace_decode_t *acedecode)
 {
   if (rep->type == OC_REP_INT) {
-    if (oc_rep_is_property(rep, OC_ACE_PROP_PERMISSION,
-                           OC_CHAR_ARRAY_LEN(OC_ACE_PROP_PERMISSION))) {
-      if (rep->value.integer > UINT16_MAX) {
-        OC_ERR("ACE permission value(%" PRId64 ") is invalid",
-               rep->value.integer);
-        return false;
-      }
-      acedecode->permission = (uint16_t)rep->value.integer;
-      return true;
-    }
-    if (oc_rep_is_property(rep, OC_ACE_PROP_ACEID,
-                           OC_CHAR_ARRAY_LEN(OC_ACE_PROP_ACEID))) {
-      if (rep->value.integer > INT_MAX) {
-        OC_ERR("ACE aceid value(%" PRId64 ") is invalid", rep->value.integer);
-        return false;
-      }
-      acedecode->aceid = (int)rep->value.integer;
+    if (ace_decode_int_property(rep, acedecode)) {
       return true;
     }
     goto unknown_property;
