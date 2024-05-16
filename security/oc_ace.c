@@ -31,18 +31,6 @@
 #include <assert.h>
 #include <inttypes.h>
 
-#define OC_ACE_PROP_SUBJECT "subject"
-#define OC_ACE_PROP_SUBJECT_UUID "uuid"
-#define OC_ACE_PROP_SUBJECT_ROLE "role"
-#define OC_ACE_PROP_SUBJECT_AUTHORITY "authority"
-#define OC_ACE_PROP_SUBJECT_CONNTYPE "conntype"
-#define OC_ACE_PROP_PERMISSION "permission"
-#define OC_ACE_PROP_ACEID "aceid"
-#define OC_ACE_PROP_TAG "tag"
-#define OC_ACE_PROP_RESOURCES "resources"
-#define OC_ACE_PROP_RESOURCE_HREF "href"
-#define OC_ACE_PROP_RESOURCE_WILDCARD "wc"
-
 #define MAX_NUM_RES_PERM_PAIRS                                                 \
   ((OC_MAX_NUM_SUBJECTS + 2) *                                                 \
    (OC_MAX_APP_RESOURCES + OC_NUM_CORE_PLATFORM_RESOURCES +                    \
