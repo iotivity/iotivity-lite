@@ -36,6 +36,7 @@
 #include "port/oc_fcntl_internal.h"
 #include "port/oc_log_internal.h"
 #include "port/oc_network_event_handler_internal.h"
+#include "port/oc_random.h"
 #include "util/oc_atomic.h"
 #include "util/oc_features.h"
 #include "util/oc_macros_internal.h"
@@ -868,6 +869,8 @@ process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
     if (ret != 0) {
       return ret;
     }
+
+    // TODO: No return value here?!
   }
 
   if (wfds != NULL) {
@@ -933,11 +936,52 @@ to_timeval(oc_clock_time_t ticks)
 }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
+#ifdef OC_DYNAMIC_ALLOCATION
+static bool
+optimize_rfds(fd_set *output_set, const fd_set *rfd_set, int rfd_count)
+{
+  if (oc_get_network_events_queue_length() >= OC_MAX_NUM_CONCURRENT_REQUESTS) {
+    for (int i = 0; i < FD_SETSIZE; i++) {
+      if (FD_ISSET(i, rfd_set)) {
+        FD_CLR(i, output_set);
+      }
+    }
+    return true;
+  }
+
+  int random_rfd = oc_random_value() % rfd_count;
+  for (int i = 0; i < FD_SETSIZE; i++) {
+    if (FD_ISSET(i, rfd_set)) {
+      if (rfd_count != random_rfd) {
+        FD_CLR(i, output_set);
+      }
+    }
+  }
+  return false;
+}
+#endif /* OC_DYNAMIC_ALLOCATION */
+
 static void *
 network_event_thread(void *data)
 {
   ip_context_t *dev = (ip_context_t *)data;
   FD_ZERO(&dev->rfds);
+  udp_add_socks_to_rfd_set(dev);
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  struct timeval queue_timeout;
+  queue_timeout.tv_sec = 0;
+  queue_timeout.tv_usec = 1000;
+
+  fd_set rfd_set = ip_context_rfds_fd_copy(dev);
+  int rfd_count = 0;
+  for (int i = 0; i < FD_SETSIZE; i++) {
+    if (FD_ISSET(i, &rfd_set)) {
+      rfd_count++;
+    }
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
   /* Monitor network interface changes on the platform from only the 0th
    * logical device
    */
@@ -946,7 +990,6 @@ network_event_thread(void *data)
   }
   FD_SET(dev->shutdown_pipe[0], &dev->rfds);
 
-  udp_add_socks_to_rfd_set(dev);
 #ifdef OC_TCP
   tcp_add_socks_to_rfd_set(dev);
 #endif /* OC_TCP */
@@ -957,6 +1000,12 @@ network_event_thread(void *data)
   while (OC_ATOMIC_LOAD8(dev->terminate) != 1) {
     struct timeval *timeout = NULL;
     fd_set rdfds = ip_context_rfds_fd_copy(dev);
+#ifdef OC_DYNAMIC_ALLOCATION
+    bool use_timeout = optimize_rfds(&rdfds, &rfd_set, rfd_count);
+#else
+    bool use_timeout = false;
+#endif /* OC_DYNAMIC_ALLOCATION */
+
     fd_set *wfds = NULL;
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
     fd_set write_fds = tcp_context_cfds_fd_copy(&dev->tcp);
@@ -969,7 +1018,7 @@ network_event_thread(void *data)
              (unsigned)tv.tv_usec);
     }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
-    int n = select(FD_SETSIZE, &rdfds, wfds, NULL, timeout);
+    int n = select(FD_SETSIZE, &rdfds, wfds, NULL, use_timeout ? &queue_timeout : timeout);
 
     if (FD_ISSET(dev->shutdown_pipe[0], &rdfds)) {
       process_shutdown(dev);

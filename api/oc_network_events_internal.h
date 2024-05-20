@@ -78,6 +78,11 @@ typedef struct oc_network_interface_cb
 void oc_network_interface_event(oc_interface_event_t event);
 #endif /* OC_NETWORK_MONITOR */
 
+/**
+ * @brief returns the length of network events queue
+ */
+int oc_get_network_events_queue_length(void);
+
 #ifdef __cplusplus
 }
 #endif

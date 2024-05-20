@@ -204,3 +204,12 @@ oc_network_interface_event(oc_interface_event_t event)
   _oc_signal_event_loop();
 }
 #endif /* OC_NETWORK_MONITOR */
+
+int
+oc_get_network_events_queue_length(void)
+{
+  oc_network_event_handler_mutex_lock();
+  int length = oc_list_length(g_network_events);
+  oc_network_event_handler_mutex_unlock();
+  return length;
+}
