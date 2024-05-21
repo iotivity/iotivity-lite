@@ -205,6 +205,9 @@ add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
   session->endpoint.next = NULL;
   session->sock = sock;
   session->csm_state = state;
+  if (session->endpoint.session_id == 0) {
+    session->endpoint.session_id = oc_tcp_get_new_session_id();
+  }
 
   oc_list_add(session_list, session);
 
@@ -436,11 +439,14 @@ oc_tcp_receive_message_done:
 
 bool
 oc_tcp_end_session(ip_context_t *dev, const oc_endpoint_t *endpoint,
-                   bool notify_session_end)
+                   bool notify_session_end, oc_endpoint_t *session_endpoint)
 {
   pthread_mutex_lock(&dev->tcp.mutex);
   tcp_session_t *session = find_session_by_endpoint(endpoint);
   if (session) {
+    if (session_endpoint) {
+      memcpy(session_endpoint, &session->endpoint, sizeof(oc_endpoint_t));
+    }
     free_tcp_session(session, notify_session_end);
   }
   pthread_mutex_unlock(&dev->tcp.mutex);

@@ -1618,17 +1618,21 @@ oc_connectivity_shutdown(size_t device)
 void
 oc_connectivity_end_session(const oc_endpoint_t *endpoint)
 {
-  oc_connectivity_end_session_v1(endpoint, true);
+  while (oc_connectivity_end_session_v1(endpoint, true, NULL)) {
+    // no-op
+  }
 }
 
 bool
 oc_connectivity_end_session_v1(const oc_endpoint_t *endpoint,
-                               bool notify_session_end)
+                               bool notify_session_end,
+                               oc_endpoint_t *session_endpoint)
 {
   if (endpoint->flags & TCP) {
     ip_context_t *dev = get_ip_context_for_device(endpoint->device);
     if (dev) {
-      return oc_tcp_end_session(dev, endpoint, notify_session_end);
+      return oc_tcp_end_session(dev, endpoint, notify_session_end,
+                                session_endpoint);
     }
   }
   return false;

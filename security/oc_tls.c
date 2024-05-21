@@ -540,7 +540,7 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb, bool from_reset,
 
 #ifdef OC_TCP
   if (endpoint.flags & TCP) {
-    oc_connectivity_end_session_v1(&endpoint, false);
+    oc_connectivity_end_session_v1(&endpoint, false, NULL);
   }
 #endif /* OC_TCP */
   if (notify_session_end) {
@@ -570,14 +570,29 @@ oc_tls_peer_is_doc(const oc_endpoint_t *endpoint)
 }
 
 void
-oc_tls_remove_peer(const oc_endpoint_t *endpoint, bool notify_session_end)
+oc_tls_remove_peer(const oc_endpoint_t *orig_endpoint, bool notify_session_end)
 {
-  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
-  if (peer != NULL) {
-    oc_tls_free_peer(peer, false, false, notify_session_end);
-  } else {
-    tls_drop_endpoint_events(endpoint);
+  oc_endpoint_t endpoint;
+  oc_endpoint_copy(&endpoint, orig_endpoint);
+  oc_tls_peer_t *peer = oc_tls_get_peer(&endpoint);
+  if (peer == NULL) {
+    tls_drop_endpoint_events(&endpoint);
+    return;
   }
+  do {
+    oc_tls_free_peer(peer, false, false, notify_session_end);
+#ifdef OC_TCP
+    if ((endpoint.flags & TCP) != 0 || endpoint.session_id != 0) {
+      break;
+    }
+#endif /* OC_TCP */
+    peer = oc_tls_get_peer(&endpoint);
+  } while (peer != NULL);
+#ifdef OC_TCP
+  if ((endpoint.flags & TCP) == 0 && endpoint.session_id == 0) {
+    tls_drop_endpoint_events(&endpoint);
+  }
+#endif /* OC_TCP */
 }
 
 static void
@@ -2284,11 +2299,19 @@ dtls_init_err:
 }
 
 static void
-tls_close_connection(const oc_endpoint_t *endpoint, bool from_reset)
+tls_close_connection(const oc_endpoint_t *orig_endpoint, bool from_reset)
 {
-  oc_tls_peer_t *peer = oc_tls_get_peer(endpoint);
-  if (peer != NULL) {
+  oc_endpoint_t endpoint;
+  oc_endpoint_copy(&endpoint, orig_endpoint);
+  oc_tls_peer_t *peer = oc_tls_get_peer(&endpoint);
+  while (peer != NULL) {
     oc_tls_close_peer(peer, from_reset);
+#ifdef OC_TCP
+    if ((endpoint.flags & TCP) != 0 || endpoint.session_id != 0) {
+      break;
+    }
+#endif /* OC_TCP */
+    peer = oc_tls_get_peer(&endpoint);
   }
 }
 
@@ -2684,6 +2707,12 @@ oc_tls_init_connection(oc_message_t *message)
     return;
   }
 
+#ifdef OC_TCP
+  if ((peer->endpoint.flags & TCP) != 0 && peer->endpoint.session_id == 0) {
+    peer->endpoint.session_id = oc_tcp_get_new_session_id();
+  }
+#endif
+
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
   if ((peer->endpoint.flags & TCP) != 0) {
     int state = oc_tcp_connect(&peer->endpoint, oc_tls_on_tcp_connect, NULL);
@@ -3054,7 +3083,9 @@ close_all_tls_sessions_for_device_reset(size_t device)
   while (p != NULL) {
     oc_tls_peer_t *next = p->next;
     if (p->endpoint.device == device) {
-      tls_close_connection(&p->endpoint, true);
+      oc_endpoint_t endpoint;
+      oc_endpoint_copy(&endpoint, &p->endpoint);
+      tls_close_connection(&endpoint, true);
     }
     p = next;
   }

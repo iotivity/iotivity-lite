@@ -211,9 +211,24 @@ log_new_session(oc_endpoint_t *endpoint, int sock, bool is_connected)
     addr = oc_string(ep);
   }
   OC_DBG("new TCP session endpoint: %s, endpoint interface: %d, sock: %d, "
-         "connected: %d",
-         addr, endpoint->interface_index, sock, (int)is_connected);
+         "connected: %d, session_id: %u",
+         addr, endpoint->interface_index, sock, (int)is_connected,
+         (unsigned)endpoint->session_id);
 }
+
+static void
+log_free_session(oc_endpoint_t *endpoint, int sock)
+{
+  oc_string64_t ep;
+  const char *addr = "";
+  if (oc_endpoint_to_string64(endpoint, &ep)) {
+    addr = oc_string(ep);
+  }
+  OC_DBG("free TCP session endpoint: %s, endpoint interface: %d, sock: %d, "
+         "session_id: %u",
+         addr, endpoint->interface_index, sock, (unsigned)endpoint->session_id);
+}
+
 #endif /* OC_DBG_IS_ENABLED */
 
 static tcp_session_t *
@@ -240,6 +255,9 @@ add_new_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
   session->sock = sock;
   session->csm_state = state;
   session->notify_session_end = true;
+  if (session->endpoint.session_id == 0) {
+    session->endpoint.session_id = oc_tcp_get_new_session_id();
+  }
 
   oc_list_add(g_session_list, session);
 
@@ -311,8 +329,9 @@ free_session_locked(tcp_session_t *session, bool signal)
     signal_network_thread(&session->dev->tcp);
   }
   close(session->sock);
-
-  OC_DBG("free TCP session(%p, fd=%d)", (void *)session, session->sock);
+#if OC_DBG_IS_ENABLED
+  log_free_session(&session->endpoint, session->sock);
+#endif /* OC_DBG_IS_ENABLED */
   oc_memb_free(&g_tcp_session_s, session);
 }
 
@@ -713,12 +732,16 @@ free_waiting_session_async_locked(tcp_waiting_session_t *ws,
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
 bool
-tcp_end_session(const oc_endpoint_t *endpoint, bool notify_session_end)
+tcp_end_session(const oc_endpoint_t *endpoint, bool notify_session_end,
+                oc_endpoint_t *session_endpoint)
 {
   pthread_mutex_lock(&g_mutex);
   tcp_session_t *s = find_session_by_endpoint_locked(endpoint);
   if (s != NULL) {
     free_session_async_locked(s, notify_session_end);
+    if (session_endpoint) {
+      memcpy(session_endpoint, &s->endpoint, sizeof(oc_endpoint_t));
+    }
     pthread_mutex_unlock(&g_mutex);
     return true;
   }
@@ -727,6 +750,9 @@ tcp_end_session(const oc_endpoint_t *endpoint, bool notify_session_end)
   tcp_waiting_session_t *ws = find_waiting_session_by_endpoint_locked(endpoint);
   if (ws != NULL) {
     free_waiting_session_async_locked(ws, notify_session_end);
+    if (session_endpoint) {
+      memcpy(session_endpoint, &ws->endpoint, sizeof(oc_endpoint_t));
+    }
     pthread_mutex_unlock(&g_mutex);
     return true;
   }

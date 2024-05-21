@@ -40,7 +40,8 @@ adapter_receive_state_t oc_tcp_receive_message(ip_context_t *dev, fd_set *fds,
                                                oc_message_t *message);
 
 bool oc_tcp_end_session(ip_context_t *dev, const oc_endpoint_t *endpoint,
-                        bool notify_session_end);
+                        bool notify_session_end,
+                        oc_endpoint_t *session_endpoint);
 
 #ifdef __cplusplus
 }

@@ -967,8 +967,9 @@ oc_close_session(const oc_endpoint_t *endpoint)
 #endif /* OC_SECURITY */
   } else if (endpoint->flags & TCP) {
 #ifdef OC_TCP
-    if (oc_connectivity_end_session_v1(endpoint, false)) {
-      oc_handle_session(endpoint, OC_SESSION_DISCONNECTED);
+    oc_endpoint_t session_endpoint;
+    while (oc_connectivity_end_session_v1(endpoint, false, &session_endpoint)) {
+      oc_handle_session(&session_endpoint, OC_SESSION_DISCONNECTED);
     }
 #endif /* OC_TCP */
   }

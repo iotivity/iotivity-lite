@@ -104,10 +104,12 @@ void handle_session_event_callback(const oc_endpoint_t *endpoint,
  * @param endpoint the endpoint to close the session for
  * @param notify_session_end send the notification about the disconnection
  * session.
+ * @param session_endpoint the endpoint of the session with session id
  * @return bool true if the session will be closed
  */
 bool oc_connectivity_end_session_v1(const oc_endpoint_t *endpoint,
-                                    bool notify_session_end);
+                                    bool notify_session_end,
+                                    oc_endpoint_t *session_endpoint);
 
 #ifdef __cplusplus
 }

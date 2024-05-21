@@ -238,6 +238,9 @@ add_new_session_locked(SOCKET sock, ip_context_t *dev, oc_endpoint_t *endpoint,
   session->csm_state = state;
   session->sock_event = sock_event;
   session->notify_session_end = true;
+  if (session->endpoint.session_id == 0) {
+    session->endpoint.session_id = oc_tcp_get_new_session_id();
+  }
 
   oc_list_add(session_list, session);
 
@@ -318,11 +321,15 @@ find_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
 }
 
 bool
-oc_tcp_end_session(const oc_endpoint_t *endpoint, bool notify_session_end)
+oc_tcp_end_session(const oc_endpoint_t *endpoint, bool notify_session_end,
+                   oc_endpoint_t *session_endpoint)
 {
   oc_tcp_adapter_mutex_lock();
   tcp_session_t *session = find_session_by_endpoint_locked(endpoint);
   if (session) {
+    if (session_endpoint) {
+      memcpy(session_endpoint, &session->endpoint, sizeof(oc_endpoint_t));
+    }
     free_tcp_session_async_locked(session, notify_session_end);
   }
   oc_tcp_adapter_mutex_unlock();
