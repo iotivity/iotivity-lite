@@ -39,7 +39,8 @@ void oc_tcp_add_socks_to_fd_set(ip_context_t *dev);
 adapter_receive_state_t oc_tcp_receive_message(ip_context_t *dev, fd_set *fds,
                                                oc_message_t *message);
 
-void oc_tcp_end_session(ip_context_t *dev, const oc_endpoint_t *endpoint);
+bool oc_tcp_end_session(ip_context_t *dev, const oc_endpoint_t *endpoint,
+                        bool notify_session_end);
 
 #ifdef __cplusplus
 }

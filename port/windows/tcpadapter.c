@@ -54,6 +54,7 @@ typedef struct tcp_session
   SOCKET sock;
   HANDLE sock_event;
   tcp_csm_state_t csm_state;
+  bool notify_session_end;
 } tcp_session_t;
 
 OC_LIST(session_list);
@@ -184,7 +185,8 @@ free_tcp_session(tcp_session_t *session)
   free_tcp_session_locked(session, &endpoint, &sock, &sock_event);
   WSACloseEvent(sock_event);
   closesocket(sock);
-  if (!oc_session_events_disconnect_is_ongoing()) {
+  if (!oc_session_events_disconnect_is_ongoing() &&
+      session->notify_session_end) {
     oc_session_end_event(&endpoint);
   }
 
@@ -192,10 +194,11 @@ free_tcp_session(tcp_session_t *session)
 }
 
 static void
-free_tcp_session_async_locked(tcp_session_t *session)
+free_tcp_session_async_locked(tcp_session_t *session, bool notify_session_end)
 {
   oc_list_remove(session_list, session);
   oc_list_add(free_session_list_async, session);
+  session->notify_session_end = notify_session_end;
 
   if (!SetEvent(session->dev->tcp.signal_event)) {
     OC_ERR("could not trigger signal event (%ld)\n", GetLastError());
@@ -234,6 +237,7 @@ add_new_session_locked(SOCKET sock, ip_context_t *dev, oc_endpoint_t *endpoint,
   session->sock = sock;
   session->csm_state = state;
   session->sock_event = sock_event;
+  session->notify_session_end = true;
 
   oc_list_add(session_list, session);
 
@@ -313,15 +317,16 @@ find_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
   return session;
 }
 
-void
-oc_tcp_end_session(const oc_endpoint_t *endpoint)
+bool
+oc_tcp_end_session(const oc_endpoint_t *endpoint, bool notify_session_end)
 {
   oc_tcp_adapter_mutex_lock();
   tcp_session_t *session = find_session_by_endpoint_locked(endpoint);
   if (session) {
-    free_tcp_session_async_locked(session);
+    free_tcp_session_async_locked(session, notify_session_end);
   }
   oc_tcp_adapter_mutex_unlock();
+  return session != NULL;
 }
 
 static SOCKET

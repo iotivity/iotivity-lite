@@ -58,6 +58,7 @@ void jni_connectivity_shutdown(size_t device)
 %}
 %ignore oc_send_discovery_request;
 %ignore oc_connectivity_end_session;
+%ignore oc_connectivity_end_session_v1;
 %ignore oc_dns_lookup;
 %ignore oc_connectivity_get_endpoints;
 %ignore handle_network_interface_event_callback;

@@ -105,7 +105,7 @@ adapter_receive_state_t tcp_receive_message(ip_context_t *dev, fd_set *fds,
  * @brief Schedule the session associated with the endpoint to be stopped and
  * deallocated (if it exists).
  */
-void tcp_end_session(const oc_endpoint_t *endpoint);
+bool tcp_end_session(const oc_endpoint_t *endpoint, bool notify_session_end);
 
 /**
  * @brief Handle data received on the signal pipe.

@@ -60,6 +60,7 @@ typedef struct tcp_session_t
   oc_endpoint_t endpoint;
   int sock;
   tcp_csm_state_t csm_state;
+  bool notify_session_end;
 } tcp_session_t;
 
 static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -95,6 +96,7 @@ typedef struct tcp_waiting_session_t
   OC_LIST_STRUCT(messages);
   on_tcp_connect_t on_tcp_connect;
   void *on_tcp_connect_data;
+  bool notify_session_end;
 } tcp_waiting_session_t;
 
 OC_LIST(g_waiting_session_list); ///< sessions waiting to open a connection,
@@ -237,6 +239,7 @@ add_new_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
   session->endpoint.next = NULL;
   session->sock = sock;
   session->csm_state = state;
+  session->notify_session_end = true;
 
   oc_list_add(g_session_list, session);
 
@@ -297,7 +300,8 @@ free_session_locked(tcp_session_t *session, bool signal)
   oc_list_remove(g_session_list, session);
   oc_list_remove(g_free_session_list_async, session);
 
-  if (!oc_session_events_disconnect_is_ongoing()) {
+  if (!oc_session_events_disconnect_is_ongoing() &&
+      session->notify_session_end) {
     oc_session_end_event(&session->endpoint);
   }
 
@@ -582,6 +586,7 @@ add_new_waiting_session_locked(int sock, ip_context_t *dev,
   ws->retry.count = 0;
   ws->on_tcp_connect = on_tcp_connect;
   ws->on_tcp_connect_data = on_tcp_connect_data;
+  ws->notify_session_end = true;
 
 #if OC_DBG_IS_ENABLED
   log_new_session(&ws->endpoint, sock, false);
@@ -679,10 +684,11 @@ tcp_connect_locked(ip_context_t *dev, oc_endpoint_t *endpoint,
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
 static void
-free_session_async_locked(tcp_session_t *s)
+free_session_async_locked(tcp_session_t *s, bool notify_session_end)
 {
   oc_list_remove(g_session_list, s);
   oc_list_add(g_free_session_list_async, s);
+  s->notify_session_end = notify_session_end;
 
   signal_network_thread(&s->dev->tcp);
   OC_DBG("signaled network event thread to monitor that the session needs to "
@@ -692,10 +698,12 @@ free_session_async_locked(tcp_session_t *s)
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
 static void
-free_waiting_session_async_locked(tcp_waiting_session_t *ws)
+free_waiting_session_async_locked(tcp_waiting_session_t *ws,
+                                  bool notify_session_end)
 {
   oc_list_remove(g_waiting_session_list, ws);
   oc_list_add(g_free_waiting_session_list_async, ws);
+  ws->notify_session_end = notify_session_end;
 
   signal_network_thread(&ws->dev->tcp);
   OC_DBG("signaled network event thread to monitor that the session needs to "
@@ -704,27 +712,28 @@ free_waiting_session_async_locked(tcp_waiting_session_t *ws)
 }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
-void
-tcp_end_session(const oc_endpoint_t *endpoint)
+bool
+tcp_end_session(const oc_endpoint_t *endpoint, bool notify_session_end)
 {
   pthread_mutex_lock(&g_mutex);
   tcp_session_t *s = find_session_by_endpoint_locked(endpoint);
   if (s != NULL) {
-    free_session_async_locked(s);
+    free_session_async_locked(s, notify_session_end);
     pthread_mutex_unlock(&g_mutex);
-    return;
+    return true;
   }
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
   tcp_waiting_session_t *ws = find_waiting_session_by_endpoint_locked(endpoint);
   if (ws != NULL) {
-    free_waiting_session_async_locked(ws);
+    free_waiting_session_async_locked(ws, notify_session_end);
     pthread_mutex_unlock(&g_mutex);
-    return;
+    return true;
   }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
   pthread_mutex_unlock(&g_mutex);
+  return false;
 }
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT

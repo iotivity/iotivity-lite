@@ -21,6 +21,7 @@
 #include "log_internal.h"
 #include "signal_internal.h"
 #include "coap_internal.h"
+#include "oc_api.h"
 #include "transactions_internal.h"
 #include <string.h>
 
@@ -223,7 +224,7 @@ coap_signal_handle_message(const coap_packet_t *packet,
   if (packet->code == RELEASE_7_04) {
     // alternative address
     // hold off
-    oc_connectivity_end_session(endpoint);
+    oc_close_session(endpoint);
     return COAP_SIGNAL_DONE;
   }
 

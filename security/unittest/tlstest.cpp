@@ -176,7 +176,7 @@ TEST_F(TestEventsWithServer, DropOutputMessages)
   oc_send_message(msg);
   EXPECT_LT(0, countInboundOrOutboundEvents());
 
-  oc_tls_remove_peer(&ep);
+  oc_tls_remove_peer(&ep, true);
   ASSERT_EQ(0, countInboundOrOutboundEvents());
 }
 
@@ -208,7 +208,7 @@ TEST_F(TestEventsWithServer, DropOutputMessagesTCP)
   oc_send_message(msg);
   EXPECT_LT(0, countInboundOrOutboundEvents());
 
-  oc_tls_remove_peer(&ep);
+  oc_tls_remove_peer(&ep, true);
   ASSERT_EQ(0, countInboundOrOutboundEvents());
 }
 #endif /* OC_TCP */

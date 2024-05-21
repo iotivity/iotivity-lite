@@ -159,11 +159,11 @@ oc_tcp_add_socks_to_fd_set(ip_context_t *dev)
 }
 
 static void
-free_tcp_session(tcp_session_t *session)
+free_tcp_session(tcp_session_t *session, bool notify_session_end)
 {
   oc_list_remove(session_list, session);
 
-  if (!oc_session_events_disconnect_is_ongoing()) {
+  if (!oc_session_events_disconnect_is_ongoing() && notify_session_end) {
     oc_session_end_event(&session->endpoint);
   }
 
@@ -374,13 +374,13 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
     if (count < 0) {
       OC_ERR("recv error! %d", errno);
 
-      free_tcp_session(session);
+      free_tcp_session(session, true);
 
       ret_with_code(ADAPTER_STATUS_ERROR);
     } else if (count == 0) {
       OC_DBG("peer closed TCP session\n");
 
-      free_tcp_session(session);
+      free_tcp_session(session, true);
 
       ret_with_code(ADAPTER_STATUS_NONE);
     }
@@ -401,7 +401,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
         oc_tcp_get_total_length_from_message_header(message);
       if (length_from_header < 0) {
         OC_ERR("invalid message size in header");
-        free_tcp_session(session);
+        free_tcp_session(session, true);
         ret_with_code(ADAPTER_STATUS_ERROR);
       }
 
@@ -411,7 +411,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
         OC_ERR(
           "total receive length(%zu) is bigger than message buffer size(%zu)",
           total_length, oc_message_buffer_size(message));
-        free_tcp_session(session);
+        free_tcp_session(session, true);
         ret_with_code(ADAPTER_STATUS_ERROR);
       }
       OC_DBG("tcp packet total length : %zu bytes.", total_length);
@@ -421,7 +421,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   } while (total_length > message->length);
 
   if (!oc_tcp_is_valid_message(message)) {
-    free_tcp_session(session);
+    free_tcp_session(session, true);
     ret_with_code(ADAPTER_STATUS_ERROR);
   }
 
@@ -434,15 +434,17 @@ oc_tcp_receive_message_done:
   return ret;
 }
 
-void
-oc_tcp_end_session(ip_context_t *dev, const oc_endpoint_t *endpoint)
+bool
+oc_tcp_end_session(ip_context_t *dev, const oc_endpoint_t *endpoint,
+                   bool notify_session_end)
 {
   pthread_mutex_lock(&dev->tcp.mutex);
   tcp_session_t *session = find_session_by_endpoint(endpoint);
   if (session) {
-    free_tcp_session(session);
+    free_tcp_session(session, notify_session_end);
   }
   pthread_mutex_unlock(&dev->tcp.mutex);
+  return session != NULL;
 }
 
 static int
@@ -724,7 +726,7 @@ oc_tcp_connectivity_shutdown(ip_context_t *dev)
   while (session != NULL) {
     next = session->next;
     if (session->endpoint.device == dev->device) {
-      free_tcp_session(session);
+      free_tcp_session(session, true);
     }
     session = next;
   }

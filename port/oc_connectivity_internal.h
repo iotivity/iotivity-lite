@@ -98,6 +98,17 @@ void handle_session_event_callback(const oc_endpoint_t *endpoint,
                                    oc_session_state_t state);
 #endif /* OC_SESSION_EVENTS */
 
+/**
+ * @brief end TCP session for the specific endpoint.
+ *
+ * @param endpoint the endpoint to close the session for
+ * @param notify_session_end send the notification about the disconnection
+ * session.
+ * @return bool true if the session will be closed
+ */
+bool oc_connectivity_end_session_v1(const oc_endpoint_t *endpoint,
+                                    bool notify_session_end);
+
 #ifdef __cplusplus
 }
 #endif

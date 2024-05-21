@@ -1100,7 +1100,7 @@ coap_process_invalid_inbound_message(const coap_packet_t *packet,
 #endif /* OC_SECURITY */
 #ifdef OC_TCP
   if ((msg->endpoint.flags & TCP) != 0) {
-    oc_connectivity_end_session(&msg->endpoint);
+    oc_close_session(&msg->endpoint);
     return;
   }
 #endif /* OC_TCP */

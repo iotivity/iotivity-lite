@@ -332,7 +332,7 @@ handle_session_disconnected(const oc_endpoint_t *endpoint)
   (void)endpoint;
 #ifdef OC_SECURITY
   if ((endpoint->flags & SECURED) != 0 && (endpoint->flags & TCP) != 0) {
-    oc_tls_remove_peer(endpoint);
+    oc_tls_remove_peer(endpoint, false);
   }
 #endif /* OC_SECURITY */
 #ifdef OC_SERVER
