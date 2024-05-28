@@ -678,15 +678,20 @@ udp_add_socks_to_rfd_set(ip_context_t *dev)
 #endif /* OC_IPV4 */
 }
 
-static void
-process_shutdown(const ip_context_t *dev)
+static bool
+process_wakeup_signal(ip_context_t *dev, fd_set *fds)
 {
-  ssize_t len;
-  do {
-    char buf;
-    // write to pipe shall not block - so read the byte we wrote
-    len = read(dev->shutdown_pipe[0], &buf, 1);
-  } while (len < 0 && errno == EINTR);
+  if (FD_ISSET(dev->shutdown_pipe[0], fds)) {
+    FD_CLR(dev->shutdown_pipe[0], fds);
+    ssize_t len;
+    do {
+      char buf;
+      // write to pipe shall not block - so read the byte we wrote
+      len = read(dev->shutdown_pipe[0], &buf, 1);
+    } while (len < 0 && errno == EINTR);
+    return true;
+  }
+  return false;
 }
 
 static adapter_receive_state_t
@@ -852,25 +857,10 @@ static int
 process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
 {
   if (rdfds != NULL) {
-    if ((dev->device == 0) && (FD_ISSET(g_ifchange_sock, rdfds))) {
-      OC_DBG("interface change processed on (fd=%d)", g_ifchange_sock);
-      FD_CLR(g_ifchange_sock, rdfds);
-      if (process_interface_change_event() < 0) {
-        OC_WRN("caught errors while handling a network interface change");
-      }
-      return 1;
-    }
-
-    if (process_socket_signal_event(dev, rdfds)) {
-      return 1;
-    }
-
     int ret = process_socket_read_event(dev, rdfds);
     if (ret != 0) {
       return ret;
     }
-
-    // TODO: No return value here?!
   }
 
   if (wfds != NULL) {
@@ -902,6 +892,44 @@ process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
   return 0;
 }
 
+#ifdef OC_DYNAMIC_ALLOCATION
+static int fds_count(const fd_set *sourcefds) { 
+  int rfd_count = 0;
+  for (int i = 0; i < FD_SETSIZE; i++) {
+    if (FD_ISSET(i, sourcefds)) {
+      rfd_count++;
+    }
+  }
+  return rfd_count;
+}
+
+static bool 
+pick_random_event(fd_set *eventfd, fd_set *sourcefds, int fd_count) {
+  FD_ZERO(eventfd);
+
+  if (oc_get_network_events_queue_length() >= OC_MAX_NUM_CONCURRENT_REQUESTS) {
+    return false;
+  }
+
+  if (fd_count == 0) {
+    return false;
+  }
+  
+  int random_rfd = oc_random_value() % fd_count;
+  for (int i = 0; i < FD_SETSIZE; i++) {
+    if (FD_ISSET(i, sourcefds)) {
+      if (--fd_count == random_rfd) {
+        FD_SET(i, eventfd);
+        FD_CLR(i, sourcefds);
+        break;
+      }
+     }
+  }
+  
+  return true;
+}
+#endif /* OC_DYNAMIC_ALLOCATION */
+
 static void
 process_events(ip_context_t *dev, fd_set *rdfds, fd_set *wfds, int fd_count)
 {
@@ -911,6 +939,40 @@ process_events(ip_context_t *dev, fd_set *rdfds, fd_set *wfds, int fd_count)
   }
 
   OC_DBG("processing %d events", fd_count);
+
+  // process control flow events
+  if (process_wakeup_signal(dev, rdfds)) {
+    fd_count--;
+  }
+
+  if ((dev->device == 0) && (FD_ISSET(g_ifchange_sock, rdfds))) {
+    OC_DBG("interface change processed on (fd=%d)", g_ifchange_sock);
+    FD_CLR(g_ifchange_sock, rdfds);
+    if (process_interface_change_event() < 0) {
+      OC_WRN("caught errors while handling a network interface change");
+    }
+    fd_count--;
+  }
+  
+  if (process_socket_signal_event(dev, rdfds)) {
+    fd_count--;
+  }
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  // process read events
+  int rfds_count = fds_count(rdfds); // TODO: optimize
+  fd_set eventfd;
+  while (pick_random_event(&eventfd, rdfds, rfds_count)) {
+    int ret = process_socket_read_event(dev, &eventfd);
+    if (ret < 0) {
+      break;
+    }
+    fd_count--;
+    rfds_count--;
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+  //OC_DBG("processing %d events", fd_count);
   for (int i = 0; i < fd_count; i++) {
     if (process_event(dev, rdfds, wfds) < 0) {
       break;
@@ -936,30 +998,15 @@ to_timeval(oc_clock_time_t ticks)
 }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
-#ifdef OC_DYNAMIC_ALLOCATION
-static bool
-optimize_rfds(fd_set *output_set, const fd_set *rfd_set, int rfd_count)
-{
-  if (oc_get_network_events_queue_length() >= OC_MAX_NUM_CONCURRENT_REQUESTS) {
-    for (int i = 0; i < FD_SETSIZE; i++) {
-      if (FD_ISSET(i, rfd_set)) {
-        FD_CLR(i, output_set);
-      }
-    }
-    return true;
+static void add_control_flow_rfds(fd_set *output_set, const ip_context_t *dev){
+  /* Monitor network interface changes on the platform from only the 0th
+   * logical device
+   */
+  if (dev->device == 0) {
+    FD_SET(g_ifchange_sock, output_set);
   }
-
-  int random_rfd = oc_random_value() % rfd_count;
-  for (int i = 0; i < FD_SETSIZE; i++) {
-    if (FD_ISSET(i, rfd_set)) {
-      if (rfd_count != random_rfd) {
-        FD_CLR(i, output_set);
-      }
-    }
-  }
-  return false;
+  FD_SET(dev->shutdown_pipe[0], output_set);
 }
-#endif /* OC_DYNAMIC_ALLOCATION */
 
 static void *
 network_event_thread(void *data)
@@ -968,27 +1015,9 @@ network_event_thread(void *data)
   FD_ZERO(&dev->rfds);
   udp_add_socks_to_rfd_set(dev);
 
-#ifdef OC_DYNAMIC_ALLOCATION
-  struct timeval queue_timeout;
-  queue_timeout.tv_sec = 0;
-  queue_timeout.tv_usec = 1000;
 
-  fd_set rfd_set = ip_context_rfds_fd_copy(dev);
-  int rfd_count = 0;
-  for (int i = 0; i < FD_SETSIZE; i++) {
-    if (FD_ISSET(i, &rfd_set)) {
-      rfd_count++;
-    }
-  }
-#endif /* OC_DYNAMIC_ALLOCATION */
 
-  /* Monitor network interface changes on the platform from only the 0th
-   * logical device
-   */
-  if (dev->device == 0) {
-    FD_SET(g_ifchange_sock, &dev->rfds);
-  }
-  FD_SET(dev->shutdown_pipe[0], &dev->rfds);
+  add_control_flow_rfds(&dev->rfds, dev);
 
 #ifdef OC_TCP
   tcp_add_socks_to_rfd_set(dev);
@@ -1000,12 +1029,6 @@ network_event_thread(void *data)
   while (OC_ATOMIC_LOAD8(dev->terminate) != 1) {
     struct timeval *timeout = NULL;
     fd_set rdfds = ip_context_rfds_fd_copy(dev);
-#ifdef OC_DYNAMIC_ALLOCATION
-    bool use_timeout = optimize_rfds(&rdfds, &rfd_set, rfd_count);
-#else
-    bool use_timeout = false;
-#endif /* OC_DYNAMIC_ALLOCATION */
-
     fd_set *wfds = NULL;
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
     fd_set write_fds = tcp_context_cfds_fd_copy(&dev->tcp);
@@ -1018,11 +1041,18 @@ network_event_thread(void *data)
              (unsigned)tv.tv_usec);
     }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
-    int n = select(FD_SETSIZE, &rdfds, wfds, NULL, use_timeout ? &queue_timeout : timeout);
 
-    if (FD_ISSET(dev->shutdown_pipe[0], &rdfds)) {
-      process_shutdown(dev);
+#ifdef OC_DYNAMIC_ALLOCATION    
+    if (oc_get_network_events_queue_length() >= OC_MAX_NUM_CONCURRENT_REQUESTS) {
+      // the queue is full -> add only control flow rfds
+      FD_ZERO(&rdfds);
+      add_control_flow_rfds(&rdfds, dev);
+#ifdef OC_TCP      
+      // TODO: add handling of tcp control flow rfds here
+#endif /* OC_TCP */   
     }
+#endif /* OC_DYNAMIC_ALLOCATION */
+    int n = select(FD_SETSIZE, &rdfds, wfds, NULL, timeout);
 
     if (OC_ATOMIC_LOAD8(dev->terminate)) {
       break;
@@ -1542,6 +1572,19 @@ initialize_ip_context(ip_context_t *dev, size_t device,
   return true;
 }
 
+static void signal_event_thread(ip_context_t *dev)
+{
+  do {
+      if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
+        if (errno == EINTR) {
+          continue;
+        }
+        OC_WRN("cannot wakeup network thread (error: %d)", (int)errno);
+      }
+      break;
+  } while (true);
+}
+
 int
 oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
 {
@@ -1565,6 +1608,24 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   return 0;
 }
 
+#ifdef OC_DYNAMIC_ALLOCATION
+void
+oc_connectivity_wakeup(void)
+{
+  pthread_mutex_lock(&g_mutex);
+  OC_LIST_LOCAL(ip_contexts);
+  oc_list_copy(ip_contexts, g_ip_contexts);
+  pthread_mutex_unlock(&g_mutex);
+
+  // signal the event thread for all devices
+  ip_context_t *dev = oc_list_head(ip_contexts);
+  while (dev != NULL) {
+    signal_event_thread(dev);
+    dev = dev->next;
+  }
+}
+#endif /* OC_DYNAMIC_ALLOCATION */
+
 void
 oc_connectivity_shutdown(size_t device)
 {
@@ -1575,15 +1636,7 @@ oc_connectivity_shutdown(size_t device)
   }
 
   OC_ATOMIC_STORE8(dev->terminate, 1);
-  do {
-    if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
-      if (errno == EINTR) {
-        continue;
-      }
-      OC_WRN("cannot wakeup network thread (error: %d)", (int)errno);
-    }
-    break;
-  } while (true);
+  signal_event_thread(dev);
 
   pthread_join(dev->event_thread, NULL);
 

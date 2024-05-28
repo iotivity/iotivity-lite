@@ -65,6 +65,27 @@ void oc_connectivity_shutdown(size_t device);
  */
 int oc_send_buffer2(oc_message_t *message, bool queue);
 
+ #ifdef OC_DYNAMIC_ALLOCATION 
+/**
+ * @brief send a signal to start consuming network events
+ */
+void oc_connectivity_wakeup(void);
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+typedef struct
+{
+  uint8_t max_count; ///< maximal number of retries for opening a single TCP
+                     /// connection (default: 5)
+  uint16_t timeout;  ///< timeout of a single retry in seconds (default: 5)
+} oc_tcp_connect_retry_t;
+
+#define OC_TCP_CONNECT_RETRY_MAX_COUNT 5
+#define OC_TCP_CONNECT_RETRY_TIMEOUT 5
+
+void oc_tcp_set_connect_retry(uint8_t max_count, uint16_t timeout);
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+
 #ifdef OC_NETWORK_MONITOR
 /**
  * @brief the callback function for an network change

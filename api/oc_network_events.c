@@ -57,13 +57,20 @@ oc_process_network_event(void)
   OC_LIST_LOCAL(network_events);
   oc_list_copy(network_events, g_network_events);
   oc_list_init(g_network_events);
-#ifdef OC_NETWORK_MONITOR
+ #ifdef OC_NETWORK_MONITOR
   bool interface_up = g_interface_up;
-  g_interface_up = false;
+   g_interface_up = false;
   bool interface_down = g_interface_down;
   g_interface_down = false;
 #endif /* OC_NETWORK_MONITOR */
   oc_network_event_handler_mutex_unlock();
+
+ #ifdef OC_DYNAMIC_ALLOCATION 
+  if(oc_list_length(network_events) >= OC_MAX_NUM_CONCURRENT_REQUESTS) {
+    // if the queue was full -> send a signal to start consuming network events
+    oc_connectivity_wakeup();
+  }
+  #endif /* OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
   oc_tcp_on_connect_event_t *event =
@@ -179,6 +186,13 @@ oc_network_drop_receive_events(const oc_endpoint_t *endpoint)
     message = next;
   }
   oc_network_event_handler_mutex_unlock();
+
+ #ifdef OC_DYNAMIC_ALLOCATION 
+  if(oc_list_length(g_network_events) + dropped >= OC_MAX_NUM_CONCURRENT_REQUESTS) {
+    // if the queue was full -> send a signal to start consuming network events
+    oc_connectivity_wakeup();
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
   return dropped;
 }
 
