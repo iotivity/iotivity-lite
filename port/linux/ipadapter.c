@@ -1013,14 +1013,12 @@ network_event_thread(void *data)
 {
   ip_context_t *dev = (ip_context_t *)data;
   FD_ZERO(&dev->rfds);
+  
   udp_add_socks_to_rfd_set(dev);
-
-
-
   add_control_flow_rfds(&dev->rfds, dev);
-
 #ifdef OC_TCP
   tcp_add_socks_to_rfd_set(dev);
+  tcp_add_controlflow_socks_to_rfd_set(&dev->rfds, dev);
 #endif /* OC_TCP */
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
@@ -1048,7 +1046,7 @@ network_event_thread(void *data)
       FD_ZERO(&rdfds);
       add_control_flow_rfds(&rdfds, dev);
 #ifdef OC_TCP      
-      // TODO: add handling of tcp control flow rfds here
+      tcp_add_controlflow_socks_to_rfd_set(&rdfds, dev);
 #endif /* OC_TCP */   
     }
 #endif /* OC_DYNAMIC_ALLOCATION */
