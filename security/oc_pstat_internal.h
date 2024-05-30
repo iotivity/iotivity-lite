@@ -32,6 +32,7 @@ extern "C" {
 
 #define OCF_SEC_PSTAT_URI "/oic/sec/pstat"
 #define OCF_SEC_PSTAT_RT "oic.r.pstat"
+#define OCF_SEC_PSTAT_STORE_NAME "pstat"
 
 /** Create pstat (/oic/sec/pstat) resource for given device. */
 void oc_sec_pstat_create_resource(size_t device);

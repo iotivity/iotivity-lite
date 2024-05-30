@@ -31,6 +31,8 @@
 extern "C" {
 #endif
 
+#define OCF_SEC_AEL_STORE_NAME "ael"
+
 typedef struct oc_sec_ael_aux_info_t
 {
   struct oc_sec_ael_aux_info_t *next;
