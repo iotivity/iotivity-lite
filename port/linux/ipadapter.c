@@ -893,9 +893,10 @@ process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
 }
 
 #ifdef OC_DYNAMIC_ALLOCATION
-static int fds_count(const fd_set *sourcefds) { 
+static int 
+fds_count(const fd_set *sourcefds) { 
   int rfd_count = 0;
-  for (int i = 0; i < FD_SETSIZE; i++) {
+  for (int i = 0; i < FD_SETSIZE; i++) { //// TODO: optimize
     if (FD_ISSET(i, sourcefds)) {
       rfd_count++;
     }
@@ -903,31 +904,36 @@ static int fds_count(const fd_set *sourcefds) {
   return rfd_count;
 }
 
-static bool 
-pick_random_event(fd_set *eventfd, fd_set *sourcefds, int fd_count) {
-  FD_ZERO(eventfd);
-
-  if (oc_get_network_events_queue_length() >= OC_MAX_NUM_CONCURRENT_REQUESTS) {
-    return false;
-  }
-
-  if (fd_count == 0) {
-    return false;
-  }
-  
+static int 
+pick_random_fd(const fd_set *sourcefds, int fd_count) {
   int random_rfd = oc_random_value() % fd_count;
-  for (int i = 0; i < FD_SETSIZE; i++) {
+  for (int i = 0; i < FD_SETSIZE; i++) { // TODO: optimize FD_SETSIZE
     if (FD_ISSET(i, sourcefds)) {
       if (--fd_count == random_rfd) {
-        FD_SET(i, eventfd);
-        FD_CLR(i, sourcefds);
-        break;
+        return i;
       }
-     }
+    }
   }
-  
-  return true;
+  return -1;
 }
+
+static int 
+remove_random_fds(fd_set *rdfds, int rfds_count, int remove_count) {
+  
+  int removed = 0;
+  while (removed < remove_count) {
+    int fd = pick_random_fd(rdfds, rfds_count);
+    if (fd < 0) {
+      break;
+    }
+    // remove file descriptor from the set
+    FD_CLR(fd, rdfds); 
+    --rfds_count;
+    ++removed;
+  }
+  return removed;
+}
+
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 static void
@@ -959,20 +965,16 @@ process_events(ip_context_t *dev, fd_set *rdfds, fd_set *wfds, int fd_count)
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  // process read events
-  int rfds_count = fds_count(rdfds); // TODO: optimize
-  fd_set eventfd;
-  while (pick_random_event(&eventfd, rdfds, rfds_count)) {
-    int ret = process_socket_read_event(dev, &eventfd);
-    if (ret < 0) {
-      break;
-    }
-    fd_count--;
-    rfds_count--;
+  // check if network queue can consume all 'ready' events
+  int available_count = OC_MAX_NUM_CONCURRENT_REQUESTS - oc_get_network_events_queue_length(dev->device);
+  if (available_count < fd_count) { 
+    // get the number of read file descriptors
+    int rfds_count = fds_count(rdfds); 
+    int removed = remove_random_fds(rdfds, rfds_count, rfds_count - available_count);
+    fd_count-= removed;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
-  //OC_DBG("processing %d events", fd_count);
   for (int i = 0; i < fd_count; i++) {
     if (process_event(dev, rdfds, wfds) < 0) {
       break;
@@ -1041,7 +1043,7 @@ network_event_thread(void *data)
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
 #ifdef OC_DYNAMIC_ALLOCATION    
-    if (oc_get_network_events_queue_length() >= OC_MAX_NUM_CONCURRENT_REQUESTS) {
+    if (oc_get_network_events_queue_length(dev->device) >= OC_MAX_NUM_CONCURRENT_REQUESTS) {
       // the queue is full -> add only control flow rfds
       FD_ZERO(&rdfds);
       add_control_flow_rfds(&rdfds, dev);
