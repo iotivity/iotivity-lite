@@ -34,6 +34,7 @@ extern "C" {
 
 #define OCF_SEC_CRED_URI "/oic/sec/cred"
 #define OCF_SEC_CRED_RT "oic.r.cred"
+#define OCF_SEC_CRED_STORE_NAME "cred"
 
 struct oc_tls_peer_t;
 

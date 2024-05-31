@@ -36,6 +36,7 @@ extern "C" {
 
 #define OCF_SEC_ACL_URI "/oic/sec/acl2"
 #define OCF_SEC_ACL_RT "oic.r.acl2"
+#define OCF_SEC_ACL_STORE_NAME "acl"
 
 #define OC_ACE_WC_ALL_STR "*"
 #define OC_ACE_WC_ALL_SECURED_STR "+"

@@ -38,6 +38,7 @@
 #endif /* OC_COLLECTIONS && OC_SERVER && OC_COLLECTIONS_IF_CREATE */
 
 #ifdef OC_SECURITY
+#include "oc_storage_internal.h"
 #include "oc_store.h"
 #include "security/oc_acl_internal.h"
 #include "security/oc_ael_internal.h"
@@ -52,6 +53,7 @@
 #include "security/oc_roles_internal.h"
 #endif /* OC_PKI */
 #include "security/oc_sdi_internal.h"
+#include "security/oc_u_ids_internal.h"
 #endif /* OC_SECURITY */
 
 #ifdef OC_CLOUD
@@ -271,6 +273,31 @@ main_init_resources(void)
 #endif /* OC_SOFTWARE_UPDATE */
 }
 
+#ifdef OC_SECURITY
+/**
+ * @brief Clear the security-related resources for a device.
+ *
+ * The function clears the device's security-related data from storage.
+ * It is called when the ownership of the device cannot be established.
+ *
+ * @param device The index of the device for which to clear the resources.
+ */
+static void
+main_sec_clear_resources(size_t device)
+{
+  oc_storage_data_clear(OCF_SEC_U_IDS_STORE_NAME, device);
+  oc_storage_data_clear(OCF_SEC_PSTAT_STORE_NAME, device);
+  oc_storage_data_clear(OCF_SEC_CRED_STORE_NAME, device);
+  oc_storage_data_clear(OCF_SEC_ACL_STORE_NAME, device);
+  oc_storage_data_clear(OCF_SEC_SP_STORE_NAME, device);
+  oc_storage_data_clear(OCF_SEC_AEL_STORE_NAME, device);
+  oc_storage_data_clear(OCF_SEC_SDI_STORE_NAME, device);
+#ifdef OC_SOFTWARE_UPDATE
+  oc_storage_data_clear(OCF_SW_UPDATE_STORE_NAME, device);
+#endif /* OC_SOFTWARE_UPDATE */
+}
+#endif /* OC_SECURITY */
+
 static void
 main_load_resources(void)
 {
@@ -282,11 +309,16 @@ main_load_resources(void)
 #if defined(OC_SECURITY) || defined(OC_SOFTWARE_UPDATE)
   for (size_t device = 0; device < oc_core_get_num_devices(); device++) {
 #ifdef OC_SECURITY
+    OC_DBG("oc_main_init(): loading doxm(%zu)", device);
+    oc_sec_load_doxm(device);
+    const oc_sec_doxm_t *doxm = oc_sec_get_doxm(device);
+    if (!doxm->owned) {
+      OC_DBG("oc_main_init(): clearing sec resource storages(%zu)", device);
+      main_sec_clear_resources(device);
+    }
     oc_sec_load_unique_ids(device);
     OC_DBG("oc_main_init(): loading pstat(%zu)", device);
     oc_sec_load_pstat(device);
-    OC_DBG("oc_main_init(): loading doxm(%zu)", device);
-    oc_sec_load_doxm(device);
     OC_DBG("oc_main_init(): loading cred(%zu)", device);
     oc_sec_load_cred(device);
     OC_DBG("oc_main_init(): loading acl(%zu)", device);
