@@ -69,8 +69,10 @@ typedef uint64_t oc_clock_time_t;
  * with REP_ENCODING_REALLOC=1 */
 // #define OC_REP_ENCODING_REALLOC
 
-/* Maximum number of messages in the network event queue */
-#define OC_MAX_NUM_CONCURRENT_REQUESTS (32)
+/* Maximum number of messages in the network event queue for a device */
+#ifndef OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS
+#define OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS (32)
+#endif /* OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS */
 
 #else /* OC_DYNAMIC_ALLOCATION */
 /* List of constraints below for a build that does not employ dynamic

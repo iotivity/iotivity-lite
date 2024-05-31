@@ -969,7 +969,7 @@ process_events(ip_context_t *dev, fd_set *rdfds, fd_set *wfds, int fd_count)
 
 #ifdef OC_DYNAMIC_ALLOCATION
   // check if network queue can consume all 'ready' events
-  int available_count = OC_MAX_NUM_CONCURRENT_REQUESTS -
+  int available_count = OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS -
                         oc_get_network_events_queue_length(dev->device);
   if (available_count < fd_count) {
     // get the number of read file descriptors
@@ -1051,7 +1051,7 @@ network_event_thread(void *data)
 
 #ifdef OC_DYNAMIC_ALLOCATION
     if (oc_get_network_events_queue_length(dev->device) >=
-        OC_MAX_NUM_CONCURRENT_REQUESTS) {
+        OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS) {
       // the queue is full -> add only control flow rfds
       FD_ZERO(&rdfds);
       add_control_flow_rfds(&rdfds, dev);

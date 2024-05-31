@@ -66,7 +66,7 @@ oc_process_network_event(void)
   oc_network_event_handler_mutex_unlock();
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  if (oc_list_length(network_events) >= OC_MAX_NUM_CONCURRENT_REQUESTS) {
+  if (oc_list_length(network_events) >= OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS) {
     // send a wake-up signal in case the queue might reach the limit for a
     // device
     oc_connectivity_wakeup();
@@ -190,7 +190,7 @@ oc_network_drop_receive_events(const oc_endpoint_t *endpoint)
 
 #ifdef OC_DYNAMIC_ALLOCATION
   if (oc_get_network_events_queue_length(endpoint->device) + dropped >=
-      OC_MAX_NUM_CONCURRENT_REQUESTS) {
+      OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS) {
     // send a wake-up signal in case the queue for the device was full
     oc_connectivity_wakeup();
   }
