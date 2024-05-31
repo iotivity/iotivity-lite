@@ -101,6 +101,9 @@ jobs:
           sudo apt install -y git wget flex bison gperf python3 python3-pip python3-setuptools python3-serial python3-click python3-cryptography python3-future python3-pyparsing python3-pyelftools cmake ninja-build ccache libffi-dev libssl-dev libusb-1.0-0
           cd ./port/esp32
           git clone --recursive -b release/v5.1 https://github.com/espressif/esp-idf.git
+          # checkout latest commit with mbedTLS v3.5.0
+          ( cd esp-idf && git checkout 7380f96017424c7be5d8e3229bf81ceb0869cc54 )
+          ( cd esp-idf && git submodule update --init --recursive )
           ./esp-idf/install.sh
           . ./esp-idf/export.sh
           idf.py ${{ matrix.args }} set-target esp32
