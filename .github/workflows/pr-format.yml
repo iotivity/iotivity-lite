@@ -1,6 +1,8 @@
 name: FormatPullRequest
 
-on: issue_comment
+on:
+  issue_comment:
+    types: [created]
 
 jobs:
   format:
@@ -19,9 +21,10 @@ jobs:
                 }
               }
             }
-          owner: ${{ github.event.repository.owner.login }}
-          repo: ${{ github.event.repository.name }}
-          pr_num: ${{ github.event.issue.number }}
+          variables: |
+            owner: ${{ github.event.repository.owner.login }}
+            repo: ${{ github.event.repository.name }}
+            pr_num: ${{ github.event.issue.number }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -40,7 +43,11 @@ jobs:
       - name: build-docs
         run: |
           sudo apt-get update -y
-          sudo apt-get install clang-format-14
+          sudo apt-get install curl
+          curl -sL https://apt.llvm.org/llvm.sh > llvm.sh
+          chmod u+x llvm.sh
+          sudo ./llvm.sh 17
+          sudo apt-get install clang-format-17
           cmake -S ${{ github.workspace }}/iotivity-lite -B ${{ github.workspace }}/build-format
           make -C ${{ github.workspace }}/build-format format
 
