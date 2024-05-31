@@ -92,12 +92,14 @@ store_decode_pstat(const oc_rep_t *rep, size_t device, void *data)
 void
 oc_sec_load_pstat(size_t device)
 {
-  if (oc_storage_data_load(OCF_SEC_PSTAT_STORE_NAME, device, store_decode_pstat, NULL) <= 0) {
+  if (oc_storage_data_load(OCF_SEC_PSTAT_STORE_NAME, device, store_decode_pstat,
+                           NULL) <= 0) {
     OC_DBG("failed to load pstat from storage for device(%zu)", device);
     oc_sec_pstat_default(device);
     return;
   }
-  OC_DBG("%s resource loaded from storage for device(%zu)", OCF_SEC_PSTAT_STORE_NAME, device);
+  OC_DBG("%s resource loaded from storage for device(%zu)",
+         OCF_SEC_PSTAT_STORE_NAME, device);
 }
 
 static int
@@ -111,7 +113,8 @@ store_encode_pstat(size_t device, const void *data)
 void
 oc_sec_dump_pstat(size_t device)
 {
-  long ret = oc_storage_data_save(OCF_SEC_PSTAT_STORE_NAME, device, store_encode_pstat, NULL);
+  long ret = oc_storage_data_save(OCF_SEC_PSTAT_STORE_NAME, device,
+                                  store_encode_pstat, NULL);
   if (ret <= 0) {
     OC_ERR("cannot dump pstat to storage: error(%ld)", ret);
   }
@@ -231,13 +234,15 @@ oc_sec_load_cred(size_t device)
   oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MAX_APP_DATA_SIZE);
 #ifndef OC_APP_DATA_STORAGE_BUFFER
   if (sb.buffer == NULL) {
-    OC_ERR("cannot load %s from store: cannot allocate buffer", OCF_SEC_CRED_STORE_NAME);
+    OC_ERR("cannot load %s from store: cannot allocate buffer",
+           OCF_SEC_CRED_STORE_NAME);
     return;
   }
 #endif /* !OC_APP_DATA_STORAGE_BUFFER */
 
   char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-  oc_storage_gen_svr_tag(OCF_SEC_CRED_STORE_NAME, device, svr_tag, sizeof(svr_tag));
+  oc_storage_gen_svr_tag(OCF_SEC_CRED_STORE_NAME, device, svr_tag,
+                         sizeof(svr_tag));
   long ret = oc_storage_read(svr_tag, sb.buffer, sb.size);
   if (ret > 0) {
     OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
@@ -259,7 +264,8 @@ oc_sec_dump_cred(size_t device)
   oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MIN_APP_DATA_SIZE);
 #ifndef OC_APP_DATA_STORAGE_BUFFER
   if (sb.buffer == NULL) {
-    OC_ERR("cannot dump %s to store: cannot allocate buffer", OCF_SEC_CRED_STORE_NAME);
+    OC_ERR("cannot dump %s to store: cannot allocate buffer",
+           OCF_SEC_CRED_STORE_NAME);
     return;
   }
   oc_rep_new_realloc_v1(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
@@ -276,7 +282,8 @@ oc_sec_dump_cred(size_t device)
   if (size > 0) {
     OC_DBG("oc_store: encoded cred size %d", size);
     char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-    oc_storage_gen_svr_tag(OCF_SEC_CRED_STORE_NAME, device, svr_tag, sizeof(svr_tag));
+    oc_storage_gen_svr_tag(OCF_SEC_CRED_STORE_NAME, device, svr_tag,
+                           sizeof(svr_tag));
     oc_storage_write(svr_tag, sb.buffer, size);
   }
   oc_storage_free_buffer(sb);
@@ -288,13 +295,15 @@ oc_sec_load_acl(size_t device)
   oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MAX_APP_DATA_SIZE);
 #ifndef OC_APP_DATA_STORAGE_BUFFER
   if (sb.buffer == NULL) {
-    OC_ERR("cannot load %s from store: cannot allocate buffer", OCF_SEC_ACL_STORE_NAME);
+    OC_ERR("cannot load %s from store: cannot allocate buffer",
+           OCF_SEC_ACL_STORE_NAME);
     return;
   }
 #endif /* !OC_APP_DATA_STORAGE_BUFFER */
 
   char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-  oc_storage_gen_svr_tag(OCF_SEC_ACL_STORE_NAME, device, svr_tag, sizeof(svr_tag));
+  oc_storage_gen_svr_tag(OCF_SEC_ACL_STORE_NAME, device, svr_tag,
+                         sizeof(svr_tag));
   long ret = oc_storage_read(svr_tag, sb.buffer, sb.size);
   if (ret > 0) {
     OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
@@ -315,7 +324,8 @@ oc_sec_dump_acl(size_t device)
   oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MIN_APP_DATA_SIZE);
 #ifndef OC_APP_DATA_STORAGE_BUFFER
   if (sb.buffer == NULL) {
-    OC_ERR("cannot dump %s to store: cannot allocate buffer", OCF_SEC_ACL_STORE_NAME);
+    OC_ERR("cannot dump %s to store: cannot allocate buffer",
+           OCF_SEC_ACL_STORE_NAME);
     return;
   }
   oc_rep_new_realloc_v1(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
@@ -332,7 +342,8 @@ oc_sec_dump_acl(size_t device)
   if (size > 0) {
     OC_DBG("oc_store: encoded ACL size %d", size);
     char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-    oc_storage_gen_svr_tag(OCF_SEC_ACL_STORE_NAME, device, svr_tag, sizeof(svr_tag));
+    oc_storage_gen_svr_tag(OCF_SEC_ACL_STORE_NAME, device, svr_tag,
+                           sizeof(svr_tag));
     oc_storage_write(svr_tag, sb.buffer, size);
   }
   oc_storage_free_buffer(sb);
@@ -363,13 +374,15 @@ oc_sec_load_unique_ids(size_t device)
   oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MAX_APP_DATA_SIZE);
 #ifndef OC_APP_DATA_STORAGE_BUFFER
   if (sb.buffer == NULL) {
-    OC_ERR("cannot load %s from store: cannot allocate buffer", OCF_SEC_U_IDS_STORE_NAME);
+    OC_ERR("cannot load %s from store: cannot allocate buffer",
+           OCF_SEC_U_IDS_STORE_NAME);
     return;
   }
 #endif /* !OC_APP_DATA_STORAGE_BUFFER */
 
   char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-  oc_storage_gen_svr_tag(OCF_SEC_U_IDS_STORE_NAME, device, svr_tag, sizeof(svr_tag));
+  oc_storage_gen_svr_tag(OCF_SEC_U_IDS_STORE_NAME, device, svr_tag,
+                         sizeof(svr_tag));
   long ret = oc_storage_read(svr_tag, sb.buffer, sb.size);
   if (ret > 0) {
     OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
@@ -390,7 +403,8 @@ oc_sec_dump_unique_ids(size_t device)
   oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MIN_APP_DATA_SIZE);
 #ifndef OC_APP_DATA_STORAGE_BUFFER
   if (sb.buffer == NULL) {
-    OC_ERR("cannot dump %s to store: cannot allocate buffer", OCF_SEC_U_IDS_STORE_NAME);
+    OC_ERR("cannot dump %s to store: cannot allocate buffer",
+           OCF_SEC_U_IDS_STORE_NAME);
     return;
   }
   oc_rep_new_realloc_v1(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
@@ -418,7 +432,8 @@ oc_sec_dump_unique_ids(size_t device)
   if (size > 0) {
     OC_DBG("oc_store: encoded unique identifiers: size %d", size);
     char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-    oc_storage_gen_svr_tag(OCF_SEC_U_IDS_STORE_NAME, device, svr_tag, sizeof(svr_tag));
+    oc_storage_gen_svr_tag(OCF_SEC_U_IDS_STORE_NAME, device, svr_tag,
+                           sizeof(svr_tag));
     oc_storage_write(svr_tag, sb.buffer, size);
   }
   oc_storage_free_buffer(sb);
@@ -430,13 +445,15 @@ oc_sec_load_ael(size_t device)
   oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MAX_APP_DATA_SIZE);
 #ifndef OC_APP_DATA_STORAGE_BUFFER
   if (sb.buffer == NULL) {
-    OC_ERR("cannot load %s from store: cannot allocate buffer", OCF_SEC_AEL_STORE_NAME);
+    OC_ERR("cannot load %s from store: cannot allocate buffer",
+           OCF_SEC_AEL_STORE_NAME);
     return;
   }
 #endif /* !OC_APP_DATA_STORAGE_BUFFER */
 
   char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-  oc_storage_gen_svr_tag(OCF_SEC_AEL_STORE_NAME, device, svr_tag, sizeof(svr_tag));
+  oc_storage_gen_svr_tag(OCF_SEC_AEL_STORE_NAME, device, svr_tag,
+                         sizeof(svr_tag));
   long ret = oc_storage_read(svr_tag, sb.buffer, sb.size);
   if (ret > 0) {
     OC_MEMB_LOCAL(rep_objects, oc_rep_t, OC_MAX_NUM_REP_OBJECTS);
@@ -457,7 +474,8 @@ oc_sec_dump_ael(size_t device)
   oc_storage_buffer_t sb = oc_storage_get_buffer(OC_MIN_APP_DATA_SIZE);
 #ifndef OC_APP_DATA_STORAGE_BUFFER
   if (sb.buffer == NULL) {
-    OC_ERR("cannot dump %s to store: cannot allocate buffer", OCF_SEC_AEL_STORE_NAME);
+    OC_ERR("cannot dump %s to store: cannot allocate buffer",
+           OCF_SEC_AEL_STORE_NAME);
     return;
   }
   oc_rep_new_realloc_v1(&sb.buffer, OC_MIN_APP_DATA_SIZE, OC_MAX_APP_DATA_SIZE);
@@ -475,7 +493,8 @@ oc_sec_dump_ael(size_t device)
   if (size > 0) {
     OC_DBG("oc_store: encoded ael size %d", size);
     char svr_tag[OC_STORAGE_SVR_TAG_MAX];
-    oc_storage_gen_svr_tag(OCF_SEC_AEL_STORE_NAME, device, svr_tag, sizeof(svr_tag));
+    oc_storage_gen_svr_tag(OCF_SEC_AEL_STORE_NAME, device, svr_tag,
+                           sizeof(svr_tag));
     oc_storage_write(svr_tag, sb.buffer, size);
   }
   oc_storage_free_buffer(sb);
