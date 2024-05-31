@@ -22,10 +22,21 @@
 #include "oc_endpoint.h"
 #include "oc_session_events.h"
 #include "util/oc_process.h"
+#include "util/oc_features.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+/**
+ * @brief Invoke all session handlers associated with given endpoint
+ *
+ * @param endpoint endpoint of the session event (cannot be NULLL)
+ * @param state new session state
+ */
+void oc_handle_session(const oc_endpoint_t *endpoint, oc_session_state_t state);
+
+#ifdef OC_SESSION_EVENTS
 
 #define OC_SESSION_EVENT_API_V0 (0)
 #define OC_SESSION_EVENT_API_V1 (1)
@@ -61,40 +72,6 @@ typedef struct oc_session_event_cb
   void *user_data;
 } oc_session_event_cb_t;
 
-OC_PROCESS_NAME(oc_session_events);
-
-/**
- * @brief session start event
- *
- * @param endpoint start event on endpoint
- */
-void oc_session_start_event(const oc_endpoint_t *endpoint);
-
-/**
- * @brief session end event
- *
- * @param endpoint stop event on endpoint
- */
-void oc_session_end_event(const oc_endpoint_t *endpoint);
-
-/**
- * @brief Invoke all session handlers associated with given endpoint
- *
- * @param endpoint endpoint of the session event (cannot be NULLL)
- * @param state new session state
- */
-void oc_handle_session(const oc_endpoint_t *endpoint, oc_session_state_t state);
-
-/**
- * @brief Check if session events are currently in the process of being
- * disconnected.
- *
- * @return true all sessions are currently being iterated, disconnected and
- * deallocated
- * @return false otherwise
- */
-bool oc_session_events_disconnect_is_ongoing(void);
-
 /**
  * @brief Find first session event callback matching the input parameters.
  *
@@ -114,6 +91,38 @@ oc_session_event_cb_t *oc_session_event_callback_find(
  * callbacks.
  */
 void oc_session_events_remove_all_callbacks(void);
+
+#endif /* OC_SESSION_EVENTS */
+
+#ifdef OC_TCP
+
+OC_PROCESS_NAME(oc_session_events);
+
+/**
+ * @brief session start event
+ *
+ * @param endpoint start event on endpoint
+ */
+void oc_session_start_event(const oc_endpoint_t *endpoint);
+
+/**
+ * @brief session end event
+ *
+ * @param endpoint stop event on endpoint
+ */
+void oc_session_end_event(const oc_endpoint_t *endpoint);
+
+/**
+ * @brief Check if session events are currently in the process of being
+ * disconnected.
+ *
+ * @return true all sessions are currently being iterated, disconnected and
+ * deallocated
+ * @return false otherwise
+ */
+bool oc_session_events_disconnect_is_ongoing(void);
+
+#endif /* OC_TCP */
 
 #ifdef __cplusplus
 }

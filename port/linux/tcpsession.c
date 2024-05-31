@@ -233,7 +233,7 @@ log_free_session(oc_endpoint_t *endpoint, int sock)
 
 static tcp_session_t *
 add_new_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
-                       tcp_csm_state_t state)
+                       uint32_t session_id, tcp_csm_state_t state)
 {
   long if_index = get_interface_index(sock);
   if (if_index < 0) {
@@ -255,8 +255,10 @@ add_new_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
   session->sock = sock;
   session->csm_state = state;
   session->notify_session_end = true;
-  if (session->endpoint.session_id == 0) {
+  if (session_id == 0) {
     session->endpoint.session_id = oc_tcp_get_new_session_id();
+  } else {
+    session->endpoint.session_id = session_id;
   }
 
   oc_list_add(g_session_list, session);
@@ -302,7 +304,8 @@ accept_new_session_locked(ip_context_t *dev, int fd, fd_set *setfds,
 #endif /* !OC_IPV4 */
   }
 
-  if (add_new_session_locked(new_socket, dev, endpoint, CSM_NONE) == NULL) {
+  if (add_new_session_locked(new_socket, dev, endpoint, /*session_id*/ 0,
+                             CSM_NONE) == NULL) {
     OC_ERR("could not record new TCP session");
     close(new_socket);
     return -1;
@@ -552,10 +555,10 @@ find_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
 
 static tcp_session_t *
 tcp_create_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
-                          bool signal)
+                          uint32_t session_id, bool signal)
 {
   tcp_session_t *session =
-    add_new_session_locked(sock, dev, endpoint, CSM_SENT);
+    add_new_session_locked(sock, dev, endpoint, session_id, CSM_SENT);
   if (session == NULL) {
     OC_ERR("could not record new TCP session");
     return NULL;
@@ -598,6 +601,7 @@ add_new_waiting_session_locked(int sock, ip_context_t *dev,
 
   ws->dev = dev;
   memcpy(&ws->endpoint, endpoint, sizeof(oc_endpoint_t));
+  ws->endpoint.session_id = oc_tcp_get_new_session_id();
   ws->endpoint.next = NULL;
   ws->sock = sock;
   OC_LIST_STRUCT_INIT(ws, messages);
@@ -679,8 +683,9 @@ tcp_connect_locked(ip_context_t *dev, oc_endpoint_t *endpoint,
   oc_tcp_socket_t cs = oc_tcp_socket_connect(endpoint, receiver);
   if (cs.state == OC_TCP_SOCKET_STATE_CONNECTED) {
     OC_DBG("successfully initiated TCP connection");
-    s = tcp_create_session_locked(cs.fd, dev, endpoint, true);
+    s = tcp_create_session_locked(cs.fd, dev, endpoint, /*session_id*/ 0, true);
     if (s != NULL) {
+      res.session = s;
       res.created = true;
       return res;
     }
@@ -1115,8 +1120,8 @@ tcp_try_connect_waiting_session_locked(tcp_waiting_session_t *ws, int *err)
     return false;
   }
 
-  tcp_session_t *s =
-    tcp_create_session_locked(ws->sock, ws->dev, &ws->endpoint, false);
+  tcp_session_t *s = tcp_create_session_locked(ws->sock, ws->dev, &ws->endpoint,
+                                               ws->endpoint.session_id, false);
   if (s == NULL) {
     return false;
   }
@@ -1190,8 +1195,8 @@ tcp_retry_waiting_session_locked(tcp_waiting_session_t *ws,
   oc_tcp_socket_t cs = oc_tcp_socket_connect(&ws->endpoint, NULL);
   if (cs.state == OC_TCP_SOCKET_STATE_CONNECTED) {
     OC_DBG("successfully initiated TCP connection");
-    tcp_session_t *s =
-      tcp_create_session_locked(cs.fd, ws->dev, &ws->endpoint, false);
+    tcp_session_t *s = tcp_create_session_locked(
+      cs.fd, ws->dev, &ws->endpoint, ws->endpoint.session_id, false);
     if (s == NULL) {
       OC_ERR("cannot allocate ongoing TCP connection");
       return -1;
@@ -1301,40 +1306,71 @@ tcp_process_waiting_sessions(fd_set *fds)
   return ret;
 }
 
-static int
-oc_tcp_connect_to_endpoint(ip_context_t *dev, oc_endpoint_t *endpoint,
-                           on_tcp_connect_t on_tcp_connect,
-                           void *on_tcp_connect_data)
+static oc_tcp_connect_result_t
+tcp_connect_to_endpoint(ip_context_t *dev, oc_endpoint_t *endpoint,
+                        on_tcp_connect_t on_tcp_connect,
+                        void *on_tcp_connect_data)
 {
   struct sockaddr_storage receiver = oc_socket_get_address(endpoint);
   pthread_mutex_lock(&g_mutex);
   tcp_connect_result_t res = tcp_connect_locked(
     dev, endpoint, &receiver, on_tcp_connect, on_tcp_connect_data);
-  pthread_mutex_unlock(&g_mutex);
-  if (res.session == NULL && res.waiting_session == NULL) {
-    return OC_TCP_SOCKET_ERROR;
+  bool is_connected = false;
+  uint32_t session_id = 0;
+  if (res.session != NULL) {
+    is_connected = true;
+    session_id = res.session->endpoint.session_id;
+  } else if (res.waiting_session != NULL) {
+    session_id = res.waiting_session->endpoint.session_id;
   }
-  bool is_connected = res.session != NULL;
+  pthread_mutex_unlock(&g_mutex);
+  if (session_id == 0) {
+    return (oc_tcp_connect_result_t){
+      .error = OC_TCP_SOCKET_ERROR,
+    };
+  }
   if (!res.created) {
-    return is_connected ? OC_TCP_SOCKET_ERROR_EXISTS_CONNECTED
-                        : OC_TCP_SOCKET_ERROR_EXISTS_CONNECTING;
+    oc_tcp_socket_error_t err = is_connected
+                                  ? OC_TCP_SOCKET_ERROR_EXISTS_CONNECTED
+                                  : OC_TCP_SOCKET_ERROR_EXISTS_CONNECTING;
+    return (oc_tcp_connect_result_t){
+      .session_id = session_id,
+      .error = err,
+    };
   }
 
-  return is_connected ? OC_TCP_SOCKET_STATE_CONNECTED
-                      : OC_TCP_SOCKET_STATE_CONNECTING;
+  oc_tcp_socket_state_t state = is_connected ? OC_TCP_SOCKET_STATE_CONNECTED
+                                             : OC_TCP_SOCKET_STATE_CONNECTING;
+  return (oc_tcp_connect_result_t){
+    .state = state,
+    .session_id = session_id,
+  };
+}
+
+oc_tcp_connect_result_t
+oc_tcp_connect_to_endpoint(oc_endpoint_t *endpoint,
+                           on_tcp_connect_t on_tcp_connect,
+                           void *on_tcp_connect_data)
+{
+  assert((endpoint->flags & TCP) != 0);
+  ip_context_t *dev = oc_get_ip_context_for_device(endpoint->device);
+  if (dev == NULL) {
+    OC_ERR("cannot find ip-context for device(%zu)", endpoint->device);
+    return (oc_tcp_connect_result_t){
+      .error = -1,
+    };
+  }
+  return tcp_connect_to_endpoint(dev, endpoint, on_tcp_connect,
+                                 on_tcp_connect_data);
 }
 
 int
 oc_tcp_connect(oc_endpoint_t *endpoint, on_tcp_connect_t on_tcp_connect,
                void *on_tcp_connect_data)
 {
-  ip_context_t *dev = oc_get_ip_context_for_device(endpoint->device);
-  if (dev == NULL) {
-    OC_ERR("cannot find ip-context for device(%zu)", endpoint->device);
-    return -1;
-  }
-  return oc_tcp_connect_to_endpoint(dev, endpoint, on_tcp_connect,
-                                    on_tcp_connect_data);
+  oc_tcp_connect_result_t ret =
+    oc_tcp_connect_to_endpoint(endpoint, on_tcp_connect, on_tcp_connect_data);
+  return ret.error != 0 ? ret.error : (int)ret.state;
 }
 
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */

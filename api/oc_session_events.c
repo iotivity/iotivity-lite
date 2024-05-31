@@ -133,6 +133,9 @@ oc_session_start_event(const oc_endpoint_t *endpoint)
     return;
   }
 
+  // only a specific session should be connected
+  assert(endpoint->session_id != 0);
+
   oc_endpoint_t *ep = oc_new_endpoint();
   memcpy(ep, endpoint, sizeof(oc_endpoint_t));
   ep->next = NULL;
@@ -151,6 +154,9 @@ oc_session_end_event(const oc_endpoint_t *endpoint)
   if (!oc_process_is_running(&oc_session_events)) {
     return;
   }
+
+  // only a specific session should be disconnected
+  assert(endpoint->session_id != 0);
 
   oc_endpoint_t *ep = oc_new_endpoint();
   memcpy(ep, endpoint, sizeof(oc_endpoint_t));

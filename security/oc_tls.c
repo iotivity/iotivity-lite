@@ -570,27 +570,27 @@ oc_tls_peer_is_doc(const oc_endpoint_t *endpoint)
 }
 
 void
-oc_tls_remove_peer(const oc_endpoint_t *orig_endpoint, bool notify_session_end)
+oc_tls_remove_peer(const oc_endpoint_t *endpoint, bool notify_session_end)
 {
-  oc_endpoint_t endpoint;
-  oc_endpoint_copy(&endpoint, orig_endpoint);
-  oc_tls_peer_t *peer = oc_tls_get_peer(&endpoint);
+  oc_endpoint_t ep_copy;
+  oc_endpoint_copy(&ep_copy, endpoint);
+  oc_tls_peer_t *peer = oc_tls_get_peer(&ep_copy);
   if (peer == NULL) {
-    tls_drop_endpoint_events(&endpoint);
+    tls_drop_endpoint_events(&ep_copy);
     return;
   }
   do {
     oc_tls_free_peer(peer, false, false, notify_session_end);
 #ifdef OC_TCP
-    if ((endpoint.flags & TCP) != 0 || endpoint.session_id != 0) {
+    if ((ep_copy.flags & TCP) != 0 || ep_copy.session_id != 0) {
       break;
     }
 #endif /* OC_TCP */
-    peer = oc_tls_get_peer(&endpoint);
+    peer = oc_tls_get_peer(&ep_copy);
   } while (peer != NULL);
 #ifdef OC_TCP
-  if ((endpoint.flags & TCP) == 0 && endpoint.session_id == 0) {
-    tls_drop_endpoint_events(&endpoint);
+  if ((ep_copy.flags & TCP) == 0 && ep_copy.session_id == 0) {
+    tls_drop_endpoint_events(&ep_copy);
   }
 #endif /* OC_TCP */
 }
@@ -2299,19 +2299,19 @@ dtls_init_err:
 }
 
 static void
-tls_close_connection(const oc_endpoint_t *orig_endpoint, bool from_reset)
+tls_close_connection(const oc_endpoint_t *endpoint, bool from_reset)
 {
-  oc_endpoint_t endpoint;
-  oc_endpoint_copy(&endpoint, orig_endpoint);
-  oc_tls_peer_t *peer = oc_tls_get_peer(&endpoint);
+  oc_endpoint_t ep_copy;
+  oc_endpoint_copy(&ep_copy, endpoint);
+  oc_tls_peer_t *peer = oc_tls_get_peer(&ep_copy);
   while (peer != NULL) {
     oc_tls_close_peer(peer, from_reset);
 #ifdef OC_TCP
-    if ((endpoint.flags & TCP) != 0 || endpoint.session_id != 0) {
+    if ((ep_copy.flags & TCP) != 0 || ep_copy.session_id != 0) {
       break;
     }
 #endif /* OC_TCP */
-    peer = oc_tls_get_peer(&endpoint);
+    peer = oc_tls_get_peer(&ep_copy);
   }
 }
 
@@ -2708,22 +2708,26 @@ oc_tls_init_connection(oc_message_t *message)
   }
 
 #ifdef OC_TCP
-  if ((peer->endpoint.flags & TCP) != 0 && peer->endpoint.session_id == 0) {
-    peer->endpoint.session_id = oc_tcp_get_new_session_id();
-  }
-#endif
+  if ((peer->endpoint.flags & TCP) != 0) {
+#ifndef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+    if (peer->endpoint.session_id == 0) {
+      peer->endpoint.session_id = oc_tcp_get_new_session_id();
+    }
+#endif /* !OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
-  if ((peer->endpoint.flags & TCP) != 0) {
-    int state = oc_tcp_connect(&peer->endpoint, oc_tls_on_tcp_connect, NULL);
-    if (state == OC_TCP_SOCKET_STATE_CONNECTED ||
-        state == OC_TCP_SOCKET_ERROR_EXISTS_CONNECTED) {
+    oc_tcp_connect_result_t res =
+      oc_tcp_connect_to_endpoint(&peer->endpoint, oc_tls_on_tcp_connect, NULL);
+    if (res.state == OC_TCP_SOCKET_STATE_CONNECTED ||
+        res.error == OC_TCP_SOCKET_ERROR_EXISTS_CONNECTED) {
+      peer->endpoint.session_id = res.session_id;
       oc_tls_handshake(peer);
       oc_message_unref(message);
       return;
     }
-    if (state == OC_TCP_SOCKET_STATE_CONNECTING ||
-        state == OC_TCP_SOCKET_ERROR_EXISTS_CONNECTING) {
+    if (res.state == OC_TCP_SOCKET_STATE_CONNECTING ||
+        res.error == OC_TCP_SOCKET_ERROR_EXISTS_CONNECTING) {
+      peer->endpoint.session_id = res.session_id;
       // just wait for connection to be established; oc_tls_handshake or
       // oc_tls_free_peer will be called from oc_tls_on_tcp_connect
       oc_message_unref(message);
@@ -2731,12 +2735,13 @@ oc_tls_init_connection(oc_message_t *message)
     }
     OC_ERR(
       "oc_tls_init_connection: oc_tcp_connect returns unexpected state: %d",
-      state);
+      res.state);
     oc_tls_free_peer(peer, false, false, true);
     oc_message_unref(message);
     return;
-  }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+  }
+#endif /* OC_TCP */
   oc_tls_handshake(peer);
   oc_message_unref(message);
 }

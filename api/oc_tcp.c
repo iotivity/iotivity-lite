@@ -32,15 +32,6 @@
 #endif /* OC_OSCORE */
 #endif /* OC_SECURITY */
 
-static OC_ATOMIC_UINT32_T g_tcp_session_id = 0;
-
-uint32_t
-oc_tcp_get_new_session_id(void)
-{
-  uint32_t v = OC_ATOMIC_INCREMENT32(g_tcp_session_id);
-  return (v == 0) ? OC_ATOMIC_INCREMENT32(g_tcp_session_id) : v;
-}
-
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
 
 #include "port/oc_allocator_internal.h"
@@ -95,6 +86,15 @@ oc_tcp_on_connect_event_free(oc_tcp_on_connect_event_t *event)
 }
 
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+
+static OC_ATOMIC_UINT32_T g_tcp_session_id = 0;
+
+uint32_t
+oc_tcp_get_new_session_id(void)
+{
+  uint32_t v = OC_ATOMIC_INCREMENT32(g_tcp_session_id);
+  return (v == 0) ? OC_ATOMIC_INCREMENT32(g_tcp_session_id) : v;
+}
 
 bool
 oc_tcp_is_valid_header(const uint8_t *data, size_t data_size, bool is_tls)

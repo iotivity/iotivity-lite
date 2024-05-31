@@ -23,10 +23,10 @@
 
 #ifdef OC_TCP
 
-#include <stdint.h>
 #include "messaging/coap/constants.h"
 #include "port/oc_connectivity.h"
 #include "oc_endpoint.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

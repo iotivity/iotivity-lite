@@ -961,16 +961,23 @@ oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
 void
 oc_close_session(const oc_endpoint_t *endpoint)
 {
-  if (endpoint->flags & SECURED) {
 #ifdef OC_SECURITY
+  if ((endpoint->flags & SECURED) != 0) {
     oc_tls_close_connection(endpoint);
+    return;
+  }
 #endif /* OC_SECURITY */
-  } else if (endpoint->flags & TCP) {
 #ifdef OC_TCP
+  if ((endpoint->flags & TCP) != 0) {
     oc_endpoint_t session_endpoint;
     while (oc_connectivity_end_session_v1(endpoint, false, &session_endpoint)) {
       oc_handle_session(&session_endpoint, OC_SESSION_DISCONNECTED);
     }
-#endif /* OC_TCP */
+    return;
   }
+#endif /* OC_TCP */
+
+#if !defined(OC_TCP) && !defined(OC_SECURITY)
+  (void)endpoint;
+#endif /* !OC_TCP && !OC_SECURITY */
 }

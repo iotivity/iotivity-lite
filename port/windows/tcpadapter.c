@@ -140,8 +140,9 @@ get_interface_index(SOCKET sock)
       struct sockaddr_in6 *a = (struct sockaddr_in6 *)&iface->addr;
       struct sockaddr_in6 *b = (struct sockaddr_in6 *)&addr;
       if (memcmp(a->sin6_addr.s6_addr, b->sin6_addr.s6_addr, 16) == 0) {
+        long if_index = iface->if_index;
         free_network_addresses(ifaddr_list);
-        return iface->if_index;
+        return if_index;
       }
     }
 #ifdef OC_IPV4
@@ -149,8 +150,9 @@ get_interface_index(SOCKET sock)
       struct sockaddr_in *a = (struct sockaddr_in *)&iface->addr;
       struct sockaddr_in *b = (struct sockaddr_in *)&addr;
       if (a->sin_addr.s_addr == b->sin_addr.s_addr) {
+        long if_index = iface->if_index;
         free_network_addresses(ifaddr_list);
-        return iface->if_index;
+        return if_index;
       }
     }
 #endif /* OC_IPV4 */
@@ -162,7 +164,8 @@ get_interface_index(SOCKET sock)
 
 static void
 free_tcp_session_locked(tcp_session_t *session, oc_endpoint_t *endpoint,
-                        SOCKET *sock, HANDLE *sock_event)
+                        SOCKET *sock, HANDLE *sock_event,
+                        bool *notify_session_end)
 {
   oc_tcp_adapter_mutex_lock();
   oc_list_remove(session_list, session);
@@ -170,6 +173,9 @@ free_tcp_session_locked(tcp_session_t *session, oc_endpoint_t *endpoint,
            sizeof(session->endpoint));
   *sock = session->sock;
   *sock_event = session->sock_event;
+  if (notify_session_end != NULL) {
+    *notify_session_end = session->notify_session_end;
+  }
   oc_memb_free(&tcp_session_s, session);
   oc_tcp_adapter_mutex_unlock();
 
@@ -182,11 +188,12 @@ free_tcp_session(tcp_session_t *session)
   oc_endpoint_t endpoint;
   SOCKET sock;
   HANDLE sock_event;
-  free_tcp_session_locked(session, &endpoint, &sock, &sock_event);
+  bool notify_session_end;
+  free_tcp_session_locked(session, &endpoint, &sock, &sock_event,
+                          &notify_session_end);
   WSACloseEvent(sock_event);
   closesocket(sock);
-  if (!oc_session_events_disconnect_is_ongoing() &&
-      session->notify_session_end) {
+  if (!oc_session_events_disconnect_is_ongoing() && notify_session_end) {
     oc_session_end_event(&endpoint);
   }
 
@@ -208,7 +215,7 @@ free_tcp_session_async_locked(tcp_session_t *session, bool notify_session_end)
 
 static int
 add_new_session_locked(SOCKET sock, ip_context_t *dev, oc_endpoint_t *endpoint,
-                       tcp_csm_state_t state)
+                       uint32_t session_id, tcp_csm_state_t state)
 {
   HANDLE sock_event = WSACreateEvent();
   if (WSAEventSelect(sock, sock_event, FD_READ | FD_CLOSE) == SOCKET_ERROR) {
@@ -238,14 +245,16 @@ add_new_session_locked(SOCKET sock, ip_context_t *dev, oc_endpoint_t *endpoint,
   session->csm_state = state;
   session->sock_event = sock_event;
   session->notify_session_end = true;
-  if (session->endpoint.session_id == 0) {
+  if (session_id == 0) {
     session->endpoint.session_id = oc_tcp_get_new_session_id();
+  } else {
+    session->endpoint.session_id = session_id;
   }
 
   oc_list_add(session_list, session);
 
-  if (!(endpoint->flags & SECURED)) {
-    oc_session_start_event(endpoint);
+  if ((session->endpoint.flags & SECURED) == 0) {
+    oc_session_start_event(&session->endpoint);
   }
 
   OC_DBG("recorded new TCP session");
@@ -283,7 +292,8 @@ accept_new_session(ip_context_t *dev, SOCKET fd, oc_endpoint_t *endpoint)
   }
 
   oc_tcp_adapter_mutex_lock();
-  if (add_new_session_locked(new_socket, dev, endpoint, CSM_NONE) < 0) {
+  if (add_new_session_locked(new_socket, dev, endpoint, /*session_id*/ 0,
+                             CSM_NONE) < 0) {
     oc_tcp_adapter_mutex_unlock();
     OC_ERR("could not record new TCP session");
     closesocket(new_socket);
@@ -351,6 +361,7 @@ get_session_socket_locked(oc_endpoint_t *endpoint)
 
 static SOCKET
 initiate_new_session_locked(ip_context_t *dev, oc_endpoint_t *endpoint,
+                            uint32_t session_id,
                             const struct sockaddr_storage *receiver)
 {
   SOCKET sock = INVALID_SOCKET;
@@ -374,7 +385,7 @@ initiate_new_session_locked(ip_context_t *dev, oc_endpoint_t *endpoint,
 
   OC_DBG("successfully initiated TCP connection");
 
-  if (add_new_session_locked(sock, dev, endpoint, CSM_SENT) < 0) {
+  if (add_new_session_locked(sock, dev, endpoint, session_id, CSM_SENT) < 0) {
     OC_ERR("could not record new TCP session");
     closesocket(sock);
     return INVALID_SOCKET;
@@ -403,6 +414,7 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
       goto oc_tcp_send_buffer_done;
     }
     if ((send_sock = initiate_new_session_locked(dev, &message->endpoint,
+                                                 message->endpoint.session_id,
                                                  receiver)) == INVALID_SOCKET) {
       OC_ERR("could not initiate new TCP session");
       goto oc_tcp_send_buffer_done;
@@ -975,7 +987,7 @@ oc_tcp_connectivity_shutdown(ip_context_t *dev)
       oc_endpoint_t endpoint;
       SOCKET sock;
       HANDLE sock_event;
-      free_tcp_session_locked(session, &endpoint, &sock, &sock_event);
+      free_tcp_session_locked(session, &endpoint, &sock, &sock_event, NULL);
       WSACloseEvent(sock_event);
       closesocket(sock);
       if (!oc_session_events_disconnect_is_ongoing()) {

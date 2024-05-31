@@ -214,7 +214,7 @@ free_tcp_session(tcp_session_t *session, bool notify_session_end)
 
 static int
 add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
-                tcp_csm_state_t state)
+                uint32_t session_id, tcp_csm_state_t state)
 {
   long if_index = get_interface_index(sock);
   if (if_index == -1) {
@@ -235,14 +235,16 @@ add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
   session->endpoint.next = NULL;
   session->sock = sock;
   session->csm_state = state;
-  if (session->endpoint.session_id == 0) {
+  if (session_id == 0) {
     session->endpoint.session_id = oc_tcp_get_new_session_id();
+  } else {
+    session->endpoint.session_id = session_id;
   }
 
   oc_list_add(session_list, session);
 
-  if (!(endpoint->flags & SECURED)) {
-    oc_session_start_event(endpoint);
+  if ((session->endpoint.flags & SECURED) == 0) {
+    oc_session_start_event(&session->endpoint);
   }
 
   OC_DBG("recorded new TCP session");
@@ -280,7 +282,8 @@ accept_new_session(ip_context_t *dev, int fd, fd_set *setfds,
 
   FD_CLR(fd, setfds);
 
-  if (add_new_session(new_socket, dev, endpoint, CSM_NONE) < 0) {
+  if (add_new_session(new_socket, dev, endpoint, /*session_id*/ 0, CSM_NONE) <
+      0) {
     OC_ERR("could not record new TCP session");
     close(new_socket);
     return -1;
@@ -495,6 +498,7 @@ get_session_socket(const oc_endpoint_t *endpoint)
 
 static int
 initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
+                     uint32_t session_id,
                      const struct sockaddr_storage *receiver)
 {
   int sock = -1;
@@ -517,7 +521,7 @@ initiate_new_session(ip_context_t *dev, oc_endpoint_t *endpoint,
 
   OC_DBG("successfully initiated TCP connection");
 
-  if (add_new_session(sock, dev, endpoint, CSM_SENT) < 0) {
+  if (add_new_session(sock, dev, endpoint, session_id, CSM_SENT) < 0) {
     OC_ERR("could not record new TCP session");
     close(sock);
     return -1;
@@ -549,8 +553,9 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
       OC_ERR("connection was closed");
       goto oc_tcp_send_buffer_done;
     }
-    if ((send_sock = initiate_new_session(dev, &message->endpoint, receiver)) <
-        0) {
+    if ((send_sock =
+           initiate_new_session(dev, &message->endpoint,
+                                message->endpoint.session_id, receiver)) < 0) {
       OC_ERR("could not initiate new TCP session");
       goto oc_tcp_send_buffer_done;
     }

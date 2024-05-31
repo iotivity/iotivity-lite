@@ -160,7 +160,7 @@ oc_tls_pki_verification_params_t oc_tls_peer_pki_default_verification_params(
  * @brief Remove and deallocate the peer for the endpoint.
  *
  * @param endpoint the endpoint
- * @param notify_session_end notify session end event
+ * @param notify_session_end send session end notification
  */
 void oc_tls_remove_peer(const oc_endpoint_t *endpoint, bool notify_session_end);
 
