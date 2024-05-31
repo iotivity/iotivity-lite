@@ -57,20 +57,21 @@ oc_process_network_event(void)
   OC_LIST_LOCAL(network_events);
   oc_list_copy(network_events, g_network_events);
   oc_list_init(g_network_events);
- #ifdef OC_NETWORK_MONITOR
+#ifdef OC_NETWORK_MONITOR
   bool interface_up = g_interface_up;
-   g_interface_up = false;
+  g_interface_up = false;
   bool interface_down = g_interface_down;
   g_interface_down = false;
 #endif /* OC_NETWORK_MONITOR */
   oc_network_event_handler_mutex_unlock();
 
- #ifdef OC_DYNAMIC_ALLOCATION 
-  if(oc_list_length(network_events) >= OC_MAX_NUM_CONCURRENT_REQUESTS) {
-    // send a wake-up signal in case the queue might reach the limit for a device
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (oc_list_length(network_events) >= OC_MAX_NUM_CONCURRENT_REQUESTS) {
+    // send a wake-up signal in case the queue might reach the limit for a
+    // device
     oc_connectivity_wakeup();
   }
-  #endif /* OC_DYNAMIC_ALLOCATION */
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
   oc_tcp_on_connect_event_t *event =
@@ -187,8 +188,9 @@ oc_network_drop_receive_events(const oc_endpoint_t *endpoint)
   }
   oc_network_event_handler_mutex_unlock();
 
- #ifdef OC_DYNAMIC_ALLOCATION 
-  if(oc_get_network_events_queue_length(endpoint->device) + dropped >= OC_MAX_NUM_CONCURRENT_REQUESTS) {
+#ifdef OC_DYNAMIC_ALLOCATION
+  if (oc_get_network_events_queue_length(endpoint->device) + dropped >=
+      OC_MAX_NUM_CONCURRENT_REQUESTS) {
     // send a wake-up signal in case the queue for the device was full
     oc_connectivity_wakeup();
   }
@@ -224,7 +226,8 @@ oc_get_network_events_queue_length(size_t device)
 {
   oc_network_event_handler_mutex_lock();
   int message_count = 0;
-  for (oc_message_t *message = (oc_message_t *)oc_list_head(g_network_events); message != NULL; message = message->next) {
+  for (oc_message_t *message = (oc_message_t *)oc_list_head(g_network_events);
+       message != NULL; message = message->next) {
     if (message->endpoint.device == device) {
       ++message_count;
     }

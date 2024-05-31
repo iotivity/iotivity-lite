@@ -80,7 +80,7 @@ void oc_network_interface_event(oc_interface_event_t event);
 
 /**
  * @brief Returns the network event queue length for the device
- * 
+ *
  * @param device valid device index
  * @return number of events in the queue
  */

@@ -270,10 +270,10 @@ tcp_add_socks_to_rfd_set(ip_context_t *dev)
 #endif /* OC_IPV4 */
 }
 
-void 
+void
 tcp_add_controlflow_socks_to_rfd_set(fd_set *rfd_set, const ip_context_t *dev)
 {
-   FD_SET(dev->tcp.connect_pipe[0], rfd_set);
+  FD_SET(dev->tcp.connect_pipe[0], rfd_set);
 }
 
 static adapter_receive_state_t

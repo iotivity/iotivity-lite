@@ -893,8 +893,9 @@ process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
 }
 
 #ifdef OC_DYNAMIC_ALLOCATION
-static int 
-fds_count(const fd_set *sourcefds) { 
+static int
+fds_count(const fd_set *sourcefds)
+{
   int rfd_count = 0;
   for (int i = 0; i < FD_SETSIZE; i++) { //// TODO: optimize
     if (FD_ISSET(i, sourcefds)) {
@@ -904,9 +905,10 @@ fds_count(const fd_set *sourcefds) {
   return rfd_count;
 }
 
-static int 
-pick_random_fd(const fd_set *sourcefds, int fd_count) {
-  int random_rfd = oc_random_value() % fd_count;
+static int
+pick_random_fd(const fd_set *sourcefds, int fd_count)
+{
+  int random_rfd = (int)oc_random_value() % fd_count;
   for (int i = 0; i < FD_SETSIZE; i++) { // TODO: optimize FD_SETSIZE
     if (FD_ISSET(i, sourcefds)) {
       if (--fd_count == random_rfd) {
@@ -917,9 +919,10 @@ pick_random_fd(const fd_set *sourcefds, int fd_count) {
   return -1;
 }
 
-static int 
-remove_random_fds(fd_set *rdfds, int rfds_count, int remove_count) {
-  
+static int
+remove_random_fds(fd_set *rdfds, int rfds_count, int remove_count)
+{
+
   int removed = 0;
   while (removed < remove_count) {
     int fd = pick_random_fd(rdfds, rfds_count);
@@ -927,7 +930,7 @@ remove_random_fds(fd_set *rdfds, int rfds_count, int remove_count) {
       break;
     }
     // remove file descriptor from the set
-    FD_CLR(fd, rdfds); 
+    FD_CLR(fd, rdfds);
     --rfds_count;
     ++removed;
   }
@@ -959,19 +962,21 @@ process_events(ip_context_t *dev, fd_set *rdfds, fd_set *wfds, int fd_count)
     }
     fd_count--;
   }
-  
+
   if (process_socket_signal_event(dev, rdfds)) {
     fd_count--;
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
   // check if network queue can consume all 'ready' events
-  int available_count = OC_MAX_NUM_CONCURRENT_REQUESTS - oc_get_network_events_queue_length(dev->device);
-  if (available_count < fd_count) { 
+  int available_count = OC_MAX_NUM_CONCURRENT_REQUESTS -
+                        oc_get_network_events_queue_length(dev->device);
+  if (available_count < fd_count) {
     // get the number of read file descriptors
-    int rfds_count = fds_count(rdfds); 
-    int removed = remove_random_fds(rdfds, rfds_count, rfds_count - available_count);
-    fd_count-= removed;
+    int rfds_count = fds_count(rdfds);
+    int removed =
+      remove_random_fds(rdfds, rfds_count, rfds_count - available_count);
+    fd_count -= removed;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
@@ -1000,7 +1005,9 @@ to_timeval(oc_clock_time_t ticks)
 }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
-static void add_control_flow_rfds(fd_set *output_set, const ip_context_t *dev){
+static void
+add_control_flow_rfds(fd_set *output_set, const ip_context_t *dev)
+{
   /* Monitor network interface changes on the platform from only the 0th
    * logical device
    */
@@ -1015,7 +1022,7 @@ network_event_thread(void *data)
 {
   ip_context_t *dev = (ip_context_t *)data;
   FD_ZERO(&dev->rfds);
-  
+
   udp_add_socks_to_rfd_set(dev);
   add_control_flow_rfds(&dev->rfds, dev);
 #ifdef OC_TCP
@@ -1042,14 +1049,15 @@ network_event_thread(void *data)
     }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
-#ifdef OC_DYNAMIC_ALLOCATION    
-    if (oc_get_network_events_queue_length(dev->device) >= OC_MAX_NUM_CONCURRENT_REQUESTS) {
+#ifdef OC_DYNAMIC_ALLOCATION
+    if (oc_get_network_events_queue_length(dev->device) >=
+        OC_MAX_NUM_CONCURRENT_REQUESTS) {
       // the queue is full -> add only control flow rfds
       FD_ZERO(&rdfds);
       add_control_flow_rfds(&rdfds, dev);
-#ifdef OC_TCP      
+#ifdef OC_TCP
       tcp_add_controlflow_socks_to_rfd_set(&rdfds, dev);
-#endif /* OC_TCP */   
+#endif /* OC_TCP */
     }
 #endif /* OC_DYNAMIC_ALLOCATION */
     int n = select(FD_SETSIZE, &rdfds, wfds, NULL, timeout);
@@ -1572,16 +1580,17 @@ initialize_ip_context(ip_context_t *dev, size_t device,
   return true;
 }
 
-static void signal_event_thread(ip_context_t *dev)
+static void
+signal_event_thread(ip_context_t *dev)
 {
   do {
-      if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
-        if (errno == EINTR) {
-          continue;
-        }
-        OC_WRN("cannot wakeup network thread (error: %d)", (int)errno);
+    if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
+      if (errno == EINTR) {
+        continue;
       }
-      break;
+      OC_WRN("cannot wakeup network thread (error: %d)", (int)errno);
+    }
+    break;
   } while (true);
 }
 

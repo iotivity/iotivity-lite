@@ -65,7 +65,7 @@ void oc_connectivity_shutdown(size_t device);
  */
 int oc_send_buffer2(oc_message_t *message, bool queue);
 
- #ifdef OC_DYNAMIC_ALLOCATION 
+#ifdef OC_DYNAMIC_ALLOCATION
 /**
  * @brief send a signal to start consuming network events
  */

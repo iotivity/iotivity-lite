@@ -58,7 +58,8 @@ void tcp_add_socks_to_rfd_set(ip_context_t *dev);
  *
  * @param dev the device network context (cannot be NULL)
  */
-void tcp_add_controlflow_socks_to_rfd_set(fd_set *rfd_set, const ip_context_t *dev);
+void tcp_add_controlflow_socks_to_rfd_set(fd_set *rfd_set,
+                                          const ip_context_t *dev);
 
 /**
  * @brief Handle data available on the signal pipe (dev->connect_pipe).
