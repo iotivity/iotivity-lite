@@ -130,6 +130,17 @@ void oc_tcp_set_connect_retry(uint8_t max_count, uint16_t timeout);
 
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
+/**
+ * @brief Get state of TCP connection for given session id.
+ *
+ * @param session_id session id
+ * @return OC_TCP_SOCKET_STATE_CONNECTED TCP connection exists and it is ongoing
+ * @return OC_TCP_SOCKET_STATE_CONNECTING TCP connection is waiting to be
+ * established
+ * @return -1 otherwise
+ */
+int oc_tcp_session_state(uint32_t session_id);
+
 #endif /* OC_TCP */
 
 #ifdef __cplusplus

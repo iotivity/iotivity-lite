@@ -205,6 +205,7 @@ get_interface_index(int sock)
 static void
 log_new_session(oc_endpoint_t *endpoint, int sock, bool is_connected)
 {
+  // GCOVR_EXCL_START
   oc_string64_t ep;
   const char *addr = "";
   if (oc_endpoint_to_string64(endpoint, &ep)) {
@@ -214,11 +215,13 @@ log_new_session(oc_endpoint_t *endpoint, int sock, bool is_connected)
          "connected: %d, session_id: %u",
          addr, endpoint->interface_index, sock, (int)is_connected,
          (unsigned)endpoint->session_id);
+  // GCOVR_EXCL_STOP
 }
 
 static void
 log_free_session(oc_endpoint_t *endpoint, int sock)
 {
+  // GCOVR_EXCL_START
   oc_string64_t ep;
   const char *addr = "";
   if (oc_endpoint_to_string64(endpoint, &ep)) {
@@ -227,6 +230,7 @@ log_free_session(oc_endpoint_t *endpoint, int sock)
   OC_DBG("free TCP session endpoint: %s, endpoint interface: %d, sock: %d, "
          "session_id: %u",
          addr, endpoint->interface_index, sock, (unsigned)endpoint->session_id);
+  // GCOVR_EXCL_STOP
 }
 
 #endif /* OC_DBG_IS_ENABLED */
@@ -250,16 +254,16 @@ add_new_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
 
   session->dev = dev;
   endpoint->interface_index = (unsigned)if_index;
+  if (session_id == 0) {
+    session_id = oc_tcp_get_new_session_id();
+  }
+  endpoint->session_id = session_id;
   memcpy(&session->endpoint, endpoint, sizeof(oc_endpoint_t));
   session->endpoint.next = NULL;
+  session->endpoint.interface_index = (unsigned)if_index;
   session->sock = sock;
   session->csm_state = state;
   session->notify_session_end = true;
-  if (session_id == 0) {
-    session->endpoint.session_id = oc_tcp_get_new_session_id();
-  } else {
-    session->endpoint.session_id = session_id;
-  }
 
   oc_list_add(g_session_list, session);
 
@@ -304,8 +308,8 @@ accept_new_session_locked(ip_context_t *dev, int fd, fd_set *setfds,
 #endif /* !OC_IPV4 */
   }
 
-  if (add_new_session_locked(new_socket, dev, endpoint, /*session_id*/ 0,
-                             CSM_NONE) == NULL) {
+  if (add_new_session_locked(new_socket, dev, endpoint,
+                             /*session_id*/ 0, CSM_NONE) == NULL) {
     OC_ERR("could not record new TCP session");
     close(new_socket);
     return -1;
@@ -551,6 +555,16 @@ find_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
   return session;
 }
 
+static tcp_session_t *
+find_session_by_id_locked(uint32_t session_id)
+{
+  tcp_session_t *session = oc_list_head(g_session_list);
+  while (session != NULL && session->endpoint.session_id != session_id) {
+    session = session->next;
+  }
+  return session;
+}
+
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
 
 static tcp_session_t *
@@ -583,6 +597,17 @@ find_waiting_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
 #if OC_DBG_IS_ENABLED
   log_tcp_session(ws, endpoint, false);
 #endif /* OC_DBG_IS_ENABLED */
+  return ws;
+}
+
+static tcp_waiting_session_t *
+find_waiting_session_by_id_locked(uint32_t session_id)
+{
+  tcp_waiting_session_t *ws =
+    (tcp_waiting_session_t *)oc_list_head(g_waiting_session_list);
+  while (ws != NULL && ws->endpoint.session_id != session_id) {
+    ws = ws->next;
+  }
   return ws;
 }
 
@@ -871,6 +896,24 @@ oc_tcp_connection_state(const oc_endpoint_t *endpoint)
   const tcp_waiting_session_t *ws =
     find_waiting_session_by_endpoint_locked(endpoint);
   if (ws != NULL) {
+    pthread_mutex_unlock(&g_mutex);
+    return OC_TCP_SOCKET_STATE_CONNECTING;
+  }
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+  pthread_mutex_unlock(&g_mutex);
+  return -1;
+}
+
+int
+oc_tcp_session_state(uint32_t session_id)
+{
+  pthread_mutex_lock(&g_mutex);
+  if (find_session_by_id_locked(session_id) != NULL) {
+    pthread_mutex_unlock(&g_mutex);
+    return OC_TCP_SOCKET_STATE_CONNECTED;
+  }
+#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+  if (find_waiting_session_by_id_locked(session_id) != NULL) {
     pthread_mutex_unlock(&g_mutex);
     return OC_TCP_SOCKET_STATE_CONNECTING;
   }
@@ -1370,6 +1413,9 @@ oc_tcp_connect(oc_endpoint_t *endpoint, on_tcp_connect_t on_tcp_connect,
 {
   oc_tcp_connect_result_t ret =
     oc_tcp_connect_to_endpoint(endpoint, on_tcp_connect, on_tcp_connect_data);
+  if (ret.session_id != 0) {
+    endpoint->session_id = ret.session_id;
+  }
   return ret.error != 0 ? ret.error : (int)ret.state;
 }
 

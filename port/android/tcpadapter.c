@@ -28,6 +28,7 @@
 #include "oc_endpoint.h"
 #include "oc_session_events.h"
 #include "port/oc_assert.h"
+#include "port/oc_connectivity_internal.h"
 #include "port/oc_log_internal.h"
 #include "port/oc_tcp_socket_internal.h"
 #include "tcpadapter.h"
@@ -228,18 +229,16 @@ add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
     return -1;
   }
 
-  endpoint->interface_index = (unsigned)if_index;
-
   session->dev = dev;
+  endpoint->interface_index = (unsigned)if_index;
+  if (session_id == 0) {
+    session_id = oc_tcp_get_new_session_id();
+  }
+  endpoint->session_id = session_id;
   memcpy(&session->endpoint, endpoint, sizeof(oc_endpoint_t));
   session->endpoint.next = NULL;
   session->sock = sock;
   session->csm_state = state;
-  if (session_id == 0) {
-    session->endpoint.session_id = oc_tcp_get_new_session_id();
-  } else {
-    session->endpoint.session_id = session_id;
-  }
 
   oc_list_add(session_list, session);
 
@@ -312,6 +311,22 @@ find_session_by_endpoint(const oc_endpoint_t *endpoint)
   OC_DBG("found TCP session for");
   OC_LOGipaddr(*endpoint);
   OC_DBG("%s", "");
+  return session;
+}
+
+static tcp_session_t *
+find_session_by_id(uint32_t session_id)
+{
+  tcp_session_t *session = oc_list_head(session_list);
+  while (session != NULL && session->endpoint.session_id != session_id) {
+    session = session->next;
+  }
+
+  if (!session) {
+    OC_DBG("could not find ongoing TCP session for session id %d", session_id);
+    return NULL;
+  }
+  OC_DBG("found TCP session for session id %d", session_id);
   return session;
 }
 
@@ -791,6 +806,15 @@ int
 oc_tcp_connection_state(const oc_endpoint_t *endpoint)
 {
   if (find_session_by_endpoint(endpoint) != NULL) {
+    return OC_TCP_SOCKET_STATE_CONNECTED;
+  }
+  return -1;
+}
+
+int
+oc_tcp_session_state(uint32_t session_id)
+{
+  if (find_session_by_id(session_id) != NULL) {
     return OC_TCP_SOCKET_STATE_CONNECTED;
   }
   return -1;

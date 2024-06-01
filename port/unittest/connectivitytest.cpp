@@ -42,6 +42,8 @@
 #include <optional>
 #include <string>
 
+using namespace std::chrono_literals;
+
 static constexpr size_t kDeviceID = 0;
 
 class TestConnectivity : public testing::Test {
@@ -462,11 +464,14 @@ TEST_F(TestConnectivityWithServer, oc_tcp_update_csm_state_P)
     coap_serialize_message(&packet, msg->data, oc_message_buffer_size(msg));
 
   oc_send_buffer(msg);
+  ep.session_id = msg->endpoint.session_id;
   oc_message_unref(msg);
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
 #ifdef OC_TCP
   EXPECT_EQ(OC_TCP_SOCKET_STATE_CONNECTED, oc_tcp_connection_state(&ep));
+  ASSERT_NE(0, ep.session_id);
+  EXPECT_EQ(OC_TCP_SOCKET_STATE_CONNECTED, oc_tcp_session_state(ep.session_id));
 #endif /* OC_TCP */
 
   EXPECT_EQ(0, oc_tcp_update_csm_state(&ep, CSM_DONE));
@@ -526,7 +531,7 @@ TEST_F(TestConnectivityWithServer, oc_tcp_connect_timeout)
     return;
   }
 
-  EXPECT_EQ(OC_TCP_SOCKET_STATE_CONNECTING, ret);
+  ASSERT_EQ(OC_TCP_SOCKET_STATE_CONNECTING, ret);
 
   oc_message_t *msg = oc_allocate_message();
   memcpy(&msg->endpoint, &ep, sizeof(oc_endpoint_t));
@@ -542,6 +547,36 @@ TEST_F(TestConnectivityWithServer, oc_tcp_connect_timeout)
   oc_message_unref(msg);
 
   restore_defaults();
+}
+
+TEST_F(TestConnectivityWithServer, oc_tcp_cleanup_waiting_session)
+{
+  auto addr = "coap+tcp://[::1]:12345";
+  oc_endpoint_t ep1 =
+    oc::endpoint::FromString(addr); // reachable address, but inactive port
+
+  oc_tcp_connect_result_t ret1 =
+    oc_tcp_connect_to_endpoint(&ep1, nullptr, nullptr);
+  ASSERT_EQ(0, ret1.error);
+  ASSERT_EQ(OC_TCP_SOCKET_STATE_CONNECTING, ret1.state);
+  ASSERT_NE(0, ret1.session_id);
+
+  // disconnect is asynchronous, we should be able to open a new session to
+  // the same endpoint
+  oc_close_session(&ep1);
+
+  oc_endpoint_t ep2 = oc::endpoint::FromString(addr);
+  oc_tcp_connect_result_t ret2 =
+    oc_tcp_connect_to_endpoint(&ep2, nullptr, nullptr);
+  ASSERT_EQ(0, ret2.error);
+  ASSERT_EQ(OC_TCP_SOCKET_STATE_CONNECTING, ret2.state);
+  ASSERT_NE(0, ret2.session_id);
+
+  oc::TestDevice::PoolEventsMsV1(20ms);
+
+  EXPECT_EQ(-1, oc_tcp_session_state(ret1.session_id));
+  EXPECT_EQ(OC_TCP_SOCKET_STATE_CONNECTING,
+            oc_tcp_session_state(ret2.session_id));
 }
 
 #endif /* __linux__ */

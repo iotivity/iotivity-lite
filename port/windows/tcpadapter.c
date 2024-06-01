@@ -22,9 +22,9 @@
 #include "api/oc_session_events_internal.h"
 #include "api/oc_tcp_internal.h"
 #include "port/oc_assert.h"
+#include "port/oc_connectivity_internal.h"
 #include "port/oc_fcntl_internal.h"
 #include "port/oc_log_internal.h"
-#include "util/oc_memb.h"
 #include "port/oc_tcp_socket_internal.h"
 #include "ipcontext.h"
 #include "messaging/coap/coap_internal.h"
@@ -33,6 +33,7 @@
 #include "oc_endpoint.h"
 #include "oc_session_events.h"
 #include "tcpadapter.h"
+#include "util/oc_memb.h"
 
 #include <assert.h>
 #include <fcntl.h>
@@ -237,19 +238,18 @@ add_new_session_locked(SOCKET sock, ip_context_t *dev, oc_endpoint_t *endpoint,
     return SOCKET_ERROR;
   }
 
-  endpoint->interface_index = (unsigned)if_index;
-  memcpy(&session->endpoint, endpoint, sizeof(oc_endpoint_t));
   session->dev = dev;
+  endpoint->interface_index = (unsigned)if_index;
+  if (session_id == 0) {
+    session_id = oc_tcp_get_new_session_id();
+  }
+  endpoint->session_id = session_id;
+  memcpy(&session->endpoint, endpoint, sizeof(oc_endpoint_t));
   session->endpoint.next = NULL;
   session->sock = sock;
   session->csm_state = state;
   session->sock_event = sock_event;
   session->notify_session_end = true;
-  if (session_id == 0) {
-    session->endpoint.session_id = oc_tcp_get_new_session_id();
-  } else {
-    session->endpoint.session_id = session_id;
-  }
 
   oc_list_add(session_list, session);
 
@@ -327,6 +327,22 @@ find_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
   OC_DBG("found TCP session for");
   OC_LOGipaddr(*endpoint);
   OC_DBG("%s", "");
+  return session;
+}
+
+static tcp_session_t *
+find_session_by_id_locked(uint32_t session_id)
+{
+  tcp_session_t *session = oc_list_head(session_list);
+  while (session != NULL && session->endpoint.session_id != session_id) {
+    session = session->next;
+  }
+
+  if (!session) {
+    OC_DBG("could not find ongoing TCP session for session id %d", session_id);
+    return NULL;
+  }
+  OC_DBG("found TCP session for session id %d", session_id);
   return session;
 }
 
@@ -1009,6 +1025,18 @@ oc_tcp_connection_state(const oc_endpoint_t *endpoint)
 {
   oc_tcp_adapter_mutex_lock();
   tcp_session_t *session = find_session_by_endpoint_locked(endpoint);
+  oc_tcp_adapter_mutex_unlock();
+  if (session != NULL) {
+    return OC_TCP_SOCKET_STATE_CONNECTED;
+  }
+  return -1;
+}
+
+int
+oc_tcp_session_state(uint32_t session_id)
+{
+  oc_tcp_adapter_mutex_lock();
+  tcp_session_t *session = find_session_by_id_locked(session_id);
   oc_tcp_adapter_mutex_unlock();
   if (session != NULL) {
     return OC_TCP_SOCKET_STATE_CONNECTED;
