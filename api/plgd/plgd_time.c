@@ -922,7 +922,7 @@ plgd_time_fetch(plgd_time_fetch_config_t fetch, unsigned *flags)
     OC_ERR("failed to send fetch plgd-time request to endpoint");
 #if defined(OC_SECURITY) && defined(OC_PKI)
     if (add_insecure_peer) {
-      oc_tls_remove_peer(fetch.endpoint);
+      oc_tls_remove_peer(fetch.endpoint, true);
     }
 #endif /* OC_SECURITY && OC_PKI */
     oc_memb_free(&g_fetch_params_s, fetch_params);

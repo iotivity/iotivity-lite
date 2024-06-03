@@ -25,6 +25,7 @@
 #include "oc_network_events.h"
 #include "oc_session_events.h"
 #include "port/oc_connectivity.h"
+#include "util/oc_compiler.h"
 #include "util/oc_features.h"
 #include <limits.h>
 #include <stdbool.h>
@@ -64,20 +65,6 @@ void oc_connectivity_shutdown(size_t device);
  */
 int oc_send_buffer2(oc_message_t *message, bool queue);
 
-#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
-typedef struct
-{
-  uint8_t max_count; ///< maximal number of retries for opening a single TCP
-                     /// connection (default: 5)
-  uint16_t timeout;  ///< timeout of a single retry in seconds (default: 5)
-} oc_tcp_connect_retry_t;
-
-#define OC_TCP_CONNECT_RETRY_MAX_COUNT 5
-#define OC_TCP_CONNECT_RETRY_TIMEOUT 5
-
-void oc_tcp_set_connect_retry(uint8_t max_count, uint16_t timeout);
-#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
-
 #ifdef OC_NETWORK_MONITOR
 /**
  * @brief the callback function for an network change
@@ -97,6 +84,64 @@ void handle_network_interface_event_callback(oc_interface_event_t event);
 void handle_session_event_callback(const oc_endpoint_t *endpoint,
                                    oc_session_state_t state);
 #endif /* OC_SESSION_EVENTS */
+
+#ifdef OC_TCP
+
+/**
+ * @brief End TCP session for the specific endpoint.
+ *
+ * @param endpoint the endpoint to close the session for
+ * @param notify_session_end send the notification about the disconnection
+ * session.
+ * @param session_endpoint the endpoint of the session with session id
+ * @return bool true if the session will be closed
+ */
+bool oc_connectivity_end_session_v1(const oc_endpoint_t *endpoint,
+                                    bool notify_session_end,
+                                    oc_endpoint_t *session_endpoint)
+  OC_NONNULL(1);
+
+#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+
+typedef struct
+{
+  uint8_t max_count; ///< maximal number of retries for opening a single TCP
+                     /// connection (default: 5)
+  uint16_t timeout;  ///< timeout of a single retry in seconds (default: 5)
+} oc_tcp_connect_retry_t;
+
+#define OC_TCP_CONNECT_RETRY_MAX_COUNT 5
+#define OC_TCP_CONNECT_RETRY_TIMEOUT 5
+
+/** @brief Connect to endpoint and return connection state and session id */
+typedef struct
+{
+  uint32_t session_id;
+  oc_tcp_socket_state_t state;
+  int error;
+} oc_tcp_connect_result_t;
+
+/** @brief Connect to TCP endpoint and return connection state and session id */
+oc_tcp_connect_result_t oc_tcp_connect_to_endpoint(
+  oc_endpoint_t *endpoint, on_tcp_connect_t on_tcp_connect,
+  void *on_tcp_connect_data) OC_NONNULL(1);
+
+void oc_tcp_set_connect_retry(uint8_t max_count, uint16_t timeout);
+
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+
+/**
+ * @brief Get state of TCP connection for given session id.
+ *
+ * @param session_id session id
+ * @return OC_TCP_SOCKET_STATE_CONNECTED TCP connection exists and it is ongoing
+ * @return OC_TCP_SOCKET_STATE_CONNECTING TCP connection is waiting to be
+ * established
+ * @return -1 otherwise
+ */
+int oc_tcp_session_state(uint32_t session_id);
+
+#endif /* OC_TCP */
 
 #ifdef __cplusplus
 }

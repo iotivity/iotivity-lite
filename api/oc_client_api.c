@@ -18,6 +18,18 @@
 
 #include "oc_config.h"
 
+#include "oc_api.h"
+#include "oc_endpoint.h"
+
+#ifdef OC_TCP
+#include "api/oc_session_events_internal.h"
+#include "port/oc_connectivity_internal.h"
+#endif /* OC_TCP */
+
+#ifdef OC_SECURITY
+#include "security/oc_tls_internal.h"
+#endif /* OC_SECURITY */
+
 #ifdef OC_CLIENT
 
 #include "api/client/oc_client_cb_internal.h"
@@ -37,10 +49,6 @@
 #ifdef OC_TCP
 #include "messaging/coap/signal_internal.h"
 #endif /* OC_TCP */
-
-#ifdef OC_SECURITY
-#include "security/oc_tls_internal.h"
-#endif /* OC_SECURITY */
 
 #include <assert.h>
 
@@ -948,18 +956,28 @@ oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
   return status;
 }
 
+#endif /* OC_CLIENT */
+
 void
 oc_close_session(const oc_endpoint_t *endpoint)
 {
-  if (endpoint->flags & SECURED) {
 #ifdef OC_SECURITY
+  if ((endpoint->flags & SECURED) != 0) {
     oc_tls_close_connection(endpoint);
-#endif /* OC_SECURITY */
-  } else if (endpoint->flags & TCP) {
-#ifdef OC_TCP
-    oc_connectivity_end_session(endpoint);
-#endif /* OC_TCP */
+    return;
   }
-}
+#endif /* OC_SECURITY */
+#ifdef OC_TCP
+  if ((endpoint->flags & TCP) != 0) {
+    oc_endpoint_t session_endpoint;
+    while (oc_connectivity_end_session_v1(endpoint, false, &session_endpoint)) {
+      oc_handle_session(&session_endpoint, OC_SESSION_DISCONNECTED);
+    }
+    return;
+  }
+#endif /* OC_TCP */
 
-#endif /* OC_CLIENT */
+#if !defined(OC_TCP) && !defined(OC_SECURITY)
+  (void)endpoint;
+#endif /* !OC_TCP && !OC_SECURITY */
+}

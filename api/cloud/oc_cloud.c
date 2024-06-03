@@ -132,19 +132,7 @@ void
 oc_cloud_close_endpoint(const oc_endpoint_t *ep)
 {
   OC_CLOUD_DBG("oc_cloud_close_endpoint");
-#ifdef OC_SECURITY
-  const oc_tls_peer_t *peer = oc_tls_get_peer(ep);
-  if (peer != NULL) {
-    OC_CLOUD_DBG("oc_cloud_close_endpoint: oc_tls_close_connection");
-    oc_tls_close_connection(ep);
-  } else
-#endif /* OC_SECURITY */
-  {
-#ifdef OC_TCP
-    OC_CLOUD_DBG("oc_cloud_close_endpoint: oc_connectivity_end_session");
-    oc_connectivity_end_session(ep);
-#endif /* OC_TCP */
-  }
+  oc_close_session(ep);
 }
 
 void

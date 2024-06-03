@@ -158,11 +158,14 @@ int oc_send_buffer(oc_message_t *message);
 void oc_send_discovery_request(oc_message_t *message);
 
 /**
- * @brief end session for the specific endpoint
+ * @brief end TCP session for the specific endpoint.
  *
  * @param endpoint the endpoint to close the session for
+ *
+ * @deprecated replaced by oc_close_session in v2.2.5.14
  */
-void oc_connectivity_end_session(const oc_endpoint_t *endpoint);
+void oc_connectivity_end_session(const oc_endpoint_t *endpoint)
+  OC_DEPRECATED("replaced by oc_close_session in v2.2.5.14");
 
 #ifdef OC_DNS_LOOKUP
 /**

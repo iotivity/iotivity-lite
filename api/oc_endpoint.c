@@ -675,6 +675,18 @@ oc_endpoint_compare_address(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
   return -1;
 }
 
+#ifdef OC_TCP
+static int
+oc_endpoint_compare_session_ids(const oc_endpoint_t *ep1,
+                                const oc_endpoint_t *ep2)
+{
+  if (ep1->session_id == 0 || ep2->session_id == 0) {
+    return 0; // session_id == 0 means any
+  }
+  return ep1->session_id == ep2->session_id ? 0 : -1;
+}
+#endif /* OC_TCP */
+
 int
 oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
 {
@@ -690,19 +702,28 @@ oc_endpoint_compare(const oc_endpoint_t *ep1, const oc_endpoint_t *ep2)
   if (ep1->flags & IPV6) {
     if (memcmp(ep1->addr.ipv6.address, ep2->addr.ipv6.address, 16) == 0 &&
         ep1->addr.ipv6.port == ep2->addr.ipv6.port) {
+#ifdef OC_TCP
+      return oc_endpoint_compare_session_ids(ep1, ep2);
+#else  /* OC_TCP */
       return 0;
+#endif /* !OC_TCP */
     }
     return -1;
   }
 #ifdef OC_IPV4
-  else if (ep1->flags & IPV4) {
+  if (ep1->flags & IPV4) {
     if (memcmp(ep1->addr.ipv4.address, ep2->addr.ipv4.address, 4) == 0 &&
         ep1->addr.ipv4.port == ep2->addr.ipv4.port) {
+#ifdef OC_TCP
+      return oc_endpoint_compare_session_ids(ep1, ep2);
+#else  /* OC_TCP */
       return 0;
+#endif /* !OC_TCP */
     }
     return -1;
   }
 #endif /* OC_IPV4 */
+
   // TODO: Add support for other endpoint types
   return -1;
 }

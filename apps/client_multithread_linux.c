@@ -107,7 +107,7 @@ pong_received_handler(oc_client_response_t *data)
     ping_count++;
     if (ping_count > PING_RETRY_COUNT) {
       OC_PRINTF("retry over. close connection.\n");
-      oc_connectivity_end_session(data->endpoint);
+      oc_close_session(data->endpoint);
     } else {
       ping_timeout <<= 1;
       OC_PRINTF("PING send again.[retry: %zd, time: %u]\n", ping_count,

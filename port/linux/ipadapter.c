@@ -1577,12 +1577,23 @@ oc_connectivity_shutdown(size_t device)
 }
 
 #ifdef OC_TCP
-void
-oc_connectivity_end_session(const oc_endpoint_t *endpoint)
+bool
+oc_connectivity_end_session_v1(const oc_endpoint_t *endpoint,
+                               bool notify_session_end,
+                               oc_endpoint_t *session_endpoint)
 {
   if ((endpoint->flags & TCP) != 0 &&
       oc_get_ip_context_for_device(endpoint->device) != NULL) {
-    tcp_end_session(endpoint);
+    return tcp_end_session(endpoint, notify_session_end, session_endpoint);
+  }
+  return false;
+}
+
+void
+oc_connectivity_end_session(const oc_endpoint_t *endpoint)
+{
+  while (oc_connectivity_end_session_v1(endpoint, true, NULL)) {
+    // no-op
   }
 }
 #endif /* OC_TCP */

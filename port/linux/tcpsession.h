@@ -17,19 +17,21 @@
  *
  ****************************************************************************/
 
-#ifndef TCP_SESION_H
-#define TCP_SESION_H
+#ifndef TCP_SESSION_H
+#define TCP_SESSION_H
+
+#include "util/oc_features.h"
+
+#ifdef OC_TCP
 
 #include "port/oc_clock.h"
 #include "port/oc_connectivity.h"
-#include "util/oc_features.h"
 #include "ipcontext.h"
 #include "oc_endpoint.h"
 #include "tcpcontext.h"
+
 #include <stddef.h>
 #include <sys/select.h>
-
-#ifdef OC_TCP
 
 #ifdef __cplusplus
 extern "C" {
@@ -105,7 +107,8 @@ adapter_receive_state_t tcp_receive_message(ip_context_t *dev, fd_set *fds,
  * @brief Schedule the session associated with the endpoint to be stopped and
  * deallocated (if it exists).
  */
-void tcp_end_session(const oc_endpoint_t *endpoint);
+bool tcp_end_session(const oc_endpoint_t *endpoint, bool notify_session_end,
+                     oc_endpoint_t *session_endpoint) OC_NONNULL(1);
 
 /**
  * @brief Handle data received on the signal pipe.
@@ -118,6 +121,7 @@ void tcp_session_handle_signal(void);
 void tcp_session_shutdown(const ip_context_t *dev);
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+
 /**
  * @brief Iterate over TCP sessions waiting for connection. Deallocate expired
  * sessions. Retry the connection process for sessions that haven't reached the
@@ -154,4 +158,4 @@ bool tcp_process_waiting_sessions(fd_set *fds);
 
 #endif /* OC_TCP */
 
-#endif /* TCP_SESION_H */
+#endif /* TCP_SESSION_H */

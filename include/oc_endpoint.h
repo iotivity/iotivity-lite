@@ -98,7 +98,7 @@ typedef struct oc_endpoint_t
     oc_ipv4_addr_t ipv4; ///< ipv4 address
     oc_le_addr_t bt;     ///< blue tooth address
   } addr, addr_local;
-  unsigned interface_index; ///< interface index (valid intefaces are >0, 0
+  unsigned interface_index; ///< interface index (valid interfaces are >0, 0
                             ///< means no index or error)
   uint8_t priority;         ///< priority
   ocf_version_t version;    ///< ocf version
@@ -106,6 +106,10 @@ typedef struct oc_endpoint_t
   uint8_t piv[OSCORE_PIV_LEN];
   uint8_t piv_len;
 #endif /* OC_OSCORE */
+#ifdef OC_TCP
+  uint32_t session_id; ///< session id for pairing tls peer with tcp session - 0
+                       ///< means any
+#endif
 } oc_endpoint_t;
 
 #define oc_make_ipv4_endpoint(__name__, __flags__, __port__, ...)              \

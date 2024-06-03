@@ -26,6 +26,7 @@
 #include "messaging/coap/constants.h"
 #include "port/oc_connectivity.h"
 #include "oc_endpoint.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -33,6 +34,9 @@ extern "C" {
 
 #define OC_TCP_DEFAULT_RECEIVE_SIZE                                            \
   (COAP_TCP_DEFAULT_HEADER_LEN + COAP_TCP_MAX_EXTENDED_LENGTH_LEN)
+
+/** @brief Get new tcp session ID */
+uint32_t oc_tcp_get_new_session_id(void);
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
 

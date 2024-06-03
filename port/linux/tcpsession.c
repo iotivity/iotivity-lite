@@ -60,6 +60,7 @@ typedef struct tcp_session_t
   oc_endpoint_t endpoint;
   int sock;
   tcp_csm_state_t csm_state;
+  bool notify_session_end;
 } tcp_session_t;
 
 static pthread_mutex_t g_mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -95,6 +96,7 @@ typedef struct tcp_waiting_session_t
   OC_LIST_STRUCT(messages);
   on_tcp_connect_t on_tcp_connect;
   void *on_tcp_connect_data;
+  bool notify_session_end;
 } tcp_waiting_session_t;
 
 OC_LIST(g_waiting_session_list); ///< sessions waiting to open a connection,
@@ -203,20 +205,39 @@ get_interface_index(int sock)
 static void
 log_new_session(oc_endpoint_t *endpoint, int sock, bool is_connected)
 {
+  // GCOVR_EXCL_START
   oc_string64_t ep;
   const char *addr = "";
   if (oc_endpoint_to_string64(endpoint, &ep)) {
     addr = oc_string(ep);
   }
   OC_DBG("new TCP session endpoint: %s, endpoint interface: %d, sock: %d, "
-         "connected: %d",
-         addr, endpoint->interface_index, sock, (int)is_connected);
+         "connected: %d, session_id: %u",
+         addr, endpoint->interface_index, sock, (int)is_connected,
+         (unsigned)endpoint->session_id);
+  // GCOVR_EXCL_STOP
 }
+
+static void
+log_free_session(oc_endpoint_t *endpoint, int sock)
+{
+  // GCOVR_EXCL_START
+  oc_string64_t ep;
+  const char *addr = "";
+  if (oc_endpoint_to_string64(endpoint, &ep)) {
+    addr = oc_string(ep);
+  }
+  OC_DBG("free TCP session endpoint: %s, endpoint interface: %d, sock: %d, "
+         "session_id: %u",
+         addr, endpoint->interface_index, sock, (unsigned)endpoint->session_id);
+  // GCOVR_EXCL_STOP
+}
+
 #endif /* OC_DBG_IS_ENABLED */
 
 static tcp_session_t *
 add_new_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
-                       tcp_csm_state_t state)
+                       uint32_t session_id, tcp_csm_state_t state)
 {
   long if_index = get_interface_index(sock);
   if (if_index < 0) {
@@ -233,10 +254,16 @@ add_new_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
 
   session->dev = dev;
   endpoint->interface_index = (unsigned)if_index;
+  if (session_id == 0) {
+    session_id = oc_tcp_get_new_session_id();
+  }
+  endpoint->session_id = session_id;
   memcpy(&session->endpoint, endpoint, sizeof(oc_endpoint_t));
   session->endpoint.next = NULL;
+  session->endpoint.interface_index = (unsigned)if_index;
   session->sock = sock;
   session->csm_state = state;
+  session->notify_session_end = true;
 
   oc_list_add(g_session_list, session);
 
@@ -281,7 +308,8 @@ accept_new_session_locked(ip_context_t *dev, int fd, fd_set *setfds,
 #endif /* !OC_IPV4 */
   }
 
-  if (add_new_session_locked(new_socket, dev, endpoint, CSM_NONE) == NULL) {
+  if (add_new_session_locked(new_socket, dev, endpoint,
+                             /*session_id*/ 0, CSM_NONE) == NULL) {
     OC_ERR("could not record new TCP session");
     close(new_socket);
     return -1;
@@ -297,7 +325,8 @@ free_session_locked(tcp_session_t *session, bool signal)
   oc_list_remove(g_session_list, session);
   oc_list_remove(g_free_session_list_async, session);
 
-  if (!oc_session_events_disconnect_is_ongoing()) {
+  if (!oc_session_events_disconnect_is_ongoing() &&
+      session->notify_session_end) {
     oc_session_end_event(&session->endpoint);
   }
 
@@ -307,8 +336,9 @@ free_session_locked(tcp_session_t *session, bool signal)
     signal_network_thread(&session->dev->tcp);
   }
   close(session->sock);
-
-  OC_DBG("free TCP session(%p, fd=%d)", (void *)session, session->sock);
+#if OC_DBG_IS_ENABLED
+  log_free_session(&session->endpoint, session->sock);
+#endif /* OC_DBG_IS_ENABLED */
   oc_memb_free(&g_tcp_session_s, session);
 }
 
@@ -525,14 +555,24 @@ find_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
   return session;
 }
 
+static tcp_session_t *
+find_session_by_id_locked(uint32_t session_id)
+{
+  tcp_session_t *session = oc_list_head(g_session_list);
+  while (session != NULL && session->endpoint.session_id != session_id) {
+    session = session->next;
+  }
+  return session;
+}
+
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
 
 static tcp_session_t *
 tcp_create_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
-                          bool signal)
+                          uint32_t session_id, bool signal)
 {
   tcp_session_t *session =
-    add_new_session_locked(sock, dev, endpoint, CSM_SENT);
+    add_new_session_locked(sock, dev, endpoint, session_id, CSM_SENT);
   if (session == NULL) {
     OC_ERR("could not record new TCP session");
     return NULL;
@@ -561,6 +601,17 @@ find_waiting_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
 }
 
 static tcp_waiting_session_t *
+find_waiting_session_by_id_locked(uint32_t session_id)
+{
+  tcp_waiting_session_t *ws =
+    (tcp_waiting_session_t *)oc_list_head(g_waiting_session_list);
+  while (ws != NULL && ws->endpoint.session_id != session_id) {
+    ws = ws->next;
+  }
+  return ws;
+}
+
+static tcp_waiting_session_t *
 add_new_waiting_session_locked(int sock, ip_context_t *dev,
                                const oc_endpoint_t *endpoint,
                                on_tcp_connect_t on_tcp_connect,
@@ -575,6 +626,7 @@ add_new_waiting_session_locked(int sock, ip_context_t *dev,
 
   ws->dev = dev;
   memcpy(&ws->endpoint, endpoint, sizeof(oc_endpoint_t));
+  ws->endpoint.session_id = oc_tcp_get_new_session_id();
   ws->endpoint.next = NULL;
   ws->sock = sock;
   OC_LIST_STRUCT_INIT(ws, messages);
@@ -582,6 +634,7 @@ add_new_waiting_session_locked(int sock, ip_context_t *dev,
   ws->retry.count = 0;
   ws->on_tcp_connect = on_tcp_connect;
   ws->on_tcp_connect_data = on_tcp_connect_data;
+  ws->notify_session_end = true;
 
 #if OC_DBG_IS_ENABLED
   log_new_session(&ws->endpoint, sock, false);
@@ -655,8 +708,9 @@ tcp_connect_locked(ip_context_t *dev, oc_endpoint_t *endpoint,
   oc_tcp_socket_t cs = oc_tcp_socket_connect(endpoint, receiver);
   if (cs.state == OC_TCP_SOCKET_STATE_CONNECTED) {
     OC_DBG("successfully initiated TCP connection");
-    s = tcp_create_session_locked(cs.fd, dev, endpoint, true);
+    s = tcp_create_session_locked(cs.fd, dev, endpoint, /*session_id*/ 0, true);
     if (s != NULL) {
+      res.session = s;
       res.created = true;
       return res;
     }
@@ -679,10 +733,11 @@ tcp_connect_locked(ip_context_t *dev, oc_endpoint_t *endpoint,
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
 static void
-free_session_async_locked(tcp_session_t *s)
+free_session_async_locked(tcp_session_t *s, bool notify_session_end)
 {
   oc_list_remove(g_session_list, s);
   oc_list_add(g_free_session_list_async, s);
+  s->notify_session_end = notify_session_end;
 
   signal_network_thread(&s->dev->tcp);
   OC_DBG("signaled network event thread to monitor that the session needs to "
@@ -692,10 +747,12 @@ free_session_async_locked(tcp_session_t *s)
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
 static void
-free_waiting_session_async_locked(tcp_waiting_session_t *ws)
+free_waiting_session_async_locked(tcp_waiting_session_t *ws,
+                                  bool notify_session_end)
 {
   oc_list_remove(g_waiting_session_list, ws);
   oc_list_add(g_free_waiting_session_list_async, ws);
+  ws->notify_session_end = notify_session_end;
 
   signal_network_thread(&ws->dev->tcp);
   OC_DBG("signaled network event thread to monitor that the session needs to "
@@ -704,27 +761,35 @@ free_waiting_session_async_locked(tcp_waiting_session_t *ws)
 }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
-void
-tcp_end_session(const oc_endpoint_t *endpoint)
+bool
+tcp_end_session(const oc_endpoint_t *endpoint, bool notify_session_end,
+                oc_endpoint_t *session_endpoint)
 {
   pthread_mutex_lock(&g_mutex);
   tcp_session_t *s = find_session_by_endpoint_locked(endpoint);
   if (s != NULL) {
-    free_session_async_locked(s);
+    free_session_async_locked(s, notify_session_end);
+    if (session_endpoint) {
+      memcpy(session_endpoint, &s->endpoint, sizeof(oc_endpoint_t));
+    }
     pthread_mutex_unlock(&g_mutex);
-    return;
+    return true;
   }
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
   tcp_waiting_session_t *ws = find_waiting_session_by_endpoint_locked(endpoint);
   if (ws != NULL) {
-    free_waiting_session_async_locked(ws);
+    free_waiting_session_async_locked(ws, notify_session_end);
+    if (session_endpoint) {
+      memcpy(session_endpoint, &ws->endpoint, sizeof(oc_endpoint_t));
+    }
     pthread_mutex_unlock(&g_mutex);
-    return;
+    return true;
   }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
   pthread_mutex_unlock(&g_mutex);
+  return false;
 }
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
@@ -831,6 +896,24 @@ oc_tcp_connection_state(const oc_endpoint_t *endpoint)
   const tcp_waiting_session_t *ws =
     find_waiting_session_by_endpoint_locked(endpoint);
   if (ws != NULL) {
+    pthread_mutex_unlock(&g_mutex);
+    return OC_TCP_SOCKET_STATE_CONNECTING;
+  }
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
+  pthread_mutex_unlock(&g_mutex);
+  return -1;
+}
+
+int
+oc_tcp_session_state(uint32_t session_id)
+{
+  pthread_mutex_lock(&g_mutex);
+  if (find_session_by_id_locked(session_id) != NULL) {
+    pthread_mutex_unlock(&g_mutex);
+    return OC_TCP_SOCKET_STATE_CONNECTED;
+  }
+#ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+  if (find_waiting_session_by_id_locked(session_id) != NULL) {
     pthread_mutex_unlock(&g_mutex);
     return OC_TCP_SOCKET_STATE_CONNECTING;
   }
@@ -1080,8 +1163,8 @@ tcp_try_connect_waiting_session_locked(tcp_waiting_session_t *ws, int *err)
     return false;
   }
 
-  tcp_session_t *s =
-    tcp_create_session_locked(ws->sock, ws->dev, &ws->endpoint, false);
+  tcp_session_t *s = tcp_create_session_locked(ws->sock, ws->dev, &ws->endpoint,
+                                               ws->endpoint.session_id, false);
   if (s == NULL) {
     return false;
   }
@@ -1155,8 +1238,8 @@ tcp_retry_waiting_session_locked(tcp_waiting_session_t *ws,
   oc_tcp_socket_t cs = oc_tcp_socket_connect(&ws->endpoint, NULL);
   if (cs.state == OC_TCP_SOCKET_STATE_CONNECTED) {
     OC_DBG("successfully initiated TCP connection");
-    tcp_session_t *s =
-      tcp_create_session_locked(cs.fd, ws->dev, &ws->endpoint, false);
+    tcp_session_t *s = tcp_create_session_locked(
+      cs.fd, ws->dev, &ws->endpoint, ws->endpoint.session_id, false);
     if (s == NULL) {
       OC_ERR("cannot allocate ongoing TCP connection");
       return -1;
@@ -1266,40 +1349,74 @@ tcp_process_waiting_sessions(fd_set *fds)
   return ret;
 }
 
-static int
-oc_tcp_connect_to_endpoint(ip_context_t *dev, oc_endpoint_t *endpoint,
-                           on_tcp_connect_t on_tcp_connect,
-                           void *on_tcp_connect_data)
+static oc_tcp_connect_result_t
+tcp_connect_to_endpoint(ip_context_t *dev, oc_endpoint_t *endpoint,
+                        on_tcp_connect_t on_tcp_connect,
+                        void *on_tcp_connect_data)
 {
   struct sockaddr_storage receiver = oc_socket_get_address(endpoint);
   pthread_mutex_lock(&g_mutex);
   tcp_connect_result_t res = tcp_connect_locked(
     dev, endpoint, &receiver, on_tcp_connect, on_tcp_connect_data);
-  pthread_mutex_unlock(&g_mutex);
-  if (res.session == NULL && res.waiting_session == NULL) {
-    return OC_TCP_SOCKET_ERROR;
+  bool is_connected = false;
+  uint32_t session_id = 0;
+  if (res.session != NULL) {
+    is_connected = true;
+    session_id = res.session->endpoint.session_id;
+  } else if (res.waiting_session != NULL) {
+    session_id = res.waiting_session->endpoint.session_id;
   }
-  bool is_connected = res.session != NULL;
+  pthread_mutex_unlock(&g_mutex);
+  if (session_id == 0) {
+    return (oc_tcp_connect_result_t){
+      .error = OC_TCP_SOCKET_ERROR,
+    };
+  }
   if (!res.created) {
-    return is_connected ? OC_TCP_SOCKET_ERROR_EXISTS_CONNECTED
-                        : OC_TCP_SOCKET_ERROR_EXISTS_CONNECTING;
+    oc_tcp_socket_error_t err = is_connected
+                                  ? OC_TCP_SOCKET_ERROR_EXISTS_CONNECTED
+                                  : OC_TCP_SOCKET_ERROR_EXISTS_CONNECTING;
+    return (oc_tcp_connect_result_t){
+      .session_id = session_id,
+      .error = err,
+    };
   }
 
-  return is_connected ? OC_TCP_SOCKET_STATE_CONNECTED
-                      : OC_TCP_SOCKET_STATE_CONNECTING;
+  oc_tcp_socket_state_t state = is_connected ? OC_TCP_SOCKET_STATE_CONNECTED
+                                             : OC_TCP_SOCKET_STATE_CONNECTING;
+  return (oc_tcp_connect_result_t){
+    .state = state,
+    .session_id = session_id,
+  };
+}
+
+oc_tcp_connect_result_t
+oc_tcp_connect_to_endpoint(oc_endpoint_t *endpoint,
+                           on_tcp_connect_t on_tcp_connect,
+                           void *on_tcp_connect_data)
+{
+  assert((endpoint->flags & TCP) != 0);
+  ip_context_t *dev = oc_get_ip_context_for_device(endpoint->device);
+  if (dev == NULL) {
+    OC_ERR("cannot find ip-context for device(%zu)", endpoint->device);
+    return (oc_tcp_connect_result_t){
+      .error = -1,
+    };
+  }
+  return tcp_connect_to_endpoint(dev, endpoint, on_tcp_connect,
+                                 on_tcp_connect_data);
 }
 
 int
 oc_tcp_connect(oc_endpoint_t *endpoint, on_tcp_connect_t on_tcp_connect,
                void *on_tcp_connect_data)
 {
-  ip_context_t *dev = oc_get_ip_context_for_device(endpoint->device);
-  if (dev == NULL) {
-    OC_ERR("cannot find ip-context for device(%zu)", endpoint->device);
-    return -1;
+  oc_tcp_connect_result_t ret =
+    oc_tcp_connect_to_endpoint(endpoint, on_tcp_connect, on_tcp_connect_data);
+  if (ret.session_id != 0) {
+    endpoint->session_id = ret.session_id;
   }
-  return oc_tcp_connect_to_endpoint(dev, endpoint, on_tcp_connect,
-                                    on_tcp_connect_data);
+  return ret.error != 0 ? ret.error : (int)ret.state;
 }
 
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */

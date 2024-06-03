@@ -133,6 +133,9 @@ oc_session_start_event(const oc_endpoint_t *endpoint)
     return;
   }
 
+  // only a specific session should be connected
+  assert(endpoint->session_id != 0);
+
   oc_endpoint_t *ep = oc_new_endpoint();
   memcpy(ep, endpoint, sizeof(oc_endpoint_t));
   ep->next = NULL;
@@ -151,6 +154,9 @@ oc_session_end_event(const oc_endpoint_t *endpoint)
   if (!oc_process_is_running(&oc_session_events)) {
     return;
   }
+
+  // only a specific session should be disconnected
+  assert(endpoint->session_id != 0);
 
   oc_endpoint_t *ep = oc_new_endpoint();
   memcpy(ep, endpoint, sizeof(oc_endpoint_t));
@@ -332,7 +338,7 @@ handle_session_disconnected(const oc_endpoint_t *endpoint)
   (void)endpoint;
 #ifdef OC_SECURITY
   if ((endpoint->flags & SECURED) != 0 && (endpoint->flags & TCP) != 0) {
-    oc_tls_remove_peer(endpoint);
+    oc_tls_remove_peer(endpoint, false);
   }
 #endif /* OC_SECURITY */
 #ifdef OC_SERVER

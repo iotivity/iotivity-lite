@@ -320,7 +320,7 @@ TEST_F(TestAcl, oc_sec_check_acl_FailInsecureDOC)
   resource.device = kDeviceID;
   EXPECT_FALSE(oc_sec_check_acl(OC_GET, &resource, &ep));
 
-  oc_tls_remove_peer(&ep);
+  oc_tls_remove_peer(&ep, true);
 }
 
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
@@ -397,7 +397,7 @@ TEST_F(TestAcl, oc_sec_check_acl_DOCAccessToDCR)
 
   EXPECT_TRUE(oc_sec_check_acl(OC_GET, resource, &ep));
 
-  oc_tls_remove_peer(&ep);
+  oc_tls_remove_peer(&ep, true);
 }
 
 TEST_F(TestAcl, oc_sec_check_acl_GETinRFOTM)
@@ -643,7 +643,7 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToSVRBySubject)
   EXPECT_FALSE(oc_sec_check_acl(OC_FETCH, doxm, &ep));
   oc_sec_acl_clear(kDeviceID, nullptr, nullptr);
 
-  oc_tls_remove_peer(&ep);
+  oc_tls_remove_peer(&ep, true);
 }
 
 TEST_F(TestAcl, oc_sec_check_acl_AccessToSVRByPSK)
@@ -731,7 +731,7 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToSVRByPSK)
   oc_sec_acl_clear(kDeviceID, nullptr, nullptr);
 
   peer->ssl_ctx.session = nullptr;
-  oc_tls_remove_peer(&ep);
+  oc_tls_remove_peer(&ep, true);
 }
 
 #if defined(OC_DYNAMIC_ALLOCATION) && defined(OC_PKI)
@@ -781,7 +781,7 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToSVRByOwnerRoleCred)
   ASSERT_NE(-1, credid);
   checkAccessToResource(doxm, &ep);
 
-  oc_tls_remove_peer(&ep);
+  oc_tls_remove_peer(&ep, true);
 }
 
 TEST_F(TestAcl, oc_sec_check_acl_AccessToSVRByNonOwnerRoleCred)
@@ -839,7 +839,7 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToSVRByNonOwnerRoleCred)
   checkAccessToResource(doxm, &ep, false, true, true, false);
 
   oc_sec_acl_clear(kDeviceID, nullptr, nullptr);
-  oc_tls_remove_peer(&ep);
+  oc_tls_remove_peer(&ep, true);
 }
 
 #endif /* OC_DYNAMIC_ALLOCATION && OC_PKI */

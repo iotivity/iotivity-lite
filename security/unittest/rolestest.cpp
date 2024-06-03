@@ -79,7 +79,7 @@ public:
   void TearDown() override
   {
     for (auto &peer : peers_) {
-      oc_tls_remove_peer(&peer->endpoint);
+      oc_tls_remove_peer(&peer->endpoint, true);
     }
     peers_.clear();
 

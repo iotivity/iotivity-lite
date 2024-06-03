@@ -33,7 +33,8 @@ void oc_tcp_connectivity_shutdown(ip_context_t *dev);
 int oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
                        const struct sockaddr_storage *receiver);
 
-void oc_tcp_end_session(const oc_endpoint_t *endpoint);
+bool oc_tcp_end_session(const oc_endpoint_t *endpoint, bool notify_session_end,
+                        oc_endpoint_t *session_endpoint);
 
 void oc_tcp_adapter_mutex_init(void);
 
