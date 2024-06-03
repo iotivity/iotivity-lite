@@ -681,13 +681,13 @@ udp_add_socks_to_rfd_set(ip_context_t *dev)
 static bool
 process_wakeup_signal(ip_context_t *dev, fd_set *fds)
 {
-  if (FD_ISSET(dev->shutdown_pipe[0], fds)) {
-    FD_CLR(dev->shutdown_pipe[0], fds);
+  if (FD_ISSET(dev->wakeup_pipe[0], fds)) {
+    FD_CLR(dev->wakeup_pipe[0], fds);
     ssize_t len;
     do {
       char buf;
       // write to pipe shall not block - so read the byte we wrote
-      len = read(dev->shutdown_pipe[0], &buf, 1);
+      len = read(dev->wakeup_pipe[0], &buf, 1);
     } while (len < 0 && errno == EINTR);
     return true;
   }
@@ -1014,7 +1014,7 @@ add_control_flow_rfds(fd_set *output_set, const ip_context_t *dev)
   if (dev->device == 0) {
     FD_SET(g_ifchange_sock, output_set);
   }
-  FD_SET(dev->shutdown_pipe[0], output_set);
+  FD_SET(dev->wakeup_pipe[0], output_set);
 }
 
 static void *
@@ -1489,12 +1489,12 @@ initialize_ip_context(ip_context_t *dev, size_t device,
     oc_abort("error initializing TCP adapter mutex");
   }
 
-  if (pipe(dev->shutdown_pipe) < 0) {
-    OC_ERR("shutdown pipe: %d", errno);
+  if (pipe(dev->wakeup_pipe) < 0) {
+    OC_ERR("wakeup pipe: %d", errno);
     return false;
   }
-  if (!oc_fcntl_set_nonblocking(dev->shutdown_pipe[0])) {
-    OC_ERR("Could not set non-block shutdown_pipe[0]");
+  if (!oc_fcntl_set_nonblocking(dev->wakeup_pipe[0])) {
+    OC_ERR("Could not set non-block wakeup_pipe[0]");
     return false;
   }
 
@@ -1584,7 +1584,7 @@ static void
 signal_event_thread(ip_context_t *dev)
 {
   do {
-    if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
+    if (write(dev->wakeup_pipe[1], "\n", 1) < 0) {
       if (errno == EINTR) {
         continue;
       }
@@ -1666,8 +1666,8 @@ oc_connectivity_shutdown(size_t device)
   tcp_connectivity_shutdown(dev);
 #endif /* OC_TCP */
 
-  close(dev->shutdown_pipe[1]);
-  close(dev->shutdown_pipe[0]);
+  close(dev->wakeup_pipe[1]);
+  close(dev->wakeup_pipe[0]);
 
   pthread_mutex_destroy(&dev->rfds_mutex);
 

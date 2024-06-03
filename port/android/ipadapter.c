@@ -795,7 +795,7 @@ network_event_thread(void *data)
     FD_SET(g_ifchange_sock, &dev->rfds);
   }
 #endif /* OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE */
-  FD_SET(dev->shutdown_pipe[0], &dev->rfds);
+  FD_SET(dev->wakeup_pipe[0], &dev->rfds);
   FD_SET(dev->server_sock, &dev->rfds);
   FD_SET(dev->mcast_sock, &dev->rfds);
 #ifdef OC_SECURITY
@@ -820,10 +820,10 @@ network_event_thread(void *data)
     setfds = dev->rfds;
     n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
 
-    if (FD_ISSET(dev->shutdown_pipe[0], &setfds)) {
+    if (FD_ISSET(dev->wakeup_pipe[0], &setfds)) {
       char buf;
       // write to pipe shall not block - so read the byte we wrote
-      if (read(dev->shutdown_pipe[0], &buf, 1) < 0) {
+      if (read(dev->wakeup_pipe[0], &buf, 1) < 0) {
         // intentionally left blank
       }
     }
@@ -1372,8 +1372,8 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   dev->device = device;
   OC_LIST_STRUCT_INIT(dev, eps);
 
-  if (pipe(dev->shutdown_pipe) < 0) {
-    OC_ERR("shutdown pipe: %d", errno);
+  if (pipe(dev->wakeup_pipe) < 0) {
+    OC_ERR("wakeup pipe: %d", errno);
     return -1;
   }
 
@@ -1583,7 +1583,7 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
 static void
 signal_event_thread(ip_context_t *dev)
 {
-  if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
+  if (write(dev->wakeup_pipe[1], "\n", 1) < 0) {
     OC_WRN("cannot wakeup network thread");
   }
 }
@@ -1633,8 +1633,8 @@ oc_connectivity_shutdown(size_t device)
   oc_tcp_connectivity_shutdown(dev);
 #endif /* OC_TCP */
 
-  close(dev->shutdown_pipe[1]);
-  close(dev->shutdown_pipe[0]);
+  close(dev->wakeup_pipe[1]);
+  close(dev->wakeup_pipe[0]);
 
   free_endpoints_list(dev);
 
