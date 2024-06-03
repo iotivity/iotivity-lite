@@ -58,7 +58,8 @@ void oc_network_tcp_connect_event(oc_tcp_on_connect_event_t *event)
  * @param endpoint the endpoint (cannot be NULL)
  * @return number of events dropped
  */
-int oc_network_drop_receive_events(const oc_endpoint_t *endpoint) OC_NONNULL();
+size_t oc_network_drop_receive_events(const oc_endpoint_t *endpoint)
+  OC_NONNULL();
 
 #ifdef OC_NETWORK_MONITOR
 /**
@@ -84,7 +85,7 @@ void oc_network_interface_event(oc_interface_event_t event);
  * @param device valid device index
  * @return number of events in the queue
  */
-int oc_get_network_events_queue_length(size_t device);
+size_t oc_network_get_event_queue_length(size_t device);
 
 #ifdef __cplusplus
 }

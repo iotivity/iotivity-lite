@@ -67,9 +67,11 @@ int oc_send_buffer2(oc_message_t *message, bool queue);
 
 #ifdef OC_DYNAMIC_ALLOCATION
 /**
- * @brief send a signal to start consuming network events
+ * @brief send a wakeup signal to the device to start consuming network events
+ *
+ * @param device the device index
  */
-void oc_connectivity_wakeup(void);
+void oc_connectivity_wakeup(size_t device);
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT

@@ -970,7 +970,7 @@ process_events(ip_context_t *dev, fd_set *rdfds, fd_set *wfds, int fd_count)
 #ifdef OC_DYNAMIC_ALLOCATION
   // check if network queue can consume all 'ready' events
   int available_count = OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS -
-                        oc_get_network_events_queue_length(dev->device);
+                        oc_network_get_event_queue_length(dev->device);
   if (available_count < fd_count) {
     // get the number of read file descriptors
     int rfds_count = fds_count(rdfds);
@@ -1050,7 +1050,7 @@ network_event_thread(void *data)
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
 #ifdef OC_DYNAMIC_ALLOCATION
-    if (oc_get_network_events_queue_length(dev->device) >=
+    if (oc_network_get_event_queue_length(dev->device) >=
         OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS) {
       // the queue is full -> add only control flow rfds
       FD_ZERO(&rdfds);
@@ -1617,23 +1617,17 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   return 0;
 }
 
-#ifdef OC_DYNAMIC_ALLOCATION
 void
-oc_connectivity_wakeup(void)
+oc_connectivity_wakeup(size_t device)
 {
-  pthread_mutex_lock(&g_mutex);
-  OC_LIST_LOCAL(ip_contexts);
-  oc_list_copy(ip_contexts, g_ip_contexts);
-  pthread_mutex_unlock(&g_mutex);
-
-  // signal the event thread for all devices
-  ip_context_t *dev = oc_list_head(ip_contexts);
-  while (dev != NULL) {
-    signal_event_thread(dev);
-    dev = dev->next;
+  ip_context_t *dev = oc_get_ip_context_for_device(device);
+  if (dev == NULL) {
+    OC_WRN("no ip-context found for device(%zu)", device);
+    return;
   }
+
+  signal_event_thread(dev);
 }
-#endif /* OC_DYNAMIC_ALLOCATION */
 
 void
 oc_connectivity_shutdown(size_t device)
