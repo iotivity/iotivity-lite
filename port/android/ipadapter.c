@@ -1580,6 +1580,26 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   return 0;
 }
 
+static void
+signal_event_thread(ip_context_t *dev)
+{
+  if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
+    OC_WRN("cannot wakeup network thread");
+  }
+}
+
+void
+oc_connectivity_wakeup(size_t device)
+{
+  ip_context_t *dev = oc_get_ip_context_for_device(device);
+  if (dev == NULL) {
+    OC_WRN("no ip-context found for device(%zu)", device);
+    return;
+  }
+
+  signal_event_thread(dev);
+}
+
 void
 oc_connectivity_shutdown(size_t device)
 {
@@ -1590,9 +1610,7 @@ oc_connectivity_shutdown(size_t device)
   }
 
   dev->terminate = 1;
-  if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
-    OC_WRN("cannot wakeup network thread");
-  }
+  signal_event_thread(dev);
 
   pthread_join(dev->event_thread, NULL);
 
