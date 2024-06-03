@@ -892,12 +892,23 @@ process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
   return 0;
 }
 
-#ifdef OC_DYNAMIC_ALLOCATION
 static int
-fds_count(const fd_set *sourcefds)
+fds_max(const fd_set *sourcefds)
+{
+  int max_fd = 0;
+  for (int i = 0; i < FD_SETSIZE; i++) {
+    if (FD_ISSET(i, sourcefds)) {
+      max_fd = i;
+    }
+  }
+  return max_fd;
+}
+
+static int
+fds_count(const fd_set *sourcefds, int max_fd)
 {
   int rfd_count = 0;
-  for (int i = 0; i < FD_SETSIZE; i++) { //// TODO: optimize
+  for (int i = 0; i <= max_fd; i++) {
     if (FD_ISSET(i, sourcefds)) {
       rfd_count++;
     }
@@ -906,10 +917,11 @@ fds_count(const fd_set *sourcefds)
 }
 
 static int
-pick_random_fd(const fd_set *sourcefds, int fd_count)
+pick_random_fd(const fd_set *sourcefds, int fd_count, int max_fd)
 {
+  assert(fd_count > 0);
   int random_rfd = (int)oc_random_value() % fd_count;
-  for (int i = 0; i < FD_SETSIZE; i++) { // TODO: optimize FD_SETSIZE
+  for (int i = 0; i <= max_fd; i++) {
     if (FD_ISSET(i, sourcefds)) {
       if (--fd_count == random_rfd) {
         return i;
@@ -920,12 +932,11 @@ pick_random_fd(const fd_set *sourcefds, int fd_count)
 }
 
 static int
-remove_random_fds(fd_set *rdfds, int rfds_count, int remove_count)
+remove_random_fds(fd_set *rdfds, int rfds_count, int max_fd, int remove_count)
 {
-
   int removed = 0;
   while (removed < remove_count) {
-    int fd = pick_random_fd(rdfds, rfds_count);
+    int fd = pick_random_fd(rdfds, rfds_count, max_fd);
     if (fd < 0) {
       break;
     }
@@ -937,10 +948,9 @@ remove_random_fds(fd_set *rdfds, int rfds_count, int remove_count)
   return removed;
 }
 
-#endif /* OC_DYNAMIC_ALLOCATION */
-
 static void
-process_events(ip_context_t *dev, fd_set *rdfds, fd_set *wfds, int fd_count)
+process_events(ip_context_t *dev, fd_set *rdfds, fd_set *wfds, int fd_count,
+               int max_read_fd)
 {
   if (fd_count == 0) {
     OC_DBG("process_events: timeout");
@@ -973,11 +983,13 @@ process_events(ip_context_t *dev, fd_set *rdfds, fd_set *wfds, int fd_count)
                         oc_network_get_event_queue_length(dev->device);
   if (available_count < fd_count) {
     // get the number of read file descriptors
-    int rfds_count = fds_count(rdfds);
-    int removed =
-      remove_random_fds(rdfds, rfds_count, rfds_count - available_count);
+    int rfds_count = fds_count(rdfds, max_read_fd);
+    int removed = remove_random_fds(rdfds, rfds_count, max_read_fd,
+                                    rfds_count - available_count);
     fd_count -= removed;
   }
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  (void)max_read_fd;
 #endif /* OC_DYNAMIC_ALLOCATION */
 
   for (int i = 0; i < fd_count; i++) {
@@ -1029,6 +1041,7 @@ network_event_thread(void *data)
   tcp_add_socks_to_rfd_set(dev);
   tcp_add_controlflow_socks_to_rfd_set(&dev->rfds, dev);
 #endif /* OC_TCP */
+  int max_read_fd = fds_max(&dev->rfds);
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
   oc_clock_time_t expires_in = 0;
@@ -1066,7 +1079,7 @@ network_event_thread(void *data)
       break;
     }
 
-    process_events(dev, &rdfds, wfds, n);
+    process_events(dev, &rdfds, wfds, n, max_read_fd);
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
     expires_in = tcp_check_expiring_sessions(oc_clock_time_monotonic());
