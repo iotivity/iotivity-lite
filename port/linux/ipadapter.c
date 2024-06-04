@@ -892,6 +892,13 @@ process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
   return 0;
 }
 
+static bool
+fd_sets_are_equal(const fd_set *fd1, const fd_set *fd2)
+{
+  return (memcmp(__FDS_BITS(fd1), __FDS_BITS(fd2), sizeof(__FDS_BITS(fd1))) ==
+          0);
+}
+
 static int
 fds_max(const fd_set *sourcefds)
 {
@@ -1041,7 +1048,10 @@ network_event_thread(void *data)
   tcp_add_socks_to_rfd_set(dev);
   tcp_add_controlflow_socks_to_rfd_set(&dev->rfds, dev);
 #endif /* OC_TCP */
-  int max_read_fd = fds_max(&dev->rfds);
+
+  int max_read_fd = FD_SETSIZE;
+  fd_set last_rdfds;
+  FD_ZERO(&last_rdfds);
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
   oc_clock_time_t expires_in = 0;
@@ -1063,6 +1073,12 @@ network_event_thread(void *data)
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
 #ifdef OC_DYNAMIC_ALLOCATION
+    if (!fd_sets_are_equal(&rdfds, &last_rdfds)) {
+      // fd set has changed -> recalculate max fd
+      max_read_fd = fds_max(&rdfds);
+      last_rdfds = rdfds;
+    }
+
     if (oc_network_get_event_queue_length(dev->device) >=
         OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS) {
       // the queue is full -> add only control flow rfds
