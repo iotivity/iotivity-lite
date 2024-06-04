@@ -1579,7 +1579,7 @@ signal_event_thread(ip_context_t *dev)
 void
 oc_connectivity_wakeup(size_t device)
 {
-  ip_context_t *dev = oc_get_ip_context_for_device(device);
+  ip_context_t *dev = get_ip_context_for_device(device);
   if (dev == NULL) {
     OC_WRN("no ip-context found for device(%zu)", device);
     return;
