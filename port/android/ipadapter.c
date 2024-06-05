@@ -1590,7 +1590,7 @@ signal_event_thread(ip_context_t *dev)
 
   if (result == -1) {
     if (errno != ENOSPC) {
-      OC_WRN("Failed to write to wakeup pipe: %s", strerror(errno));
+      OC_WRN("Failed to wakeup the network thread. Error %d", errno);
     }
     // ENOSPC is ignored as the pipe is already signaled
   } else if (result != 1) {
