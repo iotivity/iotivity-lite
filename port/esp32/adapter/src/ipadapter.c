@@ -1571,8 +1571,18 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
 static void
 signal_event_thread(ip_context_t *dev)
 {
-  if (write(dev->wakeup_pipe[1], "\n", 1) < 0) {
-    OC_WRN("cannot wakeup network thread");
+  ssize_t result;
+  do {
+    result = write(dev->wakeup_pipe[1], "\n", 1);
+  } while (result == -1 && errno == EINTR);
+
+  if (result == -1) {
+    if (errno != ENOSPC) {
+      OC_WRN("Failed to write to wakeup pipe: %s", strerror(errno));
+    }
+    // ENOSPC is ignored as the pipe is already signaled
+  } else if (result != 1) {
+    OC_WRN("Unexpected number of bytes written to wakeup pipe: %zd", result);
   }
 }
 

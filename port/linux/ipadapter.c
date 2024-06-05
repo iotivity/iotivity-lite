@@ -1612,15 +1612,19 @@ initialize_ip_context(ip_context_t *dev, size_t device,
 static void
 signal_event_thread(ip_context_t *dev)
 {
+  ssize_t result;
   do {
-    if (write(dev->wakeup_pipe[1], "\n", 1) < 0) {
-      if (errno == EINTR) {
-        continue;
-      }
-      OC_WRN("cannot wakeup network thread (error: %d)", (int)errno);
+    result = write(dev->wakeup_pipe[1], "\n", 1);
+  } while (result == -1 && errno == EINTR);
+
+  if (result == -1) {
+    if (errno != ENOSPC) {
+      OC_WRN("Failed to write to wakeup pipe: %s", strerror(errno));
     }
-    break;
-  } while (true);
+    // ENOSPC is ignored as the pipe is already signaled
+  } else if (result != 1) {
+    OC_WRN("Unexpected number of bytes written to wakeup pipe: %zd", result);
+  }
 }
 
 int
