@@ -784,7 +784,7 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
 static bool
 fd_sets_are_equal(const fd_set *fd1, const fd_set *fd2)
 {
-return memcmp(fd1->fds_bits, fd2->fds_bits , sizeof(fd1->fds_bits)) ==
+return (memcmp(fd1->fds_bits, fd2->fds_bits , sizeof(fd1->fds_bits)) ==
           0);
 }
 
@@ -1101,7 +1101,7 @@ network_event_thread(void *data)
   add_control_flow_rfds(&dev->rfds, dev);
 #ifdef OC_TCP
   oc_tcp_add_socks_to_fd_set(dev);
-  tcp_add_controlflow_socks_to_rfd_set(&dev->rfds, dev);
+  oc_tcp_add_controlflow_socks_to_rfd_set(&dev->rfds, dev);
 #endif /* OC_TCP */
 
   int max_read_fd = FD_SETSIZE;
@@ -1124,7 +1124,7 @@ network_event_thread(void *data)
       FD_ZERO(&rdfds);
       add_control_flow_rfds(&rdfds, dev);
 #ifdef OC_TCP
-      tcp_add_controlflow_socks_to_rfd_set(&rdfds, dev);
+      oc_tcp_add_controlflow_socks_to_rfd_set(&rdfds, dev);
 #endif /* OC_TCP */
     }
 #endif /* OC_DYNAMIC_ALLOCATION */
