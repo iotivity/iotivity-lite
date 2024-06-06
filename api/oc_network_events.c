@@ -45,6 +45,7 @@ static bool g_interface_up;
 static bool g_interface_down;
 #endif /* OC_NETWORK_MONITOR */
 
+#ifdef OC_DYNAMIC_ALLOCATION
 static size_t
 get_events_queue_length(size_t device, oc_list_t events)
 {
@@ -73,6 +74,7 @@ send_wakeup_signal(oc_list_t events)
     ++deviceId; // advance to the next device
   }
 }
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 static void
 oc_process_network_event(void)
@@ -248,6 +250,7 @@ oc_network_interface_event(oc_interface_event_t event)
 }
 #endif /* OC_NETWORK_MONITOR */
 
+#ifdef OC_DYNAMIC_ALLOCATION
 size_t
 oc_network_get_event_queue_length(size_t device)
 {
@@ -256,3 +259,4 @@ oc_network_get_event_queue_length(size_t device)
   oc_network_event_handler_mutex_unlock();
   return msg_count;
 }
+#endif /* OC_DYNAMIC_ALLOCATION */

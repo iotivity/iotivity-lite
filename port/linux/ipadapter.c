@@ -892,6 +892,7 @@ process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
   return 0;
 }
 
+#ifdef OC_DYNAMIC_ALLOCATION
 static bool
 fd_sets_are_equal(const fd_set *fd1, const fd_set *fd2)
 {
@@ -954,6 +955,7 @@ remove_random_fds(fd_set *rdfds, int rfds_count, int max_fd, int remove_count)
   }
   return removed;
 }
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 static void
 process_events(ip_context_t *dev, fd_set *rdfds, fd_set *wfds, int fd_count,
@@ -1650,6 +1652,7 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   return 0;
 }
 
+#ifdef OC_DYNAMIC_ALLOCATION
 void
 oc_connectivity_wakeup(size_t device)
 {
@@ -1661,6 +1664,7 @@ oc_connectivity_wakeup(size_t device)
 
   signal_event_thread(dev);
 }
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 void
 oc_connectivity_shutdown(size_t device)

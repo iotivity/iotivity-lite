@@ -38,6 +38,7 @@
 #include "port/oc_connectivity_internal.h"
 #include "port/oc_log_internal.h"
 #include "port/oc_network_event_handler_internal.h"
+#include "port/oc_random.h"
 #include "util/oc_macros_internal.h"
 
 #ifdef OC_SESSION_EVENTS
@@ -779,6 +780,7 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
   return ret;
 }
 
+#ifdef OC_DYNAMIC_ALLOCATION
 static bool
 fd_sets_are_equal(const fd_set *fd1, const fd_set *fd2)
 {
@@ -841,6 +843,7 @@ remove_random_fds(fd_set *rdfds, int rfds_count, int max_fd, int remove_count)
   }
   return removed;
 }
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 static void
 add_control_flow_rfds(fd_set *output_set, const ip_context_t *dev)
@@ -1776,6 +1779,7 @@ signal_event_thread(ip_context_t *dev)
   }
 }
 
+#ifdef OC_DYNAMIC_ALLOCATION
 void
 oc_connectivity_wakeup(size_t device)
 {
@@ -1787,6 +1791,7 @@ oc_connectivity_wakeup(size_t device)
 
   signal_event_thread(dev);
 }
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 void
 oc_connectivity_shutdown(size_t device)
