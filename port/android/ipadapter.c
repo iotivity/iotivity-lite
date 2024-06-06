@@ -784,8 +784,7 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
 static bool
 fd_sets_are_equal(const fd_set *fd1, const fd_set *fd2)
 {
-return (memcmp(fd1->fds_bits, fd2->fds_bits , sizeof(fd1->fds_bits)) ==
-          0);
+  return (memcmp(fd1->fds_bits, fd2->fds_bits, sizeof(fd1->fds_bits)) == 0);
 }
 
 static int
@@ -1036,6 +1035,7 @@ process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
 #else  /* !OC_DBG_IS_ENABLED */
   (void)wfds;
 #endif /* OC_DBG_IS_ENABLED */
+  return 0;
 }
 
 static void

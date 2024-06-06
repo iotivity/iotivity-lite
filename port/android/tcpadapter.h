@@ -36,7 +36,8 @@ int oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
 
 void oc_tcp_add_socks_to_fd_set(ip_context_t *dev);
 
-void oc_tcp_add_controlflow_socks_to_rfd_set(fd_set *rfd_set, const ip_context_t *dev);
+void oc_tcp_add_controlflow_socks_to_rfd_set(fd_set *rfd_set,
+                                             const ip_context_t *dev);
 
 adapter_receive_state_t oc_tcp_receive_message(ip_context_t *dev, fd_set *fds,
                                                oc_message_t *message);
