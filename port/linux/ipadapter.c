@@ -896,7 +896,12 @@ process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
 static bool
 fd_sets_are_equal(const fd_set *fd1, const fd_set *fd2)
 {
+#ifdef __FDS_BITS
+  return (memcmp(__FDS_BITS(fd1), __FDS_BITS(fd2), sizeof(__FDS_BITS(fd1))) ==
+          0);
+#else  //!__FDS_BITS
   return (memcmp(fd1->fds_bits, fd2->fds_bits, sizeof(fd1->fds_bits)) == 0);
+#endif //__FDS_BITS
 }
 
 static int
