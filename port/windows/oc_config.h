@@ -50,6 +50,11 @@ typedef uint64_t oc_clock_time_t;
 /* Enable reallocation during encoding the representation to cbor */
 // #define OC_REP_ENCODING_REALLOC
 
+/* Maximum number of messages in the network event queue for a device */
+#ifndef OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS
+#define OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS (32)
+#endif /* OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS */
+
 /* Maximum size of uri for a collection resource */
 // #define OC_MAX_COLLECTIONS_INSTANCE_URI_SIZE (64)
 
