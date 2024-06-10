@@ -53,6 +53,9 @@
 #include <malloc.h>
 #endif /* OC_DYNAMIC_ALLOCATION */
 
+/* Maximum possible number of WSAEVENTs to be waited on. */
+#define MAX_WSAEVENT_ARRAY_SIZE 8
+
 #define OCF_PORT_UNSECURED (5683)
 static const uint8_t ALL_OCF_NODES_LL[] = {
   0xff, 0x02, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0x01, 0x58
@@ -723,80 +726,118 @@ network_event_thread(void *data)
 #endif /* OC_IPV4 */
 #undef OC_WSAEVENTSELECT
 
-  DWORD events_list_size = 0;
-  WSAEVENT events_list[7];
-  DWORD IFCHANGE = 0;
+  WSAEVENT event_list[MAX_WSAEVENT_ARRAY_SIZE];
+  DWORD event_list_size = 0;
+
+  // Add control flow events.
   if (dev->device == 0) {
-    events_list[0] = ifchange_event.hEvent;
-    events_list_size++;
+    event_list[event_list_size++] = ifchange_event.hEvent;
     process_interface_change_event();
   }
-  DWORD MCAST6 = events_list_size;
-  events_list[events_list_size] = mcast6_event;
-  events_list_size++;
-  DWORD SERVER6 = events_list_size;
-  events_list[events_list_size] = server6_event;
-  events_list_size++;
-#if defined(OC_SECURITY)
-  DWORD SECURE6 = events_list_size;
-  events_list[events_list_size] = secure6_event;
-  events_list_size++;
-#if defined(OC_IPV4)
-  DWORD MCAST4 = events_list_size;
-  events_list[events_list_size] = mcast4_event;
-  events_list_size++;
-  DWORD SERVER4 = events_list_size;
-  events_list[events_list_size] = server4_event;
-  events_list_size++;
-  DWORD SECURE4 = events_list_size;
-  events_list[events_list_size] = secure4_event;
-  events_list_size++;
-#endif                 /* OC_IPV4 */
-#elif defined(OC_IPV4) /* OC_SECURITY */
-  DWORD MCAST4 = events_list_size;
-  events_list[events_list_size] = mcast4_event;
-  events_list_size++;
-  DWORD SERVER4 = events_list_size;
-  events_list[events_list_size] = server4_event;
-  events_list_size++;
-#endif                 /* !OC_SECURITY */
+#ifdef OC_DYNAMIC_ALLOCATION
+  event_list[event_list_size++] = dev->wake_up_event;
+#endif // OC_DYNAMIC_ALLOCATION
+  DWORD control_flow_event_count = event_list_size;
 
-  DWORD i, index;
+  // Add remaining message events.
+  event_list[event_list_size++] = mcast6_event;
+  event_list[event_list_size++] = server6_event;
+#ifdef OC_SECURITY
+  event_list[event_list_size++] = secure6_event;
+#ifdef OC_IPV4
+  event_list[event_list_size++] = mcast4_event;
+  event_list[event_list_size++] = server4_event;
+  event_list[event_list_size++] = secure4_event;
+#endif /* OC_IPV4 */
+#else  /* OC_SECURITY */
+  event_list[event_list_size++] = mcast4_event;
+  event_list[event_list_size++] = server4_event;
+#endif /* !OC_SECURITY */
 
   while (!dev->terminate) {
-    index = WSAWaitForMultipleEvents(events_list_size, events_list, FALSE,
-                                     INFINITE, FALSE);
-    index -= WSA_WAIT_EVENT_0;
-    for (i = index; !dev->terminate && i < events_list_size; i++) {
-      index = WSAWaitForMultipleEvents(1, &events_list[i], TRUE, 0, FALSE);
-      if (index != WSA_WAIT_TIMEOUT && index != WSA_WAIT_FAILED) {
-        if (WSAResetEvent(events_list[i]) == FALSE) {
+    DWORD event_count = event_list_size;
+
+#ifdef OC_DYNAMIC_ALLOCATION
+    DWORD queue_length = (DWORD)oc_network_get_event_queue_length(dev->device);
+    if (queue_length >= OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS) {
+      // Network event queue is full, wait only for control flow events.
+      event_count = control_flow_event_count;
+    }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+    DWORD i =
+      WSAWaitForMultipleEvents(event_count, event_list, FALSE, INFINITE, FALSE);
+    i -= WSA_WAIT_EVENT_0;
+
+    // Process control flow events.
+    for (; i < control_flow_event_count; i++) {
+
+      WSAEVENT cf_event = event_list[i];
+      DWORD ret = WSAWaitForMultipleEvents(1, &cf_event, TRUE, 0, FALSE);
+
+      if (ret != WSA_WAIT_TIMEOUT && ret != WSA_WAIT_FAILED) {
+        if (WSAResetEvent(cf_event) == FALSE) {
           OC_WRN("WSAResetEvent returned error: %d", WSAGetLastError());
         }
-        if (dev->device == 0 && i == IFCHANGE) {
+        if (dev->device == 0 && cf_event == ifchange_event.hEvent) {
           process_interface_change_event();
           DWORD bytes_returned = 0;
           if (WSAIoctl(ifchange_sock, SIO_ADDRESS_LIST_CHANGE, NULL, 0, NULL, 0,
                        &bytes_returned, &ifchange_event,
                        NULL) == SOCKET_ERROR) {
-            DWORD err = GetLastError();
-            if (err != ERROR_IO_PENDING) {
+            if (GetLastError() != ERROR_IO_PENDING) {
               OC_ERR("could not reset SIO_ADDRESS_LIST_CHANGE on network "
                      "interface change socket");
             }
           }
-          continue;
+        }
+      }
+    }
+
+    // Collect signalled message events.
+    WSAEVENT msg_events[MAX_WSAEVENT_ARRAY_SIZE];
+    DWORD msg_event_count = 0;
+
+    for (; i < event_count; i++) {
+      DWORD ret = WSAWaitForMultipleEvents(1, event_list + i, TRUE, 0, FALSE);
+      if (ret != WSA_WAIT_TIMEOUT && ret != WSA_WAIT_FAILED) {
+        msg_events[msg_event_count++] = event_list[i];
+      }
+    }
+
+#ifdef OC_DYNAMIC_ALLOCATION
+    // Randomly remove events from list if the queue is about to fill.
+    DWORD available_items =
+      OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS - queue_length;
+    DWORD items_to_remove =
+      msg_event_count - min(msg_event_count, available_items);
+
+    while (items_to_remove--) {
+      DWORD rnd = (DWORD)rand() % msg_event_count;
+      msg_event_count--;
+      msg_events[rnd] = msg_events[msg_event_count];
+    }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+    // Process message events.
+    for (i = 0; !dev->terminate && i < msg_event_count; i++) {
+
+      WSAEVENT msg_event = msg_events[i];
+      DWORD ret = WSAWaitForMultipleEvents(1, &msg_event, TRUE, 0, FALSE);
+
+      if (ret != WSA_WAIT_TIMEOUT && ret != WSA_WAIT_FAILED) {
+        if (WSAResetEvent(msg_event) == FALSE) {
+          OC_WRN("WSAResetEvent returned error: %d", WSAGetLastError());
         }
 
         oc_message_t *message = oc_allocate_message();
-
-        if (!message) {
+        if (message == NULL) {
           break;
         }
 
         message->endpoint.device = dev->device;
 
-        if (i == SERVER6) {
+        if (msg_event == server6_event) {
           int count = recv_msg(dev->server_sock, message->data, OC_PDU_SIZE,
                                &message->endpoint, false);
           if (count < 0) {
@@ -805,10 +846,9 @@ network_event_thread(void *data)
           }
           message->length = count;
           message->endpoint.flags = IPV6;
-          goto common;
         }
 
-        if (i == MCAST6) {
+        if (msg_event == mcast6_event) {
           int count = recv_msg(dev->mcast_sock, message->data, OC_PDU_SIZE,
                                &message->endpoint, true);
           if (count < 0) {
@@ -817,11 +857,10 @@ network_event_thread(void *data)
           }
           message->length = count;
           message->endpoint.flags = IPV6 | MULTICAST;
-          goto common;
         }
 
 #ifdef OC_IPV4
-        if (i == SERVER4) {
+        if (msg_event == server4_event) {
           int count = recv_msg(dev->server4_sock, message->data, OC_PDU_SIZE,
                                &message->endpoint, false);
           if (count < 0) {
@@ -830,10 +869,9 @@ network_event_thread(void *data)
           }
           message->length = count;
           message->endpoint.flags = IPV4;
-          goto common;
         }
 
-        if (i == MCAST4) {
+        if (msg_event == mcast4_event) {
           int count = recv_msg(dev->mcast4_sock, message->data, OC_PDU_SIZE,
                                &message->endpoint, true);
           if (count < 0) {
@@ -842,12 +880,11 @@ network_event_thread(void *data)
           }
           message->length = count;
           message->endpoint.flags = IPV4 | MULTICAST;
-          goto common;
         }
 #endif /* OC_IPV4 */
 
 #ifdef OC_SECURITY
-        if (i == SECURE6) {
+        if (msg_event == secure6_event) {
           int count = recv_msg(dev->secure_sock, message->data, OC_PDU_SIZE,
                                &message->endpoint, false);
           if (count < 0) {
@@ -857,10 +894,9 @@ network_event_thread(void *data)
           message->length = count;
           message->endpoint.flags = IPV6 | SECURED;
           message->encrypted = 1;
-          goto common;
         }
 #ifdef OC_IPV4
-        if (i == SECURE4) {
+        if (msg_event == secure4_event) {
           int count = recv_msg(dev->secure4_sock, message->data, OC_PDU_SIZE,
                                &message->endpoint, false);
           if (count < 0) {
@@ -873,7 +909,7 @@ network_event_thread(void *data)
         }
 #endif /* OC_IPV4 */
 #endif /* OC_SECURITY */
-      common:
+
         OC_DBG("Incoming message of size %zd bytes from", message->length);
         OC_LOGipaddr(message->endpoint);
         OC_DBG("%s", "");
@@ -882,8 +918,8 @@ network_event_thread(void *data)
     }
   }
 
-  for (i = 0; i < events_list_size; ++i) {
-    WSACloseEvent(events_list[i]);
+  for (DWORD i = 0; i < event_list_size; ++i) {
+    WSACloseEvent(event_list[i]);
   }
 
   return 0;
@@ -1434,6 +1470,15 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
     oc_abort("Insufficient memory");
   }
 
+#ifdef OC_DYNAMIC_ALLOCATION
+  dev->wake_up_event = WSACreateEvent();
+  if (dev->wake_up_event == WSA_INVALID_EVENT) {
+    OC_ERR("Creating wake up event for network event thread");
+    oc_memb_free(&g_ip_context_s, dev);
+    return -1;
+  }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
   dev->device = device;
   OC_LIST_STRUCT_INIT(dev, eps);
   memset(&dev->mcast, 0, sizeof(dev->mcast));
@@ -1634,6 +1679,21 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   oc_network_event_handler_mutex_unlock();
 
   return 0;
+}
+
+void
+oc_connectivity_wakeup(size_t device)
+{
+  ip_context_t *dev = get_ip_context_for_device(device);
+  if (dev == NULL) {
+    OC_WRN("no ip-context found for device(%zu)", device);
+    return;
+  }
+
+  if (WSASetEvent(dev->wake_up_event) == FALSE) {
+    OC_WRN("cannot wake up network event thread (error: %d)",
+           WSAGetLastError());
+  }
 }
 
 void

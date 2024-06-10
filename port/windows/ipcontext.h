@@ -114,6 +114,9 @@ typedef struct ip_context_t
   BOOL terminate;
   size_t device;
   OC_ATOMIC_INT8_T flags;
+#ifdef OC_DYNAMIC_ALLOCATION
+  WSAEVENT wake_up_event;
+#endif /* OC_DYNAMIC_ALLOCATION */
 } ip_context_t;
 
 #ifdef __cplusplus
