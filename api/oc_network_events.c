@@ -193,6 +193,7 @@ size_t
 oc_network_drop_receive_events(const oc_endpoint_t *endpoint)
 {
   size_t dropped = 0;
+  bool signal_wakeup = false;
   oc_network_event_handler_mutex_lock();
   for (oc_message_t *message = (oc_message_t *)oc_list_head(g_network_events);
        message != NULL;) {
@@ -219,11 +220,14 @@ oc_network_drop_receive_events(const oc_endpoint_t *endpoint)
   if (get_events_queue_length(endpoint->device, g_network_events) + dropped >=
       OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS) {
     // send a wake-up signal in case the queue for the device was full
-    oc_connectivity_wakeup(endpoint->device);
+    signal_wakeup = true; 
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
-
   oc_network_event_handler_mutex_unlock();
+
+  if(signal_wakeup) {
+    oc_connectivity_wakeup(endpoint->device);
+  }
   return dropped;
 }
 
