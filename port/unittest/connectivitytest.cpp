@@ -545,9 +545,17 @@ TEST_F(TestConnectivityWithServer, oc_network_drop_receive_events)
   size_t eventCount = oc_network_get_event_queue_length(kDeviceID);
   EXPECT_EQ(eventCount, 0);
 
+#ifdef OC_INOUT_BUFFER_POOL
+  const size_t message_count =
+    OC_INOUT_BUFFER_POOL - 1; // -1 in case some other API (for example
+                              // interface change observer) generated a message
+#else                         /* !OC_INOUT_BUFFER_POOL */
+  const size_t message_count = OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS;
+#endif                        /* OC_INOUT_BUFFER_POOL */
+
   // add max allowed amount of messages defined by
   // OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS
-  for (size_t i = 0; i < OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS; ++i) {
+  for (size_t i = 0; i < message_count; ++i) {
     oc_message_t *message = TestConnectivityWithServer::CreateValidTestUdpMsg();
     message->endpoint.device = kDeviceID;
     oc_network_receive_event(message);
@@ -555,7 +563,7 @@ TEST_F(TestConnectivityWithServer, oc_network_drop_receive_events)
 
   // verify all messages are in the queue
   eventCount = oc_network_get_event_queue_length(kDeviceID);
-  EXPECT_EQ(eventCount, OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS);
+  EXPECT_EQ(eventCount, message_count);
 
   // remove all messages specified by endpoint
   oc_endpoint_t defaultEndPoint;
@@ -566,7 +574,7 @@ TEST_F(TestConnectivityWithServer, oc_network_drop_receive_events)
   oc_message_unref(message);
 
   // all messages are equeal -> verify they are all removed
-  EXPECT_EQ(dropped, OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS);
+  EXPECT_EQ(dropped, message_count);
   eventCount = oc_network_get_event_queue_length(kDeviceID);
   EXPECT_EQ(eventCount, 0);
 }

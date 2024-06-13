@@ -137,6 +137,11 @@ jobs:
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_TSAN_ENABLED=ON"
             docker_file: docker/apps/Dockerfile.cloud-server-debug-clang
 
+          - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc-concurrent-requests-1
+            # same configuration as "cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc-concurrent-requests-1" in the SonarCloud scan job, skip for events that trigger both jobs
+            skip: ${{ github.event_name != 'workflow_dispatch' }}
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS=1"
+
           # ports
           - name: cloud-server-tcp-disabled
             args: "--udp-port 61234 --udp-port4 61234 --dtls-port 61235 --dtls-port4 61235 --tcp-port -1 --tcp-port4 -1 --tls-port -1 --tls-port4 -1"

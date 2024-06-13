@@ -51,6 +51,8 @@ jobs:
         include:
           - name: cloud-server
             build_args: ""
+          - name: cloud-server-access-in-RFOTM-concurrent-requests-1
+            build_args: "-DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS=1"
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
             # try with SHA384
@@ -72,6 +74,8 @@ jobs:
         include:
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+          - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc-concurrent-requests-1
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS=1"
           - name: dtls-cloud-server-rep-realloc
             build_args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
             hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"
