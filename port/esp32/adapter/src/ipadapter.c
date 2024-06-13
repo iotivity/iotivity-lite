@@ -840,7 +840,7 @@ static int
 pick_random_fd(const fd_set *sourcefds, int fd_count, int max_fd)
 {
   assert(fd_count > 0);
-  int random_rfd = (int)oc_random_value() % fd_count;
+  int random_rfd = (int)(oc_random_value() % fd_count);
   for (int i = 0; i <= max_fd; i++) {
     if (FD_ISSET(i, sourcefds)) {
       if (--fd_count == random_rfd) {
