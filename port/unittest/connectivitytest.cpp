@@ -136,6 +136,7 @@ TEST(TestConnectivity_shutdown, InvalidDevice)
   oc_connectivity_shutdown(kInvalidDeviceID);
 }
 
+#ifdef OC_DYNAMIC_ALLOCATION
 TEST(TestConnectivity_wakeup, WakeupSuccess)
 {
   oc_connectivity_ports_t ports;
@@ -153,6 +154,7 @@ TEST(TestConnectivity_wakeup, WakeupInvalidDevice)
   oc_connectivity_wakeup(kInvalidDeviceID);
   oc_connectivity_shutdown(kDeviceID);
 }
+#endif /* OC_DYNAMIC_ALLOCATION */
 
 static void
 interface_event_handler(oc_interface_event_t event)
