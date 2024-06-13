@@ -220,12 +220,12 @@ oc_network_drop_receive_events(const oc_endpoint_t *endpoint)
   if (get_events_queue_length(endpoint->device, g_network_events) + dropped >=
       OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS) {
     // send a wake-up signal in case the queue for the device was full
-    signal_wakeup = true; 
+    signal_wakeup = true;
   }
 #endif /* OC_DYNAMIC_ALLOCATION */
   oc_network_event_handler_mutex_unlock();
 
-  if(signal_wakeup) {
+  if (signal_wakeup) {
     oc_connectivity_wakeup(endpoint->device);
   }
   return dropped;

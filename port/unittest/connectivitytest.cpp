@@ -419,9 +419,9 @@ public:
   static std::atomic<bool> is_callback_received;
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  static oc_message_t* CreateTestUdpMsg(const std::vector<uint8_t> &data);
-  static oc_message_t* CreateValidTestUdpMsg(void);
-  static oc_message_t* CreateInvalidTestUdpMsg(void);
+  static oc_message_t *CreateTestUdpMsg(const std::vector<uint8_t> &data);
+  static oc_message_t *CreateValidTestUdpMsg(void);
+  static oc_message_t *CreateInvalidTestUdpMsg(void);
 #endif /* OC_DYNAMIC_ALLOCATION */
 };
 
@@ -447,26 +447,30 @@ TestConnectivityWithServer::findEndpoint(size_t device)
 }
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  oc_message_t* TestConnectivityWithServer::CreateTestUdpMsg(const std::vector<uint8_t> &data)
-  {
-    oc_message_t *msg = oc_allocate_message();
-    msg->endpoint.flags = IPV6;
-    memcpy(msg->data, &data[0], data.size());
-    msg->length = data.size();
-    return msg;
-  }
+oc_message_t *
+TestConnectivityWithServer::CreateTestUdpMsg(const std::vector<uint8_t> &data)
+{
+  oc_message_t *msg = oc_allocate_message();
+  msg->endpoint.flags = IPV6;
+  memcpy(msg->data, &data[0], data.size());
+  msg->length = data.size();
+  return msg;
+}
 
-  oc_message_t* TestConnectivityWithServer::CreateValidTestUdpMsg(void)
-  {
-    const std::vector<uint8_t> data = { 1 << COAP_HEADER_VERSION_POSITION, 2, 3, 4 };
-    return TestConnectivityWithServer::CreateTestUdpMsg(data);
-  }
+oc_message_t *
+TestConnectivityWithServer::CreateValidTestUdpMsg(void)
+{
+  const std::vector<uint8_t> data = { 1 << COAP_HEADER_VERSION_POSITION, 2, 3,
+                                      4 };
+  return TestConnectivityWithServer::CreateTestUdpMsg(data);
+}
 
- oc_message_t* TestConnectivityWithServer::CreateInvalidTestUdpMsg(void)
-  {
-    const std::vector<uint8_t> data = { 0xff, 2, 3, 4 };
-    return TestConnectivityWithServer::CreateTestUdpMsg(data);
-  }
+oc_message_t *
+TestConnectivityWithServer::CreateInvalidTestUdpMsg(void)
+{
+  const std::vector<uint8_t> data = { 0xff, 2, 3, 4 };
+  return TestConnectivityWithServer::CreateTestUdpMsg(data);
+}
 #endif /* OC_DYNAMIC_ALLOCATION */
 
 TEST_F(TestConnectivityWithServer, oc_connectivity_get_endpoints)
@@ -481,33 +485,32 @@ TEST_F(TestConnectivityWithServer, oc_network_receive_event_valid)
 {
   // verify initial size of event queue
   size_t initialCount = oc_network_get_event_queue_length(kDeviceID);
-  EXPECT_EQ(initialCount,0);
+  EXPECT_EQ(initialCount, 0);
 
-  // add a valid udp message to the queue 
+  // add a valid udp message to the queue
   oc_message_t *message = TestConnectivityWithServer::CreateValidTestUdpMsg();
   message->endpoint.device = kDeviceID;
   oc_network_receive_event(message);
 
   // verify the queue contains new message
   size_t eventCount = oc_network_get_event_queue_length(kDeviceID);
-  EXPECT_EQ(eventCount,1);
+  EXPECT_EQ(eventCount, 1);
 }
-
 
 TEST_F(TestConnectivityWithServer, oc_network_receive_event_invalid)
 {
   // verify initial size of event queue
   size_t initialCount = oc_network_get_event_queue_length(kDeviceID);
-  EXPECT_EQ(initialCount,0);
+  EXPECT_EQ(initialCount, 0);
 
-  // try to add an invalid udp message to the queue 
+  // try to add an invalid udp message to the queue
   oc_message_t *message = TestConnectivityWithServer::CreateInvalidTestUdpMsg();
   message->endpoint.device = kDeviceID;
   oc_network_receive_event(message);
 
   // verify the queue is still empty
   size_t eventCount = oc_network_get_event_queue_length(kDeviceID);
-  EXPECT_EQ(eventCount,0);
+  EXPECT_EQ(eventCount, 0);
 }
 
 TEST_F(TestConnectivityWithServer, oc_network_get_event_queue_length)
@@ -516,9 +519,9 @@ TEST_F(TestConnectivityWithServer, oc_network_get_event_queue_length)
   constexpr size_t kDeviceB = kDeviceID + 1;
 
   size_t eventCountA = oc_network_get_event_queue_length(kDeviceA);
-  EXPECT_EQ(eventCountA,0);
+  EXPECT_EQ(eventCountA, 0);
   size_t eventCountB = oc_network_get_event_queue_length(kDeviceB);
-  EXPECT_EQ(eventCountB,0);
+  EXPECT_EQ(eventCountB, 0);
 
   // add valid messages for kDeviceA and kDeviceB
   oc_message_t *messageA = TestConnectivityWithServer::CreateValidTestUdpMsg();
@@ -530,25 +533,25 @@ TEST_F(TestConnectivityWithServer, oc_network_get_event_queue_length)
 
   // verify msg count for kDeviceA and kDeviceB
   eventCountA = oc_network_get_event_queue_length(kDeviceA);
-  EXPECT_EQ(eventCountA,1);
+  EXPECT_EQ(eventCountA, 1);
   eventCountB = oc_network_get_event_queue_length(kDeviceB);
-  EXPECT_EQ(eventCountB,1);
+  EXPECT_EQ(eventCountB, 1);
 }
 
 TEST_F(TestConnectivityWithServer, oc_network_drop_receive_events)
 {
   size_t eventCount = oc_network_get_event_queue_length(kDeviceID);
-  EXPECT_EQ(eventCount,0);
+  EXPECT_EQ(eventCount, 0);
 
-  // add max allowed amount of messages defined by OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS
-  for(size_t i = 0; i < OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS; ++i)
-  {
+  // add max allowed amount of messages defined by
+  // OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS
+  for (size_t i = 0; i < OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS; ++i) {
     oc_message_t *message = TestConnectivityWithServer::CreateValidTestUdpMsg();
     message->endpoint.device = kDeviceID;
     oc_network_receive_event(message);
   }
 
-  // verify all messages are in the queue 
+  // verify all messages are in the queue
   eventCount = oc_network_get_event_queue_length(kDeviceID);
   EXPECT_EQ(eventCount, OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS);
 
@@ -560,7 +563,7 @@ TEST_F(TestConnectivityWithServer, oc_network_drop_receive_events)
   size_t dropped = oc_network_drop_receive_events(&defaultEndPoint);
   oc_message_unref(message);
 
-  // all messages are equeal -> verify they are all removed  
+  // all messages are equeal -> verify they are all removed
   EXPECT_EQ(dropped, OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS);
   eventCount = oc_network_get_event_queue_length(kDeviceID);
   EXPECT_EQ(eventCount, 0);
