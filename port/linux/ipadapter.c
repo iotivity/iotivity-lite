@@ -900,7 +900,12 @@ fd_sets_are_equal(const fd_set *fd1, const fd_set *fd2)
   return (memcmp(__FDS_BITS(fd1), __FDS_BITS(fd2), sizeof(__FDS_BITS(fd1))) ==
           0);
 #else  //!__FDS_BITS
-  return (memcmp(fd1->fds_bits, fd2->fds_bits, sizeof(fd1->fds_bits)) == 0);
+  for (int i = 0; i < FD_SETSIZE; ++i) {
+    if (FD_ISSET(i, fd1) != FD_ISSET(i, fd2)) {
+      return false;
+    }
+  }
+  return true;
 #endif //__FDS_BITS
 }
 
