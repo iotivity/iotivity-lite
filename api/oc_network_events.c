@@ -216,14 +216,13 @@ oc_network_drop_receive_events(const oc_endpoint_t *endpoint)
   }
 
 #ifdef OC_DYNAMIC_ALLOCATION
-  if (get_events_queue_length(endpoint->device, g_network_events) + dropped >=
-      OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS) {
-    // unlock mutex and send a wake-up signal in case the queue for the device
-    // was full
-    oc_network_event_handler_mutex_unlock();
+  size_t queue_len =
+    get_events_queue_length(endpoint->device, g_network_events);
+  // unlock mutex and send a wake-up signal in case the queue for the device was
+  // full
+  oc_network_event_handler_mutex_unlock();
+  if (queue_len + dropped >= OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS) {
     oc_connectivity_wakeup(endpoint->device);
-  } else {
-    oc_network_event_handler_mutex_unlock();
   }
 #else
   oc_network_event_handler_mutex_unlock();
