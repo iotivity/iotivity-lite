@@ -840,10 +840,15 @@ static int
 pick_random_fd(const fd_set *sourcefds, int fd_count, int max_fd)
 {
   assert(fd_count > 0);
-  int random_rfd = (int)(oc_random_value() % fd_count);
-  for (int i = 0; i <= max_fd; i++) {
-    if (FD_ISSET(i, sourcefds) && (--fd_count == random_rfd)) {
-      return i;
+  // get random number representing the position of descriptor in the fd_set
+  int random_pos = (int)(oc_random_value() % fd_count);
+  for (int i = 0, fd_pos = 0; i <= max_fd; i++) {
+    if (FD_ISSET(i, sourcefds)) {
+      if (random_pos == fd_pos) {
+        return i;
+      }
+      // advance to the position
+      fd_pos++;
     }
   }
   return -1;
@@ -1761,7 +1766,7 @@ signal_event_thread(const ip_context_t *dev)
 void
 oc_connectivity_wakeup(size_t device)
 {
-  ip_context_t *dev = get_ip_context_for_device(device);
+  const ip_context_t *dev = get_ip_context_for_device(device);
   if (dev == NULL) {
     OC_WRN("no ip-context found for device(%zu)", device);
     return;
