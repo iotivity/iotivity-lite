@@ -842,10 +842,8 @@ pick_random_fd(const fd_set *sourcefds, int fd_count, int max_fd)
   assert(fd_count > 0);
   int random_rfd = (int)(oc_random_value() % fd_count);
   for (int i = 0; i <= max_fd; i++) {
-    if (FD_ISSET(i, sourcefds)) {
-      if (--fd_count == random_rfd) {
-        return i;
-      }
+    if (FD_ISSET(i, sourcefds) && (--fd_count == random_rfd)) {
+      return i;
     }
   }
   return -1;
@@ -983,7 +981,7 @@ process_events(ip_context_t *dev, fd_set *rdfds, fd_set *wfds, int fd_count,
 #ifdef OC_DYNAMIC_ALLOCATION
   // check if network queue can consume all 'ready' events
   int available_count = OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS -
-                        oc_network_get_event_queue_length(dev->device);
+                        (int)oc_network_get_event_queue_length(dev->device);
   if (available_count < fd_count) {
     // get the number of read file descriptors
     int rfds_count = fds_count(rdfds, max_read_fd);
@@ -1742,7 +1740,7 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
 }
 
 static void
-signal_event_thread(ip_context_t *dev)
+signal_event_thread(const ip_context_t *dev)
 {
   ssize_t result;
   do {
