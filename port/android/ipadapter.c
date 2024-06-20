@@ -38,6 +38,7 @@
 #include "port/oc_connectivity_internal.h"
 #include "port/oc_log_internal.h"
 #include "port/oc_network_event_handler_internal.h"
+#include "port/oc_random.h"
 #include "util/oc_macros_internal.h"
 
 #ifdef OC_SESSION_EVENTS
@@ -779,23 +780,90 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
   return ret;
 }
 
-static void *
-network_event_thread(void *data)
+#ifdef OC_DYNAMIC_ALLOCATION
+static bool
+fd_sets_are_equal(const fd_set *fd1, const fd_set *fd2)
 {
-  ip_context_t *dev = (ip_context_t *)data;
+  return (memcmp(fd1->fds_bits, fd2->fds_bits, sizeof(fd1->fds_bits)) == 0);
+}
 
-  fd_set setfds;
-  FD_ZERO(&dev->rfds);
+static int
+fds_max(const fd_set *sourcefds)
+{
+  int max_fd = 0;
+  for (int i = 0; i < FD_SETSIZE; i++) {
+    if (FD_ISSET(i, sourcefds)) {
+      max_fd = i;
+    }
+  }
+  return max_fd;
+}
 
+static int
+fds_count(const fd_set *sourcefds, int max_fd)
+{
+  int rfd_count = 0;
+  for (int i = 0; i <= max_fd; i++) {
+    if (FD_ISSET(i, sourcefds)) {
+      rfd_count++;
+    }
+  }
+  return rfd_count;
+}
+
+static int
+pick_random_fd(const fd_set *sourcefds, int fd_count, int max_fd)
+{
+  assert(fd_count > 0);
+  // get random number representing the position of descriptor in the fd_set
+  int random_pos = (int)(oc_random_value() % fd_count);
+  for (int i = 0, fd_pos = 0; i <= max_fd; i++) {
+    if (FD_ISSET(i, sourcefds)) {
+      if (random_pos == fd_pos) {
+        return i;
+      }
+      // advance to the position
+      fd_pos++;
+    }
+  }
+  return -1;
+}
+
+static int
+remove_random_fds(fd_set *rdfds, int rfds_count, int max_fd, int remove_count)
+{
+  int removed = 0;
+  while (removed < remove_count) {
+    int fd = pick_random_fd(rdfds, rfds_count, max_fd);
+    if (fd < 0) {
+      break;
+    }
+    // remove file descriptor from the set
+    FD_CLR(fd, rdfds);
+    --rfds_count;
+    ++removed;
+  }
+  return removed;
+}
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+static void
+add_control_flow_rfds(fd_set *output_set, const ip_context_t *dev)
+{
 #ifdef OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE
-  /* Monitor network interface changes on the platform from only the 0th logical
-   * device
+  /* Monitor network interface changes on the platform from only the 0th
+   * logical device
    */
   if (dev->device == 0) {
-    FD_SET(g_ifchange_sock, &dev->rfds);
+    FD_SET(g_ifchange_sock, output_set);
   }
 #endif /* OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE */
-  FD_SET(dev->shutdown_pipe[0], &dev->rfds);
+  FD_SET(dev->wakeup_pipe[0], output_set);
+}
+
+static void
+udp_add_socks_to_rfd_set(ip_context_t *dev)
+{
   FD_SET(dev->server_sock, &dev->rfds);
   FD_SET(dev->mcast_sock, &dev->rfds);
 #ifdef OC_SECURITY
@@ -809,152 +877,268 @@ network_event_thread(void *data)
   FD_SET(dev->secure4_sock, &dev->rfds);
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
+}
 
-#ifdef OC_TCP
-  oc_tcp_add_socks_to_fd_set(dev);
-#endif /* OC_TCP */
-
-  int i, n;
-
-  while (dev->terminate != 1) {
-    setfds = dev->rfds;
-    n = select(FD_SETSIZE, &setfds, NULL, NULL, NULL);
-
-    if (FD_ISSET(dev->shutdown_pipe[0], &setfds)) {
+static bool
+process_wakeup_signal(ip_context_t *dev, fd_set *fds)
+{
+  if (FD_ISSET(dev->wakeup_pipe[0], fds)) {
+    FD_CLR(dev->wakeup_pipe[0], fds);
+    ssize_t len;
+    do {
       char buf;
       // write to pipe shall not block - so read the byte we wrote
-      if (read(dev->shutdown_pipe[0], &buf, 1) < 0) {
-        // intentionally left blank
+      len = read(dev->wakeup_pipe[0], &buf, 1);
+    } while (len < 0 && errno == EINTR);
+    return true;
+  }
+  return false;
+}
+
+static int
+process_socket_read_event(ip_context_t *dev, fd_set *rdfds)
+{
+  oc_message_t *message = oc_allocate_message();
+  if (message == NULL) {
+    return -1;
+  }
+  message->endpoint.device = dev->device;
+
+  if (FD_ISSET(dev->server_sock, rdfds)) {
+    FD_CLR(dev->server_sock, rdfds);
+    int count = recv_msg(dev->server_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, false);
+    if (count < 0) {
+      oc_message_unref(message);
+      return 0;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV6;
+    goto receive;
+  }
+
+  if (FD_ISSET(dev->mcast_sock, rdfds)) {
+    FD_CLR(dev->mcast_sock, rdfds);
+    int count = recv_msg(dev->mcast_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, true);
+    if (count < 0) {
+      oc_message_unref(message);
+      return 0;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV6 | MULTICAST;
+    goto receive;
+  }
+
+#ifdef OC_IPV4
+  if (FD_ISSET(dev->server4_sock, rdfds)) {
+    FD_CLR(dev->server4_sock, rdfds);
+    int count = recv_msg(dev->server4_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, false);
+    if (count < 0) {
+      oc_message_unref(message);
+      return 0;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV4;
+    goto receive;
+  }
+
+  if (FD_ISSET(dev->mcast4_sock, rdfds)) {
+    FD_CLR(dev->mcast4_sock, rdfds);
+    int count = recv_msg(dev->mcast4_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, true);
+    if (count < 0) {
+      oc_message_unref(message);
+      return 0;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV4 | MULTICAST;
+    goto receive;
+  }
+#endif /* OC_IPV4 */
+
+#ifdef OC_SECURITY
+  if (FD_ISSET(dev->secure_sock, rdfds)) {
+    FD_CLR(dev->secure_sock, rdfds);
+    int count = recv_msg(dev->secure_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, false);
+    if (count < 0) {
+      oc_message_unref(message);
+      return 0;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV6 | SECURED;
+    message->encrypted = 1;
+    goto receive;
+  }
+#ifdef OC_IPV4
+  if (FD_ISSET(dev->secure4_sock, rdfds)) {
+    FD_CLR(dev->secure4_sock, rdfds);
+    int count = recv_msg(dev->secure4_sock, message->data, OC_PDU_SIZE,
+                         &message->endpoint, false);
+    if (count < 0) {
+      oc_message_unref(message);
+      return 0;
+    }
+    message->length = (size_t)count;
+    message->endpoint.flags = IPV4 | SECURED;
+    message->encrypted = 1;
+    goto receive;
+  }
+#endif /* OC_IPV4 */
+#endif /* OC_SECURITY */
+
+#ifdef OC_TCP
+  adapter_receive_state_t tcp_status =
+    oc_tcp_receive_message(dev, rdfds, message);
+  if (tcp_status == ADAPTER_STATUS_RECEIVE) {
+    goto receive;
+  }
+#endif /* OC_TCP */
+
+  oc_message_unref(message);
+  return 0;
+
+receive:
+  OC_DBG("Incoming message of size %zd bytes from", message->length);
+  OC_LOGipaddr(message->endpoint);
+  OC_DBG("%s", "");
+  oc_network_receive_event(message);
+  return 1;
+}
+
+static int
+process_event(ip_context_t *dev, fd_set *rdfds, fd_set *wfds)
+{
+  if (rdfds != NULL) {
+    int ret = process_socket_read_event(dev, rdfds);
+    if (ret != 0) {
+      return ret;
+    }
+  }
+
+#if OC_DBG_IS_ENABLED
+  // GCOVR_EXCL_START
+  if (rdfds != NULL) {
+    for (int i = 0; i < FD_SETSIZE; ++i) {
+      if (FD_ISSET(i, rdfds)) {
+        OC_DBG("no handler found for read event (fd=%d)", i);
       }
     }
+  }
+  if (wfds != NULL) {
+    for (int i = 0; i < FD_SETSIZE; ++i) {
+      if (FD_ISSET(i, wfds)) {
+        OC_DBG("no handler found for write event (fd=%d)", i);
+      }
+    }
+  }
+  // GCOVR_EXCL_STOP
+#else  /* !OC_DBG_IS_ENABLED */
+  (void)wfds;
+#endif /* OC_DBG_IS_ENABLED */
+  return 0;
+}
+
+static void
+process_events(ip_context_t *dev, fd_set *rdfds, fd_set *wfds, int fd_count,
+               int max_read_fd)
+{
+  if (fd_count == 0) {
+    OC_DBG("process_events: timeout");
+    return;
+  }
+
+  OC_DBG("processing %d events", fd_count);
+
+  // process control flow events
+  if (process_wakeup_signal(dev, rdfds)) {
+    fd_count--;
+  }
+
+#ifdef OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE
+  if ((dev->device == 0) && (FD_ISSET(g_ifchange_sock, rdfds))) {
+    OC_DBG("interface change processed on (fd=%d)", g_ifchange_sock);
+    FD_CLR(g_ifchange_sock, rdfds);
+    if (process_interface_change_event() < 0) {
+      OC_WRN("caught errors while handling a network interface change");
+    }
+    fd_count--;
+  }
+#endif /* OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE */
+
+  // if (process_socket_signal_event(dev, rdfds)) {
+  //   fd_count--;
+  // }
+
+#ifdef OC_DYNAMIC_ALLOCATION
+  // check if network queue can consume all 'ready' events
+  int available_count = OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS -
+                        (int)oc_network_get_event_queue_length(dev->device);
+  if (available_count < fd_count) {
+    // get the number of read file descriptors
+    int rfds_count = fds_count(rdfds, max_read_fd);
+    int removed = remove_random_fds(rdfds, rfds_count, max_read_fd,
+                                    rfds_count - available_count);
+    fd_count -= removed;
+  }
+#else  /* !OC_DYNAMIC_ALLOCATION */
+  (void)max_read_fd;
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+  for (int i = 0; i < fd_count; i++) {
+    if (process_event(dev, rdfds, wfds) < 0) {
+      break;
+    }
+  }
+}
+
+static void *
+network_event_thread(void *data)
+{
+  ip_context_t *dev = (ip_context_t *)data;
+  FD_ZERO(&dev->rfds);
+
+  udp_add_socks_to_rfd_set(dev);
+  add_control_flow_rfds(&dev->rfds, dev);
+#ifdef OC_TCP
+  oc_tcp_add_socks_to_fd_set(dev);
+  oc_tcp_add_controlflow_socks_to_rfd_set(&dev->rfds, dev);
+#endif /* OC_TCP */
+
+  int max_read_fd = FD_SETSIZE;
+  fd_set last_rdfds;
+  FD_ZERO(&last_rdfds);
+
+  while (dev->terminate != 1) {
+    fd_set rdfds = dev->rfds;
+
+#ifdef OC_DYNAMIC_ALLOCATION
+    if (!fd_sets_are_equal(&rdfds, &last_rdfds)) {
+      // fd set has changed -> recalculate max fd
+      max_read_fd = fds_max(&rdfds);
+      last_rdfds = rdfds;
+    }
+
+    if (oc_network_get_event_queue_length(dev->device) >=
+        OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS) {
+      // the queue is full -> add only control flow rfds
+      FD_ZERO(&rdfds);
+      add_control_flow_rfds(&rdfds, dev);
+#ifdef OC_TCP
+      oc_tcp_add_controlflow_socks_to_rfd_set(&rdfds, dev);
+#endif /* OC_TCP */
+    }
+#endif /* OC_DYNAMIC_ALLOCATION */
+
+    int n = select(FD_SETSIZE, &rdfds, NULL, NULL, NULL);
 
     if (dev->terminate) {
       break;
     }
 
-    for (i = 0; i < n; i++) {
-#ifdef OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE
-      if (dev->device == 0) {
-        if (FD_ISSET(g_ifchange_sock, &setfds)) {
-          if (process_interface_change_event() < 0) {
-            OC_WRN("caught errors while handling a network interface change");
-          }
-          FD_CLR(g_ifchange_sock, &setfds);
-          continue;
-        }
-      }
-#endif /* OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE */
-
-      oc_message_t *message = oc_allocate_message();
-
-      if (!message) {
-        break;
-      }
-
-      message->endpoint.device = dev->device;
-
-      if (FD_ISSET(dev->server_sock, &setfds)) {
-        int count = recv_msg(dev->server_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, false);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV6;
-        FD_CLR(dev->server_sock, &setfds);
-        goto common;
-      }
-
-      if (FD_ISSET(dev->mcast_sock, &setfds)) {
-        int count = recv_msg(dev->mcast_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, true);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV6 | MULTICAST;
-        FD_CLR(dev->mcast_sock, &setfds);
-        goto common;
-      }
-
-#ifdef OC_IPV4
-      if (FD_ISSET(dev->server4_sock, &setfds)) {
-        int count = recv_msg(dev->server4_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, false);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV4;
-        FD_CLR(dev->server4_sock, &setfds);
-        goto common;
-      }
-
-      if (FD_ISSET(dev->mcast4_sock, &setfds)) {
-        int count = recv_msg(dev->mcast4_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, true);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV4 | MULTICAST;
-        FD_CLR(dev->mcast4_sock, &setfds);
-        goto common;
-      }
-#endif /* OC_IPV4 */
-
-#ifdef OC_SECURITY
-      if (FD_ISSET(dev->secure_sock, &setfds)) {
-        int count = recv_msg(dev->secure_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, false);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV6 | SECURED;
-        message->encrypted = 1;
-        FD_CLR(dev->secure_sock, &setfds);
-        goto common;
-      }
-#ifdef OC_IPV4
-      if (FD_ISSET(dev->secure4_sock, &setfds)) {
-        int count = recv_msg(dev->secure4_sock, message->data, OC_PDU_SIZE,
-                             &message->endpoint, false);
-        if (count < 0) {
-          oc_message_unref(message);
-          continue;
-        }
-        message->length = (size_t)count;
-        message->endpoint.flags = IPV4 | SECURED;
-        message->encrypted = 1;
-        FD_CLR(dev->secure4_sock, &setfds);
-        goto common;
-      }
-#endif /* OC_IPV4 */
-#endif /* OC_SECURITY */
-
-#ifdef OC_TCP
-      adapter_receive_state_t tcp_status =
-        oc_tcp_receive_message(dev, &setfds, message);
-      if (tcp_status == ADAPTER_STATUS_RECEIVE) {
-        goto common;
-      }
-#endif /* OC_TCP */
-
-      oc_message_unref(message);
-      continue;
-
-    common:
-      OC_DBG("Incoming message of size %zd bytes from", message->length);
-      OC_LOGipaddr(message->endpoint);
-      OC_DBG("%s", "");
-      oc_network_receive_event(message);
-    }
+    process_events(dev, &rdfds, NULL, n, max_read_fd);
   }
   pthread_exit(NULL);
   return NULL;
@@ -1372,8 +1556,8 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   dev->device = device;
   OC_LIST_STRUCT_INIT(dev, eps);
 
-  if (pipe(dev->shutdown_pipe) < 0) {
-    OC_ERR("shutdown pipe: %d", errno);
+  if (pipe(dev->wakeup_pipe) < 0) {
+    OC_ERR("wakeup pipe: %d", errno);
     return -1;
   }
 
@@ -1580,6 +1764,38 @@ oc_connectivity_init(size_t device, oc_connectivity_ports_t ports)
   return 0;
 }
 
+static void
+signal_event_thread(const ip_context_t *dev)
+{
+  ssize_t result;
+  do {
+    result = write(dev->wakeup_pipe[1], "\n", 1);
+  } while (result == -1 && errno == EINTR);
+
+  if (result == -1) {
+    if (errno != ENOSPC) {
+      OC_WRN("Failed to wakeup the network thread. Error %d", errno);
+    }
+    // ENOSPC is ignored as the pipe is already signaled
+  } else if (result != 1) {
+    OC_WRN("Unexpected number of bytes written to wakeup pipe: %zd", result);
+  }
+}
+
+#ifdef OC_DYNAMIC_ALLOCATION
+void
+oc_connectivity_wakeup(size_t device)
+{
+  const ip_context_t *dev = get_ip_context_for_device(device);
+  if (dev == NULL) {
+    OC_WRN("no ip-context found for device(%zu)", device);
+    return;
+  }
+
+  signal_event_thread(dev);
+}
+#endif /* OC_DYNAMIC_ALLOCATION */
+
 void
 oc_connectivity_shutdown(size_t device)
 {
@@ -1590,9 +1806,7 @@ oc_connectivity_shutdown(size_t device)
   }
 
   dev->terminate = 1;
-  if (write(dev->shutdown_pipe[1], "\n", 1) < 0) {
-    OC_WRN("cannot wakeup network thread");
-  }
+  signal_event_thread(dev);
 
   pthread_join(dev->event_thread, NULL);
 
@@ -1615,8 +1829,8 @@ oc_connectivity_shutdown(size_t device)
   oc_tcp_connectivity_shutdown(dev);
 #endif /* OC_TCP */
 
-  close(dev->shutdown_pipe[1]);
-  close(dev->shutdown_pipe[0]);
+  close(dev->wakeup_pipe[1]);
+  close(dev->wakeup_pipe[0]);
 
   free_endpoints_list(dev);
 

@@ -62,6 +62,11 @@ typedef uint64_t oc_clock_time_t;
 /* Enable reallocation during encoding the representation to cbor */
 // #define OC_REP_ENCODING_REALLOC
 
+/* Maximum number of messages in the network event queue for a device */
+#ifndef OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS
+#define OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS (32)
+#endif /* OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS */
+
 #else /* OC_DYNAMIC_ALLOCATION */
 /* List of constraints below for a build that does not employ dynamic
    memory allocation

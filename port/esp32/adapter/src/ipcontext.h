@@ -96,7 +96,7 @@ typedef struct ip_context_t
   int terminate;
   size_t device;
   fd_set rfds;
-  int shutdown_pipe[2];
+  int wakeup_pipe[2];
 } ip_context_t;
 
 #ifdef __cplusplus

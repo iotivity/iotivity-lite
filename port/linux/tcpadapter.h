@@ -47,11 +47,19 @@ bool tcp_connectivity_init(ip_context_t *dev, oc_connectivity_ports_t ports);
 void tcp_connectivity_shutdown(ip_context_t *dev);
 
 /**
- * @brief Add all TCP sockets and signal pipe to read fd set.
+ * @brief Add TCP sockets to read fd set.
  *
  * @param dev the device network context (cannot be NULL)
  */
 void tcp_add_socks_to_rfd_set(ip_context_t *dev);
+
+/**
+ * @brief Add signal pipe to read fd set.
+ *
+ * @param dev the device network context (cannot be NULL)
+ */
+void tcp_add_controlflow_socks_to_rfd_set(fd_set *rfd_set,
+                                          const ip_context_t *dev);
 
 /**
  * @brief Handle data available on the signal pipe (dev->connect_pipe).

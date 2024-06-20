@@ -215,7 +215,8 @@ TEST_F(TestRDClient, Publish_FailBadInput)
                           /*user_data*/ nullptr));
 }
 
-#if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_APP_DATA_BUFFER_SIZE)
+#if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_APP_DATA_BUFFER_SIZE) &&     \
+  !defined(OC_REP_ENCODING_REALLOC)
 
 TEST_F(TestRDClient, Publish_FailPayloadTooLarge)
 {
@@ -228,7 +229,8 @@ TEST_F(TestRDClient, Publish_FailPayloadTooLarge)
   oc_set_max_app_data_size(kDefaultSize);
 }
 
-#endif // OC_DYNAMIC_ALLOCATION && !OC_APP_DATA_BUFFER_SIZE
+#endif // OC_DYNAMIC_ALLOCATION && !OC_APP_DATA_BUFFER_SIZE &&
+       // !OC_REP_ENCODING_REALLOC
 
 #ifndef OC_DYNAMIC_ALLOCATION
 

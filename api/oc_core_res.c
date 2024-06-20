@@ -673,7 +673,7 @@ static bool
 core_is_resource_uri(const char *uri, size_t uri_len, const char *r_uri,
                      size_t r_uri_len)
 {
-  if (uri[0] == '/') {
+  if (uri_len > 0 && uri[0] == '/') {
     uri = &uri[1];
     --uri_len;
   }

@@ -268,7 +268,12 @@ tcp_add_socks_to_rfd_set(ip_context_t *dev)
   oc_sock_listener_fd_set(&dev->tcp.secure4, &dev->rfds);
 #endif /* OC_SECURITY */
 #endif /* OC_IPV4 */
-  FD_SET(dev->tcp.connect_pipe[0], &dev->rfds);
+}
+
+void
+tcp_add_controlflow_socks_to_rfd_set(fd_set *rfd_set, const ip_context_t *dev)
+{
+  FD_SET(dev->tcp.connect_pipe[0], rfd_set);
 }
 
 static adapter_receive_state_t

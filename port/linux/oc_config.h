@@ -69,6 +69,11 @@ typedef uint64_t oc_clock_time_t;
  * with REP_ENCODING_REALLOC=1 */
 // #define OC_REP_ENCODING_REALLOC
 
+/* Maximum number of messages in the network event queue for a device */
+#ifndef OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS
+#define OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS (32)
+#endif /* OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS */
+
 #else /* OC_DYNAMIC_ALLOCATION */
 /* List of constraints below for a build that does not employ dynamic
    memory allocation
@@ -123,10 +128,10 @@ typedef uint64_t oc_clock_time_t;
 /* Maximum number of callbacks for connection of session */
 #define OC_MAX_SESSION_EVENT_CBS (2)
 
-/* Maximal number of callbacks for ownership status changes */
+/* Maximum number of callbacks for ownership status changes */
 #define OC_MAX_DOXM_OWNED_CBS (2)
 
-/* Maximal number of callbacks invoked before a dynamic resource is deleted */
+/* Maximum number of callbacks invoked before a dynamic resource is deleted */
 #define OC_MAX_ON_DELETE_RESOURCE_CBS (2)
 
 #endif /* !OC_DYNAMIC_ALLOCATION */

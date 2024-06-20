@@ -70,7 +70,7 @@ typedef struct ip_context_t
   size_t device;
   pthread_mutex_t rfds_mutex;
   fd_set rfds;
-  int shutdown_pipe[2];
+  int wakeup_pipe[2];
   OC_ATOMIC_INT8_T flags;
 } ip_context_t;
 

@@ -27,8 +27,8 @@ jobs:
         include:
           # cloud (ipv4+tcp) on, collection create on, push on, rfotm on
           - build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
-          # security off, ipv4 on, collection create on, push on
-          - build_args: "-DOC_SECURITY_ENABLED=OFF -DOC_IPV4_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON"
+          # security off, ipv4 on, collection create on, push on, max num concurrent requests=1
+          - build_args: "-DOC_SECURITY_ENABLED=OFF -DOC_IPV4_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS=1"
           # ipv6 dns on, oscore off, rep realloc on, json encoder on, introspection IDD off
           - build_args: "-DOC_DNS_LOOKUP_IPV6_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_JSON_ENCODER_ENABLED=ON -DOC_IDD_API_ENABLED=OFF"
           # cloud (ipv4+tcp) on, dynamic allocation off, rfotm on, push off (because it forces dynamic allocation)
@@ -51,6 +51,8 @@ jobs:
         include:
           - name: cloud-server
             build_args: ""
+          - name: cloud-server-access-in-RFOTM-concurrent-requests-1
+            build_args: "-DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS=1"
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
             # try with SHA384
@@ -72,6 +74,8 @@ jobs:
         include:
           - name: cloud-server-discovery-resource-observable-access-in-RFOTM
             build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+          - name: cloud-server-discovery-resource-observable-access-in-RFOTM-rep-realloc-concurrent-requests-1
+            build_args: "-DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON -DOC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS=1"
           - name: dtls-cloud-server-rep-realloc
             build_args: "-DOC_REPRESENTATION_REALLOC_ENCODING_ENABLED=ON"
             hub_args: "-e COAP_GATEWAY_UDP_ENABLED=true"

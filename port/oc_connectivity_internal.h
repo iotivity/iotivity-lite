@@ -65,6 +65,15 @@ void oc_connectivity_shutdown(size_t device);
  */
 int oc_send_buffer2(oc_message_t *message, bool queue);
 
+#ifdef OC_DYNAMIC_ALLOCATION
+/**
+ * @brief send a wakeup signal to the device to start consuming network events
+ *
+ * @param device the device index
+ */
+void oc_connectivity_wakeup(size_t device);
+#endif /* OC_DYNAMIC_ALLOCATION */
+
 #ifdef OC_NETWORK_MONITOR
 /**
  * @brief the callback function for an network change
