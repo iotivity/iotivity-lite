@@ -27,6 +27,7 @@
 #include "oc_core_res.h"
 #include "oc_uuid.h"
 #include "port/oc_network_event_handler_internal.h"
+#include "security/oc_ace_internal.h"
 #include "security/oc_acl_internal.h"
 #include "security/oc_acl_util_internal.h"
 #include "security/oc_pstat_internal.h"
@@ -60,7 +61,6 @@
 #endif /* OC_HAS_FEATURE_PUSH */
 
 #include <array>
-#include <functional>
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
@@ -186,59 +186,118 @@ TEST_F(TestAcl, oc_sec_acl_add_bootstrap_acl)
   EXPECT_EQ(1, oc_sec_ace_count(kDeviceID));
 }
 
-TEST_F(TestAcl, oc_sec_acl_clear)
+TEST_F(TestAcl, oc_sec_acl_find_subject)
 {
-  oc_ace_subject_t anon_clear{};
+  oc_ace_subject_view_t anon_clear{};
   anon_clear.conn = OC_CONN_ANON_CLEAR;
-  EXPECT_EQ(true, oc_sec_ace_update_res(OC_SUBJECT_CONN, &anon_clear, -1,
-                                        OC_PERM_RETRIEVE, nullptr, "/test/a",
-                                        OC_ACE_NO_WC, kDeviceID, nullptr));
+  auto tag = OC_STRING_VIEW("tag");
+  EXPECT_EQ(true, oc_sec_acl_update_res(OC_SUBJECT_CONN, anon_clear, -1,
+                                        OC_PERM_RETRIEVE, tag,
+                                        OC_STRING_VIEW("/test/a"), OC_ACE_NO_WC,
+                                        kDeviceID, nullptr));
 
   oc_uuid_t uuid{};
   oc_gen_uuid(&uuid);
-  oc_ace_subject_t subject_uuid{};
+  oc_ace_subject_view_t subject_uuid{};
   subject_uuid.uuid = uuid;
-  EXPECT_EQ(true, oc_sec_ace_update_res(OC_SUBJECT_UUID, &subject_uuid, -1,
-                                        OC_PERM_UPDATE, nullptr, "/test/b",
-                                        OC_ACE_NO_WC, kDeviceID, nullptr));
+  EXPECT_EQ(true, oc_sec_acl_update_res(
+                    OC_SUBJECT_UUID, subject_uuid, -1, OC_PERM_UPDATE,
+                    /*tag*/ OC_STRING_VIEW_NULL, OC_STRING_VIEW("/test/b"),
+                    OC_ACE_NO_WC, kDeviceID, nullptr));
 
-  oc_ace_subject_t subject_role{};
-  auto testRole = OC_STRING_LOCAL("test.role");
-  auto testAuthority = OC_STRING_LOCAL("test.authority");
-  subject_role.role = { testRole, testAuthority };
-  EXPECT_EQ(true, oc_sec_ace_update_res(OC_SUBJECT_ROLE, &subject_role, -1,
-                                        OC_PERM_NOTIFY, nullptr, "/test/c",
-                                        OC_ACE_NO_WC, kDeviceID, nullptr));
-  EXPECT_EQ(3, oc_sec_ace_count(kDeviceID));
+  oc_ace_subject_view_t subject_role{};
+  auto testRole = OC_STRING_VIEW("test.role");
+  subject_role.role = { testRole, {} };
+  EXPECT_EQ(true, oc_sec_acl_update_res(
+                    OC_SUBJECT_ROLE, subject_role, -1, OC_PERM_NOTIFY,
+                    /*tag*/ OC_STRING_VIEW_NULL, OC_STRING_VIEW("/test/c"),
+                    OC_ACE_NO_WC, kDeviceID, nullptr));
+
+  oc_ace_subject_view_t subject_role2{};
+  auto testAuthority = OC_STRING_VIEW("test.authority");
+  subject_role2.role = { testRole, testAuthority };
+  EXPECT_EQ(true, oc_sec_acl_update_res(
+                    OC_SUBJECT_ROLE, subject_role2, -1, OC_PERM_RETRIEVE,
+                    /*tag*/ OC_STRING_VIEW_NULL, OC_STRING_VIEW("/test/d"),
+                    OC_ACE_NO_WC, kDeviceID, nullptr));
+
+  oc_ace_subject_view_t subject_role3{};
+  auto testAuthority2 = OC_STRING_VIEW("test.newauthority");
+  subject_role3.role = { testRole, testAuthority2 };
+  EXPECT_EQ(true, oc_sec_acl_update_res(
+                    OC_SUBJECT_ROLE, subject_role3, -1, OC_PERM_RETRIEVE,
+                    /*tag*/ OC_STRING_VIEW_NULL, OC_STRING_VIEW("/test/e"),
+                    OC_ACE_NO_WC, kDeviceID, nullptr));
+
+  oc_ace_subject_view_t subject_role4{};
+  auto testRole2 = OC_STRING_VIEW("test.newrole");
+  subject_role4.role = { testRole2, testAuthority };
+  EXPECT_EQ(true, oc_sec_acl_update_res(
+                    OC_SUBJECT_ROLE, subject_role4, -1, OC_PERM_RETRIEVE,
+                    /*tag*/ OC_STRING_VIEW_NULL, OC_STRING_VIEW("/test/f"),
+                    OC_ACE_NO_WC, kDeviceID, nullptr));
+
+  ASSERT_EQ(6, oc_sec_ace_count(kDeviceID));
 
   oc_sec_acl_clear(
     kDeviceID, [](const oc_sec_ace_t *, void *) { return false; }, nullptr);
-  EXPECT_EQ(3, oc_sec_ace_count(kDeviceID));
+  EXPECT_EQ(6, oc_sec_ace_count(kDeviceID));
 
   oc_sec_ace_t *ace =
-    oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, &anon_clear, /*aceid*/
+    oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, anon_clear, /*aceid*/
                             -1,
-                            /*permission*/ 0, /*tag*/ nullptr,
-                            /*match_tag*/ false, kDeviceID);
+                            /*permission*/ 0, tag,
+                            /*match_tag*/ true, kDeviceID);
   EXPECT_NE(nullptr, ace);
+
+  // must match aceid
+  ASSERT_NE(-1, ace->aceid);
+  ace =
+    oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, anon_clear, ace->aceid,
+                            /*permission*/ 0, tag,
+                            /*match_tag*/ true, kDeviceID);
+  EXPECT_NE(nullptr, ace);
+
+  // non-matching aceid
+  ace = oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, anon_clear,
+                                ace->aceid + 1,
+                                /*permission*/ 0, tag,
+                                /*match_tag*/ true, kDeviceID);
+  EXPECT_EQ(nullptr, ace);
+
+  // non-matching tag
+  ace = oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, anon_clear, /*aceid*/
+                                -1,
+                                /*permission*/ 0, /*tag*/ OC_STRING_VIEW_NULL,
+                                /*match_tag*/ true, kDeviceID);
+  EXPECT_EQ(nullptr, ace);
+
+  // ignore non-matching tag
+  ace = oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, anon_clear, /*aceid*/
+                                -1,
+                                /*permission*/ 0, /*tag*/ OC_STRING_VIEW_NULL,
+                                /*match_tag*/ false, kDeviceID);
+  EXPECT_NE(nullptr, ace);
+
   oc_sec_acl_clear(
     kDeviceID,
     [](const oc_sec_ace_t *entry, void *) {
       return entry->subject_type == OC_SUBJECT_CONN;
     },
     nullptr);
-  EXPECT_EQ(2, oc_sec_ace_count(kDeviceID));
-  ace = oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, &anon_clear, /*aceid*/
+  ASSERT_EQ(5, oc_sec_ace_count(kDeviceID));
+  ace = oc_sec_acl_find_subject(nullptr, OC_SUBJECT_CONN, anon_clear, /*aceid*/
                                 -1,
-                                /*permission*/ 0, /*tag*/ nullptr,
+                                /*permission*/ 0, /*tag*/ OC_STRING_VIEW_NULL,
                                 /*match_tag*/ false, kDeviceID);
   EXPECT_EQ(nullptr, ace);
 
-  ace =
-    oc_sec_acl_find_subject(nullptr, OC_SUBJECT_ROLE, &subject_role,
-                            /*aceid*/ -1, /*permission*/ 0,
-                            /*tag*/ nullptr, /*match_tag*/ false, kDeviceID);
+  ace = oc_sec_acl_find_subject(nullptr, OC_SUBJECT_ROLE, subject_role,
+                                /*aceid*/ -1, /*permission*/ 0,
+                                /*tag*/ OC_STRING_VIEW_NULL,
+                                /*match_tag*/ false, kDeviceID);
   EXPECT_NE(nullptr, ace);
+
   int aceid{ ace->aceid };
   oc_sec_acl_clear(
     kDeviceID,
@@ -247,10 +306,10 @@ TEST_F(TestAcl, oc_sec_acl_clear)
       return entry->aceid == *id;
     },
     &aceid);
-  ace =
-    oc_sec_acl_find_subject(nullptr, OC_SUBJECT_ROLE, &subject_role,
-                            /*aceid*/ -1, /*permission*/ 0,
-                            /*tag*/ nullptr, /*match_tag*/ false, kDeviceID);
+  ace = oc_sec_acl_find_subject(nullptr, OC_SUBJECT_ROLE, subject_role,
+                                /*aceid*/ -1, /*permission*/ 0,
+                                /*tag*/ OC_STRING_VIEW_NULL,
+                                /*match_tag*/ false, kDeviceID);
   EXPECT_EQ(nullptr, ace);
 
   oc_sec_acl_clear(kDeviceID, nullptr, nullptr);
@@ -610,14 +669,15 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToSVRBySubject)
   ASSERT_NE(nullptr, doxm);
   assertUnauthorizedAccessToResource(doxm, kDeviceID, &ep, true);
 
-  oc_ace_subject_t subject{};
-  memcpy(&subject.uuid, &uuid, sizeof(oc_uuid_t));
+  oc_ace_subject_view_t subject{};
+  subject.uuid = uuid;
 
   // allowing retrieve or notify should allow GET access
   for (auto perm : std::vector<oc_ace_permissions_t>(
          { OC_PERM_RETRIEVE, OC_PERM_NOTIFY })) {
-    ASSERT_EQ(true, oc_sec_ace_update_res(OC_SUBJECT_UUID, &subject, -1, perm,
-                                          nullptr, oc_string(doxm->uri),
+    ASSERT_EQ(true, oc_sec_acl_update_res(OC_SUBJECT_UUID, subject, -1, perm,
+                                          /*tag*/ OC_STRING_VIEW_NULL,
+                                          oc_string_view2(&doxm->uri),
                                           OC_ACE_NO_WC, kDeviceID, nullptr));
     checkAccessToResource(doxm, &ep, true, false, false, false);
     EXPECT_FALSE(oc_sec_check_acl(OC_FETCH, doxm, &ep));
@@ -627,8 +687,9 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToSVRBySubject)
   // allowing create or update should allow POST and PUT access
   for (auto perm :
        std::vector<oc_ace_permissions_t>({ OC_PERM_CREATE, OC_PERM_UPDATE })) {
-    ASSERT_EQ(true, oc_sec_ace_update_res(OC_SUBJECT_UUID, &subject, -1, perm,
-                                          nullptr, oc_string(doxm->uri),
+    ASSERT_EQ(true, oc_sec_acl_update_res(OC_SUBJECT_UUID, subject, -1, perm,
+                                          /*tag*/ OC_STRING_VIEW_NULL,
+                                          oc_string_view2(&doxm->uri),
                                           OC_ACE_NO_WC, kDeviceID, nullptr));
     checkAccessToResource(doxm, &ep, false, true, true, false);
     EXPECT_FALSE(oc_sec_check_acl(OC_FETCH, doxm, &ep));
@@ -636,9 +697,10 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToSVRBySubject)
   }
 
   // allowing delete should allow DELETE access
-  ASSERT_EQ(true, oc_sec_ace_update_res(
-                    OC_SUBJECT_UUID, &subject, -1, OC_PERM_DELETE, nullptr,
-                    oc_string(doxm->uri), OC_ACE_NO_WC, kDeviceID, nullptr));
+  ASSERT_EQ(true, oc_sec_acl_update_res(
+                    OC_SUBJECT_UUID, subject, -1, OC_PERM_DELETE,
+                    /*tag*/ OC_STRING_VIEW_NULL, oc_string_view2(&doxm->uri),
+                    OC_ACE_NO_WC, kDeviceID, nullptr));
   checkAccessToResource(doxm, &ep, false, false, false, true);
   EXPECT_FALSE(oc_sec_check_acl(OC_FETCH, doxm, &ep));
   oc_sec_acl_clear(kDeviceID, nullptr, nullptr);
@@ -685,22 +747,22 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToSVRByPSK)
   ASSERT_NE(-1, oc_uuid_to_str_v1(&uuid, &uuid_str[0], uuid_str.size()));
   oc_sec_encoded_data_t privatedata = { key.data(), key.size(),
                                         OC_ENCODING_RAW };
-  auto role = OC_STRING_LOCAL("role");
-  auto authority = OC_STRING_LOCAL("authority");
+  auto role = OC_STRING_VIEW("role");
+  auto authority = OC_STRING_VIEW("authority");
   int credid = oc_sec_add_new_cred(
     kDeviceID, false, nullptr, -1, OC_CREDTYPE_PSK, OC_CREDUSAGE_NULL,
-    uuid_str.data(), privatedata, { nullptr, 0, OC_ENCODING_UNSUPPORTED },
-    oc_string_view2(&role), oc_string_view2(&authority), OC_STRING_VIEW_NULL,
-    nullptr);
+    uuid_str.data(), privatedata, { nullptr, 0, OC_ENCODING_UNSUPPORTED }, role,
+    authority, OC_STRING_VIEW_NULL, nullptr);
   ASSERT_NE(-1, credid);
 
   // allowing retrieve or notify should allow GET access
   for (auto perm : std::vector<oc_ace_permissions_t>(
          { OC_PERM_RETRIEVE, OC_PERM_NOTIFY })) {
-    oc_ace_subject_t subject{};
+    oc_ace_subject_view_t subject{};
     subject.role = { role, authority };
-    ASSERT_EQ(true, oc_sec_ace_update_res(OC_SUBJECT_ROLE, &subject, -1, perm,
-                                          nullptr, oc_string(doxm->uri),
+    ASSERT_EQ(true, oc_sec_acl_update_res(OC_SUBJECT_ROLE, subject, -1, perm,
+                                          /*tag*/ OC_STRING_VIEW_NULL,
+                                          oc_string_view2(&doxm->uri),
                                           OC_ACE_NO_WC, kDeviceID, nullptr));
     checkAccessToResource(doxm, &ep, true, false, false, false);
     EXPECT_FALSE(oc_sec_check_acl(OC_FETCH, doxm, &ep));
@@ -710,10 +772,11 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToSVRByPSK)
   // allowing create or update should allow POST and PUT access
   for (auto perm :
        std::vector<oc_ace_permissions_t>({ OC_PERM_CREATE, OC_PERM_UPDATE })) {
-    oc_ace_subject_t subject{};
+    oc_ace_subject_view_t subject{};
     subject.role = { role, authority };
-    ASSERT_EQ(true, oc_sec_ace_update_res(OC_SUBJECT_ROLE, &subject, -1, perm,
-                                          nullptr, oc_string(doxm->uri),
+    ASSERT_EQ(true, oc_sec_acl_update_res(OC_SUBJECT_ROLE, subject, -1, perm,
+                                          /*tag*/ OC_STRING_VIEW_NULL,
+                                          oc_string_view2(&doxm->uri),
                                           OC_ACE_NO_WC, kDeviceID, nullptr));
     checkAccessToResource(doxm, &ep, false, true, true, false);
     EXPECT_FALSE(oc_sec_check_acl(OC_FETCH, doxm, &ep));
@@ -721,11 +784,12 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToSVRByPSK)
   }
 
   // allowing delete should allow DELETE access
-  oc_ace_subject_t subject{};
+  oc_ace_subject_view_t subject{};
   subject.role = { role, authority };
-  ASSERT_EQ(true, oc_sec_ace_update_res(
-                    OC_SUBJECT_ROLE, &subject, -1, OC_PERM_DELETE, nullptr,
-                    oc_string(doxm->uri), OC_ACE_NO_WC, kDeviceID, nullptr));
+  ASSERT_EQ(true, oc_sec_acl_update_res(
+                    OC_SUBJECT_ROLE, subject, -1, OC_PERM_DELETE,
+                    /*tag*/ OC_STRING_VIEW_NULL, oc_string_view2(&doxm->uri),
+                    OC_ACE_NO_WC, kDeviceID, nullptr));
   checkAccessToResource(doxm, &ep, false, false, false, true);
   EXPECT_FALSE(oc_sec_check_acl(OC_FETCH, doxm, &ep));
   oc_sec_acl_clear(kDeviceID, nullptr, nullptr);
@@ -813,11 +877,10 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToSVRByNonOwnerRoleCred)
   ASSERT_TRUE(
     oc_certs_encode_CN_with_UUID(&uuid, uuid_buf.data(), uuid_buf.size()));
 
-  auto role = OC_STRING_LOCAL("user");
-  auto writeAuth = OC_STRING_LOCAL("write");
+  auto role = OC_STRING_VIEW("user");
+  auto writeAuth = OC_STRING_VIEW("write");
   oc::Roles roles{};
-  roles.Add(static_cast<const char *>(role.ptr),
-            static_cast<const char *>(writeAuth.ptr));
+  roles.Add(role.data, writeAuth.data);
 
   auto role_pem = oc::pki::obt::GenerateRoleCertificate(
     uuid_buf.data(), g_root_subject, g_root_keypair, roles);
@@ -831,10 +894,11 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToSVRByNonOwnerRoleCred)
     OC_STRING_VIEW_NULL, OC_STRING_VIEW_NULL, nullptr);
   ASSERT_NE(-1, credid);
 
-  oc_ace_subject_t write{};
+  oc_ace_subject_view_t write{};
   write.role = { role, writeAuth };
-  ASSERT_TRUE(oc_sec_ace_update_res(OC_SUBJECT_ROLE, &write, -1, OC_PERM_UPDATE,
-                                    nullptr, oc_string(doxm->uri), OC_ACE_NO_WC,
+  ASSERT_TRUE(oc_sec_acl_update_res(OC_SUBJECT_ROLE, write, -1, OC_PERM_UPDATE,
+                                    /*tag*/ OC_STRING_VIEW_NULL,
+                                    oc_string_view2(&doxm->uri), OC_ACE_NO_WC,
                                     kDeviceID, nullptr));
   checkAccessToResource(doxm, &ep, false, true, true, false);
 
@@ -875,10 +939,11 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToNonSVRByCryptConn)
 
   auto setAnonConnPermission = [&resources](oc_ace_permissions_t permission) {
     for (auto res : resources) {
-      oc_ace_subject_t anon_crypt{};
+      oc_ace_subject_view_t anon_crypt{};
       anon_crypt.conn = OC_CONN_AUTH_CRYPT;
-      if (!oc_sec_ace_update_res(OC_SUBJECT_CONN, &anon_crypt, -1, permission,
-                                 nullptr, oc_string(res->uri), OC_ACE_NO_WC,
+      if (!oc_sec_acl_update_res(OC_SUBJECT_CONN, anon_crypt, -1, permission,
+                                 /*tag*/ OC_STRING_VIEW_NULL,
+                                 oc_string_view2(&res->uri), OC_ACE_NO_WC,
                                  kDeviceID, nullptr)) {
         return false;
       }
@@ -946,10 +1011,11 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToNonSVRByAnonConn)
 
   auto setAnonConnPermission = [&resources](oc_ace_permissions_t permission) {
     for (auto res : resources) {
-      oc_ace_subject_t anon_clear{};
+      oc_ace_subject_view_t anon_clear{};
       anon_clear.conn = OC_CONN_ANON_CLEAR;
-      if (!oc_sec_ace_update_res(OC_SUBJECT_CONN, &anon_clear, -1, permission,
-                                 nullptr, oc_string(res->uri), OC_ACE_NO_WC,
+      if (!oc_sec_acl_update_res(OC_SUBJECT_CONN, anon_clear, -1, permission,
+                                 /*tag*/ OC_STRING_VIEW_NULL,
+                                 oc_string_view2(&res->uri), OC_ACE_NO_WC,
                                  kDeviceID, nullptr)) {
         return false;
       }

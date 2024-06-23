@@ -80,11 +80,13 @@ typedef enum {
  */
 typedef struct oc_ace_res_t
 {
-  struct oc_ace_res_t *next;      ///< pointer to next entry
-  oc_string_t href;               ///< href
+  struct oc_ace_res_t *next; ///< pointer to next entry
+  oc_string_t href;          ///< href
+#if 0
   oc_interface_mask_t interfaces; ///< applicable interfaces (as bit mask)
   oc_string_array_t types;        ///< resource types (rt)
-  oc_ace_wildcard_t wildcard;     ///< wildcard info
+#endif
+  oc_ace_wildcard_t wildcard; ///< wildcard info
 } oc_ace_res_t;
 
 /**

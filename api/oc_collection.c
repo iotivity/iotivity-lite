@@ -548,7 +548,7 @@ oc_handle_collection_create_request(oc_method_t method, oc_request_t *request)
     oc_rep_end_root_object();
 #ifdef OC_SECURITY
     oc_sec_acl_add_created_resource_ace(
-      oc_string(new_res->resource->uri), request->origin,
+      oc_string_view2(&new_res->resource->uri), request->origin,
       request->resource->device,
       false); /* TODO: handle creation of Collections */
 #endif        /* OC_SECURITY */
