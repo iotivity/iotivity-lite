@@ -528,6 +528,7 @@ void jni_set_random_pin_callback(oc_random_pin_cb_t cb, jni_callback_data *jcb) 
    */
   public";
 %rename(setConResAnnounced) oc_set_con_res_announced;
+
 %ignore oc_reset;
 %rename(reset) jni_reset;
 %inline %{
@@ -535,6 +536,19 @@ void jni_reset(void) {
   OC_DBG("JNI: %s\n", __func__);
 #ifdef OC_SECURITY
   oc_reset();
+#endif /* OC_SECURITY */
+}
+%}
+
+%ignore oc_reset_v1;
+%rename(resetV1) jni_reset_v1;
+%inline %{
+void jni_reset_v1(bool force) {
+  OC_DBG("JNI: %s\n", __func__);
+#ifdef OC_SECURITY
+  oc_reset_v1(force);
+#else /* !OC_SECURITY */
+  (void)force;
 #endif /* OC_SECURITY */
 }
 %}
@@ -996,6 +1010,8 @@ SWIGEXPORT jobject JNICALL Java_org_iotivity_OCMainJNI_getQueryValues(JNIEnv *je
 %ignore oc_get_response_payload_raw;
 %ignore oc_send_diagnostic_message;
 %ignore oc_get_diagnostic_message;
+%ignore oc_reset_device_v1;
+%ignore oc_is_owned_device;
 
 // client side
 %{

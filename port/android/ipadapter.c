@@ -52,15 +52,6 @@
 #include <arpa/inet.h>
 #include <assert.h>
 #include <errno.h>
-#if __ANDROID_API__ >= 24
-#include <ifaddrs.h>
-#define OC_GETIFADDRS getifaddrs
-#define OC_FREEIFADDRS freeifaddrs
-#else
-#include "ifaddrs-android.h"
-#define OC_GETIFADDRS android_getifaddrs
-#define OC_FREEIFADDRS android_freeifaddrs
-#endif /* __ANDROID_API__ >= 24 */
 #include <linux/ipv6.h>
 #include <linux/netlink.h>
 #include <linux/rtnetlink.h>
@@ -72,6 +63,20 @@
 #include <string.h>
 #include <sys/un.h>
 #include <unistd.h>
+
+#include <android/api-level.h>
+#if !defined(__ANDROID_API__) || __ANDROID_API__ == 10000
+#error __ANDROID_API__ not defined
+#endif
+#if __ANDROID_API__ >= 24
+#include <ifaddrs.h>
+#define OC_GETIFADDRS getifaddrs
+#define OC_FREEIFADDRS freeifaddrs
+#else
+#include "ifaddrs-android.h"
+#define OC_GETIFADDRS android_getifaddrs
+#define OC_FREEIFADDRS android_freeifaddrs
+#endif /* __ANDROID_API__ >= 24 */
 
 #if __ANDROID_API__ < 30
 #define OC_NETLINK_IF_CHANGE_NOTIFICATIONS_AVAILABLE

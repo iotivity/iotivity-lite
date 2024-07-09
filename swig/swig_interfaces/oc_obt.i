@@ -80,7 +80,8 @@
 %nodefaultctor oc_sec_ace_t;
 %nodefaultdtor oc_sec_ace_t;
 
-// TODO: implement oc_sec_acl_clear, oc_sec_remove_ace, oc_sec_get_ace_by_aceid, oc_sec_remove_ace_by_aceid, oc_sec_acl_add_bootstrap_acl
+// TODO: implement oc_sec_get_acl, oc_sec_acl_clear, oc_sec_remove_ace, oc_sec_get_ace_by_aceid, oc_sec_remove_ace_by_aceid, oc_sec_acl_add_bootstrap_acl
+%ignore oc_sec_get_acl;
 %ignore oc_sec_ace_filter_t;
 %ignore oc_sec_acl_clear;
 %ignore oc_sec_remove_ace;
@@ -112,6 +113,8 @@ void jni_resource_set_access_in_RFOTM(oc_resource_t *resource, bool state,
 %}
 
 /*******************End oc_acl.h*****************/
+
+%ignore oc_obt_set_sd_info;
 
 %ignore oc_obt_init;
 %rename(init) jni_obt_init;

@@ -20,6 +20,7 @@
 
 %{
 #include "oc_pki.h"
+#include "oc_sp.h"
 #include "port/oc_log_internal.h"
 %}
 

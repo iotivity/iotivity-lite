@@ -51,5 +51,21 @@
 %rename (filterResourceByRt) oc_filter_resource_by_rt;
 %rename (isDCR) oc_core_is_DCR;
 
+%ignore oc_core_is_SVR;
+%rename(isSVR) jni_core_is_SVR;
+%inline %{
+bool jni_core_is_SVR(const oc_resource_t *resource, size_t device)
+{
+  OC_DBG("JNI: %s\n", __func__);
+#if defined(OC_SECURITY)
+  return oc_core_is_SVR(resource, device);
+#else
+  (void)resource;
+  (void)device;
+  return false;
+#endif /* OC_SECURITY */
+}
+%}
+
 #define OC_NONNULL(...)
 %include "oc_core_res.h"

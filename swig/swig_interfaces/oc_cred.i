@@ -60,6 +60,7 @@ typedef struct role role;
 #ifdef OC_PKI
     return &(self->publicdata);
 #else
+    (void)self;
     return NULL;
 #endif /* OC_PKI */
   }
@@ -68,6 +69,7 @@ typedef struct role role;
 #ifdef OC_PKI
     return self->credusage;
 #else
+    (void)self;
     return OC_CREDUSAGE_NULL;
 #endif /* OC_PKI */
   }
@@ -76,15 +78,17 @@ typedef struct role role;
 #ifdef OC_PKI
     return self->chain;
 #else
+    (void)self;
     return NULL;
 #endif /* OC_PKI */
   }
 
   struct oc_sec_cred_t *getChild() {
 #ifdef OC_PKI
-  return self->child;
+    return self->child;
 #else
-  return NULL;
+    (void)self;
+    return NULL;
 #endif /* OC_PKI */
   }
 }
@@ -183,6 +187,11 @@ const char *jni_cred_credtype_string(oc_sec_credtype_t credType)
   return return_value;
 }
 %}
+
+%ignore oc_sec_get_creds;
+%ignore oc_sec_remove_cred;
+%ignore oc_sec_get_cred_by_credid;
+%ignore oc_sec_remove_cred_by_credid;
 
 // TODO: implement oc_cred_verify_certificate_chain
 %ignore oc_sec_certs_data_t;

@@ -66,7 +66,7 @@
 %typemap(javain)  oc_sp_types_t "$javainput"
 %typemap(javaout) oc_sp_types_t { return $jnicall; }
 
-%typemap(in)      oc_cloud_status_t "$1 = (oc_sp_types_t)$input;"
+%typemap(in)      oc_cloud_status_t "$1 = (oc_cloud_status_t)$input;"
 %typemap(out)     oc_cloud_status_t "$result = (jint)$1;"
 %typemap(jni)     oc_cloud_status_t "jint";
 %typemap(jtype)   oc_cloud_status_t "int";
