@@ -43,8 +43,8 @@ jobs:
           - args: ""
           # debug on, json encoder on
           - args: "DEBUG=1 JSON_ENCODER=1"
-          # secure off
-          - args: "SECURE=0"
+          # secure off, pki off
+          - args: "SECURE=0 PKI=0"
           # TODO: reenable when dynamic allocation is fixed
           # dynamic allocation off
           # - args: "DYNAMIC=0"

@@ -66,6 +66,9 @@ LDFLAG += -lm
 
 INSTALL_ANDROID_LIBS =
 
+SECURE ?= 1
+PKI ?= 1
+
 ifeq ($(DEBUG),1)
 	EXTRA_FLAG += -DOC_LOG_MAXIMUM_LEVEL=8 -g -O0
 endif
@@ -88,6 +91,9 @@ ifeq ($(IDD), 1)
 endif
 
 ifneq ($(PKI),0)
+ifeq ($(SECURE),0)
+$(error PKI is enabled, but security is disabled)
+endif
 	EXTRA_FLAG += -DOC_PKI
 	SWIG_CFLAG += -DOC_PKI
 endif
@@ -131,14 +137,14 @@ ifeq ($(OS),linux)
 	SWIG_CFLAG += -D__linux__
 	EXTRA_FLAG += -fno-strict-aliasing
 	HEADER_FILE += -I../port/linux
-	LDFLAG += -lpthread -lrt
+	LDFLAG += -lpthread -lrt -Wl,--no-undefined
 endif
 ifeq ($(OS),android)
 	EXTRA_HEADER_FILE = -I"$(ANDROID_BASE)/sysroot/usr/include/"
 	PORT_OBJ_DIR = ../port/android/${ANDROID_HOST}obj/
 	SWIG_CFLAG += -D__linux__
 	HEADER_FILE += -I../port/android
-	LDFLAG += -llog
+	LDFLAG += -llog -Wl,--no-undefined
 	INSTALL_ANDROID_LIBS = install_android_libs
 ifeq ($(ANDROID_API),)
 	EXTRA_FLAG += -D__ANDROID_MIN_SDK_VERSION__=23
@@ -147,6 +153,7 @@ else
 endif
 endif
 
+PORT_COMMON_OBJ_DIR = $(PORT_OBJ_DIR)port/
 JAVA_LANG_OBJ_DIR += $(PORT_OBJ_DIR)swig/
 
 all: clean build_swig build_jar build_jni_so $(INSTALL_ANDROID_LIBS)
@@ -177,7 +184,7 @@ build_jar: copy_java
 	$(JAR) -cfv $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JAR_NAME) -C $(IOTIVITY_LITE_JAVA_BIN_DIR) .
 
 build_jni_so: $(JNI_SRC)
-	$(CC) -shared $(JAVA_LANG_OBJ_DIR)*.o $(PORT_OBJ_DIR)*.o $(CLIENT_SERVER_OBJ_DIR)*.o $(CLOUD_OBJ_DIR) $(LDFLAG) -o $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME)
+	$(CC) -shared $(JAVA_LANG_OBJ_DIR)*.o $(PORT_COMMON_OBJ_DIR)*.o $(PORT_OBJ_DIR)*.o $(CLIENT_SERVER_OBJ_DIR)*.o $(CLOUD_OBJ_DIR) $(LDFLAG) -o $(IOTIVITY_LITE_JAVA_LIBS_DIR)$(JNI_SO_NAME)
 
 install_android_libs: build_swig build_jar build_jni_so
 	# copy so and jar files to samples
