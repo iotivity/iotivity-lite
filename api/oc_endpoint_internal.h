@@ -23,9 +23,9 @@
 #include "util/oc_compiler.h"
 #include "util/oc_macros_internal.h"
 
-#include <stdint.h>
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -122,6 +122,13 @@ typedef struct oc_string64_s
  */
 bool oc_endpoint_to_string64(const oc_endpoint_t *endpoint,
                              oc_string64_t *endpoint_str);
+
+/** @brief Get session id of the endpoint */
+int64_t oc_endpoint_session_id(const oc_endpoint_t *endpoint) OC_NONNULL();
+
+/** Log session id and address. */
+void oc_endpoint_log(const char *prefix, const oc_endpoint_t *endpoint)
+  OC_NONNULL();
 
 #ifdef __cplusplus
 }

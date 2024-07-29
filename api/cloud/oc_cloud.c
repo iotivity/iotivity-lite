@@ -129,8 +129,32 @@ oc_cloud_set_endpoint(oc_cloud_context_t *ctx)
 }
 
 void
+oc_cloud_endpoint_log(const char *prefix, const oc_endpoint_t *endpoint)
+{
+#if OC_INFO_IS_ENABLED
+  const char *ep_str = "";
+  oc_string64_t ep = { 0 };
+  if (oc_endpoint_to_string64(endpoint, &ep)) {
+    ep_str = oc_string(ep);
+  }
+#if OC_DBG_IS_ENABLED
+  int64_t session_id = oc_endpoint_session_id(endpoint);
+  OC_CLOUD_INFO("%s%s (session_id=%" PRId64 ")", prefix, ep_str, session_id);
+#else  /* !OC_DBG_IS_ENABLED */
+  OC_CLOUD_INFO("%s%s", prefix, ep_str);
+#endif /* OC_DBG_IS_ENABLED */
+#else  /* !OC_INFO_IS_ENABLED */
+  (void)endpoint;
+  (void)prefix;
+#endif /* OC_INFO_IS_ENABLED */
+}
+
+void
 oc_cloud_close_endpoint(const oc_endpoint_t *ep)
 {
+  if (oc_endpoint_is_empty(ep)) {
+    return;
+  }
   OC_CLOUD_DBG("oc_cloud_close_endpoint");
   oc_close_session(ep);
 }
@@ -311,10 +335,19 @@ cloud_ep_session_event_handler(const oc_endpoint_t *endpoint,
   oc_cloud_context_t *ctx = (oc_cloud_context_t *)user_data;
   if (oc_endpoint_compare(endpoint, ctx->cloud_ep) != 0) {
     OC_CLOUD_DBG("session handler skipped: endpoint does not match");
+    oc_endpoint_log("cloud->ep: ", ctx->cloud_ep);
+    oc_endpoint_log("endpoint: ", endpoint);
     return;
   }
-  OC_CLOUD_DBG("cloud_ep_session_event_handler ep_state: %d (current: %d)",
+#if OC_DBG_IS_ENABLED
+  int64_t session_id = oc_endpoint_session_id(ctx->cloud_ep);
+  OC_CLOUD_DBG("ep(%" PRId64 ") ep_state: %d (current: %d)", session_id,
                (int)state, (int)ctx->cloud_ep_state);
+#endif /* OC_DBG_IS_ENABLED */
+  if (ctx->cloud_ep->session_id == 0 && state == OC_SESSION_CONNECTED) {
+    OC_CLOUD_DBG("session_id set to %" PRIu32, endpoint->session_id);
+    ctx->cloud_ep->session_id = endpoint->session_id;
+  }
   bool state_changed = ctx->cloud_ep_state != state;
   if (!state_changed) {
     return;

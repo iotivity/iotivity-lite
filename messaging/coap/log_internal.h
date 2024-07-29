@@ -89,9 +89,11 @@ extern "C" {
 
 #if OC_DBG_IS_ENABLED
 #define COAP_LOGipaddr(endpoint)                                               \
-  OC_LOGipaddr_WITH_COMPONENT(OC_LOG_COMPONENT_COAP, endpoint)
+  OC_LOGipaddr_WITH_COMPONENT(OC_LOG_LEVEL_DEBUG, OC_LOG_COMPONENT_COAP,       \
+                              endpoint)
 #define COAP_LOGipaddr_local(endpoint)                                         \
-  OC_LOGipaddr_local_WITH_COMPONENT(OC_LOG_COMPONENT_COAP, endpoint)
+  OC_LOGipaddr_local_WITH_COMPONENT(OC_LOG_LEVEL_DEBUG, OC_LOG_COMPONENT_COAP, \
+                                    endpoint)
 #else /* !OC_DBG_IS_ENABLED */
 #define COAP_LOGipaddr(endpoint)
 #define COAP_LOGipaddr_local(endpoint)

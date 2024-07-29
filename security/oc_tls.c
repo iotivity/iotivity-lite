@@ -95,19 +95,19 @@
 #define TLS_LOG_MBEDTLS_ERROR(mbedtls_func_name, mbedtls_err)                  \
   do {                                                                         \
     if (mbedtls_err == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {                    \
-      OC_DBG("oc_tls: %s Close-Notify received", mbedtls_func_name);           \
+      OC_TRACE("oc_tls: %s Close-Notify received", mbedtls_func_name);         \
       break;                                                                   \
     }                                                                          \
     if (mbedtls_err == MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {                     \
-      OC_DBG("oc_tls: %s Client wants to reconnect", mbedtls_func_name);       \
+      OC_TRACE("oc_tls: %s Client wants to reconnect", mbedtls_func_name);     \
       break;                                                                   \
     }                                                                          \
     MBEDTLS_ERR(mbedtls_func_name, mbedtls_err);                               \
   } while (0)
-#else /* !OC_DBG_IS_ENABLED && !OC_ERR_IS_ENABLED */
+#else /* !OC_ERR_IS_ENABLED */
 #define MBEDTLS_ERR(mbedtls_func_name, mbedtls_err)
 #define TLS_LOG_MBEDTLS_ERROR(mbedtls_func_name, mbedtls_err)
-#endif /* !OC_DBG_IS_ENABLED && !OC_ERR_IS_ENABLED */
+#endif /* !OC_ERR_IS_ENABLED */
 
 typedef struct oc_random_pin_t
 {
@@ -312,19 +312,19 @@ oc_tls_get_trust_anchors(void)
 }
 #endif /* OC_PKI */
 
-#if OC_DBG_IS_ENABLED
+#if OC_TRACE_IS_ENABLED
 static void
 oc_mbedtls_debug(void *ctx, int level, const char *file, int line,
                  const char *str)
 {
   (void)ctx;
   (void)level;
-  OC_DBG("mbedtls_log: %s:%04d: %s", file, line, str);
+  OC_TRACE("mbedtls_log: %s:%04d: %s", file, line, str);
   (void)file;
   (void)line;
   (void)str;
 }
-#endif /* OC_DBG_IS_ENABLED */
+#endif /* OC_TRACE_IS_ENABLED */
 
 static bool
 is_peer_active(const oc_tls_peer_t *peer)
@@ -414,11 +414,13 @@ tls_process_drop_event_for_removed_endpoint(oc_process_event_t ev,
       // the peer will be removed, just drop the event
 #if OC_DBG_IS_ENABLED
       // GCOVR_EXCL_START
+      oc_string_view_t ev_name = oc_process_event_name(ev);
       oc_string64_t endpoint_str;
       oc_endpoint_to_string64(&peer->endpoint, &endpoint_str);
-      oc_string_view_t ev_name = oc_process_event_name(ev);
-      OC_DBG("oc_tls: dropping %s for removed endpoint(%s)", ev_name.data,
-             oc_string(endpoint_str));
+      int64_t session_id = oc_endpoint_session_id(&peer->endpoint);
+      OC_DBG("oc_tls: dropping %s for removed endpoint(addr=%s, "
+             "session_id=%" PRId64 ")",
+             ev_name.data, oc_string(endpoint_str), session_id);
       // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
       return true;
@@ -430,11 +432,13 @@ tls_process_drop_event_for_removed_endpoint(oc_process_event_t ev,
   if (oc_endpoint_compare(&message->endpoint, endpoint) == 0) {
 #if OC_DBG_IS_ENABLED
     // GCOVR_EXCL_START
+    oc_string_view_t ev_name = oc_process_event_name(ev);
     oc_string64_t endpoint_str;
     oc_endpoint_to_string64(&message->endpoint, &endpoint_str);
-    oc_string_view_t ev_name = oc_process_event_name(ev);
-    OC_DBG("oc_tls: dropping %s for removed endpoint(%s)", ev_name.data,
-           oc_string(endpoint_str));
+    int64_t session_id = oc_endpoint_session_id(&message->endpoint);
+    OC_DBG("oc_tls: dropping %s for removed endpoint(addr=%s, "
+           "session_id=%" PRId64 ")",
+           ev_name.data, oc_string(endpoint_str), session_id);
     // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
     oc_message_unref(message);
@@ -469,8 +473,10 @@ oc_tls_free_peer(oc_tls_peer_t *peer, bool inactivity_cb, bool from_reset,
   // GCOVR_EXCL_START
   oc_string64_t endpoint_str;
   oc_endpoint_to_string64(&peer->endpoint, &endpoint_str);
-  OC_DBG("oc_tls: freeing peer(%p): endpoint(%s), role(%s)", (void *)peer,
-         oc_string(endpoint_str),
+  int64_t session_id = oc_endpoint_session_id(&peer->endpoint);
+  OC_DBG("oc_tls: freeing peer(%p): endpoint(addr=%s, session_id=%" PRId64
+         "), role(%s)",
+         (void *)peer, oc_string(endpoint_str), session_id,
          peer->role == MBEDTLS_SSL_IS_SERVER ? "server" : "client");
   // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
@@ -1979,9 +1985,9 @@ oc_tls_populate_ssl_config(mbedtls_ssl_config *conf, size_t device, int role,
     }
   }
 
-#if OC_DBG_IS_ENABLED
+#if OC_TRACE_IS_ENABLED
   mbedtls_ssl_conf_dbg(conf, oc_mbedtls_debug, stdout);
-#endif /* OC_DBG_IS_ENABLED */
+#endif /* OC_TRACE_IS_ENABLED */
 
   mbedtls_ssl_conf_rng(conf, mbedtls_ctr_drbg_random, &g_oc_ctr_drbg_ctx);
 #if MBEDTLS_VERSION_NUMBER <= 0x03010000
@@ -2192,8 +2198,10 @@ oc_tls_add_new_peer(oc_tls_new_peer_params_t params)
   // GCOVR_EXCL_START
   oc_string64_t endpoint_str;
   oc_endpoint_to_string64(&peer->endpoint, &endpoint_str);
-  OC_DBG("oc_tls: new peer(%p) added: endpoint(%s), role(%s)", (void *)peer,
-         oc_string(endpoint_str),
+  int64_t session_id = oc_endpoint_session_id(&peer->endpoint);
+  OC_DBG("oc_tls: new peer(%p) added: endpoint(addr=%s, session_id=%" PRId64
+         ", role(%s)",
+         (void *)peer, oc_string(endpoint_str), session_id,
          peer->role == MBEDTLS_SSL_IS_SERVER ? "server" : "client");
   // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
@@ -2596,7 +2604,7 @@ static void
 write_application_data(oc_tls_peer_t *peer)
 {
   if (!is_peer_active(peer)) {
-    OC_DBG("oc_tls: write_application_data: Peer not active");
+    OC_WRN("oc_tls: Peer not active");
     return;
   }
   oc_message_t *message = (oc_message_t *)oc_list_pop(peer->send_q);
@@ -2824,16 +2832,16 @@ tls_read_application_data_tcp(oc_tls_peer_t *peer)
         oc_message_shrink_buffer(peer->processed_recv_message, total_length);
 #endif /* OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
       }
-      OC_DBG("oc_tls_tcp: mbedtls_ssl_read want read: %d", (int)want_read);
+      OC_TRACE("oc_tls_tcp: mbedtls_ssl_read want read: %d", (int)want_read);
       int ret = mbedtls_ssl_read(&peer->ssl_ctx,
                                  peer->processed_recv_message->data +
                                    peer->processed_recv_message->length,
                                  want_read);
-      OC_DBG("oc_tls_tcp: mbedtls_ssl_read returns: %d", ret);
+      OC_TRACE("oc_tls_tcp: mbedtls_ssl_read returns: %d", ret);
       if (ret <= 0) {
         if (ret == 0 || ret == MBEDTLS_ERR_SSL_WANT_READ ||
             ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
-          OC_DBG("oc_tls_tcp: Received WantRead/WantWrite");
+          OC_TRACE("oc_tls_tcp: Received WantRead/WantWrite");
           return;
         }
         oc_message_unref(peer->processed_recv_message);
@@ -2939,7 +2947,7 @@ tls_read_application_data_udp(oc_tls_peer_t *peer)
 #endif /* !OC_INOUT_BUFFER_SIZE */
     if (ret == 0 || ret == MBEDTLS_ERR_SSL_WANT_READ ||
         ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
-      OC_DBG("oc_tls: Received WantRead/WantWrite");
+      OC_TRACE("oc_tls: Received WantRead/WantWrite");
       return;
     }
     TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_read", ret);
@@ -2991,15 +2999,14 @@ tls_read_application_data_udp(oc_tls_peer_t *peer)
     return;
   }
 #endif /* OC_OSCORE */
-  OC_DBG("oc_tls: Decrypted incoming message");
+  OC_TRACE("oc_tls: Decrypted incoming message");
 }
 
 static void
 tls_read_application_data(oc_tls_peer_t *peer)
 {
-  OC_DBG("oc_tls: In tls_read_application_data");
   if (!is_peer_active(peer)) {
-    OC_DBG("oc_tls: tls_read_application_data: Peer not active");
+    OC_WRN("oc_tls: Peer not active");
     return;
   }
 

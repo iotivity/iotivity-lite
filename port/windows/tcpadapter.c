@@ -320,12 +320,12 @@ find_session_by_endpoint_locked(const oc_endpoint_t *endpoint)
 
   if (!session) {
     OC_DBG("could not find ongoing TCP session for");
-    OC_LOGipaddr(*endpoint);
+    OC_LOGipaddr(OC_LOG_LEVEL_DEBUG, *endpoint);
     OC_DBG("%s", "");
     return NULL;
   }
   OC_DBG("found TCP session for");
-  OC_LOGipaddr(*endpoint);
+  OC_LOGipaddr(OC_LOG_LEVEL_DEBUG, *endpoint);
   OC_DBG("%s", "");
   return session;
 }
@@ -451,7 +451,7 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
     bytes_sent += send_len;
   } while (bytes_sent < (int)message->length);
 
-  OC_DBG("Sent %d bytes", bytes_sent);
+  OC_TRACE("Sent %d bytes", bytes_sent);
 oc_tcp_send_buffer_done:
   oc_tcp_adapter_mutex_unlock();
 
@@ -485,7 +485,7 @@ recv_message_with_tcp_session(tcp_session_t *session, oc_message_t *message)
       return ADAPTER_STATUS_NONE;
     }
 
-    OC_DBG("recv(): %d bytes.", count);
+    OC_TRACE("recv(): %d bytes.", count);
     message->length += (size_t)count;
     want_read -= (size_t)count;
 
@@ -553,9 +553,9 @@ recv_message(SOCKET s, void *ctx)
     return;
   }
 
-  OC_DBG("Incoming message of size %zd bytes from", message->length);
-  OC_LOGipaddr(message->endpoint);
-  OC_DBG("%s", "");
+  OC_TRACE("Incoming message of size %zd bytes from", message->length);
+  OC_LOGipaddr(OC_LOG_LEVEL_TRACE, message->endpoint);
+  OC_TRACE("%s", "");
   oc_network_receive_event(message);
 }
 

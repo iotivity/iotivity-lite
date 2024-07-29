@@ -50,7 +50,7 @@ static void
 etimer_update_time(void)
 {
   if (g_timerlist == NULL) {
-    OC_DBG("etimer: no expiring timers");
+    OC_TRACE("etimer: no expiring timers");
     g_next_expiration = 0;
     return;
   }
@@ -66,7 +66,7 @@ etimer_update_time(void)
     }
   }
   g_next_expiration = now + tdist;
-  OC_DBG("etimer: next expiration=%ld", (long)g_next_expiration);
+  OC_TRACE("etimer: next expiration=%ld", (long)g_next_expiration);
 }
 
 static bool
@@ -103,7 +103,7 @@ static void
 etimer_remove_process_pending_timers(const struct oc_process *p)
 {
   while (g_timerlist != NULL && g_timerlist->p == p) {
-    OC_DBG("etimer(%p) removed from pending list", (void *)g_timerlist);
+    OC_TRACE("etimer(%p) removed from pending list", (void *)g_timerlist);
     g_timerlist = g_timerlist->next;
   }
 
@@ -113,7 +113,7 @@ etimer_remove_process_pending_timers(const struct oc_process *p)
   struct oc_etimer *t = g_timerlist;
   while (t->next != NULL) {
     if (t->next->p == p) {
-      OC_DBG("etimer(%p) removed from pending list", (void *)t->next);
+      OC_TRACE("etimer(%p) removed from pending list", (void *)t->next);
       t->next = t->next->next;
     } else
       t = t->next;
@@ -178,7 +178,7 @@ etimer_add_timer(struct oc_etimer *timer)
 void
 oc_etimer_set(struct oc_etimer *et, oc_clock_time_t interval)
 {
-  OC_DBG("etimer(%p) set", (void *)et);
+  OC_TRACE("etimer(%p) set", (void *)et);
   oc_timer_set(&et->timer, interval);
   etimer_add_timer(et);
 }

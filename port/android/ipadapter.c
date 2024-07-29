@@ -1006,9 +1006,9 @@ process_socket_read_event(ip_context_t *dev, fd_set *rdfds)
   return 0;
 
 receive:
-  OC_DBG("Incoming message of size %zd bytes from", message->length);
-  OC_LOGipaddr(message->endpoint);
-  OC_DBG("%s", "");
+  OC_TRACE("Incoming message of size %zd bytes from", message->length);
+  OC_LOGipaddr(OC_LOG_LEVEL_TRACE, message->endpoint);
+  OC_TRACE("%s", "");
   oc_network_receive_event(message);
   return 1;
 }
@@ -1051,11 +1051,11 @@ process_events(ip_context_t *dev, fd_set *rdfds, fd_set *wfds, int fd_count,
                int max_read_fd)
 {
   if (fd_count == 0) {
-    OC_DBG("process_events: timeout");
+    OC_TRACE("process_events: timeout");
     return;
   }
 
-  OC_DBG("processing %d events", fd_count);
+  OC_TRACE("processing %d events", fd_count);
 
   // process control flow events
   if (process_wakeup_signal(dev, rdfds)) {
@@ -1225,7 +1225,7 @@ send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
     }
     bytes_sent += x;
   }
-  OC_DBG("Sent %zd bytes", bytes_sent);
+  OC_TRACE("Sent %zd bytes", bytes_sent);
 
   if (bytes_sent == 0) {
     return -1;
@@ -1237,9 +1237,9 @@ send_msg(int sock, struct sockaddr_storage *receiver, oc_message_t *message)
 int
 oc_send_buffer(oc_message_t *message)
 {
-  OC_DBG("Outgoing message of size %zd bytes to", message->length);
-  OC_LOGipaddr(message->endpoint);
-  OC_DBG("%s", "");
+  OC_TRACE("Outgoing message of size %zd bytes to", message->length);
+  OC_LOGipaddr(OC_LOG_LEVEL_TRACE, message->endpoint);
+  OC_TRACE("%s", "");
 
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
   if (dev == NULL) {

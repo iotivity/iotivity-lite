@@ -281,12 +281,12 @@ find_session_by_endpoint(const oc_endpoint_t *endpoint)
 
   if (!session) {
     OC_DBG("could not find ongoing TCP session for");
-    OC_LOGipaddr(*endpoint);
+    OC_LOGipaddr(OC_LOG_LEVEL_DEBUG, *endpoint);
     OC_DBG("%s", "");
     return NULL;
   }
   OC_DBG("found TCP session for");
-  OC_LOGipaddr(*endpoint);
+  OC_LOGipaddr(OC_LOG_LEVEL_DEBUG, *endpoint);
   OC_DBG("%s", "");
   return session;
 }
@@ -412,7 +412,7 @@ oc_tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
       ret_with_code(ADAPTER_STATUS_NONE);
     }
 
-    OC_DBG("recv(): %d bytes.", count);
+    OC_TRACE("recv(): %d bytes.", count);
     message->length += (size_t)count;
     want_read -= (size_t)count;
 
@@ -570,7 +570,7 @@ oc_tcp_send_buffer(ip_context_t *dev, oc_message_t *message,
     bytes_sent += send_len;
   } while (bytes_sent < message->length);
 
-  OC_DBG("Sent %zd bytes", bytes_sent);
+  OC_TRACE("Sent %zd bytes", bytes_sent);
 oc_tcp_send_buffer_done:
   pthread_mutex_unlock(&dev->tcp.mutex);
 

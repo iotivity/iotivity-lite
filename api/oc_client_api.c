@@ -16,8 +16,9 @@
  *
  ****************************************************************************/
 
-#include "oc_config.h"
+#include "util/oc_features.h"
 
+#include "api/oc_endpoint_internal.h"
 #include "oc_api.h"
 #include "oc_endpoint.h"
 
@@ -35,7 +36,6 @@
 #include "api/client/oc_client_cb_internal.h"
 #include "api/oc_client_api_internal.h"
 #include "api/oc_discovery_internal.h"
-#include "api/oc_endpoint_internal.h"
 #include "api/oc_helpers_internal.h"
 #include "api/oc_rep_encode_internal.h"
 #include "messaging/coap/coap_internal.h"
@@ -961,6 +961,7 @@ oc_do_ip_discovery_at_endpoint(const char *rt, oc_discovery_handler_t handler,
 void
 oc_close_session(const oc_endpoint_t *endpoint)
 {
+  oc_endpoint_log("oc_close_session: ", endpoint);
 #ifdef OC_SECURITY
   if ((endpoint->flags & SECURED) != 0) {
     oc_tls_close_connection(endpoint);
@@ -976,8 +977,4 @@ oc_close_session(const oc_endpoint_t *endpoint)
     return;
   }
 #endif /* OC_TCP */
-
-#if !defined(OC_TCP) && !defined(OC_SECURITY)
-  (void)endpoint;
-#endif /* !OC_TCP && !OC_SECURITY */
 }

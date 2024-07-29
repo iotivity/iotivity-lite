@@ -83,14 +83,14 @@
   android_log((level), (component), __FILE__, __func__, __LINE__, __VA_ARGS__)
 #define OC_LOG(level, ...)                                                     \
   OC_LOG_WITH_COMPONENT(level, OC_LOG_COMPONENT_DEFAULT, __VA_ARGS__)
-#define OC_LOGipaddr(endpoint)                                                 \
+#define OC_LOGipaddr(level, endpoint)                                          \
   android_log_ipaddr(OC_LOG_LEVEL_DEBUG, __FILE__, __func__, __LINE__, endpoint)
 #define OC_LOGbytes(bytes, length)                                             \
   android_log_bytes(OC_LOG_LEVEL_DEBUG, __FILE__, __func__, __LINE__, bytes,   \
                     length)
 #else /* OC_DBG_IS_ENABLED || defined(OC_PUSHDEBUG) */
 #define OC_LOG(level, ...)
-#define OC_LOGipaddr(endpoint)
+#define OC_LOGipaddr(level, endpoint)
 #define OC_LOGbytes(bytes, length)
 #endif /* !OC_DBG_IS_ENABLED && !defined(OC_PUSHDEBUG) */
 #endif /* __ANDROID__ */
@@ -196,10 +196,10 @@
   } while (0)
 
 #if OC_DBG_IS_ENABLED
-#define OC_LOG_ENDPOINT_ADDR(component, endpoint, addr_memb)                   \
+#define OC_LOG_ENDPOINT_ADDR(log_level, component, endpoint, addr_memb)        \
   do {                                                                         \
     const oc_logger_t *_logger = oc_log_get_logger();                          \
-    if (_logger->level < OC_LOG_LEVEL_DEBUG) {                                 \
+    if (_logger->level < (log_level)) {                                        \
       break;                                                                   \
     }                                                                          \
     if ((_logger->components & (component)) == 0) {                            \
@@ -211,8 +211,8 @@
                              sizeof(_oc_log_endpoint_buf), endpoint,           \
                              addr_memb);                                       \
     if (_logger->fn != NULL) {                                                 \
-      _logger->fn(OC_LOG_LEVEL_DEBUG, (component), __FILENAME__, __LINE__,     \
-                  __func__, "%s", _oc_log_endpoint_buf);                       \
+      _logger->fn((log_level), (component), __FILENAME__, __LINE__, __func__,  \
+                  "%s", _oc_log_endpoint_buf);                                 \
       break;                                                                   \
     }                                                                          \
     char _oc_log_fn_buf[64] = { 0 };                                           \
@@ -222,38 +222,38 @@
       OC_PRINTF("(%s) ", oc_log_component_name(component));                    \
     }                                                                          \
     OC_PRINTF("%s: %s:%d <%s>: endpoint %s\n",                                 \
-              oc_log_level_to_label(OC_LOG_LEVEL_DEBUG), __FILENAME__,         \
-              __LINE__, __func__, _oc_log_endpoint_buf);                       \
+              oc_log_level_to_label(log_level), __FILENAME__, __LINE__,        \
+              __func__, _oc_log_endpoint_buf);                                 \
     fflush(stdout);                                                            \
   } while (0)
 #ifndef OC_LOGipaddr_WITH_COMPONENT
-#define OC_LOGipaddr_WITH_COMPONENT(component, endpoint)                       \
-  OC_LOG_ENDPOINT_ADDR(component, endpoint, addr)
+#define OC_LOGipaddr_WITH_COMPONENT(level, component, endpoint)                \
+  OC_LOG_ENDPOINT_ADDR(level, component, endpoint, addr)
 #endif /* !OC_LOGipaddr_WITH_COMPONENT */
 #ifndef OC_LOGipaddr
-#define OC_LOGipaddr(endpoint)                                                 \
-  OC_LOGipaddr_WITH_COMPONENT(OC_LOG_COMPONENT_DEFAULT, endpoint)
+#define OC_LOGipaddr(level, endpoint)                                          \
+  OC_LOGipaddr_WITH_COMPONENT(level, OC_LOG_COMPONENT_DEFAULT, endpoint)
 #endif /* !OC_LOGipaddr */
 #ifndef OC_LOGipaddr_local_WITH_COMPONENT
-#define OC_LOGipaddr_local_WITH_COMPONENT(component, endpoint)                 \
-  OC_LOG_ENDPOINT_ADDR(component, endpoint, addr_local)
+#define OC_LOGipaddr_local_WITH_COMPONENT(level, component, endpoint)          \
+  OC_LOG_ENDPOINT_ADDR(level, component, endpoint, addr_local)
 #endif /* !OC_LOGipaddr_local_WITH_COMPONENT */
 #ifndef OC_LOGipaddr_local
-#define OC_LOGipaddr_local(endpoint)                                           \
-  OC_LOGipaddr_local_WITH_COMPONENT(OC_LOG_COMPONENT_DEFAULT, endpoint)
+#define OC_LOGipaddr_local(level, endpoint)                                    \
+  OC_LOGipaddr_local_WITH_COMPONENT(level, OC_LOG_COMPONENT_DEFAULT, endpoint)
 #endif /* !OC_LOGipaddr_local */
 #else  /* OC_DBG_IS_ENABLED */
 #ifndef OC_LOGipaddr_WITH_COMPONENT
-#define OC_LOGipaddr_WITH_COMPONENT(component, endpoint)
+#define OC_LOGipaddr_WITH_COMPONENT(level, component, endpoint)
 #endif /* !OC_LOGipaddr_WITH_COMPONENT */
 #ifndef OC_LOGipaddr
-#define OC_LOGipaddr(endpoint)
+#define OC_LOGipaddr(level, endpoint)
 #endif /* !OC_LOGipaddr */
 #ifndef OC_LOGipaddr_local_WITH_COMPONENT
-#define OC_LOGipaddr_local_WITH_COMPONENT(component, endpoint)
+#define OC_LOGipaddr_local_WITH_COMPONENT(level, component, endpoint)
 #endif /* !OC_LOGipaddr_local_WITH_COMPONENT */
 #ifndef OC_LOGipaddr_local
-#define OC_LOGipaddr_local(endpoint)
+#define OC_LOGipaddr_local(level, endpoint)
 #endif /* !OC_LOGipaddr_local */
 #endif /* !OC_DBG_IS_ENABLED */
 

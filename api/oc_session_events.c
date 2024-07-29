@@ -16,13 +16,14 @@
  *
  ****************************************************************************/
 
-#include "oc_session_events.h"
-#include "oc_config.h"
+#include "util/oc_features.h"
 
+#include "api/oc_endpoint_internal.h"
 #include "api/oc_session_events_internal.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
 #include "oc_network_monitor.h"
+#include "oc_session_events.h"
 #include "oc_signal_event_loop.h"
 #include "port/oc_connectivity_internal.h"
 #include "port/oc_log_internal.h"
@@ -135,6 +136,7 @@ oc_session_start_event(const oc_endpoint_t *endpoint)
 
   // only a specific session should be connected
   assert(endpoint->session_id != 0);
+  oc_endpoint_log("oc_session_start_event: ", endpoint);
 
   oc_endpoint_t *ep = oc_new_endpoint();
   memcpy(ep, endpoint, sizeof(oc_endpoint_t));
@@ -157,6 +159,7 @@ oc_session_end_event(const oc_endpoint_t *endpoint)
 
   // only a specific session should be disconnected
   assert(endpoint->session_id != 0);
+  oc_endpoint_log("oc_session_end_event: ", endpoint);
 
   oc_endpoint_t *ep = oc_new_endpoint();
   memcpy(ep, endpoint, sizeof(oc_endpoint_t));
@@ -350,7 +353,8 @@ handle_session_disconnected(const oc_endpoint_t *endpoint)
 void
 oc_handle_session(const oc_endpoint_t *endpoint, oc_session_state_t state)
 {
-  OC_DBG("handle session: state=%d", (int)state);
+  OC_DBG("handle session(id=%" PRIu32 "): state=%d", endpoint->session_id,
+         (int)state);
   if (state == OC_SESSION_DISCONNECTED) {
     handle_session_disconnected(endpoint);
   }

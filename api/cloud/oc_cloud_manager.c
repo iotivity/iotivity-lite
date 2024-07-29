@@ -418,14 +418,7 @@ cloud_manager_register_async(void *data)
                                 ctx->schedule_action.timeout, &conf)) {
     goto retry;
   }
-#if OC_INFO_IS_ENABLED
-  const char *ep_str = "";
-  oc_string64_t ep = { 0 };
-  if (oc_endpoint_to_string64(ctx->cloud_ep, &ep)) {
-    ep_str = oc_string(ep);
-  }
-  OC_CLOUD_INFO("Registering to %s", ep_str);
-#endif /* OC_INFO_IS_ENABLED */
+  oc_cloud_endpoint_log("Registering to ", ctx->cloud_ep);
   if (!oc_cloud_access_register(conf, oc_string(ctx->store.auth_provider), NULL,
                                 oc_string(ctx->store.uid),
                                 oc_string(ctx->store.access_token))) {
@@ -664,14 +657,7 @@ cloud_manager_login_async(void *data)
                                 ctx->schedule_action.timeout, &conf)) {
     goto retry;
   }
-#if OC_INFO_IS_ENABLED
-  const char *ep_str = "";
-  oc_string64_t ep = { 0 };
-  if (oc_endpoint_to_string64(ctx->cloud_ep, &ep)) {
-    ep_str = oc_string(ep);
-  }
-  OC_CLOUD_INFO("Login to %s", ep_str);
-#endif /* OC_INFO_IS_ENABLED */
+  oc_cloud_endpoint_log("Login to ", ctx->cloud_ep);
   if (!oc_cloud_access_login(conf, oc_string(ctx->store.uid),
                              oc_string(ctx->store.access_token))) {
     OC_CLOUD_ERR("failed to sent sign in request to cloud");
@@ -892,14 +878,7 @@ cloud_manager_refresh_token_async(void *data)
     goto retry;
   }
 
-#if OC_INFO_IS_ENABLED
-  const char *ep_str = "";
-  oc_string64_t ep = { 0 };
-  if (oc_endpoint_to_string64(ctx->cloud_ep, &ep)) {
-    ep_str = oc_string(ep);
-  }
-  OC_CLOUD_INFO("Refreshing access token for %s", ep_str);
-#endif /* OC_INFO_IS_ENABLED */
+  oc_cloud_endpoint_log("Refreshing access token for ", ctx->cloud_ep);
   if (!oc_cloud_access_refresh_access_token(
         conf, oc_string(ctx->store.auth_provider), oc_string(ctx->store.uid),
         oc_string(ctx->store.refresh_token))) {

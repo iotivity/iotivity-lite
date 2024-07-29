@@ -205,8 +205,11 @@ oc_network_drop_receive_events(const oc_endpoint_t *endpoint)
         oc_event_to_oc_process_event(INBOUND_NETWORK_EVENT);
       oc_string_view_t ev_name = oc_process_event_name(ev);
       oc_string64_t endpoint_str;
-      OC_DBG("oc_network_events: dropping %s for endpoint(%s)", ev_name.data,
-             oc_string(endpoint_str));
+      oc_endpoint_to_string64(endpoint, &endpoint_str);
+      int64_t session_id = oc_endpoint_session_id(endpoint);
+      OC_DBG("oc_network_events: dropping %s for endpoint(addr=%s, "
+             "session_id=%" PRId64 ")",
+             ev_name.data, oc_string(endpoint_str), session_id);
       // GCOVR_EXCL_STOP
 #endif /* OC_DBG_IS_ENABLED */
       oc_message_unref(message);

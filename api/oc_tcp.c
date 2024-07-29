@@ -114,8 +114,8 @@ oc_tcp_is_valid_header(const uint8_t *data, size_t data_size, bool is_tls)
     uint8_t type = data[0];
     uint8_t major_version = data[1];
     uint8_t minor_version = data[2];
-    OC_DBG("TLS header: record type: %d, major %d, minor %d", type,
-           major_version, minor_version);
+    OC_TRACE("TLS header: record type: %d, major %d, minor %d", type,
+             major_version, minor_version);
     // Validate the header fields
     switch (type) {
     case MBEDTLS_SSL_MSG_HANDSHAKE:

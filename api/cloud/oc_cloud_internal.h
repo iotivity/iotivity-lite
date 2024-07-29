@@ -127,6 +127,10 @@ void oc_cloud_update_by_resource(oc_cloud_context_t *ctx,
                                  const oc_cloud_conf_update_t *data)
   OC_NONNULL();
 
+/** Log cloud endpoint address and session id */
+void oc_cloud_endpoint_log(const char *prefix, const oc_endpoint_t *endpoint)
+  OC_NONNULL();
+
 #ifdef __cplusplus
 }
 #endif
