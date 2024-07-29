@@ -121,7 +121,7 @@ oc_ip_send_msg(int sock, struct sockaddr_storage *receiver,
     }
     bytes_sent += ret;
   }
-  OC_DBG("Sent %zu bytes", bytes_sent);
+  OC_TRACE("Sent %zu bytes", bytes_sent);
   if (bytes_sent == 0) {
     return -1;
   }

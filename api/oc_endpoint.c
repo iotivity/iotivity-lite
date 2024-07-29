@@ -733,6 +733,8 @@ oc_endpoint_is_empty(const oc_endpoint_t *endpoint)
 {
   oc_endpoint_t empty;
   memset(&empty, 0, sizeof(oc_endpoint_t));
+  // ignore the next pointer
+  empty.next = endpoint->next;
   // NOLINTNEXTLINE(bugprone-suspicious-memory-comparison)
   return memcmp(&empty, endpoint, sizeof(oc_endpoint_t)) == 0;
 }
@@ -805,3 +807,32 @@ oc_endpoint_set_local_address(oc_endpoint_t *ep, unsigned interface_index)
   }
 }
 #endif /* OC_CLIENT */
+
+/** @brief Get session id of the endpoint */
+int64_t
+oc_endpoint_session_id(const oc_endpoint_t *endpoint)
+{
+#ifdef OC_TCP
+  return (endpoint->flags & TCP) != 0 ? (int64_t)endpoint->session_id : -1;
+#else  /* !OC_TCP */
+  (void)endpoint;
+  return -1;
+#endif /* OC_TCP */
+}
+
+void
+oc_endpoint_log(const char *prefix, const oc_endpoint_t *endpoint)
+{
+  // GCOVR_EXCL_START
+#if OC_DBG_IS_ENABLED
+  oc_string64_t endpoint_str;
+  oc_endpoint_to_string64(endpoint, &endpoint_str);
+  int64_t session_id = oc_endpoint_session_id(endpoint);
+  OC_ERR("%sendpoint(addr=%s, session_id=%" PRId64 ")", prefix,
+         oc_string(endpoint_str), session_id);
+#else  /* !OC_DBG_IS_ENABLED */
+  (void)prefix;
+  (void)endpoint;
+#endif /* OC_DBG_IS_ENABLED */
+  // GCOVR_EXCL_STOP
+}

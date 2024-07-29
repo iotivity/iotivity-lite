@@ -422,7 +422,7 @@ get_interface_addresses(ifaddr_t *ifaddr_list, ip_context_t *dev,
       memcpy(new_ep, &ep, sizeof(oc_endpoint_t));
       oc_list_add(dev->eps, new_ep);
       OC_DBG("Adding address for interface %ld", ifaddr->if_index);
-      OC_LOGipaddr(ep);
+      OC_LOGipaddr(OC_LOG_LEVEL_DEBUG, ep);
       OC_DBG("%s", "");
       continue;
     }
@@ -440,7 +440,7 @@ get_interface_addresses(ifaddr_t *ifaddr_list, ip_context_t *dev,
       memcpy(new_ep, &ep, sizeof(oc_endpoint_t));
       oc_list_add(dev->eps, new_ep);
       OC_DBG("Adding address for interface %ld", ifaddr->if_index);
-      OC_LOGipaddr(ep);
+      OC_LOGipaddr(OC_LOG_LEVEL_DEBUG, ep);
       OC_DBG("%s", "");
       continue;
     }
@@ -910,9 +910,9 @@ network_event_thread(void *data)
 #endif /* OC_IPV4 */
 #endif /* OC_SECURITY */
 
-        OC_DBG("Incoming message of size %zd bytes from", message->length);
-        OC_LOGipaddr(message->endpoint);
-        OC_DBG("%s", "");
+        OC_TRACE("Incoming message of size %zd bytes from", message->length);
+        OC_LOGipaddr(OC_LOG_LEVEL_TRACE, message->endpoint);
+        OC_TRACE("%s", "");
         oc_network_receive_event(message);
       }
     }
@@ -1146,7 +1146,7 @@ send_msg(SOCKET sock, struct sockaddr_storage *receiver, oc_message_t *message)
     }
     bytes_sent += (int)NumberOfBytes;
   }
-  OC_WRN("Sent %d bytes", bytes_sent);
+  OC_TRACE("Sent %d bytes", bytes_sent);
 
   if (bytes_sent == 0) {
     return -1;
@@ -1158,9 +1158,9 @@ send_msg(SOCKET sock, struct sockaddr_storage *receiver, oc_message_t *message)
 int
 oc_send_buffer(oc_message_t *message)
 {
-  OC_DBG("Outgoing message of size %zd bytes to", message->length);
-  OC_LOGipaddr(message->endpoint);
-  OC_DBG("%s", "");
+  OC_TRACE("Outgoing message of size %zd bytes to", message->length);
+  OC_LOGipaddr(OC_LOG_LEVEL_TRACE, message->endpoint);
+  OC_TRACE("%s", "");
 
   ip_context_t *dev = get_ip_context_for_device(message->endpoint.device);
   if (dev == NULL) {

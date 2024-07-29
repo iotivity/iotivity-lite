@@ -250,13 +250,14 @@ add_new_session_locked(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
     OC_ERR("could not allocate new TCP session object");
     return NULL;
   }
-  OC_DBG("new TCP session(%p, fd=%d)", (void *)session, sock);
-
-  session->dev = dev;
-  endpoint->interface_index = (unsigned)if_index;
   if (session_id == 0) {
     session_id = oc_tcp_get_new_session_id();
   }
+  OC_DBG("new TCP session(%p, fd=%d, session_id=%" PRIu32 ")", (void *)session,
+         sock, session_id);
+
+  session->dev = dev;
+  endpoint->interface_index = (unsigned)if_index;
   endpoint->session_id = session_id;
   memcpy(&session->endpoint, endpoint, sizeof(oc_endpoint_t));
   session->endpoint.next = NULL;
@@ -446,11 +447,11 @@ tcp_session_receive_message_locked(tcp_session_t *session,
       return ADAPTER_STATUS_NONE;
     }
 
-    OC_DBG("recv(): %zu bytes.", (size_t)count);
+    OC_TRACE("recv(): %zu bytes.", (size_t)count);
     message->length += (size_t)count;
     want_read -= (size_t)count;
-    OC_DBG("written message buffer from=%p to=%p", (void *)message->data,
-           (void *)(message->data + message->length));
+    OC_TRACE("written message buffer from=%p to=%p", (void *)message->data,
+             (void *)(message->data + message->length));
 
     if (total_length == 0) {
       memcpy(&message->endpoint, &session->endpoint, sizeof(oc_endpoint_t));
@@ -477,7 +478,7 @@ tcp_session_receive_message_locked(tcp_session_t *session,
         free_session_locked(session, true);
         return ADAPTER_STATUS_ERROR;
       }
-      OC_DBG("tcp packet total length : %zu bytes.", total_length);
+      OC_TRACE("tcp packet total length : %zu bytes.", total_length);
 
       want_read = total_length - (size_t)count;
     }
@@ -506,11 +507,12 @@ tcp_receive_message(ip_context_t *dev, fd_set *fds, oc_message_t *message)
   // find session.
   tcp_session_t *session = get_ready_to_read_session_locked(fds);
   if (session == NULL) {
-    OC_DBG("could not find TCP session socket in fd set");
+    OC_TRACE("could not find TCP session socket in fd set");
     ret = ADAPTER_STATUS_NONE;
     goto tcp_receive_message_done;
   }
-  OC_DBG("tcp receive session(fd=%d)", session->sock);
+  OC_TRACE("tcp receive session(session_id=%" PRIu32 ", fd=%d)",
+           session->endpoint.session_id, session->sock);
   FD_CLR(session->sock, fds);
 
   ret = tcp_session_receive_message_locked(session, message);
@@ -531,12 +533,12 @@ log_tcp_session(const void *session, const oc_endpoint_t *endpoint,
   if (session == NULL) {
     OC_DBG("could not find %s TCP session for",
            is_connected ? "ongoing" : "waiting");
-    OC_LOGipaddr(*endpoint);
+    OC_LOGipaddr(OC_LOG_LEVEL_DEBUG, *endpoint);
     OC_DBG("%s", "");
     return;
   }
   OC_DBG("found %s TCP session for", is_connected ? "ongoing" : "waiting");
-  OC_LOGipaddr(*endpoint);
+  OC_LOGipaddr(OC_LOG_LEVEL_DEBUG, *endpoint);
   OC_DBG("%s", "");
 }
 #endif /* OC_DBG_IS_ENABLED */
@@ -614,6 +616,7 @@ find_waiting_session_by_id_locked(uint32_t session_id)
 static tcp_waiting_session_t *
 add_new_waiting_session_locked(int sock, ip_context_t *dev,
                                const oc_endpoint_t *endpoint,
+                               uint32_t session_id,
                                on_tcp_connect_t on_tcp_connect,
                                void *on_tcp_connect_data)
 {
@@ -622,11 +625,15 @@ add_new_waiting_session_locked(int sock, ip_context_t *dev,
     OC_ERR("could not allocate new TCP waiting session object");
     return NULL;
   }
-  OC_DBG("new waiting TCP session(%p, fd=%d)", (void *)ws, sock);
+  if (session_id == 0) {
+    session_id = oc_tcp_get_new_session_id();
+  }
+  OC_DBG("new waiting TCP session(%p, fd=%d, session_id=%" PRIu32 ")",
+         (void *)ws, sock, session_id);
 
   ws->dev = dev;
   memcpy(&ws->endpoint, endpoint, sizeof(oc_endpoint_t));
-  ws->endpoint.session_id = oc_tcp_get_new_session_id();
+  ws->endpoint.session_id = session_id;
   ws->endpoint.next = NULL;
   ws->sock = sock;
   OC_LIST_STRUCT_INIT(ws, messages);
@@ -660,11 +667,12 @@ tcp_waiting_session_set_socked_locked(tcp_context_t *tcp, int sock)
 static tcp_waiting_session_t *
 tcp_create_waiting_session_locked(int sock, ip_context_t *dev,
                                   const oc_endpoint_t *endpoint,
+                                  uint32_t session_id,
                                   on_tcp_connect_t on_tcp_connect,
                                   void *on_tcp_connect_data)
 {
   tcp_waiting_session_t *ws = add_new_waiting_session_locked(
-    sock, dev, endpoint, on_tcp_connect, on_tcp_connect_data);
+    sock, dev, endpoint, session_id, on_tcp_connect, on_tcp_connect_data);
   if (ws == NULL) {
     OC_ERR("could not record new waiting TCP session");
     return NULL;
@@ -708,14 +716,16 @@ tcp_connect_locked(ip_context_t *dev, oc_endpoint_t *endpoint,
   oc_tcp_socket_t cs = oc_tcp_socket_connect(endpoint, receiver);
   if (cs.state == OC_TCP_SOCKET_STATE_CONNECTED) {
     OC_DBG("successfully initiated TCP connection");
-    s = tcp_create_session_locked(cs.fd, dev, endpoint, /*session_id*/ 0, true);
+    s = tcp_create_session_locked(cs.fd, dev, endpoint, endpoint->session_id,
+                                  true);
     if (s != NULL) {
       res.session = s;
       res.created = true;
       return res;
     }
   } else if (cs.state == OC_TCP_SOCKET_STATE_CONNECTING) {
-    ws = tcp_create_waiting_session_locked(cs.fd, dev, endpoint, on_tcp_connect,
+    ws = tcp_create_waiting_session_locked(cs.fd, dev, endpoint,
+                                           endpoint->session_id, on_tcp_connect,
                                            on_tcp_connect_data);
     if (ws != NULL) {
       res.waiting_session = ws;
@@ -742,7 +752,8 @@ free_session_async_locked(tcp_session_t *s, bool notify_session_end)
   signal_network_thread(&s->dev->tcp);
   OC_DBG("signaled network event thread to monitor that the session needs to "
          "be removed");
-  OC_DBG("free TCP session async");
+  OC_DBG("free TCP session(%p, session_id=%" PRIu32 ") async", (void *)s,
+         s->endpoint.session_id);
 }
 
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
@@ -757,7 +768,8 @@ free_waiting_session_async_locked(tcp_waiting_session_t *ws,
   signal_network_thread(&ws->dev->tcp);
   OC_DBG("signaled network event thread to monitor that the session needs to "
          "be removed");
-  OC_DBG("free waiting TCP session async");
+  OC_DBG("free waiting TCP session(%p, session_id=%" PRIu32 ") async",
+         (void *)ws, ws->endpoint.session_id);
 }
 #endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
 
@@ -827,8 +839,8 @@ free_waiting_session_locked(tcp_waiting_session_t *session, bool has_expired,
     oc_network_tcp_connect_event(event);
   }
 
-  OC_DBG("freed waiting TCP session(%p, fd=%d)", (void *)session,
-         session->sock);
+  OC_DBG("freed waiting TCP session(%p, fd=%d, session_id=%" PRIu32 ")",
+         (void *)session, session->sock, session->endpoint.session_id);
   oc_memb_free(&g_tcp_waiting_session_s, session);
 }
 
@@ -942,7 +954,7 @@ tcp_send_message(int sockfd, const oc_message_t *message)
     bytes_sent += send_len;
   } while (bytes_sent < message->length);
 
-  OC_DBG("Sent %zu bytes", bytes_sent);
+  OC_TRACE("Sent %zu bytes", bytes_sent);
   assert(bytes_sent <= INT_MAX);
   return (int)bytes_sent;
 }
@@ -959,7 +971,8 @@ add_message_to_waiting_session_locked(tcp_waiting_session_t *session,
     return false;
   }
 
-  OC_DBG("message added to waiting session queue(%p)", (void *)message);
+  OC_DBG("message added to waiting session(session_id=%" PRIu32 ") queue(%p)",
+         session->endpoint.session_id, (void *)message);
   oc_message_add_ref(message);
   qm->message = message;
   oc_list_add(session->messages, qm);
@@ -1226,7 +1239,8 @@ static int
 tcp_retry_waiting_session_locked(tcp_waiting_session_t *ws,
                                  oc_clock_time_t now_mt)
 {
-  OC_DBG("try connect waiting session(%p, fd=%d): %u", (void *)ws, ws->sock,
+  OC_DBG("try connect waiting session(%p, fd=%d, session_id=%" PRIu32 "): %u",
+         (void *)ws, ws->sock, ws->endpoint.session_id,
          (unsigned)ws->retry.count);
   if (ws->sock >= 0) {
     tcp_context_cfds_fd_clr(&ws->dev->tcp, ws->sock);
@@ -1310,7 +1324,8 @@ tcp_process_waiting_session_locked(tcp_waiting_session_t *ws)
 {
   int error = 0;
   if (!tcp_try_connect_waiting_session_locked(ws, &error)) {
-    OC_DBG("failed to connect session(%p, fd=%d)", (void *)ws, ws->sock);
+    OC_DBG("failed to connect session(%p, fd=%d, session_id=%" PRIu32 ")",
+           (void *)ws, ws->sock, ws->endpoint.session_id);
     if (ws->sock >= 0) {
       tcp_context_cfds_fd_clr(&ws->dev->tcp, ws->sock);
       close(ws->sock);
@@ -1338,7 +1353,8 @@ tcp_process_waiting_sessions(fd_set *fds)
       continue;
     }
 
-    OC_DBG("tcp session(%p) connect (fd=%d): %u", (void *)ws, ws->sock,
+    OC_DBG("tcp session(%p, fd=%d, session_id=%" PRIu32 ") connect: %u",
+           (void *)ws, ws->sock, ws->endpoint.session_id,
            (unsigned)ws->retry.count);
     FD_CLR(ws->sock, fds);
     ret = true;

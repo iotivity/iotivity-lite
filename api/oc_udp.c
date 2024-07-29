@@ -50,8 +50,8 @@ oc_udp_is_valid_message(oc_message_t *message)
     uint8_t type = message->data[0];
     uint8_t major_version = 255 - message->data[1] + 2;
     uint8_t minor_version = 255 - message->data[2] + 1;
-    OC_DBG("TLS header: record type: %d, major %d(%d), minor %d(%d)", type,
-           major_version, message->data[1], minor_version, message->data[2]);
+    OC_TRACE("TLS header: record type: %d, major %d(%d), minor %d(%d)", type,
+             major_version, message->data[1], minor_version, message->data[2]);
     if (major_version != SSL_MAJOR_VERSION_3) {
       OC_ERR("invalid major version: %d", major_version);
       // Invalid major version

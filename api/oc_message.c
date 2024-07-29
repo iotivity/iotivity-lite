@@ -93,10 +93,11 @@ message_allocate_with_size(oc_memb_t *pool, size_t size)
   message->encrypted = 0;
 #endif /* OC_SECURITY */
 #ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
-  OC_DBG("buffer: Allocated TX/RX buffer; num free: %d", oc_memb_numfree(pool));
+  OC_TRACE("buffer: Allocated TX/RX buffer; num free: %d",
+           oc_memb_numfree(pool));
 #endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX */
-  OC_DBG("buffer: allocated message(%p) from pool(%p)", (void *)message,
-         (void *)pool);
+  OC_TRACE("buffer: allocated message(%p) from pool(%p)", (void *)message,
+           (void *)pool);
   return message;
 }
 
@@ -211,17 +212,17 @@ oc_message_unref(oc_message_t *message)
   }
 
   if (!dealloc) {
-    OC_DBG("buffer: message(%p) unreferenced, ref_count=%d", (void *)message,
-           (int)new_count);
+    OC_TRACE("buffer: message(%p) unreferenced, ref_count=%d", (void *)message,
+             (int)new_count);
     return;
   }
 
   oc_memb_t *pool = message->pool;
   message_deallocate(message, pool);
-  OC_DBG("buffer: deallocated message(%p) from pool(%p)", (void *)message,
-         (void *)pool);
+  OC_TRACE("buffer: deallocated message(%p) from pool(%p)", (void *)message,
+           (void *)pool);
 #ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
-  OC_DBG("buffer: freed TX/RX buffer; num free: %d", oc_memb_numfree(pool));
+  OC_TRACE("buffer: freed TX/RX buffer; num free: %d", oc_memb_numfree(pool));
 #endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX*/
 }
 

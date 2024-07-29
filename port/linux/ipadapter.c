@@ -699,7 +699,7 @@ oc_udp_receive_message(const ip_context_t *dev, fd_set *fds,
                        oc_message_t *message)
 {
   if (oc_sock_listener_fd_isset(&dev->server, fds)) {
-    OC_DBG("udp receive server.sock(fd=%d)", dev->server.sock);
+    OC_TRACE("udp receive server.sock(fd=%d)", dev->server.sock);
     FD_CLR(dev->server.sock, fds);
     int count = oc_ip_recv_msg(dev->server.sock, message->data, OC_PDU_SIZE,
                                &message->endpoint, false);
@@ -712,7 +712,7 @@ oc_udp_receive_message(const ip_context_t *dev, fd_set *fds,
   }
 
   if ((dev->mcast_sock >= 0) && FD_ISSET(dev->mcast_sock, fds)) {
-    OC_DBG("udp receive mcast_sock(fd=%d)", dev->mcast_sock);
+    OC_TRACE("udp receive mcast_sock(fd=%d)", dev->mcast_sock);
     FD_CLR(dev->mcast_sock, fds);
     int count = oc_ip_recv_msg(dev->mcast_sock, message->data, OC_PDU_SIZE,
                                &message->endpoint, true);
@@ -726,7 +726,7 @@ oc_udp_receive_message(const ip_context_t *dev, fd_set *fds,
 
 #ifdef OC_IPV4
   if (oc_sock_listener_fd_isset(&dev->server4, fds)) {
-    OC_DBG("udp receive server4.sock(fd=%d)", dev->server4.sock);
+    OC_TRACE("udp receive server4.sock(fd=%d)", dev->server4.sock);
     FD_CLR(dev->server4.sock, fds);
     int count = oc_ip_recv_msg(dev->server4.sock, message->data, OC_PDU_SIZE,
                                &message->endpoint, false);
@@ -739,7 +739,7 @@ oc_udp_receive_message(const ip_context_t *dev, fd_set *fds,
   }
 
   if ((dev->mcast4_sock >= 0) && FD_ISSET(dev->mcast4_sock, fds)) {
-    OC_DBG("udp receive mcast4_sock(fd=%d)", dev->mcast4_sock);
+    OC_TRACE("udp receive mcast4_sock(fd=%d)", dev->mcast4_sock);
     FD_CLR(dev->mcast4_sock, fds);
     int count = oc_ip_recv_msg(dev->mcast4_sock, message->data, OC_PDU_SIZE,
                                &message->endpoint, true);
@@ -754,7 +754,7 @@ oc_udp_receive_message(const ip_context_t *dev, fd_set *fds,
 
 #ifdef OC_SECURITY
   if (oc_sock_listener_fd_isset(&dev->secure, fds)) {
-    OC_DBG("udp receive secure.sock(fd=%d)", dev->secure.sock);
+    OC_TRACE("udp receive secure.sock(fd=%d)", dev->secure.sock);
     FD_CLR(dev->secure.sock, fds);
     int count = oc_ip_recv_msg(dev->secure.sock, message->data, OC_PDU_SIZE,
                                &message->endpoint, false);
@@ -768,7 +768,7 @@ oc_udp_receive_message(const ip_context_t *dev, fd_set *fds,
   }
 #ifdef OC_IPV4
   if (oc_sock_listener_fd_isset(&dev->secure4, fds)) {
-    OC_DBG("udp receive secure4.sock(fd=%d)", dev->secure4.sock);
+    OC_TRACE("udp receive secure4.sock(fd=%d)", dev->secure4.sock);
     FD_CLR(dev->secure4.sock, fds);
     int count = oc_ip_recv_msg(dev->secure4.sock, message->data, OC_PDU_SIZE,
                                &message->endpoint, false);
@@ -795,11 +795,11 @@ process_socket_signal_event(const ip_context_t *dev, fd_set *rdfds)
   }
   FD_CLR(dev->tcp.connect_pipe[0], rdfds);
   adapter_receive_state_t status = tcp_receive_signal(&dev->tcp);
-  OC_DBG("Signal event received(fd=%d, status=%d)", dev->tcp.connect_pipe[0],
-         status);
-#if !OC_DBG_IS_ENABLED
+  OC_TRACE("Signal event received(fd=%d, status=%d)", dev->tcp.connect_pipe[0],
+           status);
+#if !OC_TRACE_IS_ENABLED
   (void)status;
-#endif /* OC_DBG_IS_ENABLED */
+#endif /* OC_TRACE_IS_ENABLED */
   return true;
 #else  /* !OC_TCP */
   (void)dev;
@@ -834,9 +834,9 @@ process_socket_read_event(ip_context_t *dev, fd_set *rdfds)
   return s == ADAPTER_STATUS_NONE ? 0 : 1;
 
 receive:
-  OC_DBG("Incoming message of size %zd bytes from", message->length);
-  OC_LOGipaddr(message->endpoint);
-  OC_DBG("%s", "");
+  OC_TRACE("Incoming message of size %zd bytes from", message->length);
+  OC_LOGipaddr(OC_LOG_LEVEL_TRACE, message->endpoint);
+  OC_TRACE("%s", "");
 
   oc_network_receive_event(message);
   return 1;
@@ -974,11 +974,11 @@ process_events(ip_context_t *dev, fd_set *rdfds, fd_set *wfds, int fd_count,
                int max_read_fd)
 {
   if (fd_count == 0) {
-    OC_DBG("process_events: timeout");
+    OC_TRACE("process_events: timeout");
     return;
   }
 
-  OC_DBG("processing %d events", fd_count);
+  OC_TRACE("processing %d events", fd_count);
 
   // process control flow events
   if (process_wakeup_signal(dev, rdfds)) {
@@ -1122,9 +1122,9 @@ network_event_thread(void *data)
 static int
 oc_send_buffer_internal(oc_message_t *message, bool create, bool queue)
 {
-  OC_DBG("Outgoing message of size %zd bytes to", message->length);
-  OC_LOGipaddr(message->endpoint);
-  OC_DBG("%s", "");
+  OC_TRACE("Outgoing message of size %zd bytes to", message->length);
+  OC_LOGipaddr(OC_LOG_LEVEL_TRACE, message->endpoint);
+  OC_TRACE("%s", "");
 
   ip_context_t *dev = oc_get_ip_context_for_device(message->endpoint.device);
   if (dev == NULL) {

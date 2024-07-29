@@ -187,14 +187,7 @@ cloud_deregister_by_request(cloud_api_param_t *p, uint16_t timeout,
                                 &conf)) {
     goto error;
   }
-#if OC_INFO_IS_ENABLED
-  const char *ep_str = "";
-  oc_string64_t ep = { 0 };
-  if (oc_endpoint_to_string64(ctx->cloud_ep, &ep)) {
-    ep_str = oc_string(ep);
-  }
-  OC_CLOUD_INFO("Deregistering from %s", ep_str);
-#endif /* OC_INFO_IS_ENABLED */
+  oc_cloud_endpoint_log("Deregistering from ", ctx->cloud_ep);
   if (oc_cloud_access_deregister(
         conf, oc_string(ctx->store.uid),
         useAccessToken ? oc_string(ctx->store.access_token) : NULL)) {
