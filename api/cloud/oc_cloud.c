@@ -344,7 +344,8 @@ cloud_ep_session_event_handler(const oc_endpoint_t *endpoint,
   OC_CLOUD_DBG("ep(%" PRId64 ") ep_state: %d (current: %d)", session_id,
                (int)state, (int)ctx->cloud_ep_state);
 #endif /* OC_DBG_IS_ENABLED */
-  if (ctx->cloud_ep->session_id == 0 && state == OC_SESSION_CONNECTED) {
+  if (state == OC_SESSION_CONNECTED && (ctx->cloud_ep->flags & TCP) != 0 &&
+      ctx->cloud_ep->session_id == 0) {
     OC_CLOUD_DBG("session_id set to %" PRIu32, endpoint->session_id);
     ctx->cloud_ep->session_id = endpoint->session_id;
   }

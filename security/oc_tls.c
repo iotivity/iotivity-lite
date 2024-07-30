@@ -2182,6 +2182,12 @@ oc_tls_add_new_peer(oc_tls_new_peer_params_t params)
     return NULL;
   }
 
+#ifdef OC_TCP
+  if (((peer->endpoint.flags & TCP) != 0) && (peer->endpoint.session_id == 0)) {
+    peer->endpoint.session_id = oc_tcp_get_new_session_id();
+  }
+#endif /* OC_TCP */
+
 #ifdef OC_PKI
   oc_tls_peer_pki_init(peer, params.user_data, params.verify_certificate);
 #endif /* OC_PKI */
@@ -2715,15 +2721,8 @@ oc_tls_init_connection(oc_message_t *message)
     return;
   }
 
-#ifdef OC_TCP
-  if ((peer->endpoint.flags & TCP) != 0) {
-#ifndef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
-    if (peer->endpoint.session_id == 0) {
-      peer->endpoint.session_id = oc_tcp_get_new_session_id();
-    }
-#endif /* !OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
-
 #ifdef OC_HAS_FEATURE_TCP_ASYNC_CONNECT
+  if ((peer->endpoint.flags & TCP) != 0) {
     oc_tcp_connect_result_t res =
       oc_tcp_connect_to_endpoint(&peer->endpoint, oc_tls_on_tcp_connect, NULL);
     if (res.state == OC_TCP_SOCKET_STATE_CONNECTED ||
@@ -2747,9 +2746,8 @@ oc_tls_init_connection(oc_message_t *message)
     oc_tls_free_peer(peer, false, false, true);
     oc_message_unref(message);
     return;
-#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
   }
-#endif /* OC_TCP */
+#endif /* OC_HAS_FEATURE_TCP_ASYNC_CONNECT */
   oc_tls_handshake(peer);
   oc_message_unref(message);
 }
