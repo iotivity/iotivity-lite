@@ -40,8 +40,6 @@ public:
 
   static void TearDownTestCase() { oc_random_destroy(); }
 
-  void TearDown() override { oc_log_set_level(OC_LOG_LEVEL_INFO); }
-
   static void checkEncodedACE(
     const oc_sec_ace_t *ace, const oc_rep_t *rep,
     std::vector<const oc_ace_res_t *> expResources = {})

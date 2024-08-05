@@ -616,6 +616,10 @@ ace_decode_property(const oc_rep_t *rep, oc_sec_ace_decode_t *acedecode)
       acedecode->tag = &rep->value.string;
       return true;
     }
+    if (oc_rep_is_property(rep, "href", OC_CHAR_ARRAY_LEN("href"))) {
+      // TODO: fix CTT1.1.11 payload and remove this property parsing
+      return true;
+    }
     goto unknown_property;
   }
 
@@ -634,13 +638,14 @@ ace_decode_property(const oc_rep_t *rep, oc_sec_ace_decode_t *acedecode)
     goto unknown_property;
   }
 
-  if (rep->type == OC_REP_OBJECT_ARRAY) {
-    if (oc_rep_is_property(rep, OC_ACE_PROP_RESOURCES,
-                           OC_CHAR_ARRAY_LEN(OC_ACE_PROP_RESOURCES))) {
+  if (oc_rep_is_property(rep, OC_ACE_PROP_RESOURCES,
+                         OC_CHAR_ARRAY_LEN(OC_ACE_PROP_RESOURCES))) {
+    if (rep->type == OC_REP_OBJECT_ARRAY) {
       acedecode->resources = rep->value.object_array;
       return true;
     }
-    goto unknown_property;
+    // empty array or nil are valid, other types are not
+    return rep->type == OC_REP_NIL || rep->type == OC_REP_ARRAY;
   }
 
 unknown_property:

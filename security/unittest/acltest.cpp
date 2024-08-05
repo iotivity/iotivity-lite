@@ -34,8 +34,11 @@
 #include "security/oc_security_internal.h"
 #include "security/oc_svr_internal.h"
 #include "security/oc_tls_internal.h"
+#include "tests/gtest/Device.h"
 #include "tests/gtest/Endpoint.h"
+#include "tests/gtest/RepPool.h"
 #include "tests/gtest/Resource.h"
+#include "tests/gtest/Storage.h"
 #include "tests/gtest/tls/Peer.h"
 #include "util/oc_list.h"
 
@@ -64,6 +67,8 @@
 #include <gtest/gtest.h>
 #include <string>
 #include <vector>
+
+using namespace std::chrono_literals;
 
 static constexpr size_t kDeviceID = 0;
 
@@ -1051,5 +1056,166 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToNonSVRByAnonConn)
 
   oc_sec_acl_clear(kDeviceID, nullptr, nullptr);
 }
+
+class TestAclWithServer : public testing::Test {
+public:
+  static void SetUpTestCase()
+  {
+#ifdef OC_STORAGE
+    ASSERT_EQ(0, oc::TestStorage.Config());
+#endif // OC_STORAGE
+
+    ASSERT_TRUE(oc::TestDevice::StartServer());
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+    ASSERT_TRUE(
+      oc::SetAccessInRFOTM(OCF_SEC_ACL, kDeviceID, true,
+                           OC_PERM_RETRIEVE | OC_PERM_UPDATE | OC_PERM_DELETE));
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  }
+
+  static void TearDownTestCase()
+  {
+    oc::TestDevice::StopServer();
+#ifdef OC_STORAGE
+    ASSERT_EQ(0, oc::TestStorage.Clear());
+#endif // OC_STORAGE
+  }
+
+  void TearDown() override { oc::TestDevice::Reset(); }
+};
+
+TEST_F(TestAclWithServer, PutRequest_FailMethodNotSupported)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+  oc_status_t error_code = OC_STATUS_METHOD_NOT_ALLOWED;
+#else  /* !OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  oc_status_t error_code = OC_STATUS_UNAUTHORIZED;
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
+  oc::testNotSupportedMethod(OC_PUT, &ep, OCF_SEC_ACL_URI, nullptr, error_code);
+}
+
+#ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
+
+TEST_F(TestAclWithServer, GetRequest)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  auto get_handler = [](oc_client_response_t *data) {
+    oc::TestDevice::Terminate();
+    EXPECT_EQ(OC_STATUS_OK, data->code);
+    OC_DBG("GET payload: %s", oc::RepPool::GetJson(data->payload).data());
+    *static_cast<bool *>(data->user_data) = true;
+  };
+
+  bool invoked = false;
+  auto timeout = 1s;
+  EXPECT_TRUE(oc_do_get_with_timeout(OCF_SEC_ACL_URI, &ep, nullptr,
+                                     timeout.count(), get_handler, HIGH_QOS,
+                                     &invoked));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+  ASSERT_TRUE(invoked);
+}
+
+TEST_F(TestAclWithServer, PostRequest_EmptyArray)
+{
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  auto post_handler = [](oc_client_response_t *data) {
+    EXPECT_EQ(OC_STATUS_CHANGED, data->code);
+    oc::TestDevice::Terminate();
+    OC_DBG("POST payload: %s", oc::RepPool::GetJson(data->payload).data());
+    *static_cast<bool *>(data->user_data) = true;
+  };
+  bool invoked = false;
+  ASSERT_TRUE(oc_init_post(OCF_SEC_ACL_URI, &ep, nullptr, post_handler,
+                           HIGH_QOS, &invoked));
+
+  // {"aclist2": [{"subject": {"uuid": "11111111-2222-3333-4444-555555555555"},
+  // "permission": 31, "resources": null}]}
+  oc_rep_begin_root_object();
+  oc_rep_set_array(root, aclist2);
+  oc_rep_object_array_begin_item(aclist2);
+  oc_rep_set_object(aclist2, subject);
+  oc_rep_set_text_string(subject, uuid, "11111111-2222-3333-4444-555555555555");
+  oc_rep_close_object(aclist2, subject);
+  oc_rep_set_int(aclist2, permission,
+                 OC_PERM_CREATE | OC_PERM_RETRIEVE | OC_PERM_UPDATE |
+                   OC_PERM_DELETE | OC_PERM_NOTIFY);
+  oc_rep_set_array(aclist2, resources);
+  oc_rep_close_array(aclist2, resources);
+  oc_rep_object_array_end_item(aclist2);
+  oc_rep_close_array(root, aclist2);
+  oc_rep_end_root_object();
+
+  auto timeout = 1s;
+  EXPECT_TRUE(oc_do_post_with_timeout(timeout.count()));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+
+  EXPECT_TRUE(invoked);
+}
+
+TEST_F(TestAclWithServer, PostRequest_CTT1_1_11)
+{
+  // currently the test case CTT1.1.11: Resource Discovery by Security Domain
+  // Identifier sends an invalid POST request payload:
+  //
+  // {"aclist2":
+  //    [{
+  //      "subject": {
+  //        "conntype": "anon-clear"
+  //      },
+  //      "href": "/oic/sec/res",
+  //      "permission": 2
+  //    }]
+  // }
+  // This should be fixed in the CTT, but for now we must avoid returning an
+  // error to not break CTT verification.
+
+  auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID);
+  ASSERT_TRUE(epOpt.has_value());
+  auto ep = std::move(*epOpt);
+
+  auto post_handler = [](oc_client_response_t *data) {
+    EXPECT_EQ(OC_STATUS_CHANGED, data->code);
+    oc::TestDevice::Terminate();
+    OC_DBG("POST payload: %s", oc::RepPool::GetJson(data->payload).data());
+    *static_cast<bool *>(data->user_data) = true;
+  };
+  bool invoked = false;
+  ASSERT_TRUE(oc_init_post(OCF_SEC_ACL_URI, &ep, nullptr, post_handler,
+                           HIGH_QOS, &invoked));
+
+  oc_rep_begin_root_object();
+  oc_rep_set_array(root, aclist2);
+  oc_rep_object_array_begin_item(aclist2);
+  oc_rep_set_object(aclist2, subject);
+  oc_rep_set_text_string(subject, conntype, "anon-clear");
+  oc_rep_close_object(aclist2, subject);
+  oc_rep_set_text_string(aclist2, href, "/oic/sec/res");
+  oc_rep_set_int(aclist2, permission, OC_PERM_RETRIEVE);
+  oc_rep_object_array_end_item(aclist2);
+  oc_rep_close_array(root, aclist2);
+  oc_rep_end_root_object();
+
+  auto timeout = 1s;
+  EXPECT_TRUE(oc_do_post_with_timeout(timeout.count()));
+  oc::TestDevice::PoolEventsMsV1(timeout, true);
+
+  EXPECT_TRUE(invoked);
+}
+
+TEST_F(TestAclWithServer, DeleteRequest)
+{
+  // TODO
+}
+
+#endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 
 #endif /* OC_SECURITY */
