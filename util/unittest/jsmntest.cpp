@@ -22,9 +22,10 @@
 
 #include "util/jsmn/jsmn_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <cctype>
 #include <climits>
-#include <gtest/gtest.h>
 #include <vector>
 
 TEST(TestJsmn, ParseEmpty)

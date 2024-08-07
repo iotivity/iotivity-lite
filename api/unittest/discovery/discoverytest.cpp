@@ -42,12 +42,13 @@
 #include "security/oc_sdi_internal.h"
 #endif /* OC_SECURITY */
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <array>
 #include <chrono>
 #include <cinttypes>
 #include <cstring>
-#include <gtest/gtest.h>
 #include <map>
 #include <string>
 #include <vector>

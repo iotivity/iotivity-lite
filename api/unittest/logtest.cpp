@@ -20,9 +20,10 @@
 #include "port/oc_log_internal.h"
 #include "util/oc_compiler.h"
 
+#include "gtest/gtest.h"
+
 #include <cstdarg>
 #include <cstdio>
-#include <gtest/gtest.h>
 #include <map>
 
 class TestLog : public testing::Test {

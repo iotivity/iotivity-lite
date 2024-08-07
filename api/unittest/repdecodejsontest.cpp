@@ -28,7 +28,7 @@
 #include "tests/gtest/RepPool.h"
 #include "tests/gtest/Utility.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 #include <string>
 
 class TestRepDecodeJson : public testing::Test {

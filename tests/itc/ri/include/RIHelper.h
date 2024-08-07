@@ -23,7 +23,8 @@
 #include "oc_uuid.h"
 #include "port/oc_clock.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
+
 #include <pthread.h>
 #include <signal.h>
 #include <stdio.h>

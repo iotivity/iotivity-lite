@@ -33,8 +33,9 @@
 #include "util/oc_list.h"
 #include "util/oc_mmem_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
-#include <gtest/gtest.h>
 #include <string>
 #include <unordered_map>
 

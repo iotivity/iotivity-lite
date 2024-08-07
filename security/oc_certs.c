@@ -33,11 +33,12 @@
 #include "security/oc_tls_internal.h"
 #include "util/oc_macros_internal.h"
 
-#include <mbedtls/bignum.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/oid.h>
-#include <mbedtls/pk.h>
+#include "mbedtls/build_info.h"
+#include "mbedtls/bignum.h"
+#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/oid.h"
+#include "mbedtls/pk.h"
 
 #include <inttypes.h>
 #include <stdint.h>

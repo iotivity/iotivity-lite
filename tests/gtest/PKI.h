@@ -25,9 +25,9 @@
 #include "tests/gtest/KeyPair.h"
 #include "tests/gtest/Role.h"
 
-#include <mbedtls/build_info.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/entropy.h>
+#include "mbedtls/build_info.h"
+#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/entropy.h"
 
 #include <string>
 #include <vector>

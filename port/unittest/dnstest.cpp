@@ -23,7 +23,9 @@
 #include "port/oc_connectivity.h"
 #include "oc_endpoint.h"
 #include "oc_helpers.h"
-#include <gtest/gtest.h>
+
+#include "gtest/gtest.h"
+
 #ifdef _WIN32
 #include <WinSock2.h>
 #endif /* _WIN32 */

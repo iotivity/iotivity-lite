@@ -32,10 +32,11 @@
 #include "tests/gtest/Utility.h"
 #include "util/oc_crc_internal.h"
 
+#include "cbor.h"
+#include "gtest/gtest.h"
+
 #include <array>
-#include <cbor.h>
 #include <cfloat>
-#include <gtest/gtest.h>
 #include <memory>
 #include <optional>
 

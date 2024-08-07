@@ -30,9 +30,10 @@
 #include "security/oc_oscore_context_internal.h"
 #include "security/oc_oscore_crypto_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
 #include <cstdlib>
-#include <gtest/gtest.h>
 #include <string>
 
 class TestOSCORE : public testing::Test {

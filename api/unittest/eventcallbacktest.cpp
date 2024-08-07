@@ -46,8 +46,9 @@
 #include "security/oc_security_internal.h"
 #endif /* OC_SECURITY */
 
+#include "gtest/gtest.h"
+
 #include <chrono>
-#include <gtest/gtest.h>
 #include <string>
 #include <vector>
 

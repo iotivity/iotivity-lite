@@ -41,9 +41,10 @@
 #include "tests/gtest/Resource.h"
 #include "util/oc_process_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
 #include <chrono>
-#include <gtest/gtest.h>
 #include <string>
 
 using namespace std::chrono_literals;

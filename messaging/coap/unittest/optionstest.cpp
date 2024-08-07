@@ -20,8 +20,9 @@
 #include "messaging/coap/options_internal.h"
 #include "tests/gtest/Device.h"
 
+#include "gtest/gtest.h"
+
 #include <cstring>
-#include <gtest/gtest.h>
 #include <string>
 
 class TestOptions : public testing::Test {};

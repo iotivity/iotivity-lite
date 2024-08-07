@@ -21,8 +21,9 @@
 #include "port/oc_clock.h"
 #include "port/oc_log_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <chrono>
-#include <gtest/gtest.h>
 
 class TestClock : public testing::Test {
 public:

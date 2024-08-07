@@ -30,7 +30,8 @@
 #include "messaging/coap/signal_internal.h"
 #endif /* OC_TCP */
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
+
 #include <limits>
 #include <set>
 #include <string>

@@ -27,8 +27,9 @@
 #include "security/oc_pstat_internal.h"
 #endif /* OC_SECURITY */
 
+#include "gtest/gtest.h"
+
 #include <chrono>
-#include <gtest/gtest.h>
 
 using namespace std::chrono_literals;
 

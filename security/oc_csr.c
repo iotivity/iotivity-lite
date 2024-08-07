@@ -36,10 +36,12 @@
 #include "security/oc_pki_internal.h"
 #include "security/oc_tls_internal.h"
 
+#include "mbedtls/build_info.h"
+#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/x509_csr.h"
+
 #include <assert.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/x509_csr.h>
 
 static bool
 csr_init_pk_context(size_t device, mbedtls_pk_context *pk)

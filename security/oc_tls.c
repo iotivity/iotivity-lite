@@ -59,15 +59,15 @@
 #include "security/oc_oscore_internal.h"
 #endif /* OC_OSCORE */
 
-#include <mbedtls/build_info.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/md.h>
-#include <mbedtls/oid.h>
-#include <mbedtls/pkcs5.h>
-#include <mbedtls/ssl.h>
-#include <mbedtls/ssl_cookie.h>
-#include <mbedtls/timing.h>
+#include "mbedtls/build_info.h"
+#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/md.h"
+#include "mbedtls/oid.h"
+#include "mbedtls/pkcs5.h"
+#include "mbedtls/ssl.h"
+#include "mbedtls/ssl_cookie.h"
+#include "mbedtls/timing.h"
 
 #include <stdarg.h>
 #include <stdint.h>
@@ -75,9 +75,9 @@
 #include <inttypes.h>
 
 #if OC_ERR_IS_ENABLED
-#include <mbedtls/debug.h>
-#include <mbedtls/error.h>
-#include <mbedtls/platform.h>
+#include "mbedtls/debug.h"
+#include "mbedtls/error.h"
+#include "mbedtls/platform.h"
 #endif /* OC_ERR_IS_ENABLED */
 
 #define OC_TLS_SELECTED_ANY_CRED_ID (-1)

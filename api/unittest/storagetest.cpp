@@ -33,9 +33,10 @@
 #include "port/oc_storage_internal.h"
 #include "util/oc_macros_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
 #include <filesystem>
-#include <gtest/gtest.h>
 #include <limits>
 #include <string>
 

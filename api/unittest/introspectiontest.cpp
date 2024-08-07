@@ -34,9 +34,10 @@
 #include "tests/gtest/Resource.h"
 #include "tests/gtest/Storage.h"
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <fstream>
-#include <gtest/gtest.h>
 #include <iterator>
 #include <vector>
 

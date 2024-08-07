@@ -43,10 +43,11 @@
 #include "util/oc_macros_internal.h"
 #include "util/oc_secure_string_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <array>
 #include <chrono>
-#include <gtest/gtest.h>
 #include <string>
 
 using namespace std::chrono_literals;

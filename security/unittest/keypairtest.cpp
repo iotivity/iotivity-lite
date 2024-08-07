@@ -29,9 +29,10 @@
 #include "tests/gtest/PKI.h"
 #include "tests/gtest/RepPool.h"
 
+#include "gtest/gtest.h"
+#include "mbedtls/ecp.h"
+
 #include <array>
-#include <mbedtls/ecp.h>
-#include <gtest/gtest.h>
 #include <stdint.h>
 #include <string.h>
 

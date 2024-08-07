@@ -29,12 +29,13 @@
 #include "tests/gtest/Role.h"
 #include "tests/gtest/Utility.h"
 
+#include "gtest/gtest.h"
+#include "mbedtls/ctr_drbg.h"
+
 #include <algorithm>
 #include <array>
 #include <cstring>
-#include <gtest/gtest.h>
 #include <limits>
-#include <mbedtls/ctr_drbg.h>
 #include <string>
 #include <vector>
 

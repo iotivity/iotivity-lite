@@ -33,9 +33,10 @@
 #include "plgd/plgd_time.h"
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <array>
-#include <gtest/gtest.h>
 #include <optional>
 #include <vector>
 

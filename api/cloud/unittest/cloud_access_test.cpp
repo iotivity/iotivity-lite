@@ -28,7 +28,7 @@
 #include "tests/gtest/Device.h"
 #include "tests/gtest/Endpoint.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
 class TestCloudAccess : public testing::Test {
 public:

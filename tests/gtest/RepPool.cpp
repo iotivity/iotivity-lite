@@ -19,7 +19,7 @@
 #include "api/oc_rep_internal.h"
 #include "RepPool.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
 namespace oc {
 

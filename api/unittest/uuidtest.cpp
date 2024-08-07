@@ -20,9 +20,10 @@
 #include "oc_uuid.h"
 #include "port/oc_random.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
 #include <cstdlib>
-#include <gtest/gtest.h>
 #include <string>
 
 constexpr const char UUID[] = "0123456789ABCDEFGHIJKLMNOPQRSTUV";

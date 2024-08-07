@@ -25,12 +25,13 @@
 #include "security/oc_certs_internal.h"
 #include "tests/gtest/Utility.h"
 
+#include "gtest/gtest.h"
+#include "mbedtls/asn1.h"
+#include "mbedtls/ctr_drbg.h"
+
 #include <algorithm>
 #include <array>
-#include <gtest/gtest.h>
 #include <limits>
-#include <mbedtls/asn1.h>
-#include <mbedtls/ctr_drbg.h>
 #include <string>
 #include <vector>
 

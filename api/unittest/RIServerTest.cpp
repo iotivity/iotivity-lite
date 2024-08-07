@@ -36,9 +36,10 @@
 #include "tests/gtest/Device.h"
 #include "util/oc_process_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
 #include <cstdint>
-#include <gtest/gtest.h>
 #include <unordered_map>
 
 static const std::string kResourceURI = "/LightResourceURI";

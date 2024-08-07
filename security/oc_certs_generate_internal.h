@@ -27,8 +27,9 @@
 #include "oc_role.h"
 #include "util/oc_compiler.h"
 
-#include <mbedtls/build_info.h>
-#include <mbedtls/x509_crt.h>
+#include "mbedtls/build_info.h"
+#include "mbedtls/x509_crt.h"
+
 #include <stddef.h>
 
 #ifdef __cplusplus

@@ -47,7 +47,8 @@
 #include "security/oc_security_internal.h"
 #endif // OC_SECURITY
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
+
 #include <mutex>
 #include <string>
 #include <thread>

@@ -32,10 +32,11 @@
 #include "security/oc_acl_internal.h"
 #endif /* OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM */
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <chrono>
 #include <cstdlib>
-#include <gtest/gtest.h>
 #include <set>
 #include <string>
 #include <vector>

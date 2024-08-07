@@ -22,7 +22,7 @@
 #include "util/oc_features.h"
 
 #ifdef OC_HAS_FEATURE_PLGD_TIME
-#include <mbedtls/platform_time.h>
+#include "mbedtls/platform_time.h"
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 
 #ifdef __cplusplus

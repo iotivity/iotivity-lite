@@ -24,7 +24,7 @@
 #include "oc_ri.h"
 #include "tests/gtest/Device.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
 static constexpr size_t kDeviceID{ 0 };
 

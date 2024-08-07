@@ -25,9 +25,10 @@
 #include "oc_role.h"
 #include "security/oc_cred_internal.h"
 
-#include <mbedtls/build_info.h>
-#include <mbedtls/x509_crt.h>
-#include <mbedtls/x509_csr.h>
+#include "mbedtls/build_info.h"
+#include "mbedtls/x509_crt.h"
+#include "mbedtls/x509_csr.h"
+
 #include <stdbool.h>
 #include <stdint.h>
 

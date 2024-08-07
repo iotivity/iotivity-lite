@@ -23,8 +23,8 @@
 
 #include "oc_export.h"
 
-#include <mbedtls/build_info.h>
-#include <mbedtls/md.h>
+#include "mbedtls/build_info.h"
+#include "mbedtls/md.h"
 #include <stddef.h>
 
 #ifdef __cplusplus

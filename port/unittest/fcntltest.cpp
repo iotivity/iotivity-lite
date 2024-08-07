@@ -27,9 +27,10 @@
 #include "port/common/posix/oc_fcntl_internal.h"
 #endif /* !_WIN32 */
 
+#include "gtest/gtest.h"
+
 #include <fcntl.h>
 #include <cstdio>
-#include <gtest/gtest.h>
 #include <string>
 
 #ifdef _WIN32

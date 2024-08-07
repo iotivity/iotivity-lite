@@ -58,15 +58,16 @@
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
 
+#include "gtest/gtest.h"
+
 #include <array>
 #include <chrono>
 #include <filesystem>
-#include <gtest/gtest.h>
 
 #ifdef OC_SECURITY
-#include <mbedtls/platform_time.h>
+#include "mbedtls/platform_time.h"
 #ifdef OC_PKI
-#include <mbedtls/ssl.h>
+#include "mbedtls/ssl.h"
 #endif /* OC_PKI */
 #endif /* OC_SECURITY */
 

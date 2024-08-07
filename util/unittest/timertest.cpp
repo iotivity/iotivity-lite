@@ -22,7 +22,8 @@
 
 #include "tests/gtest/Clock.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
+
 #include <inttypes.h>
 
 using namespace std::chrono_literals;

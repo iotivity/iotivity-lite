@@ -44,9 +44,10 @@
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <filesystem>
-#include <gtest/gtest.h>
 #include <string>
 
 using namespace std::chrono_literals;

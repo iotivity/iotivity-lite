@@ -20,7 +20,7 @@
 
 #ifdef OC_SECURITY
 
-#include <mbedtls/build_info.h>
+#include "mbedtls/build_info.h"
 
 #if defined(MBEDTLS_NET_C) && defined(MBEDTLS_TIMING_C)
 

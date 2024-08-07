@@ -47,7 +47,7 @@
 #endif /* OC_OSCORE */
 #ifdef OC_PKI
 #include "security/oc_certs_internal.h"
-#include <mbedtls/platform_util.h>
+#include "mbedtls/platform_util.h"
 #endif /* OC_PKI */
 
 #include <errno.h>

@@ -42,8 +42,9 @@
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
 
+#include "gtest/gtest.h"
+
 #include <filesystem>
-#include <gtest/gtest.h>
 #include <string>
 
 static const std::string kDeviceURI{ "/oic/d" };

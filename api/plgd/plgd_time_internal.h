@@ -30,7 +30,7 @@
 #include "port/oc_clock.h"
 
 #ifdef OC_SECURITY
-#include <mbedtls/platform_time.h>
+#include "mbedtls/platform_time.h"
 #endif /* OC_SECURITY */
 
 #include <stdbool.h>

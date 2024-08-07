@@ -40,16 +40,17 @@
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
 
+#include "gtest/gtest.h"
+#include "mbedtls/build_info.h"
+#include "mbedtls/x509_crt.h"
+
+#include <array>
+#include <string>
+#include <vector>
+
 #ifdef _WIN32
 #include <WinSock2.h>
 #endif /* _WIN32 */
-
-#include <array>
-#include <gtest/gtest.h>
-#include <mbedtls/build_info.h>
-#include <mbedtls/x509_crt.h>
-#include <string>
-#include <vector>
 
 static constexpr size_t kDeviceID{ 0 };
 static const std::string kDeviceURI{ "/oic/d" };

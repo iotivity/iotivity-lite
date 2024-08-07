@@ -28,7 +28,7 @@
 #include "security/oc_roles_internal.h"
 #include "security/oc_tls_internal.h"
 
-#include <mbedtls/x509_crt.h>
+#include "mbedtls/x509_crt.h"
 
 #include <errno.h>
 #include <stdlib.h>

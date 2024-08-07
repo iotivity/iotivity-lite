@@ -26,11 +26,12 @@
 #include "tests/gtest/Resource.h"
 #include "util/oc_secure_string_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
+#include <cstdlib>
 #include <chrono>
-#include <gtest/gtest.h>
 #include <memory>
-#include <stdlib.h>
 #include <string>
 #include <vector>
 

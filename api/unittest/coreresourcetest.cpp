@@ -32,10 +32,11 @@
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
+#include <cstdio>
 #include <cstdlib>
-#include <gtest/gtest.h>
-#include <stdio.h>
 #include <string>
 
 using namespace std::chrono_literals;

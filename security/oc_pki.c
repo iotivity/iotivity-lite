@@ -30,9 +30,9 @@
 #include "port/oc_connectivity.h"
 #include "port/oc_log_internal.h"
 
-#include <mbedtls/ecp.h>
-#include <mbedtls/pk.h>
-#include <mbedtls/x509_crt.h>
+#include "mbedtls/ecp.h"
+#include "mbedtls/pk.h"
+#include "mbedtls/x509_crt.h"
 
 static oc_pki_verify_certificate_cb_t g_verify_certificate_cb;
 static oc_pki_pk_functions_t g_pk_functions;

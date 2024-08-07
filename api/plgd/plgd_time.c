@@ -49,7 +49,7 @@
 #include <time.h>
 
 #ifdef OC_SECURITY
-#include <mbedtls/x509.h>
+#include "mbedtls/x509.h"
 #endif /* OC_SECURITY */
 
 #ifdef OC_CLIENT

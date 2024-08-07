@@ -18,7 +18,7 @@
 
 #include "RIHelper.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
 class RIGeneralIntegrationTest : public ::testing::Test {};
 

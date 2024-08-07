@@ -26,9 +26,11 @@
 #include "port/oc_log_internal.h"
 #include "security/oc_certs_internal.h"
 
+#include "mbedtls/build_info.h"
+#include "mbedtls/oid.h"
+#include "mbedtls/x509_crt.h"
+
 #include <assert.h>
-#include <mbedtls/oid.h>
-#include <mbedtls/x509_crt.h>
 #include <string.h>
 
 #define MBEDTLS_ULIMITED_PATHLEN 0

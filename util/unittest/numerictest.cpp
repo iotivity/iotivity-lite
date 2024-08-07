@@ -18,8 +18,9 @@
 
 #include "util/oc_numeric_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
-#include <gtest/gtest.h>
 #include <string.h>
 
 TEST(TestNumeric, DoubleIsZero)

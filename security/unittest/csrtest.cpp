@@ -30,10 +30,11 @@
 #include "tests/gtest/KeyPair.h"
 #include "tests/gtest/Resource.h"
 
+#include "gtest/gtest.h"
+#include "mbedtls/x509_crt.h"
+
 #include <algorithm>
 #include <array>
-#include <gtest/gtest.h>
-#include <mbedtls/x509_crt.h>
 
 using namespace std::chrono_literals;
 

@@ -36,12 +36,6 @@
 #include "util/oc_secure_string_internal.h"
 #include "util/oc_features.h"
 
-#include <array>
-#include <gtest/gtest.h>
-#include <set>
-#include <string>
-#include <vector>
-
 #ifdef OC_SECURITY
 #include "security/oc_pstat_internal.h"
 #include "security/oc_svr_internal.h"
@@ -50,6 +44,13 @@
 #ifdef OC_HAS_FEATURE_PUSH
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
+
+#include "gtest/gtest.h"
+
+#include <array>
+#include <set>
+#include <string>
+#include <vector>
 
 using namespace std::chrono_literals;
 

@@ -33,8 +33,9 @@
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
 
+#include "gtest/gtest.h"
+
 #include <array>
-#include <gtest/gtest.h>
 #include <string>
 #include <vector>
 

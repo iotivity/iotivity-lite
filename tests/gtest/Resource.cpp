@@ -28,10 +28,11 @@
 #include "api/oc_collection_internal.h"
 #endif /* OC_COLLECTIONS */
 
+#include "gtest/gtest.h"
+
 #include <array>
 #include <cstring>
 #include <functional>
-#include <gtest/gtest.h>
 
 namespace oc {
 

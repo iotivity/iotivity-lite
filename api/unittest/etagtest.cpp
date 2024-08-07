@@ -60,13 +60,14 @@
 #include "api/plgd/plgd_time_internal.h"
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <array>
 #include <chrono>
 #include <filesystem>
 #include <fstream>
 #include <functional>
-#include <gtest/gtest.h>
 #include <map>
 #include <string>
 #include <vector>

@@ -46,9 +46,10 @@
 #include "security/oc_pstat_internal.h"
 #endif /* OC_SECURITY */
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <functional>
-#include <gtest/gtest.h>
 #include <string>
 #include <vector>
 

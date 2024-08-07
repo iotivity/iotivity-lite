@@ -23,8 +23,9 @@
 #include "oc_helpers.h"
 #include "oc_ri.h"
 
-#include <mbedtls/build_info.h>
-#include <mbedtls/x509_csr.h>
+#include "mbedtls/build_info.h"
+#include "mbedtls/x509_csr.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

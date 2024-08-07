@@ -24,9 +24,10 @@
 #include "util/oc_etimer_internal.h"
 #include "util/oc_process_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <chrono>
 #include <functional>
-#include <gtest/gtest.h>
 
 OC_PROCESS(oc_test_process, "Testing process");
 

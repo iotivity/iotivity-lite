@@ -18,7 +18,8 @@
 
 #include "util/oc_list.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
+
 #include <string>
 #include <vector>
 

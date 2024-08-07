@@ -36,11 +36,12 @@
 #include "port/windows/storage.h"
 #endif /* _WIN32 */
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <array>
 #include <cstdlib>
 #include <filesystem>
-#include <gtest/gtest.h>
 #include <string>
 #include <vector>
 

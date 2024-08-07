@@ -27,9 +27,10 @@
 #include "util/oc_etimer_internal.h"
 #include "util/oc_process_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <chrono>
 #include <functional>
-#include <gtest/gtest.h>
 
 #ifdef _WIN32
 #include <windows.h>

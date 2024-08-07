@@ -33,9 +33,10 @@
 #include "util/oc_memb.h"
 #include "util/oc_secure_string_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
 #include <chrono>
-#include <gtest/gtest.h>
 #include <string>
 #include <vector>
 

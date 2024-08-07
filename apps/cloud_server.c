@@ -158,7 +158,7 @@ static const char *auth_code;
 static const char *sid;
 static const char *apn;
 #ifdef OC_PKI
-#include <mbedtls/sha256.h>
+#include "mbedtls/sha256.h"
 static bool simulate_tpm = false;
 static uint8_t manufacturer_private_key[4096];
 const char *manufacturer_reference_private_key = "IDevID";

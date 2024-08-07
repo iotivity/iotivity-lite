@@ -18,7 +18,7 @@
 
 #include "api/oc_enums_internal.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 #include <limits>
 #include <string>
 

@@ -21,8 +21,9 @@
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
-#include <mbedtls/build_info.h>
-#include <mbedtls/x509_crt.h>
+#include "mbedtls/build_info.h"
+#include "mbedtls/x509_crt.h"
+
 #include <stdbool.h>
 
 #ifdef __cplusplus

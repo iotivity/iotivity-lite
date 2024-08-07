@@ -29,8 +29,9 @@
 #include "tests/gtest/Device.h"
 #include "util/oc_process.h"
 
+#include "gtest/gtest.h"
+
 #include <chrono>
-#include <gtest/gtest.h>
 
 using namespace std::chrono_literals;
 

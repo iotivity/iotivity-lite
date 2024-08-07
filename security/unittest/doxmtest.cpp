@@ -35,10 +35,11 @@
 #include "tests/gtest/Resource.h"
 #include "tests/gtest/Storage.h"
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <array>
 #include <filesystem>
-#include <gtest/gtest.h>
 #include <string>
 
 using namespace std::chrono_literals;
