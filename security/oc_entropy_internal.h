@@ -23,8 +23,9 @@
 extern "C" {
 #endif
 
-#include <mbedtls/build_info.h>
-#include <mbedtls/entropy.h>
+#include "mbedtls/build_info.h"
+#include "mbedtls/entropy.h"
+
 #include <stddef.h>
 
 /// @brief Add oc_entropy_poll to data sources

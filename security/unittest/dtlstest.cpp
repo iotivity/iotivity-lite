@@ -29,8 +29,9 @@
 #include "tests/gtest/tls/DTLSClient.h"
 #include "util/oc_macros_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <atomic>
-#include <gtest/gtest.h>
 
 // TODO: upgrade mingw, because on v10.2 std::thread doesn't work correctly
 #if defined(__MINGW32__) && defined(__GNUC__) && (__GNUC__ < 12)
@@ -39,6 +40,8 @@
 #else /* __MINGW32__ */
 #include <thread>
 #endif /* __MINGW32__ */
+
+#include "mbedtls/build_info.h"
 
 #if defined(MBEDTLS_NET_C) && defined(MBEDTLS_TIMING_C)
 

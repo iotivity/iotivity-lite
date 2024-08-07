@@ -32,7 +32,7 @@
 #include "security/oc_pstat_internal.h"
 #endif /* OC_SECURITY */
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 #include <string>
 
 static constexpr size_t kDeviceID{ 0 };

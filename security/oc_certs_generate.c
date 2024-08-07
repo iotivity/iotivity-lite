@@ -27,13 +27,14 @@
 #include "security/oc_entropy_internal.h"
 #include "util/oc_macros_internal.h"
 
+#include "mbedtls/build_info.h"
+#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/oid.h"
+#include "mbedtls/platform.h"
+#include "mbedtls/x509_crt.h"
+
 #include <assert.h>
-#include <mbedtls/build_info.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/oid.h>
-#include <mbedtls/platform.h>
-#include <mbedtls/x509_crt.h>
 #include <stdlib.h>
 
 static bool

@@ -19,9 +19,10 @@
 #include "oc_base64.h"
 #include "oc_helpers.h"
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <array>
-#include <gtest/gtest.h>
 #include <stddef.h>
 #include <string>
 #include <vector>

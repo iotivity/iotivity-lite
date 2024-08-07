@@ -28,9 +28,10 @@
 #include "messaging/coap/oc_coap.h"
 #endif /* OC_HAS_FEATURE_ETAG */
 
+#include "gtest/gtest.h"
+
 #include <cstdint>
 #include <string>
-#include <gtest/gtest.h>
 #include <vector>
 #include <unordered_map>
 

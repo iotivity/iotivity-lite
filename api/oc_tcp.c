@@ -26,7 +26,7 @@
 #include "oc_tcp_internal.h"
 #include "util/oc_atomic.h"
 #ifdef OC_SECURITY
-#include <mbedtls/ssl.h>
+#include "mbedtls/ssl.h"
 #ifdef OC_OSCORE
 #include "messaging/coap/oscore_internal.h"
 #endif /* OC_OSCORE */

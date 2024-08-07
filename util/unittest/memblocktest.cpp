@@ -18,8 +18,9 @@
 
 #include "util/oc_memb.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
-#include <gtest/gtest.h>
 
 struct test_data_t
 {

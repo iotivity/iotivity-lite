@@ -29,9 +29,10 @@
 #include "tests/gtest/tls/DTLS.h"
 #include "tests/gtest/tls/DTLSClient.h"
 
+#include "gtest/gtest.h"
+
 #include <atomic>
 #include <chrono>
-#include <gtest/gtest.h>
 
 // TODO: upgrade mingw, because on v10.2 std::thread doesn't work correctly
 #if defined(__MINGW32__) && defined(__GNUC__) && (__GNUC__ < 12)

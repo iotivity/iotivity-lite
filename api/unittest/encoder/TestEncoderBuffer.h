@@ -24,8 +24,9 @@
 #include "oc_rep.h"
 #include "tests/gtest/RepPool.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
-#include <gtest/gtest.h>
 #include <optional>
 #include <vector>
 

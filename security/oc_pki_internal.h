@@ -19,9 +19,10 @@
 #ifndef OC_PKI_INTERNAL_H
 #define OC_PKI_INTERNAL_H
 
+#include "mbedtls/ecp.h"
+#include "mbedtls/pk.h"
+
 #include <stddef.h>
-#include <mbedtls/ecp.h>
-#include <mbedtls/pk.h>
 
 #ifdef __cplusplus
 extern "C" {

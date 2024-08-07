@@ -29,10 +29,11 @@
 #include "security/oc_entropy_internal.h"
 #include "security/oc_pki_internal.h"
 
+#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/pk.h"
+
 #include <assert.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/pk.h>
 
 OC_MEMB(g_oc_keypairs_s, oc_ecdsa_keypair_t, OC_MAX_NUM_DEVICES);
 OC_LIST(g_oc_keypairs);

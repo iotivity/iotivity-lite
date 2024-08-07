@@ -20,7 +20,7 @@
 #include "oc_ri.h"
 #include "port/oc_random.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 #include <string>
 #include <vector>
 

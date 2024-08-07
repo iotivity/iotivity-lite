@@ -25,8 +25,9 @@
 #include "tests/gtest/RepPool.h"
 #include "tests/gtest/Utility.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
-#include <gtest/gtest.h>
 #include <string>
 
 class TestRepDecodeCbor : public testing::Test {

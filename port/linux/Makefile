@@ -12,6 +12,9 @@ VERSION = $(VERSION_MAJOR).$(VERSION_MINOR)
 DYNAMIC ?= 1
 export SECURE ?= 1
 export PKI ?= 1
+ifeq ($(SECURE),0)
+	PKI = 0
+endif
 export OSCORE ?= 1
 INTROSPECTION ?= 1
 export IDD ?= 1

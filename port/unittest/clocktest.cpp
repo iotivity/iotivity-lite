@@ -20,9 +20,10 @@
 #include "oc_config.h"
 #include "port/oc_clock.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
 #include <cstdlib>
-#include <gtest/gtest.h>
 #include <string>
 
 class TestClock : public testing::Test {

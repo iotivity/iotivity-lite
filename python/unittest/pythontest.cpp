@@ -18,8 +18,9 @@
 
 #include "python/oc_python_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
-#include <gtest/gtest.h>
 #include <string>
 
 class ResourceDiscoveryPayloadTest : public ::testing::Test {

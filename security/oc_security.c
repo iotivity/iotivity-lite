@@ -38,11 +38,11 @@
 #include "api/plgd/plgd_time_internal.h"
 #endif /* OC_HAS_FEATURE_PLGD_TIME */
 
-#include <mbedtls/build_info.h>
-#include <mbedtls/debug.h>
-#include <mbedtls/memory_buffer_alloc.h>
-#include <mbedtls/platform.h>
-#include <mbedtls/platform_time.h>
+#include "mbedtls/build_info.h"
+#include "mbedtls/debug.h"
+#include "mbedtls/memory_buffer_alloc.h"
+#include "mbedtls/platform.h"
+#include "mbedtls/platform_time.h"
 
 #ifndef OC_DYNAMIC_ALLOCATION
 
@@ -61,7 +61,7 @@ static unsigned char g_alloc_buf[OC_MBEDTLS_ALLOCATION_BUFFER_SIZE];
 #endif /* !OC_DYNAMIC_ALLOCATION */
 
 #if defined(_WIN32) || defined(_WIN64)
-#include <mbedtls/platform.h>
+#include "mbedtls/platform.h"
 #endif /* _WIN32 || _WIN64  */
 
 #include <time.h>

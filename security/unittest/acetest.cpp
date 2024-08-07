@@ -28,8 +28,9 @@
 #include "tests/gtest/RepPool.h"
 #include "util/oc_list.h"
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
-#include <gtest/gtest.h>
 #include <map>
 #include <string>
 #include <vector>

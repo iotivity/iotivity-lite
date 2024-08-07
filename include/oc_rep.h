@@ -22,13 +22,15 @@
 #ifndef OC_REP_H
 #define OC_REP_H
 
-#include <cbor.h>
 #include "oc_config.h"
 #include "oc_export.h"
 #include "oc_helpers.h"
 #include "util/oc_compiler.h"
 #include "util/oc_memb.h"
 #include "util/oc_features.h"
+
+#include "cbor.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

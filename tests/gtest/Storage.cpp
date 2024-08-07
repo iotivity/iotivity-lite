@@ -24,8 +24,9 @@
 #include "port/oc_storage.h"
 #include "port/oc_storage_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <filesystem>
-#include <gtest/gtest.h>
 
 namespace oc {
 

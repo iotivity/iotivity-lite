@@ -23,7 +23,8 @@
 
 #include "oc_rep.h"
 
-#include <mbedtls/ecp.h>
+#include "mbedtls/ecp.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 

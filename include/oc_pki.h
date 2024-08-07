@@ -35,10 +35,11 @@ extern "C" {
 
 #include "oc_export.h"
 #include "oc_sp.h"
-#include <mbedtls/build_info.h>
-#include <mbedtls/mbedtls_config.h>
-#include <mbedtls/platform_time.h>
-#include <mbedtls/x509_crt.h>
+
+#include "mbedtls/build_info.h"
+#include "mbedtls/mbedtls_config.h"
+#include "mbedtls/platform_time.h"
+#include "mbedtls/x509_crt.h"
 
 #include <stddef.h>
 #include <stdbool.h>

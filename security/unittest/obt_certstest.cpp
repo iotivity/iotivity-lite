@@ -31,11 +31,12 @@
 #include "tests/gtest/PKI.h"
 #include "tests/gtest/Role.h"
 
+#include "gtest/gtest.h"
+#include "mbedtls/x509.h"
+
 #include <algorithm>
 #include <array>
-#include <gtest/gtest.h>
-#include <mbedtls/x509.h>
-#include <stdint.h>
+#include <cstdint>
 #include <string>
 #include <vector>
 

@@ -28,8 +28,9 @@
 #include "tests/gtest/Resource.h"
 #include "util/oc_macros_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <functional>
-#include <gtest/gtest.h>
 #include <optional>
 #include <string>
 

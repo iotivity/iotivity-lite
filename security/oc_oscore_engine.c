@@ -35,7 +35,7 @@
 #include "oc_tls_internal.h"
 #include "util/oc_process.h"
 
-#include <mbedtls/ccm.h>
+#include "mbedtls/ccm.h"
 
 #include <inttypes.h>
 

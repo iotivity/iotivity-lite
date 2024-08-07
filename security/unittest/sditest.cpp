@@ -36,9 +36,10 @@
 #include "util/oc_features.h"
 #include "util/oc_macros_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
 #include <filesystem>
-#include <gtest/gtest.h>
 #include <string>
 
 using namespace std::chrono_literals;

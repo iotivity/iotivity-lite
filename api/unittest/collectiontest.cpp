@@ -44,10 +44,11 @@
 #include "oc_etag.h"
 #endif /* OC_HAS_FEATURE_ETAG */
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <array>
 #include <chrono>
-#include <gtest/gtest.h>
 #include <memory>
 #include <string>
 #include <vector>

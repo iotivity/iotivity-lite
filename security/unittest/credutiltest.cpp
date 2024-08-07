@@ -27,8 +27,9 @@
 #include "util/oc_macros_internal.h"
 #include "util/oc_mmem_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
-#include <gtest/gtest.h>
 #include <limits>
 #include <string>
 #include <vector>

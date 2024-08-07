@@ -21,7 +21,8 @@
 #include "oc_entropy_internal.h"
 #include "port/oc_random.h"
 
-#include <mbedtls/entropy.h>
+#include "mbedtls/entropy.h"
+
 #include <string.h>
 
 #define OC_ENTROPY_MIN 32

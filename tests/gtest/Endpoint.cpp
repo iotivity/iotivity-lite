@@ -21,8 +21,9 @@
 #include "api/oc_endpoint_internal.h"
 #include "oc_helpers.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
-#include <gtest/gtest.h>
 
 namespace oc::endpoint {
 

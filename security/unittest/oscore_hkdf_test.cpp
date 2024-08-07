@@ -23,9 +23,10 @@
 #include "security/oc_oscore_crypto_internal.h"
 #include "security/oc_tls_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
 #include <cstdlib>
-#include <gtest/gtest.h>
 #include <string>
 
 class TestOSCOREHKDF : public testing::Test {

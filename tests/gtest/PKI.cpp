@@ -29,10 +29,11 @@
 #include "security/oc_obt_internal.h"
 #endif /* OC_DYNAMIC_ALLOCATION */
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
-#include <gtest/gtest.h>
 #include <string>
 #include <vector>
 

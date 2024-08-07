@@ -31,7 +31,7 @@
 #include "util/oc_mmem_internal.h"
 
 #include <array>
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 #include <string>
 
 static constexpr size_t OC_MAX_ENDPOINT_ADDRESSES = 3;

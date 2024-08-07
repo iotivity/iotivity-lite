@@ -25,7 +25,7 @@
 #include "util/oc_compiler.h"
 
 #ifdef OC_RES_BATCH_SUPPORT
-#include <cbor.h>
+#include "cbor.h"
 #endif /* OC_RES_BATCH_SUPPORT */
 
 #include <stdbool.h>

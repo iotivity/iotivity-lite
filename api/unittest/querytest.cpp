@@ -22,7 +22,7 @@
 #include "oc_api.h"
 #include "oc_ri.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 #include <string>
 #include <utility>
 #include <vector>

@@ -28,7 +28,7 @@
 #include "util/oc_memb.h"
 #include "util/oc_process_internal.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 #include <memory>
 
 constexpr size_t kTestMessagesPoolSize = 1;

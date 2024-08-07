@@ -20,8 +20,9 @@
 
 #if defined(OC_SECURITY) && defined(OC_PKI)
 
+#include "gtest/gtest.h"
+
 #include <algorithm>
-#include <gtest/gtest.h>
 
 namespace oc {
 

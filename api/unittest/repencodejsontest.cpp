@@ -34,10 +34,11 @@
 #include "port/oc_log_internal.h"
 #include "tests/gtest/RepPool.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
+
+#include <cstdlib>
 #include <limits>
 #include <memory>
-#include <stdlib.h>
 #include <string>
 #include <vector>
 

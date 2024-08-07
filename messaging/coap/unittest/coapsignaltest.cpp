@@ -21,9 +21,10 @@
 #include "oc_api.h"
 #include "oc_endpoint.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
 #include <cstdlib>
-#include <gtest/gtest.h>
 #include <string>
 #include <vector>
 

@@ -24,8 +24,9 @@
 #include "messaging/coap/constants.h"
 #include "messaging/coap/options_internal.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
-#include <gtest/gtest.h>
 
 TEST(CoapTCP, ParseLength_0)
 {

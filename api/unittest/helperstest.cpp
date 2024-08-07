@@ -20,10 +20,11 @@
 #include "oc_helpers.h"
 #include "port/oc_random.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
 #include <cstdint>
 #include <cstdlib>
-#include <gtest/gtest.h>
 #include <numeric>
 #include <vector>
 

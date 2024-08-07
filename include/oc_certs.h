@@ -25,10 +25,11 @@
 
 #include "oc_export.h"
 
-#include <mbedtls/build_info.h>
-#include <mbedtls/ecp.h>
-#include <mbedtls/md.h>
-#include <mbedtls/x509_crt.h>
+#include "mbedtls/build_info.h"
+#include "mbedtls/ecp.h"
+#include "mbedtls/md.h"
+#include "mbedtls/x509_crt.h"
+
 #include <stdbool.h>
 
 // mask of OCF-supported message digests

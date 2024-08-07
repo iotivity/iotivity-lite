@@ -32,8 +32,8 @@
 #include "util/oc_compiler.h"
 
 #ifdef OC_PKI
-#include <mbedtls/build_info.h>
-#include <mbedtls/x509_crt.h>
+#include "mbedtls/build_info.h"
+#include "mbedtls/x509_crt.h"
 #endif /* OC_PKI */
 
 #include <stddef.h>

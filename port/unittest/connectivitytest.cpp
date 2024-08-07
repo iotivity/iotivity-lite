@@ -34,12 +34,13 @@
 #include "tests/gtest/Device.h"
 #include "tests/gtest/Endpoint.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
 #include <atomic>
 #include <cstdint>
 #include <cstdlib>
 #include <ctime>
-#include <gtest/gtest.h>
 #include <optional>
 #include <string>
 

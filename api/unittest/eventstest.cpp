@@ -19,7 +19,7 @@
 #include "api/oc_events_internal.h"
 #include "port/oc_log_internal.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
 class TestEvents : public testing::Test {
 public:

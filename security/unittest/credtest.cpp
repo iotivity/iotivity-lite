@@ -41,11 +41,12 @@
 #include "api/oc_push_internal.h"
 #endif /* OC_HAS_FEATURE_PUSH */
 
+#include "gtest/gtest.h"
+#include "mbedtls/build_info.h"
+#include "mbedtls/md.h"
+
 #include <algorithm>
 #include <array>
-#include <gtest/gtest.h>
-#include <mbedtls/build_info.h>
-#include <mbedtls/md.h>
 #include <vector>
 
 static constexpr size_t kDeviceID{ 0 };

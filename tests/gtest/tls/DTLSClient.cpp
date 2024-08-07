@@ -20,7 +20,7 @@
 
 #ifdef OC_SECURITY
 
-#include <mbedtls/build_info.h>
+#include "mbedtls/build_info.h"
 
 #if defined(MBEDTLS_NET_C) && defined(MBEDTLS_TIMING_C)
 
@@ -29,15 +29,15 @@
 #include "port/oc_log_internal.h"
 #include "security/oc_entropy_internal.h"
 
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/debug.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/error.h>
-#include <mbedtls/net_sockets.h>
-#include <mbedtls/platform.h>
-#include <mbedtls/ssl.h>
-#include <mbedtls/ssl_cookie.h>
-#include <mbedtls/timing.h>
+#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/debug.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/error.h"
+#include "mbedtls/net_sockets.h"
+#include "mbedtls/platform.h"
+#include "mbedtls/ssl.h"
+#include "mbedtls/ssl_cookie.h"
+#include "mbedtls/timing.h"
 
 namespace oc::tls {
 

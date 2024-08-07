@@ -24,7 +24,8 @@
 #include "util/oc_features.h"
 #include "tests/gtest/RepPool.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
+
 #include <map>
 #include <vector>
 

@@ -18,8 +18,6 @@
 
 #include "api/oc_rep_encode_cbor_internal.h"
 
-#include <cbor.h>
-
 oc_rep_encoder_implementation_t
 oc_rep_cbor_encoder(void)
 {

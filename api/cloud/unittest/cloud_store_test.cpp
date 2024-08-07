@@ -35,14 +35,15 @@
 #include "tests/gtest/RepPool.h"
 #include "util/oc_endpoint_address.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
 #include <filesystem>
 #include <fstream>
 #include <functional>
-#include <gtest/gtest.h>
+#include <map>
 #include <string>
 #include <string_view>
-#include <map>
 
 using namespace std::chrono_literals;
 

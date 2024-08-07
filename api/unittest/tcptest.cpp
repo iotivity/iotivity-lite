@@ -31,18 +31,19 @@
 #include "messaging/coap/oscore_internal.h"
 #endif /* OC_OSCORE */
 
+#include "gtest/gtest.h"
+
+#ifdef OC_SECURITY
+#include "mbedtls/ssl.h"
+#endif /* OC_SECURITY */
+
 #include <array>
 #include <cstdlib>
-#include <gtest/gtest.h>
 #include <vector>
 
 #ifdef _WIN32
 #include <WinSock2.h>
 #endif /* _WIN32 */
-
-#ifdef OC_SECURITY
-#include <mbedtls/ssl.h>
-#endif /* OC_SECURITY */
 
 class TCPMessage : public testing::Test {
 public:

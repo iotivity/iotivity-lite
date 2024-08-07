@@ -27,9 +27,10 @@
 #include "util/oc_list.h"
 #include "util/oc_process.h"
 
-#include <mbedtls/build_info.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/ssl.h>
+#include "mbedtls/build_info.h"
+#include "mbedtls/ctr_drbg.h"
+#include "mbedtls/ssl.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

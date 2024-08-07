@@ -22,7 +22,7 @@
 #include "oc_uuid.h"
 #include "util/oc_features.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 #include <vector>
 
 class TestCloudContext : public testing::Test {

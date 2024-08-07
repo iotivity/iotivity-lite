@@ -22,7 +22,7 @@
 
 #include "util/oc_crc_internal.h"
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
 TEST(TestCRC, CRC64)
 {

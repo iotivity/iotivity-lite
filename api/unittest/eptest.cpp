@@ -28,9 +28,10 @@
 #include "tests/gtest/Device.h"
 #include "tests/gtest/Endpoint.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
 #include <cstdlib>
-#include <gtest/gtest.h>
 #include <string>
 #include <string_view>
 #include <vector>

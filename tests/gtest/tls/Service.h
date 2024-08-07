@@ -22,16 +22,14 @@
 
 #ifdef OC_SECURITY
 
-#include <mbedtls/build_info.h>
+#include "mbedtls/build_info.h"
 
 #if defined(MBEDTLS_NET_C) && defined(MBEDTLS_TIMING_C)
 
 #include "port/oc_connectivity.h"
 
-#include <mbedtls/build_info.h>
-
-#include <mbedtls/net_sockets.h>
-#include <mbedtls/ssl.h>
+#include "mbedtls/net_sockets.h"
+#include "mbedtls/ssl.h"
 
 #include <atomic>
 #include <functional>

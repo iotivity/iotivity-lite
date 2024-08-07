@@ -23,7 +23,8 @@
 #include "oc_ri.h"
 #include "util/oc_compiler.h"
 
-#include <cbor.h>
+#include "cbor.h"
+
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>

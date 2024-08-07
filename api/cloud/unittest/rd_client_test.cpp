@@ -35,8 +35,9 @@
 #include "tests/gtest/Endpoint.h"
 #include "tests/gtest/RepPool.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
-#include <gtest/gtest.h>
 #include <optional>
 #include <string>
 #include <vector>

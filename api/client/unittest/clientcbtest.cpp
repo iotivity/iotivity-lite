@@ -28,8 +28,9 @@
 #include "tests/gtest/Device.h"
 #include "tests/gtest/Endpoint.h"
 
+#include "gtest/gtest.h"
+
 #include <array>
-#include <gtest/gtest.h>
 #include <cstdint>
 #include <limits>
 #include <string>
