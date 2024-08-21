@@ -25,8 +25,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # cloud (ipv4+tcp) on, collection create on, push on, rfotm on
-          - build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON"
+          # cloud (ipv4+tcp) on, collection create on, push on, rfotm on, device provisioning on
+          - build_args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DPLGD_DEV_DEVICE_PROVISIONING_ENABLED=ON -DPLGD_DEV_DEVICE_PROVISIONING_TEST_PROPERTIES_ENABLED=ON"
           # security off, ipv4 on, collection create on, push on, max num concurrent requests=1
           - build_args: "-DOC_SECURITY_ENABLED=OFF -DOC_IPV4_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS=1"
           # ipv6 dns on, oscore off, rep realloc on, json encoder on, introspection IDD off
@@ -87,6 +87,11 @@ jobs:
       coverage: true
       hub_args: ${{ matrix.hub_args }}
 
+  plgd-dps-tests:
+    uses: ./.github/workflows/plgd-dps-test-with-cfg.yml
+    with:
+      coverage: true
+
   sonar-cloud-scan:
     # don't run for forks
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
@@ -94,7 +99,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
-    needs: [unit-tests, plgd-device-tests, plgd-hub-tests]
+    needs: [unit-tests, plgd-device-tests, plgd-hub-tests, plgd-dps-tests]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -110,7 +115,7 @@ jobs:
           mkdir build && cd build
           # sonar-scanner currently cannot handle multi configuration configuration (ie. compilation of the same file with different defines),
           # so we enable as many features as possible so we get max. amount of code analysis
-          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_VERBOSE_MAKEFILE=ON -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON -DOC_JSON_ENCODER_ENABLED=ON -DBUILD_TESTING=ON ..
+          cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_VERBOSE_MAKEFILE=ON -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON -DOC_JSON_ENCODER_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DPLGD_DEV_DEVICE_PROVISIONING_ENABLED=ON -DBUILD_TESTING=ON ..
           cd ..
           # for files defined in multiple cmake targets, sonar-scanner seems to take the configuration from the first compilation of the file,
           # so we force client-server target to be compiled first so we get analysis of code with both OC_CLIENT and OC_SERVER enabled
@@ -138,4 +143,4 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         run: |
-          sonar-scanner --define sonar.cfamily.build-wrapper-output="${{ env.BUILD_WRAPPER_OUT_DIR }}"
+          sonar-scanner --define sonar.cfamily.compile-commands="${{ env.BUILD_WRAPPER_OUT_DIR }}/compile_commands.json"

@@ -94,11 +94,11 @@
 
 #define TLS_LOG_MBEDTLS_ERROR(mbedtls_func_name, mbedtls_err)                  \
   do {                                                                         \
-    if (mbedtls_err == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {                    \
+    if ((mbedtls_err) == MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY) {                  \
       OC_TRACE("oc_tls: %s Close-Notify received", mbedtls_func_name);         \
       break;                                                                   \
     }                                                                          \
-    if (mbedtls_err == MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {                     \
+    if ((mbedtls_err) == MBEDTLS_ERR_SSL_CLIENT_RECONNECT) {                   \
       OC_TRACE("oc_tls: %s Client wants to reconnect", mbedtls_func_name);     \
       break;                                                                   \
     }                                                                          \

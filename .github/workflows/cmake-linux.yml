@@ -54,16 +54,16 @@ jobs:
           - args: "-DOC_IPV4_ENABLED=ON -DOC_TCP_ENABLED=ON"
           # ipv4 on, tcp on, pki off
           - args: "-DOC_IPV4_ENABLED=ON -DOC_TCP_ENABLED=ON -DOC_PKI_ENABLED=OFF"
-          # cloud on (ipv4+tcp on), dynamic allocation off
-          - args: "-DOC_CLOUD_ENABLED=ON -DOC_DYNAMIC_ALLOCATION_ENABLED=OFF"
+          # cloud on (ipv4+tcp on), dynamic allocation off, push notifications off
+          - args: "-DOC_CLOUD_ENABLED=ON -DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_PUSH_ENABLED=OFF"
           # cloud on (ipv4+tcp on), collections create on
           - args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON"
           # cloud on (ipv4+tcp on), collections create on, custom message buffer size, custom message buffer pool size, custom app data buffer size, custom app data buffer pool size
           - args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_INOUT_BUFFER_SIZE=2048 -DOC_INOUT_BUFFER_POOL=4 -DOC_APP_DATA_BUFFER_SIZE=2048 -DOC_APP_DATA_BUFFER_POOL=4"
           # debug on
           - args: "-DOC_DEBUG_ENABLED=ON"
-          # debug on, cloud on (ipv4+tcp on)
-          - args: "-DOC_CLOUD_ENABLED=ON -DOC_DEBUG_ENABLED=ON"
+          # debug on, cloud on (ipv4+tcp on), plgd time off
+          - args: "-DOC_CLOUD_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=OFF -DOC_DEBUG_ENABLED=ON"
           # secure off, tcp on
           - args: "-DOC_SECURITY_ENABLED=OFF -DOC_TCP_ENABLED=ON"
           # secure off, ipv4 on, tcp on
@@ -138,7 +138,7 @@ jobs:
           #   install_faketime: true
     uses: ./.github/workflows/unit-test-with-cfg.yml
     with:
-      build_args: -DOC_LOG_MAXIMUM_LOG_LEVEL=INFO -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON ${{ matrix.args }}
+      build_args: -DOC_LOG_MAXIMUM_LOG_LEVEL=INFO -DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_MNT_ENABLED=ON -DOC_WKCORE_ENABLED=ON -DOC_SOFTWARE_UPDATE_ENABLED=ON -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON -DOC_PUSH_ENABLED=ON -DOC_RESOURCE_ACCESS_IN_RFOTM_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DOC_ETAG_ENABLED=ON -DPLGD_DEV_DEVICE_PROVISIONING_ENABLED=ON -DPLGD_DEV_DEVICE_PROVISIONING_TEST_PROPERTIES_ENABLED=ON ${{ matrix.args }}
       build_type: ${{ (github.event_name == 'workflow_dispatch' && inputs.build_type) || 'Debug' }}
       clang: ${{ ((github.event_name == 'workflow_dispatch' && inputs.clang) || matrix.clang) || false }}
       coverage: false

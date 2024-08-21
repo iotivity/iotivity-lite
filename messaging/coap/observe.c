@@ -106,9 +106,19 @@ enum {
 #define OC_MAX_OBSERVE_SIZE OC_MAX_APP_DATA_SIZE
 #endif
 
+#ifndef OC_DYNAMIC_ALLOCATION
+#if OC_MAX_OBSERVE_SIZE == OC_MIN_APP_DATA_SIZE
+#define OC_MIN_OBSERVE_SIZE OC_MIN_APP_DATA_SIZE
+#else /* OC_MAX_OBSERVE_SIZE != OC_MIN_APP_DATA_SIZE */
 #define OC_MIN_OBSERVE_SIZE                                                    \
   (OC_MIN_APP_DATA_SIZE < OC_MAX_OBSERVE_SIZE ? OC_MIN_APP_DATA_SIZE           \
                                               : OC_MAX_OBSERVE_SIZE)
+#endif /* OC_MAX_OBSERVE_SIZE == OC_MIN_APP_DATA_SIZE */
+#else  /* OC_DYNAMIC_ALLOCATION */
+#define OC_MIN_OBSERVE_SIZE                                                    \
+  (OC_MIN_APP_DATA_SIZE < OC_MAX_OBSERVE_SIZE ? OC_MIN_APP_DATA_SIZE           \
+                                              : OC_MAX_OBSERVE_SIZE)
+#endif /* !OC_DYNAMIC_ALLOCATION */
 
 #if defined(OC_RES_BATCH_SUPPORT) && defined(OC_DISCOVERY_RESOURCE_OBSERVABLE)
 

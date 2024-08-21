@@ -16,6 +16,8 @@ on:
           - cloud-server-debug
           - cloud-server-discovery-resource-observable
           - cloud-server-discovery-resource-observable-debug
+          - dps-cloud-server 
+          - dps-cloud-server-debug
 jobs:
     check_package:
       name: Check released packages

@@ -123,7 +123,7 @@ jobs:
         if: ${{ inputs.coverage }}
         id: coverage
         run: |
-          SUFFIX=`echo "-DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ steps.cmake_flags.outputs.compiler }} ${{ inputs.build_args }} -DBUILD_TESTING=ON" | sha1sum | cut -f 1 -d ' '`
+          SUFFIX=$(echo "-DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ steps.cmake_flags.outputs.compiler }} ${{ inputs.build_args }} -DBUILD_TESTING=ON" | sha1sum | cut -f 1 -d ' ')
           echo "filename=coverage-unix-${SUFFIX}.json" >> $GITHUB_OUTPUT
           echo "artifact=unit-test-${SUFFIX}-coverage" >> $GITHUB_OUTPUT
 

@@ -1,0 +1,176 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Run plgd/hub/dps tests with dps_cloud_server and a single configuration
+
+on:
+  workflow_call:
+    inputs:
+      args:
+        description: arguments forwarded to the dps_cloud_server binary
+        type: string
+        required: false
+        default: ""
+      build_args:
+        description: build arguments forwarded to CMake in docker/apps/Dockerfile.cloud-server-debug
+        type: string
+        required: false
+        default: ""
+      build_type:
+        type: string
+        required: false
+        default: Debug
+      coverage:
+        description: gather and upload coverage data
+        type: boolean
+        required: false
+        default: false
+      docker_file:
+        description: Dockerfile used to build the dps_cloud_server container
+        type: string
+        required: false
+        default: docker/apps/Dockerfile.dps-cloud-server-debug
+      skip:
+        description: Skip this run of the job
+        type: boolean
+        required: false
+        default: false
+env:
+  TEST_DPS_IMAGE: ghcr.io/plgd-dev/hub/test-device-provisioning-service:latest
+
+jobs:
+  plgd-hub-test-with-cfg:
+    if: ${{ !inputs.skip }}
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: "true"
+
+      - name: Configure vm.mmap_rnd_bits for sanitizers
+        if: contains(inputs.build_args, 'OC_ASAN_ENABLED') || contains(inputs.build_args, 'OC_LSAN_ENABLED') || contains(inputs.build_args, 'OC_TSAN_ENABLED') || contains(inputs.build_args, 'OC_UBSAN_ENABLED')
+        run: |
+          sudo sysctl vm.mmap_rnd_bits
+          sudo sysctl -w vm.mmap_rnd_bits=28
+
+      - name: Build dps-cloudserver docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          push: false
+          build-args: |
+            BUILD_ARGS=${{ inputs.build_args }}
+            BUILD_TYPE=${{ inputs.build_type }}
+          file: ${{ inputs.docker_file }}
+          tags: dps-dbg:latest
+
+      - name: Pull device-provisioning-service tests image
+        run: docker pull ${{ env.TEST_DPS_IMAGE }}
+
+      - name: Prepare test environment
+        run: >
+          mkdir -p "/tmp/data/certs/device";
+          chmod -R 0777 "/tmp/data";
+
+          docker run --rm --log-driver local --network=host
+          -e PREPARE_ENV=true
+          -e RUN=false
+          -v /tmp/data:/data
+          -v /var/run/docker.sock:/var/run/docker.sock
+          ${{ env.TEST_DPS_IMAGE }}
+
+      - name: Run dps cloud server docker image
+        run: >
+          mkdir -p "/tmp/data/coverage";
+          chmod -R 0777 "/tmp/data/coverage";
+
+          docker run --privileged -d --network=host --log-driver local
+          -v /tmp/data/certs/device:/dps/pki_certs
+          -v /tmp/data/coverage:/data/coverage
+          --name dps-devsim
+          dps-dbg:latest
+          --create-conf-resource
+          --no-verify-ca
+          --cloud-observer-max-retry 10
+          --expiration-limit 10
+          --retry-configuration 5
+          --oc-log-level="info"
+          --log-level="debug"
+          --wait-for-reset
+          "dps-devsim-$(hostname)"
+
+      - name: Run dps cloud server docker image for onboarding
+        run: >
+          docker run --privileged -d --network=host --log-driver local
+          -v /tmp/data/certs/device:/dps/pki_certs
+          -v /tmp/data/coverage:/data/coverage
+          --name dps-devsim-obt
+          dps-dbg:latest
+          --create-conf-resource
+          --cloud-observer-max-retry 10
+          --expiration-limit 10
+          --retry-configuration 5
+          --oc-log-level="info"
+          --log-level="debug"
+          ${{ inputs.args }}
+          "dps-devsim-obt-$(hostname)" ""
+
+      - name: Run device-provisioning-service tests image
+        run: >
+          docker run --rm --log-driver local --network=host --hostname="$(hostname)"
+          -e PREPARE_ENV=false
+          -e RUN=true
+          -v /tmp/data:/data
+          -v /var/run/docker.sock:/var/run/docker.sock
+          --name dps-tests
+          ${{ env.TEST_DPS_IMAGE }}
+
+      - name: Generate file name and artifact name
+        if: ${{ inputs.coverage }}
+        id: coverage
+        run: |
+          SUFFIX=$(echo "-DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ inputs.build_args }} -DBUILD_TESTING=ON ${{ inputs.args }}" | sha1sum | cut -f 1 -d ' ')
+          echo "filename=coverage-plgd-dps-${SUFFIX}.json" >> $GITHUB_OUTPUT
+          echo "filename_obt=coverage-plgd-dps-obt-${SUFFIX}.json" >> $GITHUB_OUTPUT
+          echo "artifact=plgd-dps-${SUFFIX}-coverage" >> $GITHUB_OUTPUT
+
+      - name: Gather coverage data
+        if: ${{ inputs.coverage }}
+        run: |
+          # stop to generate .gcda files
+          docker stop dps-devsim
+          # restart to generate report from the .gcda files
+          docker start dps-devsim
+          docker exec --workdir "/device-provisioning-client/tools" dps-devsim /bin/bash -c "./collect-coverage.sh --output /data/coverage/${{ steps.coverage.outputs.filename }}"
+          docker stop dps-devsim
+
+          # stop to generate .gcda files
+          docker stop dps-devsim-obt
+          # restart to generate report from the .gcda files
+          docker start dps-devsim-obt
+          docker exec --workdir "/device-provisioning-client/tools" dps-devsim-obt /bin/bash -c "./collect-coverage.sh --output /data/coverage/${{ steps.coverage.outputs.filename_obt }}"
+          docker stop dps-devsim-obt
+
+      - name: Upload coverage data
+        if: ${{ inputs.coverage }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.coverage.outputs.artifact }}
+          path: /tmp/data/coverage/coverage-plgd-dps-*.json
+          if-no-files-found: error
+          retention-days: 1
+
+      - name: Collect dps cloud server logs when the test fails
+        if: ${{ failure() }}
+        run: |
+          docker stop dps-devsim
+          docker logs dps-devsim
+
+      - name: Collect dps cloud server (obt) logs when the test fails
+        if: ${{ failure() }}
+        run: |
+          docker stop dps-devsim-obt
+          docker logs dps-devsim-obt

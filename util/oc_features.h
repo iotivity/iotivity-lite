@@ -88,4 +88,10 @@
 #define OC_HAS_FEATURE_ENDPOINT_ADDRESS_LIST
 #endif /* OC_CLOUD */
 
+#if defined(PLGD_DEV_DEVICE_PROVISIONING) && defined(OC_SERVER) &&             \
+  defined(OC_CLIENT) && defined(OC_HAS_FEATURE_PLGD_TIME) &&                   \
+  defined(OC_SECURITY)
+#define OC_HAS_FEATURE_PLGD_DEVICE_PROVISIONING
+#endif /* PLGD_DEV_DEVICE_PROVISIONING */
+
 #endif /* OC_FEATURES_H */

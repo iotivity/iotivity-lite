@@ -113,7 +113,7 @@ jobs:
         if: ${{ inputs.coverage }}
         id: coverage
         run: |
-          SUFFIX=`echo "-DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ inputs.build_args }} ${{ inputs.name }} -DBUILD_TESTING=ON" | sha1sum | cut -f 1 -d ' '`
+          SUFFIX=$(echo "-DCMAKE_BUILD_TYPE=${{ inputs.build_type }} ${{ inputs.build_args }} ${{ inputs.name }} -DBUILD_TESTING=ON" | sha1sum | cut -f 1 -d ' ')
           echo "filename=coverage-plgd-device-${SUFFIX}.json" >> $GITHUB_OUTPUT
           echo "artifact=plgd-device-${SUFFIX}-coverage" >> $GITHUB_OUTPUT
 

@@ -828,7 +828,7 @@ oc_endpoint_log(const char *prefix, const oc_endpoint_t *endpoint)
   oc_string64_t endpoint_str;
   oc_endpoint_to_string64(endpoint, &endpoint_str);
   int64_t session_id = oc_endpoint_session_id(endpoint);
-  OC_ERR("%sendpoint(addr=%s, session_id=%" PRId64 ")", prefix,
+  OC_DBG("%sendpoint(addr=%s, session_id=%" PRId64 ")", prefix,
          oc_string(endpoint_str), session_id);
 #else  /* !OC_DBG_IS_ENABLED */
   (void)prefix;
