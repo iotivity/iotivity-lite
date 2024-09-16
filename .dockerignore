@@ -1,9 +1,12 @@
 .github/
 .clang-format
 .clang-tidy
+**/*.o
+**/*.gcno
+**/*.gcda
 sonar-project.properties
 Dockerfile.*
-build/
+build*/
 images/
 port/esp32/build/
 port/esp32/esp-idf/

@@ -226,6 +226,20 @@ if(UNIX)
             DEPENDENCIES client-server-static
         )
     endif()
+
+    if(PLGD_DEV_DEVICE_PROVISIONING_ENABLED)
+        oc_add_app_executable(
+            TARGET dps_cloud_server
+            SOURCES ${PROJECT_SOURCE_DIR}/dps_cloud_server.c
+            DEPENDENCIES client-server-static
+        )
+        if(PLGD_DPS_CLOUD_SERVER_DBG_ENABLED)
+            target_compile_definitions(dps_cloud_server PRIVATE PLGD_DPS_CLOUD_SERVER_DBG)
+        endif()
+        if(PLGD_DPS_FAKETIME_ENABLED)
+            target_compile_definitions(dps_cloud_server PRIVATE "PLGD_DPS_FAKETIME" "PLGD_DPS_FAKETIME_SET_SYSTEM_TIME_ON_RESET")
+        endif()
+    endif()
 elseif(WIN32)
     oc_add_app_executable(
         TARGET simpleclient

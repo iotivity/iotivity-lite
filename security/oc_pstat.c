@@ -444,7 +444,7 @@ oc_sec_get_pstat(size_t device)
 bool
 oc_sec_is_operational(size_t device)
 {
-  return g_pstat[device].isop;
+  return oc_sec_get_pstat(device)->isop;
 }
 
 bool
@@ -456,7 +456,7 @@ oc_sec_pstat_is_in_dos_state(const oc_sec_pstat_t *ps, unsigned dos_mask)
 bool
 oc_device_is_in_dos_state(size_t device, unsigned dos_mask)
 {
-  return oc_sec_pstat_is_in_dos_state(&g_pstat[device], dos_mask);
+  return oc_sec_pstat_is_in_dos_state(oc_sec_get_pstat(device), dos_mask);
 }
 
 void

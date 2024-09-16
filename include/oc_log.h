@@ -36,6 +36,7 @@ extern "C" {
 #include "oc_config.h"
 #include "oc_export.h"
 #include "util/oc_compiler.h"
+#include "util/oc_features.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -166,6 +167,9 @@ typedef enum {
   OC_LOG_COMPONENT_CLOUD = 1 << 1, ///< cloud
 #endif
   OC_LOG_COMPONENT_COAP = 1 << 2, ///< coap
+#ifdef OC_HAS_FEATURE_PLGD_DEVICE_PROVISIONING
+  OC_LOG_COMPONENT_DEVICE_PROVISIONING = 1 << 3, ///< device provisioning
+#endif
 } oc_log_component_t;
 
 /**

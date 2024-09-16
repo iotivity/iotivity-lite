@@ -121,9 +121,9 @@ extern "C" {
                             (void *)CC_CONCAT(name, _memb_mem), NULL }
 #define OC_MEMB_LOCAL(name, structure, num)                                    \
   char CC_CONCAT(name, _memb_count)[num];                                      \
-  memset(CC_CONCAT(name, _memb_count), 0, num * sizeof(char));                 \
+  memset(CC_CONCAT(name, _memb_count), 0, (num) * sizeof(char));               \
   structure CC_CONCAT(name, _memb_mem)[num];                                   \
-  memset(CC_CONCAT(name, _memb_mem), 0, num * sizeof(structure));              \
+  memset(CC_CONCAT(name, _memb_mem), 0, (num) * sizeof(structure));            \
   oc_memb_t name = { sizeof(structure), num, CC_CONCAT(name, _memb_count),     \
                      (void *)CC_CONCAT(name, _memb_mem), NULL }
 

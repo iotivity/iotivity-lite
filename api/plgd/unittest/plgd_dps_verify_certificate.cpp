@@ -1,0 +1,210 @@
+/****************************************************************************
+ *
+ * Copyright (c) 2022-2024 plgd.dev, s.r.o.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License"),
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *      http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific
+ * language governing permissions and limitations under the License.
+ *
+ ****************************************************************************/
+
+#include "util/oc_features.h"
+
+#ifdef OC_HAS_FEATURE_PLGD_DEVICE_PROVISIONING
+
+#include "api/plgd/device-provisioning-client/plgd_dps_endpoint_internal.h"
+#include "api/plgd/device-provisioning-client/plgd_dps_verify_certificate_internal.h"
+#include "plgd_dps_test.h"
+#include "security/oc_pstat_internal.h"
+#include "security/oc_tls_internal.h"
+#include "tests/gtest/Device.h"
+
+#include "gtest/gtest.h"
+#include "mbedtls/x509_crt.h"
+
+#include <array>
+#include <cstdlib>
+
+static constexpr size_t kDeviceID = 0;
+
+class TestVerifyCertificate : public testing::Test {};
+
+TEST_F(TestVerifyCertificate, AllocateVerifyCertificateData)
+{
+  dps_verify_certificate_data_free(nullptr);
+
+  oc_pki_user_data_t pud{};
+  pud.data = malloc(42);
+  pud.free = free;
+
+  dps_verify_certificate_data_t *dvcd =
+    dps_verify_certificate_data_new({ pud, nullptr });
+
+  dps_verify_certificate_data_free(dvcd);
+}
+
+TEST_F(TestVerifyCertificate, VerifyCertificate_FailInvalidDevice)
+{
+  oc_tls_peer_t peer{};
+  peer.endpoint.device = 42;
+  mbedtls_x509_crt crt{};
+  uint32_t flags{};
+  EXPECT_EQ(-1, dps_verify_certificate(&peer, &crt, 0, &flags));
+}
+
+TEST_F(TestVerifyCertificate, VerifyCertificate_FailMissingPeerContext)
+{
+  auto ctx = dps::make_unique_context(kDeviceID);
+  dps_context_list_add(ctx.get());
+
+  oc_tls_peer_t peer{};
+  peer.endpoint.device = kDeviceID;
+  mbedtls_x509_crt crt{};
+  uint32_t flags{};
+  EXPECT_EQ(-1, dps_verify_certificate(&peer, &crt, 0, &flags));
+
+  dps_context_list_remove(ctx.get());
+}
+
+TEST_F(TestVerifyCertificate, VerifyCertificate_FailInvalidFingerprint)
+{
+  auto ctx = dps::make_unique_context(kDeviceID);
+  dps_context_list_add(ctx.get());
+
+  oc_tls_peer_t peer{};
+  peer.endpoint.device = kDeviceID;
+  dps_verify_certificate_data_t vcd{};
+  peer.user_data.data = &vcd;
+  mbedtls_x509_crt crt{};
+  uint32_t flags{};
+
+  // unsupported algorithm
+  ctx->certificate_fingerprint.md_type = MBEDTLS_MD_MD5;
+  EXPECT_EQ(-1, dps_verify_certificate(&peer, &crt, 0, &flags));
+  dps_context_list_remove(ctx.get());
+}
+
+class TestVerifyCertificateWithDevice : public testing::Test {
+protected:
+  void SetUp() override
+  {
+    EXPECT_TRUE(oc::TestDevice::StartServer());
+
+    oc_sec_pstat_t *pstat = oc_sec_get_pstat(kDeviceID);
+    pstat->s = OC_DOS_RFNOP;
+    plgd_dps_init();
+  }
+
+  void TearDown() override
+  {
+    plgd_dps_shutdown();
+    oc::TestDevice::StopServer();
+  }
+
+public:
+  static oc_endpoint_t getEndpoint(const std::string &ep)
+  {
+    oc_string_t ep_str;
+    oc_new_string(&ep_str, ep.c_str(), ep.length());
+    oc_endpoint_t endpoint;
+    EXPECT_EQ(0, oc_string_to_endpoint(&ep_str, &endpoint, nullptr));
+    oc_free_string(&ep_str);
+    return endpoint;
+  }
+};
+
+TEST_F(TestVerifyCertificateWithDevice, VerifyCertificate)
+{
+  oc_endpoint_t ep = getEndpoint("coaps://[ff02::43]:1338");
+
+  std::string data = "c8:21:63:6f:61:70:73:2b:74:63:70:3a:2f:2f:6d:6f:63:6b:2e:"
+                     "70:6c:67:64:2e:63:6c:6f:75:64:3a:32:36:"
+                     "36:38:34:c9:20:a1:e1:c3:4c:3e:3:17:8d:e4:77:79:f9:92:28:"
+                     "7d:fe:b4:b7:70:2f:80:ee:d9:15:dd:ec:d6:"
+                     "54:e4:c6:4f:e2:ca:6:53:48:41:32:35:36";
+  ssize_t ret =
+    plgd_dps_hex_string_to_bytes(data.c_str(), data.length(), nullptr, 0);
+  ASSERT_EQ(77, ret);
+  std::array<uint8_t, 77> buf;
+  ret = plgd_dps_hex_string_to_bytes(data.c_str(), data.length(), &buf[0], ret);
+  ASSERT_EQ(77, ret);
+  EXPECT_EQ(PLGD_DPS_DHCP_SET_VALUES_NEED_REPROVISION,
+            plgd_dps_dhcp_set_values_from_vendor_encapsulated_options(
+              plgd_dps_get_context(kDeviceID), &buf[0], ret));
+
+  /*
+   * Convert a certificate from PEM to hex for embedding into C-code
+   * $ openssl x509 -outform der -in certificate.pem -out certificate.der
+   * $ xxd -i certificate.der
+   */
+  std::array<uint8_t, 401> certificate = {
+    0x30, 0x82, 0x01, 0x8d, 0x30, 0x82, 0x01, 0x32, 0xa0, 0x03, 0x02, 0x01,
+    0x02, 0x02, 0x11, 0x00, 0xa7, 0x5b, 0x88, 0x93, 0x82, 0x6a, 0xba, 0xf8,
+    0x60, 0xfd, 0xf6, 0x38, 0x8a, 0xca, 0xc9, 0xa1, 0x30, 0x0a, 0x06, 0x08,
+    0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04, 0x03, 0x02, 0x30, 0x12, 0x31, 0x10,
+    0x30, 0x0e, 0x06, 0x03, 0x55, 0x04, 0x03, 0x13, 0x07, 0x70, 0x6c, 0x67,
+    0x64, 0x2d, 0x63, 0x61, 0x30, 0x1e, 0x17, 0x0d, 0x32, 0x32, 0x31, 0x32,
+    0x30, 0x31, 0x31, 0x31, 0x33, 0x38, 0x33, 0x37, 0x5a, 0x17, 0x0d, 0x32,
+    0x33, 0x31, 0x32, 0x30, 0x31, 0x31, 0x31, 0x33, 0x38, 0x33, 0x37, 0x5a,
+    0x30, 0x1a, 0x31, 0x18, 0x30, 0x16, 0x06, 0x03, 0x55, 0x04, 0x03, 0x13,
+    0x0f, 0x6d, 0x6f, 0x63, 0x6b, 0x2e, 0x70, 0x6c, 0x67, 0x64, 0x2e, 0x63,
+    0x6c, 0x6f, 0x75, 0x64, 0x30, 0x59, 0x30, 0x13, 0x06, 0x07, 0x2a, 0x86,
+    0x48, 0xce, 0x3d, 0x02, 0x01, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d,
+    0x03, 0x01, 0x07, 0x03, 0x42, 0x00, 0x04, 0x31, 0xe7, 0xc9, 0x43, 0xbf,
+    0xd7, 0xfb, 0x88, 0x91, 0x78, 0xad, 0xcc, 0x0b, 0xd1, 0x54, 0xe4, 0x50,
+    0xac, 0xb2, 0xbb, 0x6b, 0xa0, 0xec, 0x56, 0x6e, 0x96, 0x6d, 0x34, 0x6b,
+    0xde, 0x03, 0x2f, 0x6a, 0x9c, 0x8e, 0x15, 0x2c, 0x1b, 0x37, 0x8e, 0x78,
+    0x30, 0xe8, 0x7d, 0xba, 0xbe, 0x43, 0x33, 0x87, 0xab, 0x5e, 0x33, 0xe9,
+    0x87, 0xe3, 0x32, 0x4a, 0xa5, 0x7e, 0xe5, 0x8e, 0xd6, 0x47, 0x78, 0xa3,
+    0x61, 0x30, 0x5f, 0x30, 0x1d, 0x06, 0x03, 0x55, 0x1d, 0x25, 0x04, 0x16,
+    0x30, 0x14, 0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x01,
+    0x06, 0x08, 0x2b, 0x06, 0x01, 0x05, 0x05, 0x07, 0x03, 0x02, 0x30, 0x0c,
+    0x06, 0x03, 0x55, 0x1d, 0x13, 0x01, 0x01, 0xff, 0x04, 0x02, 0x30, 0x00,
+    0x30, 0x1f, 0x06, 0x03, 0x55, 0x1d, 0x23, 0x04, 0x18, 0x30, 0x16, 0x80,
+    0x14, 0xb3, 0x75, 0xa7, 0xac, 0x25, 0x64, 0x51, 0x5d, 0xe6, 0x15, 0x5d,
+    0x15, 0x16, 0xe2, 0xe8, 0x5f, 0xff, 0xc9, 0x3d, 0x91, 0x30, 0x0f, 0x06,
+    0x03, 0x55, 0x1d, 0x11, 0x04, 0x08, 0x30, 0x06, 0x87, 0x04, 0x7f, 0x00,
+    0x00, 0x01, 0x30, 0x0a, 0x06, 0x08, 0x2a, 0x86, 0x48, 0xce, 0x3d, 0x04,
+    0x03, 0x02, 0x03, 0x49, 0x00, 0x30, 0x46, 0x02, 0x21, 0x00, 0xc0, 0x7d,
+    0xe9, 0x7b, 0x47, 0x40, 0x8f, 0x0e, 0xfe, 0x86, 0x17, 0xf8, 0xbd, 0xde,
+    0x4a, 0x60, 0x34, 0x9b, 0xca, 0x97, 0xcc, 0x8e, 0xed, 0x55, 0xd3, 0xbe,
+    0xcb, 0xdc, 0x37, 0xa5, 0x48, 0x75, 0x02, 0x21, 0x00, 0x93, 0x88, 0x3e,
+    0x53, 0x7c, 0xa6, 0x1e, 0xc9, 0x04, 0x9a, 0x6d, 0xf8, 0x4f, 0x72, 0xd3,
+    0x7a, 0x84, 0x11, 0xad, 0xef, 0x4e, 0x76, 0xb5, 0x87, 0xe1, 0x1e, 0x97,
+    0x0e, 0x21, 0xfb, 0x94, 0xd0
+  };
+
+  oc_tls_peer_t *peer = dps_endpoint_add_peer(&ep);
+  ASSERT_NE(nullptr, peer);
+  ASSERT_NE(nullptr, peer->verify_certificate);
+
+  mbedtls_x509_crt crt;
+  memset(&crt, 0, sizeof(mbedtls_x509_crt));
+
+  // validate intermediate certificate
+  uint32_t flags = MBEDTLS_X509_BADCERT_NOT_TRUSTED;
+  ASSERT_EQ(0, peer->verify_certificate(peer, &crt, 1, &flags));
+  ASSERT_EQ(0, flags);
+
+  // validate leaf certificate
+  flags = MBEDTLS_X509_BADCERT_NOT_TRUSTED;
+  ASSERT_EQ(-1, peer->verify_certificate(peer, &crt, 0, &flags));
+  ASSERT_EQ(MBEDTLS_X509_BADCERT_NOT_TRUSTED, flags);
+
+  // validate leaf with good certificate
+  crt.raw.p = &certificate[0];
+  crt.raw.len = certificate.size();
+  flags = MBEDTLS_X509_BADCERT_NOT_TRUSTED;
+  ASSERT_EQ(0, peer->verify_certificate(peer, &crt, 0, &flags));
+  ASSERT_EQ(0, flags);
+}
+
+#endif /* OC_HAS_FEATURE_PLGD_DEVICE_PROVISIONING */

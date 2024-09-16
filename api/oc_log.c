@@ -96,6 +96,10 @@ oc_log_component_name(oc_log_component_t component)
 #endif /* OC_CLOUD */
   case OC_LOG_COMPONENT_COAP:
     return "coap";
+#ifdef OC_HAS_FEATURE_PLGD_DEVICE_PROVISIONING
+  case OC_LOG_COMPONENT_DEVICE_PROVISIONING:
+    return "dps";
+#endif
   }
   return "";
 }

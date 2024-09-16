@@ -66,8 +66,6 @@ set(OC_SIMPLE_MAIN_LOOP_ENABLED OFF CACHE BOOL "Compile with the single-threaded
 if (BUILD_EXAMPLE_APPLICATIONS OR BUILD_TESTING)
     set(OC_SIMPLE_MAIN_LOOP_ENABLED ON CACHE BOOL "" FORCE)
 endif()
-set(PLGD_DEV_TIME_ENABLED OFF CACHE BOOL "Enable plgd time feature.")
-
 if (OC_DEBUG_ENABLED)
     set(OC_LOG_MAXIMUM_LOG_LEVEL "TRACE" CACHE STRING "Maximum supported log level in compile time.")
 else()
@@ -78,6 +76,11 @@ set(OC_INOUT_BUFFER_POOL "" CACHE STRING "Custom static pool size of network mes
 set(OC_APP_DATA_BUFFER_SIZE "" CACHE STRING "Custom static buffer size for application messages.")
 set(OC_APP_DATA_BUFFER_POOL "" CACHE STRING "Custom static size of application messages.")
 set(OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS "" CACHE STRING "Maximum number of messages in the network event queue for a device.")
+
+# plgd.dev features
+set(PLGD_DEV_TIME_ENABLED OFF CACHE BOOL "Enable plgd time feature.")
+set(PLGD_DEV_DEVICE_PROVISIONING_ENABLED OFF CACHE BOOL "Enable plgd's device provisioning feature.")
+set(PLGD_DEV_DEVICE_PROVISIONING_TEST_PROPERTIES_ENABLED OFF CACHE BOOL "Enable plgd's device provisioning feature's test properties.")
 
 set(OC_ASAN_ENABLED OFF CACHE BOOL "Enable address sanitizer build.")
 set(OC_LSAN_ENABLED OFF CACHE BOOL "Enable leak sanitizer build.")
@@ -169,52 +172,7 @@ endif()
 set(OC_CLANG_TIDY_ENABLED OFF CACHE BOOL "Enable clang-tidy analysis during compilation.")
 
 include(tools/clang-tidy.cmake)
-
-include(CheckCCompilerFlag)
-include(CheckCXXCompilerFlag)
-# function oc_add_compile_options([GLOBAL] [IX_CXX] FLAGS [flags...])
-#
-# Arguments:
-#   GLOBAL   (option) flags are added as global compilation options
-#   FLAGS    list of flags to check and add for both C and C++
-#   CFLAGS   list of flags to check and add for C
-#   CXXFLAGS list of flags to check and add for C++
-#
-# Side-effect: C_COMPILER_SUPPORTS_${flag_name} / CXX_COMPILER_SUPPORTS_${flag_name}
-# is created and set to ON/OFF based on the result of the check. This variable
-# can be used in the context of the caller.
-function(oc_add_compile_options)
-    set(options GLOBAL)
-    set(oneValueArgs)
-    set(multiValueArgs CFLAGS CXXFLAGS FLAGS)
-    cmake_parse_arguments(OC_ADD_COMPILE_OPTIONS "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
-
-    foreach(flag IN LISTS OC_ADD_COMPILE_OPTIONS_FLAGS OC_ADD_COMPILE_OPTIONS_CFLAGS)
-        string(REPLACE "-" "_" flag_name ${flag})
-        string(REPLACE "=" "_" flag_name ${flag_name})
-        string(TOUPPER ${flag_name} flag_name)
-        set(flag_name "C_COMPILER_SUPPORTS${flag_name}")
-        unset(${flag_name})
-        check_c_compiler_flag(${flag} ${flag_name})
-        if((OC_ADD_COMPILE_OPTIONS_GLOBAL) AND (${${flag_name}}))
-            add_compile_options($<$<COMPILE_LANGUAGE:C>:${flag}>)
-        endif()
-        set(${flag_name} ${${flag_name}} PARENT_SCOPE)
-    endforeach()
-
-    foreach(flag IN LISTS OC_ADD_COMPILE_OPTIONS_FLAGS OC_ADD_COMPILE_OPTIONS_CXXFLAGS)
-        string(REPLACE "-" "_" flag_name ${flag})
-        string(REPLACE "=" "_" flag_name ${flag_name})
-        string(TOUPPER ${flag_name} flag_name)
-        set(flag_name "CXX_COMPILER_SUPPORTS${flag_name}")
-        unset(${flag_name})
-        check_cxx_compiler_flag(${flag} ${flag_name})
-        if((OC_ADD_COMPILE_OPTIONS_GLOBAL) AND (${${flag_name}}))
-            add_compile_options($<$<COMPILE_LANGUAGE:CXX>:${flag}>)
-        endif()
-        set(${flag_name} ${${flag_name}} PARENT_SCOPE)
-    endforeach()
-endfunction()
+include(tools/utils.cmake)
 
 # Global compile options
 set(PRIVATE_COMPILE_OPTIONS "")
@@ -278,31 +236,13 @@ if(BUILD_MBEDTLS)
 endif()
 
 set(OC_LOG_MAXIMUM_LOG_LEVEL_INT)
-if(OC_LOG_MAXIMUM_LOG_LEVEL STREQUAL "DISABLED")
-    set(OC_LOG_MAXIMUM_LOG_LEVEL_INT -1)
-elseif(OC_LOG_MAXIMUM_LOG_LEVEL STREQUAL "ERROR")
-    set(OC_LOG_MAXIMUM_LOG_LEVEL_INT 3)
-elseif(OC_LOG_MAXIMUM_LOG_LEVEL STREQUAL "WARNING")
-    set(OC_LOG_MAXIMUM_LOG_LEVEL_INT 4)
-elseif(OC_LOG_MAXIMUM_LOG_LEVEL STREQUAL "NOTICE")
-    set(OC_LOG_MAXIMUM_LOG_LEVEL_INT 5)
-elseif(OC_LOG_MAXIMUM_LOG_LEVEL STREQUAL "INFO")
-    set(OC_LOG_MAXIMUM_LOG_LEVEL_INT 6)
-elseif(OC_LOG_MAXIMUM_LOG_LEVEL STREQUAL "DEBUG")
-    set(OC_LOG_MAXIMUM_LOG_LEVEL_INT 7)
-elseif(OC_LOG_MAXIMUM_LOG_LEVEL STREQUAL "TRACE")
-    set(OC_LOG_MAXIMUM_LOG_LEVEL_INT 8)
-else()
-    message(FATAL_ERROR "Invalid OC_LOG_MAXIMUM_LOG_LEVEL: ${OC_LOG_MAXIMUM_LOG_LEVEL}")
-endif()
-
-set(OC_LOG_MAXIMUM_LEVEL ${OC_LOG_MAXIMUM_LOG_LEVEL_INT} CACHE INTERNAL "Maximum supported log level in compile time as integer.")
+oc_set_maximum_log_level("${OC_LOG_MAXIMUM_LOG_LEVEL}" OC_LOG_MAXIMUM_LOG_LEVEL_INT)
 
 # clang-tidy triggers bugprone-macro-parentheses if the value is not in ()
-list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=(${OC_LOG_MAXIMUM_LEVEL})")
-list(APPEND TEST_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=(${OC_LOG_MAXIMUM_LEVEL})")
+list(APPEND PRIVATE_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=(${OC_LOG_MAXIMUM_LOG_LEVEL_INT})")
+list(APPEND TEST_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=(${OC_LOG_MAXIMUM_LOG_LEVEL_INT})")
 if(BUILD_MBEDTLS)
-    list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=(${OC_LOG_MAXIMUM_LEVEL})")
+    list(APPEND MBEDTLS_COMPILE_DEFINITIONS "OC_LOG_MAXIMUM_LEVEL=(${OC_LOG_MAXIMUM_LOG_LEVEL_INT})")
 endif()
 
 if(OC_PUSH_ENABLED)
@@ -417,13 +357,6 @@ if(OC_SIMPLE_MAIN_LOOP_ENABLED)
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_SIMPLE_MAIN_LOOP")
 endif()
 
-if(PLGD_DEV_TIME_ENABLED)
-    list(APPEND PUBLIC_COMPILE_DEFINITIONS "PLGD_DEV_TIME")
-    if(BUILD_MBEDTLS)
-        list(APPEND MBEDTLS_COMPILE_DEFINITIONS "PLGD_DEV_TIME")
-    endif()
-endif()
-
 if(NOT("${OC_INOUT_BUFFER_SIZE}" STREQUAL ""))
     if(NOT OC_DYNAMIC_ALLOCATION_ENABLED)
         message(FATAL_ERROR "Cannot OC_INOUT_BUFFER_SIZE without dynamic allocation")
@@ -469,6 +402,42 @@ if(NOT("${OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS}" STREQUAL ""))
         message(FATAL_ERROR "Cannot set OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS without dynamic allocation")
     endif()
     list(APPEND PUBLIC_COMPILE_DEFINITIONS "OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS=(${OC_DEVICE_MAX_NUM_CONCURRENT_REQUESTS})")
+endif()
+
+if(PLGD_DEV_TIME_ENABLED)
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "PLGD_DEV_TIME")
+    if(BUILD_MBEDTLS)
+        list(APPEND MBEDTLS_COMPILE_DEFINITIONS "PLGD_DEV_TIME")
+    endif()
+endif()
+
+if(PLGD_DEV_DEVICE_PROVISIONING_ENABLED)
+    if(OC_OSCORE_ENABLED)
+        message(WARNING "Cannot set PLGD_DEV_DEVICE_PROVISIONING_ENABLED with OC_OSCORE_ENABLED")
+    endif()
+    if(NOT OC_CLOUD_ENABLED)
+        message(FATAL_ERROR "Cannot set PLGD_DEV_DEVICE_PROVISIONING_ENABLED without OC_CLOUD_ENABLED")
+    endif()
+    if(NOT OC_SECURITY_ENABLED)
+        message(FATAL_ERROR "Cannot set PLGD_DEV_DEVICE_PROVISIONING_ENABLED without OC_SECURITY_ENABLED")
+    endif()
+    if(NOT PLGD_DEV_TIME_ENABLED)
+        message(FATAL_ERROR "Cannot set PLGD_DEV_DEVICE_PROVISIONING_ENABLED without PLGD_DEV_TIME_ENABLED")
+    endif()
+    list(APPEND PUBLIC_COMPILE_DEFINITIONS "PLGD_DEV_DEVICE_PROVISIONING")
+
+    set(PLGD_DPS_MAXIMUM_LOG_LEVEL "DISABLED" CACHE STRING "Maximum supported Plgd DPS log level in compile time.")
+    set(PLGD_DPS_MAXIMUM_LOG_LEVEL_INT)
+    oc_set_maximum_log_level("${PLGD_DPS_MAXIMUM_LOG_LEVEL}" PLGD_DPS_MAXIMUM_LOG_LEVEL_INT)
+    list(APPEND PRIVATE_COMPILE_DEFINITIONS "PLGD_DPS_LOG_MAXIMUM_LEVEL=(${PLGD_DPS_MAXIMUM_LOG_LEVEL_INT})")
+    list(APPEND TEST_COMPILE_DEFINITIONS "PLGD_DPS_LOG_MAXIMUM_LEVEL=(${PLGD_DPS_MAXIMUM_LOG_LEVEL_INT})")
+endif()
+
+if(PLGD_DEV_DEVICE_PROVISIONING_TEST_PROPERTIES_ENABLED)
+	list(APPEND PRIVATE_COMPILE_DEFINITIONS "PLGD_DPS_RESOURCE_TEST_PROPERTIES")
+    if(BUILD_TESTING)
+        list(APPEND TEST_COMPILE_DEFINITIONS "PLGD_DPS_RESOURCE_TEST_PROPERTIES")
+    endif()
 endif()
 
 if(BUILD_TESTING)
@@ -712,7 +681,13 @@ if(OC_SECURITY_ENABLED)
     target_link_libraries(server-obj PRIVATE ${MBEDTLS_DEP})
 endif()
 
-add_library(client-server-obj OBJECT ${COMMON_SRC} ${CLIENT_SRC})
+if(PLGD_DEV_DEVICE_PROVISIONING_ENABLED)
+    file(GLOB PLGD_DPS_SRC
+        ${PROJECT_SOURCE_DIR}/api/plgd/device-provisioning-client/*.c
+    )
+endif()
+
+add_library(client-server-obj OBJECT ${COMMON_SRC} ${CLIENT_SRC} ${PLGD_DPS_SRC})
 target_compile_definitions(client-server-obj PRIVATE ${PRIVATE_COMPILE_DEFINITIONS} PUBLIC ${PUBLIC_COMPILE_DEFINITIONS} "OC_CLIENT" "OC_SERVER")
 target_compile_options(client-server-obj PRIVATE ${PRIVATE_COMPILE_OPTIONS})
 target_include_directories(client-server-obj PRIVATE ${PROJECT_SOURCE_DIR} ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/port ${PORT_INCLUDE_DIR})
@@ -1134,6 +1109,17 @@ if(BUILD_TESTING AND ((WIN32 AND NOT MSVC) OR (UNIX AND HAVE_OC_TIME_H)))
         oc_package_add_test(TARGET pythonlibtest SOURCES ${PYTHONLIBTEST_SRC})
     endif()
 
+    if(PLGD_DEV_TIME_ENABLED OR PLGD_DEV_DEVICE_PROVISIONING_ENABLED)
+        file(GLOB PLGDTEST_SRC api/plgd/unittest/*.cpp)
+        oc_package_add_test(
+            TARGET plgdtest
+            SOURCES ${COMMONTEST_SRC} ${PLGDTEST_SRC}
+            ENVIRONMENT "ASAN_OPTIONS=${OC_ASAN_OPTIONS}"
+                        "TSAN_OPTIONS=${OC_TSAN_OPTIONS}"
+                        "UBSAN_OPTIONS=${OC_UBSAN_OPTIONS}"
+        )
+    endif()
+
     if(UNIX AND NOT OC_TSAN_ENABLED)
         # install https://github.com/wolfcw/libfaketime for this test suit to run
         find_library(FAKETIME_LIBRARY
@@ -1290,14 +1276,6 @@ if (OC_INTROSPECTION_ENABLED)
     )
 endif()
 
-if (PLGD_DEV_TIME_ENABLED)
-    install(DIRECTORY include/plgd
-        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
-        FILES_MATCHING
-        PATTERN "*.h"
-    )
-endif()
-
 if(OC_ETAG_ENABLED)
     install(FILES include/oc_etag.h
         DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite COMPONENT dev
@@ -1333,6 +1311,18 @@ list(FILTER HEADERS_UTIL_PT EXCLUDE REGEX ".*_internal\\.h$")
 install(FILES ${HEADERS_UTIL_PT}
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/util/pt COMPONENT dev
 )
+
+if (PLGD_DEV_TIME_ENABLED)
+    install(FILES include/plgd/plgd_time.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/plgd COMPONENT dev
+    )
+endif()
+
+if(PLGD_DEV_DEVICE_PROVISIONING_ENABLED)
+    install(FILES include/plgd/plgd_dps.h
+        DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/iotivity-lite/plgd COMPONENT dev
+    )
+endif()
 
 # ####### Code formatting ########
 if(PROJECT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
