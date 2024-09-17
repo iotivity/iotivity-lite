@@ -30,6 +30,7 @@
 #include "util/oc_macros_internal.h"
 
 #include <assert.h>
+#include <inttypes.h>
 #include <string.h>
 
 bool
@@ -82,7 +83,8 @@ dps_reset_delayed_callback_ms(void *cb_data, oc_trigger_t callback,
 #define MILLISECONDS_IN_SECONDS 1000
 #define OC_CLOCK_MILLISECOND (OC_CLOCK_SECOND / MILLISECONDS_IN_SECONDS)
   if (oc_clock_time_max / OC_CLOCK_MILLISECOND < milliseconds) {
-    DPS_DBG("delayed callback interval truncated to %lu", oc_clock_time_max);
+    DPS_DBG("delayed callback interval truncated to %" PRIu64,
+            oc_clock_time_max);
     milliseconds = oc_clock_time_max / OC_CLOCK_MILLISECOND;
   }
   oc_clock_time_t interval = milliseconds * OC_CLOCK_MILLISECOND;

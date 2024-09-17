@@ -22,8 +22,7 @@ RUN mkdir build && \
     cd build && \
     cmake -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DOC_CLOUD_ENABLED=ON \
     -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_OSCORE_ENABLED=OFF -DOC_DISCOVERY_RESOURCE_OBSERVABLE_ENABLED=ON \
-    -DOC_DEBUG_ENABLED=ON -DPLGD_DEV_TIME_ENABLED=ON -DPLGD_DEV_DEVICE_PROVISIONING_ENABLED=ON \
-    -DPLGD_DEV_DEVICE_PROVISIONING_TEST_PROPERTIES_ENABLED=ON -DBUILD_TESTING=ON ${BUILD_ARGS} .. && \
+    -DPLGD_DEV_TIME_ENABLED=ON -DPLGD_DEV_DEVICE_PROVISIONING_ENABLED=ON -DBUILD_TESTING=ON ${BUILD_ARGS} .. && \
     cmake --build . --target mbedtls mbedx509 mbedcrypto && \
     cmake --build . -j$(nproc) --target dps_cloud_server && \
     cp /device-provisioning-client/build/apps/dps_cloud_server /dps/

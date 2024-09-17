@@ -53,7 +53,7 @@ jobs:
     uses: ./.github/workflows/plgd-dps-test-with-cfg.yml
     with:
         args: ${{ matrix.args || '' }}
-        build_args: -DOC_DEBUG_ENABLED=ON -DPLGD_DPS_MAXIMUM_LOG_LEVEL=TRACE -DPLGD_DPS_CLOUD_SERVER_DBG_ENABLED=ON ${{ matrix.build_args }}
+        build_args: -DOC_DEBUG_ENABLED=ON -DPLGD_DEV_DEVICE_PROVISIONING_MAXIMUM_LOG_LEVEL=TRACE -DPLGD_DEV_DEVICE_PROVISIONING_TEST_PROPERTIES_ENABLED=ON -DPLGD_DPS_CLOUD_SERVER_DBG_ENABLED=ON ${{ matrix.build_args }}
         build_type: ${{ (github.event_name == 'workflow_dispatch' && inputs.build_type) || 'Debug' }}
         docker_file: ${{ matrix.docker_file || 'docker/apps/Dockerfile.dps-cloud-server-debug' }}
         skip: ${{ matrix.skip || false }}
