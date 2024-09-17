@@ -135,9 +135,9 @@ dps_pki_validate_certificate(dps_pki_configuration_t cfg, uint64_t valid_from,
   }
 
   uint64_t now_s = now / OC_CLOCK_SECOND;
-  DPS_DBG(
-    "\tcheck certificate validity: now=%lu from=%lu to=%lu expiring_limit:%u",
-    now_s, valid_from, valid_to, (unsigned)cfg.expiring_limit);
+  DPS_DBG("\tcheck certificate validity: now=%" PRIu64 " from=%" PRIu64
+          " to=%" PRIu64 " expiring_limit:%u",
+          now_s, valid_from, valid_to, (unsigned)cfg.expiring_limit);
   if (now_s < valid_from) {
     return DPS_CERTIFICATE_NOT_YET_VALID;
   }

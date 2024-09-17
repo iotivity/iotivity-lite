@@ -60,7 +60,7 @@ jobs:
             file: docker/apps/Dockerfile.dps-cloud-server
           - name: dps-cloud-server-debug
             build_type: Debug
-            build_args: -DOC_DEBUG_ENABLED=ON -DOC_LOG_MAXIMUM_LOG_LEVEL=DEBUG -DPLGD_DEV_DEVICE_PROVISIONING_TEST_PROPERTIES_ENABLED=ON
+            build_args: -DOC_DEBUG_ENABLED=ON -DOC_LOG_MAXIMUM_LOG_LEVEL=DEBUG -DPLGD_DEV_DEVICE_PROVISIONING_MAXIMUM_LOG_LEVEL=DEBUG -DPLGD_DPS_CLOUD_SERVER_DBG_ENABLED=ON -DPLGD_DEV_DEVICE_PROVISIONING_TEST_PROPERTIES_ENABLED=ON
             file: docker/apps/Dockerfile.dps-cloud-server
     uses: ./.github/workflows/docker-build-publish-with-cfg.yml
     with:

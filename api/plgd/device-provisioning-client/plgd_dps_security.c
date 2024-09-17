@@ -33,6 +33,7 @@
 #include "security/oc_tls_internal.h"
 
 #include <assert.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
@@ -388,7 +389,8 @@ dps_check_credentials(const plgd_dps_context_t *ctx,
   if (!all_valid || !has_identity || !has_trust_anchor) {
     return false;
   }
-  DPS_DBG("earliest expiring certificate(valid-from: %lu, valid-to: %lu)",
+  DPS_DBG("earliest expiring certificate(valid-from: %" PRIu64
+          ", valid-to: %" PRIu64 ")",
           valid_from, valid_to);
   if (min_validity != NULL) {
     min_validity->valid_from = valid_from;
