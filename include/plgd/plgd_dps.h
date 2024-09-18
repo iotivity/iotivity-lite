@@ -16,6 +16,14 @@
  *
  ****************************************************************************/
 
+/**
+ * @file plgd_dps.h
+ *
+ * @brief Device provisioning
+ *
+ * @author Daniel Adam
+ */
+
 #ifndef PLGD_DPS_H
 #define PLGD_DPS_H
 
@@ -40,6 +48,14 @@
 #ifndef OC_STORAGE
 #error "OC_STORAGE must be defined"
 #endif
+
+/**
+ * \defgroup dps Device provisioning
+ *
+ * A facitility to securely provision and preconfigure devices.
+ *
+ * @{
+ */
 
 #include "oc_export.h"
 #include "oc_client_state.h"
@@ -395,10 +411,12 @@ OC_API
 void plgd_dps_set_configuration_resource(plgd_dps_context_t *ctx, bool create)
   OC_NONNULL();
 
-/**
- * @brief Maximal size of the retry configuration array
- */
-enum { PLGD_DPS_MAX_RETRY_VALUES_SIZE = 8 };
+enum {
+  /**
+   * @brief Maximal size of the retry configuration array
+   */
+  PLGD_DPS_MAX_RETRY_VALUES_SIZE = 8
+};
 
 /**
  * @brief Configure retry counter.
@@ -726,11 +744,12 @@ plgd_dps_dhcp_set_values_from_vendor_encapsulated_options(
  * @param ctx dps context (cannot be NULL)
  * @param endpoint endpoint of the provisioning server (cannot be NULL)
  *
- * @deprecated Use plgd_dps_add_endpoint_address instead.
+ * @deprecated replaced by plgd_dps_add_endpoint_address in v2.2.5.15
  */
 OC_API
 void plgd_dps_set_endpoint(plgd_dps_context_t *ctx, const char *endpoint)
-  OC_NONNULL() OC_DEPRECATED("Use plgd_dps_add_endpoint_address instead.");
+  OC_NONNULL()
+    OC_DEPRECATED("replaced by plgd_dps_add_endpoint_address in v2.2.5.15");
 
 /**
  * @brief Copy the selected endpoint address of the DPS service to output
@@ -855,5 +874,7 @@ const oc_endpoint_address_t *plgd_dps_selected_endpoint_address(
 #ifdef __cplusplus
 }
 #endif
+
+/** @} */
 
 #endif /* PLGD_DPS_H */
