@@ -330,12 +330,13 @@ discovery(const char *di, const char *uri, oc_string_array_t types,
   const oc_endpoint_t *ep = endpoint;
   oc_string_t ep_str;
   bool supports_mcast = false;
-  while (ep) {
+  while (ep != NULL) {
     memset(&ep_str, 0, sizeof(oc_string_t));
-    if (oc_endpoint_to_string(ep, &ep_str) >= 0) {
-      if ((oc_string_len(ep_str) == 23 &&
+    if (oc_endpoint_to_string(ep, &ep_str) == 0) {
+      size_t ep_str_len = oc_string_len(ep_str);
+      if ((ep_str_len == 23 &&
            memcmp(oc_string(ep_str), "coap://224.0.1.187:5683", 23) == 0) ||
-          (oc_string_len(ep_str) == 23 &&
+          (ep_str_len == 23 &&
            memcmp(oc_string(ep_str), "coap://[ff02::158]:5683", 23) == 0)) {
         supports_mcast = true;
       }

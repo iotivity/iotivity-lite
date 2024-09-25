@@ -50,6 +50,7 @@
 #include <fcntl.h>
 #include <ifaddrs.h>
 #include <net/if.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <unistd.h>
 
@@ -939,8 +940,9 @@ tcp_send_message(int sockfd, const oc_message_t *message)
 {
   size_t bytes_sent = 0;
   do {
-    ssize_t send_len = send(sockfd, message->data + bytes_sent,
-                            message->length - bytes_sent, MSG_NOSIGNAL);
+    const void *data = message->data + bytes_sent;
+    size_t data_length = message->length - bytes_sent;
+    ssize_t send_len = send(sockfd, data, data_length, MSG_NOSIGNAL);
     if (send_len < 0) {
       if (errno == EINTR) {
         continue;
@@ -951,6 +953,9 @@ tcp_send_message(int sockfd, const oc_message_t *message)
       }
       return (int)bytes_sent;
     }
+    // overflow check for coverity scan
+    assert(bytes_sent <= SIZE_MAX - (size_t)send_len &&
+           "Integer overflow detected");
     bytes_sent += send_len;
   } while (bytes_sent < message->length);
 

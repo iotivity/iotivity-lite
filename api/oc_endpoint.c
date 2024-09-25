@@ -27,6 +27,9 @@
 #include "util/oc_macros_internal.h"
 #include "util/oc_memb.h"
 
+#include <assert.h>
+#include <limits.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -167,6 +170,8 @@ oc_endpoint_to_cstring(const oc_endpoint_t *endpoint, char *buffer,
   if (written < 0) {
     return -1;
   }
+  // overflow check for coverity scan
+  assert(len <= INT_MAX - written && "Integer overflow detected");
   return len + written;
 }
 
