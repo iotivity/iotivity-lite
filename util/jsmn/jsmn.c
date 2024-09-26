@@ -249,7 +249,10 @@ jsmn_parse_next_char(jsmn_parser_t *parser, jsmntok_t *token, const char *js,
       return r;
     }
     // overflow check for coverity scan
-    assert(count <= INT_MAX - r && "Integer overflow detected");
+    // assert(count <= INT_MAX - r && "Integer overflow detected");
+    if (count > INT_MAX - r) {
+      return -1;
+    }
     count += r;
     break;
   }
@@ -299,7 +302,10 @@ jsmn_parse(jsmn_parser_t *parser, const char *js, const size_t len,
       return r;
     }
     // overflow check for coverity scan
-    assert(count <= INT_MAX - r && "Integer overflow detected");
+    // assert(count <= INT_MAX - r && "Integer overflow detected");
+    if (count > INT_MAX - r) {
+      return -1;
+    }
     count += r;
   }
 
