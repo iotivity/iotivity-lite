@@ -6,11 +6,11 @@ ROOT_DIR = ../..
 SWIG_DIR = ${ROOT_DIR}/swig
 OUT_DIR = $(ROOT_DIR)/port/$(OS)
 CHECK_SCRIPT = ../../tools/check.py
-# project version: 2.2.5.15
+# project version: 2.2.5.16
 VERSION_MAJOR = 2
 VERSION_MINOR = 2
 VERSION_PATCH = 5
-VERSION_BUILD = 15
+VERSION_BUILD = 16
 VERSION = $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH).$(VERSION_BUILD)
 DYNAMIC ?= 1
 export SECURE ?= 1
