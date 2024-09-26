@@ -122,7 +122,7 @@ oc_ip_send_msg(int sock, struct sockaddr_storage *receiver,
     }
     // overflow check for coverity scan
     assert(bytes_sent <= SIZE_MAX - (size_t)ret && "Integer overflow detected");
-    bytes_sent += ret;
+    bytes_sent += (size_t)ret;
   }
   OC_TRACE("Sent %zu bytes", bytes_sent);
   if (bytes_sent == 0) {

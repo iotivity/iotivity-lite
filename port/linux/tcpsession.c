@@ -956,7 +956,7 @@ tcp_send_message(int sockfd, const oc_message_t *message)
     // overflow check for coverity scan
     assert(bytes_sent <= SIZE_MAX - (size_t)send_len &&
            "Integer overflow detected");
-    bytes_sent += send_len;
+    bytes_sent += (size_t)send_len;
   } while (bytes_sent < message->length);
 
   OC_TRACE("Sent %zu bytes", bytes_sent);

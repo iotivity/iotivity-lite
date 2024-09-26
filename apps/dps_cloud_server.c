@@ -853,12 +853,21 @@ register_collection(size_t device)
   oc_resource_set_discoverable(col, true);
   oc_resource_set_observable(col, true);
 
-  oc_collection_add_supported_rt(col, "oic.r.switch.binary");
-  oc_collection_add_mandatory_rt(col, "oic.r.switch.binary");
+  if (!oc_collection_add_supported_rt(col, "oic.r.switch.binary")) {
+    printf("ERROR: could not add supported resource type to collection\n");
+    return false;
+  }
+  if (!oc_collection_add_mandatory_rt(col, "oic.r.switch.binary")) {
+    printf("ERROR: could not add mandatory resource type to collection\n");
+    return false;
+  }
 #ifdef OC_COLLECTIONS_IF_CREATE
   oc_resource_bind_resource_interface(col, OC_IF_CREATE);
-  oc_collections_add_rt_factory("oic.r.switch.binary", get_switch_instance,
-                                free_switch_instance);
+  if (!oc_collections_add_rt_factory("oic.r.switch.binary", get_switch_instance,
+                                     free_switch_instance)) {
+    OC_PRINTF("ERROR: could not register rt factory\n");
+    return false;
+  }
 #endif /* OC_COLLECTIONS_IF_CREATE */
   /* The following enables baseline RETRIEVEs/UPDATEs to Collection properties
    */
@@ -1508,15 +1517,19 @@ dps_dhcp_parse_vendor_encapsulated_options(const char *value, size_t size,
   ssize_t len = plgd_dps_hex_string_to_bytes(value, size, NULL, 0);
   if (len < 0) {
     printf("ERROR: invalid character in vendor encapsulated options\n");
-    return true;
+    return false;
   }
-  if (len > (ssize_t)(sizeof(veo->value))) {
+  if ((size_t)len > sizeof(veo->value)) {
     printf("ERROR: vendor encapsulated options too long\n");
-    return true;
+    return false;
   }
   len =
     plgd_dps_hex_string_to_bytes(value, size, veo->value, sizeof(veo->value));
-  if (len < (ssize_t)(sizeof(veo->value))) {
+  if (len < 0) {
+    printf("ERROR: invalid hex string\n");
+    return false;
+  }
+  if ((size_t)len < sizeof(veo->value)) {
     veo->value[len] = '\0';
   }
   veo->size = (size_t)len;

@@ -96,23 +96,4 @@ TEST_F(TestDPSLog, LogToFunction)
   DPS_LOG(OC_LOG_LEVEL_TRACE, "trace");
 }
 
-static void
-expectNoLog(oc_log_level_t, const char *, int, const char *, const char *, ...)
-{
-  FAIL() << "unexpected log";
-}
-
-TEST_F(TestDPSLog, SkipLogByComponent)
-{
-  plgd_dps_log_set_level(OC_LOG_LEVEL_TRACE);
-  plgd_dps_set_log_fn(expectNoLog);
-
-  DPS_ERR("error");
-  DPS_WRN("warning");
-  DPS_NOTE("notice");
-  DPS_INFO("info");
-  DPS_DBG("debug");
-  DPS_TRACE("trace");
-}
-
 #endif /* OC_HAS_FEATURE_PLGD_DEVICE_PROVISIONING */

@@ -125,11 +125,11 @@ get_delay_from_timeout(uint16_t timeout)
   if (timeout == 0) {
     return oc_random_value() % MIN_DELAYED_VALUE_MS;
   }
-  uint64_t delay = (uint64_t)timeout * MILLISECONDS_PER_SECOND / 2;
+  uint32_t delay = (uint32_t)timeout * MILLISECONDS_PER_SECOND / 2;
   // Include a random delay to prevent multiple devices from attempting to
   // connect or make requests simultaneously.
-  delay += oc_random_value() % delay;
-  return delay;
+  uint32_t random_delay = oc_random_value() % delay;
+  return (uint64_t)delay + random_delay;
 }
 
 static bool

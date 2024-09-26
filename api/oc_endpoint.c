@@ -171,10 +171,7 @@ oc_endpoint_to_cstring(const oc_endpoint_t *endpoint, char *buffer,
     return -1;
   }
   // overflow check for coverity scan
-  // assert(len <= INT_MAX - written && "Integer overflow detected");
-  if (len > INT_MAX - written) {
-    return -1;
-  }
+  assert(len <= INT_MAX - written && "Integer overflow detected");
   return len + written;
 }
 

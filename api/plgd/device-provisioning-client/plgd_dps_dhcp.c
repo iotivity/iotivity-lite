@@ -143,13 +143,15 @@ plgd_dps_hex_string_to_bytes(const char *isc_dhcp_vendor_encapsulated_options,
     memset(buffer, 0, buffer_size);
   }
   for (size_t i = 0; i < isc_dhcp_vendor_encapsulated_options_size;) {
+    const char *data = isc_dhcp_vendor_encapsulated_options + i;
+    size_t data_size = isc_dhcp_vendor_encapsulated_options_size - i;
     uint8_t val = 0;
-    ssize_t used =
-      hex_to_value(isc_dhcp_vendor_encapsulated_options + i,
-                   isc_dhcp_vendor_encapsulated_options_size - i, &val);
+    ssize_t used = hex_to_value(data, data_size, &val);
     if (used < 0) {
       return -1;
     }
+    // overflow check for coverity scan
+    assert((size_t)used <= data_size);
     if (buffer && (needed < buffer_size)) {
       buffer[needed] = val;
     }
