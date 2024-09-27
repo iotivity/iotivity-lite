@@ -22,7 +22,6 @@
 #include "api/oc_session_events_internal.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
-#include "oc_network_monitor.h"
 #include "oc_session_events.h"
 #include "oc_signal_event_loop.h"
 #include "port/oc_connectivity_internal.h"

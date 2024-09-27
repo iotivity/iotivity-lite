@@ -157,6 +157,7 @@ TEST(TestConnectivity_wakeup, WakeupInvalidDevice)
 }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
+#ifdef OC_NETWORK_MONITOR
 static void
 interface_event_handler(oc_interface_event_t event)
 {
@@ -183,7 +184,6 @@ TEST_F(TestConnectivity, oc_remove_network_interface_event_callback_fail)
     -1, oc_remove_network_interface_event_callback(interface_event_handler));
 }
 
-#ifdef OC_NETWORK_MONITOR
 TEST_F(TestConnectivity, handle_network_interface_event_callback)
 {
   oc_add_network_interface_event_callback(interface_event_handler);
