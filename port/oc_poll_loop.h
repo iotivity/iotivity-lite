@@ -29,6 +29,7 @@
 #ifndef PORT_OC_POLL_LOOP_H
 #define PORT_OC_POLL_LOOP_H
 
+#include "oc_export.h"
 #include "util/oc_features.h"
 
 #ifdef OC_HAS_FEATURE_SIMPLE_MAIN_LOOP
@@ -38,21 +39,27 @@ extern "C" {
 #endif
 
 /** @brief Initialize handles */
+OC_API
 bool oc_poll_loop_init(void);
 
 /** @brief Shutdown handles */
+OC_API
 void oc_poll_loop_shutdown(void);
 
 /** @brief Run the main loop until termination. */
+OC_API
 void oc_poll_loop_run(void);
 
 /** @brief Signal the main loop to wake up and process events. */
+OC_API
 void oc_poll_loop_signal(void);
 
 /** @brief Terminate the main loop. */
+OC_API
 void oc_poll_loop_terminate(void);
 
 /** @brief Check if the main loop has been terminated. */
+OC_API
 bool oc_poll_loop_is_terminated(void);
 
 #ifdef __cplusplus
