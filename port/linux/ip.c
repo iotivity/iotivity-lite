@@ -28,6 +28,7 @@
 #include <errno.h>
 #include <limits.h>
 #include <netinet/in.h>
+#include <stdint.h>
 #include <string.h>
 #include <sys/socket.h>
 
@@ -119,7 +120,9 @@ oc_ip_send_msg(int sock, struct sockaddr_storage *receiver,
       OC_ERR("sendmsg failed (error %d)", (int)errno);
       break;
     }
-    bytes_sent += ret;
+    // overflow check for coverity scan
+    assert(bytes_sent <= SIZE_MAX - (size_t)ret && "Integer overflow detected");
+    bytes_sent += (size_t)ret;
   }
   OC_TRACE("Sent %zu bytes", bytes_sent);
   if (bytes_sent == 0) {

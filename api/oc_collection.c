@@ -295,6 +295,8 @@ oc_get_link_by_uri(oc_collection_t *collection, const char *uri_path,
     size_t resource_uri_len = oc_string_len(link->resource->uri);
     while (resource_uri[0] == '/') {
       resource_uri++;
+      // overflow check for coverity scan
+      assert(resource_uri_len > 0);
       resource_uri_len--;
     }
     if (resource_uri_len == uri_path_len &&

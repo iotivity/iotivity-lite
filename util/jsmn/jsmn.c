@@ -45,6 +45,7 @@
 
 #include <assert.h>
 #include <ctype.h>
+#include <limits.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -247,6 +248,8 @@ jsmn_parse_next_char(jsmn_parser_t *parser, jsmntok_t *token, const char *js,
     if (r < 0) {
       return r;
     }
+    // overflow check for coverity scan
+    assert(count <= INT_MAX - r && "Integer overflow detected");
     count += r;
     break;
   }
@@ -289,12 +292,14 @@ jsmn_parse(jsmn_parser_t *parser, const char *js, const size_t len,
 {
   jsmntok_t token;
   jsmn_init_token(&token);
-  unsigned count = 0;
+  int count = 0;
   for (; parser->pos < len && js[parser->pos] != '\0'; parser->pos++) {
     int r = jsmn_parse_next_char(parser, &token, js, len, cb, data);
     if (r < 0) {
       return r;
     }
+    // overflow check for coverity scan
+    assert(count <= INT_MAX - r && "Integer overflow detected");
     count += r;
   }
 
@@ -302,7 +307,7 @@ jsmn_parse(jsmn_parser_t *parser, const char *js, const size_t len,
     return JSMN_ERROR_PART;
   }
 
-  return (int)count;
+  return count;
 }
 
 void

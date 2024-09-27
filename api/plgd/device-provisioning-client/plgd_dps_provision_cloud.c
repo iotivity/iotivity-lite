@@ -181,7 +181,10 @@ dps_handle_set_cloud_response(oc_client_response_t *data)
     }
     oc_string_view_t sidv = oc_string_view2(cloud.sid);
     oc_uuid_t sid;
-    oc_str_to_uuid_v1(sidv.data, sidv.length, &sid);
+    if (oc_str_to_uuid_v1(sidv.data, sidv.length, &sid) < 0) {
+      DPS_ERR("invalid sid(%s) value", sidv.data);
+      return PLGD_DPS_ERROR_SET_CLOUD;
+    }
     const oc_string_t *cloud_apn =
       oc_cloud_get_authorization_provider_name(cloud_ctx);
     if (dps_is_equal_string(*cloud_ctx_cis, *cloud.ci_server) &&

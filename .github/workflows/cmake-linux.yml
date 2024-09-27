@@ -56,8 +56,8 @@ jobs:
           - args: "-DOC_IPV4_ENABLED=ON -DOC_TCP_ENABLED=ON -DOC_PKI_ENABLED=OFF"
           # cloud on (ipv4+tcp on), dynamic allocation off, push notifications off
           - args: "-DOC_CLOUD_ENABLED=ON -DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_PUSH_ENABLED=OFF"
-          # cloud on (ipv4+tcp on), collections create on
-          - args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON"
+          # cloud on (ipv4+tcp on), collections create on, dps on, dps test properties on
+          - args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DPLGD_DEV_DEVICE_PROVISIONING_ENABLED=ON -DPLGD_DEV_DEVICE_PROVISIONING_TEST_PROPERTIES_ENABLED=ON -DPLGD_DEV_DEVICE_PROVISIONING_MAXIMUM_LOG_LEVEL=INFO"
           # cloud on (ipv4+tcp on), collections create on, custom message buffer size, custom message buffer pool size, custom app data buffer size, custom app data buffer pool size
           - args: "-DOC_CLOUD_ENABLED=ON -DOC_COLLECTIONS_IF_CREATE_ENABLED=ON -DOC_INOUT_BUFFER_SIZE=2048 -DOC_INOUT_BUFFER_POOL=4 -DOC_APP_DATA_BUFFER_SIZE=2048 -DOC_APP_DATA_BUFFER_POOL=4"
           # debug on

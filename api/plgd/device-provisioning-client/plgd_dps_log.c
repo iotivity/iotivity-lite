@@ -30,9 +30,8 @@
 
 static struct
 {
-  plgd_dps_print_log_fn_t fn;    ///< logging function
-  OC_ATOMIC_INT8_T level;        ///< enabled log level
-  OC_ATOMIC_UINT32_T components; ///< mask of enabled log components
+  plgd_dps_print_log_fn_t fn; ///< logging function
+  OC_ATOMIC_INT8_T level;     ///< enabled log level
 } g_dps_logger = {
   .fn = NULL,
   .level = OC_LOG_LEVEL_INFO,
