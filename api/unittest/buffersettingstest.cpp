@@ -50,11 +50,10 @@ TEST(BufferSettings, SetMaxAppDataSize)
 TEST(BufferSettings, SetMinAppDataSize)
 {
   size_t min_app_size = static_cast<size_t>(oc_get_min_app_data_size());
-
   oc_set_min_app_data_size(42);
   EXPECT_EQ(42, oc_get_min_app_data_size());
 
-  oc_set_min_app_data_size(max_app_size);
+  oc_set_min_app_data_size(min_app_size);
 }
 
 #endif /* !OC_APP_DATA_BUFFER_SIZE && OC_REP_ENCODING_REALLOC */

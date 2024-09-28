@@ -27,6 +27,7 @@
 #include "port/oc_connectivity.h"
 #include "util/oc_compiler.h"
 #include "util/oc_features.h"
+
 #include <limits.h>
 #include <stdbool.h>
 #include <stddef.h>
@@ -54,6 +55,15 @@ int oc_connectivity_init(size_t device, oc_connectivity_ports_t ports);
 void oc_connectivity_shutdown(size_t device);
 
 /**
+ * @brief send buffer
+ *
+ * @param message message to send
+ * @return int >=0 number of sent bytes
+ * @return int -1 on error
+ */
+int oc_send_buffer(oc_message_t *message);
+
+/**
  * @brief Send message to endpoint.
  *
  * @param message message to be sent (cannot be NULL)
@@ -64,6 +74,13 @@ void oc_connectivity_shutdown(size_t device);
  * @return >= number of written bytes
  */
 int oc_send_buffer2(oc_message_t *message, bool queue);
+
+/**
+ * @brief send discovery request
+ *
+ * @param message the message
+ */
+void oc_send_discovery_request(oc_message_t *message);
 
 #ifdef OC_DYNAMIC_ALLOCATION
 /**
@@ -95,6 +112,16 @@ void handle_session_event_callback(const oc_endpoint_t *endpoint,
 #endif /* OC_SESSION_EVENTS */
 
 #ifdef OC_TCP
+
+/**
+ * @brief end TCP session for the specific endpoint.
+ *
+ * @param endpoint the endpoint to close the session for
+ *
+ * @deprecated replaced by oc_close_session in v2.2.5.14
+ */
+void oc_connectivity_end_session(const oc_endpoint_t *endpoint)
+  OC_DEPRECATED("replaced by oc_close_session in v2.2.5.14");
 
 /**
  * @brief End TCP session for the specific endpoint.
