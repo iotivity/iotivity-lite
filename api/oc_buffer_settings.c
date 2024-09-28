@@ -31,17 +31,13 @@ static size_t _OC_MTU_SIZE = OC_INOUT_BUFFER_SIZE;
 #else  /* OC_INOUT_BUFFER_SIZE */
 static size_t _OC_MTU_SIZE = 2048 + COAP_MAX_HEADER_SIZE;
 #endif /* !OC_INOUT_BUFFER_SIZE */
-#ifdef OC_APP_DATA_BUFFER_SIZE
+
 static size_t _OC_MAX_APP_DATA_SIZE = 7168;
+#if defined(OC_APP_DATA_BUFFER_SIZE) || !defined(OC_REP_ENCODING_REALLOC)
 static size_t _OC_MIN_APP_DATA_SIZE = 7168;
-#else /* OC_APP_DATA_BUFFER_SIZE */
-static size_t _OC_MAX_APP_DATA_SIZE = 7168;
-#ifdef OC_REP_ENCODING_REALLOC
+#else  /* OC_APP_DATA_BUFFER_SIZE || !OC_REP_ENCODING_REALLOC */
 static size_t _OC_MIN_APP_DATA_SIZE = 256;
-#else                                /* OC_REP_ENCODING_REALLOC */
-static size_t _OC_MIN_APP_DATA_SIZE = 7168;
-#endif                               /* !OC_REP_ENCODING_REALLOC */
-#endif                               /* !OC_APP_DATA_BUFFER_SIZE */
+#endif /* !OC_APP_DATA_BUFFER_SIZE && OC_REP_ENCODING_REALLOC */
 static size_t _OC_BLOCK_SIZE = 1024; // FIX
 
 int
