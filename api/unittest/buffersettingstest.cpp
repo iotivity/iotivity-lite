@@ -24,7 +24,7 @@
 
 #ifdef OC_DYNAMIC_ALLOCATION
 
-TEST(BufferSettings, SetMTUSize)
+TEST(TestBufferSettings, SetMTUSize)
 {
 #ifdef OC_INOUT_BUFFER_SIZE
   EXPECT_EQ(-1, oc_set_mtu_size(42));
@@ -36,49 +36,53 @@ TEST(BufferSettings, SetMTUSize)
 #endif /* OC_INOUT_BUFFER_SIZE */
 }
 
-TEST(BufferSettings, SetMaxAppDataSize)
+#ifndef OC_APP_DATA_BUFFER_SIZE
+
+TEST(TestBufferSettings, SetMaxAppDataSize)
 {
-  size_t max_app_size = static_cast<size_t>(oc_get_max_app_data_size());
+  auto max_app_size = static_cast<size_t>(oc_get_max_app_data_size());
   oc_set_max_app_data_size(42);
   EXPECT_EQ(42, oc_get_max_app_data_size());
 
   oc_set_max_app_data_size(max_app_size);
 }
 
-#if !defined(OC_APP_DATA_BUFFER_SIZE) && defined(OC_REP_ENCODING_REALLOC)
+#ifdef OC_REP_ENCODING_REALLOC
 
-TEST(BufferSettings, SetMinAppDataSize)
+TEST(TestBufferSettings, SetMinAppDataSize)
 {
-  size_t min_app_size = static_cast<size_t>(oc_get_min_app_data_size());
+  auto min_app_size = static_cast<size_t>(oc_get_min_app_data_size());
   oc_set_min_app_data_size(42);
   EXPECT_EQ(42, oc_get_min_app_data_size());
 
   oc_set_min_app_data_size(min_app_size);
 }
 
-#endif /* !OC_APP_DATA_BUFFER_SIZE && OC_REP_ENCODING_REALLOC */
+#endif /* OC_REP_ENCODING_REALLOC */
+
+#endif /* !OC_APP_DATA_BUFFER_SIZE */
 
 #else /* !OC_DYNAMIC_ALLOCATION  */
 
-TEST(BufferSettings, SetMTUSize)
+TEST(TestBufferSettings, SetMTUSize)
 {
   EXPECT_EQ(-1, oc_set_mtu_size(42));
   EXPECT_EQ(-1, oc_get_mtu_size());
 }
 
-TEST(BufferSettings, SetMaxAppDataSize)
+TEST(TestBufferSettings, SetMaxAppDataSize)
 {
   oc_set_max_app_data_size(42);
   EXPECT_EQ(-1, oc_get_max_app_data_size());
 }
 
-TEST(BufferSettings, SetMinAppDataSize)
+TEST(TestBufferSettings, SetMinAppDataSize)
 {
   oc_set_min_app_data_size(42);
   EXPECT_EQ(-1, oc_get_min_app_data_size());
 }
 
-TEST(BufferSettings, GetBlockSize)
+TEST(TestBufferSettings, GetBlockSize)
 {
   EXPECT_EQ(-1, oc_get_block_size());
 }
