@@ -55,6 +55,7 @@
 #include "api/oc_helpers_internal.h"
 #include "api/oc_message_internal.h"
 #include "api/oc_query_internal.h"
+#include "api/oc_rep_internal.h"
 #include "api/oc_ri_internal.h"
 #include "api/oc_server_api_internal.h"
 #include "messaging/coap/log_internal.h"

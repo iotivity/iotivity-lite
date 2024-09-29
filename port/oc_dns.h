@@ -1,6 +1,6 @@
 /****************************************************************************
  *
- * Copyright 2018 Samsung Electronics All Rights Reserved.
+ * Copyright (c) 2016, 2018, 2020 Intel Corporation
  *
  * Licensed under the Apache License, Version 2.0 (the "License"),
  * you may not use this file except in compliance with the License.
@@ -15,41 +15,50 @@
  * language governing permissions and limitations under the License.
  *
  ****************************************************************************/
-/**
-  @file
-*/
-#ifndef OC_NETWORK_HELPERS_H
-#define OC_NETWORK_HELPERS_H
 
+/**
+ * @file
+ */
+
+#ifndef OC_PORT_DNS_H
+#define OC_PORT_DNS_H
+
+#include "oc_endpoint.h"
 #include "oc_export.h"
-#include "oc_network_events.h"
+#include "oc_helpers.h"
+#include "util/oc_features.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-/**
- * @brief Add the callback to receive change notifications for Network interface
- * event.
- * @param cb  The callback to be added. Must not be NULL.
- * @return 0 on success
- * @return -1 on error
- */
-OC_API
-int oc_add_network_interface_event_callback(interface_event_handler_t cb);
+#ifdef OC_DNS_LOOKUP
 
 /**
- * @brief Remove the callback to receive change notifications for Network
- * interface event.
- * @param cb  The callback to be removed. Must not be NULL.
- * @return 0 on success
- * @return -1 on error
+ * @brief dns look up
+ *
+ * @param domain the url
+ * @param addr the address
+ * @param flags the transport flags
+ * @return int 0 = success
  */
 OC_API
-int oc_remove_network_interface_event_callback(interface_event_handler_t cb);
+int oc_dns_lookup(const char *domain, oc_string_t *addr, transport_flags flags);
+
+#ifdef OC_DNS_CACHE
+
+/**
+ * @brief clear the DNS cache
+ */
+OC_API
+void oc_dns_clear_cache(void);
+
+#endif /* OC_DNS_CACHE */
+
+#endif /* OC_DNS_LOOKUP */
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* OC_NETWORK_HELPERS_H */
+#endif /* OC_PORT_DNS_H */

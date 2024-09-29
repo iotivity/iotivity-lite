@@ -22,6 +22,7 @@
 
 #include "api/oc_core_res_internal.h"
 #include "api/oc_mnt_internal.h"
+#include "api/oc_rep_internal.h"
 #include "api/oc_resource_internal.h"
 #include "api/oc_ri_internal.h"
 #include "oc_core_res.h"

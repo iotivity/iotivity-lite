@@ -27,6 +27,7 @@
 
 #include "oc_export.h"
 #include "oc_endpoint.h"
+#include "util/oc_compiler.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -75,6 +76,60 @@ typedef void (*session_event_handler_v1_t)(const oc_endpoint_t *endpoint,
  */
 OC_API
 void oc_session_events_set_event_delay(int secs);
+
+/**
+ * @brief Add the callback to receive session event notifications.
+ *
+ * @param cb  The callback to be added. Must not be NULL.
+ * @return 0 on success
+ * @return -1 on error
+ *
+ * @deprecated replaced by oc_add_session_event_callback_v1 in v2.2.5.4
+ */
+OC_API
+int oc_add_session_event_callback(session_event_handler_t cb)
+  OC_DEPRECATED("replaced by oc_add_session_event_callback_v1 in v2.2.5.4");
+
+/**
+ * @brief Add the callback to receive session event notifications.
+ *
+ * @param cb The callback to be added (cannot be NULL).
+ * @param user_data user data passed to the callback when invoked
+ * @return 0 on success
+ * @return -1 on error
+ */
+OC_API
+int oc_add_session_event_callback_v1(session_event_handler_v1_t cb,
+                                     void *user_data);
+
+/**
+ * @brief Remove the callback to receive session event notifications.
+ * @param cb The callback to be removed. Must not be NULL.
+ * @return 0 on success
+ * @return -1 on error
+ *
+ * @deprecated replaced by oc_remove_session_event_callback_v1 in v2.2.5.4
+ */
+OC_API
+int oc_remove_session_event_callback(session_event_handler_t cb)
+  OC_DEPRECATED("replaced by oc_remove_session_event_callback_v1 in v2.2.5.4");
+
+/**
+ * @brief Remove the callback with to receive session event notifications.
+ *
+ * @param cb The callback to be removed.
+ * @param user_data user data provided to the callback by
+ oc_add_session_event_callback_v1
+ * @param ignore_user_data ignore user_data and match only the function pointer
+ * @return 0 on success
+ * @return OC_ERR_SESSION_EVENT_HANDLER_NOT_FOUND when no match was found
+ * @return -1 other errors
+ *
+ * @see oc_add_session_event_callback_v1
+ */
+OC_API
+int oc_remove_session_event_callback_v1(session_event_handler_v1_t cb,
+                                        void *user_data, bool ignore_user_data);
 
 #ifdef __cplusplus
 }

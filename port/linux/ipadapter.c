@@ -27,7 +27,6 @@
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
-#include "oc_network_monitor.h"
 #include "port/common/posix/oc_socket_internal.h"
 #include "port/oc_assert.h"
 #include "port/oc_clock.h"
@@ -40,6 +39,10 @@
 #include "util/oc_atomic.h"
 #include "util/oc_features.h"
 #include "util/oc_macros_internal.h"
+
+#ifdef OC_NETWORK_MONITOR
+#include "oc_network_monitor.h"
+#endif /* OC_NETWORK_MONITOR */
 
 #ifdef OC_SESSION_EVENTS
 #include "api/oc_session_events_internal.h"

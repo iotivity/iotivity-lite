@@ -22,7 +22,7 @@
 #include "messaging/coap/engine_internal.h"
 #include "oc_signal_event_loop.h"
 #include "oc_buffer.h"
-#include "port/oc_connectivity.h"
+#include "port/oc_connectivity_internal.h"
 #include "util/oc_features.h"
 #include "util/oc_process.h"
 

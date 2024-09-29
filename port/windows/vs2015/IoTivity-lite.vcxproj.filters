@@ -113,6 +113,9 @@
     <ClCompile Include="..\..\..\api\oc_blockwise.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_buffer_settings.c">
+      <Filter>Core</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\util\oc_buffer.c">
       <Filter>Core</Filter>
     </ClCompile>

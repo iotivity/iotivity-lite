@@ -129,19 +129,6 @@ uint64_t oc_ri_get_batch_etag(const oc_resource_t *resource,
  */
 void oc_ri_free_resource_properties(oc_resource_t *resource) OC_NONNULL();
 
-/**
- * @brief Check if given URI is in use by given device
- *
- * @param device index of device
- * @param uri URI to check (cannot be NULL)
- * @param uri_len length of URI
- *
- * @return true if URI is in use
- * @return false otherwise
- */
-bool oc_ri_URI_is_in_use(size_t device, const char *uri, size_t uri_len)
-  OC_NONNULL();
-
 /** @brief Handle a coap request. */
 bool oc_ri_invoke_coap_entity_handler(coap_make_response_ctx_t *ctx,
                                       const oc_endpoint_t *endpoint,

@@ -33,6 +33,7 @@
 #include "oc_pstat_internal.h"
 #include "oc_store.h"
 #include "oc_tls_internal.h"
+#include "port/oc_connectivity_internal.h"
 #include "util/oc_process.h"
 
 #include "mbedtls/ccm.h"

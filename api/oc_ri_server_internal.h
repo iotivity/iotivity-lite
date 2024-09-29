@@ -32,6 +32,19 @@ extern "C" {
 #ifdef OC_SERVER
 
 /**
+ * @brief Check if given URI is in use by given device
+ *
+ * @param device index of device
+ * @param uri URI to check (cannot be NULL)
+ * @param uri_len length of URI
+ *
+ * @return true if URI is in use
+ * @return false otherwise
+ */
+bool oc_ri_URI_is_in_use(size_t device, const char *uri, size_t uri_len)
+  OC_NONNULL();
+
+/**
  * @brief allocate a resource structure
  *
  * @return oc_resource_t* allocated resource on success
@@ -73,6 +86,26 @@ void oc_ri_on_delete_resource_remove_all(void);
  * @param resource resource for the callbacks (cannot be NULL)
  */
 void oc_ri_on_delete_resource_invoke(oc_resource_t *resource) OC_NONNULL();
+
+int oc_ri_handle_observation(const coap_packet_t *request,
+                             coap_packet_t *response, oc_resource_t *resource,
+                             bool resource_is_collection, uint16_t block2_size,
+                             const oc_endpoint_t *endpoint,
+                             oc_interface_mask_t iface_query) OC_NONNULL();
+
+/** Attempt to notify all observers of the resource */
+void oc_ri_notify_resource_observers(oc_resource_t *resource,
+                                     oc_interface_mask_t iface_mask)
+  OC_NONNULL();
+
+/** Initialize resource interface server variables */
+void oc_ri_server_init(void);
+
+/** Reset observations */
+void oc_ri_server_reset(void);
+
+/** Deinitialize resource interface server variables */
+void oc_ri_server_shutdown(void);
 
 #endif /* OC_SERVER */
 

@@ -84,6 +84,25 @@ int oc_rep_parse_payload(const uint8_t *payload, size_t payload_size,
 oc_rep_t *oc_parse_rep(const uint8_t *payload, size_t payload_size);
 
 /**
+ * Get the buffer pointer at the start of the encoded cbor data.
+ *
+ * @return pointer to the start of the cbor encoded buffer
+ *
+ * @see oc_parse_rep
+ */
+const uint8_t *oc_rep_get_encoder_buf(void);
+
+/**
+ * Shrink the buffer pointer to length of encoded cbor data.
+ *
+ * @param[in] buf pointer to cbor encoded buffer
+ * @return pointer to the start of the shrinked cbor encoded buffer
+ *
+ * @see oc_parse_rep
+ */
+uint8_t *oc_rep_shrink_encoder_buf(uint8_t *buf);
+
+/**
  * @brief Get the size of the cbor encoded data.
  *
  * @param truncateEmpty truncate empty objects ("{}") to zero size

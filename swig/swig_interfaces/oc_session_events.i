@@ -39,4 +39,5 @@ void jni_session_events_set_event_delay(int secs)
 }
 %}
 #define OC_API
+#define OC_DEPRECATED(...)
 %include "oc_session_events.h"

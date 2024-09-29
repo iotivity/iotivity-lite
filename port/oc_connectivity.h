@@ -29,6 +29,7 @@
 #include "oc_export.h"
 #include "oc_network_events.h"
 #include "oc_session_events.h"
+#include "port/oc_dns.h"
 #include "util/oc_atomic.h"
 #include "util/oc_features.h"
 #include "util/oc_memb.h"
@@ -142,56 +143,12 @@ typedef struct oc_message_s
 } oc_message_t;
 
 /**
- * @brief send buffer
- *
- * @param message message to send
- * @return int >=0 number of sent bytes
- * @return int -1 on error
- */
-int oc_send_buffer(oc_message_t *message);
-
-/**
- * @brief send discovery request
- *
- * @param message the message
- */
-void oc_send_discovery_request(oc_message_t *message);
-
-/**
- * @brief end TCP session for the specific endpoint.
- *
- * @param endpoint the endpoint to close the session for
- *
- * @deprecated replaced by oc_close_session in v2.2.5.14
- */
-void oc_connectivity_end_session(const oc_endpoint_t *endpoint)
-  OC_DEPRECATED("replaced by oc_close_session in v2.2.5.14");
-
-#ifdef OC_DNS_LOOKUP
-/**
- * @brief dns look up
- *
- * @param domain the url
- * @param addr the address
- * @param flags the transport flags
- * @return int 0 = success
- */
-int oc_dns_lookup(const char *domain, oc_string_t *addr, transport_flags flags);
-#ifdef OC_DNS_CACHE
-/**
- * @brief clear the DNS cache
- *
- */
-void oc_dns_clear_cache(void);
-#endif /* OC_DNS_CACHE */
-#endif /* OC_DNS_LOOKUP */
-
-/**
  * @brief retrieve list of endpoints for the device
  *
  * @param device the device index
  * @return oc_endpoint_t* list of endpoints
  */
+OC_API
 oc_endpoint_t *oc_connectivity_get_endpoints(size_t device);
 
 #ifdef OC_TCP

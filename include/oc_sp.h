@@ -25,6 +25,8 @@
 #ifndef OC_SP_H
 #define OC_SP_H
 
+#include "oc_export.h"
+
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -126,6 +128,7 @@ typedef enum {
  * @param[in] mfg_credid the credential ID of the /oic/sec/cred entry containing
  *                       the manufactures end-entity certificate
  */
+OC_API
 void oc_pki_set_security_profile(size_t device, unsigned supported_profiles,
                                  oc_sp_types_t current_profile, int mfg_credid);
 

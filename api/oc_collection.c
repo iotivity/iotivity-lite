@@ -25,6 +25,7 @@
 #include "api/oc_link_internal.h"
 #include "api/oc_resource_internal.h"
 #include "api/oc_ri_internal.h"
+#include "api/oc_ri_server_internal.h"
 #include "messaging/coap/observe_internal.h"
 #include "oc_api.h"
 #include "oc_core_res.h"

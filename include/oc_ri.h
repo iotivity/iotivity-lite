@@ -37,10 +37,7 @@
 extern "C" {
 #endif
 
-/**
- * @brief CoAP methods
- *
- */
+/** @brief CoAP methods */
 typedef enum {
   OC_GET = 1, ///< GET
   OC_POST,    ///< POST
@@ -49,10 +46,7 @@ typedef enum {
   OC_FETCH    ///< FETCH
 } oc_method_t;
 
-/**
- * @brief resource properties (bit mask)
- *
- */
+/** @brief resource properties (bit mask) */
 typedef enum {
   OC_DISCOVERABLE = (1 << 0), ///< discoverable
   OC_OBSERVABLE = (1 << 1),   ///< observable
@@ -70,7 +64,8 @@ typedef enum {
 
 /**
  * @brief response status
- * can be translated to HTTP or CoAP.
+ *
+ * @note can be translated to HTTP or CoAP.
  */
 typedef enum {
   OC_STATUS_OK = 0,                   ///< OK
@@ -162,10 +157,7 @@ typedef enum {
   APPLICATION_NOT_DEFINED = 0xFFFF, ///< not defined
 } oc_content_format_t;
 
-/**
- * @brief interface masks
- *
- */
+/** @brief interface masks */
 typedef enum {
   OC_IF_BASELINE = 1 << 1,        ///< oic.if.baseline
   OC_IF_LL = 1 << 2,              ///< oic.if.ll
@@ -232,19 +224,13 @@ typedef enum {
 
 typedef struct oc_resource_s oc_resource_t;
 
-/**
- * @brief seperate response type
- */
+/** @brief seperate response type */
 typedef struct oc_separate_response_s oc_separate_response_t;
 
-/**
- * @brief response type
- */
+/** @brief response type */
 typedef struct oc_response_s oc_response_t;
 
-/**
- * @brief request information structure
- */
+/** @brief request information structure */
 typedef struct oc_request_t
 {
   const oc_endpoint_t *origin; ///< origin of the request
@@ -267,32 +253,22 @@ typedef struct oc_request_t
 #endif /* OC_HAS_FEATURE_ETAG */
 } oc_request_t;
 
-/**
- * @brief request callback
- *
- */
+/** @brief request callback */
 typedef void (*oc_request_callback_t)(oc_request_t *, oc_interface_mask_t,
                                       void *);
 
-/**
- * @brief request handler type
- *
- */
+/** @brief request handler type */
 typedef struct oc_request_handler_s
 {
   oc_request_callback_t cb;
   void *user_data;
 } oc_request_handler_t;
 
-/**
- * @brief set properties callback
- */
+/** @brief set properties callback */
 typedef bool (*oc_set_properties_cb_t)(const oc_resource_t *, const oc_rep_t *,
                                        void *);
 
-/**
- * @brief get properties callback
- */
+/** @brief get properties callback */
 typedef void (*oc_get_properties_cb_t)(const oc_resource_t *,
                                        oc_interface_mask_t, void *);
 
@@ -305,10 +281,7 @@ typedef void (*oc_payload_callback_t)(void);
 
 #endif /* OC_HAS_FEATURE_PUSH */
 
-/**
- * @brief properties callback structure
- *
- */
+/** @brief properties callback structure */
 typedef struct oc_properties_cb_t
 {
   union {
@@ -318,10 +291,7 @@ typedef struct oc_properties_cb_t
   void *user_data;
 } oc_properties_cb_t;
 
-/**
- * @brief resource structure
- *
- */
+/** @brief resource structure */
 struct oc_resource_s
 {
   struct oc_resource_s *next;            ///< next resource
@@ -534,6 +504,7 @@ oc_interface_mask_t oc_ri_get_interface_mask(const char *iface,
  * @param device the device index
  * @return oc_resource_t* the resource structure
  */
+OC_API
 oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len,
                                              size_t device);
 
@@ -542,6 +513,7 @@ oc_resource_t *oc_ri_get_app_resource_by_uri(const char *uri, size_t uri_len,
  *
  * @return oc_resource_t* the resource list
  */
+OC_API
 oc_resource_t *oc_ri_get_app_resources(void);
 
 /**
@@ -635,6 +607,7 @@ bool oc_ri_on_delete_resource_remove_callback(oc_ri_delete_resource_cb_t cb)
  * @return int the position of the next key value pair in the query
  * @return int -1 on failure
  */
+OC_API
 int oc_ri_get_query_nth_key_value(const char *query, size_t query_len,
                                   const char **key, size_t *key_len,
                                   const char **value, size_t *value_len,
@@ -651,6 +624,7 @@ int oc_ri_get_query_nth_key_value(const char *query, size_t query_len,
  * @return -1 if the key is not found
  * @return the length of the value
  */
+OC_API
 int oc_ri_get_query_value_v1(const char *query, size_t query_len,
                              const char *key, size_t key_len,
                              const char **value) OC_NONNULL(3);
@@ -660,6 +634,7 @@ int oc_ri_get_query_value_v1(const char *query, size_t query_len,
  *
  * @deprecated replaced by oc_ri_get_query_value_v1 in v2.2.5.9
  */
+OC_API
 int oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
                           const char **value) OC_NONNULL(3)
   OC_DEPRECATED("replaced by oc_ri_get_query_value_v1 in v2.2.5.9");
@@ -674,6 +649,7 @@ int oc_ri_get_query_value(const char *query, size_t query_len, const char *key,
  * @param key_len the key length
  * @return true if key exists
  */
+OC_API
 bool oc_ri_query_exists_v1(const char *query, size_t query_len, const char *key,
                            size_t key_len) OC_NONNULL(3);
 
@@ -684,6 +660,7 @@ bool oc_ri_query_exists_v1(const char *query, size_t query_len, const char *key,
  *
  * @deprecated replaced by oc_ri_query_exists_v1 in v2.2.5.9
  */
+OC_API
 int oc_ri_query_exists(const char *query, size_t query_len, const char *key)
   OC_NONNULL(3) OC_DEPRECATED("replaced by oc_ri_query_exists_v1 in v2.2.5.9");
 
@@ -700,6 +677,7 @@ int oc_ri_query_exists(const char *query, size_t query_len, const char *key)
  * @return >= 0 if key exists and the value is the position of the next key in
  * the query or query_len if it is the last key
  */
+OC_API
 int oc_ri_query_nth_key_exists(const char *query, size_t query_len,
                                const char **key, size_t *key_len, size_t n)
   OC_NONNULL(3, 4);
