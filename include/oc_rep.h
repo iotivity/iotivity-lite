@@ -122,31 +122,6 @@ OC_API
 int oc_rep_get_encoded_payload_size(void);
 
 /**
- * Get the buffer pointer at the start of the encoded cbor data.
- *
- * This is used when parsing the encoded cbor data to an oc_rep_t. It is
- * unlikely to be used outside the IoTivity-lite library.
- *
- * @return pointer to the start of the cbor encoded buffer
- *
- * @see oc_parse_rep
- */
-const uint8_t *oc_rep_get_encoder_buf(void);
-
-/**
- * Shrink the buffer pointer to length of encoded cbor data.
- *
- * This is used when parsing the encoded cbor data to an oc_rep_t. It is
- * unlikely to be used outside the IoTivity-lite library.
- *
- * @param[in] buf pointer to cbor encoded buffer
- * @return pointer to the start of the shrinked cbor encoded buffer
- *
- * @see oc_parse_rep
- */
-uint8_t *oc_rep_shrink_encoder_buf(uint8_t *buf);
-
-/**
  * @brief Encode raw data to the global encoder, as if it was already encoded.
  *
  * @param data Pointer to data to be encoded. Will be copied into the global
@@ -154,7 +129,7 @@ uint8_t *oc_rep_shrink_encoder_buf(uint8_t *buf);
  * @param len Length of data.
  */
 OC_API
-void oc_rep_encode_raw(const uint8_t *data, size_t len);
+void oc_rep_encode_raw(const uint8_t *data, size_t len) OC_NONNULL();
 
 /**
  * @brief Encode a NULL value.
@@ -162,7 +137,8 @@ void oc_rep_encode_raw(const uint8_t *data, size_t len);
  * @param encoder Internal Iotivity-lite encoder to store the value
  * @return CborError encoding error
  */
-CborError oc_rep_encode_null(CborEncoder *encoder);
+OC_API
+CborError oc_rep_encode_null(CborEncoder *encoder) OC_NONNULL();
 
 /**
  * @brief Encode a boolean value.
@@ -171,7 +147,8 @@ CborError oc_rep_encode_null(CborEncoder *encoder);
  * @param value value to encode
  * @return CborError encoding error
  */
-CborError oc_rep_encode_boolean(CborEncoder *encoder, bool value);
+OC_API
+CborError oc_rep_encode_boolean(CborEncoder *encoder, bool value) OC_NONNULL();
 
 /**
  * @brief Encode a signed integer value.
@@ -180,7 +157,8 @@ CborError oc_rep_encode_boolean(CborEncoder *encoder, bool value);
  * @param value value to encode
  * @return CborError encoding error
  */
-CborError oc_rep_encode_int(CborEncoder *encoder, int64_t value);
+OC_API
+CborError oc_rep_encode_int(CborEncoder *encoder, int64_t value) OC_NONNULL();
 
 /**
  * @brief Encode an unsigned integer value.
@@ -189,7 +167,8 @@ CborError oc_rep_encode_int(CborEncoder *encoder, int64_t value);
  * @param value value to encode
  * @return CborError encoding error
  */
-CborError oc_rep_encode_uint(CborEncoder *encoder, uint64_t value);
+OC_API
+CborError oc_rep_encode_uint(CborEncoder *encoder, uint64_t value) OC_NONNULL();
 
 /**
  * @brief Encode floating point value.
@@ -200,8 +179,9 @@ CborError oc_rep_encode_uint(CborEncoder *encoder, uint64_t value);
  * @param value value to encode
  * @return CborError encoding error
  */
+OC_API
 CborError oc_rep_encode_floating_point(CborEncoder *encoder, CborType fpType,
-                                       const void *value);
+                                       const void *value) OC_NONNULL();
 
 /**
  * @brief Encode a double value.
@@ -210,7 +190,8 @@ CborError oc_rep_encode_floating_point(CborEncoder *encoder, CborType fpType,
  * @param value value to encode
  * @return CborError encoding error
  */
-CborError oc_rep_encode_double(CborEncoder *encoder, double value);
+OC_API
+CborError oc_rep_encode_double(CborEncoder *encoder, double value) OC_NONNULL();
 
 /**
  * @brief Encode a C-string.
@@ -220,8 +201,9 @@ CborError oc_rep_encode_double(CborEncoder *encoder, double value);
  * @param length length of the C-string
  * @return CborError encoding error
  */
+OC_API
 CborError oc_rep_encode_text_string(CborEncoder *encoder, const char *string,
-                                    size_t length);
+                                    size_t length) OC_NONNULL();
 
 /**
  * @brief Encode a byte string.
@@ -231,8 +213,9 @@ CborError oc_rep_encode_text_string(CborEncoder *encoder, const char *string,
  * @param length length of the byte string
  * @return CborError encoding error
  */
+OC_API
 CborError oc_rep_encode_byte_string(CborEncoder *encoder, const uint8_t *string,
-                                    size_t length);
+                                    size_t length) OC_NONNULL();
 
 /**
  * @brief Encode the beginning of an array.
@@ -245,8 +228,10 @@ CborError oc_rep_encode_byte_string(CborEncoder *encoder, const uint8_t *string,
  *
  * @note Must be closed by oc_rep_encoder_close_container
  */
+OC_API
 CborError oc_rep_encoder_create_array(CborEncoder *encoder,
-                                      CborEncoder *arrayEncoder, size_t length);
+                                      CborEncoder *arrayEncoder, size_t length)
+  OC_NONNULL();
 /**
  * @brief Encode the beginning of a map.
  *
@@ -258,8 +243,10 @@ CborError oc_rep_encoder_create_array(CborEncoder *encoder,
  *
  * @note Must be closed by oc_rep_encoder_close_container
  */
+OC_API
 CborError oc_rep_encoder_create_map(CborEncoder *encoder,
-                                    CborEncoder *mapEncoder, size_t length);
+                                    CborEncoder *mapEncoder, size_t length)
+  OC_NONNULL();
 
 /**
  * @brief Encode the ending of a container (an array or a map).
@@ -273,8 +260,10 @@ CborError oc_rep_encoder_create_map(CborEncoder *encoder,
  * @see oc_rep_encoder_create_array
  * @see oc_rep_encoder_create_map
  */
+OC_API
 CborError oc_rep_encoder_close_container(CborEncoder *encoder,
-                                         CborEncoder *containerEncoder);
+                                         CborEncoder *containerEncoder)
+  OC_NONNULL();
 
 /**
  * Get a pointer to the cbor object with the given `name`
@@ -291,37 +280,45 @@ CborError oc_rep_encoder_close_container(CborEncoder *encoder,
 #define oc_rep_array(name) &name##_array
 
 /** Add an integer `value` to the cbor `object` under the `key` name */
+OC_API
 CborError oc_rep_object_set_null(CborEncoder *object, const char *key,
                                  size_t key_len) OC_NONNULL();
 
 /** Add an boolean `value` to the cbor `object` under the `key` name */
+OC_API
 CborError oc_rep_object_set_boolean(CborEncoder *object, const char *key,
                                     size_t key_len, bool value) OC_NONNULL();
 
 /** Add an integer `value` to the cbor `object` under the `key` name */
+OC_API
 CborError oc_rep_object_set_int(CborEncoder *object, const char *key,
                                 size_t key_len, int64_t value) OC_NONNULL();
 
 /** Add an unsigned integer `value` to the cbor `object` under the `key` name */
+OC_API
 CborError oc_rep_object_set_uint(CborEncoder *object, const char *key,
                                  size_t key_len, uint64_t value) OC_NONNULL();
 
 /** Add a double `value` to the cbor `object` under the `key` name */
+OC_API
 CborError oc_rep_object_set_double(CborEncoder *object, const char *key,
                                    size_t key_len, double value) OC_NONNULL();
 
 /** Add an string `value` to the cbor `object` under the `key` name */
+OC_API
 CborError oc_rep_object_set_text_string(CborEncoder *object, const char *key,
                                         size_t key_len, const char *value,
                                         size_t length) OC_NONNULL(1, 2);
 
 /** Add an byte array `value` to the cbor `object` under the `key` name */
+OC_API
 CborError oc_rep_object_set_byte_string(CborEncoder *object, const char *key,
                                         size_t key_len, const uint8_t *value,
                                         size_t length) OC_NONNULL();
 
 /** Add a string array using an oc_string_array_t as `values` to the cbor
  * `object` under the `key` name. */
+OC_API
 CborError oc_rep_object_set_string_array(CborEncoder *object, const char *key,
                                          size_t key_len,
                                          const oc_string_array_t *array)

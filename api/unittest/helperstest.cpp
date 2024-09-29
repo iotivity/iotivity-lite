@@ -261,11 +261,11 @@ TEST(Helpers, RandomBuffer)
 TEST(Helpers, HexStringTooSmallError)
 {
   std::array<uint8_t, 4> array{ 0x1f, 0xa0, 0x5b, 0xff };
-  char hex_str[5]; // Too small to fit the full hex representation (8 chars +
-                   // null terminator)
-  size_t hex_str_len = sizeof(hex_str);
+  std::array<char, 5> hex_str; // Too small to fit the full hex representation
+                               // (8 chars + null terminator)
+  size_t hex_str_len = hex_str.size();
   int result = oc_conv_byte_array_to_hex_string(array.data(), array.size(),
-                                                hex_str, &hex_str_len);
+                                                &hex_str[0], &hex_str_len);
   ASSERT_EQ(result, -1);
 }
 
@@ -273,12 +273,13 @@ TEST(Helpers, HexStringTooSmallError)
 TEST(Helpers, ConvertByteArrayToHexStringSuccess)
 {
   std::array<uint8_t, 4> array{ 0x1f, 0xa0, 0x5b, 0xff };
-  char hex_str[9]; // Must hold 8 characters (2 per byte) + null terminator
-  size_t hex_str_len = sizeof(hex_str);
+  std::array<char, 9>
+    hex_str; // Must hold 8 characters (2 per byte) + null terminator
+  size_t hex_str_len = hex_str.size();
   int result = oc_conv_byte_array_to_hex_string(array.data(), array.size(),
-                                                hex_str, &hex_str_len);
+                                                &hex_str[0], &hex_str_len);
   ASSERT_EQ(result, 0);
-  EXPECT_STREQ(hex_str, "1fa05bff");
+  EXPECT_STREQ(hex_str.data(), "1fa05bff");
   EXPECT_EQ(hex_str_len, 8);
 }
 
@@ -334,7 +335,7 @@ TEST(Helpers, OddLengthHexStringSuccess)
     hex_str.c_str(), hex_str.length(), &array[0], &array_len);
 
   ASSERT_EQ(result, 0);
-  EXPECT_EQ(array_len, 3);
   std::array<uint8_t, 3> expected_array = { 0xfa, 0x05, 0xbf };
+  EXPECT_EQ(array_len, expected_array.size());
   EXPECT_EQ(expected_array, array);
 }
