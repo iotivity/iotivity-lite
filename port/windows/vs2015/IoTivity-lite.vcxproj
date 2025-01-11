@@ -322,6 +322,7 @@
     <ClInclude Include="..\..\oc_clock.h" />
     <ClInclude Include="..\..\oc_connectivity_internal.h" />
     <ClInclude Include="..\..\oc_connectivity.h" />
+    <ClInclude Include="..\..\oc_dns.h" />
     <ClInclude Include="..\..\oc_fcntl_internal.h" />
     <ClInclude Include="..\..\oc_ip_internal.h" />
     <ClInclude Include="..\..\oc_log_internal.h" />
@@ -354,6 +355,7 @@
     <ClCompile Include="..\..\..\api\cloud\rd_client.c" />
     <ClCompile Include="..\..\..\api\oc_base64.c" />
     <ClCompile Include="..\..\..\api\oc_blockwise.c" />
+    <ClCompile Include="..\..\..\api\oc_buffer_settings.c" />
     <ClCompile Include="..\..\..\api\oc_client_api.c" />
     <ClCompile Include="..\..\..\api\oc_clock.c" />
     <ClCompile Include="..\..\..\api\oc_collection.c" />

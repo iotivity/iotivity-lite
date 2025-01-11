@@ -256,3 +256,86 @@ TEST(Helpers, RandomBuffer)
 
   oc_random_destroy();
 }
+
+// Test error when provided hex string buffer is too small
+TEST(Helpers, HexStringTooSmallError)
+{
+  std::array<uint8_t, 4> array{ 0x1f, 0xa0, 0x5b, 0xff };
+  std::array<char, 5> hex_str; // Too small to fit the full hex representation
+                               // (8 chars + null terminator)
+  size_t hex_str_len = hex_str.size();
+  int result = oc_conv_byte_array_to_hex_string(array.data(), array.size(),
+                                                &hex_str[0], &hex_str_len);
+  ASSERT_EQ(result, -1);
+}
+
+// Test successful conversion of a byte array to hex string
+TEST(Helpers, ConvertByteArrayToHexStringSuccess)
+{
+  std::array<uint8_t, 4> array{ 0x1f, 0xa0, 0x5b, 0xff };
+  std::array<char, 9>
+    hex_str; // Must hold 8 characters (2 per byte) + null terminator
+  size_t hex_str_len = hex_str.size();
+  int result = oc_conv_byte_array_to_hex_string(array.data(), array.size(),
+                                                &hex_str[0], &hex_str_len);
+  ASSERT_EQ(result, 0);
+  EXPECT_STREQ(hex_str.data(), "1fa05bff");
+  EXPECT_EQ(hex_str_len, 8);
+}
+
+// Test empty hex string input
+TEST(Helpers, EmptyHexStringError)
+{
+  std::string hex_str = "";
+  std::array<uint8_t, 4> array;
+  size_t array_len = array.size();
+
+  int result = oc_conv_hex_string_to_byte_array(
+    hex_str.c_str(), hex_str.length(), &array[0], &array_len);
+  ASSERT_EQ(result, -1);
+}
+
+// Test when array buffer is too small
+TEST(Helpers, ArrayBufferTooSmallError)
+{
+  std::string hex_str = "1fa05bff";
+  std::array<uint8_t, 2>
+    array; // Too small to hold the expected byte array (needs 4 bytes)
+  size_t array_len = array.size();
+
+  int result = oc_conv_hex_string_to_byte_array(
+    hex_str.c_str(), hex_str.length(), &array[0], &array_len);
+  ASSERT_EQ(result, -1);
+}
+
+// Test successful conversion of an even-length hex string to byte array
+TEST(Helpers, EvenLengthHexStringSuccess)
+{
+  std::string hex_str = "1fa05bff";
+  std::array<uint8_t, 4> array;
+  size_t array_len = array.size();
+
+  int result = oc_conv_hex_string_to_byte_array(
+    hex_str.c_str(), hex_str.length(), &array[0], &array_len);
+
+  ASSERT_EQ(result, 0);
+  EXPECT_EQ(array_len, 4);
+  std::array<uint8_t, 4> expected_array = { 0x1f, 0xa0, 0x5b, 0xff };
+  EXPECT_EQ(expected_array, array);
+}
+
+// Test successful conversion of an odd-length hex string to byte array
+TEST(Helpers, OddLengthHexStringSuccess)
+{
+  std::string hex_str = "fa05bf";
+  std::array<uint8_t, 3> array;
+  size_t array_len = array.size();
+
+  int result = oc_conv_hex_string_to_byte_array(
+    hex_str.c_str(), hex_str.length(), &array[0], &array_len);
+
+  ASSERT_EQ(result, 0);
+  std::array<uint8_t, 3> expected_array = { 0xfa, 0x05, 0xbf };
+  EXPECT_EQ(array_len, expected_array.size());
+  EXPECT_EQ(expected_array, array);
+}

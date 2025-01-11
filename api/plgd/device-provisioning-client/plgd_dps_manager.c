@@ -30,7 +30,6 @@
 #include "plgd_dps_internal.h"
 
 #include "oc_cred.h"
-#include "oc_network_monitor.h"
 #include "security/oc_cred_util_internal.h"
 #include "util/oc_list.h"
 

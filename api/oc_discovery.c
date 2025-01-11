@@ -1241,7 +1241,7 @@ oc_wkcore_discovery_handler(oc_request_t *request,
     }
   }
 
-  if (rt_request != 0 && rt_device != 0 &&
+  if (rt_request != NULL && rt_device != NULL &&
       strncmp(rt_request, rt_device, rt_len) == 0) {
     /* request for specific device type */
     matches = 1;
@@ -1273,7 +1273,9 @@ oc_wkcore_discovery_handler(oc_request_t *request,
 
     length += clf_add_line_to_buffer("/oic/res>;");
     length += clf_add_line_to_buffer("rt=\"oic.wk.res ");
-    length += clf_add_str_to_buffer(rt_device, rt_devlen);
+    if (rt_device != NULL) {
+      length += clf_add_str_to_buffer(rt_device, rt_devlen);
+    }
     length += clf_add_line_to_buffer("\";");
     length +=
       clf_add_line_to_buffer("if=\"oic.if.ll oic.if.baseline\";ct=10000");

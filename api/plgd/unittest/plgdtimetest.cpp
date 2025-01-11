@@ -35,7 +35,6 @@
 #include "messaging/coap/transactions_internal.h"
 #include "oc_acl.h"
 #include "oc_core_res.h"
-#include "oc_network_monitor.h"
 #include "oc_ri.h"
 #include "port/oc_log_internal.h"
 #include "port/oc_network_event_handler_internal.h"

@@ -24,6 +24,7 @@
 #include "port/oc_random.h"
 #include "util/oc_macros_internal.h"
 #include "util/oc_mmem_internal.h"
+#include "util/oc_secure_string_internal.h"
 #include <assert.h>
 #include <inttypes.h>
 #include <stdbool.h>
@@ -141,7 +142,7 @@ oc_set_string(oc_string_t *dst, const char *str, size_t str_len)
   // oc_free_string
   oc_new_string(&copy, str, str_len);
   oc_free_string(dst);
-  oc_new_string(dst, oc_string(copy), oc_string_len(copy));
+  oc_new_string(dst, oc_string(copy), oc_string_len_unsafe(copy));
   oc_free_string(&copy);
 #endif /* OC_DYNAMIC_ALLOCATION */
 }
@@ -311,7 +312,7 @@ bool
 _oc_copy_string_to_array(oc_string_array_t *ocstringarray, const char str[],
                          size_t index)
 {
-  size_t len = strlen(str);
+  size_t len = oc_strnlen(str, STRING_ARRAY_ITEM_MAX_LEN);
   if (len >= STRING_ARRAY_ITEM_MAX_LEN) {
     return false;
   }
@@ -351,7 +352,7 @@ oc_join_string_array(oc_string_array_t *ocstringarray, oc_string_t *ocstring)
        ++i) {
     const char *item =
       (const char *)oc_string_array_get_item(*ocstringarray, i);
-    size_t item_len = strlen(item);
+    size_t item_len = oc_strnlen(item, STRING_ARRAY_ITEM_MAX_LEN);
     if (item_len != 0) {
       if (len > 0) {
         oc_string(*ocstring)[len] = ' ';

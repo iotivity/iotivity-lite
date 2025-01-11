@@ -21,6 +21,8 @@
 #ifndef OC_BUFFER_SETTINGS_H
 #define OC_BUFFER_SETTINGS_H
 
+#include "oc_export.h"
+
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -33,6 +35,7 @@ extern "C" {
  * @param mtu_size size in bytes
  * @return int 0-success
  */
+OC_API
 int oc_set_mtu_size(size_t mtu_size);
 
 /**
@@ -40,6 +43,7 @@ int oc_set_mtu_size(size_t mtu_size);
  *
  * @return long the MTU size in bytes
  */
+OC_API
 long oc_get_mtu_size(void);
 
 /**
@@ -47,6 +51,7 @@ long oc_get_mtu_size(void);
  *
  * @param size size in bytes
  */
+OC_API
 void oc_set_max_app_data_size(size_t size);
 
 /**
@@ -54,6 +59,7 @@ void oc_set_max_app_data_size(size_t size);
  *
  * @return long size in bytes
  */
+OC_API
 long oc_get_max_app_data_size(void);
 
 /**
@@ -62,6 +68,7 @@ long oc_get_max_app_data_size(void);
  *
  * @param size size in bytes
  */
+OC_API
 void oc_set_min_app_data_size(size_t size);
 
 /**
@@ -69,6 +76,7 @@ void oc_set_min_app_data_size(size_t size);
  *
  * @return long size in bytes
  */
+OC_API
 long oc_get_min_app_data_size(void);
 
 /**
@@ -76,6 +84,7 @@ long oc_get_min_app_data_size(void);
  *
  * @return long the block size in bytes
  */
+OC_API
 long oc_get_block_size(void);
 
 #ifdef __cplusplus

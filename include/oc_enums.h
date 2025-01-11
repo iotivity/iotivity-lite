@@ -27,12 +27,12 @@
 extern "C" {
 #endif
 
+#include "oc_export.h"
 #include "oc_helpers.h"
 #include "util/oc_compiler.h"
 
 /**
  * @brief generic enum values for resources that convey string enums
- *
  */
 typedef enum oc_enum_t {
   OC_ENUM_ABORTED = 1,
@@ -133,7 +133,6 @@ typedef enum oc_pos_description_t {
 
 /**
  * @brief enum of location tags
- *
  */
 typedef enum oc_locn_t {
   OCF_LOCN_UNKNOWN = 1,
@@ -204,6 +203,7 @@ typedef enum oc_locn_t {
  * @param val the enum value
  * @return const char* the string
  */
+OC_API
 const char *oc_enum_to_str(oc_enum_t val);
 
 /**
@@ -212,6 +212,7 @@ const char *oc_enum_to_str(oc_enum_t val);
  * @param pos the enum value of the position description
  * @return const char* the string
  */
+OC_API
 const char *oc_enum_pos_desc_to_str(oc_pos_description_t pos);
 
 /**
@@ -220,6 +221,7 @@ const char *oc_enum_pos_desc_to_str(oc_pos_description_t pos);
  * @param locn the location enum value
  * @return const char* the string
  */
+OC_API
 const char *oc_enum_locn_to_str(oc_locn_t locn);
 
 /**
@@ -230,6 +232,7 @@ const char *oc_enum_locn_to_str(oc_locn_t locn);
  * NULL)
  * @return oc_locn_t the location value
  */
+OC_API
 oc_locn_t oc_str_to_enum_locn(oc_string_t locn_str, bool *oc_defined)
   OC_NONNULL(2);
 

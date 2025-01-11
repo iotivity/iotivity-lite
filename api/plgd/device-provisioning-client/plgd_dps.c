@@ -30,7 +30,10 @@
 #include "api/oc_tcp_internal.h"
 #include "oc_certs.h"
 #include "oc_core_res.h"
+
+#ifdef OC_NETWORK_MONITOR
 #include "oc_network_monitor.h"
+#endif /* OC_NETWORK_MONITOR */
 
 #include <assert.h>
 #include <inttypes.h>
@@ -226,13 +229,17 @@ plgd_dps_session_callbacks_deinit(plgd_dps_context_t *ctx)
 void
 plgd_dps_interface_callbacks_init(void)
 {
+#ifdef OC_NETWORK_MONITOR
   oc_add_network_interface_event_callback(dps_interface_event_handler);
+#endif /* OC_NETWORK_MONITOR */
 }
 
 void
 plgd_dps_interface_callbacks_deinit(void)
 {
+#ifdef OC_NETWORK_MONITOR
   oc_remove_network_interface_event_callback(dps_interface_event_handler);
+#endif /* OC_NETWORK_MONITOR */
 }
 
 #endif /* OC_SESSION_EVENTS */

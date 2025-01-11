@@ -22,4 +22,5 @@
 %rename (getMaxAppDataSize) oc_get_max_app_data_size;
 %rename (getBlockSize) oc_get_block_size;
 
+#define OC_API
 %include "oc_buffer_settings.h"

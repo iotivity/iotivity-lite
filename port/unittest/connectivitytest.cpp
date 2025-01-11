@@ -24,7 +24,6 @@
 #include "messaging/coap/signal_internal.h"
 #include "oc_api.h"
 #include "oc_buffer.h"
-#include "oc_network_monitor.h"
 #include "port/oc_connectivity.h"
 #include "port/oc_connectivity_internal.h"
 #include "port/oc_log_internal.h"
@@ -33,6 +32,10 @@
 #include "util/oc_features.h"
 #include "tests/gtest/Device.h"
 #include "tests/gtest/Endpoint.h"
+
+#ifdef OC_NETWORK_MONITOR
+#include "oc_network_monitor.h"
+#endif /* OC_NETWORK_MONITOR */
 
 #include "gtest/gtest.h"
 
@@ -157,6 +160,8 @@ TEST(TestConnectivity_wakeup, WakeupInvalidDevice)
 }
 #endif /* OC_DYNAMIC_ALLOCATION */
 
+#ifdef OC_NETWORK_MONITOR
+
 static void
 interface_event_handler(oc_interface_event_t event)
 {
@@ -183,7 +188,6 @@ TEST_F(TestConnectivity, oc_remove_network_interface_event_callback_fail)
     -1, oc_remove_network_interface_event_callback(interface_event_handler));
 }
 
-#ifdef OC_NETWORK_MONITOR
 TEST_F(TestConnectivity, handle_network_interface_event_callback)
 {
   oc_add_network_interface_event_callback(interface_event_handler);

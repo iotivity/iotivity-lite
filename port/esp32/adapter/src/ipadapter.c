@@ -32,7 +32,10 @@
 #include "oc_buffer.h"
 #include "oc_core_res.h"
 #include "oc_endpoint.h"
+
+#ifdef OC_NETWORK_MONITOR
 #include "oc_network_monitor.h"
+#endif /* OC_NETWORK_MONITOR */
 
 #ifdef OC_SESSION_EVENTS
 #include "api/oc_session_events_internal.h"

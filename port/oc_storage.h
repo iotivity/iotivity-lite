@@ -21,6 +21,9 @@
 #ifndef OC_PORT_STORAGE_H
 #define OC_PORT_STORAGE_H
 
+#include "oc_export.h"
+#include "util/oc_compiler.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -31,32 +34,36 @@ extern "C" {
 /**
  * @brief open the storage
  *
- * @param store the storage path (cannot be NULL)
+ * @param store the storage path
  * @return 0 on success
  * @return <0 on failure
  */
+OC_API
 int oc_storage_config(const char *store);
 
 /**
  * @brief read from the storage
  *
- * @param store the path to be read
- * @param buf the buffer to store the contents
+ * @param store the path to be read (cannot be NULL)
+ * @param buf the buffer to store the contents (cannot be NULL)
  * @param size amount of bytes to read
  * @return long amount of bytes read
  */
-long oc_storage_read(const char *store, uint8_t *buf, size_t size);
+OC_API
+long oc_storage_read(const char *store, uint8_t *buf, size_t size) OC_NONNULL();
 
 /**
  * @brief write to storage
  *
- * @param store the store (file path)
- * @param buf the buffer to write
+ * @param store the store (file path, cannot be NULL)
+ * @param buf the buffer to write (cannot be NULL)
  * @param size the size of the buffer to write
  * @return long >= 0 amount of bytes written on success
  * @return long < 0 on failure
  */
-long oc_storage_write(const char *store, const uint8_t *buf, size_t size);
+OC_API
+long oc_storage_write(const char *store, const uint8_t *buf, size_t size)
+  OC_NONNULL();
 
 #ifdef __cplusplus
 }
