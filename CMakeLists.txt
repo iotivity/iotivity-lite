@@ -11,6 +11,24 @@ if(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 	set(OC_COMPILER_IS_CLANG ON CACHE BOOL "Compiler is clang." FORCE)
 endif()
 
+execute_process(
+    COMMAND ${CMAKE_LINKER} --version
+    OUTPUT_VARIABLE LINKER_VERSION
+    RESULT_VARIABLE LINKER_RESULT
+    ERROR_QUIET
+)
+
+set(OC_LINKER_IS_LD OFF CACHE BOOL "Linker is ld." FORCE)
+set(OC_LINKER_IS_LDD OFF CACHE BOOL "Linker is ldd." FORCE)
+if(LINKER_RESULT EQUAL 0)
+    string(TOLOWER "${LINKER_VERSION}" LINKER_VERSION)
+    if(LINKER_VERSION MATCHES "ldd")
+        set(OC_LINKER_IS_LDD ON CACHE BOOL "Linker is ldd." FORCE)
+    elseif(LINKER_VERSION MATCHES "ld")
+        set(OC_LINKER_IS_LD ON CACHE BOOL "Linker is ld." FORCE)
+    endif()
+endif()
+
 set(OC_COVERAGE_ENABLED OFF CACHE BOOL "Gather code coverage")
 if(BUILD_TESTING AND UNIX AND (OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG))
     if(NOT(OC_ASAN_ENABLED OR OC_LSAN_ENABLED OR OC_TSAN_ENABLED OR OC_UBSAN_ENABLED))
@@ -155,18 +173,18 @@ if(UNIX OR (WIN32 AND OC_COMPILER_IS_CLANG))
 endif()
 
 # Compiler and linker flags
-if(OC_COMPILER_IS_GCC)
-	set(OC_COMPILE_OPTIONS_RELEASE -fdata-sections -ffunction-sections)
-	# -Wl,--as-needed       = Only link libraries that export symbols used by the binary
-	# -Wl,--gc-sections     = Remove unused code resulting from -fdata-sections and -function-sections
-	# -s                    = Strip
-	set(OC_LINK_OPTIONS_RELEASE -Wl,--as-needed -Wl,--gc-sections -s)
+if(OC_LINKER_IS_LD)
+    set(OC_COMPILE_OPTIONS_RELEASE -fdata-sections -ffunction-sections)
+    # -Wl,--as-needed       = Only link libraries that export symbols used by the binary
+    # -Wl,--gc-sections     = Remove unused code resulting from -fdata-sections and -function-sections
+    # -s                    = Strip
+    set(OC_LINK_OPTIONS_RELEASE -Wl,--as-needed -Wl,--gc-sections -s)
 endif()
 
-if(OC_COMPILER_IS_CLANG)
-	# -Wl,-dead_strip       = Remove unused code
+if(OC_LINKER_IS_LDD)
+    # -Wl,-dead_strip       = Remove unused code
     # -s                    = Strip
-	set(OC_LINK_OPTIONS_RELEASE -Wl,-dead_strip -s)
+    set(OC_LINK_OPTIONS_RELEASE -Wl,-dead_strip -s)
 endif()
 
 set(OC_CLANG_TIDY_ENABLED OFF CACHE BOOL "Enable clang-tidy analysis during compilation.")
@@ -220,7 +238,7 @@ elseif(OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG)
     oc_add_compile_options(GLOBAL FLAGS -Wno-error=cast-align -Wno-error=deprecated-declarations
         -Wno-error=documentation)
     if(MINGW OR (WIN32 AND OC_COMPILER_IS_CLANG))
-      oc_add_compile_options(GLOBAL FLAGS -Wno-error=gnu-offsetof-extensions -Wno-error=sign-compare)
+      oc_add_compile_options(GLOBAL FLAGS -Wno-error=gnu-offsetof-extensions -Wno-error=c23-extensions -Wno-error=sign-compare)
     endif()
 endif()
 
