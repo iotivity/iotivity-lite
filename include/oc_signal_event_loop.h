@@ -21,14 +21,16 @@
 #ifndef OC_SIGNAL_EVENT_LOOP_H
 #define OC_SIGNAL_EVENT_LOOP_H
 
+#include "oc_export.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 /**
  * @brief signal event loop
- *
  */
+OC_API
 void _oc_signal_event_loop(void);
 
 #ifdef __cplusplus

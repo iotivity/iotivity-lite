@@ -35,11 +35,14 @@
 #include "oc_api.h"
 #include "oc_collection.h"
 #include "oc_core_res.h"
-#include "oc_network_monitor.h"
 #include "port/oc_assert.h"
 #include "util/oc_endpoint_address_internal.h"
 #include "util/oc_mmem_internal.h"
 #include "util/oc_secure_string_internal.h"
+
+#ifdef OC_NETWORK_MONITOR
+#include "oc_network_monitor.h"
+#endif /* OC_NETWORK_MONITOR */
 
 #ifdef OC_SECURITY
 #include "security/oc_tls_internal.h"

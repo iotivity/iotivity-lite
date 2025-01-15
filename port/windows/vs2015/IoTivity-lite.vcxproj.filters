@@ -113,6 +113,9 @@
     <ClCompile Include="..\..\..\api\oc_blockwise.c">
       <Filter>Core</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\api\oc_buffer_settings.c">
+      <Filter>Core</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\..\util\oc_buffer.c">
       <Filter>Core</Filter>
     </ClCompile>
@@ -615,6 +618,9 @@
     </ClInclude>
     <ClInclude Include="..\..\..\include\oc_discovery.h">
       <Filter>Headers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\oc_dns.h">
+      <Filter>Port</Filter>
     </ClInclude>
     <ClInclude Include="..\..\..\util\oc_etimer_internal.h">
       <Filter>Core</Filter>

@@ -32,5 +32,6 @@
 %rename(locationToString) oc_enum_locn_to_str;
 %rename(stringToLocation) oc_str_to_enum_locn;
 
+#define OC_API
 #define OC_NONNULL(...)
 %include "oc_enums.h"

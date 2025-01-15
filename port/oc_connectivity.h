@@ -29,6 +29,7 @@
 #include "oc_export.h"
 #include "oc_network_events.h"
 #include "oc_session_events.h"
+#include "port/oc_dns.h"
 #include "util/oc_atomic.h"
 #include "util/oc_features.h"
 #include "util/oc_memb.h"
@@ -166,25 +167,6 @@ void oc_send_discovery_request(oc_message_t *message);
  */
 void oc_connectivity_end_session(const oc_endpoint_t *endpoint)
   OC_DEPRECATED("replaced by oc_close_session in v2.2.5.14");
-
-#ifdef OC_DNS_LOOKUP
-/**
- * @brief dns look up
- *
- * @param domain the url
- * @param addr the address
- * @param flags the transport flags
- * @return int 0 = success
- */
-int oc_dns_lookup(const char *domain, oc_string_t *addr, transport_flags flags);
-#ifdef OC_DNS_CACHE
-/**
- * @brief clear the DNS cache
- *
- */
-void oc_dns_clear_cache(void);
-#endif /* OC_DNS_CACHE */
-#endif /* OC_DNS_LOOKUP */
 
 /**
  * @brief retrieve list of endpoints for the device

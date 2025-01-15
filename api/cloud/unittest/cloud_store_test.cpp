@@ -22,6 +22,7 @@
 #include "api/cloud/oc_cloud_resource_internal.h"
 #include "api/cloud/oc_cloud_store_internal.h"
 #include "api/oc_event_callback_internal.h"
+#include "api/oc_rep_internal.h"
 #include "api/oc_storage_internal.h"
 #include "oc_api.h"
 #include "oc_config.h"
