@@ -926,6 +926,7 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToNonSVRByCryptConn)
 
   auto resources =
     getResources(kDeviceID, [](size_t device, const oc_resource_t *resource) {
+#if defined(OC_HAS_FEATURE_PLGD_TIME) || defined(OC_WKCORE)
       oc_string_view_t uriv = oc_string_view2(&resource->uri);
 #ifdef OC_HAS_FEATURE_PLGD_TIME
       if (plgd_is_time_resource_uri(uriv)) {
@@ -937,6 +938,7 @@ TEST_F(TestAcl, oc_sec_check_acl_AccessToNonSVRByCryptConn)
         return false;
       }
 #endif /* OC_WKCORE */
+#endif /* OC_HAS_FEATURE_PLGD_TIME || OC_WKCORE */
       return !oc_core_is_SVR(resource, device);
     });
   for (auto res : resources) {

@@ -2,7 +2,7 @@
 
 include(CMakeFindDependencyMacro)
 find_dependency(Threads 1.0 REQUIRED MODULE)
-find_dependency(MbedTLS 3.1 REQUIRED)
+find_dependency(MbedTLS @MBEDTLS_DEPENDENCY_VERSION@ REQUIRED)
 find_dependency(TinyCBOR 0.6 REQUIRED)
 
 # import our export targets to user of our library

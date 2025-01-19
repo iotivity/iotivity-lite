@@ -39,6 +39,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <esp_netif.h>
+#include <inttypes.h>
 #include <fcntl.h>
 #include <net/if.h>
 #include <stdlib.h>
@@ -300,10 +301,11 @@ find_session_by_id(uint32_t session_id)
   }
 
   if (!session) {
-    OC_DBG("could not find ongoing TCP session for session id %d", session_id);
+    OC_DBG("could not find ongoing TCP session for session id %" PRIu32,
+           session_id);
     return NULL;
   }
-  OC_DBG("found TCP session for session id %d", session_id);
+  OC_DBG("found TCP session for session id %" PRIu32, session_id);
   return session;
 }
 

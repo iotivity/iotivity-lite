@@ -32,8 +32,8 @@ jobs:
           - args: "CLOUD=1"
           # cloud on (tcp on, ipv4 on), debug on
           - args: "CLOUD=1 DEBUG=1"
-          # cloud on (tcp on, ipv4 on), debug on, mbedTLS v3.5.0
-          - args: "CLOUD=1 DEBUG=1 MBEDTLS_FORCE_3_5_0=1"
+          # cloud on (tcp on, ipv4 on), debug on, mbedTLS v3.6.2
+          - args: "CLOUD=1 DEBUG=1 MBEDTLS_FORCE_3_6_2=1"
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
@@ -85,17 +85,21 @@ jobs:
           - args: ""
           # hawkbit build
           - args: -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;hawkbit/sdkconfig.defaults.hawkbit"
+          # esp5.4, mbedtls3.6.2
+          - args:
+            force_5_4: true
+          # esp5.4, mbedtls3.6.2 + hawkbit build
+          - args: -DSDKCONFIG_DEFAULTS="sdkconfig.defaults;hawkbit/sdkconfig.defaults.hawkbit"
+            force_5_4: true
 
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-      # Checks-out your repository under $GITHUB_WORKSPACE,  so your job can access it
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
           submodules: "true"
 
-      # Runs a set of commands using the runners shell
-      - name: build esp32
+      - name: build esp32 (v5.1)
+        if: ${{ ! matrix.force_5_4 }}
         run: |
           sudo apt-get update -y
           sudo apt install -y git wget flex bison gperf python3 python3-pip python3-setuptools python3-serial python3-click python3-cryptography python3-future python3-pyparsing python3-pyelftools cmake ninja-build ccache libffi-dev libssl-dev libusb-1.0-0
@@ -106,8 +110,28 @@ jobs:
           ( cd esp-idf && git submodule update --init --recursive )
           ./esp-idf/install.sh
           . ./esp-idf/export.sh
+          cp sdkconfig.3_5_0.defaults sdkconfig.defaults
           idf.py ${{ matrix.args }} set-target esp32
           ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../../../patches/mbedtls/3.5/01-ocf-anon-psk.patch )
           ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../patches/mbedtls/3.5/02-ocf-mbedtls-config.patch )
+          ( cd esp-idf/components/lwip/lwip && find ../../../../patches/lwip/ -type f -name '*.patch' -exec patch -p1 -i {} \; )
+          idf.py build
+
+      - name: build esp32 (v5.4)
+        if: ${{ matrix.force_5_4 }}
+        run: |
+          sudo apt-get update -y
+          sudo apt install -y git wget flex bison gperf python3 python3-pip python3-setuptools python3-serial python3-click python3-cryptography python3-future python3-pyparsing python3-pyelftools cmake ninja-build ccache libffi-dev libssl-dev libusb-1.0-0
+          cd ./port/esp32
+          git clone --recursive -b release/v5.4 https://github.com/espressif/esp-idf.git
+          # checkout latest commit with mbedTLS v3.6.2
+          ( cd esp-idf && git checkout c8bb53292d08d6449a09823cf554e62ac839cd8c )
+          ( cd esp-idf && git submodule update --init --recursive )
+          ./esp-idf/install.sh
+          . ./esp-idf/export.sh
+          cp sdkconfig.3_6_2.defaults sdkconfig.defaults
+          idf.py ${{ matrix.args }} set-target esp32
+          ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../../../patches/mbedtls/3.6/01-ocf-anon-psk.patch )
+          ( cd esp-idf/components/mbedtls/mbedtls && patch -p1 < ../../../../patches/mbedtls/3.6/02-ocf-mbedtls-config.patch )
           ( cd esp-idf/components/lwip/lwip && find ../../../../patches/lwip/ -type f -name '*.patch' -exec patch -p1 -i {} \; )
           idf.py build

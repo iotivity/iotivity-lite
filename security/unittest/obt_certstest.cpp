@@ -154,10 +154,12 @@ TEST_F(TestObtCerts, GenerateValidSelfSignedCertificate)
   EXPECT_LT(0, ret);
   OC_DBG("serial: %s", &serial[0]);
 
+#if MBEDTLS_VERSION_NUMBER < 0x03060200
   std::array<uint8_t, 200> private_key{};
   ret = oc_certs_parse_private_key(0, &cert_buf[0], cert_buf.size(),
                                    private_key.data(), private_key.size());
   EXPECT_EQ(kp256_.private_key_size, ret);
+#endif /* MBEDTLS_VERSION_NUMBER < 0x03060200 */
 
   oc_string_t pk{};
   ret =
@@ -282,10 +284,12 @@ TEST_F(TestObtCerts, GenerateValidIdentityCertificate)
   EXPECT_NE(std::string::npos, uuid_.find(uuid_cstr.data(), 0));
 #endif
 
+#if MBEDTLS_VERSION_NUMBER < 0x03060200
   std::array<uint8_t, 200> private_key{};
   ret = oc_certs_parse_private_key(0, &id_cert[0], id_cert.size(),
                                    private_key.data(), private_key.size());
   EXPECT_EQ(kp256_.private_key_size, ret);
+#endif /* MBEDTLS_VERSION_NUMBER < 0x03060200 */
 
   std::array<uint8_t, 200> public_key{};
   ret = oc_certs_parse_public_key(&id_cert[0], id_cert.size(),
@@ -426,10 +430,12 @@ TEST_F(TestObtCerts, GenerateValidRoleCertificate)
   EXPECT_NE(std::string::npos, uuid_.find(uuid_cstr.data(), 0));
 #endif
 
+#if MBEDTLS_VERSION_NUMBER < 0x03060200
   std::array<uint8_t, 200> private_key{};
   ret = oc_certs_parse_private_key(0, &role_cert[0], role_cert.size(),
                                    private_key.data(), private_key.size());
   ASSERT_EQ(kp256_.private_key_size, ret);
+#endif /* MBEDTLS_VERSION_NUMBER < 0x03060200 */
 
   std::array<uint8_t, 200> public_key{};
   ret = oc_certs_parse_public_key(&role_cert[0], role_cert.size(),

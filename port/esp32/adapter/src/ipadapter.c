@@ -58,6 +58,7 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#include "esp_idf_version.h"
 #include "esp_netif.h"
 #include "esp_system.h"
 #include "esp_wifi.h"
@@ -65,10 +66,13 @@
 #include <lwip/sockets.h>
 
 #define ipi_spec_dst ipi_addr
+
+#if !defined(ESP_IDF_VERSION) || ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 0)
 #define IN6_IS_ADDR_V4MAPPED(a)                                                \
   ((((__const uint32_t *)(a))[0] == 0) &&                                      \
    (((__const uint32_t *)(a))[1] == 0) &&                                      \
    (((__const uint32_t *)(a))[2] == htonl(0xffff)))
+#endif /* ESP_IDF_VERSION < ESP_IDF_VERSION_VAL(5, 4, 0) */
 
 /* Some outdated toolchains do not define IFA_FLAGS.
    Note: Requires Linux kernel 3.14 or later. */
