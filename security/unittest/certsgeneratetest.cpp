@@ -265,6 +265,7 @@ static oc_certs_generate_t
 defaultCertificateGenerate(const oc::keypair_t &kp, bool isCA = false)
 {
   oc_certs_generate_t generate{};
+  generate.serial_number_size = 20;
   generate.personalization_string.value = kPersonalizationString.data();
   generate.personalization_string.size = kPersonalizationString.size();
   generate.validity.not_before = oc_certs_timestamp_now();
@@ -301,6 +302,8 @@ TEST_F(TestParseCerts, ParseSerialNumber)
 {
   oc::keypair_t kp{ oc::GetECPKeyPair(MBEDTLS_ECP_DP_SECP256R1) };
   oc_certs_generate_t generate{ defaultCertificateGenerate(kp) };
+  // certificate without serial number
+  generate.serial_number_size = 0;
   auto pem = oc::pki::GenerateCertificate(generate);
   ASSERT_FALSE(pem.empty());
   std::array<char, 64> buffer{};
@@ -315,6 +318,8 @@ TEST_F(TestParseCerts, ParseSerialNumber)
   EXPECT_LT(0, oc_certs_parse_serial_number(pem.data(), pem.size(), &buffer[0],
                                             buffer.size()));
 }
+
+#if MBEDTLS_VERSION_NUMBER < 0x03060200
 
 TEST_F(TestParseCerts, ParsePrivateKey_Fail)
 {
@@ -342,6 +347,8 @@ TEST_F(TestParseCerts, ParsePrivateKey)
                                        &private_key[0], private_key.size());
   ASSERT_EQ(generate.issuer.private_key.size, ret);
 }
+
+#endif /* MBEDTLS_VERSION_NUMBER < 0x03060200 */
 
 TEST_F(TestParseCerts, ParsePublicKey_Fail)
 {

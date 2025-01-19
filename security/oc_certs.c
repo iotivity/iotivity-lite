@@ -182,6 +182,8 @@ oc_certs_parse_serial_number(const unsigned char *cert, size_t cert_size,
   return ret;
 }
 
+#if MBEDTLS_VERSION_NUMBER < 0x03060200
+
 static int
 certs_extract_private_key(size_t device, const mbedtls_x509_crt *cert,
                           unsigned char *buffer, size_t buffer_size)
@@ -216,6 +218,8 @@ oc_certs_parse_private_key(size_t device, const unsigned char *cert,
   mbedtls_x509_crt_free(&crt);
   return ret;
 }
+
+#endif /* MBEDTLS_VERSION_NUMBER < 0x03060200 */
 
 static int
 certs_extract_public_key(const mbedtls_x509_crt *cert, unsigned char *buffer,

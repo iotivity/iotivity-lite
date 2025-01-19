@@ -72,9 +72,7 @@ foreach(target ${mbedtls_targets})
     target_compile_definitions(${target} PRIVATE ${MBEDTLS_COMPILE_DEFINITIONS})
 
     if(OC_COMPILER_IS_GCC OR OC_COMPILER_IS_CLANG)
-        if(NOT BUILD_MBEDTLS_FORCE_3_5_0)
-            target_compile_options(${target} PRIVATE -Wno-error=unused)
-        endif()
+        target_compile_options(${target} PRIVATE -Wno-error=unused)
     endif()
 
     target_compile_options(${target} PRIVATE ${MBEDTLS_COMPILE_OPTIONS})

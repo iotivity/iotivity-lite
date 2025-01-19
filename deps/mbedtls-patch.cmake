@@ -23,24 +23,45 @@ if(EXISTS "${MBEDTLS_SRC_DIR}/.git")
 	message("mbedtls cleaned")
 endif()
 
+execute_process(
+	COMMAND ${GIT_EXECUTABLE} -C ${MBEDTLS_SRC_DIR} rev-parse --is-shallow-repository
+	RESULT_VARIABLE IS_SHALLOW
+	OUTPUT_QUIET
+)
+
+if(IS_SHALLOW EQUAL 0)
+	execute_process(COMMAND ${GIT_EXECUTABLE} -C ${MBEDTLS_SRC_DIR} fetch --tags)	
+else()
+	execute_process(COMMAND ${GIT_EXECUTABLE} -C ${MBEDTLS_SRC_DIR} fetch --unshallow --tags)
+endif()
+
 if(BUILD_MBEDTLS_FORCE_3_5_0)
-	execute_process(COMMAND ${GIT_EXECUTABLE} -C ${MBEDTLS_SRC_DIR} fetch --unshallow)
+	message(STATUS "Using mbedTLS v3.5.0")
 	execute_process(COMMAND ${GIT_EXECUTABLE} -C ${MBEDTLS_SRC_DIR} checkout v3.5.0)
 	execute_process(COMMAND ${GIT_EXECUTABLE} -C ${IOTIVITY_SRC_DIR} add -u deps/mbedtls)
 	execute_process(COMMAND ${GIT_EXECUTABLE} -C ${IOTIVITY_SRC_DIR} submodule update --init)
 	execute_process(COMMAND ${GIT_EXECUTABLE} -C ${IOTIVITY_SRC_DIR} reset HEAD deps/mbedtls)
 else()
+	message(STATUS "Using mbedTLS v3.6.2")
+	execute_process(COMMAND ${GIT_EXECUTABLE} -C ${MBEDTLS_SRC_DIR} checkout v3.6.2)
+	execute_process(COMMAND ${GIT_EXECUTABLE} -C ${MBEDTLS_SRC_DIR} submodule update --init)
+	execute_process(COMMAND ${GIT_EXECUTABLE} -C ${IOTIVITY_SRC_DIR} add -u deps/mbedtls)
 	execute_process(COMMAND ${GIT_EXECUTABLE} -C ${IOTIVITY_SRC_DIR} submodule update --init)
+	execute_process(COMMAND ${GIT_EXECUTABLE} -C ${IOTIVITY_SRC_DIR} reset HEAD deps/mbedtls)
 endif()
 
 message("submodules initialised")
 
 if(BUILD_MBEDTLS_FORCE_3_5_0)
+	execute_process(COMMAND ${GIT_EXECUTABLE} -C ${MBEDTLS_SRC_DIR} branch -D feature/iotivity-lite/v3.5.0 ERROR_QUIET)
+	execute_process(COMMAND ${GIT_EXECUTABLE} -C ${MBEDTLS_SRC_DIR} checkout -b feature/iotivity-lite/v3.5.0)
 	file(GLOB PATCHES_COMMON "${IOTIVITY_PATCH_DIR}/mbedtls/3.5/*.patch")
 	file(GLOB PATCHES_CMAKE "${IOTIVITY_PATCH_DIR}/mbedtls/3.5/cmake/*.patch")
 else()
-	file(GLOB PATCHES_COMMON "${IOTIVITY_PATCH_DIR}/mbedtls/3.1/*.patch")
-	file(GLOB PATCHES_CMAKE "${IOTIVITY_PATCH_DIR}/mbedtls/3.1/cmake/*.patch")
+	execute_process(COMMAND ${GIT_EXECUTABLE} -C ${MBEDTLS_SRC_DIR} branch -D feature/iotivity-lite/v3.6.2 ERROR_QUIET)
+	execute_process(COMMAND ${GIT_EXECUTABLE} -C ${MBEDTLS_SRC_DIR} checkout -b feature/iotivity-lite/v3.6.2)
+	file(GLOB PATCHES_COMMON "${IOTIVITY_PATCH_DIR}/mbedtls/3.6/*.patch")
+	file(GLOB PATCHES_CMAKE "${IOTIVITY_PATCH_DIR}/mbedtls/3.6/cmake/*.patch")
 endif()
 
 foreach(PATCH IN LISTS PATCHES_COMMON PATCHES_CMAKE)
@@ -50,6 +71,9 @@ foreach(PATCH IN LISTS PATCHES_COMMON PATCHES_CMAKE)
 		WORKING_DIRECTORY ${MBEDTLS_SRC_DIR}
 	)
 endforeach()
+
+execute_process(COMMAND ${GIT_EXECUTABLE} -C ${MBEDTLS_SRC_DIR} add -u)
+execute_process(COMMAND ${GIT_EXECUTABLE} -C ${MBEDTLS_SRC_DIR} add include/mbedtls/mbedtls_oc_platform-standalone.h.in include/mbedtls/mbedtls_oc_platform.h.in)
 
 set(MBEDTLS_INCLUDE_DIR "${IOTIVITY_SRC_DIR}/deps/mbedtls/include/mbedtls")
 

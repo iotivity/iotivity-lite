@@ -115,27 +115,26 @@ export IDD ?= 1
 export ETAG ?= 0
 export JSON_ENCODER ?= 0
 
+# use v3.6.2 as default
+MBEDTLS_FORCE_3_5_0 ?= 0
+
 ROOT_DIR = ../..
 SWIG_DIR = $(ROOT_DIR)/swig
 OBJDIR ?= ./${ANDROID_HOST}obj
 MBEDTLS_DIR := $(ROOT_DIR)/deps/mbedtls
 
-DTLS= \
-	aes.c		aesni.c		asn1parse.c	asn1write.c	base64.c		\
-	bignum.c	camellia.c	ccm.c		cipher.c	cipher_wrap.c	\
-	cmac.c		ctr_drbg.c	des.c		dhm.c		ecdh.c		ecdsa.c			\
-	ecjpake.c	ecp.c		ecp_curves.c			entropy.c	entropy_poll.c	\
-	error.c		gcm.c		hmac_drbg.c	md.c		\
-	md5.c		oid.c		padlock.c	pem.c			            \
-	pk.c		pk_wrap.c	pkcs12.c	pkcs5.c		pkparse.c	pkwrite.c		\
-	platform.c	ripemd160.c	rsa.c		sha1.c		sha256.c	sha512.c		\
-	threading.c	timing.c	version.c	version_features.c		\
-	x509.c 		x509_crt.c	debug.c		net_sockets.c				\
-	ssl_cache.c	ssl_ciphersuites.c		ssl_cli.c	ssl_cookie.c				\
-	ssl_srv.c	ssl_ticket.c			ssl_tls.c	\
-	x509write_csr.c			x509write_crt.c			x509_create.c				\
-	x509_csr.c	platform_util.c ssl_msg.c constant_time.c \
-	nist_kw.c aria.c rsa_alt_helpers.c
+DTLS = aes.c	asn1parse.c	asn1write.c	aria.c	base64.c	bignum_core.c	bignum.c \
+	ccm.c	cipher.c	cipher_wrap.c	cmac.c		constant_time.c	ctr_drbg.c	debug.c \
+	ecdh.c	ecdsa.c	ecjpake.c	ecp.c	ecp_curves.c	entropy_poll.c	entropy.c	error.c \
+	gcm.c	md.c	net_sockets.c	nist_kw.c	oid.c pem.c	pk.c	pk_wrap.c	pkcs5.c \
+	pkparse.c	pkwrite.c	platform.c	platform_util.c		rsa.c	rsa_alt_helpers.c \
+	sha1.c	sha256.c	sha512.c	timing.c	ssl_ciphersuites.c	ssl_client.c	ssl_cookie.c \
+	ssl_debug_helpers_generated.c	ssl_msg.c	ssl_tls.c	ssl_tls12_client.c	ssl_tls12_server.c \
+	x509.c	x509_create.c	x509_crt.c	x509_csr.c	x509write.c	x509write_csr.c x509write_crt.c
+
+ifeq ($(MBEDTLS_FORCE_3_5_0),0)
+	DTLS += pk_ecc.c
+endif
 
 DTLSFLAGS=-I../../deps/mbedtls/include -Wno-error=unused
 
@@ -420,21 +419,35 @@ swig: $(OBJ_COMMON) $(OBJ_PORT_COMMON) $(OBJ_CLIENT_SERVER) $(OBJ_CLOUD)
 	${MAKE} -C ${SWIG_DIR}
 
 ifneq ($(SECURE),0)
-MBEDTLS_PATCHES ?= $(sort $(wildcard ../../patches/mbedtls/3.1/*.patch) $(wildcard ../../patches/mbedtls/3.1/make/*.patch))
+
 ${MBEDTLS_DIR}/.git:
 	git submodule update --init ${@D}
 
+ifeq ($(MBEDTLS_FORCE_3_5_0),1)
+MBEDTLS_TAG := v3.5.0
+MBEDTLS_PATCHES := $(sort $(wildcard ../../patches/mbedtls/3.5/*.patch) $(wildcard ../../patches/mbedtls/3.5/make/*.patch))
+else
+MBEDTLS_TAG := v3.6.2
+MBEDTLS_PATCHES := $(sort $(wildcard ../../patches/mbedtls/3.6/*.patch) $(wildcard ../../patches/mbedtls/3.6/make/*.patch))
+endif
+
 $(MBEDTLS_PATCH_FILE): ${MBEDTLS_DIR}/.git ${MBEDTLS_PATCHES}
 	if [ -d ${MBEDTLS_DIR} ]; then \
-	cd ${MBEDTLS_DIR} && \
-	git clean -fdx . && \
-	git reset --hard && \
-	cd -; \
+		cd ${MBEDTLS_DIR} && \
+		git clean -fdx . && \
+		git reset --hard && \
+		(git fetch --unshallow --tags || git fetch --all) && \
+		git checkout "${MBEDTLS_TAG}" && \
+		([ "${MBEDTLS_TAG}" = "v3.5.0" ] || git submodule update --init) && \
+		cd - && \
+		git add -u ${MBEDTLS_DIR} ; \
 	fi && \
 	git submodule update --init && \
+	git reset HEAD ${MBEDTLS_DIR} && \
 	cd ${MBEDTLS_DIR} && \
 	for patch in $(MBEDTLS_PATCHES); do patch -r - -s -N -p1 < $${patch} ; done && \
 	echo "Patches applied in $^" > ${@F}
+
 endif
 
 clean:

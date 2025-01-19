@@ -57,6 +57,8 @@ int oc_certs_parse_serial_number(const unsigned char *cert, size_t cert_size,
                                  char *buffer, size_t buffer_size)
   OC_NONNULL(3);
 
+#if MBEDTLS_VERSION_NUMBER < 0x03060200
+
 /**
  * @brief Extract private key from a x509 certificate.
  *
@@ -68,10 +70,15 @@ int oc_certs_parse_serial_number(const unsigned char *cert, size_t cert_size,
  * @param buffer_size size of the output buffer
  * @return <0 on error
  * @return >=0 on success, length of data written
+ *
+ * @note the private key is no longer obtainable from the PEM encoded string
+ * of a certificate(at least as of mbedTLS v3.6.2)
  */
 int oc_certs_parse_private_key(size_t device, const unsigned char *cert,
                                size_t cert_size, unsigned char *buffer,
                                size_t buffer_size) OC_NONNULL(4);
+
+#endif /* MBEDTLS_VERSION_NUMBER < 0x03060200 */
 
 /**
  * @brief Extract public key from a x509 certificate.

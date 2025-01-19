@@ -24,6 +24,7 @@
 #include "api/oc_tcp_internal.h"
 #include "messaging/coap/coap_internal.h"
 #include "port/oc_allocator_internal.h"
+#include "port/oc_random.h"
 #include "tests/gtest/Endpoint.h"
 #include "util/oc_features.h"
 
@@ -31,9 +32,15 @@
 #include "messaging/coap/oscore_internal.h"
 #endif /* OC_OSCORE */
 
+#ifdef OC_SECURITY
+#include "security/oc_entropy_internal.h"
+#endif /* OC_SECURITY */
+
 #include "gtest/gtest.h"
 
 #ifdef OC_SECURITY
+#include "mbedtls/build_info.h"
+#include "mbedtls/ctr_drbg.h"
 #include "mbedtls/ssl.h"
 #endif /* OC_SECURITY */
 
@@ -56,10 +63,12 @@ public:
 #ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
     oc_allocator_mutex_init();
 #endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX */
+    oc_random_init();
   }
 
   static void TearDownTestCase()
   {
+    oc_random_destroy();
 #ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
     oc_allocator_mutex_destroy();
 #endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX */
@@ -267,6 +276,15 @@ TEST_F(TCPMessage, GetTotalLength)
   mbedtls_ssl_conf_min_version(&conf, MBEDTLS_SSL_MAJOR_VERSION_3,
                                MBEDTLS_SSL_MINOR_VERSION_3);
 #endif /* MBEDTLS_VERSION_NUMBER <= 0x03010000 */
+  mbedtls_ctr_drbg_context ctr_drbg;
+  mbedtls_ctr_drbg_init(&ctr_drbg);
+  mbedtls_entropy_context entropy_ctx;
+  mbedtls_entropy_init(&entropy_ctx);
+  oc_entropy_add_source(&entropy_ctx);
+  std::vector<unsigned char> pers = { 't', 'e', 's', 't', '\0' };
+  ASSERT_EQ(0, mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func,
+                                     &entropy_ctx, pers.data(), pers.size()));
+  mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &ctr_drbg);
   mbedtls_ssl_context ssl;
   mbedtls_ssl_init(&ssl);
   ASSERT_EQ(0, mbedtls_ssl_setup(&ssl, &conf));
@@ -296,6 +314,8 @@ TEST_F(TCPMessage, GetTotalLength)
 
   oc_message_unref(message);
   mbedtls_ssl_free(&ssl);
+  mbedtls_entropy_free(&entropy_ctx);
+  mbedtls_ctr_drbg_free(&ctr_drbg);
   mbedtls_ssl_config_free(&conf);
 
 #define SSL_MAJOR_VERSION_3 (3)
