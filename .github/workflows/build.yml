@@ -32,8 +32,8 @@ jobs:
           - args: "CLOUD=1"
           # cloud on (tcp on, ipv4 on), debug on
           - args: "CLOUD=1 DEBUG=1"
-          # cloud on (tcp on, ipv4 on), debug on, mbedTLS v3.6.2
-          - args: "CLOUD=1 DEBUG=1 MBEDTLS_FORCE_3_6_2=1"
+          # cloud on (tcp on, ipv4 on), debug on, mbedTLS v3.5.0
+          - args: "CLOUD=1 DEBUG=1 MBEDTLS_FORCE_3_5_0=1"
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:

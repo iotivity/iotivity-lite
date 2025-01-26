@@ -1339,6 +1339,9 @@ oc_send_discovery_request(oc_message_t *message)
 
   const ip_context_t *dev =
     oc_get_ip_context_for_device(message->endpoint.device);
+  if (dev == NULL) {
+    return;
+  }
 
   for (struct ifaddrs *interface = ifs; interface != NULL;
        interface = interface->ifa_next) {

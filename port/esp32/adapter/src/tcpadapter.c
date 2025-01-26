@@ -20,10 +20,14 @@
 #define _GNU_SOURCE
 #endif
 
+#include "ipcontext.h"
+#include "netif.h"
+#include "tcpadapter.h"
+#include "vfs_pipe.h"
+
 #include "api/oc_message_internal.h"
 #include "api/oc_session_events_internal.h"
 #include "api/oc_tcp_internal.h"
-#include "ipcontext.h"
 #include "messaging/coap/coap_internal.h"
 #include "oc_endpoint.h"
 #include "oc_session_events.h"
@@ -31,9 +35,7 @@
 #include "port/oc_connectivity_internal.h"
 #include "port/oc_log_internal.h"
 #include "port/oc_tcp_socket_internal.h"
-#include "tcpadapter.h"
 #include "util/oc_memb.h"
-#include "vfs_pipe.h"
 
 #include <arpa/inet.h>
 #include <assert.h>
@@ -100,49 +102,6 @@ get_assigned_tcp_port(int sock, struct sockaddr_storage *sock_info)
   return 0;
 }
 
-static int
-get_interface_index(int sock)
-{
-  struct sockaddr_storage addr;
-  socklen_t socklen = sizeof(addr);
-  if (getsockname(sock, (struct sockaddr *)&addr, &socklen) == -1) {
-    OC_ERR("obtaining socket information %d", errno);
-    return -1;
-  }
-  for (esp_netif_t *esp_netif = esp_netif_next(NULL); esp_netif;
-       esp_netif = esp_netif_next(esp_netif)) {
-    if (!esp_netif_is_netif_up(esp_netif)) {
-      continue;
-    }
-    if (addr.ss_family == AF_INET) {
-      esp_netif_ip_info_t ip_info;
-      if (esp_netif_get_ip_info(esp_netif, &ip_info) != ESP_OK) {
-        continue;
-      }
-      struct sockaddr_in *b = (struct sockaddr_in *)&addr;
-      if (b->sin_addr.s_addr == ip_info.ip.addr) {
-        return esp_netif_get_netif_impl_index(esp_netif);
-      }
-    }
-    if (addr.ss_family == AF_INET6) {
-      struct sockaddr_in6 *b = (struct sockaddr_in6 *)&addr;
-      esp_ip6_addr_t if_ip6[LWIP_IPV6_NUM_ADDRESSES];
-      int num = esp_netif_get_all_ip6(esp_netif, if_ip6);
-      for (int i = 0; i < num; ++i) {
-
-        if (ip6_addr_isany(&if_ip6[i]) || ip6_addr_isloopback(&if_ip6[i])) {
-          continue;
-        }
-        if (memcmp(&if_ip6[i].addr, b->sin6_addr.s6_addr, 16) == 0) {
-          return esp_netif_get_netif_impl_index(esp_netif);
-        }
-      }
-    }
-  }
-  OC_ERR("interface not found");
-  return 0;
-}
-
 void
 oc_tcp_add_socks_to_fd_set(ip_context_t *dev)
 {
@@ -194,11 +153,12 @@ static int
 add_new_session(int sock, ip_context_t *dev, oc_endpoint_t *endpoint,
                 uint32_t session_id, tcp_csm_state_t state)
 {
-  int if_index = get_interface_index(sock);
+  int if_index = oc_netif_get_interface_index(sock);
   if (if_index < 0) {
     OC_ERR("could not get interface index");
     return -1;
   }
+  OC_INFO("if_index: %d", if_index);
 
   tcp_session_t *session = oc_memb_alloc(&tcp_session_s);
   if (!session) {

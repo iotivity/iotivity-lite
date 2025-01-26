@@ -3,7 +3,9 @@ cmake_minimum_required (VERSION 3.11)
 # Create list of all source files
 file(GLOB_RECURSE iotivity_allsource *.c *.cpp *.h *.hpp)
 # Remove third party code
+list(FILTER iotivity_allsource EXCLUDE REGEX "build/")
 list(FILTER iotivity_allsource EXCLUDE REGEX "deps/")
+list(FILTER iotivity_allsource EXCLUDE REGEX "port/esp32/esp-idf/")
 
 # Find clang-format
 find_program(
