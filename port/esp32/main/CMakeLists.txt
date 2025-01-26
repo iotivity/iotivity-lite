@@ -15,14 +15,15 @@ set(sources
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../deps/tinycbor/src/cborencoder_close_container_checked.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../../../deps/tinycbor/src/cborparser.c
 
+	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/abort.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/clock.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/debug_print.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/ipadapter.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/netif.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/random.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/storage.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/clock.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/ipadapter.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/abort.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/debug_print.c
-	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/vfs_pipe.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/tcpadapter.c
+	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/vfs_pipe.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/util/application.c
 	${CMAKE_CURRENT_SOURCE_DIR}/../adapter/src/util/network.c
 
