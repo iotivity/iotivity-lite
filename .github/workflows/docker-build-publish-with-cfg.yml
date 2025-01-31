@@ -73,8 +73,8 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: true
-          platforms: linux/amd64,linux/arm64,linux/arm/v7
+          push: false
+          platforms: linux/amd64,linux/arm64
           builder: ${{ steps.buildx.outputs.name }}
           file: ${{ inputs.file }}
           tags: ${{ steps.meta.outputs.tags }}
