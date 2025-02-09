@@ -23,6 +23,7 @@ RUN cp /iotivity-lite/build/apps/cloud_server /iotivity-lite/port/linux/service
 WORKDIR /
 RUN git clone https://github.com/wolfcw/libfaketime.git && \
     cd /libfaketime/src && \
+    git checkout 92c322507c272970bdcf40e37af62fb356ac9f09 && \
     make CC=clang install FAKETIME_COMPILE_CFLAGS="-DFAKE_SETTIME -DFAKE_STATELESS"
 
 COPY /docker/logbt /usr/local/bin/logbt
