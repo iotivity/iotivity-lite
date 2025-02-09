@@ -8,6 +8,7 @@ ARG BUILD_ARGS=
 # install libfaketime
 RUN git clone https://github.com/wolfcw/libfaketime.git && \
     cd /libfaketime/src && \
+    git checkout 92c322507c272970bdcf40e37af62fb356ac9f09 && \
     make install FAKETIME_COMPILE_CFLAGS="-DFAKE_SETTIME"
 WORKDIR /
 RUN mkdir /device-provisioning-client
