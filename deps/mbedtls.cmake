@@ -68,6 +68,18 @@ if(ENABLE_TESTING OR ENABLE_PROGRAMS)
     )
 endif()
 
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm" OR CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64")
+if(NOT BUILD_MBEDTLS_FORCE_3_5_0 AND OC_COMPILER_IS_GCC)
+    # there is a false positive in ctr_drbg.c when built with default arm64 gcc
+    #
+    # inlined from 'ctr_drbg_update_internal' at /iotivity-lite/deps/mbedtls/library/ctr_drbg.c:372:5:
+    # /iotivity-lite/deps/mbedtls/library/common.h:235:17: error: array subscript 48 is outside array bounds of 'unsigned char[48]' [-Werror=array-bounds=]
+    #         r[i] = a[i] ^ b[i];
+    #
+    list(APPEND MBEDTLS_COMPILE_OPTIONS -Wno-error=array-bounds)
+endif()
+endif()
+
 foreach(target ${mbedtls_targets})
     target_compile_definitions(${target} PRIVATE ${MBEDTLS_COMPILE_DEFINITIONS})
 
