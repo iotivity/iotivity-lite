@@ -1,10 +1,15 @@
 FROM ubuntu:24.04 AS build
 RUN apt-get update && \
-    DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends build-essential \
-    ca-certificates clang-15 cmake g++ gcc git python3 && \
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y  build-essential \
+    ca-certificates cmake g++ gcc git python3 && \
+    apt-get clean
+# install clang
+#   - libclang-rt-18-dev is needed for thread-sanitizer
+#   - we're using clang-18 and not clang-19 because linux/arm/v7 doesn't have libclang-rt-19-dev
+RUN DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -y clang-18 libclang-rt-18-dev && \
     apt-get clean && \
-    update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 10 && \
-    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 10
+    update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 100 && \
+    update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 100
 ARG BUILD_TYPE=Release
 ARG BUILD_ARGS=
 RUN mkdir /device-provisioning-client
