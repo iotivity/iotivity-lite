@@ -862,11 +862,17 @@ factory_presets_cb(size_t device, void *data)
     // set the manufacturer private key to the internal storage
     memcpy(manufacturer_private_key, mfg_key, mfg_key_len);
     manufacturer_private_key[mfg_key_len] = '\0';
+    size_t manufacturer_reference_private_key_len =
+      strlen(manufacturer_reference_private_key);
+    if (manufacturer_reference_private_key_len >= sizeof(mfg_key)) {
+      OC_PRINTF("ERROR: invalid manufacturer_reference_private_key\n");
+      return;
+    }
     // set reference private key as mfg_key
     memcpy(mfg_key, manufacturer_reference_private_key,
-           strlen(manufacturer_reference_private_key));
-    mfg_key[strlen(manufacturer_reference_private_key)] = 0;
-    mfg_key_len = strlen(manufacturer_reference_private_key);
+           manufacturer_reference_private_key_len);
+    mfg_key[manufacturer_reference_private_key_len] = 0;
+    mfg_key_len = manufacturer_reference_private_key_len;
   }
 
   int mfg_credid =

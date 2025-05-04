@@ -227,10 +227,14 @@ coap_remove_observer(coap_observer_t *o)
            o->token[0], o->token[1]);
 
 #ifdef OC_BLOCK_WISE
+  const char *uri = oc_string(o->resource->uri);
+  assert(uri != NULL && uri[0] == '/');
+  uri = uri + 1;
+  size_t uri_len = oc_string_len_unsafe(o->resource->uri) - 1;
   oc_string_view_t query = oc_query_encode_interface(o->iface_mask);
   oc_blockwise_state_t *response_state = oc_blockwise_find_response_buffer(
-    oc_string(o->resource->uri) + 1, oc_string_len(o->resource->uri) - 1,
-    &o->endpoint, OC_GET, query.data, query.length, OC_BLOCKWISE_SERVER);
+    uri, uri_len, &o->endpoint, OC_GET, query.data, query.length,
+    OC_BLOCKWISE_SERVER);
   // If response_state->payload_size == 0 it means, that this blockwise state
   // doesn't belong to the observer. Because the observer always sets
   // payload_size to greater than 0. The payload_size with 0 happens when the
@@ -594,19 +598,21 @@ coap_prepare_notification_blockwise(coap_packet_t *notification,
                                     const oc_response_t *response,
                                     oc_blockwise_finish_cb_t *finish_cb)
 {
-  assert(oc_string_len(obs->resource->uri) > 0);
+  const char *uri = oc_string(obs->resource->uri);
+  assert(uri != NULL && uri[0] == '/');
+  uri = uri + 1;
+  size_t uri_len = oc_string_len_unsafe(obs->resource->uri) - 1;
   notification->type = COAP_TYPE_CON;
   oc_string_view_t query = oc_query_encode_interface(obs->iface_mask);
   oc_blockwise_state_t *response_state = oc_blockwise_find_response_buffer(
-    oc_string(obs->resource->uri) + 1, oc_string_len(obs->resource->uri) - 1,
-    &obs->endpoint, OC_GET, query.data, query.length, OC_BLOCKWISE_SERVER);
+    uri, uri_len, &obs->endpoint, OC_GET, query.data, query.length,
+    OC_BLOCKWISE_SERVER);
   if (response_state != NULL) {
     if (response_state->payload_size != response_state->next_block_offset) {
       COAP_DBG("skipping for blockwise transfer running");
       return 0;
     }
     oc_blockwise_free_response_buffer(response_state);
-    response_state = NULL;
   }
 #ifdef OC_HAS_FEATURE_ETAG
   bool generate_etag = false;
@@ -614,8 +620,7 @@ coap_prepare_notification_blockwise(coap_packet_t *notification,
   bool generate_etag = true;
 #endif /* OC_HAS_FEATURE_ETAG */
   response_state = oc_blockwise_alloc_response_buffer(
-    oc_string(obs->resource->uri) + 1, oc_string_len(obs->resource->uri) - 1,
-    &obs->endpoint, OC_GET, OC_BLOCKWISE_SERVER,
+    uri, uri_len, &obs->endpoint, OC_GET, OC_BLOCKWISE_SERVER,
     (uint32_t)response->response_buffer->response_length, CONTENT_2_05,
     generate_etag);
   if (response_state == NULL) {

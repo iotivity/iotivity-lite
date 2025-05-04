@@ -96,21 +96,19 @@ hexchar_to_decimal(char hex)
   return -1;
 }
 
-static ssize_t
+static int
 hex_to_value(const char *data, size_t data_size, uint8_t *value)
 {
   assert(data);
   assert(data_size > 0);
   assert(value);
-  *value = 0;
   // number of bytes used - it can be 1 or 2 or 3
-  ssize_t used = 0;
+  int used = 0;
   for (size_t i = 0; i < data_size; i++) {
     char hexc = data[i];
     if (hexc == ':') {
       // end of hex value
-      used += 1;
-      return used;
+      return used + 1;
     }
     int val = hexchar_to_decimal(hexc);
     if (val == -1) {
@@ -142,21 +140,22 @@ plgd_dps_hex_string_to_bytes(const char *isc_dhcp_vendor_encapsulated_options,
   if (buffer && buffer_size > 0) {
     memset(buffer, 0, buffer_size);
   }
-  for (size_t i = 0; i < isc_dhcp_vendor_encapsulated_options_size;) {
-    const char *data = isc_dhcp_vendor_encapsulated_options + i;
-    size_t data_size = isc_dhcp_vendor_encapsulated_options_size - i;
+  const char *data = isc_dhcp_vendor_encapsulated_options;
+  size_t data_size = isc_dhcp_vendor_encapsulated_options_size;
+  while (data_size > 0) {
     uint8_t val = 0;
-    ssize_t used = hex_to_value(data, data_size, &val);
+    int used = hex_to_value(data, data_size, &val);
     if (used < 0) {
       return -1;
     }
-    // overflow check for coverity scan
-    assert((size_t)used <= data_size);
     if (buffer && (needed < buffer_size)) {
       buffer[needed] = val;
     }
     needed++;
-    i += used;
+    data += used;
+    // overflow check for coverity scan
+    assert(data_size >= (size_t)used);
+    data_size -= used;
   }
   return (ssize_t)needed;
 }

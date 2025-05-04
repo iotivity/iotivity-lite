@@ -559,6 +559,9 @@ oc_parse_endpoint_string(const oc_string_t *endpoint_str,
   if (host_len > 1 && address[0] == '[' && address[host_len - 1] == ']') {
     if (!oc_parse_ipv6_address(&address[1], host_len - 2, endpoint)) {
       OC_ERR("cannot resolve address(%s): cannot parse ipv6 address", address);
+#ifdef OC_DNS_LOOKUP
+      oc_free_string(&ipaddress);
+#endif /* OC_DNS_LOOKUP */
       return -1;
     }
     endpoint->flags = ep_uri.scheme_flags | IPV6;

@@ -236,9 +236,13 @@ prepare_coap_request(oc_client_cb_t *cb, coap_configure_request_fn_t configure,
 
 #ifdef OC_BLOCK_WISE
   if (cb->method == OC_PUT || cb->method == OC_POST) {
+    const char *uri = oc_string(cb->uri);
+    assert(uri != NULL && uri[0] == '/');
+    uri = uri + 1;
+    size_t uri_len = oc_string_len_unsafe(cb->uri) - 1;
     g_request.buffer = oc_blockwise_alloc_request_buffer(
-      oc_string(cb->uri) + 1, oc_string_len(cb->uri) - 1, &cb->endpoint,
-      cb->method, OC_BLOCKWISE_CLIENT, (uint32_t)OC_MIN_APP_DATA_SIZE);
+      uri, uri_len, &cb->endpoint, cb->method, OC_BLOCKWISE_CLIENT,
+      (uint32_t)OC_MIN_APP_DATA_SIZE);
     if (g_request.buffer == NULL) {
       OC_ERR("global request_buffer is NULL");
       coap_clear_transaction(transaction);
@@ -440,8 +444,6 @@ oc_do_request(oc_method_t method, const char *uri,
               coap_configure_request_fn_t configure_request,
               const void *configure_request_data)
 {
-  assert(uri != NULL);
-  assert(handler != NULL);
   oc_client_handler_t client_handler = {
     .response = handler,
     .discovery = NULL,

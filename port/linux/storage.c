@@ -101,6 +101,26 @@ oc_storage_reset(void)
 }
 
 static int
+storage_write_path(const char *store)
+{
+  size_t store_len = oc_strnlen_s(store, OC_STORE_PATH_SIZE);
+  if (store_len == 0) {
+    OC_ERR("invalid storage path: store path is empty");
+    return -ENOENT;
+  }
+  size_t available = OC_STORE_PATH_SIZE - g_store_path_len;
+  if (store_len >= available) {
+    OC_ERR("invalid storage path: store path length is greater "
+           "than " OC_EXPAND_TO_STR(OC_STORE_PATH_SIZE));
+    return -ENOENT;
+  }
+  char *store_path = g_store_path + g_store_path_len;
+  memcpy(store_path, store, store_len);
+  store_path[store_len] = '\0';
+  return 0;
+}
+
+static int
 storage_open(const char *store, FILE **fp)
 {
   if (g_store_path_len == 0) {
@@ -108,18 +128,11 @@ storage_open(const char *store, FILE **fp)
     return -ENOENT;
   }
 
-  size_t store_len = oc_strnlen_s(store, OC_STORE_PATH_SIZE);
-  if ((store_len == 0) ||
-      (store_len + g_store_path_len >= OC_STORE_PATH_SIZE)) {
-    OC_ERR("failed to open storage: %s",
-           store_len == 0
-             ? "store path is empty"
-             : "store path length is greater than " OC_EXPAND_TO_STR(
-                 OC_STORE_PATH_SIZE));
-    return -ENOENT;
+  int errW = storage_write_path(store);
+  if (errW < 0) {
+    OC_ERR("failed to open storage");
+    return errW;
   }
-  memcpy(g_store_path + g_store_path_len, store, store_len);
-  g_store_path[g_store_path_len + store_len] = '\0';
 
   FILE *file = fopen(g_store_path, "rb");
   if (file == NULL) {
@@ -242,18 +255,11 @@ oc_storage_write(const char *store, const uint8_t *buf, size_t size)
     return -ENOENT;
   }
 
-  size_t store_len = oc_strnlen_s(store, OC_STORE_PATH_SIZE);
-  if ((store_len == 0) ||
-      (store_len + g_store_path_len >= OC_STORE_PATH_SIZE)) {
-    OC_ERR("failed to write to storage: %s",
-           store_len == 0
-             ? "store path is empty"
-             : "store path length is greater than " OC_EXPAND_TO_STR(
-                 OC_STORE_PATH_SIZE));
-    return -ENOENT;
+  int errW = storage_write_path(store);
+  if (errW < 0) {
+    OC_ERR("failed to write to storage");
+    return errW;
   }
-  memcpy(g_store_path + g_store_path_len, store, store_len);
-  g_store_path[g_store_path_len + store_len] = '\0';
 
   while (true) {
     FILE *fp = fopen(g_store_path, "wb");

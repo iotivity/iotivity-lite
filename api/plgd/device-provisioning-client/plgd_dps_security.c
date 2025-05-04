@@ -156,7 +156,10 @@ dps_own_device(plgd_dps_context_t *ctx, const oc_uuid_t *owner)
 
   char owner_str[OC_UUID_LEN] = { 0 };
   int owner_str_len = oc_uuid_to_str_v1(owner, owner_str, sizeof(owner_str));
-  assert(owner_str_len > 0);
+  if (owner_str_len < 0) {
+    DPS_ERR("cannot own device: failed to convert owner UUID to string");
+    return false;
+  }
   oc_set_string(&ctx->store.owner, owner_str, (size_t)owner_str_len);
 
 #if DPS_DBG_IS_ENABLED
