@@ -57,17 +57,17 @@ jobs:
           repository: wolfcw/libfaketime
           path: libfaketime
 
-      - name: Install clang-17
+      - name: Install clang-19
         if: ${{ inputs.clang }}
         run: |
           sudo apt-get update -y
           sudo apt-get install curl
           curl -sL https://apt.llvm.org/llvm.sh > llvm.sh
           chmod u+x llvm.sh
-          sudo ./llvm.sh 17
-          sudo apt-get install clang-17
-          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-17 200
-          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-17 200
+          sudo ./llvm.sh 19
+          sudo apt-get install clang-19
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-19 200
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-19 200
 
       - name: Install libfaketime
         if: ${{ inputs.install_faketime }}

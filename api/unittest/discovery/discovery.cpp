@@ -38,6 +38,8 @@
 
 #include "gtest/gtest.h"
 
+#include <algorithm>
+
 namespace oc::discovery {
 
 LinkData
