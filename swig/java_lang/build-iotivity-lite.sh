@@ -7,7 +7,7 @@ rm -rf ../iotivity-lite-java/bin
 mkdir ../iotivity-lite-java/bin
 
 # compile swig generated java files and custom java files
-javac -source 1.7 -target 1.7 -sourcepath ../iotivity-lite-java/src  -d ../iotivity-lite-java/bin  ../iotivity-lite-java/src/org/iotivity/*.java ../iotivity-lite-java/src/org/iotivity/oc/*.java
+javac -source 1.8 -target 1.8 -sourcepath ../iotivity-lite-java/src  -d ../iotivity-lite-java/bin  ../iotivity-lite-java/src/org/iotivity/*.java ../iotivity-lite-java/src/org/iotivity/oc/*.java
 
 # create jar file
 jar -cfv ../iotivity-lite-java/libs/iotivity-lite.jar -C ../iotivity-lite-java/bin  .

@@ -21,11 +21,11 @@
 %}
 
 %rename(OCEnum) oc_enum_t;
-%rename("%(strip:[OC_ENUM_])s", %isenumitem) "";
+%rename("%(strip:[OC_ENUM_])s", %$isenumitem) "";
 %rename(OCPositionDescription) oc_pos_description_t;
-%rename("%(strip:[OC_POS_])s", %isenumitem) "";
+%rename("%(strip:[OC_POS_])s", %$isenumitem) "";
 %rename(OCLocation) oc_locn_t;
-%rename("%(strip:[OCF_LOCN_])s", %isenumitem) "";
+%rename("%(strip:[OCF_LOCN_])s", %$isenumitem) "";
 
 %rename(enumToString) oc_enum_to_str;
 %rename(positionDescriptionToString) oc_enum_pos_desc_to_str;
