@@ -39,7 +39,7 @@ oc_client_cb_t *oc_do_request(
   oc_method_t method, const char *uri, const oc_endpoint_t *endpoint,
   const char *query, uint16_t timeout_seconds, oc_response_handler_t handler,
   oc_qos_t qos, void *user_data, coap_configure_request_fn_t configure_request,
-  const void *configure_request_data) OC_NONNULL(2, 3);
+  const void *configure_request_data) OC_NONNULL(2, 3, 6);
 
 /** @brief Initialize CoAP request packet */
 void oc_request_init_packet(coap_packet_t *packet, bool is_tcp,

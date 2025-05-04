@@ -45,6 +45,10 @@
 #define __has_feature(x) 0
 #endif /* !__has_feature */
 
+#ifndef __has_builtin
+#define __has_builtin(x) 0
+#endif /* !__has_builtin */
+
 #if defined(__GNUC__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR >= 6))
 #define OC_STATIC_ASSERT(cond, msg) _Static_assert(cond, msg)
 #elif __has_feature(c_static_assert)
@@ -123,6 +127,12 @@
 /* GCC: check for __SANITIZE_THREAD__; clang: use __has_feature */
 #if defined(__SANITIZE_THREAD__) || __has_feature(thread_sanitizer)
 #define OC_SANITIZE_THREAD
+#endif
+
+#if __has_builtin(__builtin_speculation_safe_value)
+#define OC_SPECULATION_SAFE(x) __builtin_speculation_safe_value(x)
+#else
+#define OC_SPECULATION_SAFE(x) (x)
 #endif
 
 #endif // OC_COMPILER_H

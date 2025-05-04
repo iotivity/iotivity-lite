@@ -993,10 +993,13 @@ coap_receive_request_with_code(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint)
       oc_blockwise_find_response_buffer_by_client_cb(endpoint, client_cb);
     if (ctx->response_buffer == NULL) {
       uint32_t buffer_size = (uint32_t)OC_MAX_APP_DATA_SIZE;
+      const char *uri = oc_string(client_cb->uri);
+      assert(uri != NULL && uri[0] == '/');
+      uri = uri + 1;
+      size_t uri_len = oc_string_len_unsafe(client_cb->uri) - 1;
       ctx->response_buffer = oc_blockwise_alloc_response_buffer(
-        oc_string(client_cb->uri) + 1, oc_string_len(client_cb->uri) - 1,
-        endpoint, client_cb->method, OC_BLOCKWISE_CLIENT, buffer_size,
-        CONTENT_2_05, false);
+        uri, uri_len, endpoint, client_cb->method, OC_BLOCKWISE_CLIENT,
+        buffer_size, CONTENT_2_05, false);
       if (ctx->response_buffer != NULL) {
         COAP_DBG("created new response buffer for uri %s",
                  oc_string(ctx->response_buffer->href));
