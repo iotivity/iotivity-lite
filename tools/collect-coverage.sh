@@ -99,12 +99,23 @@ echo "Detected compiler: ${COMPILER}"
 
 GCOV=gcov
 if [[ "${COMPILER}" == "clang" ]]; then
-	if which llvm-cov 2>/dev/null 1>&2; then
-		GCOV="llvm-cov gcov"
+	clang --version
+	CLANG_VERSION=$(clang --version | awk 'NR==1 { split($4, v, "."); print v[1] }')
+	if ! which llvm-cov-${CLANG_VERSION} 2>/dev/null 1>&2; then
+		echo "llvm-cov-${CLANG_VERSION} not installed" >&2
+		exit 1
 	fi
-	if which llvm-cov-10 2>/dev/null 1>&2; then
-		GCOV="llvm-cov-10 gcov"
+	GCOV="llvm-cov-${CLANG_VERSION} gcov"
+fi
+
+if [[ "${COMPILER}" == "gcc" ]]; then
+	gcc --version
+	GCC_VERSION=$(gcc --version | awk 'NR==1 { split($4, v, "."); print v[1] }')
+	if ! which gcov-${GCC_VERSION} 2>/dev/null 1>&2; then
+		echo "gcov-${GCC_VERSION} not installed" >&2
+		exit 1
 	fi
+	GCOV="gcov-${GCC_VERSION}"
 fi
 
 if ! which gcovr 2>/dev/null 1>&2; then
