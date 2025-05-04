@@ -45,20 +45,11 @@ typedef struct oc_loop_event_t
 } oc_loop_event_t;
 
 #ifdef _WIN32
-#define OC_LOOP_EVENT_INIT                                                     \
-  {                                                                            \
-    INVALID_HANDLE_VALUE                                                       \
-  }
+#define OC_LOOP_EVENT_INIT { INVALID_HANDLE_VALUE }
 #elif defined(__linux__) || defined(__ANDROID_API__)
-#define OC_LOOP_EVENT_INIT                                                     \
-  {                                                                            \
-    -1                                                                         \
-  }
+#define OC_LOOP_EVENT_INIT { -1 }
 #else /* !_WIN32 && !__linux__ && !__ANDROID_API__ */
-#define OC_LOOP_EVENT_INIT                                                     \
-  {                                                                            \
-    -1, -1                                                                     \
-  }
+#define OC_LOOP_EVENT_INIT { -1, -1 }
 #endif /* _WIN32 */
 
 /**

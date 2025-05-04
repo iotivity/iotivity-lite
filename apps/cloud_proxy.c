@@ -1542,7 +1542,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
                 (char *)btoa(add_err), retval);
 
     } /* adding current device, e.g. add the resource to the cloud RD */
-  }   /* if loop */
+  } /* if loop */
   return OC_CONTINUE_DISCOVERY;
 }
 
