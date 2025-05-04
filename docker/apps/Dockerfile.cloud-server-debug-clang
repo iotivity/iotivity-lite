@@ -1,5 +1,5 @@
 # GCC thread-sanitizer keeps reporting false positives, so we use clang instead for tests with thread-sanitizer.
-FROM ubuntu:22.04 AS service
+FROM ubuntu:24.04 AS service
 ARG BUILD_TYPE=Release
 ARG BUILD_ARGS
 RUN apt-get update -y && \
