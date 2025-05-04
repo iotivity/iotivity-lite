@@ -8,7 +8,7 @@ jobs:
   info-comment:
     name: Info comment
     if: github.event.action == 'opened'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Generate token
         id: generate_token
@@ -33,7 +33,7 @@ jobs:
   remove-label:
     name: Remove label
     if: github.event.action == 'synchronize'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Generate token
         id: generate_token

@@ -96,7 +96,7 @@ jobs:
     # don't run for forks
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository)
     name: Sonar Cloud scan
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     env:
       BUILD_WRAPPER_OUT_DIR: build_wrapper_output_directory # Directory where build-wrapper output will be placed
     needs: [unit-tests, plgd-device-tests, plgd-hub-tests, plgd-dps-tests]

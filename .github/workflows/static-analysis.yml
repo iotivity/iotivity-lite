@@ -23,7 +23,7 @@ jobs:
           - build_args: -DPLGD_DEV_TIME_ENABLED=ON -DPLGD_DEV_DEVICE_PROVISIONING_ENABLED=ON
           - build_args: -DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_PUSH_ENABLED=OFF -DOC_JSON_ENCODER_ENABLED=OFF -DOC_DEBUG_ENABLED=ON
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
