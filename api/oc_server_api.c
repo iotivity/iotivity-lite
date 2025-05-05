@@ -617,9 +617,11 @@ handle_separate_response_request(coap_separate_t *request,
   bool blockwise = response_buffer->response_length > request->block2_size;
 #endif /* OC_TCP */
   if (blockwise) {
+    const char *uri = oc_string(request->uri);
+    size_t uri_len = oc_string_len(request->uri);
     response_state = oc_blockwise_find_response_buffer(
-      oc_string(request->uri), oc_string_len(request->uri), &request->endpoint,
-      request->method, NULL, 0, OC_BLOCKWISE_SERVER);
+      uri, uri_len, &request->endpoint, request->method, NULL, 0,
+      OC_BLOCKWISE_SERVER);
     if (response_state != NULL) {
       if (response_state->payload_size != response_state->next_block_offset) {
         return;
@@ -628,8 +630,7 @@ handle_separate_response_request(coap_separate_t *request,
       response_state = NULL;
     }
     response_state = oc_blockwise_alloc_response_buffer(
-      oc_string(request->uri), oc_string_len(request->uri), &request->endpoint,
-      request->method, OC_BLOCKWISE_SERVER,
+      uri, uri_len, &request->endpoint, request->method, OC_BLOCKWISE_SERVER,
       (uint32_t)response_buffer->response_length, CONTENT_2_05, false);
     if (response_state == NULL) {
       return;
