@@ -353,14 +353,14 @@ void
 TestDiscoveryWithServer::addDynamicResources()
 {
   oc::DynamicResourceHandler handlers1{};
-  dynamicResources[std::string(kDynamicURI1)] = { 42 };
+  dynamicResources[kDynamicURI1] = { 42 };
   handlers1.onGet = onGetDynamicResource;
-  handlers1.onGetData = &dynamicResources[std::string(kDynamicURI1)];
+  handlers1.onGetData = &dynamicResources[kDynamicURI1];
 
   oc::DynamicResourceHandler handlers2{};
-  dynamicResources[std::string(kDynamicURI2)] = { 1337 };
+  dynamicResources[kDynamicURI2] = { 1337 };
   handlers2.onGet = onGetDynamicResource;
-  handlers2.onGetData = &dynamicResources[std::string(kDynamicURI2)];
+  handlers2.onGetData = &dynamicResources[kDynamicURI2];
 
   oc::DynamicResourceHandler handlers3{};
   handlers3.onGet = onGetEmptyDynamicResource;
@@ -369,22 +369,19 @@ TestDiscoveryWithServer::addDynamicResources()
   handlers4.onGet = onGetIgnoredDynamicResource;
 
   std::vector<oc::DynamicResourceToAdd> dynResources = {
-    oc::makeDynamicResourceToAdd("Dynamic Resource 1",
-                                 std::string(kDynamicURI1),
+    oc::makeDynamicResourceToAdd("Dynamic Resource 1", kDynamicURI1,
                                  { "oic.d.discoverable", "oic.d.test" },
                                  { OC_IF_BASELINE, OC_IF_R }, handlers1),
-    oc::makeDynamicResourceToAdd("Dynamic Resource 2",
-                                 std::string(kDynamicURI2),
+    oc::makeDynamicResourceToAdd("Dynamic Resource 2", kDynamicURI2,
                                  { "oic.d.undiscoverable", "oic.d.test" },
                                  { OC_IF_BASELINE, OC_IF_R }, handlers2, 0),
     oc::makeDynamicResourceToAdd(
-      "Dynamic Resource 3", std::string(kDynamicURI3),
-      { "oic.d.observable", "oic.d.test" }, { OC_IF_BASELINE, OC_IF_R },
-      handlers3, OC_DISCOVERABLE | OC_OBSERVABLE),
-    oc::makeDynamicResourceToAdd(
-      "Dynamic Resource 4", std::string(kDynamicURIIgnored),
-      { "oic.d.ignored", "oic.d.test" }, { OC_IF_BASELINE, OC_IF_R }, handlers4,
-      OC_DISCOVERABLE | OC_OBSERVABLE),
+      "Dynamic Resource 3", kDynamicURI3, { "oic.d.observable", "oic.d.test" },
+      { OC_IF_BASELINE, OC_IF_R }, handlers3, OC_DISCOVERABLE | OC_OBSERVABLE),
+    oc::makeDynamicResourceToAdd("Dynamic Resource 4", kDynamicURIIgnored,
+                                 { "oic.d.ignored", "oic.d.test" },
+                                 { OC_IF_BASELINE, OC_IF_R }, handlers4,
+                                 OC_DISCOVERABLE | OC_OBSERVABLE),
   };
   for (const auto &dr : dynResources) {
     oc_resource_t *res = oc::TestDevice::AddDynamicResource(dr, kDeviceID);
@@ -407,23 +404,22 @@ TestDiscoveryWithServer::addDynamicResources()
 void
 TestDiscoveryWithServer::addColletions()
 {
-  constexpr std::string_view powerSwitchRT = "oic.d.power";
+  const std::string powerSwitchRT = "oic.d.power";
 
   auto col = oc::NewCollection("col", kCollectionURI, kDeviceID, "oic.wk.col");
   ASSERT_NE(nullptr, col);
   oc_resource_set_discoverable(&col->res, true);
-  oc_collection_add_supported_rt(&col->res, powerSwitchRT.data());
-  oc_collection_add_mandatory_rt(&col->res, powerSwitchRT.data());
+  oc_collection_add_supported_rt(&col->res, powerSwitchRT.c_str());
+  oc_collection_add_mandatory_rt(&col->res, powerSwitchRT.c_str());
   ASSERT_TRUE(oc_add_collection_v1(&col->res));
 
   oc::DynamicResourceHandler handlers1{};
-  dynamicResources[std::string(kColDynamicURI1)] = { 404 };
+  dynamicResources[kColDynamicURI1] = { 404 };
   handlers1.onGet = onGetDynamicResource;
-  handlers1.onGetData = &dynamicResources[std::string(kColDynamicURI1)];
+  handlers1.onGetData = &dynamicResources[kColDynamicURI1];
   auto dr1 = oc::makeDynamicResourceToAdd(
-    "Collection Resource 1", std::string(kColDynamicURI1),
-    { std::string(powerSwitchRT), "oic.d.test" }, { OC_IF_BASELINE, OC_IF_R },
-    handlers1);
+    "Collection Resource 1", kColDynamicURI1, { powerSwitchRT, "oic.d.test" },
+    { OC_IF_BASELINE, OC_IF_R }, handlers1);
   oc_resource_t *res1 = oc::TestDevice::AddDynamicResource(dr1, kDeviceID);
   ASSERT_NE(nullptr, res1);
   oc_link_t *link1 = oc_new_link(res1);
@@ -431,13 +427,12 @@ TestDiscoveryWithServer::addColletions()
   oc_collection_add_link(&col->res, link1);
 
   oc::DynamicResourceHandler handlers2{};
-  dynamicResources[std::string(kColDynamicURI2)] = { 1 };
+  dynamicResources[kColDynamicURI2] = { 1 };
   handlers2.onGet = onGetDynamicResource;
-  handlers2.onGetData = &dynamicResources[std::string(kColDynamicURI2)];
+  handlers2.onGetData = &dynamicResources[kColDynamicURI2];
   auto dr2 = oc::makeDynamicResourceToAdd(
-    "Collection Resource 2", std::string(kColDynamicURI2),
-    { std::string(powerSwitchRT), "oic.d.test" }, { OC_IF_BASELINE, OC_IF_R },
-    handlers2, 0);
+    "Collection Resource 2", kColDynamicURI2, { powerSwitchRT, "oic.d.test" },
+    { OC_IF_BASELINE, OC_IF_R }, handlers2, 0);
   oc_resource_t *res2 = oc::TestDevice::AddDynamicResource(dr2, kDeviceID);
   ASSERT_NE(nullptr, res2);
   oc_link_t *link2 = oc_new_link(res2);
@@ -447,9 +442,8 @@ TestDiscoveryWithServer::addColletions()
   oc::DynamicResourceHandler handlers3{};
   handlers3.onGet = onGetEmptyDynamicResource;
   auto dr3 = oc::makeDynamicResourceToAdd(
-    "Collection Resource 3", std::string(kColDynamicURI3),
-    { std::string(powerSwitchRT), "oic.d.test" }, { OC_IF_BASELINE, OC_IF_R },
-    handlers3, OC_DISCOVERABLE | OC_OBSERVABLE);
+    "Collection Resource 3", kColDynamicURI3, { powerSwitchRT, "oic.d.test" },
+    { OC_IF_BASELINE, OC_IF_R }, handlers3, OC_DISCOVERABLE | OC_OBSERVABLE);
   oc_resource_t *res3 = oc::TestDevice::AddDynamicResource(dr3, kDeviceID);
   ASSERT_NE(nullptr, res3);
   oc_link_t *link3 = oc_new_link(res3);
@@ -491,20 +485,20 @@ void
 TestDiscoveryWithServer::verifyLinks(const oc::discovery::LinkDataMap &links)
 {
 #ifdef OC_SERVER
-  auto verifyUndiscoverable = [&links](std::string_view uri) {
+  auto verifyUndiscoverable = [&links](const std::string &uri) {
     oc_resource_t *res =
-      oc_ri_get_app_resource_by_uri(uri.data(), uri.length(), kDeviceID);
+      oc_ri_get_app_resource_by_uri(uri.c_str(), uri.length(), kDeviceID);
     ASSERT_NE(nullptr, res);
     ASSERT_EQ(0, res->properties & OC_DISCOVERABLE);
-    EXPECT_EQ(std::end(links), links.find(std::string(uri)));
+    EXPECT_EQ(std::end(links), links.find(uri));
   };
 
-  auto verifyDiscoverable = [&links](std::string_view uri) {
+  auto verifyDiscoverable = [&links](const std::string &uri) {
     oc_resource_t *res =
-      oc_ri_get_app_resource_by_uri(uri.data(), uri.length(), kDeviceID);
+      oc_ri_get_app_resource_by_uri(uri.c_str(), uri.length(), kDeviceID);
     ASSERT_NE(nullptr, res);
     ASSERT_NE(0, res->properties & OC_DISCOVERABLE);
-    const auto &linkData = links.find(std::string(uri));
+    const auto &linkData = links.find(uri);
     ASSERT_NE(std::end(links), linkData);
     matchResourceLink(res, linkData->second);
   };
@@ -515,9 +509,9 @@ TestDiscoveryWithServer::verifyLinks(const oc::discovery::LinkDataMap &links)
 
 #ifdef OC_COLLECTIONS
   oc_collection_t *col = oc_get_collection_by_uri(
-    kCollectionURI.data(), kCollectionURI.length(), kDeviceID);
+    kCollectionURI.c_str(), kCollectionURI.length(), kDeviceID);
   ASSERT_NE(nullptr, col);
-  const auto &colLink = links.find(std::string(kCollectionURI));
+  const auto &colLink = links.find(kCollectionURI);
   ASSERT_NE(std::end(links), colLink);
   matchResourceLink(&col->res, colLink->second);
 
@@ -525,7 +519,7 @@ TestDiscoveryWithServer::verifyLinks(const oc::discovery::LinkDataMap &links)
        link != nullptr; link = link->next) {
     const auto &linkData = links.find(oc_string(link->resource->uri));
     if ((link->resource->properties & OC_DISCOVERABLE) == 0) {
-      EXPECT_EQ(std::end(links), links.find(std::string(kDynamicURI2)));
+      EXPECT_EQ(std::end(links), links.find(kDynamicURI2));
       continue;
     }
     ASSERT_NE(std::end(links), linkData);
@@ -546,7 +540,7 @@ TestDiscoveryWithServer::getBatchResources(const oc_endpoint_t *endpoint)
   oc_resources_iterate(
     kDeviceID, true, true, true, true,
     [](oc_resource_t *resource, void *data) {
-      if (std::string(kDynamicURIIgnored) == oc_string(resource->uri)) {
+      if (kDynamicURIIgnored == oc_string(resource->uri)) {
         // resource that returns OC_IGNORE shouldn't be in the batch payload
         return true;
       }

@@ -67,16 +67,15 @@ public:
 
 template<typename... Ts>
 oc::oc_collection_unique_ptr
-NewCollection(std::string_view name, std::string_view uri, size_t deviceID,
+NewCollection(const std::string &name, const std::string &uri, size_t deviceID,
               const Ts &...resourceTypes)
 {
-  oc_resource_t *res = oc_new_collection(name.data(), uri.data(),
+  oc_resource_t *res = oc_new_collection(name.c_str(), uri.c_str(),
                                          sizeof...(resourceTypes), deviceID);
   (oc_resource_bind_resource_type(res, resourceTypes), ...);
   return oc::oc_collection_unique_ptr(reinterpret_cast<oc_collection_t *>(res),
                                       &oc_collection_free);
 }
-
 }
 
 #endif // OC_COLLECTIONS

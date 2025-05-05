@@ -61,7 +61,8 @@ IsEqual(const oc_sec_doxm_t &lhs, const oc_sec_doxm_t &rhs,
     if (lhs.num_oxms != rhs.num_oxms) {
       return false;
     }
-    for (int i = 0; i < std::min<int>(lhs.num_oxms, OC_ARRAY_SIZE(lhs.oxms));
+    for (int i = 0;
+         i < std::min<int>(lhs.num_oxms, static_cast<int>(std::size(lhs.oxms)));
          ++i) {
       if (lhs.oxms[i] != rhs.oxms[i]) {
         return false;

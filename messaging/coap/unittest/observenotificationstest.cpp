@@ -59,13 +59,13 @@ using namespace oc::coap;
 
 static constexpr size_t kDeviceID{ 0 };
 
-constexpr std::string_view kDynamicURI1 = "/dyn/empty";
+static const std::string kDynamicURI1 = "/dyn/empty";
 
 #ifdef OC_COLLECTIONS
-constexpr std::string_view powerSwitchRT = "oic.d.power";
+static const std::string powerSwitchRT = "oic.d.power";
 
-constexpr std::string_view kCollectionURI1 = "/empty";
-constexpr std::string_view kColDynamicURI1 = "/empty/1";
+static const std::string kCollectionURI1 = "/empty";
+static const std::string kColDynamicURI1 = "/empty/1";
 #endif // OC_COLLECTIONS
 
 class TestObservationWithServer : public testing::Test {
@@ -161,9 +161,8 @@ TestObservationWithServer::addDynamicResources()
   oc::DynamicResourceHandler handlers1{};
   handlers1.onGet = onGetEmptyResource;
   auto dynResource1 = oc::makeDynamicResourceToAdd(
-    "Dynamic Resource 1", std::string(kDynamicURI1),
-    { "oic.d.dynamic", "oic.d.test" }, { OC_IF_BASELINE, OC_IF_R }, handlers1,
-    OC_OBSERVABLE);
+    "Dynamic Resource 1", kDynamicURI1, { "oic.d.dynamic", "oic.d.test" },
+    { OC_IF_BASELINE, OC_IF_R }, handlers1, OC_OBSERVABLE);
   oc_resource_t *res1 =
     oc::TestDevice::AddDynamicResource(dynResource1, kDeviceID);
   ASSERT_NE(nullptr, res1);
@@ -184,8 +183,8 @@ TestObservationWithServer::addCollections()
 #endif /* OC_SECURITY */
   oc_resource_set_discoverable(&col->res, true);
   oc_resource_set_observable(&col->res, true);
-  oc_collection_add_supported_rt(&col->res, powerSwitchRT.data());
-  oc_collection_add_mandatory_rt(&col->res, powerSwitchRT.data());
+  oc_collection_add_supported_rt(&col->res, powerSwitchRT.c_str());
+  oc_collection_add_mandatory_rt(&col->res, powerSwitchRT.c_str());
   ASSERT_TRUE(oc_add_collection_v1(&col->res));
   col.release();
 }
@@ -250,7 +249,7 @@ TEST_F(TestObservationWithServer, ObserveDeviceName)
 
 TEST_F(TestObservationWithServer, ObserveEmptyResource)
 {
-  auto *res = oc_ri_get_app_resource_by_uri(kDynamicURI1.data(),
+  auto *res = oc_ri_get_app_resource_by_uri(kDynamicURI1.c_str(),
                                             kDynamicURI1.size(), kDeviceID);
   ASSERT_NE(nullptr, res);
 
@@ -267,8 +266,7 @@ TEST_F(TestObservationWithServer, ObserveEmptyResource)
   std::thread workerThread([&ep, &client, &token]() {
     ASSERT_TRUE(client.Connect(&ep));
 
-    auto message =
-      message::tcp::RegisterObserve(token, std::string(kDynamicURI1), "", &ep);
+    auto message = message::tcp::RegisterObserve(token, kDynamicURI1, "", &ep);
     ASSERT_NE(nullptr, message.get());
     ASSERT_TRUE(client.Send(message->data, message->length));
 
@@ -303,7 +301,7 @@ TEST_F(TestObservationWithServer, ObserveEmptyResource)
 TEST_F(TestObservationWithServer, ObserveEmptyCollection)
 {
   oc_collection_t *col = oc_get_collection_by_uri(
-    kCollectionURI1.data(), kCollectionURI1.size(), kDeviceID);
+    kCollectionURI1.c_str(), kCollectionURI1.size(), kDeviceID);
   ASSERT_NE(nullptr, col);
 
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID, TCP, SECURED);
@@ -319,8 +317,8 @@ TEST_F(TestObservationWithServer, ObserveEmptyCollection)
   std::thread workerThread([&ep, &client, &token]() {
     ASSERT_TRUE(client.Connect(&ep));
 
-    auto message = message::tcp::RegisterObserve(
-      token, std::string(kCollectionURI1), "", &ep);
+    auto message =
+      message::tcp::RegisterObserve(token, kCollectionURI1, "", &ep);
     ASSERT_NE(nullptr, message.get());
     ASSERT_TRUE(client.Send(message->data, message->length));
 
@@ -346,7 +344,7 @@ TEST_F(TestObservationWithServer, ObserveEmptyCollection)
 TEST_F(TestObservationWithServer, ObserveCollectionOnDelete)
 {
   oc_collection_t *col = oc_get_collection_by_uri(
-    kCollectionURI1.data(), kCollectionURI1.size(), kDeviceID);
+    kCollectionURI1.c_str(), kCollectionURI1.size(), kDeviceID);
   ASSERT_NE(nullptr, col);
 
   auto epOpt = oc::TestDevice::GetEndpoint(kDeviceID, TCP, SECURED);
@@ -362,8 +360,8 @@ TEST_F(TestObservationWithServer, ObserveCollectionOnDelete)
   std::thread workerThread([&ep, &client, &token]() {
     ASSERT_TRUE(client.Connect(&ep));
 
-    auto message = message::tcp::RegisterObserve(
-      token, std::string(kCollectionURI1), "", &ep);
+    auto message =
+      message::tcp::RegisterObserve(token, kCollectionURI1, "", &ep);
     ASSERT_NE(nullptr, message.get());
     ASSERT_TRUE(client.Send(message->data, message->length));
 
@@ -380,9 +378,8 @@ TEST_F(TestObservationWithServer, ObserveCollectionOnDelete)
   oc::DynamicResourceHandler handlers{};
   handlers.onGet = onGetEmptyResource;
   auto dr = oc::makeDynamicResourceToAdd(
-    "Collection Resource 2", std::string(kColDynamicURI1),
-    { std::string(powerSwitchRT), "oic.d.test" }, { OC_IF_BASELINE, OC_IF_R },
-    handlers);
+    "Collection Resource 2", kColDynamicURI1, { powerSwitchRT, "oic.d.test" },
+    { OC_IF_BASELINE, OC_IF_R }, handlers);
   oc_resource_t *res = oc::TestDevice::AddDynamicResource(dr, kDeviceID);
   ASSERT_NE(nullptr, res);
   oc_link_t *link = oc_new_link(res);

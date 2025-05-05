@@ -77,11 +77,11 @@ static constexpr size_t kDeviceID1{ 0 };
 #ifdef OC_DYNAMIC_ALLOCATION
 static constexpr size_t kDeviceID2{ 1 };
 
-static constexpr std::string_view kDynamicResourceURI1{ "/dyn1" };
-static constexpr std::string_view kDynamicResourceURI2{ "/dyn2" };
+static const std::string kDynamicResourceURI1{ "/dyn1" };
+static const std::string kDynamicResourceURI2{ "/dyn2" };
 #ifdef OC_COLLECTIONS
-static constexpr std::string_view kCollectionURI = "/col";
-static constexpr std::string_view kColDynamicURI1 = "/col/discoverable";
+static const std::string kCollectionURI = "/col";
+static const std::string kColDynamicURI1 = "/col/discoverable";
 #endif /* OC_COLLECTIONS */
 #endif // OC_DYNAMIC_ALLOCATION
 
@@ -481,14 +481,14 @@ TestETagWithServer::addDynamicResource(
 void
 TestETagWithServer::addDynamicResources()
 {
-  ASSERT_NE(nullptr, addDynamicResource(
-                       "Dynamic Resource 1", std::string(kDynamicResourceURI1),
-                       { "oic.d.dynamic", "oic.d.test" },
-                       { OC_IF_BASELINE, OC_IF_R }, kDeviceID1));
-  ASSERT_NE(nullptr, addDynamicResource(
-                       "Dynamic Resource 2", std::string(kDynamicResourceURI2),
-                       { "oic.d.dynamic", "oic.d.test" },
-                       { OC_IF_BASELINE, OC_IF_RW }, kDeviceID2));
+  ASSERT_NE(nullptr,
+            addDynamicResource("Dynamic Resource 1", kDynamicResourceURI1,
+                               { "oic.d.dynamic", "oic.d.test" },
+                               { OC_IF_BASELINE, OC_IF_R }, kDeviceID1));
+  ASSERT_NE(nullptr,
+            addDynamicResource("Dynamic Resource 2", kDynamicResourceURI2,
+                               { "oic.d.dynamic", "oic.d.test" },
+                               { OC_IF_BASELINE, OC_IF_RW }, kDeviceID2));
 }
 
 #ifdef OC_COLLECTIONS
@@ -496,22 +496,21 @@ TestETagWithServer::addDynamicResources()
 void
 TestETagWithServer::addCollections()
 {
-  constexpr std::string_view powerSwitchRT = "oic.d.power";
+  const std::string powerSwitchRT = "oic.d.power";
 
   auto col = oc::NewCollection("col", kCollectionURI, kDeviceID1, "oic.wk.col");
   ASSERT_NE(nullptr, col);
   oc_resource_set_discoverable(&col->res, true);
-  oc_collection_add_supported_rt(&col->res, powerSwitchRT.data());
-  oc_collection_add_mandatory_rt(&col->res, powerSwitchRT.data());
+  oc_collection_add_supported_rt(&col->res, powerSwitchRT.c_str());
+  oc_collection_add_mandatory_rt(&col->res, powerSwitchRT.c_str());
   ASSERT_TRUE(oc_add_collection_v1(&col->res));
 
   oc::DynamicResourceHandler handlers1{};
   handlers1.onGet = onRequest;
 
   auto dr1 = oc::makeDynamicResourceToAdd(
-    "Collection Resource 1", std::string(kColDynamicURI1),
-    { std::string(powerSwitchRT), "oic.d.test" }, { OC_IF_BASELINE, OC_IF_R },
-    handlers1);
+    "Collection Resource 1", kColDynamicURI1, { powerSwitchRT, "oic.d.test" },
+    { OC_IF_BASELINE, OC_IF_R }, handlers1);
   oc_resource_t *res1 = oc::TestDevice::AddDynamicResource(dr1, kDeviceID1);
   ASSERT_NE(nullptr, res1);
   oc_link_t *link1 = oc_new_link(res1);
@@ -1052,7 +1051,7 @@ TEST_F(TestETagWithServer, GetCRC64Changed)
 
 TEST_F(TestETagWithServer, GetCRC64Collection)
 {
-  auto *col = oc_get_collection_by_uri(kCollectionURI.data(),
+  auto *col = oc_get_collection_by_uri(kCollectionURI.c_str(),
                                        kCollectionURI.length(), kDeviceID1);
   ASSERT_NE(nullptr, col);
 
@@ -1061,7 +1060,7 @@ TEST_F(TestETagWithServer, GetCRC64Collection)
 
   uint64_t crc64_2{};
   auto *link =
-    oc_get_link_by_uri(col, kColDynamicURI1.data(), kColDynamicURI1.length());
+    oc_get_link_by_uri(col, kColDynamicURI1.c_str(), kColDynamicURI1.length());
   ASSERT_NE(nullptr, link);
 
   ASSERT_TRUE(

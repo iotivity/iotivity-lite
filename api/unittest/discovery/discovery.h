@@ -152,16 +152,16 @@ public:
 
 constexpr size_t kDeviceID{ 0 };
 
-constexpr std::string_view kDynamicURI1 = "/dyn/discoverable";
-constexpr std::string_view kDynamicURI2 = "/dyn/undiscoverable";
-constexpr std::string_view kDynamicURI3 = "/dyn/empty";
-constexpr std::string_view kDynamicURIIgnored = "/dyn/ignored";
+static const std::string kDynamicURI1 = "/dyn/discoverable";
+static const std::string kDynamicURI2 = "/dyn/undiscoverable";
+static const std::string kDynamicURI3 = "/dyn/empty";
+static const std::string kDynamicURIIgnored = "/dyn/ignored";
 
 #ifdef OC_COLLECTIONS
 
-constexpr std::string_view kCollectionURI = "/col";
-constexpr std::string_view kColDynamicURI1 = "/col/discoverable";
-constexpr std::string_view kColDynamicURI2 = "/col/undiscoverable";
-constexpr std::string_view kColDynamicURI3 = "/col/empty";
+static const std::string kCollectionURI = "/col";
+static const std::string kColDynamicURI1 = "/col/discoverable";
+static const std::string kColDynamicURI2 = "/col/undiscoverable";
+static const std::string kColDynamicURI3 = "/col/empty";
 
 #endif /* OC_COLLECTIONS */
