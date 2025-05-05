@@ -140,6 +140,10 @@ if awk "BEGIN {exit !(${GCOVR_VERSION} >= 5.0)}"; then
 	pattern+=")\(.*"
 	GCOVR_OPTS+=("--exclude-lines-by-pattern" "${pattern}")
 fi
+if awk "BEGIN {exit !(${GCOVR_VERSION} >= 6.0)}"; then
+	echo "gcovr v6.0+ detected"
+	GCOVR_OPTS+=("--merge-mode-functions" "separate")
+fi
 
 gcovr --verbose --root .. \
 	--exclude "../deps/.*" \

@@ -489,7 +489,17 @@ if(WIN32 AND (MSVC OR OC_COMPILER_IS_CLANG))
 endif()
 
 if(OC_COVERAGE_ENABLED)
-    list(APPEND PRIVATE_COMPILE_OPTIONS "--coverage")
+    set(COVERAGE_COMPILE_OPTIONS "--coverage")
+    set(COVERAGE_LINK_OPTIONS "--coverage")
+    if(OC_COMPILER_IS_GCC)
+        set(COVERAGE_COMPILE_OPTIONS -ftest-coverage -fprofile-arcs -fprofile-values -fprofile-abs-path)
+        check_c_compiler_flag(-fprofile-update=atomic HAVE_ATOMIC_PROFILE_UPDATE)
+        if(HAVE_ATOMIC_PROFILE_UPDATE)
+            list(APPEND COVERAGE_COMPILE_OPTIONS -fprofile-update=atomic)
+        endif()
+        set(COVERAGE_LINK_OPTIONS -lgcov -fprofile-arcs)
+    endif()
+    list(APPEND PRIVATE_COMPILE_OPTIONS ${COVERAGE_COMPILE_OPTIONS})
 endif()
 
 # ####### Gather source files ########
@@ -628,7 +638,7 @@ else()
 endif()
 
 if(OC_COVERAGE_ENABLED)
-    list(APPEND PRIVATE_LINK_LIBS "--coverage")
+    list(APPEND PRIVATE_LINK_LIBS ${COVERAGE_LINK_OPTIONS})
 endif()
 
 # ####### Object libraries ########
@@ -881,8 +891,8 @@ if(OC_SECURITY_ENABLED)
 endif()
 
 if(OC_COVERAGE_ENABLED)
-    target_compile_options(client-server-static PRIVATE "--coverage")
-    target_link_libraries(client-server-static PRIVATE "--coverage")
+    target_compile_options(client-server-static PRIVATE ${COVERAGE_COMPILE_OPTIONS})
+    target_link_libraries(client-server-static PRIVATE ${COVERAGE_LINK_OPTIONS})
 endif()
 
 set_target_properties(client-server-static PROPERTIES
