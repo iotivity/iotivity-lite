@@ -365,23 +365,23 @@ TEST_F(TestCollections, GetLinkByURI)
 
 namespace {
 
-constexpr std::string_view switchRT = "test.r.switch";
+const std::string switchRT = "test.r.switch";
 constexpr auto switchIF =
   static_cast<oc_interface_mask_t>(OC_IF_BASELINE | OC_IF_R);
-constexpr std::string_view colRT = "test.r.col";
+const std::string colRT = "test.r.col";
 
-constexpr std::string_view col1Name = "Switch collection";
-constexpr std::string_view col1URI = "/switches";
+const std::string col1Name = "Switch collection";
+const std::string col1URI = "/switches";
 
-constexpr std::string_view switch1Name{ "test switch" };
-constexpr std::string_view switch1URI{ "/switches/1" };
+const std::string switch1Name{ "test switch" };
+const std::string switch1URI{ "/switches/1" };
 constexpr std::array<double, 3> switch1Pos = { 0.34, 0.5, 0.8 };
 
-constexpr std::string_view col2Name = "Inner collection";
-constexpr std::string_view col2URI = "/switches/inner";
+const std::string col2Name = "Inner collection";
+const std::string col2URI = "/switches/inner";
 
-constexpr std::string_view switch2Name{ "inner switch" };
-constexpr std::string_view switch2URI{ "/switches/inner/1" };
+const std::string switch2Name{ "inner switch" };
+const std::string switch2URI{ "/switches/inner/1" };
 
 struct SwitchData
 {
@@ -422,15 +422,16 @@ public:
     oc_collections_free_all();
   }
 
-  static oc_resource_t *makeSwitch(std::string_view name, std::string_view uri,
-                                   size_t device,
+  static oc_resource_t *makeSwitch(const std::string &name,
+                                   const std::string &uri, size_t device,
                                    oc_request_callback_t callback,
                                    SwitchData *switchData);
-  static oc_resource_t *makeSwitch(std::string_view name, std::string_view uri,
-                                   size_t device, SwitchData *switchData);
+  static oc_resource_t *makeSwitch(const std::string &name,
+                                   const std::string &uri, size_t device,
+                                   SwitchData *switchData);
 
   static oc::oc_collection_unique_ptr makeSwitchCollection(
-    std::string_view name, std::string_view uri, std::string_view rt,
+    const std::string &name, const std::string &uri, const std::string &rt,
     size_t device, CollectionData *colData);
 
   static void makeTestResources();
@@ -464,8 +465,8 @@ CollectionData TestCollectionsWithServer::col2Data{};
 void
 TestCollectionsWithServer::makeTestResources()
 {
-  auto col1 = makeSwitchCollection(col1Name.data(), col1URI.data(),
-                                   colRT.data(), kDeviceID, &col1Data);
+  auto col1 =
+    makeSwitchCollection(col1Name, col1URI, colRT, kDeviceID, &col1Data);
   ASSERT_NE(nullptr, col1);
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
   ASSERT_TRUE(oc::SetAccessInRFOTM(&col1->res, true, OC_PERM_RETRIEVE));
@@ -488,8 +489,8 @@ TestCollectionsWithServer::makeTestResources()
   EXPECT_TRUE(oc_link_add_link_param(link1, "hidden", "true"));
   oc_collection_add_link(&col1->res, link1);
 
-  auto col2 = makeSwitchCollection(col2Name.data(), col2URI.data(),
-                                   colRT.data(), kDeviceID, &col2Data);
+  auto col2 =
+    makeSwitchCollection(col2Name, col2URI, colRT, kDeviceID, &col2Data);
   ASSERT_NE(nullptr, col2);
 #ifdef OC_HAS_FEATURE_RESOURCE_ACCESS_IN_RFOTM
   ASSERT_TRUE(oc::SetAccessInRFOTM(&col2->res, true, OC_PERM_RETRIEVE));
@@ -515,9 +516,9 @@ TestCollectionsWithServer::makeTestResources()
 }
 
 oc::oc_collection_unique_ptr
-TestCollectionsWithServer::makeSwitchCollection(std::string_view name,
-                                                std::string_view uri,
-                                                std::string_view rt,
+TestCollectionsWithServer::makeSwitchCollection(const std::string &name,
+                                                const std::string &uri,
+                                                const std::string &rt,
                                                 size_t device,
                                                 CollectionData *colData)
 {
@@ -546,30 +547,31 @@ TestCollectionsWithServer::makeSwitchCollection(std::string_view name,
     oc_rep_set_int(root, power, cData->power);
   };
 
-  auto col = oc::NewCollection(name.data(), uri.data(), device, rt.data());
+  auto col = oc::NewCollection(name, uri, device, rt.c_str());
   if (!col) {
     return oc::oc_collection_unique_ptr(nullptr, nullptr);
   }
 
-  oc_collection_add_supported_rt(&col->res, switchRT.data());
-  oc_collection_add_mandatory_rt(&col->res, switchRT.data());
+  oc_collection_add_supported_rt(&col->res, switchRT.c_str());
+  oc_collection_add_mandatory_rt(&col->res, switchRT.c_str());
   oc_resource_set_properties_cbs(&col->res, getProps, colData, setProps,
                                  colData);
   return col;
 }
 
 oc_resource_t *
-TestCollectionsWithServer::makeSwitch(std::string_view name,
-                                      std::string_view uri, size_t device,
+TestCollectionsWithServer::makeSwitch(const std::string &name,
+                                      const std::string &uri, size_t device,
                                       oc_request_callback_t callback,
                                       SwitchData *switchData)
 {
-  oc_resource_t *bswitch = oc_new_resource(name.data(), uri.data(), 1, device);
+  oc_resource_t *bswitch =
+    oc_new_resource(name.c_str(), uri.c_str(), 1, device);
   if (bswitch == nullptr) {
     return nullptr;
   }
 
-  oc_resource_bind_resource_type(bswitch, switchRT.data());
+  oc_resource_bind_resource_type(bswitch, switchRT.c_str());
   oc_resource_bind_resource_interface(bswitch, switchIF);
   oc_resource_set_default_interface(bswitch, OC_IF_R);
   oc_resource_set_discoverable(bswitch, true);
@@ -579,8 +581,8 @@ TestCollectionsWithServer::makeSwitch(std::string_view name,
 }
 
 oc_resource_t *
-TestCollectionsWithServer::makeSwitch(std::string_view name,
-                                      std::string_view uri, size_t device,
+TestCollectionsWithServer::makeSwitch(const std::string &name,
+                                      const std::string &uri, size_t device,
                                       SwitchData *switchData)
 {
   auto getSwitch = [](oc_request_t *request, oc_interface_mask_t iface_mask,
@@ -776,8 +778,7 @@ TEST_F(TestCollectionsWithServer, GetByURI)
 
 TEST_F(TestCollectionsWithServer, GetBatchETag)
 {
-  auto col = makeSwitchCollection(col1Name.data(), col1URI.data(), colRT.data(),
-                                  kDeviceID, &col1Data);
+  auto col = makeSwitchCollection(col1Name, col1URI, colRT, kDeviceID, &col1Data);
   ASSERT_NE(nullptr, col);
   ASSERT_TRUE(oc_add_collection_v1(&col->res));
 
@@ -809,8 +810,8 @@ TEST_F(TestCollectionsWithServer, GetBatchETag)
 
 TEST_F(TestCollectionsWithServer, GetETagAfterLinkAddOrRemove)
 {
-  auto col = makeSwitchCollection(col1Name.data(), col1URI.data(), colRT.data(),
-                                  kDeviceID, &col1Data);
+  auto col =
+    makeSwitchCollection(col1Name, col1URI, colRT, kDeviceID, &col1Data);
   ASSERT_NE(nullptr, col);
   ASSERT_TRUE(oc_add_collection_v1(&col->res));
   uint64_t etag1 = col->res.etag;
@@ -851,10 +852,10 @@ static void
 checkLinks(oc::Collection::Links &links)
 {
   ASSERT_EQ(2, links.size());
-  const oc::LinkData &switchLink = links[switch1URI.data()];
-  EXPECT_STREQ(switch1URI.data(), switchLink.href.c_str());
+  const oc::LinkData &switchLink = links[switch1URI.c_str()];
+  EXPECT_STREQ(switch1URI.c_str(), switchLink.href.c_str());
   ASSERT_EQ(1, switchLink.rts.size());
-  EXPECT_STREQ(switchRT.data(), switchLink.rts[0].c_str());
+  EXPECT_STREQ(switchRT.c_str(), switchLink.rts[0].c_str());
   ASSERT_EQ(1, switchLink.rels.size());
   EXPECT_STREQ("hosts", switchLink.rels[0].c_str());
   EXPECT_NE(0, switchLink.ins);
@@ -878,8 +879,8 @@ checkLinks(oc::Collection::Links &links)
   EXPECT_EQ(switch1Pos[2], switchLink.tag_pos_rel[2]);
   EXPECT_FALSE(switchLink.eps.empty());
 
-  const oc::LinkData &colLink = links[col2URI.data()];
-  EXPECT_STREQ(col2URI.data(), colLink.href.c_str());
+  const oc::LinkData &colLink = links[col2URI.c_str()];
+  EXPECT_STREQ(col2URI.c_str(), colLink.href.c_str());
 }
 
 TEST_F(TestCollectionsWithServer, GetRequest_Baseline)
@@ -887,7 +888,7 @@ TEST_F(TestCollectionsWithServer, GetRequest_Baseline)
   makeTestResources();
 
   auto col1 =
-    oc_get_collection_by_uri(col1URI.data(), col1URI.length(), kDeviceID);
+    oc_get_collection_by_uri(col1URI.c_str(), col1URI.length(), kDeviceID);
   ASSERT_NE(nullptr, col1);
 
   // get insecure connection to the testing device
@@ -915,15 +916,15 @@ TEST_F(TestCollectionsWithServer, GetRequest_Baseline)
                                      get_handler, HIGH_QOS, &data));
   oc::TestDevice::PoolEventsMsV1(timeout, true);
 
-  EXPECT_STREQ(col1Name.data(), data.baseline->name.c_str());
+  EXPECT_STREQ(col1Name.c_str(), data.baseline->name.c_str());
   ASSERT_EQ(1, data.baseline->rts.size());
-  EXPECT_STREQ(colRT.data(), data.baseline->rts[0].c_str());
+  EXPECT_STREQ(colRT.c_str(), data.baseline->rts[0].c_str());
   ASSERT_EQ(3, data.baseline->ifs.size());
 
   ASSERT_EQ(1, data.rts.size());
-  EXPECT_STREQ(switchRT.data(), data.rts[0].c_str());
+  EXPECT_STREQ(switchRT.c_str(), data.rts[0].c_str());
   ASSERT_EQ(1, data.rts_m.size());
-  EXPECT_STREQ(switchRT.data(), data.rts_m[0].c_str());
+  EXPECT_STREQ(switchRT.c_str(), data.rts_m[0].c_str());
 
   checkLinks(data.links);
 }
@@ -933,7 +934,7 @@ TEST_F(TestCollectionsWithServer, GetRequest_LinkedList)
   makeTestResources();
 
   auto col1 =
-    oc_get_collection_by_uri(col1URI.data(), col1URI.length(), kDeviceID);
+    oc_get_collection_by_uri(col1URI.c_str(), col1URI.length(), kDeviceID);
   ASSERT_NE(nullptr, col1);
 
   // get insecure connection to the testing device
@@ -966,7 +967,7 @@ TEST_F(TestCollectionsWithServer, GetRequest_Batch)
   makeTestResources();
 
   auto col1 =
-    oc_get_collection_by_uri(col1URI.data(), col1URI.length(), kDeviceID);
+    oc_get_collection_by_uri(col1URI.c_str(), col1URI.length(), kDeviceID);
   ASSERT_NE(nullptr, col1);
 
   // get insecure connection to the testing device

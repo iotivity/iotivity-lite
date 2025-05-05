@@ -437,7 +437,7 @@ TEST_F(TestDiscoveryWithServer, ObserveBatchSkipEmptyResourceChange)
   obd.observe = 0;
   obd.batch.clear();
 
-  auto *res = oc_ri_get_app_resource_by_uri(kDynamicURI3.data(),
+  auto *res = oc_ri_get_app_resource_by_uri(kDynamicURI3.c_str(),
                                             kDynamicURI3.size(), kDeviceID);
   ASSERT_NE(nullptr, res);
   // notification with empty payload should be ignored
@@ -471,7 +471,7 @@ TEST_F(TestDiscoveryWithServer, ObserveBatchSkipIgnoreResourceChange)
   obd.batch.clear();
 
   auto *res = oc_ri_get_app_resource_by_uri(
-    kDynamicURIIgnored.data(), kDynamicURIIgnored.size(), kDeviceID);
+    kDynamicURIIgnored.c_str(), kDynamicURIIgnored.size(), kDeviceID);
   ASSERT_NE(nullptr, res);
   // notification with payload from resource that returns OC_IGNORE should be
   // ignored

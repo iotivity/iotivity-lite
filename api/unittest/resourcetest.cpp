@@ -45,17 +45,17 @@
 using namespace std::chrono_literals;
 
 static constexpr size_t kDevice1ID{ 0 };
-static constexpr std::string_view kDevice1Name{ "Test Device 1" };
+static const std::string kDevice1Name{ "Test Device 1" };
 
 #if defined(OC_SERVER) && defined(OC_DYNAMIC_ALLOCATION)
 static constexpr size_t kDevice2ID{ 1 };
-static constexpr std::string_view kDevice2Name{ "Test Device 2" };
+static const std::string kDevice2Name{ "Test Device 2" };
 
-constexpr std::string_view kDynamicURI1 = "/dyn/discoverable";
-constexpr std::string_view kDynamicURI2 = "/dyn/undiscoverable";
-constexpr std::string_view kDynamicIgnoredURI = "/dyn/ignored";
-constexpr std::string_view kCollectionURI = "/col";
-constexpr std::string_view kColDynamicURI1 = "/col/discoverable";
+static const std::string kDynamicURI1 = "/dyn/discoverable";
+static const std::string kDynamicURI2 = "/dyn/undiscoverable";
+static const std::string kDynamicIgnoredURI = "/dyn/ignored";
+static const std::string kCollectionURI = "/col";
+static const std::string kColDynamicURI1 = "/col/discoverable";
 #endif /* OC_SERVER && OC_DYNAMIC_ALLOCATION */
 
 class TestResource : public testing::Test {};
@@ -268,19 +268,19 @@ public:
     oc::TestDevice::SetServerDevices({
       {
         /*rt=*/"oic.d.test1",
-        /*name=*/std::string(kDevice1Name),
+        /*name=*/kDevice1Name,
         /*spec_version=*/"ocf.1.0.0",
         /*data_model_version=*/"ocf.res.1.0.0",
         /*uri=*/"/oic/d",
       },
 #if defined(OC_SERVER) && defined(OC_DYNAMIC_ALLOCATION)
-        {
-          /*rt=*/"oic.d.test2",
-          /*name=*/std::string(kDevice2Name),
-          /*spec_version=*/"ocf.1.0.0",
-          /*data_model_version=*/"ocf.res.1.0.0",
-          /*uri=*/"/oic/d",
-        },
+      {
+        /*rt=*/"oic.d.test2",
+        /*name=*/kDevice2Name,
+        /*spec_version=*/"ocf.1.0.0",
+        /*data_model_version=*/"ocf.res.1.0.0",
+        /*uri=*/"/oic/d",
+      },
 #endif /* OC_SERVER && OC_DYNAMIC_ALLOCATION */
     });
     EXPECT_TRUE(oc::TestDevice::StartServer());
@@ -359,29 +359,26 @@ void
 TestResourceWithDevice::addDynamicResources()
 {
   oc::DynamicResourceHandler handlers1{};
-  m_dynamic_resources[std::string(kDynamicURI1)] = { 42 };
+  m_dynamic_resources[kDynamicURI1] = { 42 };
   handlers1.onGet = onGetDynamicResource;
-  handlers1.onGetData = &m_dynamic_resources[std::string(kDynamicURI1)];
+  handlers1.onGetData = &m_dynamic_resources[kDynamicURI1];
 
   oc::DynamicResourceHandler handlers2{};
-  m_dynamic_resources[std::string(kDynamicURI2)] = { 1337 };
+  m_dynamic_resources[kDynamicURI2] = { 1337 };
   handlers2.onGet = onGetDynamicResource;
-  handlers2.onGetData = &m_dynamic_resources[std::string(kDynamicURI2)];
+  handlers2.onGetData = &m_dynamic_resources[kDynamicURI2];
 
   oc::DynamicResourceHandler handlers3{};
   handlers3.onGet = onGetIgnoredDynamicResource;
 
   std::vector<oc::DynamicResourceToAdd> dynResources = {
-    oc::makeDynamicResourceToAdd("Dynamic Resource 1",
-                                 std::string(kDynamicURI1),
+    oc::makeDynamicResourceToAdd("Dynamic Resource 1", kDynamicURI1,
                                  { "oic.d.discoverable", "oic.d.test" },
                                  { OC_IF_BASELINE, OC_IF_R }, handlers1),
-    oc::makeDynamicResourceToAdd("Dynamic Resource 2",
-                                 std::string(kDynamicURI2),
+    oc::makeDynamicResourceToAdd("Dynamic Resource 2", kDynamicURI2,
                                  { "oic.d.undiscoverable", "oic.d.test" },
                                  { OC_IF_BASELINE, OC_IF_R }, handlers2, 0),
-    oc::makeDynamicResourceToAdd("Dynamic Resource 3",
-                                 std::string(kDynamicIgnoredURI),
+    oc::makeDynamicResourceToAdd("Dynamic Resource 3", kDynamicIgnoredURI,
                                  { "oic.d.ignored", "oic.d.test" },
                                  { OC_IF_BASELINE, OC_IF_R }, handlers3),
   };
@@ -399,24 +396,23 @@ TestResourceWithDevice::addDynamicResources()
 void
 TestResourceWithDevice::addCollections()
 {
-  constexpr std::string_view powerSwitchRT = "oic.d.power";
+  const std::string powerSwitchRT = "oic.d.power";
 
   auto col = oc::NewCollection("col", kCollectionURI, kDevice1ID, "oic.wk.col");
   ASSERT_NE(nullptr, col);
   oc_resource_set_discoverable(&col->res, true);
-  oc_collection_add_supported_rt(&col->res, powerSwitchRT.data());
-  oc_collection_add_mandatory_rt(&col->res, powerSwitchRT.data());
+  oc_collection_add_supported_rt(&col->res, powerSwitchRT.c_str());
+  oc_collection_add_mandatory_rt(&col->res, powerSwitchRT.c_str());
   ASSERT_TRUE(oc_add_collection_v1(&col->res));
 
   oc::DynamicResourceHandler handlers1{};
-  m_dynamic_resources[std::string(kColDynamicURI1)] = { 404 };
+  m_dynamic_resources[kColDynamicURI1] = { 404 };
   handlers1.onGet = onGetDynamicResource;
-  handlers1.onGetData = &m_dynamic_resources[std::string(kColDynamicURI1)];
+  handlers1.onGetData = &m_dynamic_resources[kColDynamicURI1];
 
   auto dr1 = oc::makeDynamicResourceToAdd(
-    "Collection Resource 1", std::string(kColDynamicURI1),
-    { std::string(powerSwitchRT), "oic.d.test" }, { OC_IF_BASELINE, OC_IF_R },
-    handlers1);
+    "Collection Resource 1", kColDynamicURI1, { powerSwitchRT, "oic.d.test" },
+    { OC_IF_BASELINE, OC_IF_R }, handlers1);
   oc_resource_t *res1 = oc::TestDevice::AddDynamicResource(dr1, kDevice1ID);
   ASSERT_NE(nullptr, res1);
   oc_link_t *link1 = oc_new_link(res1);
@@ -607,7 +603,7 @@ TEST_F(TestResourceWithDevice, GetRequestIgnoredResource)
   };
 
   auto timeout = 1s;
-  EXPECT_TRUE(oc_do_get_with_timeout(kDynamicIgnoredURI.data(), &ep, nullptr,
+  EXPECT_TRUE(oc_do_get_with_timeout(kDynamicIgnoredURI.c_str(), &ep, nullptr,
                                      timeout.count(), get_handler, LOW_QOS,
                                      &invoked));
   oc::TestDevice::PoolEventsMsV1(timeout, true);
@@ -643,7 +639,7 @@ checkBaselineProperties(const oc_rep_t *rep)
   char *str = nullptr;
   size_t size = 0;
   EXPECT_TRUE(oc_rep_get_string(rep, "n", &str, &size));
-  EXPECT_STREQ(kDevice1Name.data(), str);
+  EXPECT_STREQ(kDevice1Name.c_str(), str);
 
   oc_string_array_t arr{};
   size = 0;

@@ -679,7 +679,7 @@ TEST_F(TestMessagingBlockwise, BlockwiseRequest_FailInvalidSize)
 
 static constexpr size_t kDeviceID = 0;
 static constexpr size_t kAppDataMaxSize = 16384;
-static constexpr std::string_view kResourceURI = "/dyn";
+static const std::string kResourceURI = "/dyn";
 
 #if defined(OC_DYNAMIC_ALLOCATION) && !defined(OC_APP_DATA_BUFFER_SIZE)
 static const long g_max_app_data_size{ oc_get_max_app_data_size() };
@@ -708,10 +708,9 @@ public:
     handlers.onPost = onPost;
     handlers.onPostData = &resourceData;
     oc_resource_t *res = oc::TestDevice::AddDynamicResource(
-      oc::makeDynamicResourceToAdd("Dynamic Device 1", kResourceURI.data(),
-                                   { "oic.d.dynamic", "oic.d.test" },
-                                   { OC_IF_BASELINE, OC_IF_RW }, handlers,
-                                   OC_SECURE),
+      oc::makeDynamicResourceToAdd(
+        "Dynamic Device 1", kResourceURI, { "oic.d.dynamic", "oic.d.test" },
+        { OC_IF_BASELINE, OC_IF_RW }, handlers, OC_SECURE),
       kDeviceID);
     ASSERT_NE(res, nullptr);
 
@@ -813,7 +812,7 @@ TEST_F(TestMessagingBlockwiseWithServer, GetLargeResource)
 
   bool invoked = false;
   auto timeout = 1s;
-  ASSERT_TRUE(oc_do_request(OC_GET, kResourceURI.data(), &ep, nullptr,
+  ASSERT_TRUE(oc_do_request(OC_GET, kResourceURI.c_str(), &ep, nullptr,
                             timeout.count(), get_handler, LOW_QOS, &invoked,
                             configure_packet, nullptr));
   oc::TestDevice::PoolEventsMsV1(timeout, true);
@@ -837,7 +836,7 @@ TEST_F(TestMessagingBlockwiseWithServer, PostLargeResource)
     coap_options_set_block1(packet, 0, 1, static_cast<uint16_t>(OC_BLOCK_SIZE),
                             0);
   };
-  ASSERT_TRUE(oc_init_async_request(OC_POST, kResourceURI.data(), &ep, nullptr,
+  ASSERT_TRUE(oc_init_async_request(OC_POST, kResourceURI.c_str(), &ep, nullptr,
                                     post_handler, HIGH_QOS, &invoked,
                                     configure_packet, nullptr));
   oc_rep_start_root_object();
