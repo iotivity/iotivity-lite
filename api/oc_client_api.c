@@ -444,8 +444,6 @@ oc_do_request(oc_method_t method, const char *uri,
               coap_configure_request_fn_t configure_request,
               const void *configure_request_data)
 {
-  assert(uri != NULL && uri[0] == '/');
-  assert(handler != NULL);
   oc_client_handler_t client_handler = {
     .response = handler,
     .discovery = NULL,
