@@ -23,7 +23,7 @@ jobs:
           - build_args: -DPLGD_DEV_TIME_ENABLED=ON -DPLGD_DEV_DEVICE_PROVISIONING_ENABLED=ON
           - build_args: -DOC_DYNAMIC_ALLOCATION_ENABLED=OFF -DOC_PUSH_ENABLED=OFF -DOC_JSON_ENCODER_ENABLED=OFF -DOC_DEBUG_ENABLED=ON
 
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout repository
@@ -31,17 +31,17 @@ jobs:
         with:
           submodules: "true"
 
-      - name: Install clang-17 and clang-tidy-17
+      - name: Install clang-19 and clang-tidy-19
         run: |
           sudo apt-get update -y
           sudo apt-get install curl
           curl -sL https://apt.llvm.org/llvm.sh > llvm.sh
           chmod u+x llvm.sh
-          sudo ./llvm.sh 17
-          sudo apt-get install clang-17 clang-tidy-17
-          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-17 200
-          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-17 200
-          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-17 200
+          sudo ./llvm.sh 19
+          sudo apt-get install clang-19 clang-tidy-19
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-19 200
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-19 200
+          sudo update-alternatives --install /usr/bin/clang-tidy clang-tidy /usr/bin/clang-tidy-19 200
           update-alternatives --verbose --display clang
 
       - name: Build with clang and analyze with clang-tidy

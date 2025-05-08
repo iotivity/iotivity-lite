@@ -10,7 +10,7 @@ list(FILTER iotivity_allsource EXCLUDE REGEX "port/esp32/esp-idf/")
 # Find clang-format
 find_program(
 	CLANG_FORMAT_EXE
-	NAMES "clang-format-17"
+	NAMES "clang-format-19"
 		"clang-format"
 	DOC "Path to clang-format executable"
 )
@@ -27,8 +27,8 @@ execute_process(
 
 # Version check
 message(STATUS ${CLANG_VERSION})
-if(NOT ${CLANG_VERSION} MATCHES "version 17\.0")
-	message(FATAL_ERROR "clang-format must be version 17.0")
+if(NOT ${CLANG_VERSION} MATCHES "version 19\.")
+	message(FATAL_ERROR "clang-format must be version 19+")
 endif()
 
 # Run clang format

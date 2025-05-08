@@ -30,8 +30,10 @@ extern "C" {
     .get_buffer_size = &cbor_encoder_get_buffer_size,                          \
     .get_extra_bytes_needed = &cbor_encoder_get_extra_bytes_needed,            \
                                                                                \
-    .encode_null = &cbor_encode_null, .encode_boolean = &cbor_encode_boolean,  \
-    .encode_int = &cbor_encode_int, .encode_uint = &cbor_encode_uint,          \
+    .encode_null = &cbor_encode_null,                                          \
+    .encode_boolean = &cbor_encode_boolean,                                    \
+    .encode_int = &cbor_encode_int,                                            \
+    .encode_uint = &cbor_encode_uint,                                          \
     .encode_floating_point = &cbor_encode_floating_point,                      \
     .encode_double = &cbor_encode_double,                                      \
     .encode_text_string = &cbor_encode_text_string,                            \

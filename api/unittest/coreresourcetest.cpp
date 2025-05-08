@@ -244,13 +244,13 @@ public:
         /*uri=*/"/oic/d",
       },
 #if defined(OC_SERVER) && defined(OC_DYNAMIC_ALLOCATION)
-        {
-          /*rt=*/OCF_D_RT,
-          /*name=*/std::string(kDevice2Name),
-          /*spec_version=*/"ocf.1.0.0",
-          /*data_model_version=*/"ocf.res.1.0.0",
-          /*uri=*/"/oic/d",
-        },
+      {
+        /*rt=*/OCF_D_RT,
+        /*name=*/std::string(kDevice2Name),
+        /*spec_version=*/"ocf.1.0.0",
+        /*data_model_version=*/"ocf.res.1.0.0",
+        /*uri=*/"/oic/d",
+      },
 #endif /* OC_SERVER && OC_DYNAMIC_ALLOCATION */
     });
     EXPECT_TRUE(oc::TestDevice::StartServer());

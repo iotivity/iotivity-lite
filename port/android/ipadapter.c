@@ -493,7 +493,7 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, uint16_t port,
                 ep.flags = IPV6;
               }
           } else if (attr->rta_type == IFA_FLAGS) {
-            if (*(uint32_t *)(RTA_DATA(attr)) & IFA_F_TEMPORARY) {
+            if (*(uint32_t *)(RTA_DATA(attr))&IFA_F_TEMPORARY) {
               include = false;
             }
           }

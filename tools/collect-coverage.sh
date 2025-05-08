@@ -99,12 +99,23 @@ echo "Detected compiler: ${COMPILER}"
 
 GCOV=gcov
 if [[ "${COMPILER}" == "clang" ]]; then
-	if which llvm-cov 2>/dev/null 1>&2; then
-		GCOV="llvm-cov gcov"
+	clang --version
+	CLANG_VERSION=$(clang --version | awk 'NR==1 { split($4, v, "."); print v[1] }')
+	if ! which llvm-cov-${CLANG_VERSION} 2>/dev/null 1>&2; then
+		echo "llvm-cov-${CLANG_VERSION} not installed" >&2
+		exit 1
 	fi
-	if which llvm-cov-10 2>/dev/null 1>&2; then
-		GCOV="llvm-cov-10 gcov"
+	GCOV="llvm-cov-${CLANG_VERSION} gcov"
+fi
+
+if [[ "${COMPILER}" == "gcc" ]]; then
+	gcc --version
+	GCC_VERSION=$(gcc --version | awk 'NR==1 { split($4, v, "."); print v[1] }')
+	if ! which gcov-${GCC_VERSION} 2>/dev/null 1>&2; then
+		echo "gcov-${GCC_VERSION} not installed" >&2
+		exit 1
 	fi
+	GCOV="gcov-${GCC_VERSION}"
 fi
 
 if ! which gcovr 2>/dev/null 1>&2; then
@@ -128,6 +139,10 @@ if awk "BEGIN {exit !(${GCOVR_VERSION} >= 5.0)}"; then
 	pattern+="|OC_CLOUD_ERR|OC_CLOUD_WRN|OC_CLOUD_NOTE|OC_CLOUD_INFO|OC_CLOUD_DBG|OC_CLOUD_TRACE"
 	pattern+=")\(.*"
 	GCOVR_OPTS+=("--exclude-lines-by-pattern" "${pattern}")
+fi
+if awk "BEGIN {exit !(${GCOVR_VERSION} >= 6.0)}"; then
+	echo "gcovr v6.0+ detected"
+	GCOVR_OPTS+=("--merge-mode-functions" "separate")
 fi
 
 gcovr --verbose --root .. \

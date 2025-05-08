@@ -44,10 +44,7 @@
 #define OC_MEMORY_KEY_NAME_SIZE 64
 #endif
 
-#define OC_MEMMAP_KEY                                                          \
-  {                                                                            \
-    0xab, 0xcd, 0xef                                                           \
-  }
+#define OC_MEMMAP_KEY { 0xab, 0xcd, 0xef }
 
 #define OC_MEMMAP_CLOSER_ERASABLE_SECTOR(_pos)                                 \
   (_pos * (_pos / memmap.sector_size))

@@ -25,19 +25,19 @@ def format(diff):
     changes = {}
 
     for line in diff.splitlines():
-        m = re.search(b'^\+\+\+\ (.*?/)(\S*)', line)
+        m = re.search(b'^\\+\\+\\+\\ (.*?/)(\\S*)', line)
         if m:
             filename = m.group(2)
         if not filename:
             continue
 
-        if not re.match(b'^.*\.(c|h)$', filename):
+        if not re.match(b'^.*\\.(c|h)$', filename):
             continue
 
         if not filename in changes:
             changes[filename] = []
 
-        m = re.search(b'^@@.*\+(\d+),(\d+)?', line)
+        m = re.search(b'^@@.*\\+(\\d+),(\\d+)?', line)
         if m:
             start = int(m.group(1))
             end = start + int(m.group(2))

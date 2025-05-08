@@ -11,7 +11,7 @@ jobs:
   format:
     name: Format the pull request if the '~format' comment is made
     if: ${{ github.event.issue.pull_request && contains(github.event.comment.body, '~format') }}
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     steps:
       - uses: octokit/graphql-action@v2.x
         id: get_branch
@@ -50,8 +50,8 @@ jobs:
           sudo apt-get install curl
           curl -sL https://apt.llvm.org/llvm.sh > llvm.sh
           chmod u+x llvm.sh
-          sudo ./llvm.sh 17
-          sudo apt-get install clang-format-17
+          sudo ./llvm.sh 19
+          sudo apt-get install clang-format-19
           cmake -S ${{ github.workspace }}/iotivity-lite -B ${{ github.workspace }}/build-format
           make -C ${{ github.workspace }}/build-format format
 

@@ -33,11 +33,9 @@
 #include <assert.h>
 
 #define OC_CLOUD_DEFAULT_RETRY_TIMEOUTS                                        \
-  {                                                                            \
-    2 * MILLISECONDS_PER_SECOND, 4 * MILLISECONDS_PER_SECOND,                  \
-      8 * MILLISECONDS_PER_SECOND, 16 * MILLISECONDS_PER_SECOND,               \
-      32 * MILLISECONDS_PER_SECOND, 64 * MILLISECONDS_PER_SECOND               \
-  }
+  { 2 * MILLISECONDS_PER_SECOND,  4 * MILLISECONDS_PER_SECOND,                 \
+    8 * MILLISECONDS_PER_SECOND,  16 * MILLISECONDS_PER_SECOND,                \
+    32 * MILLISECONDS_PER_SECOND, 64 * MILLISECONDS_PER_SECOND }
 
 static uint16_t g_retry_timeout_ms[OC_CLOUD_RETRY_TIMEOUTS_SIZE] =
   OC_CLOUD_DEFAULT_RETRY_TIMEOUTS;

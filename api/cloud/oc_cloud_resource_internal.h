@@ -42,17 +42,9 @@ extern "C" {
 /// Default sid value from OCF Device to Cloud Services Specification,
 /// equivalent to "00000000-0000-0000-0000-000000000000"
 #ifdef __cplusplus
-#define OCF_COAPCLOUDCONF_DEFAULT_SID                                          \
-  oc_uuid_t                                                                    \
-  {                                                                            \
-    0                                                                          \
-  }
+#define OCF_COAPCLOUDCONF_DEFAULT_SID oc_uuid_t{ 0 }
 #else /* !__cplusplus */
-#define OCF_COAPCLOUDCONF_DEFAULT_SID                                          \
-  (oc_uuid_t)                                                                  \
-  {                                                                            \
-    0                                                                          \
-  }
+#define OCF_COAPCLOUDCONF_DEFAULT_SID (oc_uuid_t){ 0 }
 #endif /* __cplusplus */
 
 #define OCF_COAPCLOUDCONF_PROP_ACCESSTOKEN "at"
