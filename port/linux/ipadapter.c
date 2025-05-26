@@ -533,6 +533,136 @@ oc_connectivity_get_endpoints(size_t device)
   return oc_list_head(dev->eps);
 }
 
+static void
+set_interfaces_waiting_for_refresh(size_t num_devices)
+{
+  for (size_t i = 0; i < num_devices; i++) {
+    ip_context_t *dev = oc_get_ip_context_for_device(i);
+    if (dev == NULL) {
+      continue;
+    }
+    bool swapped = false;
+    int8_t expected = OC_ATOMIC_LOAD8(dev->flags);
+    while ((expected & IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST) == 0) {
+      int8_t desired =
+        (int8_t)(expected | IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST);
+      OC_ATOMIC_COMPARE_AND_SWAP8(dev->flags, expected, desired, swapped);
+      if (swapped) {
+        break;
+      }
+    }
+  }
+}
+
+static struct rtattr *
+ifa_rta(struct ifaddrmsg *ifa)
+{
+  CLANG_IGNORE_WARNING_START
+  CLANG_IGNORE_WARNING("-Wcast-align")
+  return IFA_RTA(ifa);
+  CLANG_IGNORE_WARNING_END
+}
+
+static struct rtattr *
+rta_next(struct rtattr *attr, int att_len)
+{
+  CLANG_IGNORE_WARNING_START
+  CLANG_IGNORE_WARNING("-Wcast-align")
+  return RTA_NEXT(attr, att_len);
+  CLANG_IGNORE_WARNING_END
+}
+
+#ifdef OC_IPV4
+static bool
+add_ipv4_interface(unsigned if_index, const struct in_addr *local,
+                   size_t num_devices)
+{
+  bool success = true;
+  for (size_t i = 0; i < num_devices; i++) {
+    const ip_context_t *dev = oc_get_ip_context_for_device(i);
+    if (dev == NULL || dev->mcast4_sock < 0) {
+      continue;
+    }
+    success = oc_netsocket_add_sock_to_ipv4_mcast_group(dev->mcast4_sock, local,
+                                                        if_index) &&
+              success;
+  }
+  return success;
+}
+#endif /* OC_IPV4 */
+
+static bool
+add_ipv6_interface(unsigned if_index, size_t num_devices)
+{
+  bool success = true;
+  for (size_t i = 0; i < num_devices; i++) {
+    const ip_context_t *dev = oc_get_ip_context_for_device(i);
+    if (dev == NULL || dev->mcast_sock < 0) {
+      continue;
+    }
+    success =
+      oc_netsocket_add_sock_to_ipv6_mcast_group(dev->mcast_sock, if_index) &&
+      success;
+  }
+  return success;
+}
+
+static bool
+process_add_interface_event(const struct nlmsghdr *msg, size_t num_devices)
+{
+  struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(msg);
+  if (ifa == NULL) {
+    // nothing to do
+    return true;
+  }
+#ifdef OC_NETWORK_MONITOR
+  if (add_ip_interface(ifa->ifa_index)) {
+    oc_network_interface_event(NETWORK_INTERFACE_UP);
+  }
+#endif /* OC_NETWORK_MONITOR */
+  int att_len = IFA_PAYLOAD(msg);
+  bool success = true;
+  for (struct rtattr *attr = ifa_rta(ifa);; attr = rta_next(attr, att_len)) {
+    // the check RTA_OK is inside the loop because loop conditions can be
+    // speculatively bypassed by the CPU
+    if (!RTA_OK(attr, att_len)) {
+      break;
+    }
+    // prevent speculative execution from leaking attr->rta_type
+    unsigned short rta_type = OC_SPECULATION_SAFE(attr->rta_type);
+    if (rta_type != IFA_ADDRESS) {
+      continue;
+    }
+#ifdef OC_IPV4
+    if (ifa->ifa_family == AF_INET) {
+      success =
+        add_ipv4_interface(ifa->ifa_index, RTA_DATA(attr), num_devices) &&
+        success;
+      continue;
+    }
+#endif /* OC_IPV4 */
+    if (ifa->ifa_family == AF_INET6 && ifa->ifa_scope == RT_SCOPE_LINK) {
+      success = add_ipv6_interface(ifa->ifa_index, num_devices) && success;
+      continue;
+    }
+  }
+  return success;
+}
+
+#ifdef OC_NETWORK_MONITOR
+static void
+process_remove_interface_event(const struct nlmsghdr *msg)
+{
+  const struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(msg);
+  if (ifa == NULL) {
+    return;
+  }
+  if (remove_ip_interface(ifa->ifa_index)) {
+    oc_network_interface_event(NETWORK_INTERFACE_DOWN);
+  }
+}
+#endif /* OC_NETWORK_MONITOR */
+
 /* Called after network interface up/down events.
  * This function reconfigures IPv6/v4 multicast sockets for
  * all logical devices.
@@ -567,70 +697,15 @@ process_interface_change_event(void)
   bool if_state_changed = false;
   while (NLMSG_OK(response, response_len)) {
     if (response->nlmsg_type == RTM_NEWADDR) {
-      const struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(response);
-      if (ifa) {
-#ifdef OC_NETWORK_MONITOR
-        if (add_ip_interface(ifa->ifa_index)) {
-          oc_network_interface_event(NETWORK_INTERFACE_UP);
-        }
-#endif /* OC_NETWORK_MONITOR */
-        CLANG_IGNORE_WARNING_START
-        CLANG_IGNORE_WARNING("-Wcast-align")
-        struct rtattr *attr = IFA_RTA(ifa);
-        CLANG_IGNORE_WARNING_END
-        int att_len = IFA_PAYLOAD(response);
-        while (RTA_OK(attr, att_len)) {
-          if (attr->rta_type == IFA_ADDRESS) {
-#ifdef OC_IPV4
-            if (ifa->ifa_family == AF_INET) {
-              for (size_t i = 0; i < num_devices; i++) {
-                const ip_context_t *dev = oc_get_ip_context_for_device(i);
-                if (dev == NULL) {
-                  continue;
-                }
-                if (dev->mcast4_sock < 0) {
-                  continue;
-                }
-                success = oc_netsocket_add_sock_to_ipv4_mcast_group(
-                            dev->mcast4_sock, RTA_DATA(attr), ifa->ifa_index) &&
-                          success;
-              }
-            } else
-#endif /* OC_IPV4 */
-              if (ifa->ifa_family == AF_INET6 &&
-                  ifa->ifa_scope == RT_SCOPE_LINK) {
-                for (size_t i = 0; i < num_devices; i++) {
-                  const ip_context_t *dev = oc_get_ip_context_for_device(i);
-                  if (dev == NULL) {
-                    continue;
-                  }
-                  if (dev->mcast_sock < 0) {
-                    continue;
-                  }
-                  success = oc_netsocket_add_sock_to_ipv6_mcast_group(
-                              dev->mcast_sock, ifa->ifa_index) &&
-                            success;
-                }
-              }
-          }
-          CLANG_IGNORE_WARNING_START
-          CLANG_IGNORE_WARNING("-Wcast-align")
-          attr = RTA_NEXT(attr, att_len);
-          CLANG_IGNORE_WARNING_END
-        }
-      }
+      success = process_add_interface_event(response, num_devices) && success;
       if_state_changed = true;
     } else if (response->nlmsg_type == RTM_DELADDR) {
-      const struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(response);
-      if (ifa) {
 #ifdef OC_NETWORK_MONITOR
-        if (remove_ip_interface(ifa->ifa_index)) {
-          oc_network_interface_event(NETWORK_INTERFACE_DOWN);
-        }
+      process_remove_interface_event(response);
 #endif /* OC_NETWORK_MONITOR */
-      }
       if_state_changed = true;
     }
+
     CLANG_IGNORE_WARNING_START
     CLANG_IGNORE_WARNING("-Wcast-align")
     response = NLMSG_NEXT(response, response_len);
@@ -638,22 +713,7 @@ process_interface_change_event(void)
   }
 
   if (if_state_changed) {
-    for (size_t i = 0; i < num_devices; i++) {
-      ip_context_t *dev = oc_get_ip_context_for_device(i);
-      if (dev == NULL) {
-        continue;
-      }
-      bool swapped = false;
-      int8_t expected = OC_ATOMIC_LOAD8(dev->flags);
-      while ((expected & IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST) == 0) {
-        int8_t desired =
-          (int8_t)(expected | IP_CONTEXT_FLAG_REFRESH_ENDPOINT_LIST);
-        OC_ATOMIC_COMPARE_AND_SWAP8(dev->flags, expected, desired, swapped);
-        if (swapped) {
-          break;
-        }
-      }
-    }
+    set_interfaces_waiting_for_refresh(num_devices);
   }
   oc_message_unref(message);
   return success ? 0 : -1;
@@ -1123,6 +1183,29 @@ network_event_thread(void *data)
 }
 
 static int
+get_send_socket(const oc_message_t *message, const ip_context_t *dev)
+{
+  (void)message;
+#ifdef OC_SECURITY
+  if ((message->endpoint.flags & SECURED) != 0) {
+#ifdef OC_IPV4
+    if ((message->endpoint.flags & IPV4) != 0) {
+      return dev->secure4.sock;
+    }
+#endif /* OC_IPV4 */
+    return dev->secure.sock;
+  }
+#endif /* OC_SECURITY */
+
+#ifdef OC_IPV4
+  if ((message->endpoint.flags & IPV4) != 0) {
+    return dev->server4.sock;
+  }
+#endif /* OC_IPV4 */
+  return dev->server.sock;
+}
+
+static int
 oc_send_buffer_internal(oc_message_t *message, bool create, bool queue)
 {
   OC_TRACE("Outgoing message of size %zd bytes to", message->length);
@@ -1135,7 +1218,6 @@ oc_send_buffer_internal(oc_message_t *message, bool create, bool queue)
   }
 
   struct sockaddr_storage receiver = oc_socket_get_address(&message->endpoint);
-
 #ifdef OC_TCP
   if ((message->endpoint.flags & TCP) != 0) {
     if (create) {
@@ -1148,32 +1230,7 @@ oc_send_buffer_internal(oc_message_t *message, bool create, bool queue)
   (void)queue;
 #endif /* OC_TCP */
 
-  int send_sock = -1;
-#ifdef OC_SECURITY
-  if (message->endpoint.flags & SECURED) {
-#ifdef OC_IPV4
-    if (message->endpoint.flags & IPV4) {
-      send_sock = dev->secure4.sock;
-    } else {
-      send_sock = dev->secure.sock;
-    }
-#else  /* !OC_IPV4 */
-    send_sock = dev->secure.sock;
-#endif /* OC_IPV4 */
-  } else
-#endif /* OC_SECURITY */
-#ifdef OC_IPV4
-    if (message->endpoint.flags & IPV4) {
-    send_sock = dev->server4.sock;
-  } else {
-    send_sock = dev->server.sock;
-  }
-#else  /* !OC_IPV4 */
-  {
-    send_sock = dev->server.sock;
-  }
-#endif /* OC_IPV4 */
-
+  int send_sock = get_send_socket(message, dev);
   return (int)oc_ip_send_msg(send_sock, &receiver, message);
 }
 
@@ -1239,7 +1296,8 @@ send_ipv6_discovery_request(oc_message_t *message,
     ((((const uint8_t *)(addr))[1] & 0x0f) == OC_IPV6_ADDR_SCOPE_REALM_LOCAL)
 
   if (IN6_IS_ADDR_MC_LINKLOCAL(message->endpoint.addr.ipv6.address)) {
-    message->endpoint.addr.ipv6.scope = mif;
+    assert(mif <= UINT8_MAX);
+    message->endpoint.addr.ipv6.scope = (uint8_t)mif;
     unsigned int hops = 1;
     setsockopt(server_sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &hops,
                sizeof(hops));
