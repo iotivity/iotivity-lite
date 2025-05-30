@@ -371,7 +371,7 @@ get_interface_addresses(ip_context_t *dev, unsigned char family, int port,
                 ep.flags = IPV6;
               }
           } else if (attr->rta_type == IFA_FLAGS) {
-            if (*(uint32_t *)(RTA_DATA(attr)) & IFA_F_TEMPORARY) {
+            if (*(uint32_t *)(RTA_DATA(attr))&IFA_F_TEMPORARY) {
               include = false;
             }
           }
@@ -608,13 +608,9 @@ add_ipv6_interface(unsigned if_index, size_t num_devices)
 }
 
 static bool
-process_add_interface_event(const struct nlmsghdr *msg, size_t num_devices)
+process_add_interface_event(struct nlmsghdr *msg, size_t num_devices)
 {
   struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(msg);
-  if (ifa == NULL) {
-    // nothing to do
-    return true;
-  }
 #ifdef OC_NETWORK_MONITOR
   if (add_ip_interface(ifa->ifa_index)) {
     oc_network_interface_event(NETWORK_INTERFACE_UP);
@@ -651,12 +647,9 @@ process_add_interface_event(const struct nlmsghdr *msg, size_t num_devices)
 
 #ifdef OC_NETWORK_MONITOR
 static void
-process_remove_interface_event(const struct nlmsghdr *msg)
+process_remove_interface_event(struct nlmsghdr *msg)
 {
-  const struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(msg);
-  if (ifa == NULL) {
-    return;
-  }
+  struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(msg);
   if (remove_ip_interface(ifa->ifa_index)) {
     oc_network_interface_event(NETWORK_INTERFACE_DOWN);
   }
