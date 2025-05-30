@@ -554,8 +554,8 @@ set_interfaces_waiting_for_refresh(size_t num_devices)
   }
 }
 
-static struct rtattr *
-ifa_rta(struct ifaddrmsg *ifa)
+static const struct rtattr *
+ifa_rta(const struct ifaddrmsg *ifa)
 {
   CLANG_IGNORE_WARNING_START
   CLANG_IGNORE_WARNING("-Wcast-align")
@@ -599,9 +599,9 @@ add_ipv6_interface(unsigned if_index, size_t num_devices)
 }
 
 static bool
-process_add_interface_event(struct nlmsghdr *msg, size_t num_devices)
+process_add_interface_event(const struct nlmsghdr *msg, size_t num_devices)
 {
-  struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(msg);
+  const struct ifaddrmsg *ifa = (const struct ifaddrmsg *)NLMSG_DATA(msg);
 #ifdef OC_NETWORK_MONITOR
   if (add_ip_interface(ifa->ifa_index)) {
     oc_network_interface_event(NETWORK_INTERFACE_UP);
@@ -611,7 +611,8 @@ process_add_interface_event(struct nlmsghdr *msg, size_t num_devices)
   bool success = true;
   CLANG_IGNORE_WARNING_START
   CLANG_IGNORE_WARNING("-Wcast-align")
-  for (struct rtattr *attr = ifa_rta(ifa);; attr = RTA_NEXT(attr, att_len)) {
+  for (const struct rtattr *attr = ifa_rta(ifa);;
+       attr = RTA_NEXT(attr, att_len)) {
     CLANG_IGNORE_WARNING_END
     // the check RTA_OK is inside the loop because loop conditions can be
     // speculatively bypassed by the CPU
@@ -641,9 +642,9 @@ process_add_interface_event(struct nlmsghdr *msg, size_t num_devices)
 
 #ifdef OC_NETWORK_MONITOR
 static void
-process_remove_interface_event(struct nlmsghdr *msg)
+process_remove_interface_event(const struct nlmsghdr *msg)
 {
-  struct ifaddrmsg *ifa = (struct ifaddrmsg *)NLMSG_DATA(msg);
+  const struct ifaddrmsg *ifa = (const struct ifaddrmsg *)NLMSG_DATA(msg);
   if (remove_ip_interface(ifa->ifa_index)) {
     oc_network_interface_event(NETWORK_INTERFACE_DOWN);
   }
@@ -671,7 +672,7 @@ process_interface_change_event(void)
   }
   CLANG_IGNORE_WARNING_START
   CLANG_IGNORE_WARNING("-Wcast-align")
-  struct nlmsghdr *response = (struct nlmsghdr *)message->data;
+  const struct nlmsghdr *response = (struct nlmsghdr *)message->data;
   CLANG_IGNORE_WARNING_END
   if (response->nlmsg_type == NLMSG_ERROR) {
     OC_ERR("caught NLMSG_ERROR in payload from netlink interface");
