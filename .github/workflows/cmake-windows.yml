@@ -153,7 +153,8 @@ jobs:
           - name: Clang64
             msystem: CLANG64
             build_type: Debug
-            build_args: "-DOC_ASAN_ENABLED=ON -DOC_UBSAN_ENABLED=ON"
+            # TODO: remove once GTest library is updated to version with newer CMake
+            build_args: "-DCMAKE_POLICY_VERSION_MINIMUM=3.5 -DOC_ASAN_ENABLED=ON -DOC_UBSAN_ENABLED=ON"
             cc: clang
             cxx: clang++
             build_testing: ON
