@@ -563,15 +563,6 @@ ifa_rta(struct ifaddrmsg *ifa)
   CLANG_IGNORE_WARNING_END
 }
 
-static struct rtattr *
-rta_next(struct rtattr *attr, int att_len)
-{
-  CLANG_IGNORE_WARNING_START
-  CLANG_IGNORE_WARNING("-Wcast-align")
-  return RTA_NEXT(attr, att_len);
-  CLANG_IGNORE_WARNING_END
-}
-
 #ifdef OC_IPV4
 static bool
 add_ipv4_interface(unsigned if_index, const struct in_addr *local,
@@ -618,7 +609,10 @@ process_add_interface_event(struct nlmsghdr *msg, size_t num_devices)
 #endif /* OC_NETWORK_MONITOR */
   int att_len = IFA_PAYLOAD(msg);
   bool success = true;
-  for (struct rtattr *attr = ifa_rta(ifa);; attr = rta_next(attr, att_len)) {
+  CLANG_IGNORE_WARNING_START
+  CLANG_IGNORE_WARNING("-Wcast-align")
+  for (struct rtattr *attr = ifa_rta(ifa);; attr = RTA_NEXT(attr, att_len)) {
+    CLANG_IGNORE_WARNING_END
     // the check RTA_OK is inside the loop because loop conditions can be
     // speculatively bypassed by the CPU
     if (!RTA_OK(attr, att_len)) {
@@ -1253,9 +1247,8 @@ send_ipv6_discovery_request(oc_message_t *message,
                             const struct ifaddrs *interface, int server_sock)
 {
   if (server_sock == -1) {
-    IN6_IS_ADDR_LINKLOCAL(
-      "skipping sending of discovery request: server socket for IPv6 is "
-      "disabled");
+    OC_ERR("skipping sending of discovery request: server socket for IPv6 is "
+           "disabled");
     return SEND_DISCOVERY_SKIPPED;
   }
 
