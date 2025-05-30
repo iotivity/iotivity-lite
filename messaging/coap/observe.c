@@ -613,7 +613,6 @@ coap_prepare_notification_blockwise(coap_packet_t *notification,
       return 0;
     }
     oc_blockwise_free_response_buffer(response_state);
-    response_state = NULL;
   }
 #ifdef OC_HAS_FEATURE_ETAG
   bool generate_etag = false;

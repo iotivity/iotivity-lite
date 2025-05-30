@@ -627,7 +627,6 @@ handle_separate_response_request(coap_separate_t *request,
         return;
       }
       oc_blockwise_free_response_buffer(response_state);
-      response_state = NULL;
     }
     response_state = oc_blockwise_alloc_response_buffer(
       uri, uri_len, &request->endpoint, request->method, OC_BLOCKWISE_SERVER,
