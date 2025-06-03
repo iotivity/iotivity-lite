@@ -3,21 +3,21 @@ FROM ubuntu:22.04 AS service
 ARG BUILD_TYPE=Release
 ARG BUILD_ARGS
 RUN apt-get update -y && \
-    DEBIAN_FRONTEND="noninteractive" apt-get install --no-install-recommends -y bash ca-certificates cmake gdb git-core make patch python3 && \
-    apt-get clean
-# install clang
-RUN DEBIAN_FRONTEND="noninteractive" apt-get install --no-install-recommends -y clang-15 && \
+    DEBIAN_FRONTEND="noninteractive" apt-get install --no-install-recommends -y bash \
+    ca-certificates clang-15 cmake gdb git-core make patch python3 && \
     apt-get clean && \
     update-alternatives --install /usr/bin/clang clang /usr/bin/clang-15 100 && \
     update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-15 100
 COPY ./  /iotivity-lite/
 WORKDIR /iotivity-lite
-RUN git submodule update --recursive
-RUN mkdir /iotivity-lite/build
+RUN git submodule update --recursive && \
+    mkdir /iotivity-lite/build
 WORKDIR /iotivity-lite/build
-RUN cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DBUILD_TESTING=OFF -DOC_CLOUD_ENABLED=ON ${BUILD_ARGS} .. && \
-    cmake --build . --target cloud_server
-RUN cp /iotivity-lite/build/apps/cloud_server /iotivity-lite/port/linux/service
+RUN cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE=ON \
+    -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_C_COMPILER=clang -DBUILD_TESTING=OFF \
+    -DOC_CLOUD_ENABLED=ON ${BUILD_ARGS} .. && \
+    cmake --build . --target cloud_server && \
+    cp /iotivity-lite/build/apps/cloud_server /iotivity-lite/port/linux/service
 
 # install libfaketime
 WORKDIR /

@@ -189,7 +189,7 @@ oc_oscore_AEAD_nonce(const uint8_t *id, uint8_t id_len, const uint8_t *piv,
     memcpy(nonce + (nonce_len - 5 - id_len), id, id_len);
   }
   /* Set the 1st byte to the size of the Sender ID */
-  nonce[0] = (uint8_t)id_len;
+  nonce[0] = id_len;
   /* XOR with the Common IV */
   for (int i = 0; i < nonce_len; i++) {
     nonce[i] = nonce[i] ^ civ[i];

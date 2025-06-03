@@ -2,16 +2,18 @@ FROM ubuntu:22.04 AS service
 ARG BUILD_TYPE=Release
 ARG BUILD_ARGS
 RUN apt-get update -y && \
-	DEBIAN_FRONTEND="noninteractive" apt-get install --no-install-recommends -y bash ca-certificates cmake curl gdb git-core gcovr g++ make patch python3 && \
+	DEBIAN_FRONTEND="noninteractive" apt-get install --no-install-recommends -y bash \
+	ca-certificates cmake curl gcovr gdb git-core g++ make patch python3 && \
 	apt-get clean
 COPY ./  /iotivity-lite/
 WORKDIR /iotivity-lite
-RUN git submodule update --recursive
-RUN mkdir /iotivity-lite/build
+RUN git submodule update --recursive && \
+	mkdir /iotivity-lite/build
 WORKDIR /iotivity-lite/build
-RUN cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=OFF -DOC_CLOUD_ENABLED=ON ${BUILD_ARGS} .. && \
-	cmake --build . --target cloud_server
-RUN cp /iotivity-lite/build/apps/cloud_server /iotivity-lite/port/linux/service
+RUN cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=OFF \
+	-DOC_CLOUD_ENABLED=ON ${BUILD_ARGS} .. && \
+	cmake --build . --target cloud_server && \
+	cp /iotivity-lite/build/apps/cloud_server /iotivity-lite/port/linux/service
 
 # install libfaketime
 WORKDIR /
