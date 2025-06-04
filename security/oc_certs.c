@@ -366,8 +366,7 @@ oc_certs_extract_CN_for_UUID(const mbedtls_x509_crt *cert, char *buffer,
                              size_t buffer_size)
 {
 
-  const mbedtls_asn1_named_data *subject =
-    (const mbedtls_asn1_named_data *)&(cert->subject);
+  const mbedtls_asn1_named_data *subject = &cert->subject;
   while (subject != NULL) {
     if (MBEDTLS_OID_CMP(MBEDTLS_OID_AT_CN, &(subject->oid)) == 0) {
       break;
