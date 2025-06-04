@@ -1028,8 +1028,7 @@ coap_receive_request_with_code(coap_receive_ctx_t *ctx, oc_endpoint_t *endpoint)
       coap_get_payload(ctx->message, &incoming_block);
     if (incoming_block_len > 0 &&
         oc_blockwise_handle_block(ctx->response_buffer, ctx->block2.offset,
-                                  incoming_block,
-                                  (uint32_t)incoming_block_len)) {
+                                  incoming_block, incoming_block_len)) {
       COAP_DBG("processing incoming block");
       if (ctx->block2.enabled && ctx->block2.more) {
         COAP_DBG("issuing request for next block");

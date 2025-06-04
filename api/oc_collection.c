@@ -875,7 +875,7 @@ collection_batch_request_process_links(
 #endif /* OC_SECURITY */
     {
 
-      if ((link->resource != (oc_resource_t *)collection) &&
+      if ((link->resource != (const oc_resource_t *)collection) &&
           oc_check_if_collection(link->resource)) {
         request->resource = link->resource;
         if (!oc_handle_collection_request(

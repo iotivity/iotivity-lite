@@ -25,6 +25,7 @@
 void
 oc_clock_init(void)
 {
+  // no initialization necessary on Linux
 }
 
 oc_clock_time_t

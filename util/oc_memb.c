@@ -99,6 +99,26 @@ _oc_memb_alloc(
   return ptr;
 }
 
+static void
+memb_free_block(struct oc_memb *m, void *ptr)
+{
+  /* Walk through the list of blocks and try to find the block to
+         which the pointer "ptr" points to. */
+  const char *ptr2 = (char *)m->mem;
+  for (int i = 0; i < m->num; ++i) {
+    if (ptr2 == (char *)ptr) {
+      /* We've found to block to which "ptr" points so we decrease the
+         reference count and return the new value of it. */
+      if (m->count[i] > 0) {
+        /* Make sure that we don't deallocate free memory. */
+        --(m->count[i]);
+      }
+      break;
+    }
+    ptr2 += m->size;
+  }
+}
+
 char
 _oc_memb_free(
 #ifdef OC_MEMORY_TRACE
@@ -116,21 +136,7 @@ _oc_memb_free(
 #endif
 
   if (m->num > 0) {
-    /* Walk through the list of blocks and try to find the block to
-       which the pointer "ptr" points to. */
-    const char *ptr2 = (char *)m->mem;
-    for (int i = 0; i < m->num; ++i) {
-      if (ptr2 == (char *)ptr) {
-        /* We've found to block to which "ptr" points so we decrease the
-           reference count and return the new value of it. */
-        if (m->count[i] > 0) {
-          /* Make sure that we don't deallocate free memory. */
-          --(m->count[i]);
-        }
-        break;
-      }
-      ptr2 += m->size;
-    }
+    memb_free_block(m, ptr);
   }
 #ifdef OC_DYNAMIC_ALLOCATION
   else {

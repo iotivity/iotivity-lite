@@ -859,7 +859,7 @@ get_psk_cb(void *data, mbedtls_ssl_context *ssl, const unsigned char *identity,
     identity_len -= 17;
   }
   oc_sec_cred_t *cred =
-    oc_sec_find_cred(NULL, (oc_uuid_t *)identity, OC_CREDTYPE_PSK,
+    oc_sec_find_cred(NULL, (const oc_uuid_t *)identity, OC_CREDTYPE_PSK,
                      OC_CREDUSAGE_NULL, peer->endpoint.device);
   if (cred != NULL) {
     OC_DBG("oc_tls: Found peer credential");
@@ -2801,74 +2801,69 @@ tls_read_application_data_tcp(oc_tls_peer_t *peer)
 {
   if (peer->processed_recv_message == NULL) {
     peer->processed_recv_message = oc_allocate_message();
-    if (peer->processed_recv_message) {
-      peer->processed_recv_message->encrypted = 0;
-      memcpy(&peer->processed_recv_message->endpoint, &peer->endpoint,
-             sizeof(oc_endpoint_t));
+    if (peer->processed_recv_message == NULL) {
+      return;
     }
+    peer->processed_recv_message->encrypted = 0;
+    memcpy(&peer->processed_recv_message->endpoint, &peer->endpoint,
+           sizeof(oc_endpoint_t));
   }
-  while (true) {
-    if (peer->processed_recv_message) {
-      size_t want_read = 0;
-      size_t total_length = 0;
-      if (peer->processed_recv_message->length < OC_TCP_DEFAULT_RECEIVE_SIZE) {
-        want_read =
-          OC_TCP_DEFAULT_RECEIVE_SIZE - peer->processed_recv_message->length;
-      } else {
-        total_length =
-          coap_tcp_get_packet_size(peer->processed_recv_message->data,
-                                   peer->processed_recv_message->length);
-        if (total_length > (size_t)OC_PDU_SIZE) {
-          OC_ERR("oc_tls_tcp: total receive length(%ld) is bigger than max pdu "
-                 "size(%ld)",
-                 (long)total_length, (long)OC_PDU_SIZE);
-          oc_tls_free_peer(peer, false, false, true);
-          return;
-        }
-        want_read = total_length - peer->processed_recv_message->length;
-#ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
-        oc_message_shrink_buffer(peer->processed_recv_message, total_length);
-#endif /* OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
-      }
-      OC_TRACE("oc_tls_tcp: mbedtls_ssl_read want read: %d", (int)want_read);
-      int ret = mbedtls_ssl_read(&peer->ssl_ctx,
-                                 peer->processed_recv_message->data +
-                                   peer->processed_recv_message->length,
-                                 want_read);
-      OC_TRACE("oc_tls_tcp: mbedtls_ssl_read returns: %d", ret);
-      if (ret <= 0) {
-        if (ret == 0 || ret == MBEDTLS_ERR_SSL_WANT_READ ||
-            ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
-          OC_TRACE("oc_tls_tcp: Received WantRead/WantWrite");
-          return;
-        }
-        oc_message_unref(peer->processed_recv_message);
-        peer->processed_recv_message = NULL;
-        if (peer->role == MBEDTLS_SSL_IS_SERVER &&
-            (peer->endpoint.flags & TCP) == 0) {
-          mbedtls_ssl_close_notify(&peer->ssl_ctx);
-          mbedtls_ssl_close_notify(&peer->ssl_ctx);
-        }
-        TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_read", ret);
+  while (peer->processed_recv_message != NULL) {
+    size_t want_read = 0;
+    size_t total_length = 0;
+    if (peer->processed_recv_message->length < OC_TCP_DEFAULT_RECEIVE_SIZE) {
+      want_read =
+        OC_TCP_DEFAULT_RECEIVE_SIZE - peer->processed_recv_message->length;
+    } else {
+      total_length =
+        coap_tcp_get_packet_size(peer->processed_recv_message->data,
+                                 peer->processed_recv_message->length);
+      if (total_length > (size_t)OC_PDU_SIZE) {
+        OC_ERR("oc_tls_tcp: total receive length(%ld) is bigger than max pdu "
+               "size(%ld)",
+               (long)total_length, (long)OC_PDU_SIZE);
         oc_tls_free_peer(peer, false, false, true);
         return;
       }
-      peer->processed_recv_message->length += ret;
-      if (total_length &&
-          peer->processed_recv_message->length == total_length) {
-        OC_DBG("oc_tls_tcp: Decrypted incoming message %d",
-               (int)(total_length));
-        peer->processed_recv_message->encrypted = 0;
-        memcpy(peer->processed_recv_message->endpoint.di.id, peer->uuid.id, 16);
-        if (oc_process_post(
-              &g_coap_engine, oc_event_to_oc_process_event(INBOUND_RI_EVENT),
-              peer->processed_recv_message) == OC_PROCESS_ERR_FULL) {
-          oc_message_unref(peer->processed_recv_message);
-        }
-        peer->processed_recv_message = NULL;
+      want_read = total_length - peer->processed_recv_message->length;
+#ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
+      oc_message_shrink_buffer(peer->processed_recv_message, total_length);
+#endif /* OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER */
+    }
+    OC_TRACE("oc_tls_tcp: mbedtls_ssl_read want read: %d", (int)want_read);
+    int ret = mbedtls_ssl_read(&peer->ssl_ctx,
+                               peer->processed_recv_message->data +
+                                 peer->processed_recv_message->length,
+                               want_read);
+    OC_TRACE("oc_tls_tcp: mbedtls_ssl_read returns: %d", ret);
+    if (ret <= 0) {
+      if (ret == 0 || ret == MBEDTLS_ERR_SSL_WANT_READ ||
+          ret == MBEDTLS_ERR_SSL_WANT_WRITE) {
+        OC_TRACE("oc_tls_tcp: Received WantRead/WantWrite");
         return;
       }
-    } else {
+      oc_message_unref(peer->processed_recv_message);
+      peer->processed_recv_message = NULL;
+      if (peer->role == MBEDTLS_SSL_IS_SERVER &&
+          (peer->endpoint.flags & TCP) == 0) {
+        mbedtls_ssl_close_notify(&peer->ssl_ctx);
+        mbedtls_ssl_close_notify(&peer->ssl_ctx);
+      }
+      TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_read", ret);
+      oc_tls_free_peer(peer, false, false, true);
+      return;
+    }
+    peer->processed_recv_message->length += ret;
+    if (total_length && peer->processed_recv_message->length == total_length) {
+      OC_DBG("oc_tls_tcp: Decrypted incoming message %d", (int)(total_length));
+      peer->processed_recv_message->encrypted = 0;
+      memcpy(peer->processed_recv_message->endpoint.di.id, peer->uuid.id, 16);
+      if (oc_process_post(
+            &g_coap_engine, oc_event_to_oc_process_event(INBOUND_RI_EVENT),
+            peer->processed_recv_message) == OC_PROCESS_ERR_FULL) {
+        oc_message_unref(peer->processed_recv_message);
+      }
+      peer->processed_recv_message = NULL;
       return;
     }
   }
