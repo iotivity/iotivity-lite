@@ -551,259 +551,255 @@ oc_oscore_send_message(oc_message_t *msg)
   oc_message_t *message = msg;
   oc_oscore_context_t *oscore_ctx = oc_oscore_find_context_by_UUID(
     message->endpoint.device, &message->endpoint.di);
+  if (oscore_ctx == NULL) {
+    goto oscore_send_dispatch;
+  }
 
-  if (oscore_ctx) {
-    OC_DBG("#################################");
-    OC_DBG("found OSCORE context corresponding to the peer UUID");
-    /* Is this is an inadvertent response to a secure multicast message */
-    if (msg->endpoint.flags & MULTICAST) {
-      OC_DBG("### secure multicast requests do not elicit a response, discard "
-             "###");
-      oc_message_unref(msg);
-      return 0;
-    }
-
-    /* Use sender key for encryption */
-    const uint8_t *key = oscore_ctx->sendkey;
-
-    /* Clone incoming oc_message_t (*msg) from CoAP layer */
-    message = oc_message_allocate_outgoing();
-    message->length = msg->length;
-    memcpy(message->data, msg->data, msg->length);
-    memcpy(&message->endpoint, &msg->endpoint, sizeof(oc_endpoint_t));
-
-    bool msg_valid = false;
-    if (msg->ref_count > 1) {
-      msg_valid = true;
-    }
-
+  OC_DBG("#################################");
+  OC_DBG("found OSCORE context corresponding to the peer UUID");
+  /* Is this is an inadvertent response to a secure multicast message */
+  if (msg->endpoint.flags & MULTICAST) {
+    OC_DBG("### secure multicast requests do not elicit a response, discard "
+           "###");
     oc_message_unref(msg);
+    return 0;
+  }
 
-    OC_DBG("### parse CoAP message ###");
-    /* Parse CoAP message */
-    coap_packet_t coap_pkt[1];
-    coap_status_t code = 0;
+  /* Use sender key for encryption */
+  const uint8_t *key = oscore_ctx->sendkey;
+
+  /* Clone incoming oc_message_t (*msg) from CoAP layer */
+  message = oc_message_allocate_outgoing();
+  message->length = msg->length;
+  memcpy(message->data, msg->data, msg->length);
+  memcpy(&message->endpoint, &msg->endpoint, sizeof(oc_endpoint_t));
+
+  bool msg_deallocated = oc_message_unref2(msg);
+
+  OC_DBG("### parse CoAP message ###");
+  /* Parse CoAP message */
+  coap_packet_t coap_pkt = { 0 };
+  coap_status_t code = 0;
 #ifdef OC_TCP
-    if (message->endpoint.flags & TCP) {
-      code =
-        coap_tcp_parse_message(coap_pkt, message->data, message->length, false);
-    } else
+  if (message->endpoint.flags & TCP) {
+    code =
+      coap_tcp_parse_message(&coap_pkt, message->data, message->length, false);
+  } else
 #endif /* OC_TCP */
-    {
-      code =
-        coap_udp_parse_message(coap_pkt, message->data, message->length, false);
-    }
+  {
+    code =
+      coap_udp_parse_message(&coap_pkt, message->data, message->length, false);
+  }
 
-    if (code != COAP_NO_ERROR) {
-      OC_ERR("***error parsing CoAP packet***");
+  if (code != COAP_NO_ERROR) {
+    OC_ERR("***error parsing CoAP packet***");
+    goto oscore_send_error;
+  }
+
+  OC_DBG("### parsed CoAP message ###");
+  uint8_t piv[OSCORE_PIV_LEN];
+  uint8_t piv_len = 0;
+  uint8_t kid[OSCORE_CTXID_LEN];
+  uint8_t kid_len = 0;
+  uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
+  uint8_t AAD[OSCORE_AAD_MAX_LEN];
+  uint8_t AAD_len = 0;
+  /* If CoAP message is request */
+  if ((coap_pkt.code >= OC_GET && coap_pkt.code <= OC_DELETE)
+#ifdef OC_TCP
+      || coap_pkt.code == PING_7_02 || coap_pkt.code == ABORT_7_05 ||
+      coap_pkt.code == CSM_7_01
+#endif /* OC_TCP */
+  ) {
+    const oc_sec_pstat_t *pstat = oc_sec_get_pstat(message->endpoint.device);
+    if (pstat->s != OC_DOS_RFNOP) {
+      OC_ERR("### device not in RFNOP; stop further processing ###");
       goto oscore_send_error;
     }
 
-    OC_DBG("### parsed CoAP message ###");
-    uint8_t piv[OSCORE_PIV_LEN];
-    uint8_t piv_len = 0;
-    uint8_t kid[OSCORE_CTXID_LEN];
-    uint8_t kid_len = 0;
-    uint8_t nonce[OSCORE_AEAD_NONCE_LEN];
-    uint8_t AAD[OSCORE_AAD_MAX_LEN];
-    uint8_t AAD_len = 0;
-    /* If CoAP message is request */
-    if ((coap_pkt->code >= OC_GET && coap_pkt->code <= OC_DELETE)
-#ifdef OC_TCP
-        || coap_pkt->code == PING_7_02 || coap_pkt->code == ABORT_7_05 ||
-        coap_pkt->code == CSM_7_01
-#endif /* OC_TCP */
-    ) {
-      const oc_sec_pstat_t *pstat = oc_sec_get_pstat(message->endpoint.device);
-      if (pstat->s != OC_DOS_RFNOP) {
-        OC_ERR("### device not in RFNOP; stop further processing ###");
+    OC_DBG("### protecting outgoing request ###");
+    /* Request */
+    /* Use context->SSN as Partial IV */
+    oscore_store_piv(oscore_ctx->ssn, piv, &piv_len);
+    OC_DBG("---using SSN as Partial IV: %" PRIu64, oscore_ctx->ssn);
+    OC_LOGbytes(piv, piv_len);
+    /* Increment SSN */
+    oscore_ctx->ssn++;
+
+#ifdef OC_CLIENT
+    if (coap_pkt.code >= OC_GET && coap_pkt.code <= OC_DELETE) {
+      /* Find client cb for the request */
+      oc_client_cb_t *cb =
+        oc_ri_find_client_cb_by_token(coap_pkt.token, coap_pkt.token_len);
+
+      if (!cb) {
+        OC_ERR("**could not find client callback corresponding to request**");
         goto oscore_send_error;
       }
 
-      OC_DBG("### protecting outgoing request ###");
-      /* Request */
-      /* Use context->SSN as Partial IV */
-      oscore_store_piv(oscore_ctx->ssn, piv, &piv_len);
-      OC_DBG("---using SSN as Partial IV: %" PRIu64, oscore_ctx->ssn);
-      OC_LOGbytes(piv, piv_len);
-      /* Increment SSN */
-      oscore_ctx->ssn++;
-
-#ifdef OC_CLIENT
-      if (coap_pkt->code >= OC_GET && coap_pkt->code <= OC_DELETE) {
-        /* Find client cb for the request */
-        oc_client_cb_t *cb =
-          oc_ri_find_client_cb_by_token(coap_pkt->token, coap_pkt->token_len);
-
-        if (!cb) {
-          OC_ERR("**could not find client callback corresponding to request**");
-          goto oscore_send_error;
-        }
-
-        /* Copy partial IV into client cb */
-        memcpy(cb->piv, piv, piv_len);
-        cb->piv_len = piv_len;
-      }
+      /* Copy partial IV into client cb */
+      memcpy(cb->piv, piv, piv_len);
+      cb->piv_len = piv_len;
+    }
 #endif /* OC_CLIENT */
 
-      /* Use context-sendid as kid */
-      memcpy(kid, oscore_ctx->sendid, oscore_ctx->sendid_len);
-      kid_len = oscore_ctx->sendid_len;
+    /* Use context-sendid as kid */
+    memcpy(kid, oscore_ctx->sendid, oscore_ctx->sendid_len);
+    kid_len = oscore_ctx->sendid_len;
 
-      /* Compute nonce using partial IV and context->sendid */
-      oc_oscore_AEAD_nonce(oscore_ctx->sendid, oscore_ctx->sendid_len, piv,
-                           piv_len, oscore_ctx->commoniv, nonce,
-                           OSCORE_AEAD_NONCE_LEN);
+    /* Compute nonce using partial IV and context->sendid */
+    oc_oscore_AEAD_nonce(oscore_ctx->sendid, oscore_ctx->sendid_len, piv,
+                         piv_len, oscore_ctx->commoniv, nonce,
+                         OSCORE_AEAD_NONCE_LEN);
 
-      OC_DBG("---computed AEAD nonce using Partial IV (SSN) and Sender ID");
-      OC_LOGbytes(nonce, OSCORE_AEAD_NONCE_LEN);
+    OC_DBG("---computed AEAD nonce using Partial IV (SSN) and Sender ID");
+    OC_LOGbytes(nonce, OSCORE_AEAD_NONCE_LEN);
 
-      /* Compose AAD using partial IV and context->sendid */
-      oc_oscore_compose_AAD(oscore_ctx->sendid, oscore_ctx->sendid_len, piv,
-                            piv_len, AAD, &AAD_len);
-      OC_DBG("---composed AAD using Partial IV (SSN) and Sender ID");
-      OC_LOGbytes(AAD, AAD_len);
+    /* Compose AAD using partial IV and context->sendid */
+    oc_oscore_compose_AAD(oscore_ctx->sendid, oscore_ctx->sendid_len, piv,
+                          piv_len, AAD, &AAD_len);
+    OC_DBG("---composed AAD using Partial IV (SSN) and Sender ID");
+    OC_LOGbytes(AAD, AAD_len);
 
-      /* Copy partial IV into incoming oc_message_t (*msg), if valid */
-      if (msg_valid) {
-        memcpy(msg->endpoint.piv, piv, piv_len);
-        msg->endpoint.piv_len = piv_len;
-      }
-    } else {
-      /* Request was not protected by OSCORE */
-      if (message->endpoint.piv_len == 0) {
-        OC_DBG("request was not protected by OSCORE");
-        goto oscore_send_dispatch;
-      }
-      OC_DBG("### protecting outgoing response ###");
-      /* Response */
-      /* Per OCF specification, all responses must include a new Partial IV */
-      /* Use context->SSN as partial IV */
-      oscore_store_piv(oscore_ctx->ssn, piv, &piv_len);
-      OC_DBG("---using SSN as Partial IV: %" PRIu64, oscore_ctx->ssn);
-      OC_LOGbytes(piv, piv_len);
-
-      /* Increment SSN */
-      oscore_ctx->ssn++;
-
-      /* Coompute nonce using partial IV and context->sendid */
-      oc_oscore_AEAD_nonce(oscore_ctx->sendid, oscore_ctx->sendid_len, piv,
-                           piv_len, oscore_ctx->commoniv, nonce,
-                           OSCORE_AEAD_NONCE_LEN);
-
-      OC_DBG("---computed AEAD nonce using new Partial IV (SSN) and Sender ID");
-      OC_LOGbytes(nonce, OSCORE_AEAD_NONCE_LEN);
-
-      OC_DBG("---request_piv");
-      OC_LOGbytes(message->endpoint.piv, message->endpoint.piv_len);
-
-      /* Compose AAD using request_piv and context->recvid */
-      oc_oscore_compose_AAD(oscore_ctx->recvid, oscore_ctx->recvid_len,
-                            message->endpoint.piv, message->endpoint.piv_len,
-                            AAD, &AAD_len);
-      OC_DBG("---composed AAD using request_piv and Recipient ID");
-      OC_LOGbytes(AAD, AAD_len);
-
-      /* Copy partial IV into incoming oc_message_t (*msg), if valid */
-      if (msg_valid) {
-        memcpy(msg->endpoint.piv, piv, piv_len);
-        msg->endpoint.piv_len = piv_len;
-      }
+    /* Copy partial IV into incoming oc_message_t (*msg), if valid */
+    if (!msg_deallocated) {
+      memcpy(msg->endpoint.piv, piv, piv_len);
+      msg->endpoint.piv_len = piv_len;
     }
-
-    /* Store current SSN with frequency OSCORE_WRITE_FREQ_K */
-    /* Based on recommendations in RFC 8613, Appendix B.1. to prevent SSN reuse
-     */
-    if (oscore_ctx->ssn % OSCORE_SSN_WRITE_FREQ_K == 0) {
-      oc_set_delayed_callback((void *)message->endpoint.device, dump_cred, 0);
+  } else {
+    /* Request was not protected by OSCORE */
+    if (message->endpoint.piv_len == 0) {
+      OC_DBG("request was not protected by OSCORE");
+      goto oscore_send_dispatch;
     }
+    OC_DBG("### protecting outgoing response ###");
+    /* Response */
+    /* Per OCF specification, all responses must include a new Partial IV */
+    /* Use context->SSN as partial IV */
+    oscore_store_piv(oscore_ctx->ssn, piv, &piv_len);
+    OC_DBG("---using SSN as Partial IV: %" PRIu64, oscore_ctx->ssn);
+    OC_LOGbytes(piv, piv_len);
 
-    /* Move CoAP payload to offset 2*COAP_MAX_HEADER_SIZE to accommodate for
-       Outer+Inner CoAP options in the OSCORE packet.
-    */
-    if (coap_pkt->payload_len > 0) {
-      memmove(message->data + 2UL * COAP_MAX_HEADER_SIZE, coap_pkt->payload,
-              coap_pkt->payload_len);
+    /* Increment SSN */
+    oscore_ctx->ssn++;
 
-      /* Store the new payload location in the CoAP packet */
-      coap_pkt->payload = message->data + 2UL * COAP_MAX_HEADER_SIZE;
+    /* Coompute nonce using partial IV and context->sendid */
+    oc_oscore_AEAD_nonce(oscore_ctx->sendid, oscore_ctx->sendid_len, piv,
+                         piv_len, oscore_ctx->commoniv, nonce,
+                         OSCORE_AEAD_NONCE_LEN);
+
+    OC_DBG("---computed AEAD nonce using new Partial IV (SSN) and Sender ID");
+    OC_LOGbytes(nonce, OSCORE_AEAD_NONCE_LEN);
+
+    OC_DBG("---request_piv");
+    OC_LOGbytes(message->endpoint.piv, message->endpoint.piv_len);
+
+    /* Compose AAD using request_piv and context->recvid */
+    oc_oscore_compose_AAD(oscore_ctx->recvid, oscore_ctx->recvid_len,
+                          message->endpoint.piv, message->endpoint.piv_len, AAD,
+                          &AAD_len);
+    OC_DBG("---composed AAD using request_piv and Recipient ID");
+    OC_LOGbytes(AAD, AAD_len);
+
+    /* Copy partial IV into incoming oc_message_t (*msg), if valid */
+    if (!msg_deallocated) {
+      memcpy(msg->endpoint.piv, piv, piv_len);
+      msg->endpoint.piv_len = piv_len;
     }
-
-    /* Store the observe option. Retain the inner observe option value
-     * for observe registrations and cancellations. Use an empty value for
-     * notifications.
-     */
-    int32_t observe_option = coap_pkt->observe;
-    if (coap_pkt->observe >= OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE) {
-      coap_pkt->observe = 0;
-      OC_DBG(
-        "---response is a notification; making inner Observe option empty");
-    }
-
-    OC_DBG("### serializing OSCORE plaintext ###");
-    /* Serialize OSCORE plaintext at offset COAP_MAX_HEADER_SIZE
-       (code, inner options, payload)
-    */
-    uint8_t *buffer = message->data + COAP_MAX_HEADER_SIZE;
-    size_t buffer_size = oc_message_buffer_size(message) - COAP_MAX_HEADER_SIZE;
-    size_t plaintext_size =
-      oscore_serialize_plaintext(coap_pkt, buffer, buffer_size);
-
-    OC_DBG("### serialized OSCORE plaintext: %zd bytes ###", plaintext_size);
-
-    /* Set the OSCORE packet payload to point to location of the serialized
-       inner message.
-    */
-    coap_pkt->payload = buffer;
-    coap_pkt->payload_len = plaintext_size;
-
-    /* Encrypt OSCORE plaintext */
-    OC_DBG("### encrypting OSCORE plaintext ###");
-
-    int ret =
-      oc_oscore_encrypt(coap_pkt->payload, coap_pkt->payload_len,
-                        OSCORE_AEAD_TAG_LEN, key, OSCORE_KEY_LEN, nonce,
-                        OSCORE_AEAD_NONCE_LEN, AAD, AAD_len, coap_pkt->payload);
-
-    if (ret != 0) {
-      OC_ERR("***error encrypting OSCORE plaintext***");
-      goto oscore_send_error;
-    }
-
-    OC_DBG("### successfully encrypted OSCORE plaintext ###");
-
-    /* Adjust payload length to include the size of the authentication tag */
-    coap_pkt->payload_len += OSCORE_AEAD_TAG_LEN;
-
-    /* Set the Outer code for the OSCORE packet (POST/FETCH:2.04/2.05) */
-    coap_pkt->code = oscore_get_outer_code(coap_pkt);
-
-    /* If outer code is 2.05, then set the Max-Age option */
-    if (coap_pkt->code == CONTENT_2_05) {
-      coap_options_set_max_age(coap_pkt, 0);
-    }
-
-    /* Set the OSCORE option */
-    coap_set_header_oscore(coap_pkt, piv, piv_len, kid, kid_len, NULL, 0);
-
-    /* Reflect the Observe option (if present in the CoAP packet) */
-    coap_pkt->observe = observe_option;
-
-    /* Set the Proxy-uri option to the OCF URI bearing the peer's UUID */
-    char uuid[OC_UUID_LEN];
-    oc_uuid_to_str(&message->endpoint.di, uuid, OC_UUID_LEN);
-    oc_string_t proxy_uri;
-    oc_concat_strings(&proxy_uri, "ocf://", uuid);
-    coap_options_set_proxy_uri(coap_pkt, oc_string(proxy_uri),
-                               oc_string_len(proxy_uri));
-
-    /* Serialize OSCORE message to oc_message_t */
-    OC_DBG("### serializing OSCORE message ###");
-    message->length = oscore_serialize_message(coap_pkt, message->data,
-                                               oc_message_buffer_size(message));
-    OC_DBG("### serialized OSCORE message ###");
-    oc_free_string(&proxy_uri);
   }
+
+  /* Store current SSN with frequency OSCORE_WRITE_FREQ_K */
+  /* Based on recommendations in RFC 8613, Appendix B.1. to prevent SSN reuse
+   */
+  if (oscore_ctx->ssn % OSCORE_SSN_WRITE_FREQ_K == 0) {
+    oc_set_delayed_callback((void *)message->endpoint.device, dump_cred, 0);
+  }
+
+  /* Move CoAP payload to offset 2*COAP_MAX_HEADER_SIZE to accommodate for
+     Outer+Inner CoAP options in the OSCORE packet.
+  */
+  if (coap_pkt.payload_len > 0) {
+    memmove(message->data + 2UL * COAP_MAX_HEADER_SIZE, coap_pkt.payload,
+            coap_pkt.payload_len);
+
+    /* Store the new payload location in the CoAP packet */
+    coap_pkt.payload = message->data + 2UL * COAP_MAX_HEADER_SIZE;
+  }
+
+  /* Store the observe option. Retain the inner observe option value
+   * for observe registrations and cancellations. Use an empty value for
+   * notifications.
+   */
+  int32_t observe_option = coap_pkt.observe;
+  if (coap_pkt.observe >= OC_COAP_OPTION_OBSERVE_SEQUENCE_START_VALUE) {
+    coap_pkt.observe = 0;
+    OC_DBG("---response is a notification; making inner Observe option empty");
+  }
+
+  OC_DBG("### serializing OSCORE plaintext ###");
+  /* Serialize OSCORE plaintext at offset COAP_MAX_HEADER_SIZE
+     (code, inner options, payload)
+  */
+  uint8_t *buffer = message->data + COAP_MAX_HEADER_SIZE;
+  size_t buffer_size = oc_message_buffer_size(message) - COAP_MAX_HEADER_SIZE;
+  size_t plaintext_size =
+    oscore_serialize_plaintext(&coap_pkt, buffer, buffer_size);
+
+  OC_DBG("### serialized OSCORE plaintext: %zd bytes ###", plaintext_size);
+
+  /* Set the OSCORE packet payload to point to location of the serialized
+     inner message.
+  */
+  coap_pkt.payload = buffer;
+  coap_pkt.payload_len = plaintext_size;
+
+  /* Encrypt OSCORE plaintext */
+  OC_DBG("### encrypting OSCORE plaintext ###");
+
+  int ret =
+    oc_oscore_encrypt(coap_pkt.payload, coap_pkt.payload_len,
+                      OSCORE_AEAD_TAG_LEN, key, OSCORE_KEY_LEN, nonce,
+                      OSCORE_AEAD_NONCE_LEN, AAD, AAD_len, coap_pkt.payload);
+
+  if (ret != 0) {
+    OC_ERR("***error encrypting OSCORE plaintext***");
+    goto oscore_send_error;
+  }
+
+  OC_DBG("### successfully encrypted OSCORE plaintext ###");
+
+  /* Adjust payload length to include the size of the authentication tag */
+  coap_pkt.payload_len += OSCORE_AEAD_TAG_LEN;
+
+  /* Set the Outer code for the OSCORE packet (POST/FETCH:2.04/2.05) */
+  coap_pkt.code = oscore_get_outer_code(&coap_pkt);
+
+  /* If outer code is 2.05, then set the Max-Age option */
+  if (coap_pkt.code == CONTENT_2_05) {
+    coap_options_set_max_age(&coap_pkt, 0);
+  }
+
+  /* Set the OSCORE option */
+  coap_set_header_oscore(&coap_pkt, piv, piv_len, kid, kid_len, NULL, 0);
+
+  /* Reflect the Observe option (if present in the CoAP packet) */
+  coap_pkt.observe = observe_option;
+
+  /* Set the Proxy-uri option to the OCF URI bearing the peer's UUID */
+  char uuid[OC_UUID_LEN];
+  oc_uuid_to_str(&message->endpoint.di, uuid, OC_UUID_LEN);
+  oc_string_t proxy_uri;
+  oc_concat_strings(&proxy_uri, "ocf://", uuid);
+  coap_options_set_proxy_uri(&coap_pkt, oc_string(proxy_uri),
+                             oc_string_len(proxy_uri));
+
+  /* Serialize OSCORE message to oc_message_t */
+  OC_DBG("### serializing OSCORE message ###");
+  message->length = oscore_serialize_message(&coap_pkt, message->data,
+                                             oc_message_buffer_size(message));
+  OC_DBG("### serialized OSCORE message ###");
+  oc_free_string(&proxy_uri);
+
 oscore_send_dispatch:
   OC_DBG("#################################");
   /* Dispatch oc_message_t to the TLS layer */

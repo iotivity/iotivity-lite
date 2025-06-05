@@ -22,6 +22,7 @@
 #include "port/oc_connectivity.h"
 #include "util/oc_features.h"
 
+#include <stdbool.h>
 #include <stddef.h>
 
 #ifdef __cplusplus
@@ -67,6 +68,16 @@ oc_message_t *oc_message_allocate_outgoing_with_size(size_t size);
  * @return size_t size of the message buffer
  */
 size_t oc_message_max_buffer_size(void);
+
+/** @brief Get the current reference count */
+uint8_t oc_message_refcount(const oc_message_t *message) OC_NONNULL();
+
+/** @brief Decrease reference count and return true if message was
+ * deallocated.*/
+bool oc_message_unref2(oc_message_t *message);
+
+/** @brief Deallocate the message */
+void oc_message_deallocate(oc_message_t *message) OC_NONNULL();
 
 /**
  * @brief Get size of the message buffer

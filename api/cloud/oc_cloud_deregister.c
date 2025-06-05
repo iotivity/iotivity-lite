@@ -229,8 +229,8 @@ cloud_deregister_refreshed_token_async(void *data)
   if (oc_cloud_check_accesstoken_for_deregister(p->ctx)) {
     if (cloud_deregister_by_request(p, p->timeout, true) != 0) {
       OC_CLOUD_ERR("Failed to deregister from cloud");
-      oc_cloud_api_free_param(p);
       cloud_context_clear(p->ctx);
+      oc_cloud_api_free_param(p);
     }
     return OC_EVENT_DONE;
   }
@@ -239,8 +239,8 @@ cloud_deregister_refreshed_token_async(void *data)
   if (oc_cloud_do_login(p->ctx, cloud_deregister_try_logged_in, p,
                         p->timeout) != 0) {
     OC_CLOUD_ERR("Failed to login to cloud for deregister");
-    oc_cloud_api_free_param(p);
     cloud_context_clear(p->ctx);
+    oc_cloud_api_free_param(p);
     return OC_EVENT_DONE;
   }
   return OC_EVENT_DONE;

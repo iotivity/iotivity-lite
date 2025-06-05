@@ -198,13 +198,13 @@ event_callbacks_poll_timers(oc_list_t list, oc_memb_t *cb_pool)
 {
   oc_event_callback_t *event_cb = (oc_event_callback_t *)oc_list_head(list);
   while (event_cb != NULL) {
-    oc_event_callback_t *next = event_cb->next;
     if (!oc_etimer_expired(&event_cb->timer)) {
-      event_cb = next;
+      event_cb = event_cb->next;
       continue;
     }
     g_currently_processed_event_cb = event_cb;
     g_currently_processed_event_cb_delete = false;
+    g_currently_processed_event_on_delete = NULL;
     if ((event_cb->callback(event_cb->data) == OC_EVENT_DONE) ||
         g_currently_processed_event_cb_delete) {
       oc_list_remove(list, event_cb);
