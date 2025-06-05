@@ -744,28 +744,29 @@ check_retry_timers(void)
 {
   oc_tls_peer_t *peer = (oc_tls_peer_t *)oc_list_head(g_tls_peers);
   while (peer != NULL) {
+    if (peer->ssl_ctx.state == MBEDTLS_SSL_HANDSHAKE_OVER ||
+        !oc_etimer_expired(&peer->timer.fin_timer)) {
+      peer = peer->next;
+      continue;
+    }
     oc_tls_peer_t *next = peer->next;
-    if (peer->ssl_ctx.state != MBEDTLS_SSL_HANDSHAKE_OVER) {
-      if (oc_etimer_expired(&peer->timer.fin_timer)) {
-        int ret = mbedtls_ssl_handshake(&peer->ssl_ctx);
-        if (ret == MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED) {
-          mbedtls_ssl_session_reset(&peer->ssl_ctx);
-          if (peer->role == MBEDTLS_SSL_IS_SERVER &&
-              mbedtls_ssl_set_client_transport_id(
-                &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
-                sizeof(peer->endpoint.addr)) != 0) {
-            TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_set_client_transport_id", ret);
-            oc_tls_free_peer(peer, false, false, true);
-            peer = next;
-            continue;
-          }
-        }
-        if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
-            ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
-          TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_handshake", ret);
-          oc_tls_free_peer(peer, false, false, true);
-        }
+    int ret = mbedtls_ssl_handshake(&peer->ssl_ctx);
+    if (ret == MBEDTLS_ERR_SSL_HELLO_VERIFY_REQUIRED) {
+      mbedtls_ssl_session_reset(&peer->ssl_ctx);
+      if (peer->role == MBEDTLS_SSL_IS_SERVER &&
+          mbedtls_ssl_set_client_transport_id(
+            &peer->ssl_ctx, (const unsigned char *)&peer->endpoint.addr,
+            sizeof(peer->endpoint.addr)) != 0) {
+        TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_set_client_transport_id", ret);
+        oc_tls_free_peer(peer, false, false, true);
+        peer = next;
+        continue;
       }
+    }
+    if (ret < 0 && ret != MBEDTLS_ERR_SSL_WANT_READ &&
+        ret != MBEDTLS_ERR_SSL_WANT_WRITE) {
+      TLS_LOG_MBEDTLS_ERROR("mbedtls_ssl_handshake", ret);
+      oc_tls_free_peer(peer, false, false, true);
     }
     peer = next;
   }
@@ -937,15 +938,13 @@ oc_tls_add_new_certs(oc_sec_credusage_t credusage,
     oc_sec_creds_t *creds = oc_sec_get_creds(device);
     oc_sec_cred_t *cred = (oc_sec_cred_t *)oc_list_head(creds->creds);
     for (; cred != NULL; cred = cred->next) {
-      /* Pick all "leaf" certificates with matching credusage */
-      if ((cred->credusage & credusage) != 0 && !cred->child) {
-
-        if (is_known_cert(cred)) {
-          continue;
-        }
-
-        add_new_cert(cred, device);
+      /* Pick all "leaf" certificates with matching credusage that haven't been
+       * added yet */
+      if ((cred->credusage & credusage) == 0 || cred->child ||
+          is_known_cert(cred)) {
+        continue;
       }
+      add_new_cert(cred, device);
     }
   }
 }
