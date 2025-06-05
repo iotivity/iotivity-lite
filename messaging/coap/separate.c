@@ -154,8 +154,8 @@ coap_separate_accept(const coap_packet_t *request,
     memcpy(&message->endpoint, endpoint, sizeof(oc_endpoint_t));
     coap_send_message(message);
 
-    if (message->ref_count == 0) {
-      oc_message_unref(message);
+    if (oc_message_refcount(message) == 0) {
+      oc_message_deallocate(message);
     }
   }
 

@@ -192,11 +192,29 @@ oc_message_add_ref(oc_message_t *message)
   }
 }
 
+uint8_t
+oc_message_refcount(const oc_message_t *message)
+{
+  return OC_ATOMIC_LOAD8(message->ref_count);
+}
+
 void
-oc_message_unref(oc_message_t *message)
+oc_message_deallocate(oc_message_t *message)
+{
+  oc_memb_t *pool = message->pool;
+  message_deallocate(message, pool);
+  OC_TRACE("buffer: deallocated message(%p) from pool(%p)", (void *)message,
+           (void *)pool);
+#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
+  OC_TRACE("buffer: freed TX/RX buffer; num free: %d", oc_memb_numfree(pool));
+#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX*/
+}
+
+bool
+oc_message_unref2(oc_message_t *message)
 {
   if (message == NULL) {
-    return;
+    return false;
   }
   bool dealloc = false;
   uint8_t count = OC_ATOMIC_LOAD8(message->ref_count);
@@ -214,16 +232,16 @@ oc_message_unref(oc_message_t *message)
   if (!dealloc) {
     OC_TRACE("buffer: message(%p) unreferenced, ref_count=%d", (void *)message,
              (int)new_count);
-    return;
+    return false;
   }
+  oc_message_deallocate(message);
+  return true;
+}
 
-  oc_memb_t *pool = message->pool;
-  message_deallocate(message, pool);
-  OC_TRACE("buffer: deallocated message(%p) from pool(%p)", (void *)message,
-           (void *)pool);
-#ifdef OC_HAS_FEATURE_ALLOCATOR_MUTEX
-  OC_TRACE("buffer: freed TX/RX buffer; num free: %d", oc_memb_numfree(pool));
-#endif /* OC_HAS_FEATURE_ALLOCATOR_MUTEX*/
+void
+oc_message_unref(oc_message_t *message)
+{
+  oc_message_unref2(message);
 }
 
 #ifdef OC_HAS_FEATURE_MESSAGE_DYNAMIC_BUFFER
