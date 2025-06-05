@@ -732,8 +732,8 @@ recv_msg(int sock, uint8_t *recv_buf, int recv_buf_size,
     return -1;
   }
 
-  struct cmsghdr *cmsg;
-  for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != 0; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+  for (struct cmsghdr *cmsg = CMSG_FIRSTHDR(&msg); cmsg != 0;
+       cmsg = CMSG_NXTHDR(&msg, cmsg)) {
     if (cmsg->cmsg_level == IPPROTO_IPV6 && cmsg->cmsg_type == IPV6_PKTINFO) {
       if (msg.msg_namelen != sizeof(struct sockaddr_in6)) {
         OC_ERR("anciliary data contains invalid source address");

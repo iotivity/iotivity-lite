@@ -7,7 +7,8 @@ WORKDIR /iotivity-lite
 RUN git submodule update --recursive
 RUN mkdir /iotivity-lite/build
 WORKDIR /iotivity-lite/build
-RUN	cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=OFF -DOC_CLOUD_ENABLED=ON ${BUILD_ARGS} .. && \
+RUN	cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_VERBOSE_MAKEFILE=ON -DBUILD_TESTING=OFF \
+	-DOC_CLOUD_ENABLED=ON ${BUILD_ARGS} .. && \
 	cmake --build . --target cloud_server
 
 # install libfaketime

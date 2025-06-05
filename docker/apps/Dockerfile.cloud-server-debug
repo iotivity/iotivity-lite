@@ -3,7 +3,7 @@ ARG BUILD_TYPE=Release
 ARG BUILD_ARGS
 RUN apt-get update -y && \
 	DEBIAN_FRONTEND="noninteractive" apt-get install --no-install-recommends -y bash \
-	ca-certificates cmake curl gcovr gdb git-core g++ make patch python3 && \
+	ca-certificates cmake curl g++ gcovr gdb git-core make patch python3 && \
 	apt-get clean
 COPY ./  /iotivity-lite/
 WORKDIR /iotivity-lite
