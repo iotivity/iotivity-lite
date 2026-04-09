@@ -675,8 +675,7 @@ if_di_exist(const char *di, int di_len)
   for (int i = 0; i < MAX_ARRAY; i++) {
     size_t stored_len = strlen(g_d2dserverlist_d2dserverlist[i].di);
     if (stored_len == (size_t)di_len &&
-        strncmp(g_d2dserverlist_d2dserverlist[i].di, di, (size_t)di_len) ==
-          0) {
+        strncmp(g_d2dserverlist_d2dserverlist[i].di, di, (size_t)di_len) == 0) {
       return true;
     }
   }
@@ -693,8 +692,7 @@ find_di_index(const char *di, int di_len)
   for (int i = 0; i < MAX_ARRAY; i++) {
     size_t stored_len = strlen(g_d2dserverlist_d2dserverlist[i].di);
     if (stored_len == (size_t)di_len &&
-        strncmp(g_d2dserverlist_d2dserverlist[i].di, di, (size_t)di_len) ==
-          0) {
+        strncmp(g_d2dserverlist_d2dserverlist[i].di, di, (size_t)di_len) == 0) {
       return i;
     }
   }
@@ -1225,8 +1223,7 @@ get_resource(oc_request_t *request, oc_interface_mask_t interfaces,
     return;
   }
   char local_url[MAX_URI_LENGTH * 2] = { 0 };
-  if (!url_to_local_url(url, url_len, local_url,
-                        ARRAY_SIZE(local_url))) {
+  if (!url_to_local_url(url, url_len, local_url, ARRAY_SIZE(local_url))) {
     OC_PRINTF("ERROR: Could not extract local url from url");
     return;
   }
@@ -1336,8 +1333,7 @@ post_resource(oc_request_t *request, oc_interface_mask_t interfaces,
     return;
   }
   char local_url[MAX_URI_LENGTH * 2] = { 0 };
-  if (!url_to_local_url(url, url_len, local_url,
-                        ARRAY_SIZE(local_url))) {
+  if (!url_to_local_url(url, url_len, local_url, ARRAY_SIZE(local_url))) {
     OC_PRINTF("ERROR: Could not extract local url from url");
     return;
   }
@@ -1466,8 +1462,7 @@ delete_resource(oc_request_t *request, oc_interface_mask_t interfaces,
     return;
   }
   char local_url[MAX_URI_LENGTH * 2] = { 0 };
-  if (!url_to_local_url(url, url_len, local_url,
-                        ARRAY_SIZE(local_url))) {
+  if (!url_to_local_url(url, url_len, local_url, ARRAY_SIZE(local_url))) {
     OC_PRINTF("ERROR: Could not extract local url from url");
     return;
   }
@@ -1503,8 +1498,7 @@ delete_resource(oc_request_t *request, oc_interface_mask_t interfaces,
     return;
   }
   if (!oc_do_delete(local_url, local_server, query_as_string,
-                    &delete_local_resource_response, LOW_QOS,
-                    delay_response)) {
+                    &delete_local_resource_response, LOW_QOS, delay_response)) {
     OC_PRINTF("ERROR: Could not send DELETE request\n");
     oc_send_separate_response(delay_response, OC_STATUS_INTERNAL_SERVER_ERROR);
     free(delay_response);
@@ -1648,8 +1642,9 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
     size_t this_udn_len = strlen(this_udn);
     size_t udn_url_len = this_udn_len + uri_len + 2; // '/' + '\0'
     if (udn_url_len > sizeof(udn_url)) {
-      OC_PRINTF("   discovery: Skipping oversized local path (udn=%zu, uri=%zu)\n",
-                this_udn_len, uri_len);
+      OC_PRINTF(
+        "   discovery: Skipping oversized local path (udn=%zu, uri=%zu)\n",
+        this_udn_len, uri_len);
       continue;
     }
     size_t udn_url_offset = 0;
@@ -1735,7 +1730,7 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
                 (char *)btoa(add_err), retval);
 
     } /* adding current device, e.g. add the resource to the cloud RD */
-  }   /* if loop */
+  } /* if loop */
   return OC_CONTINUE_DISCOVERY;
 }
 
@@ -1760,8 +1755,7 @@ issue_requests(char *current_udn)
 {
 #ifdef OC_DOXM_UUID_FILTER
   char query[12 + OC_UUID_LEN] = { 0 };
-  int query_len =
-    snprintf(query, sizeof(query), "deviceuuid=%s", current_udn);
+  int query_len = snprintf(query, sizeof(query), "deviceuuid=%s", current_udn);
   if (query_len < 0 || query_len >= (int)sizeof(query)) {
     OC_PRINTF("issue_requests: deviceuuid query too long\n");
     return;

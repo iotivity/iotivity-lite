@@ -25,8 +25,13 @@
 TEST(TestEnums, OCEnum)
 {
   EXPECT_EQ(nullptr, oc_enum_to_str(static_cast<oc_enum_t>(0)));
-  if constexpr (static_cast<oc_enum_t>(std::numeric_limits<int>::max()) >
-                OC_ENUM_ZIGZAG) {
+  using oc_enum_ut = std::underlying_type_t<oc_enum_t>;
+  constexpr auto zigzag_v = static_cast<oc_enum_ut>(OC_ENUM_ZIGZAG);
+  constexpr auto int_max_v = static_cast<std::make_unsigned_t<oc_enum_ut>>(
+    std::numeric_limits<int>::max());
+
+  if constexpr (int_max_v >
+                static_cast<std::make_unsigned_t<oc_enum_ut>>(zigzag_v)) {
     EXPECT_EQ(nullptr, oc_enum_to_str(static_cast<oc_enum_t>(
                          std::numeric_limits<int>::max())));
   }
