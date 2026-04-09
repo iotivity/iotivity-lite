@@ -296,10 +296,15 @@ print_rep(oc_rep_t *rep, bool pretty_print)
 STATIC bool
 url_to_udn(const char *url, char *udn, size_t udn_size)
 {
-  if (udn_size < OC_UUID_LEN) {
+  if (url == NULL || udn == NULL || udn_size < OC_UUID_LEN) {
     return false;
   }
-  strncpy(udn, &url[1], udn_size);
+  size_t url_len = strlen(url);
+  if (url_len < OC_UUID_LEN || url[0] != '/') {
+    return false;
+  }
+
+  memcpy(udn, &url[1], OC_UUID_LEN - 1);
   udn[OC_UUID_LEN - 1] = '\0';
   return true;
 }
@@ -316,11 +321,19 @@ STATIC bool
 url_to_local_url(const char *url, size_t url_size, char *local_url,
                  size_t local_url_size)
 {
-  if (url_size < OC_UUID_LEN) {
+  if (url == NULL || local_url == NULL || local_url_size == 0) {
     return false;
   }
-  strncpy(local_url, &url[OC_UUID_LEN], local_url_size);
-  local_url[local_url_size - 1] = '\0';
+  if (url_size <= OC_UUID_LEN || url[0] != '/' || url[OC_UUID_LEN] != '/') {
+    return false;
+  }
+  size_t local_part_len = url_size - OC_UUID_LEN;
+  if (local_part_len >= local_url_size) {
+    return false;
+  }
+
+  memcpy(local_url, &url[OC_UUID_LEN], local_part_len);
+  local_url[local_part_len] = '\0';
   return true;
 }
 
@@ -331,11 +344,41 @@ url_to_local_url(const char *url, size_t url_size, char *local_url,
  * @param[out] udn url without the anchor part
  * @param udn_size the size of the udn buffer
  */
-STATIC void
+STATIC bool
 anchor_to_udn(const char *anchor, char *udn, size_t udn_size)
 {
-  strncpy(udn, &anchor[6], udn_size);
-  udn[udn_size - 1] = '\0';
+  if (anchor == NULL || udn == NULL || udn_size == 0) {
+    return false;
+  }
+  if (strncmp(anchor, "ocf://", CHAR_ARRAY_LEN("ocf://")) != 0) {
+    udn[0] = '\0';
+    return false;
+  }
+
+  size_t anchor_len = strlen(anchor);
+  size_t prefix_len = CHAR_ARRAY_LEN("ocf://");
+  if (anchor_len <= prefix_len) {
+    udn[0] = '\0';
+    return false;
+  }
+
+  size_t copy_len = anchor_len - prefix_len;
+  if (copy_len >= udn_size) {
+    copy_len = udn_size - 1;
+  }
+  memcpy(udn, anchor + prefix_len, copy_len);
+  udn[copy_len] = '\0';
+  return true;
+}
+
+STATIC size_t
+get_separate_response_buffer_size(void)
+{
+#ifdef OC_BLOCK_WISE
+  return (size_t)OC_MAX_APP_DATA_SIZE;
+#else
+  return (size_t)OC_BLOCK_SIZE;
+#endif
 }
 
 /**
@@ -625,12 +668,37 @@ get_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
 STATIC bool
 if_di_exist(const char *di, int di_len)
 {
+  if (di == NULL || di_len <= 0 || di_len >= MAX_PAYLOAD_STRING) {
+    return false;
+  }
+
   for (int i = 0; i < MAX_ARRAY; i++) {
-    if (strncmp(g_d2dserverlist_d2dserverlist[i].di, di, di_len) == 0) {
+    size_t stored_len = strlen(g_d2dserverlist_d2dserverlist[i].di);
+    if (stored_len == (size_t)di_len &&
+        strncmp(g_d2dserverlist_d2dserverlist[i].di, di, (size_t)di_len) ==
+          0) {
       return true;
     }
   }
   return false;
+}
+
+STATIC int
+find_di_index(const char *di, int di_len)
+{
+  if (di == NULL || di_len <= 0 || di_len >= MAX_PAYLOAD_STRING) {
+    return -1;
+  }
+
+  for (int i = 0; i < MAX_ARRAY; i++) {
+    size_t stored_len = strlen(g_d2dserverlist_d2dserverlist[i].di);
+    if (stored_len == (size_t)di_len &&
+        strncmp(g_d2dserverlist_d2dserverlist[i].di, di, (size_t)di_len) ==
+          0) {
+      return i;
+    }
+  }
+  return -1;
 }
 
 /**
@@ -644,9 +712,15 @@ if_di_exist(const char *di, int di_len)
 STATIC bool
 remove_di(const char *di, int len)
 {
+  if (di == NULL || len <= 0 || len >= MAX_PAYLOAD_STRING) {
+    return false;
+  }
+
   for (int i = 0; i < MAX_ARRAY; i++) {
     OC_PRINTF("   %s %.*s ", g_d2dserverlist_d2dserverlist[i].di, len, di);
-    if (strncmp(g_d2dserverlist_d2dserverlist[i].di, di, len) == 0) {
+    size_t stored_len = strlen(g_d2dserverlist_d2dserverlist[i].di);
+    if (stored_len == (size_t)len &&
+        strncmp(g_d2dserverlist_d2dserverlist[i].di, di, (size_t)len) == 0) {
       strcpy(g_d2dserverlist_d2dserverlist[i].di, "");
       return true;
     }
@@ -661,11 +735,15 @@ remove_di(const char *di, int len)
  * @return return the resource or NULL
  */
 STATIC oc_resource_t *
-find_resource(const char *di)
+find_resource(const char *di, int di_len)
 {
+  if (di == NULL || di_len <= 0) {
+    return NULL;
+  }
+
   oc_resource_t *res = oc_ri_get_app_resources();
   while (res != NULL) {
-    if (strncmp(di, oc_string(res->uri), strlen(di)) == 0)
+    if (strncmp(di, oc_string(res->uri), (size_t)di_len) == 0)
       return res;
     res = res->next;
   }
@@ -681,15 +759,18 @@ find_resource(const char *di)
 STATIC bool
 unregister_resources(const char *di, int len)
 {
-  (void)len;
+  if (di == NULL || len <= 0) {
+    return false;
+  }
+
   oc_resource_t *res = NULL;
 
-  res = find_resource(di);
+  res = find_resource(di, len);
   while (res != NULL) {
     // delete the resource
     oc_ri_delete_resource(res);
     // get a next one if exist
-    res = find_resource(di);
+    res = find_resource(di, len);
   }
   return true;
 }
@@ -718,6 +799,7 @@ post_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
   (void)interfaces;
   (void)user_data;
   bool error_state = true;
+  bool should_issue_discovery = false;
   OC_PRINTF("-- Begin post_d2dserverlist:\n");
   int stored_index = 0;
   // oc_rep_t* rep = request->request_payload;
@@ -740,20 +822,30 @@ post_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
   int _di_len =
     oc_get_query_value_v1(request, "di", CHAR_ARRAY_LEN("di"), &_di);
   if (_di_len != -1) {
+    if (_di_len <= 0 || _di_len >= (int)ARRAY_SIZE(g_d2dserverlist_di)) {
+      OC_PRINTF(" invalid di length (%d)\n", _di_len);
+      oc_send_response(request, OC_STATUS_BAD_OPTION);
+      return;
+    }
+
     /* input check
      * ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$
      */
     OC_PRINTF("  query value 'di': %.*s\n", _di_len, _di);
     if (if_di_exist(_di, _di_len) == false) {
       // di value is not listed yet, so add it
-      strncpy(g_d2dserverlist_di, _di, _di_len);
+      memcpy(g_d2dserverlist_di, _di, (size_t)_di_len);
+      g_d2dserverlist_di[_di_len] = '\0';
       OC_PRINTF(" New di %s\n", g_d2dserverlist_di);
       error_state = false;
 
       stored_index = find_empty_slot();
       if (stored_index >= 0) {
-        strncpy(g_d2dserverlist_d2dserverlist[stored_index].di, _di, _di_len);
+        memcpy(g_d2dserverlist_d2dserverlist[stored_index].di, _di,
+               (size_t)_di_len);
+        g_d2dserverlist_d2dserverlist[stored_index].di[_di_len] = '\0';
         stored = true;
+        should_issue_discovery = true;
         OC_PRINTF(" storing at %d \n", stored_index);
         list_udn();
       } else {
@@ -764,6 +856,7 @@ post_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
       OC_PRINTF(" DI exist, no error, returning existing list\n");
       error_state = false;
       stored = true;
+      stored_index = find_di_index(_di, _di_len);
       list_udn();
     }
   }
@@ -792,7 +885,9 @@ post_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
       oc_send_response(request, OC_STATUS_CHANGED);
 
       /* do a new discovery so that the new device will be added */
-      issue_requests(g_d2dserverlist_d2dserverlist[stored_index].di);
+      if (should_issue_discovery && stored_index >= 0) {
+        issue_requests(g_d2dserverlist_d2dserverlist[stored_index].di);
+      }
     } else {
       OC_PRINTF("MAX array exceeded, not stored, returing error \n");
       oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
@@ -830,6 +925,12 @@ delete_d2dserverlist(oc_request_t *request, oc_interface_mask_t interfaces,
   int _di_len =
     oc_get_query_value_v1(request, "di", CHAR_ARRAY_LEN("di"), &_di);
   if (_di_len != -1) {
+    if (_di_len <= 0 || _di_len >= MAX_PAYLOAD_STRING) {
+      OC_PRINTF(" invalid di length (%d)\n", _di_len);
+      oc_send_response(request, OC_STATUS_BAD_OPTION);
+      return;
+    }
+
     /* input check
      * ^[a-fA-F0-9]{8}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{4}-[a-fA-F0-9]{12}$
      */
@@ -1075,6 +1176,16 @@ get_local_resource_response(oc_client_response_t *data)
 
   oc_separate_response_t *delay_response =
     (oc_separate_response_t *)data->user_data;
+  if (delay_response == NULL) {
+    return;
+  }
+  size_t max_payload = get_separate_response_buffer_size();
+  if (data->_payload_len > max_payload) {
+    OC_PRINTF("ERROR: payload too large for separate response buffer\n");
+    oc_send_separate_response(delay_response, OC_STATUS_INTERNAL_SERVER_ERROR);
+    free(delay_response);
+    return;
+  }
   memcpy(delay_response->buffer, data->_payload, (int)data->_payload_len);
   delay_response->len = data->_payload_len;
   oc_send_separate_response(delay_response, data->code);
@@ -1114,7 +1225,7 @@ get_resource(oc_request_t *request, oc_interface_mask_t interfaces,
     return;
   }
   char local_url[MAX_URI_LENGTH * 2] = { 0 };
-  if (!url_to_local_url(url, ARRAY_SIZE(url), local_url,
+  if (!url_to_local_url(url, url_len, local_url,
                         ARRAY_SIZE(local_url))) {
     OC_PRINTF("ERROR: Could not extract local url from url");
     return;
@@ -1135,14 +1246,30 @@ get_resource(oc_request_t *request, oc_interface_mask_t interfaces,
 
   oc_separate_response_t *delay_response =
     malloc(sizeof(oc_separate_response_t));
+  if (delay_response == NULL) {
+    OC_PRINTF("ERROR: Could not allocate delayed response\n");
+    oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    return;
+  }
   memset(delay_response, 0, sizeof(oc_separate_response_t));
 
   oc_set_separate_response_buffer(delay_response);
   oc_indicate_separate_response(request, delay_response);
 
   oc_endpoint_t *local_server = is_udn_listed(local_udn);
-  oc_do_get(local_url, local_server, query_as_string,
-            &get_local_resource_response, LOW_QOS, delay_response);
+  if (local_server == NULL) {
+    OC_PRINTF("ERROR: Could not find local server endpoint\n");
+    oc_send_separate_response(delay_response, OC_STATUS_NOT_FOUND);
+    free(delay_response);
+    return;
+  }
+  if (!oc_do_get(local_url, local_server, query_as_string,
+                 &get_local_resource_response, LOW_QOS, delay_response)) {
+    OC_PRINTF("ERROR: Could not send GET request\n");
+    oc_send_separate_response(delay_response, OC_STATUS_INTERNAL_SERVER_ERROR);
+    free(delay_response);
+    return;
+  }
   OC_PRINTF("       DISPATCHED\n");
 }
 
@@ -1161,6 +1288,16 @@ post_local_resource_response(oc_client_response_t *data)
 
   oc_separate_response_t *delay_response =
     (oc_separate_response_t *)data->user_data;
+  if (delay_response == NULL) {
+    return;
+  }
+  size_t max_payload = get_separate_response_buffer_size();
+  if (data->_payload_len > max_payload) {
+    OC_PRINTF("ERROR: payload too large for separate response buffer\n");
+    oc_send_separate_response(delay_response, OC_STATUS_INTERNAL_SERVER_ERROR);
+    free(delay_response);
+    return;
+  }
   memcpy(delay_response->buffer, data->_payload, (int)data->_payload_len);
   delay_response->len = data->_payload_len;
   oc_send_separate_response(delay_response, data->code);
@@ -1199,7 +1336,7 @@ post_resource(oc_request_t *request, oc_interface_mask_t interfaces,
     return;
   }
   char local_url[MAX_URI_LENGTH * 2] = { 0 };
-  if (!url_to_local_url(url, ARRAY_SIZE(url), local_url,
+  if (!url_to_local_url(url, url_len, local_url,
                         ARRAY_SIZE(local_url))) {
     OC_PRINTF("ERROR: Could not extract local url from url");
     return;
@@ -1230,20 +1367,35 @@ post_resource(oc_request_t *request, oc_interface_mask_t interfaces,
 
   oc_separate_response_t *delay_response =
     malloc(sizeof(oc_separate_response_t));
+  if (delay_response == NULL) {
+    OC_PRINTF("ERROR: Could not allocate delayed response\n");
+    oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    return;
+  }
   memset(delay_response, 0, sizeof(oc_separate_response_t));
   oc_set_separate_response_buffer(delay_response);
   oc_indicate_separate_response(request, delay_response);
 
   oc_endpoint_t *local_server = is_udn_listed(local_udn);
+  if (local_server == NULL) {
+    OC_PRINTF("ERROR: Could not find local server endpoint\n");
+    oc_send_separate_response(delay_response, OC_STATUS_NOT_FOUND);
+    free(delay_response);
+    return;
+  }
   if (!oc_init_post(local_url, local_server, query_as_string,
                     &post_local_resource_response, LOW_QOS, delay_response)) {
     OC_PRINTF("ERROR: Could not init POST request\n");
+    oc_send_separate_response(delay_response, OC_STATUS_INTERNAL_SERVER_ERROR);
+    free(delay_response);
     return;
   }
   // copy over the data
   oc_rep_encode_raw(payload, len);
   if (!oc_do_post()) {
     OC_PRINTF("ERROR: Could not send POST request\n");
+    oc_send_separate_response(delay_response, OC_STATUS_INTERNAL_SERVER_ERROR);
+    free(delay_response);
     return;
   }
   OC_PRINTF("Sent POST request\n");
@@ -1265,12 +1417,22 @@ delete_local_resource_response(oc_client_response_t *data)
 
   oc_separate_response_t *delay_response =
     (oc_separate_response_t *)data->user_data;
+  if (delay_response == NULL) {
+    return;
+  }
+  size_t max_payload = get_separate_response_buffer_size();
+  if (data->_payload_len > max_payload) {
+    OC_PRINTF("ERROR: payload too large for separate response buffer\n");
+    oc_send_separate_response(delay_response, OC_STATUS_INTERNAL_SERVER_ERROR);
+    free(delay_response);
+    return;
+  }
   memcpy(delay_response->buffer, data->_payload, (int)data->_payload_len);
   delay_response->len = data->_payload_len;
   oc_send_separate_response(delay_response, data->code);
 
   // delete the allocated memory in delete_resource
-  // free(delay_response);
+  free(delay_response);
 }
 
 /**
@@ -1304,7 +1466,7 @@ delete_resource(oc_request_t *request, oc_interface_mask_t interfaces,
     return;
   }
   char local_url[MAX_URI_LENGTH * 2] = { 0 };
-  if (!url_to_local_url(url, ARRAY_SIZE(url), local_url,
+  if (!url_to_local_url(url, url_len, local_url,
                         ARRAY_SIZE(local_url))) {
     OC_PRINTF("ERROR: Could not extract local url from url");
     return;
@@ -1325,12 +1487,29 @@ delete_resource(oc_request_t *request, oc_interface_mask_t interfaces,
 
   oc_separate_response_t *delay_response =
     malloc(sizeof(oc_separate_response_t));
+  if (delay_response == NULL) {
+    OC_PRINTF("ERROR: Could not allocate delayed response\n");
+    oc_send_response(request, OC_STATUS_INTERNAL_SERVER_ERROR);
+    return;
+  }
   memset(delay_response, 0, sizeof(oc_separate_response_t));
   oc_set_separate_response_buffer(delay_response);
   oc_indicate_separate_response(request, delay_response);
   oc_endpoint_t *local_server = is_udn_listed(local_udn);
-  oc_do_delete(local_url, local_server, query_as_string,
-               &delete_local_resource_response, LOW_QOS, delay_response);
+  if (local_server == NULL) {
+    OC_PRINTF("ERROR: Could not find local server endpoint\n");
+    oc_send_separate_response(delay_response, OC_STATUS_NOT_FOUND);
+    free(delay_response);
+    return;
+  }
+  if (!oc_do_delete(local_url, local_server, query_as_string,
+                    &delete_local_resource_response, LOW_QOS,
+                    delay_response)) {
+    OC_PRINTF("ERROR: Could not send DELETE request\n");
+    oc_send_separate_response(delay_response, OC_STATUS_INTERNAL_SERVER_ERROR);
+    free(delay_response);
+    return;
+  }
   OC_PRINTF("       DISPATCHED\n");
 }
 
@@ -1369,7 +1548,10 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
   }
 
   char this_udn[200] = { 0 };
-  anchor_to_udn(anchor, this_udn, ARRAY_SIZE(this_udn));
+  if (!anchor_to_udn(anchor, this_udn, ARRAY_SIZE(this_udn))) {
+    OC_PRINTF("  discovery: invalid anchor format\n");
+    return OC_CONTINUE_DISCOVERY;
+  }
 
   bool is_added_current_device = false;
   if (strcmp(this_udn, d2d_udn) == 0) {
@@ -1463,9 +1645,20 @@ discovery(const char *anchor, const char *uri, oc_string_array_t types,
 
     // make extended url with local UDN as prefix
     char udn_url[200];
-    strcpy(udn_url, "/");
-    strcat(udn_url, this_udn);
-    strcat(udn_url, url);
+    size_t this_udn_len = strlen(this_udn);
+    size_t udn_url_len = this_udn_len + uri_len + 2; // '/' + '\0'
+    if (udn_url_len > sizeof(udn_url)) {
+      OC_PRINTF("   discovery: Skipping oversized local path (udn=%zu, uri=%zu)\n",
+                this_udn_len, uri_len);
+      continue;
+    }
+    size_t udn_url_offset = 0;
+    udn_url[udn_url_offset++] = '/';
+    memcpy(udn_url + udn_url_offset, this_udn, this_udn_len);
+    udn_url_offset += this_udn_len;
+    memcpy(udn_url + udn_url_offset, url, uri_len);
+    udn_url_offset += uri_len;
+    udn_url[udn_url_offset] = '\0';
 
     if (is_added_current_device) {
       OC_PRINTF("   discovery: Register Resource with local path \"%s\"\n",
@@ -1566,8 +1759,13 @@ void
 issue_requests(char *current_udn)
 {
 #ifdef OC_DOXM_UUID_FILTER
-  char query[12 + OC_UUID_LEN] = "deviceuuid=";
-  strcat(query, current_udn);
+  char query[12 + OC_UUID_LEN] = { 0 };
+  int query_len =
+    snprintf(query, sizeof(query), "deviceuuid=%s", current_udn);
+  if (query_len < 0 || query_len >= (int)sizeof(query)) {
+    OC_PRINTF("issue_requests: deviceuuid query too long\n");
+    return;
+  }
 
   oc_do_site_local_ipv6_multicast("/oic/sec/doxm", query, doxm_discovery_cb,
                                   current_udn);
