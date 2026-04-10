@@ -313,21 +313,22 @@ url_to_udn(const char *url, char *udn, size_t udn_size)
  * function to retrieve the local url from the cloud url
  *
  * @param url the input url
- * @param url_size the size of the input url buffer
- * @param[out] local_url the local url withoug the udn prefix
+ * @param url_len the string length of the input url (not including the
+ * null-terminator)
+ * @param[out] local_url the local url without the udn prefix
  * @param local_url_size the size of the local url buffer
  */
 STATIC bool
-url_to_local_url(const char *url, size_t url_size, char *local_url,
+url_to_local_url(const char *url, size_t url_len, char *local_url,
                  size_t local_url_size)
 {
   if (url == NULL || local_url == NULL || local_url_size == 0) {
     return false;
   }
-  if (url_size <= OC_UUID_LEN || url[0] != '/' || url[OC_UUID_LEN] != '/') {
+  if (url_len <= OC_UUID_LEN || url[0] != '/' || url[OC_UUID_LEN] != '/') {
     return false;
   }
-  size_t local_part_len = url_size - OC_UUID_LEN;
+  size_t local_part_len = url_len - OC_UUID_LEN;
   if (local_part_len >= local_url_size) {
     return false;
   }
